@@ -28,7 +28,7 @@ export default function CheckoutPage() {
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
       }
-    } catch (error) {
+    } catch {
       setCheckoutMessage("Something went wrong while preparing checkout.");
     } finally {
       setIsStartingCheckout(false);

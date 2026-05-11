@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCart } from "./cart-context";
+import ProductVisual from "@/app/components/product-visual";
 
 export default function CartDrawer() {
   const {
@@ -90,7 +90,7 @@ export default function CartDrawer() {
 
                 <p className="mt-3 max-w-xs text-sm leading-7 text-white/60">
                   Add premium products to your cart and create a smarter, more
-                  refined living setup.
+                  comfortable Her Care routine.
                 </p>
 
                 <Link
@@ -110,12 +110,7 @@ export default function CartDrawer() {
                   >
                     <div className="flex gap-3">
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0b1120]">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-contain p-2"
-                        />
+                        <ProductVisual label="Her Care" compact />
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col">

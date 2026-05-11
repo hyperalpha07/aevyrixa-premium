@@ -11,7 +11,7 @@ type SiteHeaderProps = {
 
 export default function SiteHeader({
   active = "shop",
-  productHref = "/product/flame-diffuser",
+  productHref = "/product/her-care-period-panty",
 }: SiteHeaderProps) {
   const { totalItems, toggleCart } = useCart();
 
@@ -24,23 +24,24 @@ export default function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/30 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex-shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
             <Image
               src="/logo.jpg"
               alt="Aevyrixa Logo"
               width={42}
               height={42}
+              sizes="42px"
               className="h-10 w-10 rounded-lg object-cover"
             />
           </div>
 
-          <div>
-            <p className="text-lg font-bold tracking-[0.25em] text-white">
+          <div className="min-w-0">
+            <p className="text-base sm:text-lg font-bold tracking-[0.25em] text-white truncate">
               Aevyrixa Her Care
             </p>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-cyan-300/70">
+            <p className="hidden sm:block text-[9px] uppercase tracking-[0.35em] text-cyan-300/70">
               Premium reusable period panty care
             </p>
           </div>

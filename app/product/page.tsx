@@ -2,9 +2,9 @@
 
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
-import Image from "next/image";
 import Link from "next/link";
 import { products } from "@/app/lib/products";
+import ProductVisual from "@/app/components/product-visual";
 
 function getAccentClasses(accent: "cyan" | "fuchsia" | "amber") {
   if (accent === "cyan") {
@@ -59,12 +59,12 @@ export default function ProductCollectionPage() {
           </p>
 
           <h1 className="text-4xl font-semibold leading-tight md:text-6xl">
-            Premium gadgets designed to elevate your everyday space
+            Premium reusable period care designed for modern confidence
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-white/65 md:text-lg">
-            Explore our curated smart living collection built for modern homes,
-            premium setups, and a refined futuristic lifestyle.
+            Explore soft, discreet Her Care pieces built for comfort,
+            reusable routines, and a refined everyday experience.
           </p>
         </div>
 
@@ -96,7 +96,6 @@ export default function ProductCollectionPage() {
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {products.map((product) => {
             const accent = getAccentClasses(product.accent);
-            const numericPrice = Number(String(product.price).replace("$", ""));
 
             return (
               <article
@@ -107,13 +106,12 @@ export default function ProductCollectionPage() {
                   <div className="relative flex min-h-[260px] items-center justify-center overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0b1120]">
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_55%)]" />
 
-                    <Image
-                      src={product.gallery[0] ?? "/logo.jpg"}
-                      alt={product.name}
-                      width={420}
-                      height={420}
-                      className="relative z-10 h-[190px] w-auto object-contain transition duration-500 group-hover:scale-[1.04]"
-                    />
+                    <div className="relative z-10 h-[190px] w-[190px] transition duration-500 group-hover:scale-[1.04]">
+                      <ProductVisual
+                        accent={product.accent}
+                        label={product.category}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -180,7 +178,7 @@ export default function ProductCollectionPage() {
                       View Product
                     </Link>
 
-                    <div className="flex items-center justify-between rounded-full border border-white/10 bg-black/20 px-4 py-3 text-xs uppercase tracking-[0.2em] text-white/55">
+                    <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center text-[10px] uppercase tracking-[0.12em] text-white/55 sm:rounded-full sm:text-xs sm:tracking-[0.2em]">
                       <span>Secure Payment</span>
                       <span>Fast Shipping</span>
                       <span>7-Day</span>

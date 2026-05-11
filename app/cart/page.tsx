@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
+import ProductVisual from "@/app/components/product-visual";
 
 export default function CartPage() {
   const {
@@ -70,8 +70,8 @@ export default function CartPage() {
             </h2>
 
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/60 md:text-base">
-              Add premium products to your cart and build a smarter, more
-              refined shopping experience with AEVYRIXA.
+              Add premium Her Care products to your cart and build a more
+              comfortable reusable routine with AEVYRIXA.
             </p>
 
             <Link
@@ -91,13 +91,7 @@ export default function CartPage() {
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-center">
                     <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0b1120]">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        width={96}
-                        height={96}
-                        className="h-20 w-20 object-contain"
-                      />
+                      <ProductVisual label="Her Care" compact />
                     </div>
 
                     <div className="min-w-0 flex-1">

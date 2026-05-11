@@ -56,77 +56,77 @@ export default function Home() {
 
       <SiteHeader active="home" />
 
-      <section ref={heroRef} className="mx-auto max-w-7xl px-6 pb-20 pt-20 lg:pt-24">
-        <div className="grid gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
-          <div>
-            <span className="inline-flex rounded-full border border-cyan-300/20 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cyan-200/80">
+      <section ref={heroRef} className="mx-auto max-w-7xl px-4 pb-10 pt-14 sm:px-6 sm:pb-16 sm:pt-20 lg:pb-20 lg:pt-24">
+        <div className="grid min-w-0 gap-6 sm:gap-10 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] items-start lg:items-center">
+          <div className="min-w-0">
+            <span className="inline-flex max-w-full rounded-full border border-cyan-300/20 bg-white/5 px-3 py-1.5 text-[10px] sm:text-xs sm:px-4 sm:py-2 uppercase tracking-[0.22em] text-cyan-200/80 sm:tracking-[0.35em]">
               Her Care Collection
             </span>
 
-            <h1 className="mt-8 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 max-w-[18rem] break-words text-2xl font-semibold leading-tight tracking-tight text-white sm:mt-6 sm:max-w-3xl sm:text-4xl lg:text-6xl">
               Reusable Period Care, Reimagined for Modern Confidence
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
+            <p className="mt-4 max-w-[19rem] break-words text-sm leading-7 text-white/70 sm:mt-6 sm:max-w-2xl sm:text-base sm:leading-8 md:text-lg">
               Aevyrixa Her Care brings soft, leak-resistant, reusable period protection with a premium comfort-first design.
             </p>
 
-            <div className="mt-10 flex flex-wrap gap-4">
+            <div className="mt-7 sm:mt-10 flex flex-wrap gap-3 sm:gap-4">
               <Link
                 href="/product"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-7 py-3 text-sm font-semibold text-black shadow-[0_0_40px_rgba(34,211,238,0.25)] transition hover:scale-[1.02]"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-6 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-black shadow-[0_0_40px_rgba(34,211,238,0.25)] transition hover:scale-[1.02]"
               >
                 Shop Her Care
               </Link>
 
               <a
                 href="#how-it-works"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 How It Works
               </a>
             </div>
 
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">Discreet Delivery</p>
+            <div className="mt-6 sm:mt-10 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur-xl">
+                <p className="break-words text-xs sm:text-sm uppercase tracking-[0.22em] text-cyan-200/80 sm:tracking-[0.35em]">Discreet Delivery</p>
               </div>
-              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">7-Day Money Back Guarantee</p>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur-xl">
+                <p className="break-words text-xs sm:text-sm uppercase tracking-[0.22em] text-cyan-200/80 sm:tracking-[0.35em]">7-Day Money Back Guarantee</p>
               </div>
-              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">Comfort Fit</p>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur-xl">
+                <p className="break-words text-xs sm:text-sm uppercase tracking-[0.22em] text-cyan-200/80 sm:tracking-[0.35em]">Comfort Fit</p>
               </div>
-              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">Reusable Protection</p>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur-xl">
+                <p className="break-words text-xs sm:text-sm uppercase tracking-[0.22em] text-cyan-200/80 sm:tracking-[0.35em]">Reusable Protection</p>
               </div>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute left-0 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="absolute right-0 bottom-10 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="relative mt-8 min-w-0 sm:mt-0">
+            <div className="hidden sm:block absolute left-0 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="hidden sm:block absolute right-0 bottom-10 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
 
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#09101d]/90 p-6 shadow-2xl backdrop-blur-2xl">
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-cyan-300/10 to-transparent" />
-              <div className="rounded-[1.75rem] border border-white/10 bg-[#0f172a]/90 p-6">
-                <div className="mb-6 flex items-center justify-between rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm uppercase tracking-[0.3em] text-cyan-200/80">
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] border border-white/10 bg-[#09101d]/90 p-3 sm:p-5 shadow-2xl backdrop-blur-2xl">
+              <div className="absolute inset-x-0 top-0 h-20 sm:h-24 bg-gradient-to-b from-cyan-300/10 to-transparent" />
+              <div className="rounded-2xl sm:rounded-[1.75rem] border border-white/10 bg-[#0f172a]/90 p-4 sm:p-5">
+                <div className="mb-4 sm:mb-6 flex min-w-0 items-center justify-between gap-2 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 px-3 py-2 sm:px-4 sm:py-3 text-[10px] sm:text-sm uppercase tracking-[0.18em] text-cyan-200/80 sm:tracking-[0.3em]">
                   <span>Period Panty Preview</span>
-                  <span className="rounded-full bg-violet-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-violet-200">
+                  <span className="rounded-full bg-violet-500/10 px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-violet-200">
                     New
                   </span>
                 </div>
 
-                <div className="rounded-[1.75rem] border border-white/10 bg-[#0c1321] p-6">
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-3xl bg-cyan-300/15 text-2xl text-cyan-300">
+                <div className="rounded-xl sm:rounded-[1.75rem] border border-white/10 bg-[#0c1321] p-4 sm:p-5">
+                  <div className="mb-4 sm:mb-6 flex h-12 sm:h-14 w-12 sm:w-14 items-center justify-center rounded-2xl sm:rounded-3xl bg-cyan-300/15 text-xl sm:text-2xl text-cyan-300">
                     ♢
                   </div>
-                  <h2 className="text-2xl font-semibold text-white">Aevyrixa Her Care Period Panty</h2>
-                  <p className="mt-4 text-sm leading-7 text-white/65">
+                  <h2 className="max-w-[17rem] break-words text-lg font-semibold text-white sm:max-w-none sm:text-2xl">Aevyrixa Her Care Period Panty</h2>
+                  <p className="mt-3 max-w-[17rem] break-words text-xs leading-6 text-white/65 sm:mt-4 sm:max-w-none sm:text-sm sm:leading-7">
                     Soft, discreet coverage with a premium fit and comfortable reusable protection.
                   </p>
 
-                  <div className="mt-8 space-y-3 text-sm text-white/60">
+                  <div className="mt-5 max-w-[17rem] space-y-2 break-words text-xs text-white/60 sm:mt-8 sm:max-w-none sm:space-y-3 sm:text-sm">
                     <p>Soft stretch fabric for all-day wear.</p>
                     <p>Layered protection designed to reduce worry during light to moderate flow.</p>
                     <p>Effortless care with simple rinse and reuse.</p>
@@ -138,11 +138,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={trustRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="grid gap-10 lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">The challenge</p>
-            <h2 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+      <section ref={trustRef} className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:pb-24">
+        <div className="grid gap-6 sm:gap-8 lg:gap-10 lg:grid-cols-2">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-2xl">
+            <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-cyan-300/75">The challenge</p>
+            <h2 className="mt-4 text-2xl sm:text-3xl font-semibold text-white md:text-4xl">
               Period care should feel secure, stylish, and easy to live with.
             </h2>
             <p className="mt-6 text-base leading-8 text-white/70">
@@ -171,9 +171,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">The solution</p>
-            <h3 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-2xl">
+            <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-cyan-300/75">The solution</p>
+            <h3 className="mt-4 text-2xl sm:text-3xl font-semibold text-white md:text-4xl">
               Confidence from premium reusable design
             </h3>
             <p className="mt-6 text-base leading-8 text-white/70">
@@ -198,10 +198,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={stepsRef} id="how-it-works" className="mx-auto max-w-7xl px-6 pb-24">
+      <section ref={stepsRef} id="how-it-works" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:pb-24">
         <div className="text-center">
-          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">How It Works</p>
-          <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-cyan-300/75">How It Works</p>
+          <h2 className="mt-4 text-2xl sm:text-3xl font-semibold text-white md:text-5xl">
             Simple steps to premium reusable period care
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
@@ -209,32 +209,32 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+        <div className="mt-8 sm:mt-12 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-2xl">
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-300/15 text-xl text-cyan-300">
               1
             </div>
-            <h3 className="text-xl font-semibold text-white">Choose your fit</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Choose your fit</h3>
             <p className="mt-4 text-sm leading-7 text-white/65">
               Find the right cut and coverage for your needs, with guidance for comfort and support.
             </p>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-2xl">
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-3xl bg-violet-500/15 text-xl text-violet-300">
               2
             </div>
-            <h3 className="text-xl font-semibold text-white">Wear with confidence</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Wear with confidence</h3>
             <p className="mt-4 text-sm leading-7 text-white/65">
               Comfortable coverage for your routine, with design details focused on discreet everyday wear.
             </p>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-2xl">
             <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-3xl bg-amber-300/15 text-xl text-amber-200">
               3
             </div>
-            <h3 className="text-xl font-semibold text-white">Rinse and reuse</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Rinse and reuse</h3>
             <p className="mt-4 text-sm leading-7 text-white/65">
               Easy care instructions keep your pieces feeling fresh and ready for another cycle.
             </p>
@@ -242,14 +242,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={previewRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] items-center">
-          <div className="space-y-6">
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Featured Product Preview</p>
-            <h2 className="text-3xl font-semibold text-white md:text-5xl">
+      <section ref={previewRef} className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:pb-24">
+        <div className="grid min-w-0 gap-8 sm:gap-10 lg:gap-12 lg:grid-cols-[0.95fr_1.05fr] items-center">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
+            <p className="break-words text-xs sm:text-sm uppercase tracking-[0.22em] text-cyan-300/75 sm:tracking-[0.35em]">Featured Product Preview</p>
+            <h2 className="break-words text-2xl sm:text-3xl font-semibold text-white md:text-5xl">
               The period panty built for comfort, discretion, and premium care
             </h2>
-            <p className="max-w-xl text-base leading-8 text-white/70">
+            <p className="max-w-xl break-words text-base leading-8 text-white/70">
               Designed with soft fabrics, thoughtful layering, and a flattering shape for everyday confidence.
             </p>
 
@@ -276,11 +276,11 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl">
-            <div className="absolute -left-10 top-8 h-36 w-36 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="absolute right-8 bottom-10 h-36 w-36 rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="relative mt-8 min-w-0 rounded-2xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-2xl sm:mt-0 sm:rounded-[2rem] sm:p-8">
+            <div className="hidden sm:block absolute -left-10 top-8 h-36 w-36 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="hidden sm:block absolute right-8 bottom-10 h-36 w-36 rounded-full bg-violet-500/10 blur-3xl" />
 
-            <div className="relative rounded-[1.75rem] border border-white/10 bg-[#0a1223] p-8">
+            <div className="relative rounded-xl sm:rounded-[1.75rem] border border-white/10 bg-[#0a1223] p-4 sm:p-8">
               <div className="mb-6 rounded-[1.5rem] bg-gradient-to-br from-cyan-300/10 via-violet-500/10 to-transparent p-6">
                 <div className="h-60 rounded-[1.5rem] border border-white/10 bg-[#07101f]" />
               </div>
@@ -306,11 +306,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={guideRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="grid gap-12 lg:grid-cols-3">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl">
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Size & Care</p>
-            <h2 className="mt-4 text-3xl font-semibold text-white">Find the right fit and keep it fresh.</h2>
+      <section ref={guideRef} className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:pb-24">
+        <div className="grid gap-6 sm:gap-8 lg:gap-12 grid-cols-1 lg:grid-cols-3">
+          <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-8 shadow-2xl backdrop-blur-2xl">
+            <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-cyan-300/75">Size & Care</p>
+            <h2 className="mt-4 text-2xl sm:text-3xl font-semibold text-white">Find the right fit and keep it fresh.</h2>
             <p className="mt-4 text-base leading-8 text-white/65">
               Practical guidance for sizing, care, and premium maintenance so your Aevyrixa pieces stay comfortable longer.
             </p>
@@ -333,36 +333,36 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={faqRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="mb-12 text-center">
-          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">FAQ Preview</p>
-          <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">Questions customers often ask</h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
+      <section ref={faqRef} id="faq" className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 sm:pb-28 lg:pb-32">
+        <div className="mb-8 sm:mb-12 text-center">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-cyan-300/75">FAQ Preview</p>
+          <h2 className="mt-4 text-2xl sm:text-3xl font-semibold text-white md:text-5xl">Questions customers often ask</h2>
+          <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base leading-7 sm:leading-8 text-white/65">
             Honest answers help shoppers feel comfortable choosing a premium reusable solution.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">How do I choose my size?</h3>
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
+          <div className="rounded-2xl sm:rounded-[1.75rem] border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-2xl">
+            <h3 className="text-lg sm:text-xl font-semibold">How do I choose my size?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
               Select the size that matches your usual underwear fit and coverage preference for the best comfort.
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">Is care difficult?</h3>
+          <div className="rounded-2xl sm:rounded-[1.75rem] border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-2xl">
+            <h3 className="text-lg sm:text-xl font-semibold">Is care difficult?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
               Not at all. Gentle rinse, mild soap, and air drying are all that’s needed to keep your pieces fresh.
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">Can I use them every day?</h3>
+          <div className="rounded-2xl sm:rounded-[1.75rem] border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-2xl">
+            <h3 className="text-lg sm:text-xl font-semibold">Can I use them every day?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
               Yes, our design is built for repeated wear with thoughtful coverage and reusable comfort.
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">Do you offer returns?</h3>
+          <div className="rounded-2xl sm:rounded-[1.75rem] border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-2xl">
+            <h3 className="text-lg sm:text-xl font-semibold">Do you offer returns?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
               We offer a 7-day satisfaction guarantee to support confident shopping.
             </p>
@@ -370,26 +370,26 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={finalRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#08101d] via-[#090b16] to-[#160f29] p-1 shadow-2xl">
-          <div className="rounded-[2rem] bg-[#050816] p-12 text-center">
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Ready for premium period care?</p>
-            <h2 className="mt-6 text-4xl font-semibold text-white md:text-5xl">
+      <section ref={finalRef} className="mx-auto max-w-7xl px-4 pb-32 sm:px-6 sm:pb-36 lg:pb-40">
+        <div className="overflow-hidden rounded-2xl sm:rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#08101d] via-[#090b16] to-[#160f29] p-1 shadow-2xl">
+          <div className="rounded-2xl sm:rounded-[2rem] bg-[#050816] p-6 sm:p-8 lg:p-12 text-center">
+            <p className="text-xs sm:text-sm uppercase tracking-[0.35em] text-cyan-300/75">Ready for premium period care?</p>
+            <h2 className="mt-6 text-2xl sm:text-3xl font-semibold text-white md:text-4xl lg:text-5xl">
               Discover Aevyrixa Her Care today
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
+            <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base leading-7 sm:leading-8 text-white/65">
               Upgrade your routine with thoughtfully designed reusable protection made for modern confidence.
             </p>
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <div className="mt-6 sm:mt-10 flex flex-wrap justify-center gap-3 sm:gap-4">
               <Link
                 href="/product"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-8 py-3 text-sm font-semibold text-black shadow-[0_0_35px_rgba(34,211,238,0.22)] transition hover:scale-[1.02]"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-7 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-black shadow-[0_0_35px_rgba(34,211,238,0.22)] transition hover:scale-[1.02]"
               >
                 Shop Her Care
               </Link>
               <a
                 href="#faq"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 Read FAQs
               </a>
@@ -399,16 +399,17 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-white/10 bg-black/20">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="grid gap-10 md:grid-cols-4">
-            <div className="md:col-span-1">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="grid gap-8 sm:gap-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+            <div className="md:col-span-1 sm:col-span-2 md:col-span-1">
               <div className="flex items-center gap-3">
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
+                <div className="flex-shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
                   <Image
                     src="/logo.jpg"
                     alt="Aevyrixa Logo"
                     width={42}
                     height={42}
+                    sizes="42px"
                     className="h-10 w-10 rounded-lg object-cover"
                   />
                 </div>
@@ -423,14 +424,14 @@ export default function Home() {
                 </div>
               </div>
 
-              <p className="mt-5 max-w-sm text-sm leading-7 text-white/60">
+              <p className="mt-5 max-w-sm text-xs sm:text-sm leading-6 sm:leading-7 text-white/60">
                 Aevyrixa Her Care blends premium-looking design, thoughtful comfort, and elevated ecommerce presentation for women who want quality reusable period care.
               </p>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white">Shop</h3>
-              <ul className="mt-5 space-y-3 text-sm text-white/60">
+              <h3 className="text-base sm:text-lg font-semibold text-white">Shop</h3>
+              <ul className="mt-5 space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/60">
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
                     Her Care Collection
@@ -455,8 +456,8 @@ export default function Home() {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white">Company</h3>
-              <ul className="mt-5 space-y-3 text-sm text-white/60">
+              <h3 className="text-base sm:text-lg font-semibold text-white">Company</h3>
+              <ul className="mt-5 space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/60">
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
                     About Aevyrixa
@@ -481,8 +482,8 @@ export default function Home() {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white">Legal</h3>
-              <ul className="mt-5 space-y-3 text-sm text-white/60">
+              <h3 className="text-base sm:text-lg font-semibold text-white">Legal</h3>
+              <ul className="mt-5 space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/60">
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
                     Privacy Policy
@@ -507,7 +508,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-sm text-white/50 md:flex-row md:items-center">
+          <div className="mt-8 sm:mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-[11px] sm:text-xs text-white/50 md:flex-row md:items-center">
             <p>© 2026 Aevyrixa. All rights reserved.</p>
             <p>Designed for a premium modern shopping experience.</p>
           </div>

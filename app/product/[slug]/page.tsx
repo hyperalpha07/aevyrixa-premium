@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { products, type Product } from "@/app/lib/products";
 import { useCart } from "@/app/components/cart/cart-context";
+import ProductVisual from "@/app/components/product-visual";
 
 function getAccentClasses(accent: Product["accent"]) {
   if (accent === "cyan") {
@@ -67,21 +67,15 @@ export default function ProductPage({
   );
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState("/logo.jpg");
+  const [selectedImage, setSelectedImage] = useState("");
   const { addItem } = useCart();
-
-  useEffect(() => {
-    if (product?.gallery?.[0]) {
-      setSelectedImage(product.gallery[0]);
-    }
-  }, [product]);
 
   if (!product) {
     notFound();
   }
 
   const accent = getAccentClasses(product.accent);
-  const numericPrice = Number(String(product.price).replace("$", ""));
+  const activeImage = selectedImage || product.gallery[0] || product.category;
 
   const decreaseQuantity = () => {
     setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
@@ -150,13 +144,12 @@ export default function ProductPage({
             >
               <div className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-[#0b1020] via-[#12172a] to-[#1b1030] p-4">
                 <div className="relative flex min-h-[360px] items-center justify-center rounded-[1.25rem] border border-white/10 bg-[#0b1120] md:min-h-[520px]">
-                  <Image
-                    src={selectedImage}
-                    alt={product.name}
-                    width={700}
-                    height={700}
-                    className="max-h-[320px] w-auto object-contain md:max-h-[430px]"
-                  />
+                  <div className="h-[260px] w-[260px] max-w-full md:h-[420px] md:w-[420px]">
+                    <ProductVisual
+                      accent={product.accent}
+                      label={activeImage}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -167,18 +160,16 @@ export default function ProductPage({
                   key={`${product.slug}-${index}`}
                   onClick={() => setSelectedImage(img)}
                   className={`overflow-hidden rounded-2xl border p-2 transition duration-300 ${
-                    selectedImage === img
+                    activeImage === img
                       ? accent.thumbActive
                       : "border-white/10 bg-white/5 hover:border-fuchsia-400/30 hover:bg-white/8"
                   }`}
                 >
                   <div className="flex h-20 items-center justify-center rounded-xl bg-[#0b1120]">
-                    <Image
-                      src={img}
-                      alt={`${product.name} thumbnail ${index + 1}`}
-                      width={100}
-                      height={100}
-                      className="h-14 w-14 object-contain"
+                    <ProductVisual
+                      accent={product.accent}
+                      label={img}
+                      compact
                     />
                   </div>
                 </button>
@@ -336,7 +327,7 @@ export default function ProductPage({
               Premium Features
             </p>
             <h2 className="text-3xl font-semibold md:text-4xl">
-              Crafted for a refined smart living experience
+              Crafted for a refined reusable care experience
             </h2>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
