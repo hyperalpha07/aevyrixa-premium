@@ -38,10 +38,10 @@ export default function SiteHeader({
 
           <div>
             <p className="text-lg font-bold tracking-[0.25em] text-white">
-              AEVYRIXA
+              Aevyrixa Her Care
             </p>
             <p className="text-[10px] uppercase tracking-[0.35em] text-cyan-300/70">
-              Premium Smart Living
+              Premium reusable period panty care
             </p>
           </div>
         </Link>

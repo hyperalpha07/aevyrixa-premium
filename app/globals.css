@@ -3,6 +3,11 @@
 :root {
   --background: #050816;
   --foreground: #ffffff;
+  --brand-black: #050816;
+  --brand-cyan: #22d3ee;
+  --brand-violet: #a855f7;
+  --brand-ivory: #fff7ef;
+  --brand-rose-gold: #f4c4d4;
 }
 
 * {
