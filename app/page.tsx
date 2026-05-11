@@ -2,526 +2,134 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SiteHeader from "@/app/components/cart/site-header";
 
 export default function Home() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const featuredRef = useRef<HTMLElement>(null);
-  const featuredCardsRef = useRef<HTMLDivElement>(null);
-  const badgeRef = useRef<HTMLParagraphElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const textRef = useRef<HTMLParagraphElement>(null);
-  const buttonsRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const whyRef = useRef<HTMLElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const trustRef = useRef<HTMLElement>(null);
+  const problemRef = useRef<HTMLElement>(null);
+  const stepsRef = useRef<HTMLElement>(null);
+  const previewRef = useRef<HTMLElement>(null);
+  const guideRef = useRef<HTMLElement>(null);
   const faqRef = useRef<HTMLElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const testimonialCardsRef = useRef<HTMLDivElement>(null);
+  const finalRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     const tl = gsap.timeline();
 
-    tl.from(badgeRef.current, {
-      y: 30,
+    tl.from(heroRef.current, {
+      y: 40,
       opacity: 0,
-      duration: 0.7,
+      duration: 1,
       ease: "power3.out",
-    })
-      .from(
-        titleRef.current,
-        {
-          y: 50,
-          opacity: 0,
-          duration: 1,
-          ease: "power4.out",
-        },
-        "-=0.3"
-      )
-      .from(
-        textRef.current,
-        {
-          y: 30,
-          opacity: 0,
-          duration: 0.8,
-          ease: "power3.out",
-        },
-        "-=0.5"
-      )
-      .from(
-        buttonsRef.current,
-        {
-          y: 25,
-          opacity: 0,
-          duration: 0.8,
-          ease: "power3.out",
-        },
-        "-=0.5"
-      )
-      .from(
-        statsRef.current,
-        {
-          y: 25,
-          opacity: 0,
-          duration: 0.8,
-          ease: "power3.out",
-        },
-        "-=0.5"
-      )
-      .from(
-        cardRef.current,
-        {
-          x: 80,
-          opacity: 0,
-          scale: 0.95,
-          duration: 1.1,
-          ease: "power4.out",
-        },
-        "-=1"
-      );
-
-    gsap.to(cardRef.current, {
-      y: -10,
-      duration: 2.2,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut",
     });
 
-    if (featuredRef.current && featuredCardsRef.current) {
-      gsap.from(featuredRef.current, {
-        scrollTrigger: {
-          trigger: featuredRef.current,
-          start: "top 80%",
-        },
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-      });
-
-      gsap.from(featuredCardsRef.current.children, {
-        scrollTrigger: {
-          trigger: featuredCardsRef.current,
-          start: "top 85%",
-        },
-        y: 60,
-        opacity: 0,
-        scale: 0.95,
-        duration: 1,
-        stagger: 0.2,
-        ease: "power4.out",
-      });
-    }
-
-    if (whyRef.current) {
-      gsap.from(whyRef.current, {
-        scrollTrigger: {
-          trigger: whyRef.current,
-          start: "top 80%",
-        },
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out",
-      });
-    }
-
-    if (trustRef.current) {
-      gsap.from(trustRef.current, {
-        scrollTrigger: {
-          trigger: trustRef.current,
-          start: "top 85%",
-        },
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-      });
-    }
-
-    if (faqRef.current) {
-      gsap.from(faqRef.current, {
-        scrollTrigger: {
-          trigger: faqRef.current,
-          start: "top 85%",
-        },
-        y: 40,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-      });
-    }
-
-    if (testimonialCardsRef.current) {
-      gsap.from(testimonialCardsRef.current.children, {
-        scrollTrigger: {
-          trigger: testimonialCardsRef.current,
-          start: "top 85%",
-        },
-        y: 45,
-        opacity: 0,
-        duration: 0.9,
-        stagger: 0.18,
-        ease: "power3.out",
-        clearProps: "all",
-      });
-    }
+    [trustRef, problemRef, stepsRef, previewRef, guideRef, faqRef, finalRef].forEach((ref) => {
+      if (ref.current) {
+        gsap.from(ref.current, {
+          scrollTrigger: {
+            trigger: ref.current,
+            start: "top 85%",
+          },
+          y: 50,
+          opacity: 0,
+          duration: 0.9,
+          ease: "power3.out",
+          stagger: 0.1,
+        });
+      }
+    });
   }, []);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-10%] top-[8%] h-[320px] w-[320px] rounded-full bg-cyan-500/20 blur-[120px]" />
-        <div className="absolute right-[-8%] top-[18%] h-[360px] w-[360px] rounded-full bg-fuchsia-500/20 blur-[140px]" />
-        <div className="absolute bottom-[-8%] left-[30%] h-[280px] w-[280px] rounded-full bg-amber-400/10 blur-[120px]" />
+        <div className="absolute left-[10%] top-8 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" />
+        <div className="absolute right-[10%] top-32 h-80 w-80 rounded-full bg-violet-500/15 blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-amber-300/10 blur-3xl" />
       </div>
 
       <SiteHeader active="home" />
 
-      {mobileMenuOpen && (
-        <div className="border-b border-white/10 bg-black/80 px-6 py-4 backdrop-blur-xl md:hidden">
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/80 transition hover:border-fuchsia-400/35 hover:bg-white/8 hover:text-white"
-            >
-              Home
-            </Link>
-            <Link
-              href="/product"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/80 transition hover:border-fuchsia-400/35 hover:bg-white/8 hover:text-white"
-            >
-              Shop
-            </Link>
-            <Link
-              href="/product/rgb-lamp"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/80 transition hover:border-fuchsia-400/35 hover:bg-white/8 hover:text-white"
-            >
-              Featured Product
-            </Link>
-
-            <Link
-              href="/product"
-              className="mt-2 rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3 text-center text-sm font-semibold text-black"
-            >
-              Explore
-            </Link>
-          </div>
-        </div>
-      )}
-
-      <section
-        className="relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 py-20"
-      >
-        <div className="grid w-full items-center gap-16 md:grid-cols-2">
+      <section ref={heroRef} className="mx-auto max-w-7xl px-6 pb-20 pt-20 lg:pt-24">
+        <div className="grid gap-16 lg:grid-cols-[1.05fr_0.95fr] items-center">
           <div>
-            <p
-              ref={badgeRef}
-              className="mb-4 text-sm uppercase tracking-[0.4em] text-cyan-300/80"
-            >
-              Luxury • Futuristic • Premium
-            </p>
+            <span className="inline-flex rounded-full border border-cyan-300/20 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cyan-200/80">
+              Her Care Collection
+            </span>
 
-            <h1
-              ref={titleRef}
-              className="max-w-3xl text-5xl font-semibold leading-tight md:text-7xl"
-            >
-              Elevate Everyday Living With a{" "}
-              <span className="bg-gradient-to-r from-cyan-300 via-white to-fuchsia-400 bg-clip-text text-transparent">
-                VIP Smart Home Experience
-              </span>
+            <h1 className="mt-8 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Reusable Period Care, Reimagined for Modern Confidence
             </h1>
 
-            <p
-              ref={textRef}
-              className="mt-6 max-w-xl text-base leading-8 text-white/65 md:text-lg"
-            >
-              A high-end ecommerce experience crafted for modern customers with
-              cinematic visuals, premium layout, luxury interactions, and a
-              futuristic brand atmosphere.
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
+              Aevyrixa Her Care brings soft, leak-resistant, reusable period protection with a premium comfort-first design.
             </p>
 
-            <div ref={buttonsRef} className="mt-10 flex flex-wrap gap-4">
+            <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/product"
-                className="rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-7 py-3 text-sm font-semibold text-black shadow-[0_0_40px_rgba(56,189,248,0.25)] transition hover:scale-[1.04]"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-7 py-3 text-sm font-semibold text-black shadow-[0_0_40px_rgba(34,211,238,0.25)] transition hover:scale-[1.02]"
               >
-                Shop Now
+                Shop Her Care
               </Link>
 
-              <Link
-                href="/product"
-                className="rounded-full border border-fuchsia-400/20 bg-white/5 px-7 py-3 text-sm font-semibold text-white transition duration-300 hover:border-fuchsia-400/40 hover:bg-white/8 hover:text-white hover:shadow-[0_0_30px_rgba(217,70,239,0.14)]"
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                View Collection
-              </Link>
+                How It Works
+              </a>
             </div>
 
-            <div
-              ref={statsRef}
-              className="mt-12 grid max-w-xl grid-cols-3 gap-4"
-            >
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-                <p className="text-2xl font-semibold text-white">VIP</p>
-                <p className="mt-1 text-sm text-white/60">Luxury UI</p>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-                <p className="text-2xl font-semibold text-white">Fast</p>
-                <p className="mt-1 text-sm text-white/60">Responsive</p>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-                <p className="text-2xl font-semibold text-white">Smooth</p>
-                <p className="mt-1 text-sm text-white/60">Animations</p>
-              </div>
-            </div>
-          </div>
-
-          <div ref={cardRef} className="relative">
-            <div className="absolute -left-8 top-8 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl" />
-            <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-fuchsia-500/20 blur-3xl" />
-            <div className="absolute right-10 top-20 h-24 w-24 rounded-full bg-amber-300/10 blur-2xl" />
-
-            <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-2xl">
-              <div className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-[#0b1020] via-[#13182d] to-[#1d1030] p-6">
-                <div className="mb-6 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-cyan-300/70">
-                      Featured Drop
-                    </p>
-                    <h3 className="mt-2 text-2xl font-semibold">
-                      Smart Home Collection
-                    </h3>
-                  </div>
-
-                  <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs text-white/70">
-                    New Season
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                    <div className="h-40 rounded-2xl bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-transparent" />
-                    <h4 className="mt-4 text-lg font-medium">
-                      Ambient RGB Lamp
-                    </h4>
-                    <p className="mt-2 text-sm text-white/60">$49.00</p>
-                  </div>
-
-                  <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                    <div className="h-40 rounded-2xl bg-gradient-to-br from-fuchsia-400/20 via-purple-500/10 to-transparent" />
-                    <h4 className="mt-4 text-lg font-medium">
-                      Luxury Diffuser
-                    </h4>
-                    <p className="mt-2 text-sm text-white/60">$39.00</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-5">
-                  <p className="text-sm leading-7 text-white/60">
-                    Designed with premium spacing, cinematic glow, futuristic
-                    color harmony, and a polished luxury aesthetic for a truly
-                    elite ecommerce presence.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section ref={featuredRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="mb-12 flex items-end justify-between gap-6">
-          <div>
-            <p className="mb-3 text-sm uppercase tracking-[0.35em] text-cyan-300/75">
-              Featured Products
-            </p>
-            <h2 className="text-3xl font-semibold md:text-5xl">
-              Designed for a Premium Lifestyle
-            </h2>
-          </div>
-
-          <Link
-            href="/product"
-            className="hidden rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:border-cyan-300/30 hover:bg-cyan-300 hover:text-black md:inline-flex"
-          >
-            View All Products
-          </Link>
-        </div>
-
-        <div ref={featuredCardsRef} className="grid gap-6 md:grid-cols-3">
-          <div className="group rounded-[2rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-cyan-300/30 hover:shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-            <div className="mb-5 rounded-[1.5rem] bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-transparent p-6">
-              <div className="h-56 rounded-[1.25rem] border border-white/10 bg-[#0b1120]" />
-            </div>
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
-              Smart Lighting
-            </p>
-            <h3 className="mt-3 text-2xl font-semibold">Ambient RGB Lamp</h3>
-            <p className="mt-3 text-sm leading-7 text-white/60">
-              Premium smart lighting for a modern luxury room setup with a
-              futuristic glow.
-            </p>
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-lg font-semibold">$49.00</span>
-              <Link
-                href="/product/rgb-lamp"
-                className="inline-flex min-w-[110px] items-center justify-center rounded-full border border-fuchsia-400/20 bg-white px-6 py-3 text-base font-semibold !text-black transition duration-300 hover:border-fuchsia-400/40 hover:bg-white/90 hover:shadow-[0_0_30px_rgba(217,70,239,0.16)]"
-              >
-                Buy Now
-              </Link>
-            </div>
-          </div>
-
-          <div className="group rounded-[2rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-fuchsia-400/30 hover:shadow-[0_0_40px_rgba(217,70,239,0.12)]">
-            <div className="mb-5 rounded-[1.5rem] bg-gradient-to-br from-fuchsia-400/20 via-purple-500/10 to-transparent p-6">
-              <div className="h-56 rounded-[1.25rem] border border-white/10 bg-[#0b1120]" />
-            </div>
-            <p className="text-sm uppercase tracking-[0.3em] text-fuchsia-300/70">
-              Home Wellness
-            </p>
-            <h3 className="mt-3 text-2xl font-semibold">Luxury Diffuser</h3>
-            <p className="mt-3 text-sm leading-7 text-white/60">
-              Elegant aroma diffusion for calm, style, and a high-end home
-              atmosphere.
-            </p>
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-lg font-semibold">$39.00</span>
-              <Link
-                href="/product/diffuser"
-                className="inline-flex min-w-[110px] items-center justify-center rounded-full border border-fuchsia-400/20 bg-white px-6 py-3 text-base font-semibold !text-black transition duration-300 hover:border-fuchsia-400/40 hover:bg-white/90 hover:shadow-[0_0_30px_rgba(217,70,239,0.16)]"
-              >
-                Buy Now
-              </Link>
-            </div>
-          </div>
-
-          <div className="group rounded-[2rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-amber-300/30 hover:shadow-[0_0_40px_rgba(251,191,36,0.10)]">
-            <div className="mb-5 rounded-[1.5rem] bg-gradient-to-br from-amber-300/20 via-orange-400/10 to-transparent p-6">
-              <div className="h-56 rounded-[1.25rem] border border-white/10 bg-[#0b1120]" />
-            </div>
-            <p className="text-sm uppercase tracking-[0.3em] text-amber-200/70">
-              Smart Essentials
-            </p>
-            <h3 className="mt-3 text-2xl font-semibold">
-              Minimal Desk Gadget
-            </h3>
-            <p className="mt-3 text-sm leading-7 text-white/60">
-              A sleek smart accessory that brings elegance and function to your
-              daily setup.
-            </p>
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-lg font-semibold">$29.00</span>
-              <Link
-                href="/product/desk-gadget"
-                className="inline-flex min-w-[110px] items-center justify-center rounded-full border border-fuchsia-400/20 bg-white px-6 py-3 text-base font-semibold !text-black transition duration-300 hover:border-fuchsia-400/40 hover:bg-white/90 hover:shadow-[0_0_30px_rgba(217,70,239,0.16)]"
-              >
-                Buy Now
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        ref={whyRef}
-        className="mx-auto max-w-7xl px-6 pb-24"
-      >
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <p className="mb-3 text-sm uppercase tracking-[0.35em] text-cyan-300/75">
-              Why Choose Aevyrixa
-            </p>
-            <h2 className="max-w-2xl text-3xl font-semibold md:text-5xl">
-              Premium products with a luxury digital experience
-            </h2>
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/65">
-              We combine elegant product presentation, fast performance, modern
-              design language, and a premium shopping atmosphere to create a
-              store experience that feels refined from the first second.
-            </p>
-
-            <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/15 text-xl text-cyan-300">
-                  ✦
-                </div>
-                <h3 className="text-xl font-semibold">Luxury UI System</h3>
-                <p className="mt-3 text-sm leading-7 text-white/60">
-                  A premium visual language with glow, spacing, depth, and refined interactions.
-                </p>
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">Discreet Delivery</p>
               </div>
-
               <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-fuchsia-400/15 text-xl text-fuchsia-300">
-                  ⚡
-                </div>
-                <h3 className="text-xl font-semibold">Fast Experience</h3>
-                <p className="mt-3 text-sm leading-7 text-white/60">
-                  Optimized structure for a smooth and modern browsing experience across devices.
-                </p>
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">7-Day Money Back Guarantee</p>
               </div>
-
               <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-300/15 text-xl text-amber-200">
-                  ◆
-                </div>
-                <h3 className="text-xl font-semibold">Premium Curation</h3>
-                <p className="mt-3 text-sm leading-7 text-white/60">
-                  Selected products designed for modern homes, elegant setups, and elevated living.
-                </p>
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">Comfort Fit</p>
               </div>
-
               <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/15 text-xl text-cyan-300">
-                  ☰
-                </div>
-                <h3 className="text-xl font-semibold">Responsive Design</h3>
-                <p className="mt-3 text-sm leading-7 text-white/60">
-                  Built to look strong, balanced, and premium on both desktop and mobile screens.
-                </p>
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-200/80">Reusable Protection</p>
               </div>
             </div>
           </div>
 
           <div className="relative">
-            <div className="absolute left-8 top-10 h-40 w-40 rounded-full bg-cyan-400/15 blur-3xl" />
-            <div className="absolute bottom-0 right-10 h-52 w-52 rounded-full bg-fuchsia-500/15 blur-3xl" />
+            <div className="absolute left-0 top-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="absolute right-0 bottom-10 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
 
-            <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-              <div className="rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#0b1020] via-[#12172a] to-[#1b1030] p-6">
-                <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">
-                  Signature Experience
-                </p>
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#09101d]/90 p-6 shadow-2xl backdrop-blur-2xl">
+              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-cyan-300/10 to-transparent" />
+              <div className="rounded-[1.75rem] border border-white/10 bg-[#0f172a]/90 p-6">
+                <div className="mb-6 flex items-center justify-between rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm uppercase tracking-[0.3em] text-cyan-200/80">
+                  <span>Period Panty Preview</span>
+                  <span className="rounded-full bg-violet-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-violet-200">
+                    New
+                  </span>
+                </div>
 
-                <div className="mt-6 space-y-4">
-                  <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
-                    <h4 className="text-lg font-semibold">Modern luxury atmosphere</h4>
-                    <p className="mt-2 text-sm leading-7 text-white/60">
-                      Dark premium visual direction with futuristic glow accents and strong contrast.
-                    </p>
+                <div className="rounded-[1.75rem] border border-white/10 bg-[#0c1321] p-6">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-3xl bg-cyan-300/15 text-2xl text-cyan-300">
+                    ♢
                   </div>
+                  <h2 className="text-2xl font-semibold text-white">Aevyrixa Her Care Period Panty</h2>
+                  <p className="mt-4 text-sm leading-7 text-white/65">
+                    Soft, discreet coverage with a premium fit and comfortable reusable protection.
+                  </p>
 
-                  <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
-                    <h4 className="text-lg font-semibold">Trust-first ecommerce feel</h4>
-                    <p className="mt-2 text-sm leading-7 text-white/60">
-                      A clean and polished structure that makes the store feel professional and reliable.
-                    </p>
-                  </div>
-
-                  <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
-                    <h4 className="text-lg font-semibold">Smooth premium interactions</h4>
-                    <p className="mt-2 text-sm leading-7 text-white/60">
-                      Buttons, sections, hover states, and animations are designed to feel refined.
-                    </p>
+                  <div className="mt-8 space-y-3 text-sm text-white/60">
+                    <p>Soft stretch fabric for all-day wear.</p>
+                    <p>Layered protection designed to reduce worry during light to moderate flow.</p>
+                    <p>Effortless care with simple rinse and reuse.</p>
                   </div>
                 </div>
               </div>
@@ -531,130 +139,195 @@ export default function Home() {
       </section>
 
       <section ref={trustRef} className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl md:p-8">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-center">
-              <div className="mb-3 text-2xl text-cyan-300">🔒</div>
-              <h3 className="text-lg font-semibold">Secure Payment</h3>
-              <p className="mt-2 text-sm text-white/60">
-                Protected checkout experience
-              </p>
-            </div>
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">The challenge</p>
+            <h2 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+              Period care should feel secure, stylish, and easy to live with.
+            </h2>
+            <p className="mt-6 text-base leading-8 text-white/70">
+              Too many products leave behind discomfort, uncertainty, or waste. Aevyrixa Her Care offers a premium alternative built for everyday confidence.
+            </p>
 
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-center">
-              <div className="mb-3 text-2xl text-fuchsia-300">💰</div>
-              <h3 className="text-lg font-semibold">7-Day Guarantee</h3>
-              <p className="mt-2 text-sm text-white/60">
-                Risk-free customer confidence
-              </p>
+            <div className="mt-10 space-y-4">
+              <div className="rounded-3xl border border-white/10 bg-black/20 p-6">
+                <p className="text-lg font-semibold text-white">Leaks that cause stress</p>
+                <p className="mt-2 text-sm leading-7 text-white/60">
+                  Modern reusable protection designed to help reduce worry while staying comfortable and discreet.
+                </p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/20 p-6">
+                <p className="text-lg font-semibold text-white">Stains and changing uncertainty</p>
+                <p className="mt-2 text-sm leading-7 text-white/60">
+                  Thoughtful coverage and premium fit work together to support a more reliable daily routine.
+                </p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-black/20 p-6">
+                <p className="text-lg font-semibold text-white">Discomfort from ordinary layers</p>
+                <p className="mt-2 text-sm leading-7 text-white/60">
+                  Soft fabrics and refined construction are made to move with your body instead of against it.
+                </p>
+              </div>
             </div>
+          </div>
 
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-center">
-              <div className="mb-3 text-2xl text-amber-200">🚚</div>
-              <h3 className="text-lg font-semibold">Fast Shipping</h3>
-              <p className="mt-2 text-sm text-white/60">
-                Quick order fulfillment flow
-              </p>
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">The solution</p>
+            <h3 className="mt-4 text-3xl font-semibold text-white md:text-4xl">
+              Confidence from premium reusable design
+            </h3>
+            <p className="mt-6 text-base leading-8 text-white/70">
+              Aevyrixa Her Care combines soft stretch, layered protection, and a flattering silhouette so you can feel calm, comfortable, and ready for the day.
+            </p>
+
+            <ul className="mt-10 space-y-4 text-white/70">
+              <li className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <p className="font-semibold">Discreet, modern styling</p>
+                <p className="mt-2 text-sm leading-7 text-white/60">Designed to look as good as it feels, with a premium finish.</p>
+              </li>
+              <li className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <p className="font-semibold">Leak-resistant protection</p>
+                <p className="mt-2 text-sm leading-7 text-white/60">Layered materials help manage light to moderate flow while staying reusable.</p>
+              </li>
+              <li className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <p className="font-semibold">Comfort-first construction</p>
+                <p className="mt-2 text-sm leading-7 text-white/60">Smooth seams, soft edges, and adaptable fabric for everyday wear.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section ref={stepsRef} id="how-it-works" className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="text-center">
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">How It Works</p>
+          <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">
+            Simple steps to premium reusable period care
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
+            Our process is built for women who want easier care with a refined, confident experience.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-300/15 text-xl text-cyan-300">
+              1
             </div>
+            <h3 className="text-xl font-semibold text-white">Choose your fit</h3>
+            <p className="mt-4 text-sm leading-7 text-white/65">
+              Find the right cut and coverage for your needs, with guidance for comfort and support.
+            </p>
+          </div>
 
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 text-center">
-              <div className="mb-3 text-2xl text-cyan-300">📞</div>
-              <h3 className="text-lg font-semibold">24/7 Support</h3>
-              <p className="mt-2 text-sm text-white/60">
-                Always here when needed
-              </p>
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-3xl bg-violet-500/15 text-xl text-violet-300">
+              2
+            </div>
+            <h3 className="text-xl font-semibold text-white">Wear with confidence</h3>
+            <p className="mt-4 text-sm leading-7 text-white/65">
+              Comfortable coverage for your routine, with design details focused on discreet everyday wear.
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-3xl bg-amber-300/15 text-xl text-amber-200">
+              3
+            </div>
+            <h3 className="text-xl font-semibold text-white">Rinse and reuse</h3>
+            <p className="mt-4 text-sm leading-7 text-white/65">
+              Easy care instructions keep your pieces feeling fresh and ready for another cycle.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section ref={previewRef} className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] items-center">
+          <div className="space-y-6">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Featured Product Preview</p>
+            <h2 className="text-3xl font-semibold text-white md:text-5xl">
+              The period panty built for comfort, discretion, and premium care
+            </h2>
+            <p className="max-w-xl text-base leading-8 text-white/70">
+              Designed with soft fabrics, thoughtful layering, and a flattering shape for everyday confidence.
+            </p>
+
+            <ul className="space-y-4 text-white/70">
+              <li className="flex gap-3 text-sm leading-7">
+                <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-300/15 text-cyan-300">✓</span>
+                Soft, breathable fabrics with gentle stretch.
+              </li>
+              <li className="flex gap-3 text-sm leading-7">
+                <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/15 text-violet-300">✓</span>
+                Layered protection designed to reduce worry during light to moderate flow.
+              </li>
+              <li className="flex gap-3 text-sm leading-7">
+                <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-300/15 text-amber-200">✓</span>
+                Discreet silhouette that feels premium under every outfit.
+              </li>
+            </ul>
+
+            <Link
+              href="/product"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-7 py-3 text-sm font-semibold text-black shadow-[0_0_35px_rgba(34,211,238,0.22)] transition hover:scale-[1.02]"
+            >
+              Explore Her Care
+            </Link>
+          </div>
+
+          <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl">
+            <div className="absolute -left-10 top-8 h-36 w-36 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="absolute right-8 bottom-10 h-36 w-36 rounded-full bg-violet-500/10 blur-3xl" />
+
+            <div className="relative rounded-[1.75rem] border border-white/10 bg-[#0a1223] p-8">
+              <div className="mb-6 rounded-[1.5rem] bg-gradient-to-br from-cyan-300/10 via-violet-500/10 to-transparent p-6">
+                <div className="h-60 rounded-[1.5rem] border border-white/10 bg-[#07101f]" />
+              </div>
+              <div className="space-y-4 text-white/70">
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Aevyrixa Her Care</p>
+                <h3 className="text-2xl font-semibold text-white">Premium Reusable Period Panty</h3>
+                <p className="text-sm leading-7">
+                  Soft edges, discreet coverage, and layered comfort designed for modern confidence.
+                </p>
+                <div className="grid gap-3 text-sm">
+                  <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
+                    <p className="font-semibold text-white">Premium Fit</p>
+                    <p className="text-white/60">Tailored to move with your body, not against it.</p>
+                  </div>
+                  <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
+                    <p className="font-semibold text-white">Reusable Care</p>
+                    <p className="text-white/60">Simple upkeep for longer wear and reduced waste.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="mb-12 text-center">
-          <p className="mb-3 text-sm uppercase tracking-[0.35em] text-cyan-300/75">
-            Customer Reviews
-          </p>
-          <h2 className="text-3xl font-semibold md:text-5xl">
-            Trusted by customers who love premium living
-          </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
-            A refined shopping experience feels even stronger when real customer
-            satisfaction is visible across the storefront.
-          </p>
-        </div>
-
-        <div ref={testimonialCardsRef} className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl transition duration-300 hover:-translate-y-2 hover:border-cyan-300/30 hover:shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-            <div className="mb-4 flex items-center gap-1 text-amber-300">
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-            </div>
-
-            <p className="min-h-[160px] text-base leading-8 text-white/75">
-              “The whole shopping experience feels premium. The design, product
-              presentation, and overall vibe make the store look far above average.”
+      <section ref={guideRef} className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="grid gap-12 lg:grid-cols-3">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Size & Care</p>
+            <h2 className="mt-4 text-3xl font-semibold text-white">Find the right fit and keep it fresh.</h2>
+            <p className="mt-4 text-base leading-8 text-white/65">
+              Practical guidance for sizing, care, and premium maintenance so your Aevyrixa pieces stay comfortable longer.
             </p>
-
-            <div className="mt-6 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-400/15 text-lg font-semibold text-cyan-300">
-                S
-              </div>
-              <div>
-                <p className="font-semibold text-white">Sophia R.</p>
-                <p className="text-sm text-white/55">New York, USA</p>
-              </div>
-            </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl transition duration-300 hover:-translate-y-2 hover:border-fuchsia-400/30 hover:shadow-[0_0_40px_rgba(217,70,239,0.12)]">
-            <div className="mb-4 flex items-center gap-1 text-amber-300">
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
+          <div className="space-y-4">
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-6">
+              <p className="font-semibold text-white">Size Guide</p>
+              <p className="mt-2 text-sm leading-7 text-white/60">Choose a fit that balances coverage, support, and comfort for your cycle.</p>
             </div>
-
-            <p className="min-h-[160px] text-base leading-8 text-white/75">
-              “Clean layout, elegant colors, and a very modern luxury feel. It
-              honestly looks like a high-end brand instead of a typical online store.”
-            </p>
-
-            <div className="mt-6 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-fuchsia-400/15 text-lg font-semibold text-fuchsia-300">
-                D
-              </div>
-              <div>
-                <p className="font-semibold text-white">Daniel M.</p>
-                <p className="text-sm text-white/55">California, USA</p>
-              </div>
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-6">
+              <p className="font-semibold text-white">Care Tips</p>
+              <p className="mt-2 text-sm leading-7 text-white/60">Rinse gently after wear, wash with mild soap, and air dry for best results.</p>
             </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl transition duration-300 hover:-translate-y-2 hover:border-amber-300/30 hover:shadow-[0_0_40px_rgba(251,191,36,0.10)]">
-            <div className="mb-4 flex items-center gap-1 text-amber-300">
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-            </div>
-
-            <p className="min-h-[160px] text-base leading-8 text-white/75">
-              “The products feel curated, the interface is smooth, and everything
-              gives a polished premium impression. Very professional experience.”
-            </p>
-
-            <div className="mt-6 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-300/15 text-lg font-semibold text-amber-200">
-                E
-              </div>
-              <div>
-                <p className="font-semibold text-white">Emily K.</p>
-                <p className="text-sm text-white/55">Texas, USA</p>
-              </div>
+            <div className="rounded-[1.75rem] border border-white/10 bg-black/20 p-6">
+              <p className="font-semibold text-white">Made to Last</p>
+              <p className="mt-2 text-sm leading-7 text-white/60">Premium materials and clean construction support reusable performance over time.</p>
             </div>
           </div>
         </div>
@@ -662,46 +335,65 @@ export default function Home() {
 
       <section ref={faqRef} className="mx-auto max-w-7xl px-6 pb-24">
         <div className="mb-12 text-center">
-          <p className="mb-3 text-sm uppercase tracking-[0.35em] text-cyan-300/75">
-            FAQ
-          </p>
-          <h2 className="text-3xl font-semibold md:text-5xl">
-            Everything customers usually want to know
-          </h2>
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">FAQ Preview</p>
+          <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">Questions customers often ask</h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
-            Clear answers help customers feel confident, reduce hesitation, and
-            make the buying experience smoother.
+            Honest answers help shoppers feel comfortable choosing a premium reusable solution.
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-4xl gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">How long does shipping take?</h3>
+            <h3 className="text-xl font-semibold">How do I choose my size?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
-              Shipping times vary by location, but we always aim for fast and
-              reliable delivery with clear order updates throughout the process.
+              Select the size that matches your usual underwear fit and coverage preference for the best comfort.
             </p>
           </div>
-
           <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">Do you offer a guarantee?</h3>
+            <h3 className="text-xl font-semibold">Is care difficult?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
-              Yes, we offer a 7-day guarantee to help customers shop with more confidence.
+              Not at all. Gentle rinse, mild soap, and air drying are all that’s needed to keep your pieces fresh.
             </p>
           </div>
-
           <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">Is payment secure?</h3>
+            <h3 className="text-xl font-semibold">Can I use them every day?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
-              Yes, customer payment information is handled through secure checkout methods.
+              Yes, our design is built for repeated wear with thoughtful coverage and reusable comfort.
             </p>
           </div>
-
           <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <h3 className="text-xl font-semibold">Can I contact support anytime?</h3>
+            <h3 className="text-xl font-semibold">Do you offer returns?</h3>
             <p className="mt-3 text-sm leading-7 text-white/60">
-              Our support team is available to help with questions, updates, and order concerns.
+              We offer a 7-day satisfaction guarantee to support confident shopping.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section ref={finalRef} className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#08101d] via-[#090b16] to-[#160f29] p-1 shadow-2xl">
+          <div className="rounded-[2rem] bg-[#050816] p-12 text-center">
+            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/75">Ready for premium period care?</p>
+            <h2 className="mt-6 text-4xl font-semibold text-white md:text-5xl">
+              Discover Aevyrixa Her Care today
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/65">
+              Upgrade your routine with thoughtfully designed reusable protection made for modern confidence.
+            </p>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <Link
+                href="/product"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-violet-500 px-8 py-3 text-sm font-semibold text-black shadow-[0_0_35px_rgba(34,211,238,0.22)] transition hover:scale-[1.02]"
+              >
+                Shop Her Care
+              </Link>
+              <a
+                href="#faq"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Read FAQs
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -723,17 +415,16 @@ export default function Home() {
 
                 <div>
                   <p className="text-lg font-bold tracking-[0.25em] text-white">
-                    AEVYRIXA
+                    Aevyrixa
                   </p>
                   <p className="text-[10px] uppercase tracking-[0.35em] text-cyan-300/70">
-                    Premium Smart Living
+                    Her Care
                   </p>
                 </div>
               </div>
 
               <p className="mt-5 max-w-sm text-sm leading-7 text-white/60">
-                Aevyrixa brings together premium product selection, modern luxury
-                design, and a refined ecommerce experience for customers who want more.
+                Aevyrixa Her Care blends premium-looking design, thoughtful comfort, and elevated ecommerce presentation for women who want quality reusable period care.
               </p>
             </div>
 
@@ -742,17 +433,17 @@ export default function Home() {
               <ul className="mt-5 space-y-3 text-sm text-white/60">
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
-                    Smart Lighting
+                    Her Care Collection
                   </Link>
                 </li>
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
-                    Home Essentials
+                    Comfort Fit
                   </Link>
                 </li>
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
-                    Wellness Products
+                    Leak-Resistant Layers
                   </Link>
                 </li>
                 <li>
@@ -768,7 +459,7 @@ export default function Home() {
               <ul className="mt-5 space-y-3 text-sm text-white/60">
                 <li>
                   <Link href="/product" className="transition hover:text-cyan-300">
-                    About Us
+                    About Aevyrixa
                   </Link>
                 </li>
                 <li>
