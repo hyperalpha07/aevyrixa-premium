@@ -1,20 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { FormEvent, useMemo, useState } from "react";
-import { CheckCircle2, ShieldCheck, Truck } from "lucide-react";
+import { CheckCircle2, Copy, ShieldCheck, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 
 const DRAFT_ORDER_STORAGE_KEY = "aevyrixa-draft-order";
+const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
 
 const paymentMethods = [
   "Cash on Delivery",
-  "Manual Mobile Payment",
+  "Mobile Wallet Payment",
   "Bank Transfer",
 ] as const;
 
 type PaymentMethod = (typeof paymentMethods)[number];
+
+const walletProviders = ["bKash", "Nagad", "Rocket", "Upay"] as const;
+
+type WalletProvider = (typeof walletProviders)[number];
+
+const walletReceiverNumbers: Record<WalletProvider, string> = {
+  bKash: "01644037384",
+  Nagad: "01644037384",
+  Rocket: "016440373844",
+  Upay: "01644037384",
+};
+
+const paymentTypes = ["Send Money", "Merchant Payment", "Cash Out"] as const;
+
+type PaymentType = (typeof paymentTypes)[number];
 
 type CheckoutForm = {
   fullName: string;
@@ -25,15 +42,34 @@ type CheckoutForm = {
   sizeFitNote: string;
   deliveryNote: string;
   paymentMethod: PaymentMethod;
+  walletProvider: WalletProvider;
+  paymentType: PaymentType;
+  walletSenderNumber: string;
+  transactionReference: string;
 };
 
 type CheckoutErrors = Partial<
-  Record<"fullName" | "phone" | "cityArea" | "address", string>
+  Record<
+    | "fullName"
+    | "phone"
+    | "cityArea"
+    | "address"
+    | "walletSenderNumber"
+    | "transactionReference",
+    string
+  >
 >;
 
 type PreparedOrder = {
   orderId: string;
   customerName: string;
+  customerPhone: string;
+  paymentMethod: PaymentMethod;
+  walletProvider?: WalletProvider;
+  paymentType?: PaymentType;
+  receiverNumber?: string;
+  walletSenderNumber?: string;
+  transactionReference?: string;
   total: number;
 };
 
@@ -46,13 +82,21 @@ const initialForm: CheckoutForm = {
   sizeFitNote: "",
   deliveryNote: "",
   paymentMethod: "Cash on Delivery",
+  walletProvider: "bKash",
+  paymentType: "Send Money",
+  walletSenderNumber: "",
+  transactionReference: "",
 };
+
+const isBangladeshMobileNumber = (value: string) =>
+  value.trim().match(/^01\d{9}$/) !== null;
 
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, isLoaded } = useCart();
   const [form, setForm] = useState<CheckoutForm>(initialForm);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [preparedOrder, setPreparedOrder] = useState<PreparedOrder | null>(null);
+  const [copiedReceiver, setCopiedReceiver] = useState(false);
 
   const orderMeta = useMemo(
     () => ({
@@ -76,6 +120,28 @@ export default function CheckoutPage() {
     });
   };
 
+  const updatePaymentMethod = (paymentMethod: PaymentMethod) => {
+    setForm((current) => ({ ...current, paymentMethod }));
+  };
+
+  const selectedReceiverNumber = walletReceiverNumbers[form.walletProvider];
+  const isWalletSendMoney =
+    form.paymentMethod === "Mobile Wallet Payment" &&
+    form.paymentType === "Send Money";
+  const isSubmitDisabled =
+    form.paymentMethod === "Mobile Wallet Payment" &&
+    form.paymentType !== "Send Money";
+
+  const copyReceiverNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(selectedReceiverNumber);
+      setCopiedReceiver(true);
+      window.setTimeout(() => setCopiedReceiver(false), 1800);
+    } catch {
+      setCopiedReceiver(false);
+    }
+  };
+
   const validateForm = () => {
     const nextErrors: CheckoutErrors = {};
 
@@ -83,8 +149,8 @@ export default function CheckoutPage() {
       nextErrors.fullName = "Full name is required.";
     }
 
-    if (!form.phone.trim()) {
-      nextErrors.phone = "Phone number is required.";
+    if (!form.phone.trim() || !isBangladeshMobileNumber(form.phone)) {
+      nextErrors.phone = BANGLADESH_MOBILE_ERROR;
     }
 
     if (!form.cityArea.trim()) {
@@ -95,6 +161,20 @@ export default function CheckoutPage() {
       nextErrors.address = "Full delivery address is required.";
     }
 
+    if (isWalletSendMoney) {
+      if (
+        !form.walletSenderNumber.trim() ||
+        !isBangladeshMobileNumber(form.walletSenderNumber)
+      ) {
+        nextErrors.walletSenderNumber = BANGLADESH_MOBILE_ERROR;
+      }
+
+      if (!form.transactionReference.trim()) {
+        nextErrors.transactionReference =
+          "Transaction ID / Reference is required.";
+      }
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -102,12 +182,45 @@ export default function CheckoutPage() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!validateForm() || items.length === 0) return;
+    if (isSubmitDisabled || !validateForm() || items.length === 0) return;
 
     const orderId = `AEV-${Date.now().toString(36).toUpperCase()}`;
+    const selectedWalletProvider =
+      form.paymentMethod === "Mobile Wallet Payment"
+        ? form.walletProvider
+        : undefined;
+    const selectedPaymentType =
+      form.paymentMethod === "Mobile Wallet Payment" ? form.paymentType : undefined;
+    const receiverNumber =
+      form.paymentMethod === "Mobile Wallet Payment"
+        ? selectedReceiverNumber
+        : undefined;
+    const walletSenderNumber = isWalletSendMoney
+      ? form.walletSenderNumber.trim()
+      : undefined;
+    const transactionReference = isWalletSendMoney
+      ? form.transactionReference.trim()
+      : undefined;
+
     const draftOrder = {
       orderId,
-      customer: form,
+      customer: {
+        fullName: form.fullName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        cityArea: form.cityArea.trim(),
+        address: form.address.trim(),
+        sizeFitNote: form.sizeFitNote.trim(),
+        deliveryNote: form.deliveryNote.trim(),
+      },
+      paymentDetails: {
+        paymentMethod: form.paymentMethod,
+        walletProvider: selectedWalletProvider,
+        paymentType: selectedPaymentType,
+        receiverNumber,
+        walletSenderNumber,
+        transactionReference,
+      },
       items,
       totals: {
         totalItems,
@@ -121,6 +234,13 @@ export default function CheckoutPage() {
     setPreparedOrder({
       orderId,
       customerName: form.fullName.trim(),
+      customerPhone: form.phone.trim(),
+      paymentMethod: form.paymentMethod,
+      walletProvider: selectedWalletProvider,
+      paymentType: selectedPaymentType,
+      receiverNumber,
+      walletSenderNumber,
+      transactionReference,
       total: subtotal,
     });
   };
@@ -141,11 +261,11 @@ export default function CheckoutPage() {
             Aevyrixa Checkout
           </p>
           <h1 className="mt-4 max-w-full break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
-            Manual order request
+            Complete Your Order
           </h1>
           <p className="mt-4 max-w-2xl break-words text-sm leading-7 text-white/64 [overflow-wrap:anywhere] md:text-base">
-            Share your delivery details and preferred payment method. Our team
-            will review your order request and contact you to confirm details.
+            Share your delivery details and choose your preferred payment method.
+            Our team will confirm your order before dispatch.
           </p>
         </div>
 
@@ -243,18 +363,160 @@ export default function CheckoutPage() {
                         name="paymentMethod"
                         value={method}
                         checked={form.paymentMethod === method}
-                        onChange={() => updateField("paymentMethod", method)}
+                        onChange={() => updatePaymentMethod(method)}
                         className="h-4 w-4 accent-cyan-200"
                       />
                       <span>{method}</span>
                     </label>
                   ))}
                 </div>
+                {form.paymentMethod === "Mobile Wallet Payment" && (
+                  <div className="mt-4 space-y-4 rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.06] p-4">
+                    <p className="text-sm font-medium text-white/80">
+                      Select your mobile wallet
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {walletProviders.map((provider) => (
+                        <label
+                          key={provider}
+                          className={`flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
+                            form.walletProvider === provider
+                              ? "border-cyan-200/60 bg-cyan-200/14 text-white"
+                              : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="walletProvider"
+                            value={provider}
+                            checked={form.walletProvider === provider}
+                            onChange={() =>
+                              updateField("walletProvider", provider)
+                            }
+                            className="h-4 w-4 accent-cyan-200"
+                          />
+                          <span>{provider}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-white/80">
+                        Payment type
+                      </p>
+                      <div className="mt-3 grid grid-cols-1 gap-3 min-[390px]:grid-cols-3">
+                        {paymentTypes.map((type) => (
+                          <label
+                            key={type}
+                            className={`flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-center text-sm transition ${
+                              form.paymentType === type
+                                ? "border-fuchsia-200/60 bg-fuchsia-200/14 text-white"
+                                : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="paymentType"
+                              value={type}
+                              checked={form.paymentType === type}
+                              onChange={() => updateField("paymentType", type)}
+                              className="h-4 w-4 shrink-0 accent-fuchsia-200"
+                            />
+                            <span className="break-words leading-5">{type}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {form.paymentType === "Merchant Payment" && (
+                      <PremiumNotice>
+                        Merchant Payment is not available yet. Please use Send
+                        Money for now.
+                      </PremiumNotice>
+                    )}
+
+                    {form.paymentType === "Cash Out" && (
+                      <PremiumNotice>
+                        Cash Out is not available yet. Please use Send Money for
+                        now.
+                      </PremiumNotice>
+                    )}
+
+                    {isWalletSendMoney && (
+                      <div className="space-y-4">
+                        <div className="rounded-2xl border border-cyan-100/25 bg-black/25 p-4">
+                          <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/65">
+                            Verified Receiver Number
+                          </p>
+                          <div className="mt-3 flex flex-col gap-3 min-[390px]:flex-row min-[390px]:items-center">
+                            <p className="min-w-0 flex-1 break-all text-2xl font-semibold leading-tight text-white">
+                              {selectedReceiverNumber}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={copyReceiverNumber}
+                              className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-cyan-100/15 min-[390px]:w-auto"
+                            >
+                              <Copy className="h-4 w-4" />
+                              {copiedReceiver ? "Copied" : "Copy"}
+                            </button>
+                          </div>
+                          <p className="mt-4 text-sm leading-6 text-white/72">
+                            Send Money to this verified Aevyrixa receiver number,
+                            then enter your sender number and transaction ID
+                            below.
+                          </p>
+                          <p className="mt-3 text-xs leading-5 text-amber-100/80">
+                            Please send payment only to the selected wallet number
+                            shown here.
+                          </p>
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <TextField
+                            label="Wallet sender number *"
+                            value={form.walletSenderNumber}
+                            error={errors.walletSenderNumber}
+                            onChange={(value) =>
+                              updateField("walletSenderNumber", value)
+                            }
+                            autoComplete="tel"
+                          />
+                          <TextField
+                            label="Transaction ID / Reference *"
+                            value={form.transactionReference}
+                            error={errors.transactionReference}
+                            onChange={(value) =>
+                              updateField("transactionReference", value)
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {form.paymentMethod === "Bank Transfer" && (
+                  <PremiumNotice>
+                    Our team will share verified bank details after confirming
+                    your order.
+                  </PremiumNotice>
+                )}
+                {form.paymentMethod === "Cash on Delivery" && (
+                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/68">
+                    Pay when your order is confirmed and delivered according to
+                    your selected delivery method.
+                  </div>
+                )}
               </div>
 
               <button
                 type="submit"
-                className="mt-7 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01]"
+                disabled={isSubmitDisabled}
+                className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+                  isSubmitDisabled
+                    ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
+                    : "bg-gradient-to-r from-cyan-300 to-fuchsia-300 text-black hover:scale-[1.01]"
+                }`}
               >
                 Submit Order
               </button>
@@ -294,7 +556,7 @@ function TextField({
         value={value}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/45 focus:bg-black/30"
+        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/45 focus:bg-black/30"
       />
       {error && <span className="mt-2 block text-xs text-rose-200">{error}</span>}
     </label>
@@ -322,10 +584,18 @@ function TextAreaField({
         rows={3}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/45 focus:bg-black/30"
+        className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition focus:border-cyan-200/45 focus:bg-black/30"
       />
       {error && <span className="mt-2 block text-xs text-rose-200">{error}</span>}
     </label>
+  );
+}
+
+function PremiumNotice({ children }: { children: ReactNode }) {
+  return (
+    <div className="mt-4 rounded-2xl border border-fuchsia-100/20 bg-fuchsia-100/[0.07] p-4 text-sm leading-6 text-white/72">
+      {children}
+    </div>
   );
 }
 
@@ -408,7 +678,7 @@ function EmptyCheckoutState() {
         Your checkout is empty
       </h2>
       <p className="mx-auto mt-3 max-w-xl break-words text-sm leading-7 text-white/60 [overflow-wrap:anywhere]">
-        Add an Aevyrixa Her Care product before preparing a manual order request.
+        Add an Aevyrixa Her Care product before completing checkout.
       </p>
       <Link
         href="/product"
@@ -421,38 +691,50 @@ function EmptyCheckoutState() {
 }
 
 function ConfirmationPanel({ order }: { order: PreparedOrder }) {
+  const detailItems = (
+    [
+    ["Order Reference", order.orderId],
+    ["Customer Name", order.customerName],
+    ["Customer Phone", order.customerPhone],
+    ["Order Total", `$${order.total.toFixed(2)}`],
+    ["Selected Payment Method", order.paymentMethod],
+    ["Wallet Provider", order.walletProvider],
+    ["Payment Type", order.paymentType],
+    ["Receiver Number", order.receiverNumber],
+    ["Wallet Sender Number", order.walletSenderNumber],
+    ["Transaction ID / Reference", order.transactionReference],
+    ] as Array<[string, string | undefined]>
+  ).filter((item): item is [string, string] => Boolean(item[1]));
+
   return (
-    <div className="mx-auto max-w-3xl rounded-[1.75rem] border border-cyan-200/25 bg-cyan-200/[0.08] p-6 text-center shadow-[0_0_48px_rgba(34,211,238,0.12)] backdrop-blur-2xl sm:p-10">
+    <div className="mx-auto max-w-3xl rounded-[1.75rem] border border-cyan-200/25 bg-cyan-200/[0.08] p-5 text-center shadow-[0_0_48px_rgba(34,211,238,0.12)] backdrop-blur-2xl sm:p-10">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-100/30 bg-cyan-100/12">
         <CheckCircle2 className="h-8 w-8 text-cyan-100" />
       </div>
       <p className="mt-6 text-xs uppercase tracking-[0.3em] text-cyan-100/75">
-        Order Request Prepared
+        Order Received
       </p>
       <h2 className="mt-3 text-3xl font-semibold text-white">
         Thank you, {order.customerName}
       </h2>
-      <div className="mx-auto mt-6 grid max-w-xl gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/45">
-            Temporary Order ID
-          </p>
-          <p className="mt-2 break-words text-lg font-semibold text-white">
-            {order.orderId}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/45">
-            Order Total
-          </p>
-          <p className="mt-2 text-lg font-semibold text-white">
-            ${order.total.toFixed(2)}
-          </p>
-        </div>
+      <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left sm:grid-cols-2">
+        {detailItems.map(([label, value]) => (
+          <div
+            key={label}
+            className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4"
+          >
+            <p className="break-words text-xs uppercase tracking-[0.16em] text-white/45">
+              {label}
+            </p>
+            <p className="mt-2 break-words text-base font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+              {value}
+            </p>
+          </div>
+        ))}
       </div>
       <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/68">
-        Your order request has been prepared. Our team will contact you to
-        confirm details.
+        We have received your order request. Our team will contact you to confirm
+        delivery and payment details before dispatch.
       </p>
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
