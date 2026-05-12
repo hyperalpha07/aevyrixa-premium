@@ -91,7 +91,11 @@ export default function CartPage() {
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-center">
                     <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0b1120]">
-                      <ProductVisual label="Her Care" compact />
+                      <ProductVisual
+                        visualTheme={item.visualTheme}
+                        label={item.absorbency || "Her Care"}
+                        compact
+                      />
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -103,6 +107,13 @@ export default function CartPage() {
                           <p className="mt-2 text-sm text-cyan-300">
                             ${item.price.toFixed(2)}
                           </p>
+                          {(item.size || item.color || item.absorbency) && (
+                            <p className="mt-2 text-xs leading-5 text-white/45">
+                              {[item.size, item.color, item.absorbency]
+                                .filter(Boolean)
+                                .join(" / ")}
+                            </p>
+                          )}
                         </div>
 
                         <div className="text-left md:text-right">
@@ -182,9 +193,12 @@ export default function CartPage() {
               </div>
 
               <div className="mt-6 space-y-3">
-                <button className="w-full rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01]">
+                <Link
+                  href="/checkout"
+                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01]"
+                >
                   Proceed to Checkout
-                </button>
+                </Link>
 
                 <Link
                   href="/product"

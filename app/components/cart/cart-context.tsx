@@ -10,12 +10,17 @@ import React, {
 
 export type CartItem = {
   id: string;
+  productId?: string;
   slug: string;
   shopifyHandle: string;
   shopifyVariantId: string;
   name: string;
   price: number;
   image: string;
+  visualTheme?: "blush-violet" | "cyan-night" | "rose-gold";
+  size?: string;
+  color?: string;
+  absorbency?: string;
   quantity: number;
 };
 

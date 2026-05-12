@@ -3,54 +3,83 @@
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { use, useMemo, useState } from "react";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  HeartHandshake,
+  PackageCheck,
+  Recycle,
+  ShieldCheck,
+} from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
-import { products, type Product } from "@/app/lib/products";
+import { products, type Product, type ProductVisualTheme } from "@/app/lib/products";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
 
-function getAccentClasses(accent: Product["accent"]) {
-  if (accent === "cyan") {
-    return {
-      badge: "text-cyan-300/75",
-      sale: "border-cyan-300/20 bg-cyan-300/10 text-cyan-300",
-      thumbActive:
-        "border-cyan-300/40 bg-cyan-300/10 shadow-[0_0_25px_rgba(34,211,238,0.14)]",
-      primaryButton:
-        "bg-gradient-to-r from-cyan-300 to-fuchsia-400 text-black shadow-[0_0_40px_rgba(56,189,248,0.25)]",
-      secondaryButton:
-        "border-cyan-300/20 bg-white/5 text-white hover:border-cyan-300/40 hover:bg-white/10",
-      featureLabel: "text-cyan-300/75",
-      panelGlow: "shadow-[0_0_35px_rgba(34,211,238,0.08)]",
-    };
+const themeStyles: Record<
+  ProductVisualTheme,
+  {
+    accent: string;
+    badge: string;
+    selected: string;
+    primary: string;
+    panel: string;
   }
+> = {
+  "blush-violet": {
+    accent: "text-fuchsia-100",
+    badge: "border-fuchsia-200/25 bg-fuchsia-300/10 text-fuchsia-100",
+    selected: "border-fuchsia-100/50 bg-fuchsia-200/14 text-white",
+    primary: "from-fuchsia-200 to-cyan-200 text-black",
+    panel: "shadow-[0_0_42px_rgba(217,70,239,0.10)]",
+  },
+  "cyan-night": {
+    accent: "text-cyan-100",
+    badge: "border-cyan-200/25 bg-cyan-300/10 text-cyan-100",
+    selected: "border-cyan-100/50 bg-cyan-200/14 text-white",
+    primary: "from-cyan-200 to-fuchsia-200 text-black",
+    panel: "shadow-[0_0_42px_rgba(34,211,238,0.10)]",
+  },
+  "rose-gold": {
+    accent: "text-rose-100",
+    badge: "border-rose-100/30 bg-rose-200/10 text-rose-100",
+    selected: "border-rose-100/55 bg-rose-200/14 text-white",
+    primary: "from-rose-100 to-cyan-200 text-black",
+    panel: "shadow-[0_0_42px_rgba(244,196,212,0.10)]",
+  },
+};
 
-  if (accent === "fuchsia") {
-    return {
-      badge: "text-fuchsia-300/75",
-      sale: "border-fuchsia-400/20 bg-fuchsia-400/10 text-fuchsia-300",
-      thumbActive:
-        "border-fuchsia-400/40 bg-fuchsia-400/10 shadow-[0_0_25px_rgba(217,70,239,0.14)]",
-      primaryButton:
-        "bg-gradient-to-r from-fuchsia-300 to-cyan-300 text-black shadow-[0_0_40px_rgba(217,70,239,0.22)]",
-      secondaryButton:
-        "border-fuchsia-400/20 bg-white/5 text-white hover:border-fuchsia-400/40 hover:bg-white/10",
-      featureLabel: "text-fuchsia-300/75",
-      panelGlow: "shadow-[0_0_35px_rgba(217,70,239,0.08)]",
-    };
-  }
+const trustBadges = [
+  { label: "Discreet Delivery", icon: PackageCheck },
+  { label: "7-Day Money Back Guarantee", icon: ShieldCheck },
+  { label: "Comfort Fit", icon: HeartHandshake },
+  { label: "Reusable Protection", icon: Recycle },
+];
 
-  return {
-    badge: "text-amber-200/75",
-    sale: "border-amber-300/20 bg-amber-300/10 text-amber-200",
-    thumbActive:
-      "border-amber-300/40 bg-amber-300/10 shadow-[0_0_25px_rgba(251,191,36,0.14)]",
-    primaryButton:
-      "bg-gradient-to-r from-amber-200 to-fuchsia-300 text-black shadow-[0_0_40px_rgba(251,191,36,0.18)]",
-    secondaryButton:
-      "border-amber-300/20 bg-white/5 text-white hover:border-amber-300/40 hover:bg-white/10",
-    featureLabel: "text-amber-200/75",
-    panelGlow: "shadow-[0_0_35px_rgba(251,191,36,0.08)]",
-  };
+const faqs = [
+  {
+    question: "Can I wear it on its own?",
+    answer:
+      "Choose the absorbency that matches your routine. Some customers also use reusable period underwear as backup support on higher-flow days.",
+  },
+  {
+    question: "How should I wash it?",
+    answer:
+      "Rinse cold after wear, wash cold with mild detergent, and air dry fully. Avoid bleach, fabric softener, and high heat.",
+  },
+  {
+    question: "How do I choose a size?",
+    answer:
+      "Start with your usual underwear size. If you are between sizes, choose the fit that feels more comfortable around the waist and leg opening.",
+  },
+];
+
+function buildCartLineId(product: Product, size: string, color: string, absorbency: string) {
+  return `${product.id}-${size}-${color}-${absorbency}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 export default function ProductPage({
@@ -60,325 +89,276 @@ export default function ProductPage({
 }) {
   const router = useRouter();
   const { slug } = use(params);
+  const { addItem } = useCart();
 
   const product = useMemo(
     () => products.find((item) => item.slug === slug),
     [slug]
   );
 
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState("");
-  const { addItem } = useCart();
-
   if (!product) {
     notFound();
   }
 
-  const accent = getAccentClasses(product.accent);
-  const activeImage = selectedImage || product.gallery[0] || product.category;
-
-  const decreaseQuantity = () => {
-    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-  };
-
-  const increaseQuantity = () => {
-    setQuantity((prev) => prev + 1);
-  };
-
- const handleAddToCart = () => {
-  addItem(
-    {
-      id: product.id,
-      slug: product.slug,
-      shopifyHandle: product.shopifyHandle,
-      shopifyVariantId: product.shopifyVariantId,
-      name: product.name,
-      price: product.numericPrice,
-      image: product.featuredImage,
-    },
-    quantity
+  const style = themeStyles[product.visualTheme];
+  const [selectedSize, setSelectedSize] = useState<string>(
+    product.sizes[1] || product.sizes[0] || "M"
   );
-};
-
-  const handleBuyNow = () => {
-  addItem(
-    {
-      id: product.id,
-      slug: product.slug,
-      shopifyHandle: product.shopifyHandle,
-      shopifyVariantId: product.shopifyVariantId,
-      name: product.name,
-      price: product.numericPrice,
-      image: product.featuredImage,
-    },
-    quantity
+  const [selectedColor, setSelectedColor] = useState<string>(
+    product.colors[0] || "Black"
   );
+  const [selectedAbsorbency, setSelectedAbsorbency] = useState<string>(
+    product.absorbency
+  );
+  const [quantity, setQuantity] = useState(1);
 
-  router.push("/cart");
-};
+  const decreaseQuantity = () => setQuantity((current) => Math.max(1, current - 1));
+  const increaseQuantity = () => setQuantity((current) => current + 1);
+
+  const handleAddToCart = (goToCart = false) => {
+    addItem(
+      {
+        id: buildCartLineId(product, selectedSize, selectedColor, selectedAbsorbency),
+        productId: product.id,
+        slug: product.slug,
+        shopifyHandle: product.shopifyHandle,
+        shopifyVariantId: product.shopifyVariantId,
+        name: product.name,
+        price: product.numericPrice,
+        image: product.visualTheme,
+        visualTheme: product.visualTheme,
+        size: selectedSize,
+        color: selectedColor,
+        absorbency: selectedAbsorbency,
+      },
+      quantity
+    );
+
+    if (goToCart) {
+      router.push("/cart");
+    }
+  };
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-10%] top-[8%] h-[320px] w-[320px] rounded-full bg-cyan-500/20 blur-[120px]" />
-        <div className="absolute right-[-8%] top-[18%] h-[360px] w-[360px] rounded-full bg-fuchsia-500/20 blur-[140px]" />
-        <div className="absolute bottom-[-8%] left-[30%] h-[280px] w-[280px] rounded-full bg-amber-400/10 blur-[120px]" />
+        <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-cyan-400/14 blur-[120px]" />
+        <div className="absolute right-[-18%] top-[20%] h-[360px] w-[360px] rounded-full bg-fuchsia-400/14 blur-[140px]" />
+        <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
       </div>
 
       <SiteHeader active="product" productHref={`/product/${product.slug}`} />
 
-      <section className="mx-auto max-w-7xl px-6 py-12 md:py-16">
-        <div className="mb-8 flex justify-end">
-          <Link
-            href="/cart"
-            className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white transition duration-300 hover:border-fuchsia-400/35 hover:bg-white/10"
-          >
-            Go to Cart
-          </Link>
-        </div>
-
-        <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] xl:gap-14">
-          <div>
-            <div
-              className={`rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl ${accent.panelGlow}`}
-            >
-              <div className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-[#0b1020] via-[#12172a] to-[#1b1030] p-4">
-                <div className="relative flex min-h-[360px] items-center justify-center rounded-[1.25rem] border border-white/10 bg-[#0b1120] md:min-h-[520px]">
-                  <div className="h-[260px] w-[260px] max-w-full md:h-[420px] md:w-[420px]">
-                    <ProductVisual
-                      accent={product.accent}
-                      label={activeImage}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-4 gap-3 md:gap-4">
-              {product.gallery.map((img, index) => (
-                <button
-                  key={`${product.slug}-${index}`}
-                  onClick={() => setSelectedImage(img)}
-                  className={`overflow-hidden rounded-2xl border p-2 transition duration-300 ${
-                    activeImage === img
-                      ? accent.thumbActive
-                      : "border-white/10 bg-white/5 hover:border-fuchsia-400/30 hover:bg-white/8"
-                  }`}
-                >
-                  <div className="flex h-20 items-center justify-center rounded-xl bg-[#0b1120]">
-                    <ProductVisual
-                      accent={product.accent}
-                      label={img}
-                      compact
-                    />
-                  </div>
-                </button>
-              ))}
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
+        <div className={`min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}>
+          <div className="overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
+            <div className="aspect-[0.92] min-h-[340px] w-full sm:aspect-square">
+              <ProductVisual
+                visualTheme={product.visualTheme}
+                label={product.absorbency}
+              />
             </div>
           </div>
+        </div>
 
-          <div>
-            <p
-              className={`mb-4 text-sm uppercase tracking-[0.35em] ${accent.badge}`}
-            >
+        <div className="min-w-0">
+          <Link
+            href="/product"
+            className="text-sm font-medium text-white/55 transition hover:text-white"
+          >
+            Back to products
+          </Link>
+
+          <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${style.badge}`}>
+              {product.absorbency}
+            </span>
+            <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-white/42 [overflow-wrap:anywhere] min-[420px]:tracking-[0.24em]">
               {product.category}
-            </p>
+            </span>
+          </div>
 
-            <h1 className="max-w-2xl text-4xl font-semibold leading-tight md:text-6xl">
-              {product.name}
-            </h1>
+          <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
+            {product.name}
+          </h1>
 
-            <div className="mt-5 flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-1 text-amber-300">
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-              </div>
-              <p className="text-sm text-white/55">{product.reviewSummary}</p>
-            </div>
+          <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/68 [overflow-wrap:anywhere]">
+            {product.description}
+          </p>
 
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/65">
-              {product.shortDescription}
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-end gap-4">
-              <span className="text-4xl font-semibold text-white">
-                {product.price}
-              </span>
+          <div className="mt-6 flex flex-wrap items-end gap-3">
+            <span className="text-4xl font-semibold">{product.price}</span>
+            {product.compareAtPrice && (
               <span className="pb-1 text-lg text-white/35 line-through">
                 {product.compareAtPrice}
               </span>
-              <span
-                className={`rounded-full border px-4 py-1 text-sm font-medium ${accent.sale}`}
-              >
-                {product.saveText}
-              </span>
-            </div>
+            )}
+          </div>
 
-            <div
-              className={`mt-8 rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-2xl md:p-6 ${accent.panelGlow}`}
-            >
-              <div className="flex flex-col gap-5">
-                <div>
-                  <p
-                    className={`mb-4 text-sm uppercase tracking-[0.3em] ${accent.badge}`}
-                  >
-                    Quantity
-                  </p>
+          <div className={`mt-7 rounded-[1.65rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-5 ${style.panel}`}>
+            <div className="space-y-6">
+              <VariantSelector
+                label="Size"
+                options={product.sizes}
+                selected={selectedSize}
+                onSelect={setSelectedSize}
+                selectedClassName={style.selected}
+              />
+              <VariantSelector
+                label="Color"
+                options={product.colors}
+                selected={selectedColor}
+                onSelect={setSelectedColor}
+                selectedClassName={style.selected}
+              />
+              <VariantSelector
+                label="Absorbency"
+                options={product.absorbencyOptions}
+                selected={selectedAbsorbency}
+                onSelect={setSelectedAbsorbency}
+                selectedClassName={style.selected}
+              />
 
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center rounded-full border border-white/10 bg-black/20">
-                      <button
-                        onClick={decreaseQuantity}
-                        className="px-5 py-3 text-lg text-white/70 transition hover:text-white"
-                      >
-                        −
-                      </button>
-                      <span className="min-w-[48px] text-center text-base font-medium">
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={increaseQuantity}
-                        className="px-5 py-3 text-lg text-white/70 transition hover:text-white"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <p className="text-sm text-white/55">
-                      In stock • ready to ship
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-white/50">
+                  Quantity
+                </p>
+                <div className="flex w-fit items-center rounded-full border border-white/10 bg-black/20">
                   <button
-                    onClick={handleAddToCart}
-                    className={`rounded-full px-8 py-3.5 text-sm font-semibold transition hover:scale-[1.02] ${accent.primaryButton}`}
+                    onClick={decreaseQuantity}
+                    className="px-4 py-3 text-white/70 transition hover:text-white"
+                    aria-label="Decrease quantity"
                   >
-                    Add to Cart
+                    <ChevronDown className="h-4 w-4" />
                   </button>
-
+                  <span className="min-w-[48px] text-center text-sm font-semibold">
+                    {quantity}
+                  </span>
                   <button
-                    onClick={handleBuyNow}
-                    className={`rounded-full border px-8 py-3.5 text-sm font-semibold transition duration-300 ${accent.secondaryButton}`}
+                    onClick={increaseQuantity}
+                    className="px-4 py-3 text-white/70 transition hover:text-white"
+                    aria-label="Increase quantity"
                   >
-                    Buy Now
+                    <ChevronUp className="h-4 w-4" />
                   </button>
                 </div>
+              </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
-                  <div className="grid gap-3 text-sm text-white/60 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center">
-                      Secure Payment
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center">
-                      Fast Shipping
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center">
-                      7-Day Guarantee
-                    </div>
-                  </div>
-                </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={() => handleAddToCart(false)}
+                  className={`rounded-full bg-gradient-to-r px-6 py-3.5 text-sm font-semibold transition hover:scale-[1.01] ${style.primary}`}
+                >
+                  Add to Cart
+                </button>
+                <button
+                  onClick={() => handleAddToCart(true)}
+                  className="rounded-full border border-white/12 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08]"
+                >
+                  Add and View Cart
+                </button>
               </div>
             </div>
+          </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-xl">
-                <div className="mb-2 text-2xl text-cyan-300">🔒</div>
-                <h3 className="text-sm font-semibold">Secure Payment</h3>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-xl">
-                <div className="mb-2 text-2xl text-fuchsia-300">💰</div>
-                <h3 className="text-sm font-semibold">7-Day Guarantee</h3>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4 text-center backdrop-blur-xl">
-                <div className="mb-2 text-2xl text-amber-200">🚚</div>
-                <h3 className="text-sm font-semibold">Fast Shipping</h3>
-              </div>
-            </div>
-
-            <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/5 p-5 backdrop-blur-2xl">
-              <p
-                className={`mb-4 text-sm uppercase tracking-[0.3em] ${accent.badge}`}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {trustBadges.map(({ label, icon: Icon }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/72"
               >
-                Shipping & Support
-              </p>
-              <ul className="space-y-3 text-sm leading-7 text-white/65">
-                {product.shippingNotes.map((note) => (
-                  <li key={note}>• {note}</li>
-                ))}
-              </ul>
-            </div>
+                <Icon className={`h-4 w-4 shrink-0 ${style.accent}`} />
+                <span>{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <p
-              className={`mb-3 text-sm uppercase tracking-[0.35em] ${accent.featureLabel}`}
-            >
-              Premium Features
-            </p>
-            <h2 className="text-3xl font-semibold md:text-4xl">
-              Crafted for a refined reusable care experience
-            </h2>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {product.features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4"
-                >
-                  <h3 className="font-semibold">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-white/60">
-                    {feature.text}
-                  </p>
-                </div>
-              ))}
-            </div>
+      <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-24 sm:px-6 lg:grid-cols-[1fr_0.9fr]">
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+          <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
+            Benefits
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold">Made for a calmer routine</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {product.benefits.map((benefit) => (
+              <div key={benefit} className="flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/68">
+                <Check className={`mt-0.5 h-4 w-4 shrink-0 ${style.accent}`} />
+                <span>{benefit}</span>
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-            <p
-              className={`mb-3 text-sm uppercase tracking-[0.35em] ${accent.featureLabel}`}
-            >
-              Review Summary
-            </p>
-            <h2 className="text-3xl font-semibold md:text-4xl">
-              Customers love the premium feel
-            </h2>
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+          <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
+            Care Guide
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold">Simple wash steps</h2>
+          <div className="mt-5 space-y-3">
+            {product.care.map((step, index) => (
+              <div key={step} className="flex gap-3 text-sm leading-7 text-white/68">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-xs text-white">
+                  {index + 1}
+                </span>
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="mt-5 flex items-center gap-2 text-amber-300">
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span>★</span>
-              <span className="ml-2 text-base text-white">
-                {product.reviewScore}
-              </span>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {product.reviewQuotes.map((quote) => (
-                <div
-                  key={quote}
-                  className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4"
-                >
-                  <p className="text-sm leading-7 text-white/70">“{quote}”</p>
-                </div>
-              ))}
-            </div>
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6 lg:col-span-2">
+          <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
+            FAQ
+          </p>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {faqs.map((faq) => (
+              <div key={faq.question} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <h3 className="font-semibold text-white">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-7 text-white/62">{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function VariantSelector({
+  label,
+  options,
+  selected,
+  onSelect,
+  selectedClassName,
+}: {
+  label: string;
+  options: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+  selectedClassName: string;
+}) {
+  return (
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-white/50">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            onClick={() => onSelect(option)}
+            className={`rounded-full border px-4 py-2.5 text-sm font-medium transition ${
+              selected === option
+                ? selectedClassName
+                : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

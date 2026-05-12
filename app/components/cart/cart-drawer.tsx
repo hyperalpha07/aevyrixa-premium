@@ -89,8 +89,8 @@ export default function CartDrawer() {
                 </h3>
 
                 <p className="mt-3 max-w-xs text-sm leading-7 text-white/60">
-                  Add premium products to your cart and create a smarter, more
-                  comfortable Her Care routine.
+                  Add premium Her Care products to your cart and build a more
+                  comfortable reusable routine.
                 </p>
 
                 <Link
@@ -110,7 +110,11 @@ export default function CartDrawer() {
                   >
                     <div className="flex gap-3">
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0b1120]">
-                        <ProductVisual label="Her Care" compact />
+                        <ProductVisual
+                          visualTheme={item.visualTheme}
+                          label={item.absorbency || "Her Care"}
+                          compact
+                        />
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col">
@@ -122,6 +126,13 @@ export default function CartDrawer() {
                             <p className="mt-1 text-sm text-cyan-300">
                               ${item.price.toFixed(2)}
                             </p>
+                            {(item.size || item.color || item.absorbency) && (
+                              <p className="mt-1 text-xs leading-5 text-white/45">
+                                {[item.size, item.color, item.absorbency]
+                                  .filter(Boolean)
+                                  .join(" / ")}
+                              </p>
+                            )}
                           </div>
 
                           <button

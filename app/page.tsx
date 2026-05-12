@@ -75,9 +75,9 @@ const careCards = [
 
 const faqs = [
   {
-    question: "Is it completely leak proof?",
+    question: "How much protection should I expect?",
     answer:
-      "No reusable period underwear should be described as 100% leak proof. Aevyrixa Her Care is designed to help manage light to moderate flow with layered protection.",
+      "Aevyrixa Her Care is designed to help manage light to moderate flow with layered protection, without overpromising protection levels.",
   },
   {
     question: "Can I wear it by itself?",
@@ -316,7 +316,7 @@ export default function Home() {
             </div>
 
             <Link
-              href="/product/her-care-period-panty"
+              href="/product/everyday-comfort"
               className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
             >
               View Product

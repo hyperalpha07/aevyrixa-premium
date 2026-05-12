@@ -11,7 +11,7 @@ type SiteHeaderProps = {
 
 export default function SiteHeader({
   active = "shop",
-  productHref = "/product/her-care-period-panty",
+  productHref = "/product/everyday-comfort",
 }: SiteHeaderProps) {
   const { totalItems, toggleCart } = useCart();
 
