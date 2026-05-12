@@ -8,6 +8,7 @@ import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 
 const DRAFT_ORDER_STORAGE_KEY = "aevyrixa-draft-order";
+const DRAFT_ORDERS_STORAGE_KEY = "aevyrixa-draft-orders";
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
 
 const paymentMethods = [
@@ -231,6 +232,23 @@ export default function CheckoutPage() {
     };
 
     localStorage.setItem(DRAFT_ORDER_STORAGE_KEY, JSON.stringify(draftOrder));
+
+    try {
+      const savedOrders = localStorage.getItem(DRAFT_ORDERS_STORAGE_KEY);
+      const parsedOrders = savedOrders
+        ? (JSON.parse(savedOrders) as unknown)
+        : [];
+      const existingOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
+
+      localStorage.setItem(
+        DRAFT_ORDERS_STORAGE_KEY,
+        JSON.stringify([...existingOrders, draftOrder])
+      );
+    } catch (error) {
+      console.error("Failed to save order history:", error);
+      localStorage.setItem(DRAFT_ORDERS_STORAGE_KEY, JSON.stringify([draftOrder]));
+    }
+
     setPreparedOrder({
       orderId,
       customerName: form.fullName.trim(),
