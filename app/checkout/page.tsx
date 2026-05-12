@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { CheckCircle2, Copy, ShieldCheck, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
+import {
+  ADMIN_SETTINGS_KEY,
+  defaultAdminSettings,
+  normalizeAdminSettings,
+  walletProviders,
+  type AdminSettings,
+  type WalletProvider,
+} from "@/app/lib/admin-settings";
 
 const DRAFT_ORDER_STORAGE_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_STORAGE_KEY = "aevyrixa-draft-orders";
@@ -18,17 +26,6 @@ const paymentMethods = [
 ] as const;
 
 type PaymentMethod = (typeof paymentMethods)[number];
-
-const walletProviders = ["bKash", "Nagad", "Rocket", "Upay"] as const;
-
-type WalletProvider = (typeof walletProviders)[number];
-
-const walletReceiverNumbers: Record<WalletProvider, string> = {
-  bKash: "01644037384",
-  Nagad: "01644037384",
-  Rocket: "016440373844",
-  Upay: "01644037384",
-};
 
 const paymentTypes = ["Send Money", "Merchant Payment", "Cash Out"] as const;
 
@@ -92,21 +89,34 @@ const initialForm: CheckoutForm = {
 const isBangladeshMobileNumber = (value: string) =>
   value.trim().match(/^01\d{9}$/) !== null;
 
+function readAdminSettingsFromStorage() {
+  try {
+    const stored = localStorage.getItem(ADMIN_SETTINGS_KEY);
+    return stored
+      ? normalizeAdminSettings(JSON.parse(stored) as unknown)
+      : defaultAdminSettings;
+  } catch (error) {
+    console.error("Failed to load checkout settings:", error);
+    return defaultAdminSettings;
+  }
+}
+
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, isLoaded } = useCart();
   const [form, setForm] = useState<CheckoutForm>(initialForm);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [preparedOrder, setPreparedOrder] = useState<PreparedOrder | null>(null);
   const [copiedReceiver, setCopiedReceiver] = useState(false);
+  const [adminSettings, setAdminSettings] =
+    useState<AdminSettings>(defaultAdminSettings);
 
-  const orderMeta = useMemo(
-    () => ({
-      deliveryNote:
-        "Estimated delivery will be confirmed by our team after order review.",
-      guarantee: "7-Day Money Back Guarantee",
-    }),
-    []
-  );
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      setAdminSettings(readAdminSettingsFromStorage());
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   const updateField = <Field extends keyof CheckoutForm>(
     field: Field,
@@ -125,7 +135,9 @@ export default function CheckoutPage() {
     setForm((current) => ({ ...current, paymentMethod }));
   };
 
-  const selectedReceiverNumber = walletReceiverNumbers[form.walletProvider];
+  const selectedReceiverNumber =
+    adminSettings.walletReceiverNumbers[form.walletProvider] ||
+    defaultAdminSettings.walletReceiverNumbers[form.walletProvider];
   const isWalletSendMoney =
     form.paymentMethod === "Mobile Wallet Payment" &&
     form.paymentType === "Send Money";
@@ -514,15 +526,11 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {form.paymentMethod === "Bank Transfer" && (
-                  <PremiumNotice>
-                    Our team will share verified bank details after confirming
-                    your order.
-                  </PremiumNotice>
+                  <PremiumNotice>{adminSettings.bankTransferInstruction}</PremiumNotice>
                 )}
                 {form.paymentMethod === "Cash on Delivery" && (
                   <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/68">
-                    Pay when your order is confirmed and delivered according to
-                    your selected delivery method.
+                    {adminSettings.codInstruction}
                   </div>
                 )}
               </div>
@@ -541,8 +549,9 @@ export default function CheckoutPage() {
             </form>
 
             <OrderSummary
-              deliveryNote={orderMeta.deliveryNote}
-              guarantee={orderMeta.guarantee}
+              storeName={adminSettings.storeName}
+              deliveryNote={adminSettings.deliveryNote}
+              guarantee={adminSettings.guaranteeText}
             />
           </div>
         )}
@@ -618,9 +627,11 @@ function PremiumNotice({ children }: { children: ReactNode }) {
 }
 
 function OrderSummary({
+  storeName,
   deliveryNote,
   guarantee,
 }: {
+  storeName: string;
   deliveryNote: string;
   guarantee: string;
 }) {
@@ -631,7 +642,9 @@ function OrderSummary({
       <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
         Order Summary
       </p>
-      <h2 className="mt-2 text-2xl font-semibold text-white">Aevyrixa Her Care</h2>
+      <h2 className="mt-2 break-words text-2xl font-semibold text-white [overflow-wrap:anywhere]">
+        {storeName}
+      </h2>
 
       <div className="mt-5 space-y-3">
         {items.map((item) => (

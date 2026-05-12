@@ -20,12 +20,19 @@ import {
   Trash2,
 } from "lucide-react";
 import { products as seedProducts, type ProductVisualTheme } from "@/app/lib/products";
+import {
+  ADMIN_SETTINGS_KEY,
+  defaultAdminSettings,
+  normalizeAdminSettings,
+  type AdminSettings,
+  walletProviders,
+  type WalletProvider,
+} from "@/app/lib/admin-settings";
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
 const ADMIN_SESSION_KEY = "aevyrixa-admin-session";
 const ADMIN_PRODUCTS_KEY = "aevyrixa-admin-products";
-const ADMIN_SETTINGS_KEY = "aevyrixa-admin-settings";
 const ADMIN_PASSCODE = "AEV-ADMIN-2026";
 
 const orderStatuses = [
@@ -102,13 +109,6 @@ type AdminProduct = {
   visualVariant: string;
 };
 
-type AdminSettings = {
-  storeName: string;
-  guaranteeText: string;
-  walletNumbers: string;
-  deliveryNote: string;
-};
-
 type UnknownRecord = Record<string, unknown>;
 
 const navItems = [
@@ -144,12 +144,7 @@ const emptyProduct: AdminProduct = {
   visualVariant: "default",
 };
 
-const defaultSettings: AdminSettings = {
-  storeName: "Aevyrixa Her Care",
-  guaranteeText: "7-Day Money Back Guarantee",
-  walletNumbers: "JazzCash / EasyPaisa numbers will be managed here in the backend phase.",
-  deliveryNote: "Discreet delivery notes will be tested locally before backend wiring.",
-};
+const defaultSettings = defaultAdminSettings;
 
 const statusStyles: Record<OrderStatus, string> = {
   Pending: "border-amber-200/25 bg-amber-200/10 text-amber-100",
@@ -365,15 +360,7 @@ function readSettingsFromStorage() {
   try {
     const stored = localStorage.getItem(ADMIN_SETTINGS_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as unknown;
-      if (isRecord(parsed)) {
-        return {
-          storeName: textValue(parsed.storeName) || defaultSettings.storeName,
-          guaranteeText: textValue(parsed.guaranteeText) || defaultSettings.guaranteeText,
-          walletNumbers: textValue(parsed.walletNumbers) || defaultSettings.walletNumbers,
-          deliveryNote: textValue(parsed.deliveryNote) || defaultSettings.deliveryNote,
-        };
-      }
+      return normalizeAdminSettings(JSON.parse(stored) as unknown);
     }
   } catch (error) {
     console.error("Failed to load admin settings:", error);
@@ -1033,47 +1020,125 @@ function SettingsSection({
   onSaveSettings: (settings: AdminSettings) => void;
 }) {
   const [draft, setDraft] = useState(settings);
+  const [statusMessage, setStatusMessage] = useState("");
+
+  useEffect(() => {
+    setDraft(settings);
+  }, [settings]);
 
   const saveSettings = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSaveSettings(draft);
+    setStatusMessage("Settings saved. Checkout will use these local payment details.");
+  };
+
+  const resetSettings = () => {
+    setDraft(defaultSettings);
+    onSaveSettings(defaultSettings);
+    setStatusMessage("Settings reset to defaults.");
+  };
+
+  const updateWalletNumber = (provider: WalletProvider, value: string) => {
+    setDraft((current) => ({
+      ...current,
+      walletReceiverNumbers: {
+        ...current.walletReceiverNumbers,
+        [provider]: value,
+      },
+    }));
   };
 
   return (
     <form onSubmit={saveSettings} className="mt-6 space-y-5">
       <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.045] p-4 text-sm leading-6 text-cyan-50/72">
-        These are local admin settings for the next backend phase. They are saved in this browser and are not wired into checkout yet.
+        These settings are stored locally for testing. Backend/database sync will be added later.
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <TextField
-          label="Store name"
-          value={draft.storeName}
-          onChange={(value) => setDraft((current) => ({ ...current, storeName: value }))}
-        />
-        <TextField
-          label="Guarantee text"
-          value={draft.guaranteeText}
-          onChange={(value) => setDraft((current) => ({ ...current, guaranteeText: value }))}
-        />
-        <TextAreaField
-          label="Wallet numbers"
-          value={draft.walletNumbers}
-          onChange={(value) => setDraft((current) => ({ ...current, walletNumbers: value }))}
-          tall
-        />
-        <TextAreaField
-          label="Delivery note"
-          value={draft.deliveryNote}
-          onChange={(value) => setDraft((current) => ({ ...current, deliveryNote: value }))}
-          tall
-        />
+
+      {statusMessage && (
+        <div className="rounded-[1.25rem] border border-emerald-200/20 bg-emerald-200/[0.07] p-4 text-sm leading-6 text-emerald-50/80">
+          {statusMessage}
+        </div>
+      )}
+
+      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+        <div className="mb-5 min-w-0">
+          <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/70">
+            Store Messaging
+          </p>
+          <h2 className="mt-2 break-words text-xl font-semibold text-white">
+            Checkout trust and delivery text
+          </h2>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TextField
+            label="Store name"
+            value={draft.storeName}
+            onChange={(value) => setDraft((current) => ({ ...current, storeName: value }))}
+          />
+          <TextField
+            label="Guarantee text"
+            value={draft.guaranteeText}
+            onChange={(value) => setDraft((current) => ({ ...current, guaranteeText: value }))}
+          />
+          <TextAreaField
+            label="Delivery note"
+            value={draft.deliveryNote}
+            onChange={(value) => setDraft((current) => ({ ...current, deliveryNote: value }))}
+            tall
+          />
+          <TextAreaField
+            label="COD instruction"
+            value={draft.codInstruction}
+            onChange={(value) => setDraft((current) => ({ ...current, codInstruction: value }))}
+            tall
+          />
+        </div>
+      </section>
+
+      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+        <div className="mb-5 min-w-0">
+          <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-200/70">
+            Payment Configuration
+          </p>
+          <h2 className="mt-2 break-words text-xl font-semibold text-white">
+            Wallet receivers and bank instructions
+          </h2>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {walletProviders.map((provider) => (
+            <TextField
+              key={provider}
+              label={`${provider} receiver number`}
+              value={draft.walletReceiverNumbers[provider]}
+              onChange={(value) => updateWalletNumber(provider, value)}
+            />
+          ))}
+          <TextAreaField
+            label="Bank transfer instruction"
+            value={draft.bankTransferInstruction}
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, bankTransferInstruction: value }))
+            }
+            tall
+          />
+        </div>
+      </section>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={resetSettings}
+          className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white/68 transition hover:border-white/25 hover:text-white"
+        >
+          Reset to defaults
+        </button>
+        <button
+          type="submit"
+          className="rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
+        >
+          Save settings
+        </button>
       </div>
-      <button
-        type="submit"
-        className="rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
-      >
-        Save local settings
-      </button>
     </form>
   );
 }
