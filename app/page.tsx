@@ -98,7 +98,7 @@ const faqs = [
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
+    <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.16),transparent_28%),linear-gradient(180deg,#030612_0%,#07101f_46%,#050612_100%)]" />
 
       <SiteHeader active="home" />
@@ -112,18 +112,18 @@ export default function Home() {
 
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
           <div className="min-w-0">
-            <p className="inline-flex max-w-full rounded-full border border-cyan-200/20 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/90 shadow-[0_0_28px_rgba(34,211,238,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
+            <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-cyan-200/20 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/90 shadow-[0_0_28px_rgba(34,211,238,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
               Aevyrixa Her Care
             </p>
-            <h1 className="mt-7 max-w-4xl text-balance text-[2.45rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="aev-hero-headline mt-7 max-w-4xl text-balance text-[2.45rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
               Reusable Period Care, Reimagined for Modern Confidence
             </h1>
-            <p className="mt-6 max-w-2xl text-pretty text-base leading-8 text-white/72 sm:text-lg">
+            <p className="aev-hero-copy mt-6 max-w-2xl text-pretty text-base leading-8 text-white/72 sm:text-lg">
               Soft, discreet, reusable protection designed for comfort,
               confidence, and everyday movement.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row sm:mt-10">
+            <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[420px]:flex-row sm:mt-10">
               <Link
                 href="/product"
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
@@ -142,7 +142,7 @@ export default function Home() {
               {trustItems.map((item) => (
                 <div
                   key={item}
-                  className="rounded-full border border-white/10 bg-white/[0.055] px-4 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/76 backdrop-blur-xl"
+                  className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-4 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/76 backdrop-blur-xl"
                 >
                   {item}
                 </div>
@@ -150,9 +150,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative min-w-0">
-            <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.065] p-3 shadow-2xl backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-5">
+          <div className="aev-hero-visual relative min-w-0">
+            <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
+            <div className="aev-product-float relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.065] p-3 shadow-2xl backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-5">
               <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.12),transparent_28%,rgba(255,255,255,0.04)_56%,transparent_72%)]" />
               <div className="relative min-h-[30rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#061020] p-5 sm:min-h-[36rem] sm:rounded-[2rem] sm:p-7">
                 <div className="aev-wave absolute left-[8%] top-[13%] h-44 w-[84%] rounded-[54%_46%_64%_36%/44%_42%_58%_56%] border border-cyan-100/18 bg-gradient-to-r from-cyan-100/18 via-white/8 to-violet-300/14" />
@@ -207,7 +207,7 @@ export default function Home() {
             {confidenceCards.map(({ title, copy, accent, icon: Icon }) => (
               <article
                 key={title}
-                className="aev-border-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:p-7"
+                className="aev-border-card aev-mobile-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:p-7"
               >
                 <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
                 <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105">
@@ -243,7 +243,7 @@ export default function Home() {
             {howItWorks.map((step, index) => (
               <article
                 key={step.title}
-                className="group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#07101f]/82 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-7"
+                className="aev-mobile-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#07101f]/82 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-7"
               >
                 <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-200/10 blur-2xl transition duration-300 group-hover:bg-violet-300/14" />
                 <div className="relative mb-12 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-lg font-semibold text-white">
@@ -263,7 +263,7 @@ export default function Home() {
 
       <section className="px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
-          <div className="relative min-h-[28rem] overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl backdrop-blur-2xl sm:min-h-[34rem] sm:p-7">
+          <div className="aev-mobile-reveal relative min-h-[28rem] overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl backdrop-blur-2xl sm:min-h-[34rem] sm:p-7">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(244,196,212,0.16),transparent_30%),radial-gradient(circle_at_20%_76%,rgba(34,211,238,0.12),transparent_32%),linear-gradient(145deg,rgba(255,255,255,0.08),transparent_42%)]" />
             <div className="absolute left-1/2 top-20 h-56 w-[72%] -translate-x-1/2 rounded-[50%_50%_38%_38%/38%_38%_58%_58%] border border-white/20 bg-gradient-to-br from-white/24 via-cyan-100/14 to-fuchsia-300/18 shadow-[inset_0_2px_28px_rgba(255,255,255,0.28),0_34px_90px_rgba(0,0,0,0.28)] backdrop-blur-md sm:h-72" />
             <div className="absolute left-[24%] right-[24%] top-[8.3rem] h-14 rounded-b-full border-b border-white/35 bg-white/18 sm:top-[10.6rem]" />
@@ -303,7 +303,7 @@ export default function Home() {
               ].map((benefit) => (
                 <div
                   key={benefit}
-                  className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-sm leading-7 text-white/70"
+                  className="aev-mobile-reveal flex gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-sm leading-7 text-white/70"
                 >
                   <ShieldCheck
                     className="mt-1 shrink-0 text-cyan-200"
@@ -342,7 +342,7 @@ export default function Home() {
                 {careCards.map(({ title, copy, icon: Icon }) => (
                   <article
                     key={title}
-                    className="rounded-[1.35rem] border border-white/10 bg-[#050816]/58 p-5"
+                    className="aev-mobile-reveal rounded-[1.35rem] border border-white/10 bg-[#050816]/58 p-5"
                   >
                     <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.07] text-cyan-100">
                       <Icon size={20} strokeWidth={1.7} />
@@ -372,7 +372,7 @@ export default function Home() {
             {faqs.map((faq, index) => (
               <article
                 key={faq.question}
-                className="rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl sm:p-6"
+                className="aev-mobile-reveal rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl sm:p-6"
               >
                 <div className="flex items-start gap-4">
                   <span className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/70">
