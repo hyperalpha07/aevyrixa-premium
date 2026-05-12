@@ -61,3 +61,93 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(34, 211, 238, 1), rgba(168, 85, 247, 1));
 }
+
+.aev-glow {
+  animation: aev-glow 8s ease-in-out infinite alternate;
+}
+
+.aev-float {
+  animation: aev-float 10s ease-in-out infinite;
+}
+
+.aev-float-slow {
+  animation: aev-float 14s ease-in-out infinite reverse;
+}
+
+.aev-wave {
+  animation: aev-wave 9s ease-in-out infinite;
+}
+
+.aev-wave-delayed {
+  animation: aev-wave 11s ease-in-out infinite reverse;
+}
+
+.aev-border-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(103, 232, 249, 0.32),
+    rgba(168, 85, 247, 0.2),
+    rgba(244, 196, 212, 0.24)
+  );
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.aev-border-card:hover::before {
+  opacity: 1;
+}
+
+@keyframes aev-glow {
+  from {
+    opacity: 0.55;
+    transform: translateX(-50%) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+@keyframes aev-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, 18px, 0);
+  }
+}
+
+@keyframes aev-wave {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-2deg) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, 10px, 0) rotate(2deg) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .aev-glow,
+  .aev-float,
+  .aev-float-slow,
+  .aev-wave,
+  .aev-wave-delayed {
+    animation: none !important;
+  }
+}
