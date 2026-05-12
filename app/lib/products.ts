@@ -3,8 +3,6 @@ export type ProductVisualTheme = "blush-violet" | "cyan-night" | "rose-gold";
 export type Product = {
   id: string;
   slug: string;
-  shopifyHandle: string;
-  shopifyVariantId: string;
   name: string;
   shortDescription: string;
   description: string;
@@ -30,8 +28,6 @@ export const products: Product[] = [
   {
     id: "aev-her-care-everyday-comfort",
     slug: "everyday-comfort",
-    shopifyHandle: "aevyrixa-her-care-period-panty-everyday-comfort",
-    shopifyVariantId: "gid://shopify/ProductVariant/00000000001001",
     name: "Aevyrixa Her Care Period Panty - Everyday Comfort",
     shortDescription:
       "Soft reusable period underwear for lighter routine days with a smooth, discreet fit.",
@@ -65,8 +61,6 @@ export const products: Product[] = [
   {
     id: "aev-her-care-heavy-flow-support",
     slug: "heavy-flow-support",
-    shopifyHandle: "aevyrixa-her-care-period-panty-heavy-flow-support",
-    shopifyVariantId: "gid://shopify/ProductVariant/00000000001002",
     name: "Aevyrixa Her Care Period Panty - Heavy Flow Support",
     shortDescription:
       "A supportive reusable panty for heavier routine days with secure coverage and soft structure.",
@@ -100,8 +94,6 @@ export const products: Product[] = [
   {
     id: "aev-her-care-night-comfort",
     slug: "night-comfort",
-    shopifyHandle: "aevyrixa-her-care-period-panty-night-comfort",
-    shopifyVariantId: "gid://shopify/ProductVariant/00000000001003",
     name: "Aevyrixa Her Care Period Panty - Night Comfort",
     shortDescription:
       "Extended comfort for sleep, travel, and long wear moments with a soft secure feel.",

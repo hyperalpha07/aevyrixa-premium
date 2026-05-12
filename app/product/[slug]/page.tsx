@@ -121,8 +121,6 @@ export default function ProductPage({
         id: buildCartLineId(product, selectedSize, selectedColor, selectedAbsorbency),
         productId: product.id,
         slug: product.slug,
-        shopifyHandle: product.shopifyHandle,
-        shopifyVariantId: product.shopifyVariantId,
         name: product.name,
         price: product.numericPrice,
         image: product.visualTheme,

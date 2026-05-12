@@ -24,8 +24,8 @@ export default function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/30 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="flex-shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
             <Image
               src="/logo.jpg"
@@ -37,11 +37,11 @@ export default function SiteHeader({
             />
           </div>
 
-          <div className="min-w-0">
-            <p className="text-base sm:text-lg font-bold tracking-[0.25em] text-white truncate">
+          <div className="min-w-0 max-w-[250px] sm:max-w-none">
+            <p className="truncate text-sm font-bold tracking-[0.18em] text-white min-[390px]:text-base min-[390px]:tracking-[0.22em] sm:text-lg sm:tracking-[0.25em]">
               Aevyrixa Her Care
             </p>
-            <p className="hidden sm:block text-[9px] uppercase tracking-[0.35em] text-cyan-300/70">
+            <p className="hidden text-[9px] uppercase tracking-[0.35em] text-cyan-300/70 sm:block">
               Premium reusable period panty care
             </p>
           </div>

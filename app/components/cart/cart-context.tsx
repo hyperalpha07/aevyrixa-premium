@@ -12,8 +12,6 @@ export type CartItem = {
   id: string;
   productId?: string;
   slug: string;
-  shopifyHandle: string;
-  shopifyVariantId: string;
   name: string;
   price: number;
   image: string;
