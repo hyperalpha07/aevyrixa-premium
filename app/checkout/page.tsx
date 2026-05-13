@@ -102,7 +102,7 @@ function readAdminSettingsFromStorage() {
 }
 
 export default function CheckoutPage() {
-  const { items, totalItems, subtotal, isLoaded } = useCart();
+  const { items, totalItems, subtotal, isLoaded, clearCart } = useCart();
   const [form, setForm] = useState<CheckoutForm>(initialForm);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [preparedOrder, setPreparedOrder] = useState<PreparedOrder | null>(null);
@@ -192,6 +192,36 @@ export default function CheckoutPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
+  const saveDraftOrder = (draftOrder: unknown) => {
+    try {
+      localStorage.setItem(DRAFT_ORDER_STORAGE_KEY, JSON.stringify(draftOrder));
+
+      try {
+        const savedOrders = localStorage.getItem(DRAFT_ORDERS_STORAGE_KEY);
+        const parsedOrders = savedOrders
+          ? (JSON.parse(savedOrders) as unknown)
+          : [];
+        const existingOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
+
+        localStorage.setItem(
+          DRAFT_ORDERS_STORAGE_KEY,
+          JSON.stringify([...existingOrders, draftOrder])
+        );
+      } catch (error) {
+        console.error("Failed to save order history:", error);
+        localStorage.setItem(
+          DRAFT_ORDERS_STORAGE_KEY,
+          JSON.stringify([draftOrder])
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Failed to save order:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -243,23 +273,7 @@ export default function CheckoutPage() {
       createdAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(DRAFT_ORDER_STORAGE_KEY, JSON.stringify(draftOrder));
-
-    try {
-      const savedOrders = localStorage.getItem(DRAFT_ORDERS_STORAGE_KEY);
-      const parsedOrders = savedOrders
-        ? (JSON.parse(savedOrders) as unknown)
-        : [];
-      const existingOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
-
-      localStorage.setItem(
-        DRAFT_ORDERS_STORAGE_KEY,
-        JSON.stringify([...existingOrders, draftOrder])
-      );
-    } catch (error) {
-      console.error("Failed to save order history:", error);
-      localStorage.setItem(DRAFT_ORDERS_STORAGE_KEY, JSON.stringify([draftOrder]));
-    }
+    if (!saveDraftOrder(draftOrder)) return;
 
     setPreparedOrder({
       orderId,
@@ -273,6 +287,7 @@ export default function CheckoutPage() {
       transactionReference,
       total: subtotal,
     });
+    clearCart();
   };
 
   return (
@@ -303,10 +318,10 @@ export default function CheckoutPage() {
           <div className="w-full min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-white/65 backdrop-blur-2xl">
             Loading checkout...
           </div>
-        ) : items.length === 0 ? (
-          <EmptyCheckoutState />
         ) : preparedOrder ? (
           <ConfirmationPanel order={preparedOrder} />
+        ) : items.length === 0 ? (
+          <EmptyCheckoutState />
         ) : (
           <div className="grid w-full min-w-0 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] lg:items-start">
             <form

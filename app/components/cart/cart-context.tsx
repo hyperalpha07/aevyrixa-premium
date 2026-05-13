@@ -115,6 +115,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+
+    if (!isLoaded) return;
+
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify([]));
+    } catch (error) {
+      console.error("Failed to clear cart from localStorage:", error);
+    }
   };
 
   const totalItems = useMemo(() => {
