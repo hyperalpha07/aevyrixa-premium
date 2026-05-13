@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
           items: [
             "To confirm and prepare customer orders.",
             "To provide delivery and payment support.",
-            "To review refund, guarantee, or product support requests.",
+            "To review support, exchange, refund, or product concern requests.",
           ],
         },
         {

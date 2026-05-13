@@ -4,28 +4,36 @@ export default function RefundPolicyPage() {
   return (
     <InfoPageShell
       eyebrow="Refund Policy"
-      title="A fair 7-Day Money Back Guarantee for Her Care orders."
-      intro="Aevyrixa Her Care keeps the refund process professional and transparent while respecting hygiene-sensitive product handling."
+      title="3-Day Hygiene-Safe Support for Her Care Orders"
+      intro="Aevyrixa Her Care keeps support fair and transparent while respecting hygiene-sensitive product handling."
       sections={[
         {
-          title: "7-Day Money Back Guarantee",
-          copy: "Customers may request support under the 7-Day Money Back Guarantee within 7 days of receiving the order.",
+          title: "3-Day Support Window",
+          copy: "Customers may request support within 3 days of delivery for size concerns, wrong item, damaged item, or order issues.",
         },
         {
-          title: "Hygiene-sensitive conditions",
-          items: [
-            "Products must be unused, unwashed, and returned with original packaging where return is requested.",
-            "Opened or used intimate care products may be limited to replacement or store support depending on the issue.",
-            "Fit, comfort, or product concerns should be reported with the order reference and customer phone number.",
-          ],
+          title: "Hygiene-Sensitive Conditions",
+          copy: "Eligible items must be unused, unwashed, unstained, odor-free, undamaged, and kept with original packaging, tags, and hygiene liner/seal where applicable.",
         },
         {
-          title: "Fair review",
-          copy: "Each request is reviewed by the Aevyrixa team. Approved refunds, replacements, or adjustments are confirmed directly with the customer.",
+          title: "Size Check Rule",
+          copy: "For size checking, try the product only over clean underwear or clean fitted clothing. Direct skin contact, washing, staining, odor, removed hygiene liner/seal, or damaged packaging may make the item ineligible for exchange/refund.",
         },
         {
-          title: "What to prepare",
-          copy: "Keep your order reference, phone number, product condition details, and any relevant photos ready when contacting support.",
+          title: "Unboxing Proof",
+          copy: "For wrong item, missing item, damaged item, or packaging issue claims, an unboxing video is required. The video should start before opening the parcel and clearly show the sealed package, label/order reference, opening process, and product condition.",
+        },
+        {
+          title: "Used Product Policy",
+          copy: "For hygiene and safety reasons, used, washed, stained, damaged, odor-marked, or directly worn intimate products cannot be returned or exchanged.",
+        },
+        {
+          title: "Review First",
+          copy: "All support, exchange, or refund requests are reviewed by the Aevyrixa Her Care team before approval.",
+        },
+        {
+          title: "Return Cost",
+          copy: "If the issue is caused by Aevyrixa, we will support the correction. If the request is due to customer size preference or change of mind, delivery/return cost may be the customer's responsibility.",
         },
       ]}
     />

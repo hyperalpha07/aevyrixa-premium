@@ -215,7 +215,7 @@ export default function CartDrawer() {
             </div>
 
             <p className="mt-4 text-center text-[11px] uppercase tracking-[0.2em] text-white/40">
-              Secure Payment • Fast Shipping • 7-Day Guarantee
+              Secure Payment • Discreet Privacy Packaging • 3-Day Hygiene-Safe Support
             </p>
           </div>
         </div>

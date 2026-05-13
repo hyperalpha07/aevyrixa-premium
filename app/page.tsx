@@ -13,8 +13,8 @@ import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 
 const trustItems = [
-  "Discreet Delivery",
-  "7-Day Money Back Guarantee",
+  "Discreet Privacy Packaging",
+  "3-Day Hygiene-Safe Support",
   "Comfort Fit",
   "Reusable Protection",
 ];
@@ -90,9 +90,9 @@ const faqs = [
       "Rinse with cool water, machine wash or hand wash with mild detergent, then air dry before storing.",
   },
   {
-    question: "What is the guarantee?",
+    question: "What support is available?",
     answer:
-      "Aevyrixa Her Care includes a 7-day money back guarantee so you can shop with more confidence.",
+      "Aevyrixa Her Care offers 3-Day Hygiene-Safe Support. Approval depends on product condition, packaging, proof, and support review.",
   },
 ];
 
@@ -411,7 +411,7 @@ export default function Home() {
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
                 Discover premium reusable protection with discreet delivery and
-                a 7-day money back guarantee.
+                3-Day Hygiene-Safe Support.
               </p>
               <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                 <Link

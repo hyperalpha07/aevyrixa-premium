@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FormEvent, useEffect, useState } from "react";
-import { CheckCircle2, Copy, ShieldCheck, Truck } from "lucide-react";
+import { CheckCircle2, Copy, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import {
@@ -698,6 +698,10 @@ function OrderSummary({
           <div className="flex items-start gap-3">
             <Truck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />
             <span className="leading-6">{deliveryNote}</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />
+            <span className="leading-6">Discreet Privacy Packaging</span>
           </div>
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-200" />

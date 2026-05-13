@@ -15,7 +15,7 @@ export type AdminSettings = {
 
 export const defaultAdminSettings: AdminSettings = {
   storeName: "Aevyrixa Her Care",
-  guaranteeText: "7-Day Money Back Guarantee",
+  guaranteeText: "3-Day Hygiene-Safe Support",
   deliveryNote: "Estimated delivery will be confirmed by our team after order review.",
   walletReceiverNumbers: {
     bKash: "01644037384",

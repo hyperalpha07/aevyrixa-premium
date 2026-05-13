@@ -51,8 +51,8 @@ const themeStyles: Record<
 };
 
 const trustBadges = [
-  { label: "Discreet Delivery", icon: PackageCheck },
-  { label: "7-Day Money Back Guarantee", icon: ShieldCheck },
+  { label: "Discreet Privacy Packaging", icon: PackageCheck },
+  { label: "3-Day Hygiene-Safe Support", icon: ShieldCheck },
   { label: "Comfort Fit", icon: HeartHandshake },
   { label: "Reusable Protection", icon: Recycle },
 ];

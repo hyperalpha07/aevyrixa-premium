@@ -7,8 +7,8 @@ import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
 
 const emptyCartTrustNotes = [
-  { label: "Discreet Delivery", icon: PackageCheck },
-  { label: "7-Day Money Back Guarantee", icon: ShieldCheck },
+  { label: "Discreet Privacy Packaging", icon: PackageCheck },
+  { label: "3-Day Hygiene-Safe Support", icon: ShieldCheck },
   { label: "Comfort Fit", icon: Sparkles },
 ];
 
@@ -198,8 +198,8 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-white/65">
-                    <span>Guarantee</span>
-                    <span>7-Day Coverage</span>
+                    <span>Support</span>
+                    <span>3-Day Support Window</span>
                   </div>
 
                   <div className="h-px bg-white/10" />
@@ -228,7 +228,7 @@ export default function CartPage() {
               </div>
 
               <p className="mt-5 text-center text-xs uppercase tracking-[0.2em] text-white/45">
-                Secure Payment • Fast Shipping • 7-Day Guarantee
+                Secure Payment • Discreet Privacy Packaging • 3-Day Hygiene-Safe Support
               </p>
             </div>
           </div>

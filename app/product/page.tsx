@@ -61,7 +61,7 @@ export default function ProductCollectionPage() {
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           {[
-            ["Discreet Delivery", Truck],
+            ["Discreet Privacy Packaging", Truck],
             ["Comfort-Led Fit", Sparkles],
             ["Reusable Protection", Droplets],
           ].map(([label, Icon]) => (

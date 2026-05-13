@@ -4,24 +4,28 @@ export default function ShippingPolicyPage() {
   return (
     <InfoPageShell
       eyebrow="Shipping Policy"
-      title="Discreet delivery, confirmed before dispatch."
-      intro="Shipping is currently handled through direct team review so customers receive clear confirmation before an order is prepared for delivery."
+      title="Discreet Delivery Across Bangladesh"
+      intro="Orders are reviewed and confirmed before dispatch so delivery details stay clear and private."
       sections={[
         {
-          title: "Order review first",
-          copy: "After checkout, our team reviews the order details and contacts the customer to confirm delivery information before dispatch preparation.",
+          title: "Bangladesh Delivery",
+          copy: "Estimated delivery is 2-7 working days across Bangladesh after order confirmation.",
         },
         {
-          title: "Discreet delivery",
-          copy: "Aevyrixa Her Care uses discreet delivery wording and respectful handling for women hygiene products.",
+          title: "Discreet Privacy Packaging",
+          copy: "Your order is packed with privacy-focused handling. Outer packaging will not expose sensitive product details.",
         },
         {
-          title: "Cost and timing",
-          copy: "Shipping cost and delivery timing will be confirmed by the team for now. Live automated shipping rules will be connected in a future backend phase.",
+          title: "Delivery Review",
+          copy: "Delivery cost, courier details, and estimated timing are confirmed by our team before dispatch.",
         },
         {
-          title: "Customer details",
-          copy: "Please provide a reachable phone number and complete address at checkout so confirmation can happen without delay.",
+          title: "Parcel Check",
+          copy: "Please check the outer parcel condition at delivery. If the package looks damaged, wet, opened, or tampered with, take photos/video before opening.",
+        },
+        {
+          title: "Possible Delays",
+          copy: "Remote areas, courier delays, holidays, weather, or high order volume may affect delivery timing.",
         },
       ]}
     />

@@ -25,7 +25,7 @@ export default function AboutPage() {
         },
         {
           title: "Promise",
-          copy: "We keep the experience transparent: clear product information, a 7-Day Money Back Guarantee, and direct order confirmation before dispatch.",
+          copy: "We keep the experience transparent: clear product information, 3-Day Hygiene-Safe Support, and direct order confirmation before dispatch.",
         },
       ]}
     />

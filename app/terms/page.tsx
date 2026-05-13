@@ -13,23 +13,31 @@ export default function TermsPage() {
         },
         {
           title: "Order confirmation",
-          copy: "Submitting checkout details creates an order request. The Aevyrixa team confirms details before dispatch preparation.",
+          copy: "Submitting checkout details creates an order request. The Aevyrixa Her Care team confirms product, size, payment, and delivery details before dispatch.",
         },
         {
           title: "Product availability",
-          copy: "Product availability, colors, sizes, pricing, and offers may change as inventory is reviewed.",
+          copy: "Product availability, price, color, and size may change before confirmation as inventory and order details are reviewed.",
         },
         {
           title: "Payment and delivery",
           copy: "Available payment options are shown during checkout. Delivery cost, timing, and dispatch details may be confirmed directly by the team.",
         },
         {
+          title: "Hygiene-sensitive eligibility",
+          copy: "Support, exchange, or refund eligibility depends on unused condition, original packaging, hygiene liner/seal where applicable, proof, and support review.",
+        },
+        {
+          title: "Used intimate products",
+          copy: "Used, washed, stained, damaged, odor-marked, or directly worn intimate products cannot be returned or exchanged.",
+        },
+        {
           title: "Policies",
-          copy: "Refund, shipping, privacy, and guarantee details are provided on the related policy pages and may be updated as operations mature.",
+          copy: "Refund, shipping, privacy, and support details are provided on the related policy pages and may be updated as operations mature.",
         },
         {
           title: "Policy changes",
-          copy: "Aevyrixa Her Care may update website content and policies as the store grows, especially when backend features are added.",
+          copy: "Aevyrixa Her Care may update website content and policies as operations mature.",
         },
       ]}
     />
