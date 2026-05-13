@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -11,6 +10,7 @@ import {
   Waves,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
+import SiteFooter from "@/app/components/site-footer";
 
 const trustItems = [
   "Discreet Delivery",
@@ -432,60 +432,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-white/10 bg-[#02040d] px-4 pb-24 pt-12 sm:px-6 sm:pb-16">
-        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
-                <Image
-                  src="/logo.jpg"
-                  alt="Aevyrixa Logo"
-                  width={42}
-                  height={42}
-                  sizes="42px"
-                  className="h-10 w-10 rounded-lg object-cover"
-                />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-lg font-bold tracking-[0.22em] text-white">
-                  Aevyrixa
-                </p>
-                <p className="text-[0.64rem] font-semibold uppercase tracking-[0.3em] text-cyan-200/68">
-                  Her Care
-                </p>
-              </div>
-            </div>
-            <p className="mt-5 max-w-sm text-sm leading-7 text-white/56">
-              Premium reusable period care designed around comfort, discretion,
-              and a more confident everyday routine.
-            </p>
-          </div>
-
-          {[
-            ["Shop", "Her Care Collection", "Period Panty", "Size Guide"],
-            ["Support", "FAQ", "Care Tips", "7-Day Guarantee"],
-            ["Brand", "Aevyrixa", "Discreet Delivery", "Reusable Care"],
-          ].map(([title, ...links]) => (
-            <div key={title}>
-              <h3 className="font-semibold text-white">{title}</h3>
-              <ul className="mt-4 space-y-3 text-sm text-white/55">
-                {links.map((label) => (
-                  <li key={label}>
-                    <Link href="/product" className="transition hover:text-cyan-200">
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/42 sm:flex-row sm:items-center sm:justify-between">
-          <p>Copyright 2026 Aevyrixa. All rights reserved.</p>
-          <p>Reusable care guidance is informational and not medical advice.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

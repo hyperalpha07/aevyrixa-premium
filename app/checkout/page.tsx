@@ -716,21 +716,23 @@ function OrderSummary({
 
 function EmptyCheckoutState() {
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-center backdrop-blur-2xl sm:p-10">
+    <div className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_0_48px_rgba(34,211,238,0.08)] backdrop-blur-2xl sm:p-10">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10">
         <ShieldCheck className="h-6 w-6 text-cyan-100" />
       </div>
       <h2 className="mt-5 break-words text-2xl font-semibold text-white [overflow-wrap:anywhere]">
-        Your checkout is empty
+        Your checkout is ready when your Her Care essentials are selected.
       </h2>
       <p className="mx-auto mt-3 max-w-xl break-words text-sm leading-7 text-white/60 [overflow-wrap:anywhere]">
-        Add an Aevyrixa Her Care product before completing checkout.
+        Add a reusable period care product to your cart before sharing delivery
+        and payment details. The checkout form will appear after your cart has
+        items.
       </p>
       <Link
         href="/product"
         className="mt-7 inline-flex w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
       >
-        Back to Products
+        Shop Her Care
       </Link>
     </div>
   );
@@ -751,9 +753,14 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
     ["Transaction ID / Reference", order.transactionReference],
     ] as Array<[string, string | undefined]>
   ).filter((item): item is [string, string] => Boolean(item[1]));
+  const nextSteps = [
+    "Order received",
+    "Team confirms details",
+    "Dispatch preparation",
+  ];
 
   return (
-    <div className="mx-auto max-w-3xl rounded-[1.75rem] border border-cyan-200/25 bg-cyan-200/[0.08] p-5 text-center shadow-[0_0_48px_rgba(34,211,238,0.12)] backdrop-blur-2xl sm:p-10">
+    <div className="mx-auto max-w-4xl rounded-[1.75rem] border border-cyan-200/25 bg-cyan-200/[0.08] p-5 text-center shadow-[0_0_48px_rgba(34,211,238,0.12)] backdrop-blur-2xl sm:p-10">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-100/30 bg-cyan-100/12">
         <CheckCircle2 className="h-8 w-8 text-cyan-100" />
       </div>
@@ -761,8 +768,25 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
         Order Received
       </p>
       <h2 className="mt-3 text-3xl font-semibold text-white">
-        Thank you, {order.customerName}
+        Thank you, {order.customerName}. Your Her Care order is in review.
       </h2>
+      <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/68">
+        We have received your order request. Our team will confirm delivery and
+        payment details directly before dispatch preparation begins.
+      </p>
+      <div className="mx-auto mt-7 grid max-w-3xl gap-3 sm:grid-cols-3">
+        {nextSteps.map((step, index) => (
+          <div
+            key={step}
+            className="rounded-2xl border border-white/10 bg-black/20 p-4 text-left"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/65">
+              Step {index + 1}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-white">{step}</p>
+          </div>
+        ))}
+      </div>
       <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left sm:grid-cols-2">
         {detailItems.map(([label, value]) => (
           <div
@@ -778,20 +802,16 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
           </div>
         ))}
       </div>
-      <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/68">
-        We have received your order request. Our team will contact you to confirm
-        delivery and payment details before dispatch.
-      </p>
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href="/cart"
-          className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-6 py-3 text-sm font-medium text-white transition hover:bg-white/[0.09]"
+          className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-6 py-3 text-sm font-medium text-white transition hover:bg-white/[0.09] sm:w-auto"
         >
           Review Cart
         </Link>
         <Link
           href="/product"
-          className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
+          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
         >
           Continue Shopping
         </Link>

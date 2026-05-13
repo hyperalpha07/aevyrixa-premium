@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { PackageCheck, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
+
+const emptyCartTrustNotes = [
+  { label: "Discreet Delivery", icon: PackageCheck },
+  { label: "7-Day Money Back Guarantee", icon: ShieldCheck },
+  { label: "Comfort Fit", icon: Sparkles },
+];
 
 export default function CartPage() {
   const {
@@ -60,25 +67,37 @@ export default function CartPage() {
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-2xl md:p-12">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center shadow-[0_0_48px_rgba(34,211,238,0.08)] backdrop-blur-2xl sm:p-8 md:p-12">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-400/20 bg-cyan-400/10 text-2xl text-cyan-300">
-              🛒
+              <ShoppingBag className="h-7 w-7" />
             </div>
 
             <h2 className="mt-6 text-2xl font-semibold md:text-3xl">
-              Your cart is empty
+              Your cart is ready for Her Care essentials.
             </h2>
 
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/60 md:text-base">
-              Add premium Her Care products to your cart and build a more
-              comfortable reusable routine with AEVYRIXA.
+              Choose premium reusable period care essentials when you are ready.
+              Your selections will appear here before checkout.
             </p>
+
+            <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-3">
+              {emptyCartTrustNotes.map(({ label, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/64"
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-cyan-200" />
+                  <span className="break-words">{label}</span>
+                </div>
+              ))}
+            </div>
 
             <Link
               href="/product"
-              className="mt-7 inline-flex rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-7 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.02]"
+              className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-7 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.02] sm:w-auto"
             >
-              Explore Products
+              Shop Her Care
             </Link>
           </div>
         ) : (
