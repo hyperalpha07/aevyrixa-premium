@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
-import CareExperiencePanel from "@/app/components/care-experience-panel";
+import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
 
 const trustItems = [
@@ -161,54 +161,32 @@ export default function Home() {
 
           <div className="aev-hero-visual relative min-w-0 max-w-full">
             <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
-            <div className="aev-product-float relative w-full max-w-full overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.065] p-3 shadow-2xl backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-5">
-              <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.12),transparent_28%,rgba(255,255,255,0.04)_56%,transparent_72%)]" />
-              <div className="relative min-h-[30rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#061020] p-5 sm:min-h-[36rem] sm:rounded-[2rem] sm:p-7">
-                <div className="aev-wave absolute left-[8%] top-[13%] h-44 w-[84%] rounded-[54%_46%_64%_36%/44%_42%_58%_56%] border border-cyan-100/18 bg-gradient-to-r from-cyan-100/18 via-white/8 to-violet-300/14" />
-                <div className="aev-wave-delayed absolute bottom-[19%] left-[7%] h-36 w-[86%] rounded-[40%_60%_44%_56%/62%_48%_52%_38%] border border-rose-100/14 bg-gradient-to-r from-violet-300/14 via-rose-100/12 to-cyan-200/10" />
-
-                <div className="relative ml-auto w-fit rounded-full border border-white/12 bg-black/25 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-cyan-100/80">
-                  reusable layer system
-                </div>
-
-                <div className="aev-hero-layer-stack absolute inset-x-6 top-[7.2rem] grid gap-4 sm:inset-x-12 sm:top-[9rem]">
-                  <div className="aev-hero-layer-card aev-hero-layer-card-one rounded-[1.45rem] border border-white/16 bg-gradient-to-r from-white/24 via-cyan-100/14 to-white/10 p-4 shadow-[inset_0_1px_24px_rgba(255,255,255,0.15),0_24px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/72">
-                      Comfort Knit
-                    </span>
+            <div className="aev-product-float relative">
+              <AevyrixaMotionPanel
+                mp4Src="/videos/aevyrixa-hero-motion.mp4"
+                eyebrow="Reusable Layer System"
+                title="Period care in motion"
+                copy="Floating comfort layers, glass reflections, and soft cyan-violet light create a cinematic product intro without explicit visuals."
+                variant="hero"
+              />
+              <div className="aev-hero-product-chip absolute bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/12 bg-[#050816]/72 p-4 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.66rem] font-semibold uppercase tracking-[0.3em] text-rose-100/70">
+                      Aevyrixa Her Care
+                    </p>
+                    <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
+                      Period Panty
+                    </h2>
                   </div>
-                  <div className="aev-hero-layer-card aev-hero-layer-card-two ml-5 rounded-[1.45rem] border border-white/16 bg-gradient-to-r from-cyan-200/18 via-violet-200/16 to-cyan-100/10 p-4 shadow-[inset_0_1px_24px_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:ml-10">
-                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/72">
-                      Absorbent Core
-                    </span>
-                  </div>
-                  <div className="aev-hero-layer-card aev-hero-layer-card-three mr-5 rounded-[1.45rem] border border-white/16 bg-gradient-to-r from-violet-200/18 via-rose-100/16 to-cyan-100/12 p-4 shadow-[inset_0_1px_24px_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:mr-10">
-                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/72">
-                      Protective Layer
-                    </span>
+                  <div className="rounded-full border border-cyan-200/20 bg-cyan-200/10 p-3 text-cyan-100">
+                    <Leaf size={20} strokeWidth={1.7} />
                   </div>
                 </div>
-                <div className="absolute bottom-[9rem] left-[18%] right-[18%] h-10 rounded-full bg-cyan-300/16 blur-xl sm:bottom-[11rem]" />
-
-                <div className="absolute bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/12 bg-[#050816]/72 p-4 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[0.66rem] font-semibold uppercase tracking-[0.3em] text-rose-100/70">
-                        Aevyrixa Her Care
-                      </p>
-                      <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
-                        Period Panty
-                      </h2>
-                    </div>
-                    <div className="rounded-full border border-cyan-200/20 bg-cyan-200/10 p-3 text-cyan-100">
-                      <Leaf size={20} strokeWidth={1.7} />
-                    </div>
-                  </div>
-                  <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[0.68rem] text-white/68">
-                    <span className="rounded-full bg-white/[0.07] px-2 py-2">Soft</span>
-                    <span className="rounded-full bg-white/[0.07] px-2 py-2">Layered</span>
-                    <span className="rounded-full bg-white/[0.07] px-2 py-2">Discreet</span>
-                  </div>
+                <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[0.68rem] text-white/68">
+                  <span className="rounded-full bg-white/[0.07] px-2 py-2">Soft</span>
+                  <span className="rounded-full bg-white/[0.07] px-2 py-2">Layered</span>
+                  <span className="rounded-full bg-white/[0.07] px-2 py-2">Discreet</span>
                 </div>
               </div>
             </div>
@@ -287,63 +265,33 @@ export default function Home() {
 
       <section className="px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
-          <div className="aev-reveal aev-layer-showcase relative min-h-[28rem] overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl backdrop-blur-2xl sm:min-h-[34rem] sm:p-7">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(244,196,212,0.16),transparent_30%),radial-gradient(circle_at_20%_76%,rgba(34,211,238,0.12),transparent_32%),linear-gradient(145deg,rgba(255,255,255,0.08),transparent_42%)]" />
-            <div className="aev-layer-halo absolute left-1/2 top-16 h-64 w-[78%] -translate-x-1/2 rounded-full bg-cyan-200/14 blur-3xl" />
-            <div className="aev-layer-reflection absolute inset-y-0 left-[-30%] w-1/2" />
-            <div className="absolute left-1/2 top-[4.7rem] h-72 w-[82%] -translate-x-1/2 sm:top-[6rem] sm:h-80">
-              {[
-                {
-                  label: "Comfort Knit",
-                  className:
-                    "aev-layer-plate-one top-0 bg-gradient-to-r from-white/24 via-cyan-100/16 to-white/10",
-                },
-                {
-                  label: "Absorbent Core",
-                  className:
-                    "aev-layer-plate-two top-[5.8rem] bg-gradient-to-r from-cyan-200/18 via-violet-200/18 to-cyan-100/10 sm:top-[6.8rem]",
-                },
-                {
-                  label: "Protective Layer",
-                  className:
-                    "aev-layer-plate-three top-[11.6rem] bg-gradient-to-r from-violet-200/18 via-rose-100/16 to-cyan-100/12 sm:top-[13.6rem]",
-                },
-              ].map(({ label, className }) => (
-                <div
-                  key={label}
-                  className={`aev-layer-plate absolute left-0 right-0 flex min-h-20 items-center justify-between gap-4 rounded-[1.4rem] border border-white/16 px-4 py-4 shadow-[inset_0_1px_26px_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:px-5 ${className}`}
-                >
-                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-100 shadow-[0_0_18px_rgba(103,232,249,0.8)]" />
-                  <span className="text-right text-xs font-semibold uppercase tracking-[0.22em] text-white/76">
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="absolute bottom-24 left-10 right-10 h-14 rounded-full bg-[#020617]/35 blur-2xl sm:bottom-28" />
-            <div className="absolute bottom-6 left-6 right-6 rounded-[1.35rem] border border-white/10 bg-black/24 p-4 text-sm leading-7 text-white/66 backdrop-blur-xl">
-              Abstract layered care system with soft spacing, quiet movement,
-              and no explicit body or intimate product imagery.
-            </div>
-          </div>
+          <AevyrixaMotionPanel
+            mp4Src="/videos/aevyrixa-care-system.mp4"
+            eyebrow="Aevyrixa Care Motion"
+            title="Layered reusable care, softly engineered."
+            copy="Comfort knit, absorbent core, and a protective layer move as abstract fabric forms, supporting discreet daily confidence and privacy packaging."
+            variant="care"
+            className="aev-reveal"
+          />
 
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-              Featured Product
+              Aevyrixa Care Motion
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              Aevyrixa Her Care Period Panty
+              Premium comfort, reusable care, and discreet protection in one calm system.
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
               A polished reusable period panty made for soft contact, discreet
-              wear, and calm movement through everyday plans.
+              wear, gentle care after use, and privacy-minded delivery from
+              order to arrival.
             </p>
 
             <div className="mt-8 grid gap-3">
               {[
                 "Soft fabric feel with flexible everyday support.",
                 "Layered protection designed for light to moderate flow.",
-                "Reusable care routine that helps reduce single-use waste.",
+                "Reusable routine with discreet Privacy Packaging.",
               ].map((benefit) => (
                 <div
                   key={benefit}
@@ -373,19 +321,27 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
           <div className="aev-reveal min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-              Care Experience
+              Aevyrixa Experience
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              A cinematic coded care moment, without video.
+              A cinematic product website moment that stays lightweight.
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-              Moving glass reflections, floating fabric-like layers, and soft
-              cyan-violet light create a premium sense of comfort, discretion,
-              reusable care, and privacy packaging.
+              Moving glass, soft glow, scroll reveal, and tactile tap feedback
+              give the homepage a video-style experience while staying fast and
+              mobile-safe.
             </p>
           </div>
 
-          <CareExperiencePanel className="aev-reveal" />
+          <AevyrixaMotionPanel
+            mp4Src="/videos/aevyrixa-experience.mp4"
+            eyebrow="Premium Experience"
+            title="Video-style motion, coded fallback."
+            copy="A cinematic glass frame with flowing care layers, soft reflections, and reveal motion keeps the brand alive even when video files are not installed."
+            labels={["Comfort", "Discretion", "Privacy Pack"]}
+            variant="experience"
+            className="aev-reveal"
+          />
         </div>
       </section>
 

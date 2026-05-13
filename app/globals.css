@@ -417,6 +417,181 @@ button {
   animation: aev-card-sheen 6s ease-in-out infinite;
 }
 
+.aev-motion-panel {
+  min-width: 0;
+  max-width: 100%;
+  transform: translateZ(0);
+  transition:
+    transform 320ms var(--aev-ease-out),
+    border-color 320ms ease,
+    box-shadow 320ms ease;
+}
+
+.aev-motion-panel::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 50% 0%, rgba(103, 232, 249, 0.18), transparent 34%);
+  opacity: 0.7;
+}
+
+.aev-motion-panel::after {
+  content: "";
+  position: absolute;
+  inset: auto 12% 8% 12%;
+  z-index: 1;
+  height: 4.5rem;
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.13);
+  filter: blur(24px);
+  animation: aev-motion-floor-glow 5.8s ease-in-out infinite alternate;
+}
+
+.aev-motion-panel-hero {
+  box-shadow:
+    0 34px 120px rgba(0, 0, 0, 0.42),
+    0 0 70px rgba(34, 211, 238, 0.12);
+}
+
+.aev-motion-panel-experience {
+  box-shadow:
+    0 34px 120px rgba(0, 0, 0, 0.42),
+    0 0 80px rgba(168, 85, 247, 0.12);
+}
+
+.aev-motion-ambient {
+  background:
+    radial-gradient(circle at 22% 16%, rgba(34, 211, 238, 0.24), transparent 29%),
+    radial-gradient(circle at 78% 66%, rgba(168, 85, 247, 0.22), transparent 31%),
+    radial-gradient(circle at 44% 86%, rgba(244, 196, 212, 0.15), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.09), transparent 44%);
+  animation: aev-motion-ambient 9s ease-in-out infinite alternate;
+}
+
+.aev-motion-grid {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: 0.24;
+}
+
+.aev-motion-shine {
+  z-index: 3;
+  background: linear-gradient(105deg, transparent 4%, rgba(255, 255, 255, 0.18) 48%, transparent 82%);
+  filter: blur(1px);
+  opacity: 0.45;
+  transform: skewX(-12deg);
+  animation: aev-motion-shine 6.8s ease-in-out infinite;
+}
+
+.aev-motion-ribbon {
+  box-shadow: inset 0 1px 28px rgba(255, 255, 255, 0.08);
+  will-change: transform;
+}
+
+.aev-motion-ribbon-one {
+  animation: aev-motion-ribbon 8.2s ease-in-out infinite;
+}
+
+.aev-motion-ribbon-two {
+  animation: aev-motion-ribbon 9.4s ease-in-out infinite reverse;
+}
+
+.aev-motion-ribbon-three {
+  animation: aev-motion-ribbon 10.4s ease-in-out infinite;
+}
+
+.aev-motion-core {
+  animation: aev-motion-core 5.4s ease-in-out infinite alternate;
+}
+
+.aev-motion-chip {
+  position: relative;
+  z-index: 4;
+  overflow: hidden;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease;
+}
+
+.aev-motion-chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 16%, rgba(255, 255, 255, 0.2) 46%, transparent 70%);
+  transform: translateX(-120%);
+  animation: aev-motion-chip-shine 5.4s ease-in-out infinite;
+}
+
+.aev-motion-chip:nth-child(2)::after {
+  animation-delay: 180ms;
+}
+
+.aev-motion-chip:nth-child(3)::after {
+  animation-delay: 360ms;
+}
+
+.aev-motion-copy-card {
+  position: relative;
+  z-index: 4;
+  overflow: hidden;
+}
+
+.aev-motion-copy-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.11) 48%, transparent 68%);
+  transform: translateX(-130%);
+  animation: aev-card-sheen 6s ease-in-out infinite;
+}
+
+.aev-motion-copy-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-hero-product-chip {
+  z-index: 6;
+}
+
+.aev-hero-product-chip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-motion-panel:hover {
+    transform: translate3d(0, -4px, 0);
+    border-color: rgba(103, 232, 249, 0.28);
+    box-shadow:
+      0 40px 130px rgba(0, 0, 0, 0.48),
+      0 0 70px rgba(34, 211, 238, 0.14),
+      0 0 86px rgba(168, 85, 247, 0.1);
+  }
+}
+
+.aev-motion-panel:active {
+  transform: translate3d(0, 1px, 0) scale(0.992);
+}
+
+.aev-motion-panel.aev-reveal:not(.aev-reveal-visible) {
+  transform: translate3d(0, 22px, 0);
+}
+
+.aev-motion-panel.aev-reveal-visible {
+  transform: translate3d(0, 0, 0);
+}
+
 .aev-border-card::before {
   content: "";
   position: absolute;
@@ -719,12 +894,84 @@ button {
   }
 }
 
+@keyframes aev-motion-ambient {
+  from {
+    opacity: 0.76;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.035);
+  }
+}
+
+@keyframes aev-motion-shine {
+  0%,
+  100% {
+    transform: translateX(-10%) skewX(-12deg);
+    opacity: 0.18;
+  }
+
+  50% {
+    transform: translateX(230%) skewX(-12deg);
+    opacity: 0.48;
+  }
+}
+
+@keyframes aev-motion-ribbon {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1.4deg) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, 12px, 0) rotate(1.5deg) scale(1.018);
+  }
+}
+
+@keyframes aev-motion-core {
+  from {
+    opacity: 0.56;
+    transform: translate3d(-50%, 0, 0) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, -6px, 0) scale(1.1);
+  }
+}
+
+@keyframes aev-motion-chip-shine {
+  0%,
+  60% {
+    transform: translateX(-125%);
+  }
+
+  82%,
+  100% {
+    transform: translateX(125%);
+  }
+}
+
+@keyframes aev-motion-floor-glow {
+  from {
+    opacity: 0.45;
+    transform: scaleX(0.9);
+  }
+
+  to {
+    opacity: 0.9;
+    transform: scaleX(1.08);
+  }
+}
+
 @media (max-width: 767px) {
   .aev-home .aev-hero-visual {
     animation: none;
     max-width: 100%;
     opacity: 1;
-    width: 80vw;
+    width: 100%;
   }
 
   .aev-home .aev-product-float,
@@ -736,7 +983,7 @@ button {
 
   .aev-home .aev-product-float {
     animation: aev-mobile-product-float 7.5s ease-in-out infinite;
-    width: 80vw;
+    width: 100%;
   }
 
   .aev-home .aev-hero-headline {
@@ -769,6 +1016,28 @@ button {
   .aev-care-panel {
     border-radius: 1.5rem;
   }
+
+  .aev-motion-panel {
+    border-radius: 1.5rem;
+    width: 100%;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .aev-motion-panel .aev-motion-chip {
+    letter-spacing: 0.12em;
+  }
+
+  .aev-motion-panel > .relative > .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aev-hero-product-chip {
+    overflow: hidden;
+  }
+
+  .aev-hero-product-chip span {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 479px) {
@@ -777,7 +1046,7 @@ button {
   }
 
   .aev-home .aev-hero-actions > * {
-    width: 88vw;
+    width: min(100%, calc(100vw - 2rem));
   }
 }
 
@@ -894,7 +1163,15 @@ button {
   .aev-video-orbit,
   .aev-video-scan,
   .aev-video-core,
-  .aev-video-pulse {
+  .aev-video-pulse,
+  .aev-motion-panel,
+  .aev-motion-panel::after,
+  .aev-motion-ambient,
+  .aev-motion-shine,
+  .aev-motion-ribbon,
+  .aev-motion-core,
+  .aev-motion-chip::after,
+  .aev-motion-copy-card::before {
     animation: none !important;
     opacity: 1 !important;
     will-change: auto !important;
@@ -916,6 +1193,6 @@ button {
   }
 
   .aev-home .aev-hero-visual {
-    max-width: 80vw;
+    max-width: 100%;
   }
 }
