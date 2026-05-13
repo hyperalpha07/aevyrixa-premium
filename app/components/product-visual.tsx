@@ -46,17 +46,18 @@ export default function ProductVisual({
 
   return (
     <div
-      className={`relative isolate flex h-full min-h-full w-full items-center justify-center overflow-hidden rounded-[inherit] bg-[#07101f] ${className}`}
+      className={`aev-product-visual relative isolate flex h-full min-h-full w-full items-center justify-center overflow-hidden rounded-[inherit] bg-[#07101f] ${className}`}
       aria-label={`${label} CSS product visual`}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${theme.shell}`} />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.58),transparent_26%),radial-gradient(circle_at_80%_76%,rgba(255,255,255,0.22),transparent_34%)]" />
+      <div className="aev-product-visual-halo absolute left-1/2 top-[18%] h-[58%] w-[74%] -translate-x-1/2 rounded-full bg-cyan-100/18 blur-3xl" />
       <div
-        className={`absolute left-[16%] right-[16%] top-[22%] h-[48%] rounded-[44%_44%_30%_30%/40%_40%_52%_52%] border ${theme.trim} shadow-[inset_0_1px_24px_rgba(255,255,255,0.18),0_28px_80px_rgba(0,0,0,0.24)] backdrop-blur-md`}
+        className={`aev-product-visual-shell absolute left-[16%] right-[16%] top-[22%] h-[48%] rounded-[44%_44%_30%_30%/40%_40%_52%_52%] border ${theme.trim} shadow-[inset_0_1px_24px_rgba(255,255,255,0.18),0_28px_80px_rgba(0,0,0,0.24)] backdrop-blur-md`}
       />
-      <div className="absolute left-[29%] right-[29%] top-[28%] h-[12%] rounded-b-full border-b border-white/45 bg-white/20" />
+      <div className="aev-product-visual-trim absolute left-[29%] right-[29%] top-[28%] h-[12%] rounded-b-full border-b border-white/45 bg-white/20" />
       <div
-        className={`absolute bottom-[26%] left-[31%] right-[31%] h-[22%] rounded-[48%_48%_56%_56%] ${theme.gusset} shadow-[inset_0_1px_16px_rgba(255,255,255,0.22)]`}
+        className={`aev-product-visual-core absolute bottom-[26%] left-[31%] right-[31%] h-[22%] rounded-[48%_48%_56%_56%] ${theme.gusset} shadow-[inset_0_1px_16px_rgba(255,255,255,0.22)]`}
       />
       <div className={`absolute bottom-[18%] h-[22%] w-[56%] rounded-full ${theme.glow} blur-2xl`} />
       <div className="absolute inset-x-[18%] top-[20%] h-px bg-gradient-to-r from-transparent via-white/55 to-transparent" />

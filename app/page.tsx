@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
+import CareExperiencePanel from "@/app/components/care-experience-panel";
+import HomeMotionController from "@/app/components/home-motion-controller";
 
 const trustItems = [
   "Discreet Privacy Packaging",
@@ -99,15 +101,18 @@ const faqs = [
 export default function Home() {
   return (
     <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
+      <HomeMotionController />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.16),transparent_28%),linear-gradient(180deg,#030612_0%,#07101f_46%,#050612_100%)]" />
 
       <SiteHeader active="home" />
 
       <section className="relative isolate overflow-hidden px-4 pb-18 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
+        <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
           <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-cyan-300/18 blur-3xl" />
           <div className="aev-float-slow absolute -left-16 top-32 h-72 w-72 rounded-full bg-violet-500/18 blur-3xl" />
           <div className="aev-float absolute right-[-6rem] top-40 h-80 w-80 rounded-full bg-rose-200/12 blur-3xl" />
+          <div className="aev-hero-shimmer absolute left-0 top-0 h-full w-full" />
         </div>
 
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
@@ -115,24 +120,28 @@ export default function Home() {
             <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-cyan-200/20 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/90 shadow-[0_0_28px_rgba(34,211,238,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
               Aevyrixa Her Care
             </p>
-            <h1 className="aev-hero-headline mt-7 max-w-4xl text-balance text-[2.45rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
-              Reusable Period Care, Reimagined for Modern Confidence
+            <h1 className="aev-hero-headline mt-7 max-w-4xl text-[1.7rem] font-semibold leading-[1.05] tracking-tight text-white min-[430px]:text-[2.15rem] sm:text-6xl lg:text-7xl">
+              <span className="block">Reusable Period</span>
+              <span className="block">Care, Reimagined</span>
+              <span className="block sm:inline">for Modern</span>
+              <span className="block sm:inline"> Confidence</span>
             </h1>
             <p className="aev-hero-copy mt-6 max-w-2xl text-pretty text-base leading-8 text-white/72 sm:text-lg">
-              Soft, discreet, reusable protection designed for comfort,
-              confidence, and everyday movement.
+              <span className="block">Soft, discreet, reusable protection</span>
+              <span className="block">designed for comfort, confidence,</span>
+              <span className="block">and everyday movement.</span>
             </p>
 
-            <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[420px]:flex-row sm:mt-10">
+            <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[768px]:flex-row sm:mt-10">
               <Link
                 href="/product"
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
+                className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
               >
                 Shop Her Care
               </Link>
               <a
                 href="#how-it-works"
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/40 hover:bg-white/[0.09]"
+                className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/40 hover:bg-white/[0.09]"
               >
                 Explore How It Works
               </a>
@@ -150,9 +159,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="aev-hero-visual relative min-w-0">
+          <div className="aev-hero-visual relative min-w-0 max-w-full">
             <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
-            <div className="aev-product-float relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.065] p-3 shadow-2xl backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-5">
+            <div className="aev-product-float relative w-full max-w-full overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.065] p-3 shadow-2xl backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-5">
               <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.12),transparent_28%,rgba(255,255,255,0.04)_56%,transparent_72%)]" />
               <div className="relative min-h-[30rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#061020] p-5 sm:min-h-[36rem] sm:rounded-[2rem] sm:p-7">
                 <div className="aev-wave absolute left-[8%] top-[13%] h-44 w-[84%] rounded-[54%_46%_64%_36%/44%_42%_58%_56%] border border-cyan-100/18 bg-gradient-to-r from-cyan-100/18 via-white/8 to-violet-300/14" />
@@ -162,9 +171,24 @@ export default function Home() {
                   reusable layer system
                 </div>
 
-                <div className="absolute inset-x-8 bottom-24 h-44 rounded-[48%_52%_34%_36%/58%_58%_32%_30%] border border-white/18 bg-gradient-to-br from-white/26 via-cyan-100/14 to-violet-300/20 shadow-[inset_0_1px_30px_rgba(255,255,255,0.26),0_34px_90px_rgba(0,0,0,0.32)] backdrop-blur-md sm:inset-x-16 sm:bottom-28 sm:h-56" />
-                <div className="absolute bottom-[9.2rem] left-[28%] right-[28%] h-12 rounded-b-full border-b border-white/35 bg-white/18 sm:bottom-[11.8rem]" />
-                <div className="absolute bottom-[8.3rem] left-[30%] right-[30%] h-7 rounded-full bg-cyan-300/16 blur-lg sm:bottom-[10.8rem]" />
+                <div className="aev-hero-layer-stack absolute inset-x-6 top-[7.2rem] grid gap-4 sm:inset-x-12 sm:top-[9rem]">
+                  <div className="aev-hero-layer-card aev-hero-layer-card-one rounded-[1.45rem] border border-white/16 bg-gradient-to-r from-white/24 via-cyan-100/14 to-white/10 p-4 shadow-[inset_0_1px_24px_rgba(255,255,255,0.15),0_24px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/72">
+                      Comfort Knit
+                    </span>
+                  </div>
+                  <div className="aev-hero-layer-card aev-hero-layer-card-two ml-5 rounded-[1.45rem] border border-white/16 bg-gradient-to-r from-cyan-200/18 via-violet-200/16 to-cyan-100/10 p-4 shadow-[inset_0_1px_24px_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:ml-10">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/72">
+                      Absorbent Core
+                    </span>
+                  </div>
+                  <div className="aev-hero-layer-card aev-hero-layer-card-three mr-5 rounded-[1.45rem] border border-white/16 bg-gradient-to-r from-violet-200/18 via-rose-100/16 to-cyan-100/12 p-4 shadow-[inset_0_1px_24px_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:mr-10">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/72">
+                      Protective Layer
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute bottom-[9rem] left-[18%] right-[18%] h-10 rounded-full bg-cyan-300/16 blur-xl sm:bottom-[11rem]" />
 
                 <div className="absolute bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/12 bg-[#050816]/72 p-4 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -207,7 +231,7 @@ export default function Home() {
             {confidenceCards.map(({ title, copy, accent, icon: Icon }) => (
               <article
                 key={title}
-                className="aev-border-card aev-mobile-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:p-7"
+                className="aev-border-card aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:p-7"
               >
                 <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
                 <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105">
@@ -243,7 +267,7 @@ export default function Home() {
             {howItWorks.map((step, index) => (
               <article
                 key={step.title}
-                className="aev-mobile-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#07101f]/82 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-7"
+                className="aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#07101f]/82 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-7"
               >
                 <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-200/10 blur-2xl transition duration-300 group-hover:bg-violet-300/14" />
                 <div className="relative mb-12 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-lg font-semibold text-white">
@@ -263,23 +287,43 @@ export default function Home() {
 
       <section className="px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
-          <div className="aev-mobile-reveal relative min-h-[28rem] overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl backdrop-blur-2xl sm:min-h-[34rem] sm:p-7">
+          <div className="aev-reveal aev-layer-showcase relative min-h-[28rem] overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl backdrop-blur-2xl sm:min-h-[34rem] sm:p-7">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(244,196,212,0.16),transparent_30%),radial-gradient(circle_at_20%_76%,rgba(34,211,238,0.12),transparent_32%),linear-gradient(145deg,rgba(255,255,255,0.08),transparent_42%)]" />
-            <div className="absolute left-1/2 top-20 h-56 w-[72%] -translate-x-1/2 rounded-[50%_50%_38%_38%/38%_38%_58%_58%] border border-white/20 bg-gradient-to-br from-white/24 via-cyan-100/14 to-fuchsia-300/18 shadow-[inset_0_2px_28px_rgba(255,255,255,0.28),0_34px_90px_rgba(0,0,0,0.28)] backdrop-blur-md sm:h-72" />
-            <div className="absolute left-[24%] right-[24%] top-[8.3rem] h-14 rounded-b-full border-b border-white/35 bg-white/18 sm:top-[10.6rem]" />
-            <div className="absolute bottom-24 left-10 right-10 h-14 rounded-full bg-[#020617]/35 blur-2xl sm:bottom-28" />
-
-            <div className="absolute bottom-6 left-6 right-6 grid gap-3 sm:grid-cols-3">
-              {["Comfort knit", "Absorbent core", "Protective layer"].map(
-                (label) => (
-                  <div
-                    key={label}
-                    className="rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white/70 backdrop-blur-xl"
-                  >
+            <div className="aev-layer-halo absolute left-1/2 top-16 h-64 w-[78%] -translate-x-1/2 rounded-full bg-cyan-200/14 blur-3xl" />
+            <div className="aev-layer-reflection absolute inset-y-0 left-[-30%] w-1/2" />
+            <div className="absolute left-1/2 top-[4.7rem] h-72 w-[82%] -translate-x-1/2 sm:top-[6rem] sm:h-80">
+              {[
+                {
+                  label: "Comfort Knit",
+                  className:
+                    "aev-layer-plate-one top-0 bg-gradient-to-r from-white/24 via-cyan-100/16 to-white/10",
+                },
+                {
+                  label: "Absorbent Core",
+                  className:
+                    "aev-layer-plate-two top-[5.8rem] bg-gradient-to-r from-cyan-200/18 via-violet-200/18 to-cyan-100/10 sm:top-[6.8rem]",
+                },
+                {
+                  label: "Protective Layer",
+                  className:
+                    "aev-layer-plate-three top-[11.6rem] bg-gradient-to-r from-violet-200/18 via-rose-100/16 to-cyan-100/12 sm:top-[13.6rem]",
+                },
+              ].map(({ label, className }) => (
+                <div
+                  key={label}
+                  className={`aev-layer-plate absolute left-0 right-0 flex min-h-20 items-center justify-between gap-4 rounded-[1.4rem] border border-white/16 px-4 py-4 shadow-[inset_0_1px_26px_rgba(255,255,255,0.12),0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:px-5 ${className}`}
+                >
+                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-100 shadow-[0_0_18px_rgba(103,232,249,0.8)]" />
+                  <span className="text-right text-xs font-semibold uppercase tracking-[0.22em] text-white/76">
                     {label}
-                  </div>
-                ),
-              )}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="absolute bottom-24 left-10 right-10 h-14 rounded-full bg-[#020617]/35 blur-2xl sm:bottom-28" />
+            <div className="absolute bottom-6 left-6 right-6 rounded-[1.35rem] border border-white/10 bg-black/24 p-4 text-sm leading-7 text-white/66 backdrop-blur-xl">
+              Abstract layered care system with soft spacing, quiet movement,
+              and no explicit body or intimate product imagery.
             </div>
           </div>
 
@@ -303,7 +347,7 @@ export default function Home() {
               ].map((benefit) => (
                 <div
                   key={benefit}
-                  className="aev-mobile-reveal flex gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-sm leading-7 text-white/70"
+                  className="aev-reveal flex gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-sm leading-7 text-white/70"
                 >
                   <ShieldCheck
                     className="mt-1 shrink-0 text-cyan-200"
@@ -317,11 +361,31 @@ export default function Home() {
 
             <Link
               href="/product/everyday-comfort"
-              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
+              className="aev-action-primary mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
             >
               View Product
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
+          <div className="aev-reveal min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+              Care Experience
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              A cinematic coded care moment, without video.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
+              Moving glass reflections, floating fabric-like layers, and soft
+              cyan-violet light create a premium sense of comfort, discretion,
+              reusable care, and privacy packaging.
+            </p>
+          </div>
+
+          <CareExperiencePanel className="aev-reveal" />
         </div>
       </section>
 
@@ -342,7 +406,7 @@ export default function Home() {
                 {careCards.map(({ title, copy, icon: Icon }) => (
                   <article
                     key={title}
-                    className="aev-mobile-reveal rounded-[1.35rem] border border-white/10 bg-[#050816]/58 p-5"
+                    className="aev-reveal aev-premium-card rounded-[1.35rem] border border-white/10 bg-[#050816]/58 p-5"
                   >
                     <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.07] text-cyan-100">
                       <Icon size={20} strokeWidth={1.7} />
@@ -372,7 +436,7 @@ export default function Home() {
             {faqs.map((faq, index) => (
               <article
                 key={faq.question}
-                className="aev-mobile-reveal rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl sm:p-6"
+                className="aev-reveal aev-premium-card rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl sm:p-6"
               >
                 <div className="flex items-start gap-4">
                   <span className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/70">
@@ -416,13 +480,13 @@ export default function Home() {
               <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                 <Link
                   href="/product"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                  className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
                 >
                   Shop Her Care
                 </Link>
                 <a
                   href="#faq"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
+                  className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
                 >
                   Read FAQs
                 </a>

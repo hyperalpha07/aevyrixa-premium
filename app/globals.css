@@ -62,6 +62,34 @@ button {
   background: linear-gradient(180deg, rgba(34, 211, 238, 1), rgba(168, 85, 247, 1));
 }
 
+.aev-home {
+  --aev-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.aev-hero-cinema {
+  background:
+    radial-gradient(circle at 18% 24%, rgba(103, 232, 249, 0.12), transparent 26%),
+    radial-gradient(circle at 76% 18%, rgba(216, 180, 254, 0.12), transparent 28%),
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.045) 46%, transparent 58%);
+  opacity: 0.86;
+  animation: aev-cinematic-drift 14s ease-in-out infinite alternate;
+}
+
+.aev-home .aev-hero-headline,
+.aev-home .aev-hero-copy {
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.aev-hero-shimmer {
+  background:
+    linear-gradient(105deg, transparent 18%, rgba(255, 255, 255, 0.075) 42%, transparent 64%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 140% 100%, 44px 44px;
+  opacity: 0.32;
+  animation: aev-hero-shimmer 8s ease-in-out infinite;
+}
+
 .aev-glow {
   animation: aev-glow 8s ease-in-out infinite alternate;
 }
@@ -80,6 +108,313 @@ button {
 
 .aev-wave-delayed {
   animation: aev-wave 11s ease-in-out infinite reverse;
+}
+
+.aev-hero-kicker,
+.aev-hero-headline,
+.aev-hero-copy,
+.aev-hero-actions,
+.aev-hero-visual,
+.aev-trust-badge {
+  animation: aev-mobile-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+.aev-hero-kicker {
+  animation-delay: 60ms;
+}
+
+.aev-hero-headline {
+  animation-delay: 150ms;
+}
+
+.aev-hero-copy {
+  animation-delay: 240ms;
+}
+
+.aev-hero-actions {
+  animation-delay: 330ms;
+}
+
+.aev-hero-visual {
+  animation-delay: 420ms;
+}
+
+.aev-trust-badge {
+  position: relative;
+  overflow: hidden;
+  animation-duration: 620ms;
+}
+
+.aev-trust-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 18%, rgba(255, 255, 255, 0.26) 46%, transparent 68%);
+  transform: translateX(-120%);
+  animation: aev-badge-shine 4.8s ease-in-out infinite;
+}
+
+.aev-trust-badge:nth-child(1) {
+  animation-delay: 450ms;
+}
+
+.aev-trust-badge:nth-child(2) {
+  animation-delay: 520ms;
+}
+
+.aev-trust-badge:nth-child(3) {
+  animation-delay: 590ms;
+}
+
+.aev-trust-badge:nth-child(4) {
+  animation-delay: 660ms;
+}
+
+.aev-product-float {
+  animation: aev-product-float 8s ease-in-out infinite;
+  max-width: min(100%, calc(100vw - 2rem));
+  transform-origin: 50% 55%;
+  width: min(100%, calc(100vw - 2rem));
+  will-change: transform;
+}
+
+.aev-product-glow {
+  animation: aev-mobile-glow-pulse 6s ease-in-out infinite alternate;
+  will-change: opacity, transform;
+}
+
+.aev-hero-layer-card {
+  will-change: transform;
+}
+
+.aev-hero-layer-card-one {
+  animation: aev-layer-card-float 7.8s ease-in-out infinite;
+}
+
+.aev-hero-layer-card-two {
+  animation: aev-layer-card-float 8.8s ease-in-out infinite reverse;
+}
+
+.aev-hero-layer-card-three {
+  animation: aev-layer-card-float 9.6s ease-in-out infinite;
+}
+
+.aev-action-primary,
+.aev-action-secondary,
+.aev-nav-control {
+  transition-property: transform, box-shadow, border-color, background, opacity;
+  transform: translateZ(0);
+  touch-action: manipulation;
+  will-change: transform;
+}
+
+.aev-hero-visual,
+.aev-hero-actions,
+.aev-hero-actions > * {
+  max-width: 100%;
+}
+
+.aev-action-primary:active,
+.aev-action-secondary:active,
+.aev-nav-control:active,
+.aev-premium-card:active {
+  transform: translate3d(0, 1px, 0) scale(0.985);
+}
+
+.aev-premium-card {
+  touch-action: manipulation;
+  transition-property: transform, box-shadow, border-color, background;
+  will-change: transform, box-shadow, border-color;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-premium-card:hover {
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25),
+      0 0 42px rgba(34, 211, 238, 0.08);
+  }
+
+  .aev-nav-control:hover {
+    transform: translate3d(0, -1px, 0);
+  }
+}
+
+.aev-layer-halo {
+  animation: aev-layer-halo 6.5s ease-in-out infinite alternate;
+}
+
+.aev-layer-shell {
+  animation: aev-layer-shell 7.5s ease-in-out infinite;
+}
+
+.aev-layer-trim,
+.aev-layer-core {
+  animation: aev-layer-detail 6.8s ease-in-out infinite;
+}
+
+.aev-layer-chip {
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.aev-layer-chip:active {
+  transform: scale(0.98);
+}
+
+.aev-layer-reflection {
+  background: linear-gradient(105deg, transparent 6%, rgba(255, 255, 255, 0.16) 48%, transparent 82%);
+  filter: blur(1px);
+  opacity: 0.36;
+  transform: skewX(-12deg);
+  animation: aev-care-reflection 7.2s ease-in-out infinite;
+}
+
+.aev-layer-plate {
+  will-change: transform;
+}
+
+.aev-layer-plate-one {
+  animation: aev-layer-plate-float 7.6s ease-in-out infinite;
+}
+
+.aev-layer-plate-two {
+  animation: aev-layer-plate-float 8.8s ease-in-out infinite reverse;
+}
+
+.aev-layer-plate-three {
+  animation: aev-layer-plate-float 9.8s ease-in-out infinite;
+}
+
+.aev-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 680ms var(--aev-ease-out) var(--aev-reveal-delay, 0ms),
+    transform 680ms var(--aev-ease-out) var(--aev-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.aev-reveal-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.aev-product-visual-halo {
+  animation: aev-layer-halo 6s ease-in-out infinite alternate;
+}
+
+.aev-product-visual-shell {
+  animation: aev-product-visual-shell 7.2s ease-in-out infinite;
+}
+
+.aev-product-visual-trim,
+.aev-product-visual-core {
+  animation: aev-product-visual-detail 6.4s ease-in-out infinite;
+}
+
+.aev-video-panel {
+  min-width: 0;
+}
+
+.aev-video-orbit {
+  animation: aev-video-orbit 10s ease-in-out infinite;
+  transform-origin: 50% 50%;
+}
+
+.aev-video-orbit-2 {
+  animation-duration: 12s;
+  animation-direction: reverse;
+}
+
+.aev-video-scan {
+  animation: aev-video-scan 5.6s ease-in-out infinite;
+}
+
+.aev-video-core {
+  animation: aev-video-core 4.8s ease-in-out infinite alternate;
+}
+
+.aev-video-pulse {
+  animation: aev-video-pulse 2.6s ease-in-out infinite;
+}
+
+.aev-care-panel {
+  min-width: 0;
+}
+
+.aev-care-ambient {
+  background:
+    radial-gradient(circle at 24% 16%, rgba(34, 211, 238, 0.22), transparent 29%),
+    radial-gradient(circle at 78% 66%, rgba(168, 85, 247, 0.2), transparent 31%),
+    radial-gradient(circle at 44% 86%, rgba(244, 196, 212, 0.14), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 44%);
+  animation: aev-care-ambient 9s ease-in-out infinite alternate;
+}
+
+.aev-care-grid {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: 0.25;
+}
+
+.aev-care-reflection {
+  background: linear-gradient(105deg, transparent 4%, rgba(255, 255, 255, 0.18) 48%, transparent 82%);
+  filter: blur(1px);
+  opacity: 0.45;
+  transform: skewX(-12deg);
+  animation: aev-care-reflection 6.8s ease-in-out infinite;
+}
+
+.aev-care-ribbon {
+  box-shadow: inset 0 1px 28px rgba(255, 255, 255, 0.07);
+  will-change: transform;
+}
+
+.aev-care-ribbon-one {
+  animation: aev-care-ribbon 8.2s ease-in-out infinite;
+}
+
+.aev-care-ribbon-two {
+  animation: aev-care-ribbon 9.4s ease-in-out infinite reverse;
+}
+
+.aev-care-ribbon-three {
+  animation: aev-care-ribbon 10.4s ease-in-out infinite;
+}
+
+.aev-care-core {
+  animation: aev-care-core 5.4s ease-in-out infinite alternate;
+}
+
+.aev-care-signal {
+  animation: aev-care-signal 5.6s ease-in-out infinite;
+}
+
+.aev-care-signal:nth-child(2) {
+  animation-delay: 180ms;
+}
+
+.aev-care-signal:nth-child(3) {
+  animation-delay: 360ms;
+}
+
+.aev-care-signal:nth-child(4) {
+  animation-delay: 540ms;
+}
+
+.aev-care-copy-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.aev-care-copy-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.11) 48%, transparent 68%);
+  transform: translateX(-130%);
+  animation: aev-card-sheen 6s ease-in-out infinite;
 }
 
 .aev-border-card::before {
@@ -114,6 +449,43 @@ button {
   }
 }
 
+@keyframes aev-cinematic-drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+    opacity: 0.72;
+  }
+
+  to {
+    transform: translate3d(1.5%, 1%, 0) scale(1.03);
+    opacity: 0.94;
+  }
+}
+
+@keyframes aev-hero-shimmer {
+  0%,
+  100% {
+    background-position: -30% 0, 0 0;
+    opacity: 0.22;
+  }
+
+  50% {
+    background-position: 130% 0, 22px 18px;
+    opacity: 0.4;
+  }
+}
+
+@keyframes aev-badge-shine {
+  0%,
+  56% {
+    transform: translateX(-125%);
+  }
+
+  78%,
+  100% {
+    transform: translateX(125%);
+  }
+}
+
 @keyframes aev-float {
   0%,
   100% {
@@ -136,61 +508,239 @@ button {
   }
 }
 
+@keyframes aev-product-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -9px, 0) rotate(0.4deg);
+  }
+}
+
+@keyframes aev-layer-card-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.4deg);
+  }
+
+  50% {
+    transform: translate3d(0, -7px, 0) rotate(0.5deg);
+  }
+}
+
+@keyframes aev-layer-halo {
+  from {
+    opacity: 0.55;
+    transform: translateX(-50%) scale(0.96);
+  }
+
+  to {
+    opacity: 0.95;
+    transform: translateX(-50%) scale(1.04);
+  }
+}
+
+@keyframes aev-layer-shell {
+  0%,
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-50%, -8px, 0);
+  }
+}
+
+@keyframes aev-layer-detail {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.84;
+  }
+
+  50% {
+    transform: translate3d(0, -5px, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes aev-layer-plate-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.6deg);
+  }
+
+  50% {
+    transform: translate3d(0, -9px, 0) rotate(0.7deg);
+  }
+}
+
+@keyframes aev-product-visual-shell {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes aev-product-visual-detail {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+@keyframes aev-video-orbit {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-2deg) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, 10px, 0) rotate(2deg) scale(1.025);
+  }
+}
+
+@keyframes aev-video-scan {
+  0%,
+  100% {
+    transform: translate3d(0, -40%, 0);
+    opacity: 0.18;
+  }
+
+  50% {
+    transform: translate3d(0, 220%, 0);
+    opacity: 0.42;
+  }
+}
+
+@keyframes aev-video-core {
+  from {
+    opacity: 0.58;
+    transform: translate3d(-50%, -50%, 0) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0) scale(1.12);
+  }
+}
+
+@keyframes aev-video-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(103, 232, 249, 0.18);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgba(103, 232, 249, 0);
+  }
+}
+
+@keyframes aev-care-ambient {
+  from {
+    opacity: 0.76;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.035);
+  }
+}
+
+@keyframes aev-care-reflection {
+  0%,
+  100% {
+    transform: translateX(-10%) skewX(-12deg);
+    opacity: 0.18;
+  }
+
+  50% {
+    transform: translateX(230%) skewX(-12deg);
+    opacity: 0.48;
+  }
+}
+
+@keyframes aev-care-ribbon {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1.4deg) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, 12px, 0) rotate(1.5deg) scale(1.018);
+  }
+}
+
+@keyframes aev-care-core {
+  from {
+    opacity: 0.56;
+    transform: translate3d(-50%, 0, 0) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, -6px, 0) scale(1.1);
+  }
+}
+
+@keyframes aev-care-signal {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    border-color: rgba(103, 232, 249, 0.28);
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes aev-card-sheen {
+  0%,
+  58% {
+    transform: translateX(-130%);
+  }
+
+  82%,
+  100% {
+    transform: translateX(130%);
+  }
+}
+
 @media (max-width: 767px) {
-  .aev-home .aev-hero-kicker,
-  .aev-home .aev-hero-headline,
-  .aev-home .aev-hero-copy,
-  .aev-home .aev-hero-actions,
-  .aev-home .aev-hero-visual,
-  .aev-home .aev-trust-badge {
-    animation: aev-mobile-rise 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
-    will-change: opacity, transform;
-  }
-
-  .aev-home .aev-hero-kicker {
-    animation-delay: 60ms;
-  }
-
-  .aev-home .aev-hero-headline {
-    animation-delay: 150ms;
-  }
-
-  .aev-home .aev-hero-copy {
-    animation-delay: 230ms;
-  }
-
-  .aev-home .aev-hero-actions {
-    animation-delay: 320ms;
-  }
-
-  .aev-home .aev-trust-badge {
-    animation-duration: 560ms;
-  }
-
-  .aev-home .aev-trust-badge:nth-child(1) {
-    animation-delay: 430ms;
-  }
-
-  .aev-home .aev-trust-badge:nth-child(2) {
-    animation-delay: 500ms;
-  }
-
-  .aev-home .aev-trust-badge:nth-child(3) {
-    animation-delay: 570ms;
-  }
-
-  .aev-home .aev-trust-badge:nth-child(4) {
-    animation-delay: 640ms;
-  }
-
   .aev-home .aev-hero-visual {
-    animation-delay: 420ms;
+    animation: none;
+    max-width: 100%;
+    opacity: 1;
+    width: 80vw;
+  }
+
+  .aev-home .aev-product-float,
+  .aev-home .aev-hero-actions,
+  .aev-home .aev-hero-actions > *,
+  .aev-home .aev-trust-badge {
+    max-width: 100%;
   }
 
   .aev-home .aev-product-float {
     animation: aev-mobile-product-float 7.5s ease-in-out infinite;
-    transform-origin: 50% 55%;
-    will-change: transform;
+    width: 80vw;
+  }
+
+  .aev-home .aev-hero-headline {
+    text-wrap: wrap;
   }
 
   .aev-home .aev-product-glow {
@@ -211,43 +761,23 @@ button {
   .aev-home .aev-wave-delayed {
     animation-name: aev-mobile-wave;
   }
-}
 
-@media (max-width: 389px) {
-  .aev-home .aev-hero-headline {
-    font-size: 2.22rem;
-    line-height: 1.08;
+  .aev-video-panel {
+    border-radius: 1.5rem;
   }
 
+  .aev-care-panel {
+    border-radius: 1.5rem;
+  }
+}
+
+@media (max-width: 479px) {
   .aev-home .aev-hero-actions {
     flex-direction: column;
   }
 
   .aev-home .aev-hero-actions > * {
-    width: 100%;
-  }
-
-  .aev-home .aev-hero-visual {
-    max-width: 100%;
-  }
-}
-
-@supports (animation-timeline: view()) {
-  @media (max-width: 767px) {
-    .aev-home .aev-mobile-reveal {
-      animation: aev-mobile-scroll-reveal both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 24%;
-      will-change: opacity, transform;
-    }
-
-    .aev-home .aev-mobile-reveal:nth-child(2) {
-      animation-range: entry 3% cover 27%;
-    }
-
-    .aev-home .aev-mobile-reveal:nth-child(3) {
-      animation-range: entry 6% cover 30%;
-    }
+    width: 88vw;
   }
 }
 
@@ -332,6 +862,7 @@ button {
   .aev-float-slow,
   .aev-wave,
   .aev-wave-delayed,
+  .aev-reveal,
   .aev-hero-kicker,
   .aev-hero-headline,
   .aev-hero-copy,
@@ -340,10 +871,51 @@ button {
   .aev-trust-badge,
   .aev-product-float,
   .aev-product-glow,
-  .aev-mobile-reveal {
+  .aev-layer-halo,
+  .aev-layer-shell,
+  .aev-layer-trim,
+  .aev-layer-core,
+  .aev-layer-reflection,
+  .aev-layer-plate,
+  .aev-hero-layer-card,
+  .aev-product-visual-halo,
+  .aev-product-visual-shell,
+  .aev-product-visual-trim,
+  .aev-product-visual-core,
+  .aev-hero-cinema,
+  .aev-hero-shimmer,
+  .aev-care-ambient,
+  .aev-care-reflection,
+  .aev-care-ribbon,
+  .aev-care-core,
+  .aev-care-signal,
+  .aev-care-copy-card::before,
+  .aev-trust-badge::after,
+  .aev-video-orbit,
+  .aev-video-scan,
+  .aev-video-core,
+  .aev-video-pulse {
     animation: none !important;
     opacity: 1 !important;
-    transform: none !important;
     will-change: auto !important;
+  }
+}
+
+@media (max-width: 389px) {
+  .aev-home .aev-hero-headline {
+    font-size: 1.7rem;
+    line-height: 1.08;
+  }
+
+  .aev-home .aev-hero-actions {
+    flex-direction: column;
+  }
+
+  .aev-home .aev-hero-actions > * {
+    width: 100%;
+  }
+
+  .aev-home .aev-hero-visual {
+    max-width: 80vw;
   }
 }

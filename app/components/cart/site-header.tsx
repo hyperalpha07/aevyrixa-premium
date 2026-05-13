@@ -16,7 +16,7 @@ export default function SiteHeader({
   const { totalItems, toggleCart } = useCart();
 
   const navBase =
-    "rounded-full border px-5 py-2.5 text-white transition duration-300";
+    "aev-nav-control rounded-full border px-5 py-2.5 text-white transition duration-300";
   const navMuted =
     "border-transparent text-white/80 hover:border-fuchsia-400/35 hover:bg-white/5 hover:text-white hover:shadow-[0_0_30px_rgba(217,70,239,0.14)]";
   const navActive =
