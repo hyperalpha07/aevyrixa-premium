@@ -65,10 +65,13 @@ export default function AevyrixaMotionPanel({
         </video>
       ) : (
         <div className="aev-motion-fallback absolute inset-0">
+          <div className="aev-motion-depth-plate absolute left-[11%] top-[10%] h-[58%] w-[78%] rounded-[48%_52%_58%_42%/46%_42%_58%_54%] border border-white/10 bg-white/[0.035]" />
           <div className="aev-motion-ribbon aev-motion-ribbon-one absolute left-[7%] top-[13%] h-[22%] w-[84%] rounded-[54%_46%_62%_38%/46%_42%_58%_54%] border border-cyan-100/18 bg-cyan-100/[0.045]" />
           <div className="aev-motion-ribbon aev-motion-ribbon-two absolute left-[17%] top-[31%] h-[19%] w-[66%] rounded-[42%_58%_48%_52%/58%_44%_56%_42%] border border-violet-100/18 bg-violet-100/[0.05]" />
           <div className="aev-motion-ribbon aev-motion-ribbon-three absolute left-[10%] top-[50%] h-[18%] w-[78%] rounded-[48%_52%_39%_61%/42%_54%_46%_58%] border border-rose-100/16 bg-rose-100/[0.045]" />
           <div className="aev-motion-core absolute left-1/2 top-[39%] h-40 w-40 -translate-x-1/2 rounded-full bg-cyan-200/16 blur-2xl" />
+          <div className="aev-motion-fabric-line absolute left-[18%] top-[37%] h-[18%] w-[64%] rounded-full border-t border-white/20" />
+          <div className="aev-motion-fabric-line aev-motion-fabric-line-two absolute left-[25%] top-[53%] h-[16%] w-[52%] rounded-full border-t border-cyan-100/20" />
           <div className="absolute inset-x-[13%] top-[29%] h-px bg-gradient-to-r from-transparent via-cyan-100/65 to-transparent" />
           <div className="absolute inset-x-[20%] top-[46%] h-px bg-gradient-to-r from-transparent via-violet-100/58 to-transparent" />
           <div className="absolute inset-x-[25%] top-[61%] h-px bg-gradient-to-r from-transparent via-rose-100/52 to-transparent" />

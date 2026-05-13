@@ -64,15 +64,56 @@ button {
 
 .aev-home {
   --aev-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --aev-ease-cinema: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .aev-hero-cinema {
   background:
-    radial-gradient(circle at 18% 24%, rgba(103, 232, 249, 0.12), transparent 26%),
-    radial-gradient(circle at 76% 18%, rgba(216, 180, 254, 0.12), transparent 28%),
-    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.045) 46%, transparent 58%);
-  opacity: 0.86;
-  animation: aev-cinematic-drift 14s ease-in-out infinite alternate;
+    radial-gradient(circle at 18% 24%, rgba(103, 232, 249, 0.16), transparent 28%),
+    radial-gradient(circle at 78% 18%, rgba(216, 180, 254, 0.15), transparent 30%),
+    radial-gradient(circle at 50% 62%, rgba(244, 196, 212, 0.08), transparent 34%),
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.052) 46%, transparent 60%);
+  opacity: 0.9;
+  animation: aev-cinematic-drift 16s ease-in-out infinite alternate;
+}
+
+.aev-hero-stage::before,
+.aev-hero-stage::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 999px;
+}
+
+.aev-hero-stage::before {
+  left: 50%;
+  top: -10rem;
+  height: 34rem;
+  width: min(58rem, 118vw);
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.22), transparent 62%);
+  filter: blur(28px);
+  transform: translateX(-50%);
+  animation: aev-hero-dome 9s ease-in-out infinite alternate;
+}
+
+.aev-hero-stage::after {
+  bottom: -11rem;
+  left: 12%;
+  height: 24rem;
+  width: 76%;
+  background: radial-gradient(ellipse, rgba(168, 85, 247, 0.13), transparent 68%);
+  filter: blur(26px);
+  animation: aev-hero-floor 10s ease-in-out infinite alternate;
+}
+
+.aev-hero-load-wash {
+  background:
+    linear-gradient(100deg, transparent 18%, rgba(255, 255, 255, 0.11) 48%, transparent 70%),
+    radial-gradient(circle at 50% 28%, rgba(103, 232, 249, 0.16), transparent 36%);
+  opacity: 0;
+  transform: translateX(-26%);
+  animation: aev-hero-load-wash 1600ms var(--aev-ease-cinema) 120ms both;
 }
 
 .aev-home .aev-hero-headline,
@@ -86,8 +127,8 @@ button {
     linear-gradient(105deg, transparent 18%, rgba(255, 255, 255, 0.075) 42%, transparent 64%),
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 140% 100%, 44px 44px;
-  opacity: 0.32;
-  animation: aev-hero-shimmer 8s ease-in-out infinite;
+  opacity: 0.34;
+  animation: aev-hero-shimmer 9s ease-in-out infinite;
 }
 
 .aev-glow {
@@ -116,28 +157,28 @@ button {
 .aev-hero-actions,
 .aev-hero-visual,
 .aev-trust-badge {
-  animation: aev-mobile-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: aev-hero-rise 980ms var(--aev-ease-cinema) both;
   will-change: opacity, transform;
 }
 
 .aev-hero-kicker {
-  animation-delay: 60ms;
+  animation-delay: 120ms;
 }
 
 .aev-hero-headline {
-  animation-delay: 150ms;
-}
-
-.aev-hero-copy {
   animation-delay: 240ms;
 }
 
+.aev-hero-copy {
+  animation-delay: 360ms;
+}
+
 .aev-hero-actions {
-  animation-delay: 330ms;
+  animation-delay: 500ms;
 }
 
 .aev-hero-visual {
-  animation-delay: 420ms;
+  animation-delay: 430ms;
 }
 
 .aev-trust-badge {
@@ -156,32 +197,41 @@ button {
 }
 
 .aev-trust-badge:nth-child(1) {
-  animation-delay: 450ms;
+  animation-delay: 620ms;
 }
 
 .aev-trust-badge:nth-child(2) {
-  animation-delay: 520ms;
+  animation-delay: 700ms;
 }
 
 .aev-trust-badge:nth-child(3) {
-  animation-delay: 590ms;
+  animation-delay: 780ms;
 }
 
 .aev-trust-badge:nth-child(4) {
-  animation-delay: 660ms;
+  animation-delay: 860ms;
 }
 
 .aev-product-float {
-  animation: aev-product-float 8s ease-in-out infinite;
+  animation: aev-product-float 7.2s ease-in-out infinite;
   max-width: min(100%, calc(100vw - 2rem));
-  transform-origin: 50% 55%;
+  transform-origin: 50% 52%;
   width: min(100%, calc(100vw - 2rem));
   will-change: transform;
 }
 
 .aev-product-glow {
-  animation: aev-mobile-glow-pulse 6s ease-in-out infinite alternate;
+  animation: aev-product-glow 5.8s ease-in-out infinite alternate;
   will-change: opacity, transform;
+}
+
+.aev-product-edge {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 48px rgba(34, 211, 238, 0.08),
+    0 0 70px rgba(168, 85, 247, 0.08);
+  opacity: 0.75;
+  animation: aev-product-edge 6.6s ease-in-out infinite alternate;
 }
 
 .aev-hero-layer-card {
@@ -286,29 +336,49 @@ button {
 
 .aev-reveal {
   opacity: 0;
-  transform: translate3d(0, 22px, 0);
+  transform: translate3d(0, 30px, 0) scale(0.985);
   transition:
-    opacity 680ms var(--aev-ease-out) var(--aev-reveal-delay, 0ms),
-    transform 680ms var(--aev-ease-out) var(--aev-reveal-delay, 0ms);
+    opacity 860ms var(--aev-ease-out) var(--aev-reveal-delay, 0ms),
+    transform 860ms var(--aev-ease-out) var(--aev-reveal-delay, 0ms);
   will-change: opacity, transform;
 }
 
 .aev-reveal-visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .aev-product-visual-halo {
-  animation: aev-layer-halo 6s ease-in-out infinite alternate;
+  animation: aev-product-visual-halo 5.8s ease-in-out infinite alternate;
 }
 
 .aev-product-visual-shell {
-  animation: aev-product-visual-shell 7.2s ease-in-out infinite;
+  animation: aev-product-visual-shell 6.8s ease-in-out infinite;
 }
 
 .aev-product-visual-trim,
 .aev-product-visual-core {
   animation: aev-product-visual-detail 6.4s ease-in-out infinite;
+}
+
+.aev-product-visual-plate {
+  will-change: transform;
+}
+
+.aev-product-visual-plate-back {
+  animation: aev-product-visual-plate-back 8s ease-in-out infinite;
+}
+
+.aev-product-visual-plate-front {
+  animation: aev-product-visual-plate-front 7.4s ease-in-out infinite reverse;
+}
+
+.aev-product-visual-reflection {
+  background: linear-gradient(105deg, transparent 8%, rgba(255, 255, 255, 0.22) 48%, transparent 78%);
+  filter: blur(1px);
+  opacity: 0.42;
+  transform: skewX(-12deg);
+  animation: aev-product-visual-reflection 6.2s ease-in-out infinite;
 }
 
 .aev-video-panel {
@@ -437,7 +507,7 @@ button {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 34%),
     radial-gradient(circle at 50% 0%, rgba(103, 232, 249, 0.18), transparent 34%);
-  opacity: 0.7;
+  opacity: 0.82;
 }
 
 .aev-motion-panel::after {
@@ -466,11 +536,11 @@ button {
 
 .aev-motion-ambient {
   background:
-    radial-gradient(circle at 22% 16%, rgba(34, 211, 238, 0.24), transparent 29%),
-    radial-gradient(circle at 78% 66%, rgba(168, 85, 247, 0.22), transparent 31%),
+    radial-gradient(circle at 22% 16%, rgba(34, 211, 238, 0.28), transparent 31%),
+    radial-gradient(circle at 78% 66%, rgba(168, 85, 247, 0.25), transparent 33%),
     radial-gradient(circle at 44% 86%, rgba(244, 196, 212, 0.15), transparent 28%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.09), transparent 44%);
-  animation: aev-motion-ambient 9s ease-in-out infinite alternate;
+  animation: aev-motion-ambient 8.4s ease-in-out infinite alternate;
 }
 
 .aev-motion-grid {
@@ -491,8 +561,27 @@ button {
 }
 
 .aev-motion-ribbon {
-  box-shadow: inset 0 1px 28px rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 28px rgba(255, 255, 255, 0.1),
+    0 20px 60px rgba(0, 0, 0, 0.18);
   will-change: transform;
+}
+
+.aev-motion-depth-plate {
+  box-shadow:
+    inset 0 1px 34px rgba(255, 255, 255, 0.08),
+    0 28px 82px rgba(0, 0, 0, 0.22);
+  animation: aev-motion-depth-plate 9s ease-in-out infinite alternate;
+}
+
+.aev-motion-fabric-line {
+  opacity: 0.46;
+  animation: aev-motion-fabric-line 7.2s ease-in-out infinite;
+}
+
+.aev-motion-fabric-line-two {
+  animation-duration: 8.4s;
+  animation-direction: reverse;
 }
 
 .aev-motion-ribbon-one {
@@ -585,7 +674,7 @@ button {
 }
 
 .aev-motion-panel.aev-reveal:not(.aev-reveal-visible) {
-  transform: translate3d(0, 22px, 0);
+  transform: translate3d(0, 30px, 0) scale(0.985);
 }
 
 .aev-motion-panel.aev-reveal-visible {
@@ -612,15 +701,82 @@ button {
   opacity: 1;
 }
 
+.aev-scroll-section {
+  position: relative;
+}
+
+.aev-scroll-section::before {
+  content: "";
+  position: absolute;
+  inset: 2rem 0 auto;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.14), transparent);
+  opacity: 0.7;
+}
+
+.aev-experience-section .aev-motion-panel {
+  box-shadow:
+    0 38px 132px rgba(0, 0, 0, 0.46),
+    0 0 88px rgba(34, 211, 238, 0.12),
+    0 0 100px rgba(168, 85, 247, 0.1);
+}
+
+.aev-cinematic-page {
+  --aev-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.aev-cinematic-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.1), transparent 34%),
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.035) 45%, transparent 62%);
+  animation: aev-cinematic-page-wash 11s ease-in-out infinite alternate;
+}
+
+.aev-shop-card,
+.aev-product-buy-panel,
+.aev-cinematic-chip {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 26px 86px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.aev-shop-card::before,
+.aev-product-buy-panel::before,
+.aev-cinematic-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 8%, rgba(255, 255, 255, 0.09) 44%, transparent 66%);
+  opacity: 0.34;
+  transform: translateX(-120%);
+  animation: aev-card-sheen 7.2s ease-in-out infinite;
+}
+
+.aev-shop-card > *,
+.aev-product-buy-panel > *,
+.aev-cinematic-chip > * {
+  position: relative;
+  z-index: 1;
+}
+
 @keyframes aev-glow {
   from {
-    opacity: 0.55;
-    transform: translateX(-50%) scale(0.92);
+    opacity: 0.5;
+    transform: translateX(-50%) scale(0.9);
   }
 
   to {
     opacity: 1;
-    transform: translateX(-50%) scale(1.06);
+    transform: translateX(-50%) scale(1.1);
   }
 }
 
@@ -633,6 +789,58 @@ button {
   to {
     transform: translate3d(1.5%, 1%, 0) scale(1.03);
     opacity: 0.94;
+  }
+}
+
+@keyframes aev-hero-dome {
+  from {
+    opacity: 0.48;
+    transform: translateX(-50%) scale(0.96);
+  }
+
+  to {
+    opacity: 0.86;
+    transform: translateX(-50%) scale(1.05);
+  }
+}
+
+@keyframes aev-hero-floor {
+  from {
+    opacity: 0.36;
+    transform: translate3d(0, 0, 0) scaleX(0.92);
+  }
+
+  to {
+    opacity: 0.78;
+    transform: translate3d(0, -10px, 0) scaleX(1.08);
+  }
+}
+
+@keyframes aev-hero-load-wash {
+  0% {
+    opacity: 0;
+    transform: translateX(-28%) scale(1.02);
+  }
+
+  28% {
+    opacity: 0.62;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(28%) scale(1.02);
+  }
+}
+
+@keyframes aev-hero-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
@@ -686,11 +894,35 @@ button {
 @keyframes aev-product-float {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotate(0deg);
   }
 
   50% {
-    transform: translate3d(0, -9px, 0) rotate(0.4deg);
+    transform: translate3d(0, -12px, 0) rotateX(1.1deg) rotateY(-1.4deg) rotate(0.55deg);
+  }
+}
+
+@keyframes aev-product-glow {
+  from {
+    opacity: 0.66;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes aev-product-edge {
+  from {
+    opacity: 0.46;
+    transform: scale(0.985);
+  }
+
+  to {
+    opacity: 0.86;
+    transform: scale(1.01);
   }
 }
 
@@ -755,11 +987,11 @@ button {
 @keyframes aev-product-visual-shell {
   0%,
   100% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) rotate(-0.4deg);
   }
 
   50% {
-    transform: translate3d(0, -6px, 0);
+    transform: translate3d(0, -8px, 0) rotate(0.5deg);
   }
 }
 
@@ -771,6 +1003,53 @@ button {
 
   50% {
     transform: translate3d(0, -4px, 0);
+  }
+}
+
+@keyframes aev-product-visual-halo {
+  from {
+    opacity: 0.52;
+    transform: translateX(-50%) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+@keyframes aev-product-visual-plate-back {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0.6deg);
+  }
+
+  50% {
+    transform: translate3d(0, 10px, 0) rotate(-0.7deg);
+  }
+}
+
+@keyframes aev-product-visual-plate-front {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.5deg);
+  }
+
+  50% {
+    transform: translate3d(0, -7px, 0) rotate(0.6deg);
+  }
+}
+
+@keyframes aev-product-visual-reflection {
+  0%,
+  100% {
+    opacity: 0.16;
+    transform: translateX(-18%) skewX(-12deg);
+  }
+
+  50% {
+    opacity: 0.52;
+    transform: translateX(245%) skewX(-12deg);
   }
 }
 
@@ -930,6 +1209,31 @@ button {
   }
 }
 
+@keyframes aev-motion-depth-plate {
+  from {
+    opacity: 0.42;
+    transform: translate3d(0, 6px, 0) rotate(-0.6deg) scale(0.98);
+  }
+
+  to {
+    opacity: 0.78;
+    transform: translate3d(0, -5px, 0) rotate(0.7deg) scale(1.02);
+  }
+}
+
+@keyframes aev-motion-fabric-line {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleX(0.94);
+    opacity: 0.28;
+  }
+
+  50% {
+    transform: translate3d(0, 7px, 0) scaleX(1.04);
+    opacity: 0.58;
+  }
+}
+
 @keyframes aev-motion-core {
   from {
     opacity: 0.56;
@@ -966,12 +1270,37 @@ button {
   }
 }
 
+@keyframes aev-cinematic-page-wash {
+  from {
+    opacity: 0.48;
+    transform: translate3d(-1%, -1%, 0) scale(1);
+  }
+
+  to {
+    opacity: 0.84;
+    transform: translate3d(1%, 1%, 0) scale(1.02);
+  }
+}
+
 @media (max-width: 767px) {
   .aev-home .aev-hero-visual {
     animation: none;
+    margin-top: -1rem;
     max-width: 100%;
     opacity: 1;
     width: 100%;
+  }
+
+  .aev-home .aev-hero-copy {
+    margin-top: 1.25rem;
+  }
+
+  .aev-home .aev-hero-actions {
+    margin-top: 1.5rem;
+  }
+
+  .aev-home .aev-hero-trust {
+    margin-top: 1.5rem;
   }
 
   .aev-home .aev-product-float,
@@ -1023,6 +1352,10 @@ button {
     max-width: calc(100vw - 2rem);
   }
 
+  .aev-motion-panel > .relative {
+    min-height: 22rem;
+  }
+
   .aev-motion-panel .aev-motion-chip {
     letter-spacing: 0.12em;
   }
@@ -1035,8 +1368,19 @@ button {
     overflow: hidden;
   }
 
+  .aev-hero-product-chip .grid {
+    gap: 0.35rem;
+  }
+
   .aev-hero-product-chip span {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    font-size: 0.62rem;
     min-width: 0;
+  }
+
+  .aev-product-visual-reflection {
+    animation-duration: 5.8s;
   }
 }
 
@@ -1047,6 +1391,26 @@ button {
 
   .aev-home .aev-hero-actions > * {
     width: min(100%, calc(100vw - 2rem));
+  }
+
+  .aev-cinematic-page section,
+  .aev-cinematic-page article,
+  .aev-cinematic-page h1,
+  .aev-cinematic-page h2,
+  .aev-cinematic-page p {
+    max-width: 100%;
+  }
+
+  .aev-cinematic-page h1 {
+    font-size: 2rem;
+    line-height: 1.16;
+    overflow-wrap: anywhere;
+  }
+
+  .aev-shop-card,
+  .aev-product-buy-panel,
+  .aev-cinematic-chip {
+    max-width: calc(100vw - 2rem);
   }
 }
 
@@ -1140,6 +1504,7 @@ button {
   .aev-trust-badge,
   .aev-product-float,
   .aev-product-glow,
+  .aev-product-edge,
   .aev-layer-halo,
   .aev-layer-shell,
   .aev-layer-trim,
@@ -1148,10 +1513,15 @@ button {
   .aev-layer-plate,
   .aev-hero-layer-card,
   .aev-product-visual-halo,
+  .aev-product-visual-plate,
+  .aev-product-visual-reflection,
   .aev-product-visual-shell,
   .aev-product-visual-trim,
   .aev-product-visual-core,
   .aev-hero-cinema,
+  .aev-hero-stage::before,
+  .aev-hero-stage::after,
+  .aev-hero-load-wash,
   .aev-hero-shimmer,
   .aev-care-ambient,
   .aev-care-reflection,
@@ -1167,11 +1537,17 @@ button {
   .aev-motion-panel,
   .aev-motion-panel::after,
   .aev-motion-ambient,
+  .aev-motion-depth-plate,
+  .aev-motion-fabric-line,
   .aev-motion-shine,
   .aev-motion-ribbon,
   .aev-motion-core,
   .aev-motion-chip::after,
-  .aev-motion-copy-card::before {
+  .aev-motion-copy-card::before,
+  .aev-cinematic-page::before,
+  .aev-shop-card::before,
+  .aev-product-buy-panel::before,
+  .aev-cinematic-chip::before {
     animation: none !important;
     opacity: 1 !important;
     will-change: auto !important;
@@ -1194,5 +1570,9 @@ button {
 
   .aev-home .aev-hero-visual {
     max-width: 100%;
+  }
+
+  .aev-motion-panel > .relative {
+    min-height: 21rem;
   }
 }

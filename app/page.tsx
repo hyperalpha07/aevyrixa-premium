@@ -106,7 +106,7 @@ export default function Home() {
 
       <SiteHeader active="home" />
 
-      <section className="relative isolate overflow-hidden px-4 pb-18 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
+      <section className="aev-hero-stage relative isolate overflow-hidden px-4 pb-18 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
           <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-cyan-300/18 blur-3xl" />
@@ -114,6 +114,7 @@ export default function Home() {
           <div className="aev-float absolute right-[-6rem] top-40 h-80 w-80 rounded-full bg-rose-200/12 blur-3xl" />
           <div className="aev-hero-shimmer absolute left-0 top-0 h-full w-full" />
         </div>
+        <div className="aev-hero-load-wash pointer-events-none absolute inset-0 -z-10" />
 
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
           <div className="min-w-0">
@@ -147,7 +148,7 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="mt-9 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="aev-hero-trust mt-9 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
               {trustItems.map((item) => (
                 <div
                   key={item}
@@ -161,6 +162,7 @@ export default function Home() {
 
           <div className="aev-hero-visual relative min-w-0 max-w-full">
             <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
+            <div className="aev-product-edge absolute -inset-2 rounded-[2.4rem] border border-cyan-100/10" />
             <div className="aev-product-float relative">
               <AevyrixaMotionPanel
                 mp4Src="/videos/aevyrixa-hero-motion.mp4"
@@ -194,7 +196,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
@@ -223,7 +225,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="how-it-works" className="px-4 py-16 sm:px-6 sm:py-20">
+      <section id="how-it-works" className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
@@ -263,7 +265,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
           <AevyrixaMotionPanel
             mp4Src="/videos/aevyrixa-care-system.mp4"
@@ -317,18 +319,18 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-experience-section aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
           <div className="aev-reveal min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
               Aevyrixa Experience
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              A cinematic product website moment that stays lightweight.
+              A cinematic care experience that stays calm, premium, and lightweight.
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-              Moving glass, soft glow, scroll reveal, and tactile tap feedback
-              give the homepage a video-style experience while staying fast and
+              Moving glass, layered fabric forms, soft glow, and tactile tap
+              feedback create a video-style moment while staying fast and
               mobile-safe.
             </p>
           </div>

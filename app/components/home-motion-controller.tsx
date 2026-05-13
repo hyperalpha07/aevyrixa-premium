@@ -30,7 +30,12 @@ export default function HomeMotionController() {
     );
 
     revealItems.forEach((element, index) => {
-      element.setAttribute("style", `--aev-reveal-delay: ${Math.min(index % 4, 3) * 70}ms`);
+      if (element instanceof HTMLElement) {
+        element.style.setProperty(
+          "--aev-reveal-delay",
+          `${Math.min(index % 5, 4) * 85}ms`,
+        );
+      }
       observer.observe(element);
     });
 

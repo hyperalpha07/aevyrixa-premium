@@ -138,7 +138,7 @@ export default function ProductPage({
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
+    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-cyan-400/14 blur-[120px]" />
         <div className="absolute right-[-18%] top-[20%] h-[360px] w-[360px] rounded-full bg-fuchsia-400/14 blur-[140px]" />
@@ -148,7 +148,7 @@ export default function ProductPage({
       <SiteHeader active="product" productHref={`/product/${product.slug}`} />
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
-        <div className={`min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}>
+        <div className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}>
           <div className="overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
             <div className="aspect-[0.92] min-h-[340px] w-full sm:aspect-square">
               <ProductVisual
@@ -193,7 +193,7 @@ export default function ProductPage({
             )}
           </div>
 
-          <div className={`mt-7 rounded-[1.65rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-5 ${style.panel}`}>
+          <div className={`aev-product-buy-panel mt-7 rounded-[1.65rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-5 ${style.panel}`}>
             <div className="space-y-6">
               <VariantSelector
                 label="Size"
@@ -245,13 +245,13 @@ export default function ProductPage({
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   onClick={() => handleAddToCart(false)}
-                  className={`rounded-full bg-gradient-to-r px-6 py-3.5 text-sm font-semibold transition hover:scale-[1.01] ${style.primary}`}
+                  className={`aev-action-primary rounded-full bg-gradient-to-r px-6 py-3.5 text-sm font-semibold transition hover:scale-[1.01] ${style.primary}`}
                 >
                   Add to Cart
                 </button>
                 <button
                   onClick={() => handleAddToCart(true)}
-                  className="rounded-full border border-white/12 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08]"
+                  className="aev-action-secondary rounded-full border border-white/12 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08]"
                 >
                   Add and View Cart
                 </button>
@@ -263,7 +263,7 @@ export default function ProductPage({
             {trustBadges.map(({ label, icon: Icon }) => (
               <div
                 key={label}
-                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/72"
+                className="aev-cinematic-chip flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/72"
               >
                 <Icon className={`h-4 w-4 shrink-0 ${style.accent}`} />
                 <span>{label}</span>

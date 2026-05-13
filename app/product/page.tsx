@@ -36,7 +36,7 @@ const themeStyles: Record<
 
 export default function ProductCollectionPage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
+    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-[-18%] top-[4%] h-[300px] w-[300px] rounded-full bg-cyan-400/14 blur-[120px]" />
         <div className="absolute right-[-18%] top-[22%] h-[340px] w-[340px] rounded-full bg-fuchsia-400/14 blur-[130px]" />
@@ -67,7 +67,7 @@ export default function ProductCollectionPage() {
           ].map(([label, Icon]) => (
             <div
               key={label as string}
-              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/70 backdrop-blur-xl"
+              className="aev-cinematic-chip flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/70 backdrop-blur-xl"
             >
               <Icon className="h-4 w-4 shrink-0 text-cyan-200" />
               <span>{label as string}</span>
@@ -84,7 +84,7 @@ export default function ProductCollectionPage() {
             return (
               <article
                 key={product.id}
-                className={`group min-w-0 overflow-hidden rounded-[1.75rem] border bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 ${style.border}`}
+                className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.75rem] border bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 ${style.border}`}
               >
                 <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#07111f]">
                   <div className="relative aspect-[1.08] w-full">
