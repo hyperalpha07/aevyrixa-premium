@@ -1,6 +1,6 @@
 import type { OrderRecord } from "@/app/lib/order-types";
 
-export async function notifyOrderReceived(order: OrderRecord) {
+export async function notifyNewOrder(order: OrderRecord) {
   const botToken = process.env.ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN;
   const chatId = process.env.ORDER_NOTIFICATION_TELEGRAM_CHAT_ID;
 
@@ -14,3 +14,5 @@ export async function notifyOrderReceived(order: OrderRecord) {
   void order;
   return { skipped: true, reason: "Notification adapter is not connected yet." };
 }
+
+export const notifyOrderReceived = notifyNewOrder;

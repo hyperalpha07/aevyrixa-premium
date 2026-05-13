@@ -1,5 +1,5 @@
-import { notifyOrderReceived } from "@/app/lib/order-notifications";
-import { listOrders, saveOrder } from "@/app/lib/order-store";
+import { notifyNewOrder } from "@/app/lib/order-notifications";
+import { createOrder, listOrders } from "@/app/lib/order-store";
 import {
   paymentMethods,
   paymentTypes,
@@ -43,6 +43,7 @@ function validateOrderPayload(payload: unknown): {
   const rawItems = Array.isArray(payload.items) ? payload.items : [];
   const errors: string[] = [];
 
+  const orderReference = optionalText(payload.orderReference);
   const fullName = text(customer.fullName);
   const phone = text(customer.phone);
   const cityArea = text(customer.cityArea);
@@ -119,6 +120,7 @@ function validateOrderPayload(payload: unknown): {
         sizeFitNote: optionalText(customer.sizeFitNote),
         deliveryNote: optionalText(customer.deliveryNote),
       },
+      orderReference,
       paymentDetails: {
         paymentMethod: paymentMethod as OrderSubmissionInput["paymentDetails"]["paymentMethod"],
         walletProvider: walletProvider as OrderSubmissionInput["paymentDetails"]["walletProvider"],
@@ -162,8 +164,8 @@ export async function POST(request: Request) {
   if (!input) return Response.json({ errors }, { status: 400 });
 
   try {
-    const result = await saveOrder(input);
-    await notifyOrderReceived(result.order);
+    const result = await createOrder(input);
+    await notifyNewOrder(result.order);
 
     return Response.json(result, { status: 201 });
   } catch (error) {

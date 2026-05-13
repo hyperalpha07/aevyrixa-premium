@@ -74,7 +74,9 @@ export type OrderRecord = {
 export type OrderSubmissionInput = Omit<
   OrderRecord,
   "orderId" | "orderReference" | "status" | "createdAt" | "totalAmount"
->;
+> & {
+  orderReference?: string;
+};
 
 export type OrderStorageMode = "supabase" | "demo-memory";
 

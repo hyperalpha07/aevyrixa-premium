@@ -174,7 +174,7 @@ function normalizeStatus(value: unknown): OrderStatus {
 function normalizeOrder(value: unknown): StoredOrder | null {
   if (!isRecord(value)) return null;
 
-  const orderId = textValue(value.orderId);
+  const orderId = textValue(value.orderId) || textValue(value.orderReference);
   if (!orderId) return null;
 
   const customer = isRecord(value.customer) ? value.customer : {};
@@ -330,6 +330,28 @@ async function readOrdersFromApi() {
   }
 }
 
+async function updateOrderStatusInApi(orderId: string, status: OrderStatus) {
+  try {
+    const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as unknown;
+    if (!isRecord(payload)) return null;
+
+    return normalizeOrder(payload.order);
+  } catch (error) {
+    console.error("Failed to update backend order status:", error);
+    return null;
+  }
+}
+
 function writeOrdersToStorage(orders: StoredOrder[]) {
   localStorage.setItem(DRAFT_ORDERS_KEY, JSON.stringify(orders));
 
@@ -477,6 +499,18 @@ export default function AdminPanel({ view }: { view: AdminView }) {
       );
       writeOrdersToStorage(nextOrders);
       return nextOrders;
+    });
+
+    void updateOrderStatusInApi(orderId, status).then((backendOrder) => {
+      if (!backendOrder) return;
+
+      setOrders((current) => {
+        const nextOrders = current.map((order) =>
+          order.orderId === orderId ? { ...order, ...backendOrder } : order
+        );
+        writeOrdersToStorage(nextOrders);
+        return nextOrders;
+      });
     });
   };
 

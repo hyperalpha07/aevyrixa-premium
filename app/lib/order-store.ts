@@ -3,6 +3,7 @@ import type {
   OrderSaveResult,
   OrderStorageMode,
   OrderSubmissionInput,
+  OrderStatus,
 } from "@/app/lib/order-types";
 
 const demoOrders: OrderRecord[] = [];
@@ -25,13 +26,16 @@ function createOrderReference() {
 }
 
 function buildOrder(input: OrderSubmissionInput): OrderRecord {
-  const orderReference = createOrderReference();
+  const orderReference = input.orderReference?.trim() || createOrderReference();
   const createdAt = new Date().toISOString();
 
   return {
-    ...input,
     orderId: orderReference,
     orderReference,
+    customer: input.customer,
+    paymentDetails: input.paymentDetails,
+    items: input.items,
+    totals: input.totals,
     totalAmount: input.totals.subtotal,
     status: "Pending",
     createdAt,
@@ -78,6 +82,35 @@ async function saveOrderToSupabase(order: OrderRecord) {
   return order;
 }
 
+async function updateOrderStatusInSupabase(
+  orderRef: string,
+  status: OrderStatus
+) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) throw new Error("Missing Supabase URL.");
+
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/orders?order_reference=eq.${encodeURIComponent(
+      orderRef
+    )}&select=*`,
+    {
+      method: "PATCH",
+      headers: {
+        ...supabaseHeaders(),
+        prefer: "return=representation",
+      },
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Supabase order status update failed with ${response.status}.`);
+  }
+
+  const rows = (await response.json()) as Array<Record<string, unknown>>;
+  return rows[0] ? mapSupabaseOrder(rows[0]) : null;
+}
+
 async function listOrdersFromSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) throw new Error("Missing Supabase URL.");
@@ -96,7 +129,11 @@ async function listOrdersFromSupabase() {
 
   const rows = (await response.json()) as Array<Record<string, unknown>>;
 
-  return rows.map((row) => ({
+  return rows.map(mapSupabaseOrder);
+}
+
+function mapSupabaseOrder(row: Record<string, unknown>): OrderRecord {
+  return {
     orderId: String(row.order_id ?? row.orderReference ?? ""),
     orderReference: String(row.order_reference ?? row.order_id ?? ""),
     customer: row.customer as OrderRecord["customer"],
@@ -106,10 +143,10 @@ async function listOrdersFromSupabase() {
     totalAmount: Number(row.total_amount ?? 0),
     status: row.status as OrderRecord["status"],
     createdAt: String(row.created_at ?? ""),
-  }));
+  };
 }
 
-export async function saveOrder(
+export async function createOrder(
   input: OrderSubmissionInput
 ): Promise<OrderSaveResult> {
   const order = buildOrder(input);
@@ -126,6 +163,8 @@ export async function saveOrder(
   return { order, storageMode };
 }
 
+export const saveOrder = createOrder;
+
 export async function listOrders() {
   const storageMode = getStorageMode();
 
@@ -136,4 +175,25 @@ export async function listOrders() {
   // See saveOrder fallback note: admin keeps browser localStorage as the
   // visible fallback until Supabase/Postgres is connected.
   return { orders: demoOrders, storageMode };
+}
+
+export async function updateOrderStatus(orderRef: string, status: OrderStatus) {
+  const storageMode = getStorageMode();
+
+  if (storageMode === "supabase") {
+    const order = await updateOrderStatusInSupabase(orderRef, status);
+    return { order, storageMode };
+  }
+
+  // Safe demo fallback: updates the current runtime memory only. The admin
+  // client also updates localStorage so local workflows keep working until
+  // Supabase/Postgres becomes the production source of truth.
+  const order = demoOrders.find(
+    (item) => item.orderReference === orderRef || item.orderId === orderRef
+  );
+
+  if (!order) return { order: null, storageMode };
+
+  order.status = status;
+  return { order, storageMode };
 }

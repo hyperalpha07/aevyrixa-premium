@@ -1,8 +1,8 @@
 # Aevyrixa Order Backend Setup
 
-Phase 12 adds a backend-ready order capture layer at `app/api/orders/route.ts`.
-The site still builds and accepts demo/local orders when backend credentials are
-not configured.
+Phase 12 adds a backend-ready order capture layer at `app/api/orders/route.ts`
+and `app/api/orders/[orderRef]/route.ts`. The site still builds and accepts
+demo/local orders when backend credentials are not configured.
 
 ## Future Environment Variables
 
@@ -19,11 +19,23 @@ ORDER_NOTIFICATION_TELEGRAM_CHAT_ID=
 ## Storage Behavior
 
 - With `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, the order
-  adapter is ready to write and read from a Supabase/Postgres `orders` table.
+  adapter in `app/lib/order-store.ts` is ready to write, read, and update order
+  statuses from a Supabase/Postgres `orders` table.
 - Without those variables, the API uses a safe demo-memory fallback so local
   development and Vercel builds do not fail.
 - Checkout also stores the saved order in browser localStorage to keep the
   current admin orders UI usable until the production database is connected.
+- Admin status changes call the API route when possible and keep the local
+  admin fallback compatible while the backend is still demo-only.
+
+## Notification Placeholder
+
+`app/lib/order-notifications.ts` exposes `notifyNewOrder(order)`. It is safe
+without notification credentials and currently skips delivery. A future phase
+can connect Telegram or email by using these Vercel Environment Variables:
+
+- `ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN`
+- `ORDER_NOTIFICATION_TELEGRAM_CHAT_ID`
 
 ## Suggested Supabase Table Shape
 
