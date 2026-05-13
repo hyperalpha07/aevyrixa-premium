@@ -148,7 +148,7 @@ export default function CartPage() {
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="px-5 py-2 text-lg text-white/70 transition hover:text-white"
                           >
-                            −
+                            -
                           </button>
 
                           <span className="min-w-[44px] text-center text-sm font-medium text-white">
@@ -228,7 +228,7 @@ export default function CartPage() {
               </div>
 
               <p className="mt-5 text-center text-xs uppercase tracking-[0.2em] text-white/45">
-                Secure Payment • Discreet Privacy Packaging • 3-Day Hygiene-Safe Support
+                Secure Payment | Discreet Privacy Packaging | 3-Day Hygiene-Safe Support
               </p>
             </div>
           </div>

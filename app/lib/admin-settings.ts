@@ -16,7 +16,8 @@ export type AdminSettings = {
 export const defaultAdminSettings: AdminSettings = {
   storeName: "Aevyrixa Her Care",
   guaranteeText: "3-Day Hygiene-Safe Support",
-  deliveryNote: "Estimated delivery will be confirmed by our team after order review.",
+  deliveryNote:
+    "Bangladesh delivery estimate is 2-7 working days after confirmation. Our team reviews delivery details before dispatch.",
   walletReceiverNumbers: {
     bKash: "01644037384",
     Nagad: "01644037384",
@@ -39,6 +40,17 @@ function textValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
 }
 
+function guaranteeTextValue(value: unknown) {
+  const guaranteeText = textValue(value);
+  if (!guaranteeText) return defaultAdminSettings.guaranteeText;
+
+  if (/7\s*-?\s*day|money back|coverage/i.test(guaranteeText)) {
+    return defaultAdminSettings.guaranteeText;
+  }
+
+  return guaranteeText;
+}
+
 export function normalizeAdminSettings(value: unknown): AdminSettings {
   if (!isRecord(value)) return defaultAdminSettings;
 
@@ -48,8 +60,7 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
 
   return {
     storeName: textValue(value.storeName) || defaultAdminSettings.storeName,
-    guaranteeText:
-      textValue(value.guaranteeText) || defaultAdminSettings.guaranteeText,
+    guaranteeText: guaranteeTextValue(value.guaranteeText),
     deliveryNote: textValue(value.deliveryNote) || defaultAdminSettings.deliveryNote,
     walletReceiverNumbers: {
       bKash:

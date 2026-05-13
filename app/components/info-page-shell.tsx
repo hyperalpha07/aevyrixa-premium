@@ -48,7 +48,7 @@ export default function InfoPageShell({
           </Link>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="mt-10 grid min-w-0 gap-4 md:grid-cols-2">
           {sections.map((section) => (
             <article
               key={section.title}
@@ -58,7 +58,7 @@ export default function InfoPageShell({
                 {section.title}
               </h2>
               {section.copy && (
-                <p className="mt-3 break-words text-sm leading-7 text-white/64 [overflow-wrap:anywhere]">
+                <p className="mt-3 max-w-full break-words text-sm leading-7 text-white/64 [overflow-wrap:anywhere]">
                   {section.copy}
                 </p>
               )}

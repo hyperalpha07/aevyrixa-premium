@@ -111,8 +111,9 @@ button {
   background:
     linear-gradient(100deg, transparent 18%, rgba(255, 255, 255, 0.11) 48%, transparent 70%),
     radial-gradient(circle at 50% 28%, rgba(103, 232, 249, 0.16), transparent 36%);
+  background-position: 0% 0%, center;
+  background-size: 180% 100%, 100% 100%;
   opacity: 0;
-  transform: translateX(-26%);
   animation: aev-hero-load-wash 1600ms var(--aev-ease-cinema) 120ms both;
 }
 
@@ -819,7 +820,7 @@ button {
 @keyframes aev-hero-load-wash {
   0% {
     opacity: 0;
-    transform: translateX(-28%) scale(1.02);
+    background-position: 0% 0%, center;
   }
 
   28% {
@@ -828,7 +829,7 @@ button {
 
   100% {
     opacity: 0;
-    transform: translateX(28%) scale(1.02);
+    background-position: 100% 0%, center;
   }
 }
 

@@ -111,7 +111,7 @@ export default function Home() {
         <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
           <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-cyan-300/18 blur-3xl" />
           <div className="aev-float-slow absolute -left-16 top-32 h-72 w-72 rounded-full bg-violet-500/18 blur-3xl" />
-          <div className="aev-float absolute right-[-6rem] top-40 h-80 w-80 rounded-full bg-rose-200/12 blur-3xl" />
+          <div className="aev-float absolute right-0 top-40 h-56 w-56 rounded-full bg-rose-200/12 blur-3xl" />
           <div className="aev-hero-shimmer absolute left-0 top-0 h-full w-full" />
         </div>
         <div className="aev-hero-load-wash pointer-events-none absolute inset-0 -z-10" />
@@ -249,7 +249,7 @@ export default function Home() {
                 key={step.title}
                 className="aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#07101f]/82 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-7"
               >
-                <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-200/10 blur-2xl transition duration-300 group-hover:bg-violet-300/14" />
+                <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-cyan-200/10 blur-2xl transition duration-300 group-hover:bg-violet-300/14" />
                 <div className="relative mb-12 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-lg font-semibold text-white">
                   0{index + 1}
                 </div>

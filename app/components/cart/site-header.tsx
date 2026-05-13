@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 
 type SiteHeaderProps = {
@@ -24,7 +25,7 @@ export default function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/30 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 sm:py-4 md:flex md:justify-between">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="flex-shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
             <Image
@@ -37,8 +38,8 @@ export default function SiteHeader({
             />
           </div>
 
-          <div className="min-w-0 max-w-[250px] sm:max-w-none">
-            <p className="truncate text-sm font-bold tracking-[0.18em] text-white min-[390px]:text-base min-[390px]:tracking-[0.22em] sm:text-lg sm:tracking-[0.25em]">
+          <div className="min-w-0 max-w-[136px] min-[390px]:max-w-[168px] min-[430px]:max-w-[210px] sm:max-w-none">
+            <p className="truncate text-xs font-bold tracking-[0.1em] text-white min-[390px]:tracking-[0.14em] min-[430px]:text-sm min-[430px]:tracking-[0.18em] sm:text-lg sm:tracking-[0.25em]">
               Aevyrixa Her Care
             </p>
             <p className="hidden text-[9px] uppercase tracking-[0.35em] text-cyan-300/70 sm:block">
@@ -46,6 +47,22 @@ export default function SiteHeader({
             </p>
           </div>
         </Link>
+
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <button
+            type="button"
+            onClick={toggleCart}
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-fuchsia-400/35 hover:bg-white/10"
+            aria-label={`Open cart with ${totalItems} item${totalItems === 1 ? "" : "s"}`}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {totalItems > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-cyan-300 px-1 text-[10px] font-bold text-black">
+                {totalItems}
+              </span>
+            )}
+          </button>
+        </div>
 
         <div className="hidden items-center gap-3 text-sm md:flex">
           <Link

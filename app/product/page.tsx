@@ -53,7 +53,7 @@ export default function ProductCollectionPage() {
           <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
             Premium reusable period panty care
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-8 text-white/65 md:text-lg">
+          <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/65 [overflow-wrap:anywhere] md:text-lg">
             Clean, discreet, reusable essentials shaped around comfort,
             confidence, and a refined Her Care routine.
           </p>
@@ -108,7 +108,7 @@ export default function ProductCollectionPage() {
                   <h2 className="mt-4 break-words text-xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-2xl">
                     {product.name}
                   </h2>
-                  <p className="mt-3 text-sm leading-7 text-white/62">
+                  <p className="mt-3 break-words text-sm leading-7 text-white/62 [overflow-wrap:anywhere]">
                     {product.shortDescription}
                   </p>
 

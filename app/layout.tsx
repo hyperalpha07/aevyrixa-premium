@@ -15,9 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aevyrixa Her Care",
+  title: {
+    default: "Aevyrixa Her Care",
+    template: "%s | Aevyrixa Her Care",
+  },
   description:
-    "Premium reusable period panty and women hygiene care by Aevyrixa.",
+    "Aevyrixa Her Care offers reusable period panty essentials with discreet privacy packaging, careful order review, and 3-Day Hygiene-Safe Support.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

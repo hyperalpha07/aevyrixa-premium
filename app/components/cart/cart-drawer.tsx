@@ -48,8 +48,10 @@ export default function CartDrawer() {
       />
 
       <aside
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md transform border-l border-white/10 bg-[#07111f] shadow-2xl transition-transform duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md transform border-l border-white/10 bg-[#07111f] shadow-2xl transition duration-300 ease-out ${
+          isOpen
+            ? "visible translate-x-0 opacity-100"
+            : "invisible translate-x-0 opacity-0 pointer-events-none"
         }`}
       >
         <div className="flex h-full flex-col">
@@ -215,7 +217,7 @@ export default function CartDrawer() {
             </div>
 
             <p className="mt-4 text-center text-[11px] uppercase tracking-[0.2em] text-white/40">
-              Secure Payment • Discreet Privacy Packaging • 3-Day Hygiene-Safe Support
+              Secure Payment | Discreet Privacy Packaging | 3-Day Hygiene-Safe Support
             </p>
           </div>
         </div>
