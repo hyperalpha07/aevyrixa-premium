@@ -28,6 +28,7 @@ import {
   walletProviders,
   type WalletProvider,
 } from "@/app/lib/admin-settings";
+import { orderStatuses, type OrderStatus } from "@/app/lib/order-types";
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
@@ -35,18 +36,9 @@ const ADMIN_SESSION_KEY = "aevyrixa-admin-session";
 const ADMIN_PRODUCTS_KEY = "aevyrixa-admin-products";
 const ADMIN_PASSCODE = "AEV-ADMIN-2026";
 
-const orderStatuses = [
-  "Pending",
-  "Confirmed",
-  "Shipped",
-  "Delivered",
-  "Cancelled",
-] as const;
-
 const productStatuses = ["Active", "Draft"] as const;
 const visualThemes: ProductVisualTheme[] = ["blush-violet", "cyan-night", "rose-gold"];
 
-type OrderStatus = (typeof orderStatuses)[number];
 type ProductStatus = (typeof productStatuses)[number];
 type AdminView = "dashboard" | "orders" | "products" | "settings";
 
@@ -316,6 +308,28 @@ function readOrdersFromStorage() {
   });
 }
 
+async function readOrdersFromApi() {
+  try {
+    const response = await fetch("/api/orders", { cache: "no-store" });
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as unknown;
+    if (!isRecord(payload) || !Array.isArray(payload.orders)) return null;
+
+    const orders = payload.orders
+      .map(normalizeOrder)
+      .filter((order): order is StoredOrder => Boolean(order));
+
+    // Supabase/Postgres-backed reads become the source of truth when env vars
+    // are connected. Until then, API returns demo-memory and localStorage keeps
+    // the existing browser fallback visible for current admin workflows.
+    return textValue(payload.storageMode) === "supabase" ? orders : null;
+  } catch (error) {
+    console.error("Failed to load backend orders:", error);
+    return null;
+  }
+}
+
 function writeOrdersToStorage(orders: StoredOrder[]) {
   localStorage.setItem(DRAFT_ORDERS_KEY, JSON.stringify(orders));
 
@@ -430,10 +444,13 @@ export default function AdminPanel({ view }: { view: AdminView }) {
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       setIsAuthenticated(localStorage.getItem(ADMIN_SESSION_KEY) === "active");
-      setOrders(readOrdersFromStorage());
       setAdminProducts(readProductsFromStorage());
       setSettings(readSettingsFromStorage());
       setIsLoaded(true);
+
+      void readOrdersFromApi().then((backendOrders) => {
+        setOrders(backendOrders ?? readOrdersFromStorage());
+      });
     }, 0);
 
     return () => window.clearTimeout(timerId);
@@ -573,7 +590,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 </h2>
               </div>
               <p className="max-w-xl break-words text-sm leading-6 text-white/56 [overflow-wrap:anywhere]">
-                Admin data is local to this browser for Phase 6 and structured for later API/database wiring.
+                Orders are prepared for backend sync, with local browser fallback until Supabase/Postgres is connected.
               </p>
             </div>
 

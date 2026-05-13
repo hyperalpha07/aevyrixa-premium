@@ -34,3 +34,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Backend Setup
+
+Order capture is backend-ready through `app/api/orders/route.ts`. Supabase and
+notification environment variable notes are documented in
+[`docs/backend-setup.md`](docs/backend-setup.md). Add secrets in Vercel
+Environment Variables, never in committed code.

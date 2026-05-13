@@ -14,22 +14,17 @@ import {
   type AdminSettings,
   type WalletProvider,
 } from "@/app/lib/admin-settings";
+import {
+  paymentMethods,
+  paymentTypes,
+  type OrderRecord,
+  type PaymentMethod,
+  type PaymentType,
+} from "@/app/lib/order-types";
 
 const DRAFT_ORDER_STORAGE_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_STORAGE_KEY = "aevyrixa-draft-orders";
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
-
-const paymentMethods = [
-  "Cash on Delivery",
-  "Mobile Wallet Payment",
-  "Bank Transfer",
-] as const;
-
-type PaymentMethod = (typeof paymentMethods)[number];
-
-const paymentTypes = ["Send Money", "Merchant Payment", "Cash Out"] as const;
-
-type PaymentType = (typeof paymentTypes)[number];
 
 type CheckoutForm = {
   fullName: string;
@@ -71,6 +66,11 @@ type PreparedOrder = {
   total: number;
 };
 
+type OrderApiResponse = {
+  order?: OrderRecord;
+  errors?: string[];
+};
+
 const initialForm: CheckoutForm = {
   fullName: "",
   phone: "",
@@ -106,6 +106,8 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<CheckoutForm>(initialForm);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [preparedOrder, setPreparedOrder] = useState<PreparedOrder | null>(null);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedReceiver, setCopiedReceiver] = useState(false);
   const [adminSettings, setAdminSettings] =
     useState<AdminSettings>(defaultAdminSettings);
@@ -123,6 +125,7 @@ export default function CheckoutPage() {
     value: CheckoutForm[Field]
   ) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setSubmitError("");
     setErrors((current) => {
       if (!current[field as keyof CheckoutErrors]) return current;
       const next = { ...current };
@@ -222,12 +225,13 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isSubmitDisabled || !validateForm() || items.length === 0) return;
+    if (isSubmitting || isSubmitDisabled || !validateForm() || items.length === 0) {
+      return;
+    }
 
-    const orderId = `AEV-${Date.now().toString(36).toUpperCase()}`;
     const selectedWalletProvider =
       form.paymentMethod === "Mobile Wallet Payment"
         ? form.walletProvider
@@ -245,8 +249,7 @@ export default function CheckoutPage() {
       ? form.transactionReference.trim()
       : undefined;
 
-    const draftOrder = {
-      orderId,
+    const orderPayload = {
       customer: {
         fullName: form.fullName.trim(),
         phone: form.phone.trim(),
@@ -273,21 +276,47 @@ export default function CheckoutPage() {
       createdAt: new Date().toISOString(),
     };
 
-    if (!saveDraftOrder(draftOrder)) return;
+    setIsSubmitting(true);
+    setSubmitError("");
 
-    setPreparedOrder({
-      orderId,
-      customerName: form.fullName.trim(),
-      customerPhone: form.phone.trim(),
-      paymentMethod: form.paymentMethod,
-      walletProvider: selectedWalletProvider,
-      paymentType: selectedPaymentType,
-      receiverNumber,
-      walletSenderNumber,
-      transactionReference,
-      total: subtotal,
-    });
-    clearCart();
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(orderPayload),
+      });
+      const result = (await response.json()) as OrderApiResponse;
+
+      if (!response.ok || !result.order) {
+        setSubmitError(
+          result.errors?.[0] || "Order could not be submitted. Please try again."
+        );
+        return;
+      }
+
+      saveDraftOrder(result.order);
+
+      setPreparedOrder({
+        orderId: result.order.orderReference || result.order.orderId,
+        customerName: result.order.customer.fullName,
+        customerPhone: result.order.customer.phone,
+        paymentMethod: result.order.paymentDetails.paymentMethod,
+        walletProvider: result.order.paymentDetails.walletProvider,
+        paymentType: result.order.paymentDetails.paymentType,
+        receiverNumber: result.order.paymentDetails.receiverNumber,
+        walletSenderNumber: result.order.paymentDetails.walletSenderNumber,
+        transactionReference: result.order.paymentDetails.transactionReference,
+        total: result.order.totalAmount,
+      });
+      clearCart();
+    } catch (error) {
+      console.error("Failed to submit order:", error);
+      setSubmitError("Order could not be submitted. Please check your connection.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -550,16 +579,22 @@ export default function CheckoutPage() {
                 )}
               </div>
 
+              {submitError && (
+                <div className="mt-5 rounded-2xl border border-rose-200/20 bg-rose-200/[0.07] p-4 text-sm leading-6 text-rose-50/80">
+                  {submitError}
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isSubmitDisabled}
+                disabled={isSubmitDisabled || isSubmitting}
                 className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
-                  isSubmitDisabled
+                  isSubmitDisabled || isSubmitting
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
                     : "bg-gradient-to-r from-cyan-300 to-fuchsia-300 text-black hover:scale-[1.01]"
                 }`}
               >
-                Submit Order
+                {isSubmitting ? "Submitting Order..." : "Submit Order"}
               </button>
             </form>
 
