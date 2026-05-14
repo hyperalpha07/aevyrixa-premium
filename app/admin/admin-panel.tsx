@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Boxes,
@@ -16,6 +16,7 @@ import {
   Phone,
   Pencil,
   Plus,
+  Rows3,
   Search,
   Settings,
   ShieldCheck,
@@ -1789,6 +1790,16 @@ function OrderDetails({ order }: { order: StoredOrder }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const reference = orderReferenceKey(order);
   const transactionReference = order.paymentDetails.transactionReference;
+  const copiedLabel =
+    copiedKey === "summary"
+      ? "Order summary copied"
+      : copiedKey === "contact"
+        ? "Customer contact copied"
+        : copiedKey === "address-action"
+          ? "Delivery address copied"
+          : copiedKey === "payment-action"
+            ? "Payment summary copied"
+            : null;
 
   const copyValue = async (key: string, value?: string) => {
     if (!value) return;
@@ -1833,43 +1844,53 @@ function OrderDetails({ order }: { order: StoredOrder }) {
               <DetailLine label="Total" value={formatCurrency(orderTotal(order))} />
             </div>
           </div>
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-            <ActionButton
-              label="Copy Summary"
-              icon={Copy}
-              copied={copiedKey === "summary"}
-              onClick={() => copyValue("summary", buildOrderSummary(order))}
-            />
-            <ActionButton
-              label="Copy Contact"
-              icon={Copy}
-              copied={copiedKey === "contact"}
-              onClick={() => copyValue("contact", buildCustomerContact(order))}
-            />
-            <ActionButton
-              label="Copy Address"
-              icon={Copy}
-              copied={copiedKey === "address-action"}
-              disabled={!order.customer.address}
-              onClick={() => copyValue("address-action", buildDeliveryAddress(order))}
-            />
-            <ActionButton
-              label="Copy Payment"
-              icon={Copy}
-              copied={copiedKey === "payment-action"}
-              onClick={() => copyValue("payment-action", buildPaymentSummary(order))}
+          <div className="relative flex min-w-0 flex-col gap-2 sm:flex-row sm:justify-end">
+            <QuickActionsMenu
+              copiedKey={copiedKey}
+              actions={[
+                {
+                  key: "summary",
+                  label: "Copy Summary",
+                  onClick: () => copyValue("summary", buildOrderSummary(order)),
+                },
+                {
+                  key: "contact",
+                  label: "Copy Contact",
+                  onClick: () => copyValue("contact", buildCustomerContact(order)),
+                },
+                {
+                  key: "address-action",
+                  label: "Copy Address",
+                  disabled: !order.customer.address,
+                  onClick: () => copyValue("address-action", buildDeliveryAddress(order)),
+                },
+                {
+                  key: "payment-action",
+                  label: "Copy Payment",
+                  onClick: () => copyValue("payment-action", buildPaymentSummary(order)),
+                },
+              ]}
             />
             <a
               href={order.customer.phone ? `tel:${order.customer.phone}` : undefined}
-              className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition ${
+              className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200/70 sm:min-w-[150px] ${
                 order.customer.phone
-                  ? "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/35 hover:text-white"
+                  ? "border-cyan-200/30 bg-cyan-200/[0.10] text-cyan-50 hover:border-cyan-100/55 hover:bg-cyan-200/[0.16] hover:text-white"
                   : "pointer-events-none border-white/5 bg-white/[0.025] text-white/25"
               }`}
             >
               <Phone className="h-4 w-4 shrink-0" />
-              <span className="truncate">Call Customer</span>
+              <span>Call Customer</span>
             </a>
+            <p
+              role="status"
+              aria-live="polite"
+              className={`pointer-events-none absolute right-0 top-[calc(100%+0.5rem)] z-20 rounded-full border border-emerald-200/30 bg-emerald-200/12 px-3 py-1.5 text-xs font-semibold text-emerald-100 shadow-[0_14px_34px_rgba(0,0,0,0.22)] transition duration-200 ${
+                copiedLabel ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+              }`}
+            >
+              {copiedLabel ?? "Copied"}
+            </p>
           </div>
         </div>
       </div>
@@ -2172,30 +2193,126 @@ function CopyButton({
   );
 }
 
-function ActionButton({
-  label,
-  icon: Icon,
-  copied,
-  disabled,
-  onClick,
-}: {
+type QuickAction = {
+  key: string;
   label: string;
-  icon: typeof Copy;
-  copied?: boolean;
   disabled?: boolean;
   onClick: () => void;
+};
+
+function QuickActionsMenu({
+  actions,
+  copiedKey,
+}: {
+  actions: QuickAction[];
+  copiedKey: string | null;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen]);
+
+  const focusAction = (direction: 1 | -1) => {
+    const buttons = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>("[data-menu-action]:not(:disabled)") ?? []
+    );
+    if (!buttons.length) return;
+
+    const currentIndex = buttons.findIndex((button) => button === document.activeElement);
+    const nextIndex =
+      currentIndex === -1
+        ? direction === 1
+          ? 0
+          : buttons.length - 1
+        : (currentIndex + direction + buttons.length) % buttons.length;
+    buttons[nextIndex]?.focus();
+  };
+
+  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setIsOpen(false);
+      menuRef.current?.querySelector<HTMLButtonElement>("[aria-haspopup='menu']")?.focus();
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      focusAction(event.key === "ArrowDown" ? 1 : -1);
+    }
+  };
+
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      data-copied={copied ? "true" : "false"}
-      className="aev-admin-copy-button inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm font-medium text-white/76 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+    <div
+      ref={menuRef}
+      onKeyDown={handleMenuKeyDown}
+      className="relative min-w-0 sm:min-w-[172px]"
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      <span className="truncate">{copied ? "Copied" : label}</span>
-    </button>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+        className="aev-admin-copy-button inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-cyan-200/35 hover:bg-cyan-200/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200/70"
+      >
+        <Rows3 className="h-4 w-4 shrink-0 text-cyan-100" />
+        <span>Quick Actions</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-white/48 transition duration-150 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <div
+        role="menu"
+        aria-label="Copy actions"
+        aria-hidden={!isOpen}
+        className={`absolute right-0 top-[calc(100%+0.5rem)] z-30 w-full min-w-[220px] origin-top-right rounded-2xl border border-white/12 bg-[#08111f]/98 p-1.5 shadow-[0_22px_60px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur transition duration-150 ${
+          isOpen
+            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+            : "pointer-events-none -translate-y-1 scale-95 opacity-0"
+        }`}
+      >
+        {actions.map((action) => {
+          const isCopied = copiedKey === action.key;
+
+          return (
+            <button
+              key={action.key}
+              type="button"
+              role="menuitem"
+              data-menu-action
+              data-copied={isCopied ? "true" : "false"}
+              disabled={action.disabled}
+              tabIndex={isOpen ? 0 : -1}
+              onClick={() => {
+                action.onClick();
+                setIsOpen(false);
+              }}
+              className="aev-admin-copy-button flex min-h-10 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-white/74 transition hover:bg-cyan-200/[0.08] hover:text-white focus:bg-cyan-200/[0.10] focus:text-white focus:outline-none disabled:pointer-events-none disabled:text-white/28"
+            >
+              <Copy className="h-4 w-4 shrink-0 text-cyan-100/82" />
+              <span className="min-w-0 flex-1">{action.label}</span>
+              <span className="text-xs font-semibold text-emerald-100/90">
+                {isCopied ? "Copied" : ""}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
