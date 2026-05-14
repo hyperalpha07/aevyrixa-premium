@@ -35,6 +35,11 @@ import {
   type WalletProvider,
 } from "@/app/lib/admin-settings";
 import { orderStatuses, paymentMethods, type OrderStatus } from "@/app/lib/order-types";
+import type {
+  ProductCatalogItem,
+  ProductStockStatus,
+  ProductStatus as StoreProductStatus,
+} from "@/app/lib/product-types";
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
@@ -43,6 +48,12 @@ const ADMIN_PRODUCTS_KEY = "aevyrixa-admin-products";
 const ADMIN_PASSCODE = "AEV-ADMIN-2026";
 
 const productStatuses = ["Active", "Draft"] as const;
+const stockStatuses: ProductStockStatus[] = [
+  "in_stock",
+  "low_stock",
+  "out_of_stock",
+  "preorder",
+];
 const visualThemes: ProductVisualTheme[] = ["blush-violet", "cyan-night", "rose-gold"];
 
 type ProductStatus = (typeof productStatuses)[number];
@@ -122,6 +133,9 @@ type AdminProduct = {
   seoTitle: string;
   seoDescription: string;
   status: ProductStatus;
+  featured: boolean;
+  stockStatus: ProductStockStatus;
+  stockQuantity?: number;
   visualTheme: ProductVisualTheme;
   visualVariant: string;
 };
@@ -157,6 +171,9 @@ const emptyProduct: AdminProduct = {
   seoTitle: "",
   seoDescription: "",
   status: "Draft",
+  featured: false,
+  stockStatus: "in_stock",
+  stockQuantity: undefined,
   visualTheme: "blush-violet",
   visualVariant: "default",
 };
@@ -289,7 +306,12 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     care: stringArrayValue(value.care),
     seoTitle: textValue(value.seoTitle) || "",
     seoDescription: textValue(value.seoDescription) || "",
-    status: value.status === "Active" ? "Active" : "Draft",
+    status: value.status === "Active" || value.status === "active" ? "Active" : "Draft",
+    featured: Boolean(value.featured),
+    stockStatus: stockStatuses.includes(value.stockStatus as ProductStockStatus)
+      ? (value.stockStatus as ProductStockStatus)
+      : "in_stock",
+    stockQuantity: numberValue(value.stockQuantity) || undefined,
     visualTheme,
     visualVariant: textValue(value.visualVariant) || visualTheme,
   };
@@ -313,6 +335,9 @@ function productSeed(): AdminProduct[] {
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
     status: "Active",
+    featured: true,
+    stockStatus: "in_stock",
+    stockQuantity: undefined,
     visualTheme: product.visualTheme,
     visualVariant: product.visualTheme,
   }));
@@ -406,6 +431,144 @@ async function updateOrderStatusInApi(orderId: string, status: OrderStatus) {
     return normalizeOrder(payload.order);
   } catch (error) {
     console.error("Failed to update backend order status:", error);
+    return null;
+  }
+}
+
+function priceTextToNumber(value: string) {
+  const parsed = Number(value.replace(/[^0-9.]+/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function optionalPriceTextToNumber(value: string) {
+  if (!value.trim()) return undefined;
+  const parsed = Number(value.replace(/[^0-9.]+/g, ""));
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function formatAdminPrice(value?: number, currency = "USD") {
+  if (typeof value !== "number") return "";
+  const symbol = currency === "BDT" ? "৳" : "$";
+  return `${symbol}${value.toFixed(2)}`;
+}
+
+function storeStatus(status: ProductStatus): StoreProductStatus {
+  return status === "Active" ? "active" : "draft";
+}
+
+function adminStatus(status: StoreProductStatus): ProductStatus {
+  return status === "active" ? "Active" : "Draft";
+}
+
+function productToApiPayload(product: AdminProduct) {
+  return {
+    id: product.id,
+    name: product.name,
+    slug: slugify(product.slug),
+    shortDescription: product.shortDescription,
+    description: product.description,
+    category: product.category,
+    price: priceTextToNumber(product.price),
+    compareAtPrice: optionalPriceTextToNumber(product.compareAtPrice),
+    currency: "USD",
+    status: storeStatus(product.status),
+    featured: product.featured,
+    stockStatus: product.stockStatus,
+    stockQuantity: product.stockQuantity,
+    sizes: product.sizes,
+    colors: product.colors,
+    absorbency: product.absorbency,
+    absorbencyOptions: product.absorbency ? [product.absorbency] : [],
+    visual: product.visualTheme,
+    visualTheme: product.visualTheme,
+    visualVariant: product.visualVariant,
+    benefits: product.benefits,
+    care: product.care,
+    seoTitle: product.seoTitle,
+    seoDescription: product.seoDescription,
+  };
+}
+
+function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    price: formatAdminPrice(product.price, product.currency),
+    compareAtPrice: formatAdminPrice(product.compareAtPrice, product.currency),
+    category: product.category,
+    sizes: product.sizes,
+    colors: product.colors,
+    absorbency: product.absorbency,
+    benefits: product.benefits,
+    care: product.care,
+    seoTitle: product.seoTitle ?? "",
+    seoDescription: product.seoDescription ?? "",
+    status: adminStatus(product.status),
+    featured: product.featured,
+    stockStatus: product.stockStatus,
+    stockQuantity: product.stockQuantity,
+    visualTheme: product.visualTheme,
+    visualVariant: product.visualVariant ?? product.visualTheme,
+  };
+}
+
+async function readProductsFromApi() {
+  try {
+    const response = await fetch("/api/products?admin=1", { cache: "no-store" });
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as unknown;
+    if (!isRecord(payload) || !Array.isArray(payload.products)) return null;
+
+    return payload.products.map(apiProductToAdminProduct);
+  } catch (error) {
+    console.error("Failed to load backend products:", error);
+    return null;
+  }
+}
+
+async function saveProductToApi(product: AdminProduct, exists: boolean) {
+  try {
+    const response = await fetch(
+      exists ? `/api/products/${encodeURIComponent(product.id)}` : "/api/products",
+      {
+        method: exists ? "PATCH" : "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(productToApiPayload(product)),
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as unknown;
+    if (!isRecord(payload) || !isRecord(payload.product)) return null;
+
+    return apiProductToAdminProduct(payload.product as ProductCatalogItem);
+  } catch (error) {
+    console.error("Failed to save backend product:", error);
+    return null;
+  }
+}
+
+async function disableProductInApi(productId: string) {
+  try {
+    const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as unknown;
+    if (!isRecord(payload) || !isRecord(payload.product)) return null;
+
+    return apiProductToAdminProduct(payload.product as ProductCatalogItem);
+  } catch (error) {
+    console.error("Failed to disable backend product:", error);
     return null;
   }
 }
@@ -667,6 +830,12 @@ export default function AdminPanel({ view }: { view: AdminView }) {
 
         setOrders(nextOrders);
         writeOrdersToStorage(nextOrders);
+      });
+
+      void readProductsFromApi().then((backendProducts) => {
+        if (!backendProducts || backendProducts.length === 0) return;
+        setAdminProducts(backendProducts);
+        writeProductsToStorage(backendProducts);
       });
     }, 0);
 
@@ -1143,6 +1312,7 @@ function ProductsSection({
   onSaveProducts: (products: AdminProduct[]) => void;
 }) {
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const addProduct = () => {
     setEditingProduct({
@@ -1167,27 +1337,72 @@ function ProductsSection({
 
     onSaveProducts(nextProducts);
     setEditingProduct(null);
+    setStatusMessage("Product saved locally. Backend sync is running when available.");
+
+    void saveProductToApi(nextProduct, exists).then((backendProduct) => {
+      if (!backendProduct) return;
+      const syncedProducts = nextProducts.map((item) =>
+        item.id === nextProduct.id || item.id === backendProduct.id
+          ? backendProduct
+          : item
+      );
+      onSaveProducts(syncedProducts);
+      setStatusMessage("Product saved to backend.");
+    });
   };
 
   const deleteProduct = (productId: string) => {
-    onSaveProducts(products.filter((product) => product.id !== productId));
+    if (!window.confirm("Set this product to Draft instead of deleting it?")) return;
+
+    const nextProducts = products.map((product) =>
+      product.id === productId ? { ...product, status: "Draft" as ProductStatus } : product
+    );
+    onSaveProducts(nextProducts);
     setEditingProduct((current) => (current?.id === productId ? null : current));
+    setStatusMessage("Product moved to Draft locally. Backend sync is running when available.");
+
+    void disableProductInApi(productId).then((backendProduct) => {
+      if (!backendProduct) return;
+      onSaveProducts(
+        nextProducts.map((product) =>
+          product.id === backendProduct.id ? backendProduct : product
+        )
+      );
+      setStatusMessage("Product moved to Draft in backend.");
+    });
   };
 
   const toggleStatus = (productId: string) => {
-    onSaveProducts(
-      products.map((product) =>
-        product.id === productId
-          ? { ...product, status: product.status === "Active" ? "Draft" : "Active" }
-          : product
-      )
+    const nextProducts: AdminProduct[] = products.map((product) =>
+      product.id === productId
+        ? {
+            ...product,
+            status: product.status === "Active" ? "Draft" : "Active",
+          }
+        : product
     );
+    const nextProduct = nextProducts.find((product) => product.id === productId);
+
+    onSaveProducts(nextProducts);
+    setStatusMessage("Product status updated locally. Backend sync is running when available.");
+
+    if (!nextProduct) return;
+
+    void saveProductToApi(nextProduct, true).then((backendProduct) => {
+      if (!backendProduct) return;
+      onSaveProducts(
+        nextProducts.map((product) =>
+          product.id === backendProduct.id ? backendProduct : product
+        )
+      );
+      setStatusMessage("Product status saved to backend.");
+    });
   };
 
   return (
     <div className="mt-6 space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SectionHeader title="Local product catalog" />
+        <SectionHeader title="Product catalog" />
         <button
           type="button"
           onClick={addProduct}
@@ -1197,6 +1412,12 @@ function ProductsSection({
           Add product
         </button>
       </div>
+
+      {statusMessage && (
+        <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
+          {statusMessage}
+        </div>
+      )}
 
       {editingProduct && (
         <ProductEditor
@@ -1225,6 +1446,7 @@ function ProductsSection({
                   <DetailLine label="Slug" value={product.slug} />
                   <DetailLine label="Category" value={product.category} />
                   <DetailLine label="Absorbency" value={product.absorbency} />
+                  <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
                   <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
                 </div>
               </div>
@@ -1252,7 +1474,7 @@ function ProductsSection({
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Delete
+                  Set Draft
                 </button>
               </div>
             </div>
@@ -1325,6 +1547,33 @@ function ProductEditor({
           value={draft.status}
           options={productStatuses}
           onChange={(value) => setDraft((current) => ({ ...current, status: value as ProductStatus }))}
+        />
+        <SelectField
+          label="Stock status"
+          value={draft.stockStatus}
+          options={stockStatuses}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, stockStatus: value as ProductStockStatus }))
+          }
+        />
+        <TextField
+          label="Stock quantity"
+          value={draft.stockQuantity?.toString() ?? ""}
+          onChange={(value) =>
+            setDraft((current) => ({
+              ...current,
+              stockQuantity: value.trim() ? Number(value) : undefined,
+            }))
+          }
+          placeholder="24"
+        />
+        <SelectField
+          label="Featured"
+          value={draft.featured ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, featured: value === "Yes" }))
+          }
         />
         <SelectField
           label="Visual theme"

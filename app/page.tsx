@@ -13,6 +13,9 @@ import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
+import { listProducts } from "@/app/lib/product-store";
+
+export const dynamic = "force-dynamic";
 
 const trustItems = [
   "Discreet Privacy Packaging",
@@ -98,7 +101,13 @@ const faqs = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { products } = await listProducts();
+  const featuredProduct = products.find((product) => product.featured) ?? products[0];
+  const featuredProductHref = featuredProduct
+    ? `/product/${featuredProduct.slug}`
+    : "/product/everyday-comfort";
+
   return (
     <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
       <HomeMotionController />
@@ -310,7 +319,7 @@ export default function Home() {
             </div>
 
             <Link
-              href="/product/everyday-comfort"
+              href={featuredProductHref}
               className="aev-action-primary mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
             >
               View Product

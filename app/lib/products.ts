@@ -1,4 +1,6 @@
-export type ProductVisualTheme = "blush-violet" | "cyan-night" | "rose-gold";
+import type { ProductCatalogItem, ProductVisualTheme } from "@/app/lib/product-types";
+
+export type { ProductCatalogItem, ProductVisualTheme } from "@/app/lib/product-types";
 
 export type Product = {
   id: string;
@@ -125,3 +127,89 @@ export const products: Product[] = [
     visualTheme: "rose-gold",
   },
 ];
+
+export function legacyProductToCatalogItem(
+  product: Product,
+  overrides: Partial<ProductCatalogItem> = {}
+): ProductCatalogItem {
+  const now = new Date(0).toISOString();
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    category: product.category,
+    price: product.numericPrice,
+    compareAtPrice: priceTextToNumber(product.compareAtPrice),
+    currency: "USD",
+    status: "active",
+    featured: true,
+    stockStatus: "in_stock",
+    stockQuantity: undefined,
+    sizes: product.sizes,
+    colors: product.colors,
+    absorbency: product.absorbency,
+    absorbencyOptions: product.absorbencyOptions,
+    visual: product.visualTheme,
+    visualTheme: product.visualTheme,
+    visualVariant: product.visualTheme,
+    benefits: product.benefits,
+    care: product.care,
+    seoTitle: product.seoTitle,
+    seoDescription: product.seoDescription,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+export function catalogItemToLegacyProduct(
+  product: ProductCatalogItem
+): Product {
+  const visualTheme = product.visualTheme ?? product.visual;
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    price: formatProductPrice(product),
+    compareAtPrice:
+      typeof product.compareAtPrice === "number"
+        ? formatProductPrice({ ...product, price: product.compareAtPrice })
+        : undefined,
+    numericPrice: product.price,
+    category: product.category,
+    sizes: product.sizes.length > 0 ? product.sizes : productSizes,
+    colors: product.colors.length > 0 ? product.colors : productColors,
+    absorbency:
+      product.absorbency === "Light" ||
+      product.absorbency === "Moderate" ||
+      product.absorbency === "Heavy/Night"
+        ? product.absorbency
+        : "Moderate",
+    absorbencyOptions:
+      product.absorbencyOptions.length > 0
+        ? product.absorbencyOptions
+        : [product.absorbency || "Moderate"],
+    benefits: product.benefits,
+    care: product.care,
+    seoTitle: product.seoTitle || product.name,
+    seoDescription: product.seoDescription || product.shortDescription,
+    visualTheme,
+  };
+}
+
+export function formatProductPrice(product: Pick<ProductCatalogItem, "price" | "currency">) {
+  const symbol = product.currency === "BDT" ? "৳" : "$";
+  return `${symbol}${product.price.toFixed(2)}`;
+}
+
+function priceTextToNumber(value?: string) {
+  if (!value) return undefined;
+  const parsed = Number(value.replace(/[^0-9.]+/g, ""));
+  return Number.isFinite(parsed) ? parsed : undefined;
+}

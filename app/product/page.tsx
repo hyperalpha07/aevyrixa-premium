@@ -1,10 +1,11 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight, Droplets, Sparkles, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
-import { products, type ProductVisualTheme } from "@/app/lib/products";
+import { listProducts } from "@/app/lib/product-store";
+import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
+
+export const dynamic = "force-dynamic";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -34,7 +35,9 @@ const themeStyles: Record<
   },
 };
 
-export default function ProductCollectionPage() {
+export default async function ProductCollectionPage() {
+  const { products } = await listProducts();
+
   return (
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -113,10 +116,15 @@ export default function ProductCollectionPage() {
                   </p>
 
                   <div className="mt-5 flex items-end gap-3">
-                    <span className="text-3xl font-semibold">{product.price}</span>
-                    {product.compareAtPrice && (
+                    <span className="text-3xl font-semibold">
+                      {formatProductPrice(product)}
+                    </span>
+                    {typeof product.compareAtPrice === "number" && (
                       <span className="pb-1 text-sm text-white/35 line-through">
-                        {product.compareAtPrice}
+                        {formatProductPrice({
+                          price: product.compareAtPrice,
+                          currency: product.currency,
+                        })}
                       </span>
                     )}
                   </div>
