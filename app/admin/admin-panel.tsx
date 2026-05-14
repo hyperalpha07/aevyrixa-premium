@@ -54,6 +54,7 @@ type StoredOrderItem = {
 
 type StoredOrder = {
   orderId: string;
+  orderReference?: string;
   customer: {
     fullName?: string;
     phone?: string;
@@ -174,7 +175,8 @@ function normalizeStatus(value: unknown): OrderStatus {
 function normalizeOrder(value: unknown): StoredOrder | null {
   if (!isRecord(value)) return null;
 
-  const orderId = textValue(value.orderId) || textValue(value.orderReference);
+  const orderReference = textValue(value.orderReference);
+  const orderId = textValue(value.orderId) || orderReference;
   if (!orderId) return null;
 
   const customer = isRecord(value.customer) ? value.customer : {};
@@ -194,6 +196,7 @@ function normalizeOrder(value: unknown): StoredOrder | null {
 
   return {
     orderId,
+    orderReference,
     customer: {
       fullName: textValue(customer.fullName),
       phone: textValue(customer.phone),
@@ -219,6 +222,10 @@ function normalizeOrder(value: unknown): StoredOrder | null {
     status: normalizeStatus(value.status),
     createdAt: textValue(value.createdAt),
   };
+}
+
+function orderReferenceKey(order: StoredOrder) {
+  return order.orderReference || order.orderId;
 }
 
 function normalizeAdminProduct(value: unknown): AdminProduct | null {
@@ -283,8 +290,10 @@ function readOrdersFromStorage() {
 
   const pushOrder = (value: unknown) => {
     const order = normalizeOrder(value);
-    if (!order || seen.has(order.orderId)) return;
-    seen.add(order.orderId);
+    if (!order) return;
+    const key = orderReferenceKey(order);
+    if (seen.has(key)) return;
+    seen.add(key);
     orders.push(order);
   };
 
@@ -308,6 +317,24 @@ function readOrdersFromStorage() {
   });
 }
 
+function mergeOrders(apiOrders: StoredOrder[], localOrders: StoredOrder[]) {
+  const merged: StoredOrder[] = [];
+  const seen = new Set<string>();
+
+  [...apiOrders, ...localOrders].forEach((order) => {
+    const key = orderReferenceKey(order);
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(order);
+  });
+
+  return merged.sort((a, b) => {
+    const first = a.createdAt ? Date.parse(a.createdAt) : 0;
+    const second = b.createdAt ? Date.parse(b.createdAt) : 0;
+    return second - first;
+  });
+}
+
 async function readOrdersFromApi() {
   try {
     const response = await fetch("/api/orders", { cache: "no-store" });
@@ -320,10 +347,7 @@ async function readOrdersFromApi() {
       .map(normalizeOrder)
       .filter((order): order is StoredOrder => Boolean(order));
 
-    // Supabase/Postgres-backed reads become the source of truth when env vars
-    // are connected. Until then, API returns demo-memory and localStorage keeps
-    // the existing browser fallback visible for current admin workflows.
-    return textValue(payload.storageMode) === "supabase" ? orders : null;
+    return orders;
   } catch (error) {
     console.error("Failed to load backend orders:", error);
     return null;
@@ -360,7 +384,10 @@ function writeOrdersToStorage(orders: StoredOrder[]) {
 
   try {
     const latest = normalizeOrder(JSON.parse(latestStored) as unknown);
-    const updatedLatest = orders.find((order) => order.orderId === latest?.orderId);
+    const latestKey = latest ? orderReferenceKey(latest) : undefined;
+    const updatedLatest = orders.find(
+      (order) => latestKey && orderReferenceKey(order) === latestKey
+    );
     if (updatedLatest) {
       localStorage.setItem(LATEST_DRAFT_ORDER_KEY, JSON.stringify(updatedLatest));
     }
@@ -470,8 +497,21 @@ export default function AdminPanel({ view }: { view: AdminView }) {
       setSettings(readSettingsFromStorage());
       setIsLoaded(true);
 
+      const localOrders = readOrdersFromStorage();
+      setOrders(localOrders);
+
       void readOrdersFromApi().then((backendOrders) => {
-        setOrders(backendOrders ?? readOrdersFromStorage());
+        const latestLocalOrders = readOrdersFromStorage();
+
+        // Temporary no-database bridge: merge API demo-memory with the browser
+        // fallback so checkout-submitted orders remain visible until the real
+        // Supabase/Postgres order table replaces localStorage in the next phase.
+        const nextOrders = backendOrders
+          ? mergeOrders(backendOrders, latestLocalOrders)
+          : latestLocalOrders;
+
+        setOrders(nextOrders);
+        writeOrdersToStorage(nextOrders);
       });
     }, 0);
 
@@ -492,21 +532,25 @@ export default function AdminPanel({ view }: { view: AdminView }) {
     };
   }, [orders]);
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+  const updateOrderStatus = (orderKey: string, status: OrderStatus) => {
     setOrders((current) => {
       const nextOrders = current.map((order) =>
-        order.orderId === orderId ? { ...order, status } : order
+        orderReferenceKey(order) === orderKey || order.orderId === orderKey
+          ? { ...order, status }
+          : order
       );
       writeOrdersToStorage(nextOrders);
       return nextOrders;
     });
 
-    void updateOrderStatusInApi(orderId, status).then((backendOrder) => {
+    void updateOrderStatusInApi(orderKey, status).then((backendOrder) => {
       if (!backendOrder) return;
 
       setOrders((current) => {
         const nextOrders = current.map((order) =>
-          order.orderId === orderId ? { ...order, ...backendOrder } : order
+          orderReferenceKey(order) === orderKey || order.orderId === orderKey
+            ? { ...order, ...backendOrder }
+            : order
         );
         writeOrdersToStorage(nextOrders);
         return nextOrders;
@@ -1389,7 +1433,7 @@ function OrderList({
           order={order}
           isExpanded={expandedOrderId === order.orderId}
           onToggleDetails={() => onToggleDetails(order.orderId)}
-          onStatusChange={(status) => onStatusChange(order.orderId, status)}
+          onStatusChange={(status) => onStatusChange(orderReferenceKey(order), status)}
         />
       ))}
     </div>

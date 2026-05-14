@@ -205,10 +205,27 @@ export default function CheckoutPage() {
           ? (JSON.parse(savedOrders) as unknown)
           : [];
         const existingOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
+        const draftRecord =
+          typeof draftOrder === "object" && draftOrder !== null
+            ? (draftOrder as Partial<OrderRecord>)
+            : {};
+        const draftReference = draftRecord.orderReference || draftRecord.orderId;
+        const nextOrders = draftReference
+          ? existingOrders.filter((order) => {
+              if (typeof order !== "object" || order === null) return true;
+              const record = order as Partial<OrderRecord>;
+              return (
+                record.orderReference !== draftReference &&
+                record.orderId !== draftReference
+              );
+            })
+          : existingOrders;
 
+        // Temporary browser fallback until Supabase/Postgres becomes the
+        // production source of truth. Admin reads this same key immediately.
         localStorage.setItem(
           DRAFT_ORDERS_STORAGE_KEY,
-          JSON.stringify([...existingOrders, draftOrder])
+          JSON.stringify([draftOrder, ...nextOrders])
         );
       } catch (error) {
         console.error("Failed to save order history:", error);
