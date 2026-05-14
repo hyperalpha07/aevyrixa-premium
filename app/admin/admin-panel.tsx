@@ -772,8 +772,8 @@ export default function AdminPanel({ view }: { view: AdminView }) {
         <div className="absolute bottom-[-20%] left-[22%] h-[320px] w-[320px] rounded-full bg-fuchsia-400/10 blur-[140px]" />
       </div>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-4 sm:px-6 lg:min-h-screen lg:flex-row lg:py-6">
-        <aside className="min-w-0 rounded-[1.4rem] border border-white/10 bg-white/[0.045] p-4 shadow-[0_0_60px_rgba(34,211,238,0.08)] backdrop-blur-2xl lg:w-72 lg:shrink-0">
+      <div className="flex w-full flex-col gap-4 px-3 py-3 sm:px-4 lg:min-h-screen lg:flex-row lg:items-start lg:px-5 lg:py-5">
+        <aside className="min-w-0 rounded-[1.4rem] border border-white/10 bg-white/[0.045] p-4 shadow-[0_0_60px_rgba(34,211,238,0.08)] backdrop-blur-2xl lg:sticky lg:top-5 lg:w-[260px] lg:shrink-0">
           <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between lg:block">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
@@ -824,17 +824,17 @@ export default function AdminPanel({ view }: { view: AdminView }) {
         </aside>
 
         <section className="min-w-0 flex-1">
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-2xl sm:p-6">
-            <div className="flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-2xl sm:p-5 xl:p-6">
+            <div className="flex flex-col gap-3 border-b border-white/10 pb-5 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0">
                 <p className="text-xs uppercase tracking-[0.28em] text-fuchsia-200/70">
                   Control Room
                 </p>
-                <h2 className="mt-2 break-words text-3xl font-semibold tracking-tight">
+                <h2 className="mt-2 break-words text-3xl font-semibold tracking-tight [overflow-wrap:break-word]">
                   {viewTitle(view)}
                 </h2>
               </div>
-              <p className="max-w-xl break-words text-sm leading-6 text-white/56 [overflow-wrap:anywhere]">
+              <p className="max-w-3xl break-words text-sm leading-6 text-white/56 [overflow-wrap:break-word]">
                 Supabase-backed order operations with local fallback for development.
               </p>
             </div>
@@ -964,7 +964,7 @@ function DashboardSection({
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
         <MetricCard label="Total Orders" value={String(metrics.totalOrders)} icon={ShoppingBag} />
         <MetricCard label="Pending" value={String(metrics.pendingOrders)} icon={Sparkles} />
         <MetricCard label="Confirmed" value={String(metrics.confirmedOrders)} icon={ShieldCheck} />
@@ -1000,9 +1000,9 @@ function DashboardSection({
         />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0">
-          <SectionHeader title="Recent orders" href="/admin/orders" action="View all" />
+          <SectionHeader title="Recent order preview" href="/admin/orders" action="Open orders workspace" />
           <RecentOrderList
             orders={recentOrders}
             onStatusChange={onStatusChange}
@@ -1052,9 +1052,16 @@ function OrdersSection({
 
   return (
     <div className="mt-6 space-y-5">
-      <SectionHeader title="Order management" />
+      <div className="flex min-w-0 flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
+        <div className="min-w-0">
+          <SectionHeader title="Order command workspace" />
+          <p className="max-w-4xl text-sm leading-6 text-white/50">
+            Select an order from the operations queue to manage customer, payment, delivery, item, and support details in the command panel.
+          </p>
+        </div>
+      </div>
       <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3 sm:p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(150px,0.7fr)_minmax(190px,0.9fr)_minmax(150px,0.7fr)]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(280px,1.5fr)_minmax(150px,0.7fr)_minmax(220px,0.9fr)_minmax(160px,0.7fr)]">
           <label className="relative block min-w-0">
             <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
               Search orders
@@ -1106,13 +1113,15 @@ function OrdersSection({
           )}
         </div>
       </section>
-      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] xl:items-start">
-        <OrderList
-          orders={visibleOrders}
-          expandedOrderId={expandedOrderId}
-          onToggleDetails={onToggleDetails}
-          onStatusChange={onStatusChange}
-        />
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(380px,520px)_minmax(0,1fr)] xl:items-start">
+        <div className="min-w-0 xl:max-h-[calc(100vh-13rem)] xl:overflow-y-auto xl:pr-1">
+          <OrderList
+            orders={visibleOrders}
+            expandedOrderId={expandedOrderId}
+            onToggleDetails={onToggleDetails}
+            onStatusChange={onStatusChange}
+          />
+        </div>
         <div className="min-w-0 xl:sticky xl:top-6">
           {selectedOrder ? (
             <OrderDetails order={selectedOrder} />
@@ -1206,7 +1215,7 @@ function ProductsSection({
             <div className="grid min-w-0 gap-4 xl:grid-cols-[1fr_120px_130px_160px] xl:items-center">
               <div className="min-w-0">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <h3 className="break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
+                  <h3 className="break-words text-base font-semibold text-white [overflow-wrap:break-word]">
                     {product.name}
                   </h3>
                   <ProductStatusBadge status={product.status} />
@@ -1722,7 +1731,7 @@ function OrderCard({
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">
               Order reference
             </p>
-            <h3 className="mt-1 break-words text-base font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+            <h3 className="mt-1 break-words text-base font-semibold leading-6 text-white [overflow-wrap:break-word]">
               {reference}
             </h3>
           </div>
@@ -1731,7 +1740,7 @@ function OrderCard({
           </div>
         </div>
 
-        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
           <DetailLine label="Customer" value={order.customer.fullName} />
           <DetailLine label="Phone" value={order.customer.phone} />
           <DetailLine label="City / Area" value={order.customer.cityArea} />
@@ -1808,22 +1817,23 @@ function OrderDetails({ order }: { order: StoredOrder }) {
   return (
     <section className="aev-admin-detail-panel min-w-0 rounded-[1.35rem] border border-cyan-200/20 bg-[#07101f]/95 p-4 shadow-[0_0_48px_rgba(34,211,238,0.10),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-5">
       <div className="min-w-0 rounded-[1.1rem] border border-white/10 bg-white/[0.04] p-4">
-        <div className="flex min-w-0 flex-col gap-3 2xl:flex-row 2xl:items-start 2xl:justify-between">
+        <div className="grid min-w-0 gap-4 2xl:grid-cols-[minmax(280px,0.9fr)_minmax(420px,1.1fr)] 2xl:items-start">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/65">
               Order command strip
             </p>
             <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
-              <h4 className="break-words text-xl font-semibold text-white [overflow-wrap:anywhere]">
+              <h4 className="break-words text-xl font-semibold text-white [overflow-wrap:break-word]">
                 {reference}
               </h4>
               <StatusBadge status={order.status} />
             </div>
-            <p className="mt-2 text-sm leading-6 text-white/52">
-              Created {formatDate(order.createdAt)}
-            </p>
+            <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+              <DetailLine label="Created" value={formatDate(order.createdAt)} />
+              <DetailLine label="Total" value={formatCurrency(orderTotal(order))} />
+            </div>
           </div>
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 2xl:min-w-[520px]">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             <ActionButton
               label="Copy Summary"
               icon={Copy}
@@ -1864,7 +1874,7 @@ function OrderDetails({ order }: { order: StoredOrder }) {
         </div>
       </div>
 
-      <div className="mt-4 grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+      <div className="mt-4 grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))]">
         <DetailGroup
           title="Customer"
           rows={[
@@ -1907,7 +1917,7 @@ function OrderDetails({ order }: { order: StoredOrder }) {
         />
       </div>
 
-      <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)]">
+      <div className="mt-4 grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]">
         <ItemsPanel order={order} />
         <FutureOpsPanel />
       </div>
@@ -1937,15 +1947,15 @@ function ItemsPanel({ order }: { order: StoredOrder }) {
                 key={`${item.id ?? item.name ?? "item"}-${index}`}
                 className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
               >
-                <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_96px_110px_110px] lg:items-start">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(260px,1fr)_minmax(84px,0.35fr)_minmax(110px,0.4fr)_minmax(110px,0.4fr)] 2xl:items-start">
                   <div className="min-w-0">
                     <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">
                       Product
                     </p>
-                    <p className="mt-1 break-words text-sm font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+                    <p className="mt-1 whitespace-normal break-words text-sm font-semibold leading-6 text-white [overflow-wrap:break-word]">
                       {item.name ?? "Unnamed item"}
                     </p>
-                    <p className="mt-1 break-words text-xs leading-5 text-white/48 [overflow-wrap:anywhere]">
+                    <p className="mt-1 whitespace-normal break-words text-xs leading-5 text-white/48 [overflow-wrap:break-word]">
                       {itemVariantSummary(item) || "No variant recorded"}
                     </p>
                   </div>
@@ -2081,7 +2091,7 @@ function RecentOrderCard({
           <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">
             Order reference
           </p>
-          <h3 className="mt-1 break-words text-base font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+          <h3 className="mt-1 break-words text-base font-semibold leading-6 text-white [overflow-wrap:break-word]">
             {reference}
           </h3>
         </div>
@@ -2133,7 +2143,7 @@ function DetailLine({ label, value }: { label: string; value?: string }) {
       <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm leading-6 text-white/72 [overflow-wrap:anywhere]">
+      <p className="mt-1 whitespace-normal break-words text-sm leading-6 text-white/72 [overflow-wrap:break-word]">
         {value || "Not provided"}
       </p>
     </div>

@@ -1,9 +1,12 @@
 # Aevyrixa Admin Order Operations
 
-The admin panel is organized as a future-ready Aevyrixa Control Room over the
-orders returned by `GET /api/orders`. Supabase remains the source of truth when
-the Supabase environment variables are configured; the browser localStorage
-fallback is only for development visibility.
+The admin panel is organized as a full-width, future-ready Aevyrixa Control
+Room over the orders returned by `GET /api/orders`. It uses a dedicated admin
+app shell instead of the public site container so desktop screens can hold a
+sidebar, operational filters, the order queue, and a wide selected-order command
+panel. Supabase remains the source of truth when the Supabase environment
+variables are configured; the browser localStorage fallback is only for
+development visibility.
 
 ## Dashboard vs. Orders
 
@@ -14,8 +17,9 @@ fields so the dashboard stays readable.
 
 The Orders page is the main working area for order handling. It keeps search,
 status filter, payment filter, and sort controls at the top, then shows the
-order list beside or above a selected order detail panel depending on screen
-width.
+order queue beside a selected order detail panel on desktop. On tablet and
+mobile, the same controls stack into one column with the selected details below
+the queue and without horizontal overflow.
 
 ## Order Workflow
 
