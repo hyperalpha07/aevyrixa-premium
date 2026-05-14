@@ -1659,7 +1659,7 @@ function OrderList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {orders.map((order) => (
         <OrderCard
           key={order.orderId}
@@ -1688,55 +1688,61 @@ function OrderCard({
 
   return (
     <article className="min-w-0 overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/24 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_180px_150px] xl:items-center">
-        <div className="min-w-0">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="min-w-0 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
-              {reference}
+      <div className="min-w-0 p-4 sm:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">
+              Order reference
             </p>
+            <h3 className="mt-1 break-words text-base font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+              {reference}
+            </h3>
+          </div>
+          <div className="shrink-0">
             <StatusBadge status={order.status} />
-          </div>
-          <div className="mt-4 grid gap-3 text-sm text-white/58 md:grid-cols-2 xl:grid-cols-3">
-            <DetailLine label="Customer" value={order.customer.fullName} />
-            <DetailLine label="Phone" value={order.customer.phone} />
-            <DetailLine label="City / Area" value={order.customer.cityArea} />
-            <DetailLine
-              label="Total"
-              value={formatCurrency(orderTotal(order))}
-            />
-            <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
-            <DetailLine label="Created" value={formatDate(order.createdAt)} />
-          </div>
-          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2">
-            <DetailLine label="Main item" value={mainItemSummary(order)} />
           </div>
         </div>
 
-        <label className="relative block min-w-0">
-          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
-            Quick status
-          </span>
-          <select
-            value={order.status}
-            onChange={(event) => onStatusChange(event.target.value as OrderStatus)}
-            className="w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-3 py-3 pr-9 text-sm font-medium text-white outline-none transition focus:border-cyan-200/40"
-          >
-            {orderStatuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute bottom-3.5 right-3 h-4 w-4 text-white/45" />
-        </label>
+        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <DetailLine label="Customer" value={order.customer.fullName} />
+          <DetailLine label="Phone" value={order.customer.phone} />
+          <DetailLine label="City / Area" value={order.customer.cityArea} />
+          <DetailLine label="Total" value={formatCurrency(orderTotal(order))} />
+          <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
+          <DetailLine label="Created" value={formatDate(order.createdAt)} />
+        </div>
 
-        <button
-          type="button"
-          onClick={onToggleDetails}
-          className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:bg-cyan-200/10 hover:text-white"
-        >
-          {isExpanded ? "Hide details" : "View details"}
-        </button>
+        <div className="mt-4 min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-3 sm:px-4">
+          <DetailLine label="Main item" value={mainItemSummary(order)} />
+        </div>
+
+        <div className="mt-4 grid min-w-0 gap-3 border-t border-white/10 pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(150px,180px)] sm:items-end">
+          <label className="relative block min-w-0">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+              Quick status
+            </span>
+            <select
+              value={order.status}
+              onChange={(event) => onStatusChange(event.target.value as OrderStatus)}
+              className="min-h-12 w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-3 py-3 pr-9 text-sm font-medium text-white outline-none transition focus:border-cyan-200/40"
+            >
+              {orderStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute bottom-4 right-3 h-4 w-4 text-white/45" />
+          </label>
+
+          <button
+            type="button"
+            onClick={onToggleDetails}
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:bg-cyan-200/10 hover:text-white"
+          >
+            {isExpanded ? "Hide details" : "View details"}
+          </button>
+        </div>
       </div>
 
       {isExpanded && <OrderDetails order={order} />}
