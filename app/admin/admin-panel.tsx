@@ -613,6 +613,29 @@ function buildCustomerContact(order: StoredOrder) {
     .join("\n");
 }
 
+function buildDeliveryAddress(order: StoredOrder) {
+  return [
+    order.customer.fullName,
+    order.customer.phone,
+    order.customer.cityArea,
+    order.customer.address,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildPaymentSummary(order: StoredOrder) {
+  return [
+    `Payment method: ${order.paymentDetails.paymentMethod ?? "Not provided"}`,
+    `Wallet provider: ${order.paymentDetails.walletProvider ?? "Not provided"}`,
+    `Payment type: ${order.paymentDetails.paymentType ?? "Not provided"}`,
+    `Receiver number: ${order.paymentDetails.receiverNumber ?? "Not provided"}`,
+    `Sender number: ${order.paymentDetails.walletSenderNumber ?? "Not provided"}`,
+    `Transaction/reference ID: ${order.paymentDetails.transactionReference ?? "Not provided"}`,
+    `Total: ${formatCurrency(orderTotal(order))}`,
+  ].join("\n");
+}
+
 export default function AdminPanel({ view }: { view: AdminView }) {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [adminProducts, setAdminProducts] = useState<AdminProduct[]>([]);
@@ -836,12 +859,6 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 metrics={metrics}
                 orders={orders}
                 products={adminProducts}
-                expandedOrderId={expandedOrderId}
-                onToggleDetails={(orderId) =>
-                  setExpandedOrderId((current) =>
-                    current === orderId ? null : orderId
-                  )
-                }
                 onStatusChange={updateOrderStatus}
               />
             )}
@@ -935,15 +952,11 @@ function DashboardSection({
   metrics,
   orders,
   products,
-  expandedOrderId,
-  onToggleDetails,
   onStatusChange,
 }: {
   metrics: DashboardMetrics;
   orders: StoredOrder[];
   products: AdminProduct[];
-  expandedOrderId: string | null;
-  onToggleDetails: (orderId: string) => void;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
 }) {
   const recentOrders = orders.slice(0, 5);
@@ -990,10 +1003,8 @@ function DashboardSection({
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
           <SectionHeader title="Recent orders" href="/admin/orders" action="View all" />
-          <OrderList
+          <RecentOrderList
             orders={recentOrders}
-            expandedOrderId={expandedOrderId}
-            onToggleDetails={onToggleDetails}
             onStatusChange={onStatusChange}
           />
         </div>
@@ -1036,6 +1047,8 @@ function OrdersSection({
     () => filterAndSortOrders(orders, searchTerm, statusFilter, paymentFilter, sortOrder),
     [orders, paymentFilter, searchTerm, sortOrder, statusFilter]
   );
+  const selectedOrder =
+    visibleOrders.find((order) => order.orderId === expandedOrderId) ?? null;
 
   return (
     <div className="mt-6 space-y-5">
@@ -1093,12 +1106,21 @@ function OrdersSection({
           )}
         </div>
       </section>
-      <OrderList
-        orders={visibleOrders}
-        expandedOrderId={expandedOrderId}
-        onToggleDetails={onToggleDetails}
-        onStatusChange={onStatusChange}
-      />
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] xl:items-start">
+        <OrderList
+          orders={visibleOrders}
+          expandedOrderId={expandedOrderId}
+          onToggleDetails={onToggleDetails}
+          onStatusChange={onStatusChange}
+        />
+        <div className="min-w-0 xl:sticky xl:top-6">
+          {selectedOrder ? (
+            <OrderDetails order={selectedOrder} />
+          ) : (
+            <EmptyDetailPanel />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1564,7 +1586,7 @@ function MetricCard({
   compact?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+    <div className="aev-admin-metric-card min-w-0 rounded-2xl border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
       <div className="flex items-center justify-between gap-3">
         <p className="break-words text-xs uppercase tracking-[0.2em] text-white/45">
           {label}
@@ -1687,7 +1709,13 @@ function OrderCard({
   const reference = orderReferenceKey(order);
 
   return (
-    <article className="min-w-0 overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/24 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <article
+      className={`aev-admin-order-card min-w-0 overflow-hidden rounded-[1.25rem] border bg-black/24 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${
+        isExpanded
+          ? "border-cyan-200/45 shadow-[0_0_34px_rgba(34,211,238,0.12),inset_0_1px_0_rgba(255,255,255,0.06)]"
+          : "border-white/10"
+      }`}
+    >
       <div className="min-w-0 p-4 sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
@@ -1740,12 +1768,10 @@ function OrderCard({
             onClick={onToggleDetails}
             className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:bg-cyan-200/10 hover:text-white"
           >
-            {isExpanded ? "Hide details" : "View details"}
+            {isExpanded ? "Viewing details" : "View details"}
           </button>
         </div>
       </div>
-
-      {isExpanded && <OrderDetails order={order} />}
     </article>
   );
 }
@@ -1780,57 +1806,65 @@ function OrderDetails({ order }: { order: StoredOrder }) {
   };
 
   return (
-    <div className="border-t border-white/10 bg-white/[0.025] p-4 sm:p-5">
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/65">
-            Order details
-          </p>
-          <h4 className="mt-1 break-words text-lg font-semibold text-white [overflow-wrap:anywhere]">
-            {reference}
-          </h4>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5 xl:max-w-4xl">
-          <ActionButton
-            label="Copy summary"
-            icon={Copy}
-            copied={copiedKey === "summary"}
-            onClick={() => copyValue("summary", buildOrderSummary(order))}
-          />
-          <ActionButton
-            label="Copy contact"
-            icon={Copy}
-            copied={copiedKey === "contact"}
-            onClick={() => copyValue("contact", buildCustomerContact(order))}
-          />
-          <ActionButton
-            label="Copy address"
-            icon={Copy}
-            copied={copiedKey === "address"}
-            disabled={!order.customer.address}
-            onClick={() => copyValue("address", order.customer.address)}
-          />
-          <ActionButton
-            label="Copy payment ref"
-            icon={Copy}
-            copied={copiedKey === "payment-reference-action"}
-            disabled={!transactionReference}
-            onClick={() => copyValue("payment-reference-action", transactionReference)}
-          />
-          <a
-            href={order.customer.phone ? `tel:${order.customer.phone}` : undefined}
-            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition ${
-              order.customer.phone
-                ? "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/35 hover:text-white"
-                : "pointer-events-none border-white/5 bg-white/[0.025] text-white/25"
-            }`}
-          >
-            <Phone className="h-4 w-4 shrink-0" />
-            Call
-          </a>
+    <section className="aev-admin-detail-panel min-w-0 rounded-[1.35rem] border border-cyan-200/20 bg-[#07101f]/95 p-4 shadow-[0_0_48px_rgba(34,211,238,0.10),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-5">
+      <div className="min-w-0 rounded-[1.1rem] border border-white/10 bg-white/[0.04] p-4">
+        <div className="flex min-w-0 flex-col gap-3 2xl:flex-row 2xl:items-start 2xl:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/65">
+              Order command strip
+            </p>
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+              <h4 className="break-words text-xl font-semibold text-white [overflow-wrap:anywhere]">
+                {reference}
+              </h4>
+              <StatusBadge status={order.status} />
+            </div>
+            <p className="mt-2 text-sm leading-6 text-white/52">
+              Created {formatDate(order.createdAt)}
+            </p>
+          </div>
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 2xl:min-w-[520px]">
+            <ActionButton
+              label="Copy Summary"
+              icon={Copy}
+              copied={copiedKey === "summary"}
+              onClick={() => copyValue("summary", buildOrderSummary(order))}
+            />
+            <ActionButton
+              label="Copy Contact"
+              icon={Copy}
+              copied={copiedKey === "contact"}
+              onClick={() => copyValue("contact", buildCustomerContact(order))}
+            />
+            <ActionButton
+              label="Copy Address"
+              icon={Copy}
+              copied={copiedKey === "address-action"}
+              disabled={!order.customer.address}
+              onClick={() => copyValue("address-action", buildDeliveryAddress(order))}
+            />
+            <ActionButton
+              label="Copy Payment"
+              icon={Copy}
+              copied={copiedKey === "payment-action"}
+              onClick={() => copyValue("payment-action", buildPaymentSummary(order))}
+            />
+            <a
+              href={order.customer.phone ? `tel:${order.customer.phone}` : undefined}
+              className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition ${
+                order.customer.phone
+                  ? "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/35 hover:text-white"
+                  : "pointer-events-none border-white/5 bg-white/[0.025] text-white/25"
+              }`}
+            >
+              <Phone className="h-4 w-4 shrink-0" />
+              <span className="truncate">Call Customer</span>
+            </a>
+          </div>
         </div>
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+
+      <div className="mt-4 grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
         <DetailGroup
           title="Customer"
           rows={[
@@ -1853,56 +1887,113 @@ function OrderDetails({ order }: { order: StoredOrder }) {
             ["Sender number", order.paymentDetails.walletSenderNumber],
             ["Transaction / reference ID", transactionReference, "payment-reference"],
             ["Total", formatCurrency(orderTotal(order))],
+            ["Payment verification", "Payment verification will be added in a future operations phase."],
           ]}
           copiedKey={copiedKey}
           onCopy={copyValue}
         />
-        <div className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h4 className="text-sm font-semibold text-white">Order</h4>
-            <StatusBadge status={order.status} />
-          </div>
-          <div className="mt-3 grid gap-3">
-            <div className="flex min-w-0 items-start gap-2">
-              <div className="min-w-0 flex-1">
-                <DetailLine label="Order reference" value={reference} />
-              </div>
-              <CopyButton
-                copied={copiedKey === "order-reference"}
-                onClick={() => copyValue("order-reference", reference)}
-              />
-            </div>
-            <DetailLine label="Created date" value={formatDate(order.createdAt)} />
-            <DetailLine label="Subtotal / total" value={formatCurrency(orderTotal(order))} />
-            <DetailLine label="Size / fit note" value={order.customer.sizeFitNote} />
-            <DetailLine label="Delivery note" value={order.customer.deliveryNote} />
-          </div>
-          <div className="mt-3 space-y-3">
-            {order.items.length === 0 ? (
-              <p className="text-sm text-white/50">No items recorded.</p>
-            ) : (
-              order.items.map((item, index) => (
-                <div
-                  key={`${item.id ?? item.name ?? "item"}-${index}`}
-                  className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
-                >
-                  <p className="break-words text-sm font-semibold leading-6 text-white [overflow-wrap:anywhere]">
-                    {item.name ?? "Unnamed item"}
-                  </p>
-                  <p className="mt-1 break-words text-xs leading-5 text-white/48 [overflow-wrap:anywhere]">
-                    {itemVariantSummary(item) || "No variant recorded"}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between gap-3 text-sm text-white/68">
-                    <span>Qty {item.quantity ?? 0}</span>
-                    <span>{formatCurrency((item.price ?? 0) * (item.quantity ?? 0))}</span>
+        <DetailGroup
+          title="Delivery"
+          rows={[
+            ["Delivery address", order.customer.address, "delivery-address"],
+            ["Delivery note", order.customer.deliveryNote],
+            ["Courier name", "Not assigned yet"],
+            ["Tracking ID", "Not assigned yet"],
+            ["Delivery charge", "To be confirmed"],
+            ["Assigned staff", "Not assigned yet"],
+          ]}
+          copiedKey={copiedKey}
+          onCopy={copyValue}
+        />
+      </div>
+
+      <div className="mt-4 grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(240px,0.85fr)]">
+        <ItemsPanel order={order} />
+        <FutureOpsPanel />
+      </div>
+    </section>
+  );
+}
+
+function ItemsPanel({ order }: { order: StoredOrder }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="text-sm font-semibold text-white">Items</h4>
+        <p className="text-xs uppercase tracking-[0.16em] text-white/35">
+          {order.totals.totalItems ?? order.items.length} total
+        </p>
+      </div>
+      <div className="mt-4 space-y-3">
+        {order.items.length === 0 ? (
+          <p className="text-sm text-white/50">No items recorded.</p>
+        ) : (
+          order.items.map((item, index) => {
+            const quantity = item.quantity ?? 0;
+            const unitPrice = item.price ?? 0;
+
+            return (
+              <div
+                key={`${item.id ?? item.name ?? "item"}-${index}`}
+                className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
+              >
+                <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_96px_110px_110px] lg:items-start">
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">
+                      Product
+                    </p>
+                    <p className="mt-1 break-words text-sm font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+                      {item.name ?? "Unnamed item"}
+                    </p>
+                    <p className="mt-1 break-words text-xs leading-5 text-white/48 [overflow-wrap:anywhere]">
+                      {itemVariantSummary(item) || "No variant recorded"}
+                    </p>
                   </div>
+                  <DetailLine label="Quantity" value={String(quantity)} />
+                  <DetailLine label="Unit price" value={formatCurrency(unitPrice)} />
+                  <DetailLine label="Line total" value={formatCurrency(unitPrice * quantity)} />
                 </div>
-              ))
-            )}
-          </div>
-        </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
+  );
+}
+
+function FutureOpsPanel() {
+  return (
+    <div className="min-w-0 rounded-2xl border border-violet-200/15 bg-violet-200/[0.045] p-4">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <h4 className="text-sm font-semibold text-white">Support / Future Ops</h4>
+        <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+          Planned
+        </span>
+      </div>
+      <div className="mt-4 grid gap-3">
+        <DetailLine label="Customer confirmation note" value="Not added yet" />
+        <DetailLine label="Refund / exchange request" value="None" />
+        <DetailLine label="Size issue report" value="None" />
+        <DetailLine label="Photo / video proof received" value="Not uploaded" />
+        <DetailLine label="Admin internal note" value="Not added yet" />
+        <DetailLine label="Order source" value="Website" />
+      </div>
+    </div>
+  );
+}
+
+function EmptyDetailPanel() {
+  return (
+    <section className="aev-admin-detail-panel min-w-0 rounded-[1.35rem] border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] p-6 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-cyan-100/25 bg-cyan-100/10">
+        <ClipboardList className="h-5 w-5 text-cyan-100" />
+      </div>
+      <h3 className="mt-4 text-xl font-semibold text-white">Select an order</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/56">
+        Open a card to review customer, payment, delivery, item, and future operations details.
+      </p>
+    </section>
   );
 }
 
@@ -1940,6 +2031,102 @@ function DetailGroup({
   );
 }
 
+function RecentOrderList({
+  orders,
+  onStatusChange,
+}: {
+  orders: StoredOrder[];
+  onStatusChange: (orderId: string, status: OrderStatus) => void;
+}) {
+  if (orders.length === 0) {
+    return (
+      <div className="rounded-[1.4rem] border border-dashed border-cyan-200/25 bg-cyan-200/[0.05] p-6 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-cyan-100/25 bg-cyan-100/10">
+          <ClipboardList className="h-5 w-5 text-cyan-100" />
+        </div>
+        <h3 className="mt-4 text-xl font-semibold text-white">No orders yet.</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/58">
+          Test checkout orders will appear here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {orders.map((order) => (
+        <RecentOrderCard
+          key={order.orderId}
+          order={order}
+          onStatusChange={(status) => onStatusChange(orderReferenceKey(order), status)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function RecentOrderCard({
+  order,
+  onStatusChange,
+}: {
+  order: StoredOrder;
+  onStatusChange: (status: OrderStatus) => void;
+}) {
+  const reference = orderReferenceKey(order);
+
+  return (
+    <article className="aev-admin-order-card min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">
+            Order reference
+          </p>
+          <h3 className="mt-1 break-words text-base font-semibold leading-6 text-white [overflow-wrap:anywhere]">
+            {reference}
+          </h3>
+        </div>
+        <StatusBadge status={order.status} />
+      </div>
+
+      <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <DetailLine label="Customer" value={order.customer.fullName} />
+        <DetailLine label="Phone" value={order.customer.phone} />
+        <DetailLine label="City / Area" value={order.customer.cityArea} />
+        <DetailLine label="Total" value={formatCurrency(orderTotal(order))} />
+        <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
+        <DetailLine label="Created" value={formatDate(order.createdAt)} />
+      </div>
+
+      <div className="mt-4 grid min-w-0 gap-3 border-t border-white/10 pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(130px,160px)] sm:items-end">
+        <label className="relative block min-w-0">
+          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+            Quick status
+          </span>
+          <select
+            value={order.status}
+            onChange={(event) => onStatusChange(event.target.value as OrderStatus)}
+            className="min-h-12 w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-3 py-3 pr-9 text-sm font-medium text-white outline-none transition focus:border-cyan-200/40"
+          >
+            {orderStatuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute bottom-4 right-3 h-4 w-4 text-white/45" />
+        </label>
+
+        <Link
+          href="/admin/orders"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.08] px-4 py-3 text-sm font-medium text-cyan-50 transition hover:border-cyan-100/40 hover:bg-cyan-200/12"
+        >
+          View full details
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 function DetailLine({ label, value }: { label: string; value?: string }) {
   return (
     <div className="min-w-0">
@@ -1967,7 +2154,8 @@ function CopyButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs font-medium text-white/62 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+      data-copied={copied ? "true" : "false"}
+      className="aev-admin-copy-button inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs font-medium text-white/62 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
     >
       {copied ? "Copied" : <Copy className="h-4 w-4" />}
     </button>
@@ -1992,7 +2180,8 @@ function ActionButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm font-medium text-white/76 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+      data-copied={copied ? "true" : "false"}
+      className="aev-admin-copy-button inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm font-medium text-white/76 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
     >
       <Icon className="h-4 w-4 shrink-0" />
       <span className="truncate">{copied ? "Copied" : label}</span>
@@ -2003,7 +2192,7 @@ function ActionButton({
 function StatusBadge({ status }: { status: OrderStatus }) {
   return (
     <span
-      className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}
+      className={`aev-admin-status-badge inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}
     >
       {status}
     </span>

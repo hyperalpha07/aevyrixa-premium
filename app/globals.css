@@ -45,6 +45,52 @@ button {
   color: #ffffff;
 }
 
+.aev-admin-order-card,
+.aev-admin-detail-panel,
+.aev-admin-metric-card {
+  animation: aev-admin-soft-reveal 360ms ease-out both;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.aev-admin-detail-panel {
+  animation-name: aev-admin-panel-in;
+}
+
+.aev-admin-copy-button {
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.aev-admin-copy-button[data-copied="true"] {
+  animation: aev-admin-copy-pop 260ms ease-out;
+}
+
+.aev-admin-status-badge {
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-admin-order-card:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: rgba(103, 232, 249, 0.28);
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.22),
+      0 0 28px rgba(34, 211, 238, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -778,6 +824,44 @@ button {
   to {
     opacity: 1;
     transform: translateX(-50%) scale(1.1);
+  }
+}
+
+@keyframes aev-admin-soft-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes aev-admin-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(14px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes aev-admin-copy-pop {
+  0% {
+    transform: scale(0.96);
+  }
+
+  55% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -1548,10 +1632,19 @@ button {
   .aev-cinematic-page::before,
   .aev-shop-card::before,
   .aev-product-buy-panel::before,
-  .aev-cinematic-chip::before {
+  .aev-cinematic-chip::before,
+  .aev-admin-order-card,
+  .aev-admin-detail-panel,
+  .aev-admin-metric-card,
+  .aev-admin-copy-button {
     animation: none !important;
-    opacity: 1 !important;
     will-change: auto !important;
+  }
+
+  .aev-shop-card::before,
+  .aev-product-buy-panel::before,
+  .aev-cinematic-chip::before {
+    opacity: 1 !important;
   }
 }
 
