@@ -8,16 +8,21 @@ import {
   Boxes,
   ChevronDown,
   ClipboardList,
+  Copy,
+  CreditCard,
   Gauge,
   LogOut,
   PackageCheck,
+  Phone,
   Pencil,
   Plus,
+  Search,
   Settings,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Trash2,
+  Wallet,
 } from "lucide-react";
 import { products as seedProducts, type ProductVisualTheme } from "@/app/lib/products";
 import {
@@ -28,7 +33,7 @@ import {
   walletProviders,
   type WalletProvider,
 } from "@/app/lib/admin-settings";
-import { orderStatuses, type OrderStatus } from "@/app/lib/order-types";
+import { orderStatuses, paymentMethods, type OrderStatus } from "@/app/lib/order-types";
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
@@ -41,6 +46,9 @@ const visualThemes: ProductVisualTheme[] = ["blush-violet", "cyan-night", "rose-
 
 type ProductStatus = (typeof productStatuses)[number];
 type AdminView = "dashboard" | "orders" | "products" | "settings";
+type PaymentFilter = "All" | (typeof paymentMethods)[number];
+type StatusFilter = "All" | OrderStatus;
+type OrderSort = "Newest first" | "Oldest first" | "Highest total" | "Lowest total";
 
 type StoredOrderItem = {
   id?: string;
@@ -155,12 +163,21 @@ const emptyProduct: AdminProduct = {
 const defaultSettings = defaultAdminSettings;
 
 const statusStyles: Record<OrderStatus, string> = {
-  Pending: "border-amber-200/25 bg-amber-200/10 text-amber-100",
-  Confirmed: "border-cyan-200/25 bg-cyan-200/10 text-cyan-100",
-  Shipped: "border-violet-200/25 bg-violet-200/10 text-violet-100",
-  Delivered: "border-emerald-200/25 bg-emerald-200/10 text-emerald-100",
-  Cancelled: "border-rose-200/25 bg-rose-200/10 text-rose-100",
+  Pending: "border-amber-200/35 bg-amber-200/12 text-amber-100",
+  Confirmed: "border-cyan-200/35 bg-cyan-200/12 text-cyan-100",
+  Shipped: "border-violet-200/35 bg-violet-200/12 text-violet-100",
+  Delivered: "border-emerald-200/35 bg-emerald-200/12 text-emerald-100",
+  Cancelled: "border-rose-200/35 bg-rose-200/12 text-rose-100",
 };
+
+const statusFilterOptions = ["All", ...orderStatuses] as const;
+const paymentFilterOptions = ["All", ...paymentMethods] as const;
+const orderSortOptions = [
+  "Newest first",
+  "Oldest first",
+  "Highest total",
+  "Lowest total",
+] as const;
 
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -457,6 +474,10 @@ function formatCurrency(value?: number) {
   return `$${(value ?? 0).toFixed(2)}`;
 }
 
+function orderTotal(order: StoredOrder) {
+  return order.totalAmount ?? order.totals.subtotal ?? 0;
+}
+
 function formatDate(value?: string) {
   if (!value) return "Not recorded";
   const date = new Date(value);
@@ -512,6 +533,86 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+function itemVariantSummary(item: StoredOrderItem) {
+  return [item.size, item.color, item.absorbency].filter(Boolean).join(" / ");
+}
+
+function mainItemSummary(order: StoredOrder) {
+  if (order.items.length === 0) return "No item recorded";
+
+  const [firstItem, ...restItems] = order.items;
+  const quantity = firstItem.quantity ?? 0;
+  const more = restItems.length > 0 ? ` +${restItems.length} more` : "";
+  return `${firstItem.name ?? "Unnamed item"} x ${quantity}${more}`;
+}
+
+function orderSearchText(order: StoredOrder) {
+  return [
+    orderReferenceKey(order),
+    order.orderId,
+    order.customer.fullName,
+    order.customer.phone,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function filterAndSortOrders(
+  orders: StoredOrder[],
+  searchTerm: string,
+  statusFilter: StatusFilter,
+  paymentFilter: PaymentFilter,
+  sortOrder: OrderSort
+) {
+  const query = searchTerm.trim().toLowerCase();
+
+  return orders
+    .filter((order) => {
+      const matchesSearch = !query || orderSearchText(order).includes(query);
+      const matchesStatus = statusFilter === "All" || order.status === statusFilter;
+      const matchesPayment =
+        paymentFilter === "All" || order.paymentDetails.paymentMethod === paymentFilter;
+      return matchesSearch && matchesStatus && matchesPayment;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "Highest total") return orderTotal(b) - orderTotal(a);
+      if (sortOrder === "Lowest total") return orderTotal(a) - orderTotal(b);
+
+      const first = a.createdAt ? Date.parse(a.createdAt) : 0;
+      const second = b.createdAt ? Date.parse(b.createdAt) : 0;
+      return sortOrder === "Oldest first" ? first - second : second - first;
+    });
+}
+
+function buildOrderSummary(order: StoredOrder) {
+  return [
+    `Order: ${orderReferenceKey(order)}`,
+    `Status: ${order.status}`,
+    `Customer: ${order.customer.fullName ?? "Not provided"}`,
+    `Phone: ${order.customer.phone ?? "Not provided"}`,
+    `City/Area: ${order.customer.cityArea ?? "Not provided"}`,
+    `Address: ${order.customer.address ?? "Not provided"}`,
+    `Payment: ${order.paymentDetails.paymentMethod ?? "Not provided"}`,
+    `Reference: ${order.paymentDetails.transactionReference ?? "Not provided"}`,
+    `Total: ${formatCurrency(orderTotal(order))}`,
+    `Items: ${order.items
+      .map((item) => `${item.name ?? "Unnamed item"} x ${item.quantity ?? 0}`)
+      .join(", ") || "Not recorded"}`,
+  ].join("\n");
+}
+
+function buildCustomerContact(order: StoredOrder) {
+  return [
+    order.customer.fullName,
+    order.customer.phone,
+    order.customer.email,
+    order.customer.cityArea,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 export default function AdminPanel({ view }: { view: AdminView }) {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [adminProducts, setAdminProducts] = useState<AdminProduct[]>([]);
@@ -559,7 +660,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
       deliveredOrders: orders.filter((order) => order.status === "Delivered").length,
       cancelledOrders: orders.filter((order) => order.status === "Cancelled").length,
       estimatedRevenue: activeOrders.reduce(
-        (sum, order) => sum + (order.totalAmount ?? order.totals.subtotal ?? 0),
+        (sum, order) => sum + orderTotal(order),
         0
       ),
       todayOrders: orders.filter((order) => isToday(order.createdAt)).length,
@@ -711,7 +812,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 </h2>
               </div>
               <p className="max-w-xl break-words text-sm leading-6 text-white/56 [overflow-wrap:anywhere]">
-                Orders are prepared for backend sync, with local browser fallback until Supabase/Postgres is connected.
+                Supabase-backed order operations with local fallback for development.
               </p>
             </div>
 
@@ -869,7 +970,7 @@ function DashboardSection({
         <MetricCard
           label="Mobile Wallet Orders"
           value={String(metrics.mobileWalletOrders)}
-          icon={ShoppingBag}
+          icon={Wallet}
           compact
         />
         <MetricCard
@@ -881,7 +982,7 @@ function DashboardSection({
         <MetricCard
           label="Bank Transfer Orders"
           value={String(metrics.bankTransferOrders)}
-          icon={ShieldCheck}
+          icon={CreditCard}
           compact
         />
       </div>
@@ -926,11 +1027,74 @@ function OrdersSection({
   onToggleDetails: (orderId: string) => void;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
 }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("All");
+  const [sortOrder, setSortOrder] = useState<OrderSort>("Newest first");
+
+  const visibleOrders = useMemo(
+    () => filterAndSortOrders(orders, searchTerm, statusFilter, paymentFilter, sortOrder),
+    [orders, paymentFilter, searchTerm, sortOrder, statusFilter]
+  );
+
   return (
-    <div className="mt-6">
-      <SectionHeader title="Saved local orders" />
+    <div className="mt-6 space-y-5">
+      <SectionHeader title="Order management" />
+      <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3 sm:p-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(150px,0.7fr)_minmax(190px,0.9fr)_minmax(150px,0.7fr)]">
+          <label className="relative block min-w-0">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+              Search orders
+            </span>
+            <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Reference, name, or phone"
+              className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+            />
+          </label>
+          <SelectField
+            label="Status"
+            value={statusFilter}
+            options={statusFilterOptions}
+            onChange={setStatusFilter}
+          />
+          <SelectField
+            label="Payment"
+            value={paymentFilter}
+            options={paymentFilterOptions}
+            onChange={setPaymentFilter}
+          />
+          <SelectField
+            label="Sort"
+            value={sortOrder}
+            options={orderSortOptions}
+            onChange={setSortOrder}
+          />
+        </div>
+        <div className="mt-3 flex flex-col gap-2 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Showing {visibleOrders.length} of {orders.length} orders
+          </span>
+          {(searchTerm || statusFilter !== "All" || paymentFilter !== "All" || sortOrder !== "Newest first") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("All");
+                setPaymentFilter("All");
+                setSortOrder("Newest first");
+              }}
+              className="w-fit rounded-full border border-white/10 px-3 py-2 font-medium text-white/65 transition hover:border-cyan-200/35 hover:text-white"
+            >
+              Reset filters
+            </button>
+          )}
+        </div>
+      </section>
       <OrderList
-        orders={orders}
+        orders={visibleOrders}
         expandedOrderId={expandedOrderId}
         onToggleDetails={onToggleDetails}
         onStatusChange={onStatusChange}
@@ -1520,32 +1684,37 @@ function OrderCard({
   onToggleDetails: () => void;
   onStatusChange: (status: OrderStatus) => void;
 }) {
+  const reference = orderReferenceKey(order);
+
   return (
-    <article className="min-w-0 overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/24">
-      <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[1fr_170px_170px] xl:items-center">
+    <article className="min-w-0 overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/24 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_180px_150px] xl:items-center">
         <div className="min-w-0">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="min-w-0 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
-              {order.orderId}
+              {reference}
             </p>
             <StatusBadge status={order.status} />
           </div>
-          <div className="mt-3 grid gap-3 text-sm text-white/58 md:grid-cols-2">
+          <div className="mt-4 grid gap-3 text-sm text-white/58 md:grid-cols-2 xl:grid-cols-3">
             <DetailLine label="Customer" value={order.customer.fullName} />
             <DetailLine label="Phone" value={order.customer.phone} />
-            <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
-            <DetailLine label="Wallet" value={order.paymentDetails.walletProvider} />
-            <DetailLine label="Created" value={formatDate(order.createdAt)} />
+            <DetailLine label="City / Area" value={order.customer.cityArea} />
             <DetailLine
               label="Total"
-              value={formatCurrency(order.totalAmount ?? order.totals.subtotal)}
+              value={formatCurrency(orderTotal(order))}
             />
+            <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
+            <DetailLine label="Created" value={formatDate(order.createdAt)} />
+          </div>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2">
+            <DetailLine label="Main item" value={mainItemSummary(order)} />
           </div>
         </div>
 
         <label className="relative block min-w-0">
           <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
-            Status
+            Quick status
           </span>
           <select
             value={order.status}
@@ -1576,20 +1745,97 @@ function OrderCard({
 }
 
 function OrderDetails({ order }: { order: StoredOrder }) {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const reference = orderReferenceKey(order);
+  const transactionReference = order.paymentDetails.transactionReference;
+
+  const copyValue = async (key: string, value?: string) => {
+    if (!value) return;
+
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.setAttribute("readonly", "true");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedKey(key);
+      window.setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), 1400);
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
+  };
+
   return (
-    <div className="border-t border-white/10 bg-white/[0.025] p-4">
+    <div className="border-t border-white/10 bg-white/[0.025] p-4 sm:p-5">
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/65">
+            Order details
+          </p>
+          <h4 className="mt-1 break-words text-lg font-semibold text-white [overflow-wrap:anywhere]">
+            {reference}
+          </h4>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5 xl:max-w-4xl">
+          <ActionButton
+            label="Copy summary"
+            icon={Copy}
+            copied={copiedKey === "summary"}
+            onClick={() => copyValue("summary", buildOrderSummary(order))}
+          />
+          <ActionButton
+            label="Copy contact"
+            icon={Copy}
+            copied={copiedKey === "contact"}
+            onClick={() => copyValue("contact", buildCustomerContact(order))}
+          />
+          <ActionButton
+            label="Copy address"
+            icon={Copy}
+            copied={copiedKey === "address"}
+            disabled={!order.customer.address}
+            onClick={() => copyValue("address", order.customer.address)}
+          />
+          <ActionButton
+            label="Copy payment ref"
+            icon={Copy}
+            copied={copiedKey === "payment-reference-action"}
+            disabled={!transactionReference}
+            onClick={() => copyValue("payment-reference-action", transactionReference)}
+          />
+          <a
+            href={order.customer.phone ? `tel:${order.customer.phone}` : undefined}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition ${
+              order.customer.phone
+                ? "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/35 hover:text-white"
+                : "pointer-events-none border-white/5 bg-white/[0.025] text-white/25"
+            }`}
+          >
+            <Phone className="h-4 w-4 shrink-0" />
+            Call
+          </a>
+        </div>
+      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <DetailGroup
-          title="Customer info"
+          title="Customer"
           rows={[
-            ["Name", order.customer.fullName],
-            ["Phone", order.customer.phone],
+            ["Name", order.customer.fullName, "name"],
+            ["Phone", order.customer.phone, "phone"],
             ["Email", order.customer.email],
             ["City / area", order.customer.cityArea],
-            ["Delivery address", order.customer.address],
-            ["Size / fit note", order.customer.sizeFitNote],
-            ["Delivery note", order.customer.deliveryNote],
+            ["Delivery address", order.customer.address, "address"],
           ]}
+          copiedKey={copiedKey}
+          onCopy={copyValue}
         />
         <DetailGroup
           title="Payment"
@@ -1599,14 +1845,32 @@ function OrderDetails({ order }: { order: StoredOrder }) {
             ["Payment type", order.paymentDetails.paymentType],
             ["Receiver number", order.paymentDetails.receiverNumber],
             ["Sender number", order.paymentDetails.walletSenderNumber],
-            ["Transaction ID / reference", order.paymentDetails.transactionReference],
-            ["Order total", formatCurrency(order.totalAmount ?? order.totals.subtotal)],
-            ["Order status", order.status],
-            ["Created date", formatDate(order.createdAt)],
+            ["Transaction / reference ID", transactionReference, "payment-reference"],
+            ["Total", formatCurrency(orderTotal(order))],
           ]}
+          copiedKey={copiedKey}
+          onCopy={copyValue}
         />
         <div className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
-          <h4 className="text-sm font-semibold text-white">Items</h4>
+          <div className="flex items-center justify-between gap-3">
+            <h4 className="text-sm font-semibold text-white">Order</h4>
+            <StatusBadge status={order.status} />
+          </div>
+          <div className="mt-3 grid gap-3">
+            <div className="flex min-w-0 items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <DetailLine label="Order reference" value={reference} />
+              </div>
+              <CopyButton
+                copied={copiedKey === "order-reference"}
+                onClick={() => copyValue("order-reference", reference)}
+              />
+            </div>
+            <DetailLine label="Created date" value={formatDate(order.createdAt)} />
+            <DetailLine label="Subtotal / total" value={formatCurrency(orderTotal(order))} />
+            <DetailLine label="Size / fit note" value={order.customer.sizeFitNote} />
+            <DetailLine label="Delivery note" value={order.customer.deliveryNote} />
+          </div>
           <div className="mt-3 space-y-3">
             {order.items.length === 0 ? (
               <p className="text-sm text-white/50">No items recorded.</p>
@@ -1620,8 +1884,7 @@ function OrderDetails({ order }: { order: StoredOrder }) {
                     {item.name ?? "Unnamed item"}
                   </p>
                   <p className="mt-1 break-words text-xs leading-5 text-white/48 [overflow-wrap:anywhere]">
-                    {[item.size, item.color, item.absorbency].filter(Boolean).join(" / ") ||
-                      "No variant recorded"}
+                    {itemVariantSummary(item) || "No variant recorded"}
                   </p>
                   <div className="mt-3 flex items-center justify-between gap-3 text-sm text-white/68">
                     <span>Qty {item.quantity ?? 0}</span>
@@ -1640,16 +1903,31 @@ function OrderDetails({ order }: { order: StoredOrder }) {
 function DetailGroup({
   title,
   rows,
+  copiedKey,
+  onCopy,
 }: {
   title: string;
-  rows: Array<[string, string | undefined]>;
+  rows: Array<[string, string | undefined, string?]>;
+  copiedKey?: string | null;
+  onCopy?: (key: string, value?: string) => void;
 }) {
   return (
     <div className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
       <h4 className="text-sm font-semibold text-white">{title}</h4>
       <div className="mt-3 space-y-3">
-        {rows.map(([label, value]) => (
-          <DetailLine key={label} label={label} value={value} />
+        {rows.map(([label, value, copyKey]) => (
+          <div key={label} className="flex min-w-0 items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <DetailLine label={label} value={value} />
+            </div>
+            {copyKey && (
+              <CopyButton
+                copied={copiedKey === copyKey}
+                disabled={!value}
+                onClick={() => onCopy?.(copyKey, value)}
+              />
+            )}
+          </div>
         ))}
       </div>
     </div>
@@ -1666,6 +1944,53 @@ function DetailLine({ label, value }: { label: string; value?: string }) {
         {value || "Not provided"}
       </p>
     </div>
+  );
+}
+
+function CopyButton({
+  copied,
+  disabled,
+  onClick,
+}: {
+  copied: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs font-medium text-white/62 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+    >
+      {copied ? "Copied" : <Copy className="h-4 w-4" />}
+    </button>
+  );
+}
+
+function ActionButton({
+  label,
+  icon: Icon,
+  copied,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  icon: typeof Copy;
+  copied?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm font-medium text-white/76 transition hover:border-cyan-200/35 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="truncate">{copied ? "Copied" : label}</span>
+    </button>
   );
 }
 
