@@ -165,7 +165,15 @@ export async function POST(request: Request) {
 
   try {
     const result = await createOrder(input);
-    await notifyNewOrder(result.order);
+
+    try {
+      const notificationResult = await notifyNewOrder(result.order);
+      if (notificationResult.status === "failed") {
+        console.error("Order notification failed:", notificationResult.reason);
+      }
+    } catch (notificationError) {
+      console.error("Order notification failed:", notificationError);
+    }
 
     return Response.json(result, { status: 201 });
   } catch (error) {

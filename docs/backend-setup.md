@@ -27,10 +27,14 @@ For local development, create `.env.local` with the same values:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN=123456789:your-bot-token
+ORDER_NOTIFICATION_TELEGRAM_CHAT_ID=123456789
 ```
 
 Never commit `.env.local` or the service role key. The service role key must only
-be read from server-side code. Do not import it into client components.
+be read from server-side code. Telegram notification credentials are also
+server-side only. Do not import service keys, bot tokens, or chat IDs into client
+components.
 
 ## Supabase Table
 
@@ -90,15 +94,40 @@ columns, keeps line items in `items jsonb`, and updates `status` plus
 
 1. Add `NEXT_PUBLIC_SUPABASE_URL`.
 2. Add `SUPABASE_SERVICE_ROLE_KEY` as a secret value.
-3. Redeploy the site after saving environment variables.
-4. Submit a checkout order and confirm it appears in Supabase and in admin from
+3. Optional: add `ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN`.
+4. Optional: add `ORDER_NOTIFICATION_TELEGRAM_CHAT_ID`.
+5. Redeploy the site after saving environment variables.
+6. Submit a checkout order and confirm it appears in Supabase and in admin from
    another browser/device.
 
-## Notification Placeholder
+## Telegram Order Notifications
 
-`app/lib/order-notifications.ts` exposes `notifyNewOrder(order)`. It is safe
-without notification credentials and currently skips delivery. A future phase
-can connect Telegram or email by using:
+`app/lib/order-notifications.ts` exposes `notifyNewOrder(order)`. The checkout
+API calls it only after an order is saved. Notification failures are logged and
+do not block the successful checkout response.
 
 - `ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN`
 - `ORDER_NOTIFICATION_TELEGRAM_CHAT_ID`
+
+To create a Telegram bot:
+
+1. Open Telegram and search for `@BotFather`.
+2. Send `/newbot`.
+3. Follow the prompts for the bot name and username.
+4. Copy the bot token that BotFather returns.
+5. Save it as `ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN` in Vercel and in local
+   `.env.local` when testing locally.
+
+To get a Telegram chat ID:
+
+1. Send a message to the new bot from the Telegram account or group that should
+   receive order alerts.
+2. Open this URL in a browser, replacing the token:
+   `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+3. Find the `chat.id` value in the response.
+4. Save that value as `ORDER_NOTIFICATION_TELEGRAM_CHAT_ID`.
+
+If either Telegram environment variable is missing, `notifyNewOrder(order)`
+returns a skipped status and checkout continues normally. Telegram bot tokens
+and chat IDs are read only from server route execution; they are never exposed
+to browser-side checkout or admin code.

@@ -77,8 +77,23 @@ type StoredOrder = {
     totalItems?: number;
     subtotal?: number;
   };
+  totalAmount?: number;
   status: OrderStatus;
   createdAt?: string;
+};
+
+type DashboardMetrics = {
+  totalOrders: number;
+  pendingOrders: number;
+  confirmedOrders: number;
+  shippedOrders: number;
+  deliveredOrders: number;
+  cancelledOrders: number;
+  estimatedRevenue: number;
+  todayOrders: number;
+  mobileWalletOrders: number;
+  codOrders: number;
+  bankTransferOrders: number;
 };
 
 type AdminProduct = {
@@ -219,6 +234,7 @@ function normalizeOrder(value: unknown): StoredOrder | null {
       totalItems: numberValue(totals.totalItems),
       subtotal: numberValue(totals.subtotal),
     },
+    totalAmount: numberValue(value.totalAmount),
     status: normalizeStatus(value.status),
     createdAt: textValue(value.createdAt),
   };
@@ -452,6 +468,20 @@ function formatDate(value?: string) {
   }).format(date);
 }
 
+function isToday(value?: string) {
+  if (!value) return false;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+
+  const today = new Date();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
 function listToText(values: string[]) {
   return values.join(", ");
 }
@@ -525,10 +555,23 @@ export default function AdminPanel({ view }: { view: AdminView }) {
       totalOrders: orders.length,
       pendingOrders: orders.filter((order) => order.status === "Pending").length,
       confirmedOrders: orders.filter((order) => order.status === "Confirmed").length,
+      shippedOrders: orders.filter((order) => order.status === "Shipped").length,
+      deliveredOrders: orders.filter((order) => order.status === "Delivered").length,
+      cancelledOrders: orders.filter((order) => order.status === "Cancelled").length,
       estimatedRevenue: activeOrders.reduce(
-        (sum, order) => sum + (order.totals.subtotal ?? 0),
+        (sum, order) => sum + (order.totalAmount ?? order.totals.subtotal ?? 0),
         0
       ),
+      todayOrders: orders.filter((order) => isToday(order.createdAt)).length,
+      mobileWalletOrders: orders.filter(
+        (order) => order.paymentDetails.paymentMethod === "Mobile Wallet Payment"
+      ).length,
+      codOrders: orders.filter(
+        (order) => order.paymentDetails.paymentMethod === "Cash on Delivery"
+      ).length,
+      bankTransferOrders: orders.filter(
+        (order) => order.paymentDetails.paymentMethod === "Bank Transfer"
+      ).length,
     };
   }, [orders]);
 
@@ -795,12 +838,7 @@ function DashboardSection({
   onToggleDetails,
   onStatusChange,
 }: {
-  metrics: {
-    totalOrders: number;
-    pendingOrders: number;
-    confirmedOrders: number;
-    estimatedRevenue: number;
-  };
+  metrics: DashboardMetrics;
   orders: StoredOrder[];
   products: AdminProduct[];
   expandedOrderId: string | null;
@@ -813,13 +851,38 @@ function DashboardSection({
   return (
     <div className="mt-6 space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Total orders" value={String(metrics.totalOrders)} icon={ShoppingBag} />
-        <MetricCard label="Pending orders" value={String(metrics.pendingOrders)} icon={Sparkles} />
-        <MetricCard label="Confirmed orders" value={String(metrics.confirmedOrders)} icon={ShieldCheck} />
+        <MetricCard label="Total Orders" value={String(metrics.totalOrders)} icon={ShoppingBag} />
+        <MetricCard label="Pending" value={String(metrics.pendingOrders)} icon={Sparkles} />
+        <MetricCard label="Confirmed" value={String(metrics.confirmedOrders)} icon={ShieldCheck} />
+        <MetricCard label="Shipped" value={String(metrics.shippedOrders)} icon={PackageCheck} />
+        <MetricCard label="Delivered" value={String(metrics.deliveredOrders)} icon={ShieldCheck} />
+        <MetricCard label="Cancelled" value={String(metrics.cancelledOrders)} icon={ClipboardList} />
         <MetricCard
-          label="Estimated revenue"
+          label="Estimated Revenue"
           value={formatCurrency(metrics.estimatedRevenue)}
           icon={PackageCheck}
+        />
+        <MetricCard label="Today Orders" value={String(metrics.todayOrders)} icon={Gauge} />
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard
+          label="Mobile Wallet Orders"
+          value={String(metrics.mobileWalletOrders)}
+          icon={ShoppingBag}
+          compact
+        />
+        <MetricCard
+          label="COD Orders"
+          value={String(metrics.codOrders)}
+          icon={PackageCheck}
+          compact
+        />
+        <MetricCard
+          label="Bank Transfer Orders"
+          value={String(metrics.bankTransferOrders)}
+          icon={ShieldCheck}
+          compact
         />
       </div>
 
@@ -1329,10 +1392,12 @@ function MetricCard({
   label,
   value,
   icon: Icon,
+  compact = false,
 }: {
   label: string;
   value: string;
   icon: typeof Gauge;
+  compact?: boolean;
 }) {
   return (
     <div className="min-w-0 rounded-2xl border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
@@ -1344,7 +1409,11 @@ function MetricCard({
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <p className="mt-5 break-words text-3xl font-semibold tracking-tight">
+      <p
+        className={`break-words font-semibold tracking-tight ${
+          compact ? "mt-4 text-2xl" : "mt-5 text-3xl"
+        }`}
+      >
         {value}
       </p>
     </div>
@@ -1467,7 +1536,10 @@ function OrderCard({
             <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
             <DetailLine label="Wallet" value={order.paymentDetails.walletProvider} />
             <DetailLine label="Created" value={formatDate(order.createdAt)} />
-            <DetailLine label="Total" value={formatCurrency(order.totals.subtotal)} />
+            <DetailLine
+              label="Total"
+              value={formatCurrency(order.totalAmount ?? order.totals.subtotal)}
+            />
           </div>
         </div>
 
@@ -1513,9 +1585,10 @@ function OrderDetails({ order }: { order: StoredOrder }) {
             ["Name", order.customer.fullName],
             ["Phone", order.customer.phone],
             ["Email", order.customer.email],
-            ["Delivery address", order.customer.address],
             ["City / area", order.customer.cityArea],
-            ["Notes", joinNotes(order.customer.sizeFitNote, order.customer.deliveryNote)],
+            ["Delivery address", order.customer.address],
+            ["Size / fit note", order.customer.sizeFitNote],
+            ["Delivery note", order.customer.deliveryNote],
           ]}
         />
         <DetailGroup
@@ -1527,7 +1600,9 @@ function OrderDetails({ order }: { order: StoredOrder }) {
             ["Receiver number", order.paymentDetails.receiverNumber],
             ["Sender number", order.paymentDetails.walletSenderNumber],
             ["Transaction ID / reference", order.paymentDetails.transactionReference],
-            ["Order total", formatCurrency(order.totals.subtotal)],
+            ["Order total", formatCurrency(order.totalAmount ?? order.totals.subtotal)],
+            ["Order status", order.status],
+            ["Created date", formatDate(order.createdAt)],
           ]}
         />
         <div className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
@@ -1618,6 +1693,3 @@ function ProductStatusBadge({ status }: { status: ProductStatus }) {
   );
 }
 
-function joinNotes(sizeFitNote?: string, deliveryNote?: string) {
-  return [sizeFitNote, deliveryNote].filter(Boolean).join(" / ") || undefined;
-}
