@@ -1,12 +1,46 @@
 import type {
+  OrderCartItem,
   OrderRecord,
   OrderSaveResult,
   OrderStorageMode,
-  OrderSubmissionInput,
   OrderStatus,
+  OrderSubmissionInput,
 } from "@/app/lib/order-types";
 
 const demoOrders: OrderRecord[] = [];
+const SUPABASE_ORDERS_TABLE = "orders";
+
+type SupabaseOrderRow = {
+  id?: string;
+  order_ref?: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_email?: string | null;
+  city_area?: string | null;
+  delivery_address?: string | null;
+  size_fit_note?: string | null;
+  delivery_note?: string | null;
+  items?: unknown;
+  subtotal?: number | string | null;
+  total?: number | string | null;
+  payment_method?: string | null;
+  wallet_provider?: string | null;
+  payment_type?: string | null;
+  receiver_number?: string | null;
+  sender_number?: string | null;
+  transaction_id?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+
+  // Backward compatibility for the earlier Phase 12 draft Supabase shape.
+  order_id?: string;
+  order_reference?: string;
+  customer?: unknown;
+  payment_details?: unknown;
+  totals?: unknown;
+  total_amount?: number | string | null;
+};
 
 function hasSupabaseConfig() {
   return Boolean(
@@ -42,81 +76,136 @@ function buildOrder(input: OrderSubmissionInput): OrderRecord {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value : undefined;
+}
+
+function numberValue(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const next = Number(value);
+    return Number.isFinite(next) ? next : undefined;
+  }
+  return undefined;
+}
+
+function nullableText(value: string | undefined) {
+  return value && value.trim() ? value.trim() : null;
+}
+
+function normalizeStatus(value: unknown): OrderStatus {
+  if (
+    value === "Pending" ||
+    value === "Confirmed" ||
+    value === "Shipped" ||
+    value === "Delivered" ||
+    value === "Cancelled"
+  ) {
+    return value;
+  }
+
+  return "Pending";
+}
+
+function normalizeItems(value: unknown): OrderCartItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter(isRecord).map((item) => ({
+    id: textValue(item.id) ?? "",
+    productId: textValue(item.productId),
+    slug: textValue(item.slug) ?? "",
+    name: textValue(item.name) ?? "",
+    price: numberValue(item.price) ?? 0,
+    image: textValue(item.image) ?? "",
+    size: textValue(item.size),
+    color: textValue(item.color),
+    absorbency: textValue(item.absorbency),
+    quantity: numberValue(item.quantity) ?? 0,
+  }));
+}
+
+function countItems(items: OrderCartItem[]) {
+  return items.reduce((sum, item) => sum + item.quantity, 0);
+}
+
 function supabaseHeaders() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
   return {
     apikey: serviceRoleKey,
-    authorization: `Bearer ${serviceRoleKey}`,
+    Authorization: `Bearer ${serviceRoleKey}`,
     "content-type": "application/json",
   };
 }
 
-async function saveOrderToSupabase(order: OrderRecord) {
+function supabaseEndpoint(pathAndQuery: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) throw new Error("Missing Supabase URL.");
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/orders?select=*`, {
-    method: "POST",
-    headers: {
-      ...supabaseHeaders(),
-      prefer: "return=representation",
-    },
-    body: JSON.stringify({
-      order_id: order.orderId,
-      order_reference: order.orderReference,
-      customer: order.customer,
-      payment_details: order.paymentDetails,
-      items: order.items,
-      totals: order.totals,
-      total_amount: order.totalAmount,
-      status: order.status,
-      created_at: order.createdAt,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Supabase order insert failed with ${response.status}.`);
-  }
-
-  return order;
+  return `${supabaseUrl.replace(/\/$/, "")}/rest/v1/${pathAndQuery}`;
 }
 
-async function updateOrderStatusInSupabase(
-  orderRef: string,
-  status: OrderStatus
-) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) throw new Error("Missing Supabase URL.");
+async function supabaseError(response: Response, action: string) {
+  const detail = await response.text().catch(() => "");
+  const suffix = detail ? ` ${detail.slice(0, 240)}` : "";
+  return new Error(`Supabase ${action} failed with ${response.status}.${suffix}`);
+}
 
+function orderToSupabaseInsertPayload(order: OrderRecord) {
+  const now = new Date().toISOString();
+
+  return {
+    order_ref: order.orderReference,
+    customer_name: order.customer.fullName,
+    customer_phone: order.customer.phone,
+    customer_email: nullableText(order.customer.email),
+    city_area: order.customer.cityArea,
+    delivery_address: order.customer.address,
+    size_fit_note: nullableText(order.customer.sizeFitNote),
+    delivery_note: nullableText(order.customer.deliveryNote),
+    items: order.items,
+    subtotal: order.totals.subtotal,
+    total: order.totalAmount,
+    payment_method: order.paymentDetails.paymentMethod,
+    wallet_provider: nullableText(order.paymentDetails.walletProvider),
+    payment_type: nullableText(order.paymentDetails.paymentType),
+    receiver_number: nullableText(order.paymentDetails.receiverNumber),
+    sender_number: nullableText(order.paymentDetails.walletSenderNumber),
+    transaction_id: nullableText(order.paymentDetails.transactionReference),
+    status: order.status,
+    created_at: order.createdAt,
+    updated_at: now,
+  };
+}
+
+async function saveOrderToSupabase(order: OrderRecord) {
   const response = await fetch(
-    `${supabaseUrl}/rest/v1/orders?order_reference=eq.${encodeURIComponent(
-      orderRef
-    )}&select=*`,
+    supabaseEndpoint(`${SUPABASE_ORDERS_TABLE}?select=*`),
     {
-      method: "PATCH",
+      method: "POST",
       headers: {
         ...supabaseHeaders(),
         prefer: "return=representation",
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(orderToSupabaseInsertPayload(order)),
     }
   );
 
   if (!response.ok) {
-    throw new Error(`Supabase order status update failed with ${response.status}.`);
+    throw await supabaseError(response, "order insert");
   }
 
-  const rows = (await response.json()) as Array<Record<string, unknown>>;
-  return rows[0] ? mapSupabaseOrder(rows[0]) : null;
+  const rows = (await response.json()) as SupabaseOrderRow[];
+  return rows[0] ? mapSupabaseOrder(rows[0]) : order;
 }
 
 async function listOrdersFromSupabase() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) throw new Error("Missing Supabase URL.");
-
   const response = await fetch(
-    `${supabaseUrl}/rest/v1/orders?select=*&order=created_at.desc`,
+    supabaseEndpoint(`${SUPABASE_ORDERS_TABLE}?select=*&order=created_at.desc`),
     {
       headers: supabaseHeaders(),
       cache: "no-store",
@@ -124,25 +213,96 @@ async function listOrdersFromSupabase() {
   );
 
   if (!response.ok) {
-    throw new Error(`Supabase order list failed with ${response.status}.`);
+    throw await supabaseError(response, "order list");
   }
 
-  const rows = (await response.json()) as Array<Record<string, unknown>>;
-
+  const rows = (await response.json()) as SupabaseOrderRow[];
   return rows.map(mapSupabaseOrder);
 }
 
-function mapSupabaseOrder(row: Record<string, unknown>): OrderRecord {
+async function updateOrderStatusInSupabase(
+  orderRef: string,
+  status: OrderStatus
+) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_ORDERS_TABLE}?order_ref=eq.${encodeURIComponent(
+        orderRef
+      )}&select=*`
+    ),
+    {
+      method: "PATCH",
+      headers: {
+        ...supabaseHeaders(),
+        prefer: "return=representation",
+      },
+      body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+    }
+  );
+
+  if (!response.ok) {
+    throw await supabaseError(response, "order status update");
+  }
+
+  const rows = (await response.json()) as SupabaseOrderRow[];
+  return rows[0] ? mapSupabaseOrder(rows[0]) : null;
+}
+
+function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
+  const legacyCustomer = isRecord(row.customer) ? row.customer : {};
+  const legacyPayment = isRecord(row.payment_details) ? row.payment_details : {};
+  const legacyTotals = isRecord(row.totals) ? row.totals : {};
+  const items = normalizeItems(row.items);
+  const subtotal =
+    numberValue(row.subtotal) ??
+    numberValue(legacyTotals.subtotal) ??
+    numberValue(row.total_amount) ??
+    0;
+  const total = numberValue(row.total) ?? numberValue(row.total_amount) ?? subtotal;
+  const orderReference = row.order_ref ?? row.order_reference ?? row.order_id ?? "";
+
   return {
-    orderId: String(row.order_id ?? row.orderReference ?? ""),
-    orderReference: String(row.order_reference ?? row.order_id ?? ""),
-    customer: row.customer as OrderRecord["customer"],
-    paymentDetails: row.payment_details as OrderRecord["paymentDetails"],
-    items: row.items as OrderRecord["items"],
-    totals: row.totals as OrderRecord["totals"],
-    totalAmount: Number(row.total_amount ?? 0),
-    status: row.status as OrderRecord["status"],
-    createdAt: String(row.created_at ?? ""),
+    orderId: orderReference,
+    orderReference,
+    customer: {
+      fullName: row.customer_name ?? textValue(legacyCustomer.fullName) ?? "",
+      phone: row.customer_phone ?? textValue(legacyCustomer.phone) ?? "",
+      email: row.customer_email ?? textValue(legacyCustomer.email),
+      cityArea: row.city_area ?? textValue(legacyCustomer.cityArea) ?? "",
+      address: row.delivery_address ?? textValue(legacyCustomer.address) ?? "",
+      sizeFitNote: row.size_fit_note ?? textValue(legacyCustomer.sizeFitNote),
+      deliveryNote: row.delivery_note ?? textValue(legacyCustomer.deliveryNote),
+    },
+    paymentDetails: {
+      paymentMethod:
+        (row.payment_method ??
+          textValue(legacyPayment.paymentMethod) ??
+          "Cash on Delivery") as OrderRecord["paymentDetails"]["paymentMethod"],
+      walletProvider:
+        (row.wallet_provider ??
+          textValue(
+            legacyPayment.walletProvider
+          )) as OrderRecord["paymentDetails"]["walletProvider"],
+      paymentType:
+        (row.payment_type ??
+          textValue(
+            legacyPayment.paymentType
+          )) as OrderRecord["paymentDetails"]["paymentType"],
+      receiverNumber:
+        row.receiver_number ?? textValue(legacyPayment.receiverNumber),
+      walletSenderNumber:
+        row.sender_number ?? textValue(legacyPayment.walletSenderNumber),
+      transactionReference:
+        row.transaction_id ?? textValue(legacyPayment.transactionReference),
+    },
+    items,
+    totals: {
+      totalItems: numberValue(legacyTotals.totalItems) ?? countItems(items),
+      subtotal,
+    },
+    totalAmount: total,
+    status: normalizeStatus(row.status),
+    createdAt: row.created_at ?? "",
   };
 }
 

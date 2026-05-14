@@ -1,13 +1,19 @@
 # Aevyrixa Order Backend Setup
 
-Phase 12 adds a backend-ready order capture layer at `app/api/orders/route.ts`
-and `app/api/orders/[orderRef]/route.ts`. The site still builds and accepts
-demo/local orders when backend credentials are not configured.
+Phase 13A connects checkout and admin order storage to Supabase through the
+server API routes:
 
-## Future Environment Variables
+- `app/api/orders/route.ts`
+- `app/api/orders/[orderRef]/route.ts`
+- `app/lib/order-store.ts`
 
-Add these in Vercel Project Settings -> Environment Variables. Do not commit
-secret values to the repository.
+Client checkout and admin screens continue to call the local API routes. They do
+not talk directly to Supabase.
+
+## Environment Variables
+
+Add these in Vercel Project Settings -> Environment Variables for Production,
+Preview, and Development as needed:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
@@ -16,45 +22,83 @@ ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN=
 ORDER_NOTIFICATION_TELEGRAM_CHAT_ID=
 ```
 
+For local development, create `.env.local` with the same values:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+Never commit `.env.local` or the service role key. The service role key must only
+be read from server-side code. Do not import it into client components.
+
+## Supabase Table
+
+Create `public.orders` in Supabase SQL Editor:
+
+```sql
+create table if not exists public.orders (
+  id uuid primary key default gen_random_uuid(),
+  order_ref text not null unique,
+  customer_name text not null,
+  customer_phone text not null,
+  customer_email text,
+  city_area text not null,
+  delivery_address text not null,
+  size_fit_note text,
+  delivery_note text,
+  items jsonb not null default '[]'::jsonb,
+  subtotal numeric not null default 0,
+  total numeric not null default 0,
+  payment_method text not null,
+  wallet_provider text,
+  payment_type text,
+  receiver_number text,
+  sender_number text,
+  transaction_id text,
+  status text not null default 'Pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists orders_created_at_idx
+  on public.orders (created_at desc);
+
+create index if not exists orders_status_idx
+  on public.orders (status);
+```
+
+The order adapter writes through Supabase REST using the service role key from
+server route handlers. It inserts customer and payment fields into scalar
+columns, keeps line items in `items jsonb`, and updates `status` plus
+`updated_at` from admin PATCH requests.
+
 ## Storage Behavior
 
-- With `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, the order
-  adapter in `app/lib/order-store.ts` is ready to write, read, and update order
-  statuses from a Supabase/Postgres `orders` table.
-- Without those variables, the API uses a safe demo-memory fallback so local
-  development and Vercel builds do not fail.
-- Checkout also stores the saved order in browser localStorage to keep the
-  current admin orders UI usable until the production database is connected.
-- Admin status changes call the API route when possible and keep the local
-  admin fallback compatible while the backend is still demo-only.
+- With `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, orders are
+  created, listed, and updated in `public.orders`.
+- Without those variables, the API uses the safe demo-memory fallback so local
+  development and Vercel builds still pass.
+- Checkout stores the saved order in browser localStorage only after the API
+  save succeeds. This keeps the current local admin fallback usable.
+- Admin fetches `/api/orders` first, merges with local fallback data, and
+  deduplicates by `order_ref` / order reference.
+- Admin status changes call `PATCH /api/orders/[orderRef]`; local fallback sync
+  remains for no-database development.
+
+## Vercel Deployment
+
+1. Add `NEXT_PUBLIC_SUPABASE_URL`.
+2. Add `SUPABASE_SERVICE_ROLE_KEY` as a secret value.
+3. Redeploy the site after saving environment variables.
+4. Submit a checkout order and confirm it appears in Supabase and in admin from
+   another browser/device.
 
 ## Notification Placeholder
 
 `app/lib/order-notifications.ts` exposes `notifyNewOrder(order)`. It is safe
 without notification credentials and currently skips delivery. A future phase
-can connect Telegram or email by using these Vercel Environment Variables:
+can connect Telegram or email by using:
 
 - `ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN`
 - `ORDER_NOTIFICATION_TELEGRAM_CHAT_ID`
-
-## Suggested Supabase Table Shape
-
-Create an `orders` table that can store JSON order details:
-
-```sql
-create table orders (
-  id uuid primary key default gen_random_uuid(),
-  order_id text not null unique,
-  order_reference text not null unique,
-  customer jsonb not null,
-  payment_details jsonb not null,
-  items jsonb not null,
-  totals jsonb not null,
-  total_amount numeric not null,
-  status text not null default 'Pending',
-  created_at timestamptz not null default now()
-);
-```
-
-The service role key is used only from server-side route handlers. Never expose
-it in client components.
