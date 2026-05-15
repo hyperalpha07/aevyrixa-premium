@@ -20,10 +20,10 @@ function productInput(payload: unknown): ProductMutationInput | null {
 
 function includeDraftsFromRequest(request: Request) {
   const url = new URL(request.url);
-  return (
-    url.searchParams.get("scope") === "admin" ||
-    url.searchParams.get("admin") === "1"
-  );
+  const scope = url.searchParams.get("scope");
+  if (scope === "deleted") return "deleted";
+  if (scope === "admin" || url.searchParams.get("admin") === "1") return "admin";
+  return "public";
 }
 
 function json(payload: unknown, init: ResponseInit = {}) {
@@ -35,7 +35,7 @@ function json(payload: unknown, init: ResponseInit = {}) {
 export async function GET(request: Request) {
   try {
     const result = await listProducts({
-      scope: includeDraftsFromRequest(request) ? "admin" : "public",
+      scope: includeDraftsFromRequest(request),
     });
 
     return json(result);

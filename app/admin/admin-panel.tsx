@@ -57,6 +57,7 @@ const stockStatuses: ProductStockStatus[] = [
 const visualThemes: ProductVisualTheme[] = ["blush-violet", "cyan-night", "rose-gold"];
 
 type ProductStatus = (typeof productStatuses)[number];
+type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
 type AdminView = "dashboard" | "orders" | "products" | "settings";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type StatusFilter = "All" | OrderStatus;
@@ -141,6 +142,8 @@ type AdminProduct = {
   stockQuantity?: number;
   visualTheme: ProductVisualTheme;
   visualVariant: string;
+  deletedAt?: string;
+  deletedReason?: string;
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -320,6 +323,8 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     stockQuantity: numberValue(value.stockQuantity) || undefined,
     visualTheme,
     visualVariant: textValue(value.visualVariant) || visualTheme,
+    deletedAt: textValue(value.deletedAt),
+    deletedReason: textValue(value.deletedReason),
   };
 }
 
@@ -346,6 +351,8 @@ function productSeed(): AdminProduct[] {
     stockQuantity: undefined,
     visualTheme: product.visualTheme,
     visualVariant: product.visualTheme,
+    deletedAt: undefined,
+    deletedReason: undefined,
   }));
 }
 
@@ -518,18 +525,42 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
     stockQuantity: product.stockQuantity,
     visualTheme: product.visualTheme,
     visualVariant: product.visualVariant ?? product.visualTheme,
+    deletedAt: product.deletedAt,
+    deletedReason: product.deletedReason,
   };
 }
 
 async function readProductsFromApi() {
   try {
-    const response = await fetch("/api/products?scope=admin", { cache: "no-store" });
-    if (!response.ok) return null;
+    const [adminResponse, deletedResponse] = await Promise.all([
+      fetch("/api/products?scope=admin", { cache: "no-store" }),
+      fetch("/api/products?scope=deleted", { cache: "no-store" }),
+    ]);
+    if (!adminResponse.ok || !deletedResponse.ok) return null;
 
-    const payload = (await response.json()) as unknown;
-    if (!isRecord(payload) || !Array.isArray(payload.products)) return null;
+    const [adminPayload, deletedPayload] = (await Promise.all([
+      adminResponse.json(),
+      deletedResponse.json(),
+    ])) as [unknown, unknown];
+    if (
+      !isRecord(adminPayload) ||
+      !Array.isArray(adminPayload.products) ||
+      !isRecord(deletedPayload) ||
+      !Array.isArray(deletedPayload.products)
+    ) {
+      return null;
+    }
 
-    return payload.products.map(apiProductToAdminProduct);
+    const products = [
+      ...adminPayload.products.map(apiProductToAdminProduct),
+      ...deletedPayload.products.map(apiProductToAdminProduct),
+    ];
+    const seen = new Set<string>();
+    return products.filter((product) => {
+      if (seen.has(product.id)) return false;
+      seen.add(product.id);
+      return true;
+    });
   } catch (error) {
     console.error("Failed to load backend products:", error);
     return null;
@@ -569,21 +600,62 @@ async function saveProductToApi(product: AdminProduct, exists: boolean) {
   return apiProductToAdminProduct(payload.product as ProductCatalogItem);
 }
 
-async function disableProductInApi(productId: string) {
+async function deleteProductInApi(productId: string) {
   const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
     method: "DELETE",
   });
 
   const payload = (await response.json().catch(() => null)) as unknown;
   if (!response.ok) {
-    throw new Error(apiErrorMessage(payload, "Product could not be moved to Draft."));
+    throw new Error(apiErrorMessage(payload, "Product could not be deleted."));
   }
 
   if (!isRecord(payload) || !isRecord(payload.product)) {
-    throw new Error("Product status update did not return a saved product.");
+    throw new Error("Product delete did not return a deleted product.");
   }
 
   return apiProductToAdminProduct(payload.product as ProductCatalogItem);
+}
+
+async function restoreProductInApi(productId: string) {
+  const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
+    method: "PATCH",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ action: "restore" }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    throw new Error(apiErrorMessage(payload, "Product could not be restored."));
+  }
+
+  if (!isRecord(payload) || !isRecord(payload.product)) {
+    throw new Error("Product restore did not return a saved product.");
+  }
+
+  return apiProductToAdminProduct(payload.product as ProductCatalogItem);
+}
+
+async function permanentlyDeleteProductInApi(productId: string) {
+  const response = await fetch(
+    `/api/products/${encodeURIComponent(productId)}?permanent=1`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    throw new Error(apiErrorMessage(payload, "Product could not be permanently deleted."));
+  }
+
+  if (!isRecord(payload) || payload.deleted !== true) {
+    throw new Error("Product permanent delete did not complete.");
+  }
+
+  return true;
 }
 
 function writeOrdersToStorage(orders: StoredOrder[]) {
@@ -1150,7 +1222,10 @@ function DashboardSection({
   onStatusChange: (orderId: string, status: OrderStatus) => void;
 }) {
   const recentOrders = orders.slice(0, 5);
-  const activeProducts = products.filter((product) => product.status === "Active").length;
+  const activeProducts = products.filter(
+    (product) => product.status === "Active" && !product.deletedAt
+  ).length;
+  const availableProducts = products.filter((product) => !product.deletedAt).length;
 
   return (
     <div className="mt-6 space-y-6">
@@ -1201,7 +1276,7 @@ function DashboardSection({
         <div className="grid gap-4">
           <AdminSummaryCard
             title="Products"
-            value={`${activeProducts}/${products.length} active`}
+            value={`${activeProducts}/${availableProducts} active`}
             href="/admin/products"
             icon={Boxes}
           />
@@ -1334,8 +1409,29 @@ function ProductsSection({
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [productFilter, setProductFilter] = useState<ProductFilter>("All");
+
+  const productFilterOptions: ProductFilter[] = [
+    "All",
+    "Active",
+    "Draft",
+    "Out of Stock",
+    "Deleted",
+  ];
+
+  const visibleProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (productFilter === "Deleted") return Boolean(product.deletedAt);
+      if (product.deletedAt) return false;
+      if (productFilter === "Active") return product.status === "Active";
+      if (productFilter === "Draft") return product.status === "Draft";
+      if (productFilter === "Out of Stock") return product.stockStatus === "out_of_stock";
+      return true;
+    });
+  }, [productFilter, products]);
 
   const addProduct = () => {
+    setProductFilter("All");
     setEditingProduct({
       ...emptyProduct,
       id: `admin-product-${Date.now()}`,
@@ -1385,24 +1481,71 @@ function ProductsSection({
   };
 
   const deleteProduct = async (productId: string) => {
-    if (!window.confirm("Set this product to Draft instead of deleting it?")) return;
+    if (!window.confirm("Delete this product and move it to Deleted/Trash?")) return;
 
     setIsSavingProduct(true);
     setStatusMessage("");
 
     try {
-      const backendProduct = await disableProductInApi(productId);
+      const backendProduct = await deleteProductInApi(productId);
       onSaveProducts(
         products.map((product) =>
           product.id === backendProduct.id ? backendProduct : product
         )
       );
       setEditingProduct((current) => (current?.id === productId ? null : current));
-      setStatusMessage("Product moved to Draft in backend.");
+      setStatusMessage("Product moved to Deleted.");
     } catch (error) {
-      console.error("Failed to disable backend product:", error);
+      console.error("Failed to delete backend product:", error);
       setStatusMessage(
-        error instanceof Error ? error.message : "Product could not be moved to Draft."
+        error instanceof Error ? error.message : "Product could not be deleted."
+      );
+    } finally {
+      setIsSavingProduct(false);
+    }
+  };
+
+  const restoreProduct = async (productId: string) => {
+    setIsSavingProduct(true);
+    setStatusMessage("");
+
+    try {
+      const backendProduct = await restoreProductInApi(productId);
+      onSaveProducts(
+        products.map((product) =>
+          product.id === backendProduct.id ? backendProduct : product
+        )
+      );
+      setStatusMessage("Product restored as Draft.");
+    } catch (error) {
+      console.error("Failed to restore backend product:", error);
+      setStatusMessage(
+        error instanceof Error ? error.message : "Product could not be restored."
+      );
+    } finally {
+      setIsSavingProduct(false);
+    }
+  };
+
+  const permanentlyDeleteProduct = async (product: AdminProduct) => {
+    const confirmation = window.prompt(
+      `Permanently delete "${product.name}" from Supabase? Type DELETE to confirm.`
+    );
+    if (confirmation !== "DELETE") return;
+
+    setIsSavingProduct(true);
+    setStatusMessage("");
+
+    try {
+      await permanentlyDeleteProductInApi(product.id);
+      onSaveProducts(products.filter((item) => item.id !== product.id));
+      setStatusMessage("Product permanently deleted.");
+    } catch (error) {
+      console.error("Failed to permanently delete backend product:", error);
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Product could not be permanently deleted."
       );
     } finally {
       setIsSavingProduct(false);
@@ -1459,6 +1602,23 @@ function ProductsSection({
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2">
+        {productFilterOptions.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => setProductFilter(option)}
+            className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+              productFilter === option
+                ? "border-cyan-100/45 bg-cyan-200/15 text-white"
+                : "border-white/10 bg-white/[0.04] text-white/58 hover:border-cyan-200/25 hover:text-white"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+
       {editingProduct && (
         <ProductEditor
           key={editingProduct.id}
@@ -1470,7 +1630,13 @@ function ProductsSection({
       )}
 
       <div className="grid gap-3">
-        {products.map((product) => (
+        {visibleProducts.length === 0 && (
+          <div className="rounded-[1.25rem] border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] p-6 text-center text-sm text-white/58">
+            No products in this filter.
+          </div>
+        )}
+
+        {visibleProducts.map((product) => (
           <article
             key={product.id}
             className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4"
@@ -1482,6 +1648,11 @@ function ProductsSection({
                     {product.name}
                   </h3>
                   <ProductStatusBadge status={product.status} />
+                  {product.deletedAt && (
+                    <span className="inline-flex w-fit items-center rounded-full border border-rose-200/25 bg-rose-200/10 px-3 py-1 text-xs font-semibold text-rose-100">
+                      Deleted
+                    </span>
+                  )}
                 </div>
                 <div className="mt-3 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
                   <DetailLine label="Slug" value={product.slug} />
@@ -1489,37 +1660,64 @@ function ProductsSection({
                   <DetailLine label="Absorbency" value={product.absorbency} />
                   <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
                   <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
+                  {product.deletedAt && (
+                    <DetailLine label="Deleted" value={formatDate(product.deletedAt)} />
+                  )}
                 </div>
               </div>
               <DetailLine label="Price" value={product.price || "$0.00"} />
               <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
               <div className="grid gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingProduct(product)}
-                  disabled={isSavingProduct}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:text-white"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleStatus(product.id)}
-                  disabled={isSavingProduct}
-                  className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
-                >
-                  {product.status === "Active" ? "Set Draft" : "Set Active"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => deleteProduct(product.id)}
-                  disabled={isSavingProduct}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Set Draft
-                </button>
+                {product.deletedAt ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => restoreProduct(product.id)}
+                      disabled={isSavingProduct}
+                      className="rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-2.5 text-sm font-medium text-emerald-50/85 transition hover:border-emerald-100/40 hover:text-white"
+                    >
+                      Restore
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => permanentlyDeleteProduct(product)}
+                      disabled={isSavingProduct}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/20 bg-rose-200/[0.08] px-3 py-2.5 text-sm font-medium text-rose-100/85 transition hover:border-rose-100/40 hover:text-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Permanently Delete
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setEditingProduct(product)}
+                      disabled={isSavingProduct}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:text-white"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleStatus(product.id)}
+                      disabled={isSavingProduct}
+                      className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
+                    >
+                      {product.status === "Active" ? "Set Draft" : "Set Active"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteProduct(product.id)}
+                      disabled={isSavingProduct}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </article>

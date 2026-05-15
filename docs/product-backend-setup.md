@@ -41,12 +41,25 @@ create table if not exists public.products (
   care jsonb not null default '[]'::jsonb,
   seo_title text,
   seo_description text,
+  deleted_at timestamptz,
+  deleted_reason text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists products_status_idx on public.products (status);
 create index if not exists products_featured_idx on public.products (featured);
+create index if not exists products_deleted_at_idx on public.products (deleted_at);
+```
+
+If the table already exists from Phase 15, add the trash columns manually:
+
+```sql
+alter table public.products
+  add column if not exists deleted_at timestamptz,
+  add column if not exists deleted_reason text;
+
+create index if not exists products_deleted_at_idx on public.products (deleted_at);
 ```
 
 Optional updated-at trigger:
@@ -84,6 +97,37 @@ Security notes:
   mutation endpoints beyond the current private operating workflow.
 - Storefront reads only active products. Draft products stay available to admin
   views and hidden from customers.
+- Deleted products use `deleted_at` and `deleted_reason`. They are hidden from
+  storefront, hidden from the normal admin list, and only visible in the Deleted
+  admin filter.
+
+Product deletion lifecycle:
+
+- Draft is not delete. Draft keeps a product hidden from storefront while it
+  remains editable in admin.
+- Delete is a soft delete. The API sets `deleted_at = now()` and
+  `deleted_reason = 'Deleted from admin'`.
+- Restore clears the trash fields and sets `status = 'draft'` so a restored
+  product does not immediately go live.
+- Permanently Delete is allowed only after a product is already in Deleted.
+  This removes the row from `public.products`. Existing order history is safe
+  because orders store item snapshot data.
+
+30-day purge foundation:
+
+- Products with `deleted_at < now() - interval '30 days'` are eligible for
+  permanent purge.
+- `app/lib/product-store.ts` includes `purgeDeletedProductsOlderThan(30)` for a
+  future protected admin route, scheduled job, or maintenance script.
+- Do not expose a public purge endpoint until real admin authentication protects
+  product mutation routes.
+- A future Supabase scheduled function or `pg_cron` job can run:
+
+```sql
+delete from public.products
+where deleted_at is not null
+  and deleted_at < now() - interval '30 days';
+```
 
 Fallback behavior:
 

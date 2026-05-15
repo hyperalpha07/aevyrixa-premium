@@ -36,6 +36,8 @@ export type ProductCatalogItem = {
   care: string[];
   seoTitle?: string;
   seoDescription?: string;
+  deletedAt?: string;
+  deletedReason?: string;
   createdAt?: string;
   updatedAt?: string;
 };

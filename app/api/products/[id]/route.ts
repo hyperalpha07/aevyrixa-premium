@@ -1,5 +1,8 @@
 import {
   deleteProduct,
+  permanentlyDeleteProduct,
+  productStoreErrorResponse,
+  restoreProduct,
   updateProduct,
   validateProductInput,
 } from "@/app/lib/product-store";
@@ -35,6 +38,28 @@ export async function PATCH(
     return json({ errors: ["Invalid product payload."] }, { status: 400 });
   }
 
+  if (payload.action === "restore") {
+    try {
+      const result = await restoreProduct(id);
+
+      if (!result.product) {
+        return json(
+          { errors: ["Deleted product was not found."], storageMode: result.storageMode },
+          { status: 404 }
+        );
+      }
+
+      return json(result);
+    } catch (error) {
+      console.error("Failed to restore product:", error);
+      const response = productStoreErrorResponse(
+        error,
+        "Product could not be restored."
+      );
+      return json(response.body, { status: response.status });
+    }
+  }
+
   const input = payload as ProductMutationInput;
   const { errors } = validateProductInput(input, { partial: true });
   if (errors.length > 0) return json({ errors }, { status: 400 });
@@ -52,20 +77,36 @@ export async function PATCH(
     return json(result);
   } catch (error) {
     console.error("Failed to update product:", error);
-    return json(
-      { errors: ["Product could not be updated."], detail: error instanceof Error ? error.message : undefined },
-      { status: 500 }
+    const response = productStoreErrorResponse(
+      error,
+      "Product could not be updated."
     );
+    return json(response.body, { status: response.status });
   }
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
+  const url = new URL(request.url);
+  const permanent = url.searchParams.get("permanent") === "1";
 
   try {
+    if (permanent) {
+      const result = await permanentlyDeleteProduct(id);
+
+      if (!result.deleted) {
+        return json(
+          { errors: ["Deleted product was not found."], storageMode: result.storageMode },
+          { status: 404 }
+        );
+      }
+
+      return json(result);
+    }
+
     const result = await deleteProduct(id);
 
     if (!result.product) {
@@ -77,10 +118,13 @@ export async function DELETE(
 
     return json(result);
   } catch (error) {
-    console.error("Failed to disable product:", error);
-    return json(
-      { errors: ["Product could not be disabled."], detail: error instanceof Error ? error.message : undefined },
-      { status: 500 }
+    console.error("Failed to delete product:", error);
+    const response = productStoreErrorResponse(
+      error,
+      permanent
+        ? "Product could not be permanently deleted."
+        : "Product could not be deleted."
     );
+    return json(response.body, { status: response.status });
   }
 }

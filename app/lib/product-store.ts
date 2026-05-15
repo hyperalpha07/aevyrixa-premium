@@ -38,6 +38,8 @@ type SupabaseProductRow = {
   care?: unknown;
   seo_title?: string | null;
   seo_description?: string | null;
+  deleted_at?: string | null;
+  deleted_reason?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -99,10 +101,24 @@ async function supabaseError(response: Response, action: string) {
     if (parsed.code === "23505") {
       publicMessage = "A product with this slug already exists.";
       code = "PRODUCT_SLUG_EXISTS";
+    } else if (
+      parsed.code === "PGRST204" ||
+      (typeof parsed.message === "string" &&
+        (parsed.message.includes("deleted_at") ||
+          parsed.message.includes("deleted_reason")))
+    ) {
+      publicMessage =
+        "Product trash columns are missing. Add deleted_at timestamptz and deleted_reason text to public.products.";
+      code = "PRODUCT_TRASH_COLUMNS_MISSING";
     } else if (response.status >= 400 && response.status < 500) {
       publicMessage = "Product data was rejected by the backend.";
     }
   } catch {
+    if (detail.includes("deleted_at") || detail.includes("deleted_reason")) {
+      publicMessage =
+        "Product trash columns are missing. Add deleted_at timestamptz and deleted_reason text to public.products.";
+      code = "PRODUCT_TRASH_COLUMNS_MISSING";
+    } else
     if (response.status >= 400 && response.status < 500) {
       publicMessage = "Product data was rejected by the backend.";
     }
@@ -251,6 +267,8 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
     care: stringArrayValue(input.care),
     seoTitle: optionalText(input.seoTitle),
     seoDescription: optionalText(input.seoDescription),
+    deletedAt: input.deletedAt,
+    deletedReason: optionalText(input.deletedReason),
     createdAt: input.createdAt ?? now,
     updatedAt: now,
   };
@@ -287,6 +305,8 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     care: stringArrayValue(row.care),
     seoTitle: row.seo_title ?? undefined,
     seoDescription: row.seo_description ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    deletedReason: row.deleted_reason ?? undefined,
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined,
   };
@@ -352,6 +372,10 @@ function toSupabasePayload(product: ProductMutationInput) {
   if (hasProductField(product, "seoDescription")) {
     payload.seo_description = product.seoDescription ?? null;
   }
+  if (hasProductField(product, "deletedAt")) payload.deleted_at = product.deletedAt ?? null;
+  if (hasProductField(product, "deletedReason")) {
+    payload.deleted_reason = product.deletedReason ?? null;
+  }
 
   return payload;
 }
@@ -403,6 +427,23 @@ async function listProductsFromSupabase() {
   return rows.map(mapSupabaseProduct);
 }
 
+async function getProductByIdFromSupabase(id: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&select=*&limit=1`
+    ),
+    {
+      headers: supabaseHeaders(),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) throw await supabaseError(response, "product lookup");
+
+  const rows = (await response.json()) as SupabaseProductRow[];
+  return rows[0] ? mapSupabaseProduct(rows[0]) : null;
+}
+
 async function createProductInSupabase(input: ProductCatalogItem) {
   const payload = toSupabaseCreatePayload(input);
 
@@ -433,6 +474,16 @@ async function createProductInSupabase(input: ProductCatalogItem) {
 }
 
 async function updateProductInSupabase(id: string, updates: ProductMutationInput) {
+  const existing = await getProductByIdFromSupabase(id);
+  if (!existing) return null;
+  if (existing.deletedAt) {
+    throw new ProductStoreError("Cannot update a deleted product.", {
+      status: 409,
+      publicMessage: "Restore this product before editing it.",
+      code: "PRODUCT_DELETED",
+    });
+  }
+
   const response = await fetch(
     supabaseEndpoint(
       `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&select=*`
@@ -453,6 +504,94 @@ async function updateProductInSupabase(id: string, updates: ProductMutationInput
   return rows[0] ? mapSupabaseProduct(rows[0]) : null;
 }
 
+async function softDeleteProductInSupabase(id: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&deleted_at=is.null&select=*`
+    ),
+    {
+      method: "PATCH",
+      headers: {
+        ...supabaseHeaders(),
+        prefer: "return=representation",
+      },
+      body: JSON.stringify({
+        deleted_at: new Date().toISOString(),
+        deleted_reason: "Deleted from admin",
+        updated_at: new Date().toISOString(),
+      }),
+    }
+  );
+
+  if (!response.ok) throw await supabaseError(response, "product delete");
+
+  const rows = (await response.json()) as SupabaseProductRow[];
+  return rows[0] ? mapSupabaseProduct(rows[0]) : null;
+}
+
+async function restoreProductInSupabase(id: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&deleted_at=not.is.null&select=*`
+    ),
+    {
+      method: "PATCH",
+      headers: {
+        ...supabaseHeaders(),
+        prefer: "return=representation",
+      },
+      body: JSON.stringify({
+        deleted_at: null,
+        deleted_reason: null,
+        status: "draft",
+        updated_at: new Date().toISOString(),
+      }),
+    }
+  );
+
+  if (!response.ok) throw await supabaseError(response, "product restore");
+
+  const rows = (await response.json()) as SupabaseProductRow[];
+  return rows[0] ? mapSupabaseProduct(rows[0]) : null;
+}
+
+async function permanentlyDeleteProductInSupabase(id: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&deleted_at=not.is.null`
+    ),
+    {
+      method: "DELETE",
+      headers: supabaseHeaders(),
+    }
+  );
+
+  if (!response.ok) throw await supabaseError(response, "product permanent delete");
+
+  return true;
+}
+
+async function purgeDeletedProductsInSupabase(cutoffIso: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_PRODUCTS_TABLE}?deleted_at=lt.${encodeURIComponent(cutoffIso)}&deleted_at=not.is.null`
+    ),
+    {
+      method: "DELETE",
+      headers: {
+        ...supabaseHeaders(),
+        prefer: "count=exact",
+      },
+    }
+  );
+
+  if (!response.ok) throw await supabaseError(response, "product deleted purge");
+
+  const contentRange = response.headers.get("content-range");
+  const deletedCount = contentRange ? Number(contentRange.split("/").at(-1)) : undefined;
+  return Number.isFinite(deletedCount) ? deletedCount : 0;
+}
+
 async function safelyUseSupabase<T>(action: () => Promise<T>) {
   if (!hasSupabaseConfig()) return null;
 
@@ -468,7 +607,7 @@ async function safelyUseSupabase<T>(action: () => Promise<T>) {
 
 function logProductSource(
   source: ProductStorageMode,
-  details: { count: number; scope: "admin" | "public"; reason?: string }
+  details: { count: number; scope: "admin" | "public" | "deleted"; reason?: string }
 ) {
   const reason = details.reason ? `, reason=${details.reason}` : "";
   console.info(
@@ -477,16 +616,21 @@ function logProductSource(
 }
 
 export async function listProducts(
-  options: { includeDrafts?: boolean; scope?: "admin" | "public" } = {}
+  options: { includeDrafts?: boolean; scope?: "admin" | "public" | "deleted" } = {}
 ) {
   const scope = options.scope ?? (options.includeDrafts ? "admin" : "public");
   const includeDrafts = scope === "admin" || Boolean(options.includeDrafts);
   const supabaseProducts = await safelyUseSupabase(listProductsFromSupabase);
 
-  if (supabaseProducts && supabaseProducts.length > 0) {
-    const products = includeDrafts
-        ? supabaseProducts
-        : supabaseProducts.filter((product) => product.status === "active");
+  if (supabaseProducts !== null) {
+    const products =
+      scope === "deleted"
+        ? supabaseProducts.filter((product) => Boolean(product.deletedAt))
+        : includeDrafts
+          ? supabaseProducts.filter((product) => !product.deletedAt)
+          : supabaseProducts.filter(
+              (product) => product.status === "active" && !product.deletedAt
+            );
 
     logProductSource("supabase", { count: products.length, scope });
 
@@ -497,8 +641,10 @@ export async function listProducts(
   }
 
   const products = includeDrafts
-    ? demoProducts
-    : demoProducts.filter((product) => product.status === "active");
+    ? demoProducts.filter((product) => !product.deletedAt)
+    : scope === "deleted"
+      ? demoProducts.filter((product) => Boolean(product.deletedAt))
+      : demoProducts.filter((product) => product.status === "active" && !product.deletedAt);
 
   const storageMode = hasSupabaseConfig()
     ? ("fallback-static" as ProductStorageMode)
@@ -522,7 +668,7 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
 
   if (supabaseProducts && supabaseProducts.length > 0) {
     const supabaseProduct =
-      supabaseProducts.find((product) => product.slug === slug) ?? null;
+      supabaseProducts.find((product) => product.slug === slug && !product.deletedAt) ?? null;
 
     console.info(
       `Product detail source: supabase (slug=${slug}, found=${Boolean(
@@ -546,7 +692,10 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
 
   const product =
     demoProducts.find(
-      (item) => item.slug === slug && (includeDrafts || item.status === "active")
+      (item) =>
+        item.slug === slug &&
+        !item.deletedAt &&
+        (includeDrafts || item.status === "active")
     ) ?? null;
 
   console.info(
@@ -587,6 +736,13 @@ export async function updateProduct(id: string, updates: ProductMutationInput) {
   if (!existing) {
     return { product: null, storageMode: "demo-memory" as ProductStorageMode };
   }
+  if (existing.deletedAt) {
+    throw new ProductStoreError("Cannot update a deleted product.", {
+      status: 409,
+      publicMessage: "Restore this product before editing it.",
+      code: "PRODUCT_DELETED",
+    });
+  }
 
   demoProducts = demoProducts.map((product) =>
     product.id === id ? { ...product, ...merged, id, updatedAt: new Date().toISOString() } : product
@@ -603,8 +759,97 @@ export async function updateProductStatus(id: string, status: ProductStatus) {
 }
 
 export async function deleteProduct(id: string) {
-  // Safer admin delete: draft/disable product instead of hard deleting.
-  return updateProductStatus(id, "draft");
+  if (hasSupabaseConfig()) {
+    const supabaseProduct = await softDeleteProductInSupabase(id);
+    return { product: supabaseProduct, storageMode: "supabase" as ProductStorageMode };
+  }
+
+  const existing = demoProducts.find((product) => product.id === id && !product.deletedAt);
+  if (!existing) return { product: null, storageMode: "demo-memory" as ProductStorageMode };
+
+  const deletedProduct = {
+    ...existing,
+    deletedAt: new Date().toISOString(),
+    deletedReason: "Deleted from admin",
+    updatedAt: new Date().toISOString(),
+  };
+  demoProducts = demoProducts.map((product) =>
+    product.id === id ? deletedProduct : product
+  );
+  return { product: deletedProduct, storageMode: "demo-memory" as ProductStorageMode };
+}
+
+export async function restoreProduct(id: string) {
+  if (hasSupabaseConfig()) {
+    const supabaseProduct = await restoreProductInSupabase(id);
+    return { product: supabaseProduct, storageMode: "supabase" as ProductStorageMode };
+  }
+
+  const existing = demoProducts.find((product) => product.id === id && product.deletedAt);
+  if (!existing) return { product: null, storageMode: "demo-memory" as ProductStorageMode };
+
+  const restoredProduct = {
+    ...existing,
+    status: "draft" as ProductStatus,
+    deletedAt: undefined,
+    deletedReason: undefined,
+    updatedAt: new Date().toISOString(),
+  };
+  demoProducts = demoProducts.map((product) =>
+    product.id === id ? restoredProduct : product
+  );
+  return { product: restoredProduct, storageMode: "demo-memory" as ProductStorageMode };
+}
+
+export async function permanentlyDeleteProduct(id: string) {
+  if (hasSupabaseConfig()) {
+    const existing = await getProductByIdFromSupabase(id);
+    if (!existing) return { deleted: false, storageMode: "supabase" as ProductStorageMode };
+    if (!existing.deletedAt) {
+      throw new ProductStoreError("Cannot permanently delete a non-deleted product.", {
+        status: 409,
+        publicMessage: "Move this product to Deleted before permanently deleting it.",
+        code: "PRODUCT_NOT_DELETED",
+      });
+    }
+
+    await permanentlyDeleteProductInSupabase(id);
+    return { deleted: true, storageMode: "supabase" as ProductStorageMode };
+  }
+
+  const existing = demoProducts.find((product) => product.id === id);
+  if (!existing) return { deleted: false, storageMode: "demo-memory" as ProductStorageMode };
+  if (!existing.deletedAt) {
+    throw new ProductStoreError("Cannot permanently delete a non-deleted product.", {
+      status: 409,
+      publicMessage: "Move this product to Deleted before permanently deleting it.",
+      code: "PRODUCT_NOT_DELETED",
+    });
+  }
+
+  demoProducts = demoProducts.filter((product) => product.id !== id);
+  return { deleted: true, storageMode: "demo-memory" as ProductStorageMode };
+}
+
+export async function purgeDeletedProductsOlderThan(days = 30) {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  if (hasSupabaseConfig()) {
+    const deletedCount = await purgeDeletedProductsInSupabase(cutoff);
+    return { deletedCount, cutoff, storageMode: "supabase" as ProductStorageMode };
+  }
+
+  const before = demoProducts.length;
+  demoProducts = demoProducts.filter((product) => {
+    if (!product.deletedAt) return true;
+    return Date.parse(product.deletedAt) >= Date.parse(cutoff);
+  });
+
+  return {
+    deletedCount: before - demoProducts.length,
+    cutoff,
+    storageMode: "demo-memory" as ProductStorageMode,
+  };
 }
 
 // TODO: Expand this adapter when inventory variants become first-class rows.
