@@ -807,6 +807,25 @@ function orderSearchText(order: StoredOrder) {
     .toLowerCase();
 }
 
+function productSearchText(product: AdminProduct) {
+  return [
+    product.name,
+    product.slug,
+    product.category,
+    product.absorbency,
+    product.visualVariant,
+    product.visualTheme,
+    product.stockStatus.replace(/_/g, " "),
+    product.stockStatus,
+    product.status,
+    product.price,
+    product.compareAtPrice,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
 function filterAndSortOrders(
   orders: StoredOrder[],
   searchTerm: string,
@@ -1411,6 +1430,7 @@ function ProductsSection({
   const [statusMessage, setStatusMessage] = useState("");
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [productFilter, setProductFilter] = useState<ProductFilter>("All");
+  const [productSearchTerm, setProductSearchTerm] = useState("");
 
   const productFilterOptions: ProductFilter[] = [
     "All",
@@ -1421,15 +1441,23 @@ function ProductsSection({
   ];
 
   const visibleProducts = useMemo(() => {
+    const query = productSearchTerm.trim().toLowerCase();
+
     return products.filter((product) => {
-      if (productFilter === "Deleted") return Boolean(product.deletedAt);
-      if (product.deletedAt) return false;
-      if (productFilter === "Active") return product.status === "Active";
-      if (productFilter === "Draft") return product.status === "Draft";
-      if (productFilter === "Out of Stock") return product.stockStatus === "out_of_stock";
-      return true;
+      const matchesFilter =
+        productFilter === "Deleted"
+          ? Boolean(product.deletedAt)
+          : !product.deletedAt &&
+            (productFilter === "All" ||
+              (productFilter === "Active" && product.status === "Active") ||
+              (productFilter === "Draft" && product.status === "Draft") ||
+              (productFilter === "Out of Stock" &&
+                product.stockStatus === "out_of_stock"));
+
+      if (!matchesFilter) return false;
+      return !query || productSearchText(product).includes(query);
     });
-  }, [productFilter, products]);
+  }, [productFilter, productSearchTerm, products]);
   const editingProductId = editingProduct?.id;
   const isEditingExistingProduct = Boolean(
     editingProductId && products.some((product) => product.id === editingProductId)
@@ -1441,15 +1469,16 @@ function ProductsSection({
     const scrollTimer = window.setTimeout(() => {
       inlineEditorRef.current?.scrollIntoView({
         behavior: "smooth",
-        block: "nearest",
+        block: "start",
       });
-    }, 0);
+    }, 80);
 
     return () => window.clearTimeout(scrollTimer);
   }, [editingProductId, isEditingExistingProduct]);
 
   const addProduct = () => {
     setProductFilter("All");
+    setProductSearchTerm("");
     setEditingProduct({
       ...emptyProduct,
       id: `admin-product-${Date.now()}`,
@@ -1620,22 +1649,55 @@ function ProductsSection({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {productFilterOptions.map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => setProductFilter(option)}
-            className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-              productFilter === option
-                ? "border-cyan-100/45 bg-cyan-200/15 text-white"
-                : "border-white/10 bg-white/[0.04] text-white/58 hover:border-cyan-200/25 hover:text-white"
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
+      <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3 sm:p-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(240px,1fr)_auto] lg:items-end">
+          <label className="relative block min-w-0">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+              Search products
+            </span>
+            <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
+            <input
+              value={productSearchTerm}
+              onChange={(event) => setProductSearchTerm(event.target.value)}
+              placeholder="Name, slug, category, absorbency"
+              className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+            />
+          </label>
+          <div className="flex min-w-0 flex-wrap gap-2">
+            {productFilterOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setProductFilter(option)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  productFilter === option
+                    ? "border-cyan-100/45 bg-cyan-200/15 text-white"
+                    : "border-white/10 bg-white/[0.04] text-white/58 hover:border-cyan-200/25 hover:text-white"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 flex flex-col gap-2 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Showing {visibleProducts.length} of {products.length} products
+          </span>
+          {(productSearchTerm || productFilter !== "All") && (
+            <button
+              type="button"
+              onClick={() => {
+                setProductSearchTerm("");
+                setProductFilter("All");
+              }}
+              className="w-fit text-cyan-100/75 transition hover:text-cyan-50"
+            >
+              Clear product filters
+            </button>
+          )}
+        </div>
+      </section>
 
       {editingProduct && !isEditingExistingProduct && (
         <ProductEditor
@@ -1650,7 +1712,9 @@ function ProductsSection({
       <div className="grid gap-3">
         {visibleProducts.length === 0 && (
           <div className="rounded-[1.25rem] border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] p-6 text-center text-sm text-white/58">
-            No products in this filter.
+            {productSearchTerm.trim()
+              ? "No products found for this search."
+              : "No products in this filter."}
           </div>
         )}
 
@@ -1658,95 +1722,94 @@ function ProductsSection({
           const isEditingThisProduct = editingProductId === product.id;
 
           return (
-            <article
-              key={product.id}
-              className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4"
-            >
-              <div className="grid min-w-0 gap-4 xl:grid-cols-[1fr_120px_130px_160px] xl:items-center">
-                <div className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h3 className="break-words text-base font-semibold text-white [overflow-wrap:break-word]">
-                      {product.name}
-                    </h3>
-                    <ProductStatusBadge status={product.status} />
-                    {product.deletedAt && (
-                      <span className="inline-flex w-fit items-center rounded-full border border-rose-200/25 bg-rose-200/10 px-3 py-1 text-xs font-semibold text-rose-100">
-                        Deleted
-                      </span>
-                    )}
+            <div key={product.id} className="grid min-w-0 gap-3">
+              <article className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4">
+                <div className="grid min-w-0 gap-4 xl:grid-cols-[1fr_120px_130px_160px] xl:items-center">
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h3 className="break-words text-base font-semibold text-white [overflow-wrap:break-word]">
+                        {product.name}
+                      </h3>
+                      <ProductStatusBadge status={product.status} />
+                      {product.deletedAt && (
+                        <span className="inline-flex w-fit items-center rounded-full border border-rose-200/25 bg-rose-200/10 px-3 py-1 text-xs font-semibold text-rose-100">
+                          Deleted
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-3 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
+                      <DetailLine label="Slug" value={product.slug} />
+                      <DetailLine label="Category" value={product.category} />
+                      <DetailLine label="Absorbency" value={product.absorbency} />
+                      <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
+                      <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
+                      {product.deletedAt && (
+                        <DetailLine label="Deleted" value={formatDate(product.deletedAt)} />
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-3 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
-                    <DetailLine label="Slug" value={product.slug} />
-                    <DetailLine label="Category" value={product.category} />
-                    <DetailLine label="Absorbency" value={product.absorbency} />
-                    <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
-                    <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
-                    {product.deletedAt && (
-                      <DetailLine label="Deleted" value={formatDate(product.deletedAt)} />
+                  <DetailLine label="Price" value={product.price || "$0.00"} />
+                  <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
+                  <div className="grid gap-2">
+                    {product.deletedAt ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => restoreProduct(product.id)}
+                          disabled={isSavingProduct}
+                          className="rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-2.5 text-sm font-medium text-emerald-50/85 transition hover:border-emerald-100/40 hover:text-white"
+                        >
+                          Restore
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => permanentlyDeleteProduct(product)}
+                          disabled={isSavingProduct}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/20 bg-rose-200/[0.08] px-3 py-2.5 text-sm font-medium text-rose-100/85 transition hover:border-rose-100/40 hover:text-white"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Permanently Delete
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setEditingProduct(product)}
+                          disabled={isSavingProduct}
+                          className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
+                            isEditingThisProduct
+                              ? "border-cyan-100/40 bg-cyan-200/12 text-white"
+                              : "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/30 hover:text-white"
+                          }`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          {isEditingThisProduct ? "Editing" : "Edit"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleStatus(product.id)}
+                          disabled={isSavingProduct}
+                          className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
+                        >
+                          {product.status === "Active" ? "Set Draft" : "Set Active"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteProduct(product.id)}
+                          disabled={isSavingProduct}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
-                <DetailLine label="Price" value={product.price || "$0.00"} />
-                <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
-                <div className="grid gap-2">
-                  {product.deletedAt ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => restoreProduct(product.id)}
-                        disabled={isSavingProduct}
-                        className="rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-2.5 text-sm font-medium text-emerald-50/85 transition hover:border-emerald-100/40 hover:text-white"
-                      >
-                        Restore
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => permanentlyDeleteProduct(product)}
-                        disabled={isSavingProduct}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/20 bg-rose-200/[0.08] px-3 py-2.5 text-sm font-medium text-rose-100/85 transition hover:border-rose-100/40 hover:text-white"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Permanently Delete
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setEditingProduct(product)}
-                        disabled={isSavingProduct}
-                        className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
-                          isEditingThisProduct
-                            ? "border-cyan-100/40 bg-cyan-200/12 text-white"
-                            : "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/30 hover:text-white"
-                        }`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        {isEditingThisProduct ? "Editing" : "Edit"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => toggleStatus(product.id)}
-                        disabled={isSavingProduct}
-                        className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
-                      >
-                        {product.status === "Active" ? "Set Draft" : "Set Active"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteProduct(product.id)}
-                        disabled={isSavingProduct}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+              </article>
               {editingProduct && isEditingThisProduct && !product.deletedAt && (
-                <div ref={inlineEditorRef} className="mt-4">
+                <div ref={inlineEditorRef} className="scroll-mt-6">
                   <ProductEditor
                     key={editingProduct.id}
                     product={editingProduct}
@@ -1756,7 +1819,7 @@ function ProductsSection({
                   />
                 </div>
               )}
-            </article>
+            </div>
           );
         })}
       </div>
