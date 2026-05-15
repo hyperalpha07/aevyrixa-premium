@@ -1,6 +1,7 @@
 import {
   defaultAdminSettings,
   normalizeAdminSettings,
+  publicAdminSettings,
   type AdminSettings,
 } from "@/app/lib/admin-settings";
 
@@ -22,6 +23,16 @@ export type SettingsResult = {
 
 type SupabaseSettingsRow = {
   id?: string;
+  store_profile?: unknown;
+  payment_settings?: unknown;
+  checkout_settings?: unknown;
+  delivery_settings?: unknown;
+  policy_settings?: unknown;
+  order_settings?: unknown;
+  notification_settings?: unknown;
+  seo_settings?: unknown;
+  appearance_settings?: unknown;
+  advanced_settings?: unknown;
   store_name?: string | null;
   support_phone?: string | null;
   support_whatsapp?: string | null;
@@ -108,6 +119,16 @@ async function supabaseError(response: Response, action: string) {
 
 function mapSupabaseRow(row: SupabaseSettingsRow) {
   return normalizeAdminSettings({
+    storeProfile: row.store_profile,
+    paymentSettings: row.payment_settings,
+    checkoutSettings: row.checkout_settings,
+    deliverySettings: row.delivery_settings,
+    policySettings: row.policy_settings,
+    orderSettings: row.order_settings,
+    notificationSettings: row.notification_settings,
+    seoSettings: row.seo_settings,
+    appearanceSettings: row.appearance_settings,
+    advancedSettings: row.advanced_settings,
     storeName: row.store_name,
     supportPhone: row.support_phone,
     supportWhatsApp: row.support_whatsapp,
@@ -125,7 +146,7 @@ function mapSupabaseRow(row: SupabaseSettingsRow) {
   });
 }
 
-function toSupabasePayload(settings: AdminSettings) {
+function toLegacySupabasePayload(settings: AdminSettings) {
   const normalized = normalizeAdminSettings(settings);
 
   return {
@@ -145,6 +166,24 @@ function toSupabasePayload(settings: AdminSettings) {
     hygiene_return_message: normalized.hygieneReturnMessage,
     order_confirmation_message: normalized.orderConfirmationMessage,
     updated_at: new Date().toISOString(),
+  };
+}
+
+function toSupabasePayload(settings: AdminSettings) {
+  const normalized = normalizeAdminSettings(settings);
+
+  return {
+    ...toLegacySupabasePayload(normalized),
+    store_profile: normalized.storeProfile,
+    payment_settings: normalized.paymentSettings,
+    checkout_settings: normalized.checkoutSettings,
+    delivery_settings: normalized.deliverySettings,
+    policy_settings: normalized.policySettings,
+    order_settings: normalized.orderSettings,
+    notification_settings: normalized.notificationSettings,
+    seo_settings: normalized.seoSettings,
+    appearance_settings: normalized.appearanceSettings,
+    advanced_settings: normalized.advancedSettings,
   };
 }
 
@@ -178,7 +217,40 @@ async function upsertSettingsInSupabase(settings: AdminSettings) {
     }
   );
 
-  if (!response.ok) throw await supabaseError(response, "upsert");
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    const isMissingGroupedColumn =
+      response.status === 400 &&
+      /store_profile|payment_settings|checkout_settings|delivery_settings|policy_settings|order_settings|notification_settings|seo_settings|appearance_settings|advanced_settings|schema cache|column/i.test(
+        detail
+      );
+
+    if (!isMissingGroupedColumn) {
+      throw await supabaseError(
+        new Response(detail, { status: response.status }),
+        "upsert"
+      );
+    }
+
+    const legacyResponse = await fetch(
+      supabaseEndpoint(`${SUPABASE_SETTINGS_TABLE}?on_conflict=id&select=*`),
+      {
+        method: "POST",
+        headers: {
+          ...supabaseHeaders(),
+          prefer: "resolution=merge-duplicates,return=representation",
+        },
+        body: JSON.stringify(toLegacySupabasePayload(settings)),
+      }
+    );
+
+    if (!legacyResponse.ok) throw await supabaseError(legacyResponse, "legacy upsert");
+
+    const legacyRows = (await legacyResponse.json()) as SupabaseSettingsRow[];
+    return legacyRows[0]
+      ? normalizeAdminSettings({ ...settings, ...mapSupabaseRow(legacyRows[0]) })
+      : normalizeAdminSettings(settings);
+  }
 
   const rows = (await response.json()) as SupabaseSettingsRow[];
   return rows[0] ? mapSupabaseRow(rows[0]) : normalizeAdminSettings(settings);
@@ -259,5 +331,38 @@ export function settingsStoreErrorResponse(error: unknown) {
       errors: ["Store settings could not be saved right now."],
       code: "SETTINGS_STORE_ERROR",
     },
+  };
+}
+
+export function toPublicSettingsPayload(settings: AdminSettings) {
+  const normalized = publicAdminSettings(settings);
+
+  return {
+    storeProfile: normalized.storeProfile,
+    paymentSettings: normalized.paymentSettings,
+    checkoutSettings: normalized.checkoutSettings,
+    deliverySettings: normalized.deliverySettings,
+    policySettings: normalized.policySettings,
+    seoSettings: normalized.seoSettings,
+    appearanceSettings: normalized.appearanceSettings,
+    storeName: normalized.storeName,
+    supportPhone: normalized.supportPhone,
+    supportWhatsApp: normalized.supportWhatsApp,
+    supportEmail: normalized.supportEmail,
+    facebookPageUrl: normalized.facebookPageUrl,
+    instagramUrl: normalized.instagramUrl,
+    tiktokUrl: normalized.tiktokUrl,
+    businessLocation: normalized.businessLocation,
+    deliveryCoverageText: normalized.deliveryCoverageText,
+    codMessage: normalized.codMessage,
+    privacyPackagingMessage: normalized.privacyPackagingMessage,
+    supportWindowMessage: normalized.supportWindowMessage,
+    hygieneReturnMessage: normalized.hygieneReturnMessage,
+    orderConfirmationMessage: normalized.orderConfirmationMessage,
+    guaranteeText: normalized.guaranteeText,
+    deliveryNote: normalized.deliveryNote,
+    walletReceiverNumbers: normalized.walletReceiverNumbers,
+    bankTransferInstruction: normalized.bankTransferInstruction,
+    codInstruction: normalized.codInstruction,
   };
 }

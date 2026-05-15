@@ -87,8 +87,11 @@ function TrackOrderContent() {
   const supportContact = settings.supportWhatsApp || settings.supportPhone;
   const supportNote = useMemo(() => {
     const contact = supportContact ? ` at ${supportContact}` : "";
-    return `Need help? Contact Aevyrixa support${contact} with your order reference.`;
-  }, [supportContact]);
+    const configured = settings.deliverySettings.trackingSupportMessage.trim();
+    return configured
+      ? `${configured}${contact ? ` Support: ${supportContact}.` : ""}`
+      : `Need help? Contact Aevyrixa support${contact} with your order reference.`;
+  }, [settings.deliverySettings.trackingSupportMessage, supportContact]);
 
   useEffect(() => {
     let isActive = true;

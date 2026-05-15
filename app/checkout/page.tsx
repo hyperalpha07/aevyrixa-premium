@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Copy, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
@@ -87,6 +87,13 @@ const initialForm: CheckoutForm = {
 const isBangladeshMobileNumber = (value: string) =>
   value.trim().match(/^01\d{9}$/) !== null;
 
+function isWalletProviderEnabled(provider: WalletProvider, settings: AdminSettings) {
+  if (provider === "bKash") return settings.paymentSettings.bkashEnabled;
+  if (provider === "Nagad") return settings.paymentSettings.nagadEnabled;
+  if (provider === "Rocket") return settings.paymentSettings.rocketEnabled;
+  return settings.paymentSettings.upayEnabled;
+}
+
 function readAdminSettingsFromStorage() {
   try {
     const stored = localStorage.getItem(ADMIN_SETTINGS_KEY);
@@ -127,14 +134,7 @@ export default function CheckoutPage() {
     const timerId = window.setTimeout(() => {
       setAdminSettings(readAdminSettingsFromStorage());
       void readAdminSettingsFromApi().then((backendSettings) => {
-        setAdminSettings((current) =>
-          normalizeAdminSettings({
-            ...current,
-            ...backendSettings,
-            walletReceiverNumbers: current.walletReceiverNumbers,
-            bankTransferInstruction: current.bankTransferInstruction,
-          })
-        );
+        setAdminSettings(backendSettings);
       });
     }, 0);
 
@@ -162,15 +162,54 @@ export default function CheckoutPage() {
   const selectedReceiverNumber =
     adminSettings.walletReceiverNumbers[form.walletProvider] ||
     defaultAdminSettings.walletReceiverNumbers[form.walletProvider];
+  const enabledPaymentMethods = useMemo(
+    () =>
+      paymentMethods.filter((method) => {
+        if (method === "Cash on Delivery") {
+          return adminSettings.paymentSettings.codEnabled;
+        }
+        if (method === "Bank Transfer") {
+          return adminSettings.paymentSettings.bankTransferEnabled;
+        }
+        return walletProviders.some((provider) =>
+          isWalletProviderEnabled(provider, adminSettings)
+        );
+      }),
+    [adminSettings]
+  );
+  const enabledWalletProviders = useMemo(
+    () =>
+      walletProviders.filter((provider) =>
+        isWalletProviderEnabled(provider, adminSettings)
+      ),
+    [adminSettings]
+  );
   const isWalletSendMoney =
     form.paymentMethod === "Mobile Wallet Payment" &&
     form.paymentType === "Send Money";
   const isSubmitDisabled =
-    form.paymentMethod === "Mobile Wallet Payment" &&
-    form.paymentType !== "Send Money";
+    enabledPaymentMethods.length === 0 ||
+    (form.paymentMethod === "Mobile Wallet Payment" &&
+      form.paymentType !== "Send Money");
   const hasUnavailableItems = items.some(
     (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
   );
+
+  useEffect(() => {
+    setForm((current) => ({
+      ...current,
+      paymentMethod:
+        enabledPaymentMethods.length > 0 &&
+        !enabledPaymentMethods.includes(current.paymentMethod)
+          ? enabledPaymentMethods[0]
+          : current.paymentMethod,
+      walletProvider:
+        enabledWalletProviders.length > 0 &&
+        !enabledWalletProviders.includes(current.walletProvider)
+          ? enabledWalletProviders[0]
+          : current.walletProvider,
+    }));
+  }, [enabledPaymentMethods, enabledWalletProviders]);
 
   const copyReceiverNumber = async () => {
     try {
@@ -465,7 +504,7 @@ export default function CheckoutPage() {
               <div className="mt-6">
                 <p className="text-sm font-semibold text-white">Payment Method</p>
                 <div className="mt-3 grid gap-3">
-                  {paymentMethods.map((method) => (
+                  {enabledPaymentMethods.map((method) => (
                     <label
                       key={method}
                       className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
@@ -486,13 +525,19 @@ export default function CheckoutPage() {
                     </label>
                   ))}
                 </div>
+                {enabledPaymentMethods.length === 0 && (
+                  <PremiumNotice>
+                    Payment is temporarily unavailable. Please contact support
+                    before placing an order.
+                  </PremiumNotice>
+                )}
                 {form.paymentMethod === "Mobile Wallet Payment" && (
                   <div className="mt-4 space-y-4 rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.06] p-4">
                     <p className="text-sm font-medium text-white/80">
                       Select your mobile wallet
                     </p>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                      {walletProviders.map((provider) => (
+                      {enabledWalletProviders.map((provider) => (
                         <label
                           key={provider}
                           className={`flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm transition ${

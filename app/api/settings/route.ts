@@ -7,6 +7,7 @@ import {
   getStoreSettings,
   saveStoreSettings,
   settingsStoreErrorResponse,
+  toPublicSettingsPayload,
 } from "@/app/lib/settings-store";
 
 export const dynamic = "force-dynamic";
@@ -18,9 +19,14 @@ function json(payload: unknown, init: ResponseInit = {}) {
   return Response.json(payload, { ...init, headers });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const result = await getStoreSettings();
-  return json(result);
+  if (verifyAdminRequest(request)) return json(result);
+
+  return json({
+    ...result,
+    settings: toPublicSettingsPayload(result.settings),
+  });
 }
 
 export async function PATCH(request: Request) {

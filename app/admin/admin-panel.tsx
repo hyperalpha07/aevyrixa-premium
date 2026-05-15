@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
+import type {
+  FormEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  ReactNode,
+} from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Bell as BellIcon,
   Boxes,
   ChevronDown,
   ClipboardList,
@@ -33,8 +38,6 @@ import {
   defaultAdminSettings,
   normalizeAdminSettings,
   type AdminSettings,
-  walletProviders,
-  type WalletProvider,
 } from "@/app/lib/admin-settings";
 import {
   orderSources,
@@ -793,12 +796,7 @@ async function readSettingsFromApi() {
     const localSettings = readSettingsFromStorage();
 
     return {
-      settings: normalizeAdminSettings({
-        ...localSettings,
-        ...payload.settings,
-        walletReceiverNumbers: localSettings.walletReceiverNumbers,
-        bankTransferInstruction: localSettings.bankTransferInstruction,
-      }),
+      settings: normalizeAdminSettings({ ...localSettings, ...payload.settings }),
       storageMode: payload.storageMode ?? "fallback-error",
       backendConnected: Boolean(payload.backendConnected),
       message: payload.message,
@@ -845,12 +843,7 @@ async function saveSettingsToApi(settings: AdminSettings) {
   }
 
   return {
-    settings: normalizeAdminSettings({
-      ...settings,
-      ...payload.settings,
-      walletReceiverNumbers: settings.walletReceiverNumbers,
-      bankTransferInstruction: settings.bankTransferInstruction,
-    }),
+    settings: normalizeAdminSettings({ ...settings, ...payload.settings }),
     storageMode: payload.storageMode ?? "supabase",
     backendConnected: Boolean(payload.backendConnected),
     message: payload.message,
@@ -2108,6 +2101,7 @@ function SettingsSection({
   }>;
 }) {
   const [draft, setDraft] = useState(settings);
+  const [activeSection, setActiveSection] = useState("storeProfile");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -2139,15 +2133,91 @@ function SettingsSection({
     );
   };
 
-  const updateWalletNumber = (provider: WalletProvider, value: string) => {
-    setDraft((current) => ({
+  const updateStoreProfile = (
+    updates: Partial<AdminSettings["storeProfile"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    storeProfile: { ...current.storeProfile, ...updates },
+  }));
+
+  const updatePaymentSettings = (
+    updates: Partial<AdminSettings["paymentSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    paymentSettings: { ...current.paymentSettings, ...updates },
+  }));
+
+  const updateCheckoutSettings = (
+    updates: Partial<AdminSettings["checkoutSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    checkoutSettings: { ...current.checkoutSettings, ...updates },
+  }));
+
+  const updateDeliverySettings = (
+    updates: Partial<AdminSettings["deliverySettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    deliverySettings: { ...current.deliverySettings, ...updates },
+  }));
+
+  const updatePolicySettings = (
+    updates: Partial<AdminSettings["policySettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    policySettings: { ...current.policySettings, ...updates },
+  }));
+
+  const updateOrderSettings = (
+    updates: Partial<AdminSettings["orderSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    orderSettings: { ...current.orderSettings, ...updates },
+  }));
+
+  const updateNotificationSettings = (
+    updates: Partial<AdminSettings["notificationSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    notificationSettings: {
+      ...current.notificationSettings,
+      ...updates,
+      telegramChatStatus: "Configured in environment",
+    },
+  }));
+
+  const updateSeoSettings = (updates: Partial<AdminSettings["seoSettings"]>) =>
+    setDraft((current) => normalizeAdminSettings({
       ...current,
-      walletReceiverNumbers: {
-        ...current.walletReceiverNumbers,
-        [provider]: value,
-      },
+      seoSettings: { ...current.seoSettings, ...updates },
     }));
-  };
+
+  const updateAppearanceSettings = (
+    updates: Partial<AdminSettings["appearanceSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    appearanceSettings: { ...current.appearanceSettings, ...updates },
+  }));
+
+  const updateAdvancedSettings = (
+    updates: Partial<AdminSettings["advancedSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    advancedSettings: { ...current.advancedSettings, ...updates },
+  }));
+
+  const settingsTabs = [
+    { id: "storeProfile", label: "Store Profile", icon: Phone },
+    { id: "paymentSettings", label: "Payment", icon: Wallet },
+    { id: "checkoutSettings", label: "Checkout", icon: ShoppingBag },
+    { id: "deliverySettings", label: "Delivery", icon: PackageCheck },
+    { id: "policySettings", label: "Policy", icon: ShieldCheck },
+    { id: "orderSettings", label: "Orders", icon: ClipboardList },
+    { id: "notificationSettings", label: "Notifications", icon: BellIcon },
+    { id: "seoSettings", label: "SEO", icon: Search },
+    { id: "appearanceSettings", label: "Appearance", icon: Sparkles },
+    { id: "advancedSettings", label: "Advanced", icon: Settings },
+  ] as const;
 
   return (
     <form onSubmit={saveSettings} className="mt-6 space-y-5">
@@ -2167,141 +2237,761 @@ function SettingsSection({
         </div>
       )}
 
-      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-        <div className="mb-5 min-w-0">
-          <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/70">
-            Store Messaging
-          </p>
-          <h2 className="mt-2 break-words text-xl font-semibold text-white">
-            Checkout trust and delivery text
-          </h2>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <TextField
-            label="Store name"
-            value={draft.storeName}
-            onChange={(value) => setDraft((current) => ({ ...current, storeName: value }))}
-          />
-          <TextField
-            label="Support phone"
-            value={draft.supportPhone}
-            onChange={(value) => setDraft((current) => ({ ...current, supportPhone: value }))}
-            inputMode="tel"
-          />
-          <TextField
-            label="WhatsApp number"
-            value={draft.supportWhatsApp}
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, supportWhatsApp: value }))
-            }
-            inputMode="tel"
-          />
-          <TextField
-            label="Support email"
-            value={draft.supportEmail}
-            onChange={(value) => setDraft((current) => ({ ...current, supportEmail: value }))}
-            inputMode="email"
-          />
-          <TextField
-            label="Facebook page URL"
-            value={draft.facebookPageUrl}
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, facebookPageUrl: value }))
-            }
-            inputMode="url"
-          />
-          <TextField
-            label="Business location"
-            value={draft.businessLocation}
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, businessLocation: value }))
-            }
-          />
-          <TextAreaField
-            label="Delivery coverage"
-            value={draft.deliveryCoverageText}
-            onChange={(value) =>
-              setDraft((current) => ({
-                ...current,
-                deliveryCoverageText: value,
-                deliveryNote: value,
-              }))
-            }
-            tall
-          />
-          <TextAreaField
-            label="COD message"
-            value={draft.codMessage}
-            onChange={(value) =>
-              setDraft((current) => ({
-                ...current,
-                codMessage: value,
-                codInstruction: value,
-              }))
-            }
-            tall
-          />
-          <TextAreaField
-            label="Privacy packaging message"
-            value={draft.privacyPackagingMessage}
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, privacyPackagingMessage: value }))
-            }
-            tall
-          />
-          <TextAreaField
-            label="3-Day Hygiene-Safe Support message"
-            value={draft.supportWindowMessage}
-            onChange={(value) =>
-              setDraft((current) => ({
-                ...current,
-                supportWindowMessage: value,
-                guaranteeText: value,
-              }))
-            }
-            tall
-          />
-          <TextAreaField
-            label="Order confirmation support note"
-            value={draft.orderConfirmationMessage}
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, orderConfirmationMessage: value }))
-            }
-            tall
-          />
-        </div>
-      </section>
+      <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <nav className="grid gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3 xl:sticky xl:top-5 xl:self-start">
+          {settingsTabs.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveSection(item.id)}
+                className={`flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-left text-sm font-medium transition ${
+                  isActive
+                    ? "border-cyan-200/40 bg-cyan-200/12 text-white"
+                    : "border-transparent text-white/58 hover:border-white/10 hover:bg-white/[0.045] hover:text-white"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 break-words">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
-      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-        <div className="mb-5 min-w-0">
-          <p className="text-xs uppercase tracking-[0.24em] text-fuchsia-200/70">
-            Payment Configuration
-          </p>
-          <h2 className="mt-2 break-words text-xl font-semibold text-white">
-            Wallet receivers and bank instructions
-          </h2>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {walletProviders.map((provider) => (
-            <TextField
-              key={provider}
-              label={`${provider} receiver number`}
-              value={draft.walletReceiverNumbers[provider]}
-              onChange={(value) => updateWalletNumber(provider, value)}
-            />
-          ))}
-          <TextAreaField
-            label="Bank transfer instruction"
-            value={draft.bankTransferInstruction}
-            onChange={(value) =>
-              setDraft((current) => ({ ...current, bankTransferInstruction: value }))
-            }
-            tall
-          />
-        </div>
-      </section>
+        <div className="min-w-0 space-y-5">
+          {activeSection === "storeProfile" && (
+            <SettingsCard
+              eyebrow="Store Profile"
+              title="Public brand and support identity"
+              description="These values power visible support and contact surfaces."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Store name"
+                  value={draft.storeProfile.storeName}
+                  onChange={(value) => updateStoreProfile({ storeName: value })}
+                />
+                <TextField
+                  label="Brand subtitle"
+                  value={draft.storeProfile.brandSubtitle}
+                  onChange={(value) => updateStoreProfile({ brandSubtitle: value })}
+                />
+                <TextField
+                  label="Business location"
+                  value={draft.storeProfile.businessLocation}
+                  onChange={(value) =>
+                    updateStoreProfile({ businessLocation: value })
+                  }
+                />
+                <SelectField
+                  label="Store status"
+                  value={draft.storeProfile.storeStatus}
+                  options={["live", "maintenance", "coming_soon"] as const}
+                  onChange={(value) => updateStoreProfile({ storeStatus: value })}
+                />
+                <TextField
+                  label="Support phone"
+                  value={draft.storeProfile.supportPhone}
+                  onChange={(value) => updateStoreProfile({ supportPhone: value })}
+                  inputMode="tel"
+                />
+                <TextField
+                  label="Support WhatsApp"
+                  value={draft.storeProfile.supportWhatsApp}
+                  onChange={(value) => updateStoreProfile({ supportWhatsApp: value })}
+                  inputMode="tel"
+                />
+                <TextField
+                  label="Support email"
+                  value={draft.storeProfile.supportEmail}
+                  onChange={(value) => updateStoreProfile({ supportEmail: value })}
+                  inputMode="email"
+                />
+                <TextField
+                  label="Facebook page URL"
+                  value={draft.storeProfile.facebookPageUrl}
+                  onChange={(value) => updateStoreProfile({ facebookPageUrl: value })}
+                  inputMode="url"
+                />
+                <TextField
+                  label="Instagram URL"
+                  value={draft.storeProfile.instagramUrl}
+                  onChange={(value) => updateStoreProfile({ instagramUrl: value })}
+                  inputMode="url"
+                />
+                <TextField
+                  label="TikTok URL"
+                  value={draft.storeProfile.tiktokUrl}
+                  onChange={(value) => updateStoreProfile({ tiktokUrl: value })}
+                  inputMode="url"
+                />
+              </div>
+            </SettingsCard>
+          )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          {activeSection === "paymentSettings" && (
+            <SettingsCard
+              eyebrow="Payment Settings"
+              title="Checkout payment options"
+              description="Enabled methods control what customers can choose at checkout."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <ToggleField
+                  label="COD enabled"
+                  checked={draft.paymentSettings.codEnabled}
+                  onChange={(value) => updatePaymentSettings({ codEnabled: value })}
+                />
+                <ToggleField
+                  label="Bank transfer enabled"
+                  checked={draft.paymentSettings.bankTransferEnabled}
+                  onChange={(value) =>
+                    updatePaymentSettings({ bankTransferEnabled: value })
+                  }
+                />
+                <TextAreaField
+                  label="COD message"
+                  value={draft.paymentSettings.codMessage}
+                  onChange={(value) => updatePaymentSettings({ codMessage: value })}
+                  tall
+                />
+                <TextAreaField
+                  label="Payment confirmation instruction"
+                  value={draft.paymentSettings.paymentConfirmationInstruction}
+                  onChange={(value) =>
+                    updatePaymentSettings({ paymentConfirmationInstruction: value })
+                  }
+                  tall
+                />
+                <WalletControl
+                  label="bKash"
+                  enabled={draft.paymentSettings.bkashEnabled}
+                  receiverNumber={draft.paymentSettings.bkashReceiverNumber}
+                  onEnabledChange={(value) =>
+                    updatePaymentSettings({ bkashEnabled: value })
+                  }
+                  onNumberChange={(value) =>
+                    updatePaymentSettings({ bkashReceiverNumber: value })
+                  }
+                />
+                <WalletControl
+                  label="Nagad"
+                  enabled={draft.paymentSettings.nagadEnabled}
+                  receiverNumber={draft.paymentSettings.nagadReceiverNumber}
+                  onEnabledChange={(value) =>
+                    updatePaymentSettings({ nagadEnabled: value })
+                  }
+                  onNumberChange={(value) =>
+                    updatePaymentSettings({ nagadReceiverNumber: value })
+                  }
+                />
+                <WalletControl
+                  label="Rocket"
+                  enabled={draft.paymentSettings.rocketEnabled}
+                  receiverNumber={draft.paymentSettings.rocketReceiverNumber}
+                  onEnabledChange={(value) =>
+                    updatePaymentSettings({ rocketEnabled: value })
+                  }
+                  onNumberChange={(value) =>
+                    updatePaymentSettings({ rocketReceiverNumber: value })
+                  }
+                />
+                <WalletControl
+                  label="Upay"
+                  enabled={draft.paymentSettings.upayEnabled}
+                  receiverNumber={draft.paymentSettings.upayReceiverNumber}
+                  onEnabledChange={(value) =>
+                    updatePaymentSettings({ upayEnabled: value })
+                  }
+                  onNumberChange={(value) =>
+                    updatePaymentSettings({ upayReceiverNumber: value })
+                  }
+                />
+                <TextField
+                  label="Bank name"
+                  value={draft.paymentSettings.bankName}
+                  onChange={(value) => updatePaymentSettings({ bankName: value })}
+                />
+                <TextField
+                  label="Bank account name"
+                  value={draft.paymentSettings.bankAccountName}
+                  onChange={(value) =>
+                    updatePaymentSettings({ bankAccountName: value })
+                  }
+                />
+                <TextField
+                  label="Bank account number"
+                  value={draft.paymentSettings.bankAccountNumber}
+                  onChange={(value) =>
+                    updatePaymentSettings({ bankAccountNumber: value })
+                  }
+                />
+                <TextField
+                  label="Bank branch"
+                  value={draft.paymentSettings.bankBranch}
+                  onChange={(value) => updatePaymentSettings({ bankBranch: value })}
+                />
+                <TextField
+                  label="Bank routing number"
+                  value={draft.paymentSettings.bankRoutingNumber}
+                  onChange={(value) =>
+                    updatePaymentSettings({ bankRoutingNumber: value })
+                  }
+                />
+                <TextAreaField
+                  label="Bank transfer instruction"
+                  value={draft.paymentSettings.bankTransferInstruction}
+                  onChange={(value) =>
+                    updatePaymentSettings({ bankTransferInstruction: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "checkoutSettings" && (
+            <SettingsCard
+              eyebrow="Checkout Settings"
+              title="Checkout copy and future thresholds"
+              description="Threshold fields are saved for future use and are not enforced yet."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Checkout header text"
+                  value={draft.checkoutSettings.checkoutHeaderText}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ checkoutHeaderText: value })
+                  }
+                />
+                <TextField
+                  label="Cart empty message"
+                  value={draft.checkoutSettings.cartEmptyMessage}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ cartEmptyMessage: value })
+                  }
+                />
+                <TextField
+                  label="Minimum order amount"
+                  value={draft.checkoutSettings.minimumOrderAmount}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ minimumOrderAmount: value })
+                  }
+                  inputMode="decimal"
+                />
+                <TextField
+                  label="Free delivery threshold"
+                  value={draft.checkoutSettings.freeDeliveryThreshold}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ freeDeliveryThreshold: value })
+                  }
+                  inputMode="decimal"
+                />
+                <TextAreaField
+                  label="Checkout support message"
+                  value={draft.checkoutSettings.checkoutSupportMessage}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ checkoutSupportMessage: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Order confirmation message"
+                  value={draft.checkoutSettings.orderConfirmationMessage}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ orderConfirmationMessage: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Order review message"
+                  value={draft.checkoutSettings.orderReviewMessage}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ orderReviewMessage: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "deliverySettings" && (
+            <SettingsCard
+              eyebrow="Delivery Settings"
+              title="Courier, coverage, and tracking support"
+              description="Delivery pricing fields are saved for operations and future checkout rules."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Default delivery charge"
+                  value={draft.deliverySettings.defaultDeliveryCharge}
+                  onChange={(value) =>
+                    updateDeliverySettings({ defaultDeliveryCharge: value })
+                  }
+                  inputMode="decimal"
+                />
+                <TextField
+                  label="Inside Dhaka delivery charge"
+                  value={draft.deliverySettings.insideDhakaDeliveryCharge}
+                  onChange={(value) =>
+                    updateDeliverySettings({ insideDhakaDeliveryCharge: value })
+                  }
+                  inputMode="decimal"
+                />
+                <TextField
+                  label="Outside Dhaka delivery charge"
+                  value={draft.deliverySettings.outsideDhakaDeliveryCharge}
+                  onChange={(value) =>
+                    updateDeliverySettings({ outsideDhakaDeliveryCharge: value })
+                  }
+                  inputMode="decimal"
+                />
+                <TextField
+                  label="Default courier"
+                  value={draft.deliverySettings.defaultCourier}
+                  onChange={(value) =>
+                    updateDeliverySettings({ defaultCourier: value })
+                  }
+                />
+                <TextAreaField
+                  label="Courier partners"
+                  value={draft.deliverySettings.courierPartners}
+                  onChange={(value) =>
+                    updateDeliverySettings({ courierPartners: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Delivery coverage text"
+                  value={draft.deliverySettings.deliveryCoverageText}
+                  onChange={(value) =>
+                    updateDeliverySettings({ deliveryCoverageText: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Estimated delivery time"
+                  value={draft.deliverySettings.estimatedDeliveryTime}
+                  onChange={(value) =>
+                    updateDeliverySettings({ estimatedDeliveryTime: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Dispatch confirmation message"
+                  value={draft.deliverySettings.dispatchConfirmationMessage}
+                  onChange={(value) =>
+                    updateDeliverySettings({ dispatchConfirmationMessage: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Tracking support message"
+                  value={draft.deliverySettings.trackingSupportMessage}
+                  onChange={(value) =>
+                    updateDeliverySettings({ trackingSupportMessage: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "policySettings" && (
+            <SettingsCard
+              eyebrow="Policy & Hygiene Settings"
+              title="Hygiene-safe support language"
+              description="Keep wording conservative: no medical or guaranteed leak-proof claims."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextAreaField
+                  label="Hygiene-safe support message"
+                  value={draft.policySettings.hygieneSafeSupportMessage}
+                  onChange={(value) =>
+                    updatePolicySettings({ hygieneSafeSupportMessage: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Refund/exchange condition"
+                  value={draft.policySettings.refundExchangeCondition}
+                  onChange={(value) =>
+                    updatePolicySettings({ refundExchangeCondition: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Unused/unwashed condition"
+                  value={draft.policySettings.unusedUnwashedCondition}
+                  onChange={(value) =>
+                    updatePolicySettings({ unusedUnwashedCondition: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Original packaging hygiene seal message"
+                  value={draft.policySettings.originalPackagingHygieneSealMessage}
+                  onChange={(value) =>
+                    updatePolicySettings({
+                      originalPackagingHygieneSealMessage: value,
+                    })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Size checking instruction"
+                  value={draft.policySettings.sizeCheckingInstruction}
+                  onChange={(value) =>
+                    updatePolicySettings({ sizeCheckingInstruction: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Privacy packaging message"
+                  value={draft.policySettings.privacyPackagingMessage}
+                  onChange={(value) =>
+                    updatePolicySettings({ privacyPackagingMessage: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="No medical claims notice"
+                  value={draft.policySettings.noMedicalClaimsNotice}
+                  onChange={(value) =>
+                    updatePolicySettings({ noMedicalClaimsNotice: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "orderSettings" && (
+            <SettingsCard
+              eyebrow="Order Operations Settings"
+              title="Defaults for order operations"
+              description="Auto-cancel and low-stock values are saved for future automation only."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <SelectField
+                  label="Default order status"
+                  value={draft.orderSettings.defaultOrderStatus}
+                  options={orderStatuses}
+                  onChange={(value) =>
+                    updateOrderSettings({ defaultOrderStatus: value })
+                  }
+                />
+                <SelectField
+                  label="Default order source"
+                  value={draft.orderSettings.defaultOrderSource}
+                  options={orderSources}
+                  onChange={(value) =>
+                    updateOrderSettings({ defaultOrderSource: value })
+                  }
+                />
+                <TextField
+                  label="Default assigned staff"
+                  value={draft.orderSettings.defaultAssignedStaff}
+                  onChange={(value) =>
+                    updateOrderSettings({ defaultAssignedStaff: value })
+                  }
+                />
+                <SelectField
+                  label="Default payment verification status"
+                  value={draft.orderSettings.defaultPaymentVerificationStatus}
+                  options={paymentVerificationStatuses}
+                  onChange={(value) =>
+                    updateOrderSettings({
+                      defaultPaymentVerificationStatus: value,
+                    })
+                  }
+                />
+                <SelectField
+                  label="Proof required default"
+                  value={draft.orderSettings.proofRequiredDefault}
+                  options={proofReceivedStatuses}
+                  onChange={(value) =>
+                    updateOrderSettings({ proofRequiredDefault: value })
+                  }
+                />
+                <TextField
+                  label="Auto-cancel pending after days"
+                  value={draft.orderSettings.autoCancelPendingAfterDays}
+                  onChange={(value) =>
+                    updateOrderSettings({ autoCancelPendingAfterDays: value })
+                  }
+                  inputMode="numeric"
+                />
+                <TextField
+                  label="Low stock alert threshold"
+                  value={draft.orderSettings.lowStockAlertThreshold}
+                  onChange={(value) =>
+                    updateOrderSettings({ lowStockAlertThreshold: value })
+                  }
+                  inputMode="numeric"
+                />
+                <TextField
+                  label="Order ID prefix"
+                  value={draft.orderSettings.orderIdPrefix}
+                  onChange={(value) => updateOrderSettings({ orderIdPrefix: value })}
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "notificationSettings" && (
+            <SettingsCard
+              eyebrow="Notification Settings"
+              title="Telegram and customer message templates"
+              description="Bot token stays in environment variables and is never shown here."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <ToggleField
+                  label="Telegram new order enabled"
+                  checked={draft.notificationSettings.telegramNewOrderEnabled}
+                  onChange={(value) =>
+                    updateNotificationSettings({ telegramNewOrderEnabled: value })
+                  }
+                />
+                <ToggleField
+                  label="Telegram status update enabled"
+                  checked={draft.notificationSettings.telegramStatusUpdateEnabled}
+                  onChange={(value) =>
+                    updateNotificationSettings({
+                      telegramStatusUpdateEnabled: value,
+                    })
+                  }
+                />
+                <ReadonlyField
+                  label="Telegram Chat ID status"
+                  value={draft.notificationSettings.telegramChatStatus}
+                />
+                <TextAreaField
+                  label="Order confirmation message template"
+                  value={draft.notificationSettings.orderConfirmationMessageTemplate}
+                  onChange={(value) =>
+                    updateNotificationSettings({
+                      orderConfirmationMessageTemplate: value,
+                    })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Shipped message template"
+                  value={draft.notificationSettings.shippedMessageTemplate}
+                  onChange={(value) =>
+                    updateNotificationSettings({ shippedMessageTemplate: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Delivered message template"
+                  value={draft.notificationSettings.deliveredMessageTemplate}
+                  onChange={(value) =>
+                    updateNotificationSettings({ deliveredMessageTemplate: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Cancelled message template"
+                  value={draft.notificationSettings.cancelledMessageTemplate}
+                  onChange={(value) =>
+                    updateNotificationSettings({ cancelledMessageTemplate: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "seoSettings" && (
+            <SettingsCard
+              eyebrow="SEO & Social Settings"
+              title="Search metadata and analytics IDs"
+              description="Pixel IDs are stored only; scripts are not injected by this phase."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Homepage SEO title"
+                  value={draft.seoSettings.homepageSeoTitle}
+                  onChange={(value) => updateSeoSettings({ homepageSeoTitle: value })}
+                />
+                <TextField
+                  label="Default product SEO suffix"
+                  value={draft.seoSettings.defaultProductSeoSuffix}
+                  onChange={(value) =>
+                    updateSeoSettings({ defaultProductSeoSuffix: value })
+                  }
+                />
+                <TextField
+                  label="Facebook Pixel ID"
+                  value={draft.seoSettings.facebookPixelId}
+                  onChange={(value) => updateSeoSettings({ facebookPixelId: value })}
+                />
+                <TextField
+                  label="TikTok Pixel ID"
+                  value={draft.seoSettings.tiktokPixelId}
+                  onChange={(value) => updateSeoSettings({ tiktokPixelId: value })}
+                />
+                <TextField
+                  label="Google Analytics ID"
+                  value={draft.seoSettings.googleAnalyticsId}
+                  onChange={(value) =>
+                    updateSeoSettings({ googleAnalyticsId: value })
+                  }
+                />
+                <TextField
+                  label="Open Graph image URL"
+                  value={draft.seoSettings.openGraphImageUrl}
+                  onChange={(value) => updateSeoSettings({ openGraphImageUrl: value })}
+                  inputMode="url"
+                />
+                <TextAreaField
+                  label="Homepage meta description"
+                  value={draft.seoSettings.homepageMetaDescription}
+                  onChange={(value) =>
+                    updateSeoSettings({ homepageMetaDescription: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "appearanceSettings" && (
+            <SettingsCard
+              eyebrow="Appearance Settings"
+              title="Future-ready storefront copy"
+              description="Saved safely for future homepage wiring without redesigning the public site now."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextField
+                  label="Brand accent color"
+                  value={draft.appearanceSettings.brandAccentColor}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ brandAccentColor: value })
+                  }
+                />
+                <TextField
+                  label="Hero badge text"
+                  value={draft.appearanceSettings.heroBadgeText}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ heroBadgeText: value })
+                  }
+                />
+                <TextField
+                  label="Homepage hero title"
+                  value={draft.appearanceSettings.homepageHeroTitle}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ homepageHeroTitle: value })
+                  }
+                />
+                <TextField
+                  label="Primary CTA text"
+                  value={draft.appearanceSettings.primaryCtaText}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ primaryCtaText: value })
+                  }
+                />
+                <TextField
+                  label="Secondary CTA text"
+                  value={draft.appearanceSettings.secondaryCtaText}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ secondaryCtaText: value })
+                  }
+                />
+                <ToggleField
+                  label="Announcement bar enabled"
+                  checked={draft.appearanceSettings.announcementBarEnabled}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ announcementBarEnabled: value })
+                  }
+                />
+                <TextAreaField
+                  label="Homepage hero subtitle"
+                  value={draft.appearanceSettings.homepageHeroSubtitle}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ homepageHeroSubtitle: value })
+                  }
+                  tall
+                />
+                <TextAreaField
+                  label="Announcement bar text"
+                  value={draft.appearanceSettings.announcementBarText}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ announcementBarText: value })
+                  }
+                  tall
+                />
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "advancedSettings" && (
+            <SettingsCard
+              eyebrow="Advanced / System Settings"
+              title="System flags and future operations"
+              description="Dangerous actions are not active buttons; values are stored for controlled future tooling."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <ToggleField
+                  label="Maintenance mode"
+                  checked={draft.advancedSettings.maintenanceMode}
+                  onChange={(value) =>
+                    updateAdvancedSettings({ maintenanceMode: value })
+                  }
+                />
+                <ToggleField
+                  label="Test mode"
+                  checked={draft.advancedSettings.testMode}
+                  onChange={(value) => updateAdvancedSettings({ testMode: value })}
+                />
+                <ToggleField
+                  label="Debug mode"
+                  checked={draft.advancedSettings.debugMode}
+                  onChange={(value) => updateAdvancedSettings({ debugMode: value })}
+                />
+                <TextField
+                  label="Purge deleted products after days"
+                  value={draft.advancedSettings.purgeDeletedProductsAfterDays}
+                  onChange={(value) =>
+                    updateAdvancedSettings({
+                      purgeDeletedProductsAfterDays: value,
+                    })
+                  }
+                  inputMode="numeric"
+                />
+                <TextField
+                  label="System version label"
+                  value={draft.advancedSettings.systemVersionLabel}
+                  onChange={(value) =>
+                    updateAdvancedSettings({ systemVersionLabel: value })
+                  }
+                />
+                <TextAreaField
+                  label="Backup reminder text"
+                  value={draft.advancedSettings.backupReminderText}
+                  onChange={(value) =>
+                    updateAdvancedSettings({ backupReminderText: value })
+                  }
+                  tall
+                />
+                <div className="rounded-2xl border border-amber-200/20 bg-amber-200/[0.07] p-4 text-sm leading-6 text-amber-50/78 lg:col-span-2">
+                  Destructive maintenance tools are intentionally disabled in this
+                  phase.
+                </div>
+              </div>
+            </SettingsCard>
+          )}
+        </div>
+      </div>
+
+      <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-[1.25rem] border border-white/10 bg-[#06101d]/92 p-3 shadow-[0_20px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs leading-5 text-white/50">
+          Settings save as one grouped control-room record. Existing checkout
+          aliases are preserved automatically.
+        </p>
         <button
           type="button"
           onClick={resetSettings}
@@ -2319,6 +3009,100 @@ function SettingsSection({
         </button>
       </div>
     </form>
+  );
+}
+
+function SettingsCard({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+      <div className="mb-5 min-w-0">
+        <p className="text-xs uppercase tracking-[0.24em] text-cyan-200/70">
+          {eyebrow}
+        </p>
+        <h2 className="mt-2 break-words text-xl font-semibold text-white">
+          {title}
+        </h2>
+        <p className="mt-2 break-words text-sm leading-6 text-white/52">
+          {description}
+        </p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ToggleField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/24 px-4 py-3">
+      <span className="break-words text-xs uppercase tracking-[0.18em] text-white/48">
+        {label}
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-5 w-5 shrink-0 accent-cyan-200"
+      />
+    </label>
+  );
+}
+
+function WalletControl({
+  label,
+  enabled,
+  receiverNumber,
+  onEnabledChange,
+  onNumberChange,
+}: {
+  label: string;
+  enabled: boolean;
+  receiverNumber: string;
+  onEnabledChange: (value: boolean) => void;
+  onNumberChange: (value: string) => void;
+}) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <ToggleField label={`${label} enabled`} checked={enabled} onChange={onEnabledChange} />
+      <div className="mt-4">
+        <TextField
+          label={`${label} receiver number`}
+          value={receiverNumber}
+          onChange={onNumberChange}
+          inputMode="tel"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ReadonlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="block min-w-0">
+      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+        {label}
+      </span>
+      <div className="w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white/58">
+        {value}
+      </div>
+    </div>
   );
 }
 
