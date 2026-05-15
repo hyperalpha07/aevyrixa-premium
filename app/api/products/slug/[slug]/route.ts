@@ -3,6 +3,12 @@ import { getProductBySlug } from "@/app/lib/product-store";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
+function json(payload: unknown, init: ResponseInit = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("cache-control", "no-store, no-cache, must-revalidate");
+  return Response.json(payload, { ...init, headers });
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ slug: string }> }
@@ -18,16 +24,16 @@ export async function GET(
     });
 
     if (!result.product) {
-      return Response.json(
-        { product: null, storageMode: result.storageMode },
+      return json(
+        { product: null, storageMode: result.storageMode, errors: ["Product unavailable."] },
         { status: 404 }
       );
     }
 
-    return Response.json(result);
+    return json(result);
   } catch (error) {
     console.error("Failed to load product by slug:", error);
-    return Response.json(
+    return json(
       { product: null, errors: ["Unable to load product."] },
       { status: 500 }
     );

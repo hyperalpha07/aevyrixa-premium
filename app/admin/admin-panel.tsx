@@ -530,47 +530,54 @@ async function readProductsFromApi() {
   }
 }
 
-async function saveProductToApi(product: AdminProduct, exists: boolean) {
-  try {
-    const response = await fetch(
-      exists ? `/api/products/${encodeURIComponent(product.id)}` : "/api/products",
-      {
-        method: exists ? "PATCH" : "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(productToApiPayload(product)),
-      }
-    );
-
-    if (!response.ok) return null;
-
-    const payload = (await response.json()) as unknown;
-    if (!isRecord(payload) || !isRecord(payload.product)) return null;
-
-    return apiProductToAdminProduct(payload.product as ProductCatalogItem);
-  } catch (error) {
-    console.error("Failed to save backend product:", error);
-    return null;
+function apiErrorMessage(payload: unknown, fallback: string) {
+  if (!isRecord(payload)) return fallback;
+  if (Array.isArray(payload.errors)) {
+    const errors = payload.errors.filter((error): error is string => typeof error === "string");
+    if (errors.length > 0) return errors.join(" ");
   }
+  return textValue(payload.detail) || fallback;
+}
+
+async function saveProductToApi(product: AdminProduct, exists: boolean) {
+  const response = await fetch(
+    exists ? `/api/products/${encodeURIComponent(product.id)}` : "/api/products",
+    {
+      method: exists ? "PATCH" : "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(productToApiPayload(product)),
+    }
+  );
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    throw new Error(apiErrorMessage(payload, "Product could not be saved."));
+  }
+
+  if (!isRecord(payload) || !isRecord(payload.product)) {
+    throw new Error("Product save did not return a saved product.");
+  }
+
+  return apiProductToAdminProduct(payload.product as ProductCatalogItem);
 }
 
 async function disableProductInApi(productId: string) {
-  try {
-    const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
-      method: "DELETE",
-    });
+  const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
+    method: "DELETE",
+  });
 
-    if (!response.ok) return null;
-
-    const payload = (await response.json()) as unknown;
-    if (!isRecord(payload) || !isRecord(payload.product)) return null;
-
-    return apiProductToAdminProduct(payload.product as ProductCatalogItem);
-  } catch (error) {
-    console.error("Failed to disable backend product:", error);
-    return null;
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    throw new Error(apiErrorMessage(payload, "Product could not be moved to Draft."));
   }
+
+  if (!isRecord(payload) || !isRecord(payload.product)) {
+    throw new Error("Product status update did not return a saved product.");
+  }
+
+  return apiProductToAdminProduct(payload.product as ProductCatalogItem);
 }
 
 function writeOrdersToStorage(orders: StoredOrder[]) {
@@ -811,7 +818,6 @@ export default function AdminPanel({ view }: { view: AdminView }) {
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       setIsAuthenticated(localStorage.getItem(ADMIN_SESSION_KEY) === "active");
-      setAdminProducts(readProductsFromStorage());
       setSettings(readSettingsFromStorage());
       setIsLoaded(true);
 
@@ -833,7 +839,10 @@ export default function AdminPanel({ view }: { view: AdminView }) {
       });
 
       void readProductsFromApi().then((backendProducts) => {
-        if (!backendProducts || backendProducts.length === 0) return;
+        if (!backendProducts) {
+          setAdminProducts(readProductsFromStorage());
+          return;
+        }
         setAdminProducts(backendProducts);
         writeProductsToStorage(backendProducts);
       });
@@ -1313,16 +1322,30 @@ function ProductsSection({
 }) {
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
 
   const addProduct = () => {
     setEditingProduct({
       ...emptyProduct,
       id: `admin-product-${Date.now()}`,
-      slug: `new-product-${products.length + 1}`,
+      slug: `new-product-${Date.now()}`,
     });
   };
 
-  const saveProduct = (product: AdminProduct) => {
+  const replaceSavedProduct = (
+    currentProducts: AdminProduct[],
+    draftProduct: AdminProduct,
+    savedProduct: AdminProduct,
+    exists: boolean
+  ) => {
+    if (!exists) return [savedProduct, ...currentProducts];
+
+    return currentProducts.map((item) =>
+      item.id === draftProduct.id || item.id === savedProduct.id ? savedProduct : item
+    );
+  };
+
+  const saveProduct = async (product: AdminProduct) => {
     const slug = product.slug || slugify(product.name);
     const nextProduct = {
       ...product,
@@ -1331,72 +1354,78 @@ function ProductsSection({
       visualVariant: product.visualVariant || product.visualTheme,
     };
     const exists = products.some((item) => item.id === nextProduct.id);
-    const nextProducts = exists
-      ? products.map((item) => (item.id === nextProduct.id ? nextProduct : item))
-      : [nextProduct, ...products];
 
-    onSaveProducts(nextProducts);
-    setEditingProduct(null);
-    setStatusMessage("Product saved locally. Backend sync is running when available.");
+    setIsSavingProduct(true);
+    setStatusMessage("");
 
-    void saveProductToApi(nextProduct, exists).then((backendProduct) => {
-      if (!backendProduct) return;
-      const syncedProducts = nextProducts.map((item) =>
-        item.id === nextProduct.id || item.id === backendProduct.id
-          ? backendProduct
-          : item
-      );
-      onSaveProducts(syncedProducts);
+    try {
+      const backendProduct = await saveProductToApi(nextProduct, exists);
+      onSaveProducts(replaceSavedProduct(products, nextProduct, backendProduct, exists));
+      setEditingProduct(null);
       setStatusMessage("Product saved to backend.");
-    });
+    } catch (error) {
+      console.error("Failed to save backend product:", error);
+      setStatusMessage(
+        error instanceof Error ? error.message : "Product could not be saved."
+      );
+    } finally {
+      setIsSavingProduct(false);
+    }
   };
 
-  const deleteProduct = (productId: string) => {
+  const deleteProduct = async (productId: string) => {
     if (!window.confirm("Set this product to Draft instead of deleting it?")) return;
 
-    const nextProducts = products.map((product) =>
-      product.id === productId ? { ...product, status: "Draft" as ProductStatus } : product
-    );
-    onSaveProducts(nextProducts);
-    setEditingProduct((current) => (current?.id === productId ? null : current));
-    setStatusMessage("Product moved to Draft locally. Backend sync is running when available.");
+    setIsSavingProduct(true);
+    setStatusMessage("");
 
-    void disableProductInApi(productId).then((backendProduct) => {
-      if (!backendProduct) return;
+    try {
+      const backendProduct = await disableProductInApi(productId);
       onSaveProducts(
-        nextProducts.map((product) =>
+        products.map((product) =>
           product.id === backendProduct.id ? backendProduct : product
         )
       );
+      setEditingProduct((current) => (current?.id === productId ? null : current));
       setStatusMessage("Product moved to Draft in backend.");
-    });
+    } catch (error) {
+      console.error("Failed to disable backend product:", error);
+      setStatusMessage(
+        error instanceof Error ? error.message : "Product could not be moved to Draft."
+      );
+    } finally {
+      setIsSavingProduct(false);
+    }
   };
 
-  const toggleStatus = (productId: string) => {
-    const nextProducts: AdminProduct[] = products.map((product) =>
-      product.id === productId
-        ? {
-            ...product,
-            status: product.status === "Active" ? "Draft" : "Active",
-          }
-        : product
-    );
-    const nextProduct = nextProducts.find((product) => product.id === productId);
+  const toggleStatus = async (productId: string) => {
+    const currentProduct = products.find((product) => product.id === productId);
+    if (!currentProduct) return;
 
-    onSaveProducts(nextProducts);
-    setStatusMessage("Product status updated locally. Backend sync is running when available.");
+    const nextProduct: AdminProduct = {
+      ...currentProduct,
+      status: currentProduct.status === "Active" ? "Draft" : "Active",
+    };
 
-    if (!nextProduct) return;
+    setIsSavingProduct(true);
+    setStatusMessage("");
 
-    void saveProductToApi(nextProduct, true).then((backendProduct) => {
-      if (!backendProduct) return;
+    try {
+      const backendProduct = await saveProductToApi(nextProduct, true);
       onSaveProducts(
-        nextProducts.map((product) =>
+        products.map((product) =>
           product.id === backendProduct.id ? backendProduct : product
         )
       );
       setStatusMessage("Product status saved to backend.");
-    });
+    } catch (error) {
+      console.error("Failed to save backend product status:", error);
+      setStatusMessage(
+        error instanceof Error ? error.message : "Product status could not be saved."
+      );
+    } finally {
+      setIsSavingProduct(false);
+    }
   };
 
   return (
@@ -1425,6 +1454,7 @@ function ProductsSection({
           product={editingProduct}
           onCancel={() => setEditingProduct(null)}
           onSave={saveProduct}
+          isSaving={isSavingProduct}
         />
       )}
 
@@ -1456,6 +1486,7 @@ function ProductsSection({
                 <button
                   type="button"
                   onClick={() => setEditingProduct(product)}
+                  disabled={isSavingProduct}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:text-white"
                 >
                   <Pencil className="h-4 w-4" />
@@ -1464,6 +1495,7 @@ function ProductsSection({
                 <button
                   type="button"
                   onClick={() => toggleStatus(product.id)}
+                  disabled={isSavingProduct}
                   className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
                 >
                   {product.status === "Active" ? "Set Draft" : "Set Active"}
@@ -1471,6 +1503,7 @@ function ProductsSection({
                 <button
                   type="button"
                   onClick={() => deleteProduct(product.id)}
+                  disabled={isSavingProduct}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1489,10 +1522,12 @@ function ProductEditor({
   product,
   onCancel,
   onSave,
+  isSaving,
 }: {
   product: AdminProduct;
   onCancel: () => void;
-  onSave: (product: AdminProduct) => void;
+  onSave: (product: AdminProduct) => void | Promise<void>;
+  isSaving: boolean;
 }) {
   const [draft, setDraft] = useState(product);
   const [sizes, setSizes] = useState(listToText(product.sizes));
@@ -1600,15 +1635,17 @@ function ProductEditor({
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSaving}
           className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white/68 transition hover:border-white/25 hover:text-white"
         >
           Cancel
         </button>
         <button
           type="submit"
+          disabled={isSaving}
           className="rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
         >
-          Save product
+          {isSaving ? "Saving..." : "Save product"}
         </button>
       </div>
     </form>

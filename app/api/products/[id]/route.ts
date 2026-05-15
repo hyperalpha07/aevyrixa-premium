@@ -12,6 +12,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function json(payload: unknown, init: ResponseInit = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("cache-control", "no-store, no-cache, must-revalidate");
+  return Response.json(payload, { ...init, headers });
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -22,32 +28,32 @@ export async function PATCH(
   try {
     payload = await request.json();
   } catch {
-    return Response.json({ errors: ["Invalid JSON body."] }, { status: 400 });
+    return json({ errors: ["Invalid JSON body."] }, { status: 400 });
   }
 
   if (!isRecord(payload)) {
-    return Response.json({ errors: ["Invalid product payload."] }, { status: 400 });
+    return json({ errors: ["Invalid product payload."] }, { status: 400 });
   }
 
   const input = payload as ProductMutationInput;
-  const { errors } = validateProductInput(input);
-  if (errors.length > 0) return Response.json({ errors }, { status: 400 });
+  const { errors } = validateProductInput(input, { partial: true });
+  if (errors.length > 0) return json({ errors }, { status: 400 });
 
   try {
     const result = await updateProduct(id, input);
 
     if (!result.product) {
-      return Response.json(
+      return json(
         { errors: ["Product was not found."], storageMode: result.storageMode },
         { status: 404 }
       );
     }
 
-    return Response.json(result);
+    return json(result);
   } catch (error) {
     console.error("Failed to update product:", error);
-    return Response.json(
-      { errors: ["Product could not be updated."] },
+    return json(
+      { errors: ["Product could not be updated."], detail: error instanceof Error ? error.message : undefined },
       { status: 500 }
     );
   }
@@ -63,17 +69,17 @@ export async function DELETE(
     const result = await deleteProduct(id);
 
     if (!result.product) {
-      return Response.json(
+      return json(
         { errors: ["Product was not found."], storageMode: result.storageMode },
         { status: 404 }
       );
     }
 
-    return Response.json(result);
+    return json(result);
   } catch (error) {
     console.error("Failed to disable product:", error);
-    return Response.json(
-      { errors: ["Product could not be disabled."] },
+    return json(
+      { errors: ["Product could not be disabled."], detail: error instanceof Error ? error.message : undefined },
       { status: 500 }
     );
   }

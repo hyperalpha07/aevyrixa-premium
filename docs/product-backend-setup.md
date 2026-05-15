@@ -91,6 +91,7 @@ Fallback behavior:
 - If env vars exist but the `products` table is missing, the adapter catches the
   Supabase error and returns the current static catalog so builds and storefront
   pages continue to work.
-- Admin edits are saved locally first and then synced to the backend when the
-  product table is available.
-
+- Admin edits are not treated as successful until the product API returns a
+  saved backend product. If Supabase is configured but the `products` table is
+  missing or rejects the write, admin shows an error instead of saving a local
+  product that will disappear after refresh.

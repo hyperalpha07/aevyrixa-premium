@@ -25,16 +25,22 @@ function includeDraftsFromRequest(request: Request) {
   );
 }
 
+function json(payload: unknown, init: ResponseInit = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("cache-control", "no-store, no-cache, must-revalidate");
+  return Response.json(payload, { ...init, headers });
+}
+
 export async function GET(request: Request) {
   try {
     const result = await listProducts({
-      includeDrafts: includeDraftsFromRequest(request),
+      scope: includeDraftsFromRequest(request) ? "admin" : "public",
     });
 
-    return Response.json(result);
+    return json(result);
   } catch (error) {
     console.error("Failed to list products:", error);
-    return Response.json(
+    return json(
       { products: [], errors: ["Unable to load products."] },
       { status: 500 }
     );
@@ -47,24 +53,24 @@ export async function POST(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return Response.json({ errors: ["Invalid JSON body."] }, { status: 400 });
+    return json({ errors: ["Invalid JSON body."] }, { status: 400 });
   }
 
   const input = productInput(payload);
   if (!input) {
-    return Response.json({ errors: ["Invalid product payload."] }, { status: 400 });
+    return json({ errors: ["Invalid product payload."] }, { status: 400 });
   }
 
   const { errors } = validateProductInput(input);
-  if (errors.length > 0) return Response.json({ errors }, { status: 400 });
+  if (errors.length > 0) return json({ errors }, { status: 400 });
 
   try {
     const result = await createProduct(input);
-    return Response.json(result, { status: 201 });
+    return json(result, { status: 201 });
   } catch (error) {
     console.error("Failed to create product:", error);
-    return Response.json(
-      { errors: ["Product could not be created."] },
+    return json(
+      { errors: ["Product could not be created."], detail: error instanceof Error ? error.message : undefined },
       { status: 500 }
     );
   }

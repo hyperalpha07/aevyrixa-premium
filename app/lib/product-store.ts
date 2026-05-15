@@ -86,6 +86,19 @@ function optionalText(value: unknown) {
   return text || undefined;
 }
 
+function slugValue(value: unknown) {
+  return textValue(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 function numberValue(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim()) {
@@ -111,8 +124,9 @@ function normalizeStatus(value: unknown): ProductStatus {
 }
 
 function normalizeStockStatus(value: unknown) {
-  return productStockStatuses.includes(value as never)
-    ? (value as ProductCatalogItem["stockStatus"])
+  const stockStatus = typeof value === "string" ? value.trim().toLowerCase() : "";
+  return productStockStatuses.includes(stockStatus as never)
+    ? (stockStatus as ProductCatalogItem["stockStatus"])
     : "in_stock";
 }
 
@@ -124,27 +138,34 @@ function normalizeVisual(value: unknown): ProductCatalogItem["visualTheme"] {
   return "blush-violet";
 }
 
-export function validateProductInput(input: ProductMutationInput) {
+export function validateProductInput(
+  input: ProductMutationInput,
+  options: { partial?: boolean } = {}
+) {
   const errors: string[] = [];
-  const slug = textValue(input.slug);
+  const slug = slugValue(input.slug);
   const name = textValue(input.name);
   const price = numberValue(input.price);
-  const status = input.status ?? "draft";
-  const stockStatus = input.stockStatus ?? "in_stock";
+  const status =
+    input.status === undefined ? undefined : textValue(input.status).toLowerCase();
+  const stockStatus =
+    input.stockStatus === undefined
+      ? undefined
+      : textValue(input.stockStatus).toLowerCase();
 
-  if (!name) errors.push("Product name is required.");
-  if (!slug) {
+  if (!options.partial && !name) errors.push("Product name is required.");
+  if (!options.partial && !slug) {
     errors.push("Slug is required.");
-  } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  } else if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     errors.push("Slug must be lowercase kebab-case.");
   }
-  if (price === undefined || price < 0) {
+  if ((!options.partial || input.price !== undefined) && (price === undefined || price < 0)) {
     errors.push("Price must be a non-negative number.");
   }
-  if (!productStatuses.includes(status as never)) {
+  if (status !== undefined && !productStatuses.includes(status as never)) {
     errors.push("Status must be active or draft.");
   }
-  if (!productStockStatuses.includes(stockStatus as never)) {
+  if (stockStatus !== undefined && !productStockStatuses.includes(stockStatus as never)) {
     errors.push("Stock status is invalid.");
   }
 
@@ -155,10 +176,10 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
   const now = new Date().toISOString();
   const visualTheme = normalizeVisual(input.visualTheme ?? input.visual);
   const name = textValue(input.name);
-  const slug = textValue(input.slug);
+  const slug = slugValue(input.slug) || slugValue(name) || `product-${Date.now()}`;
 
   return {
-    id: textValue(input.id) || `product-${slug || Date.now()}`,
+    id: textValue(input.id) || `product-${slug}-${Date.now()}`,
     slug,
     name,
     shortDescription: textValue(input.shortDescription),
@@ -195,7 +216,7 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
 
   return {
     id: row.id ?? "",
-    slug: row.slug ?? "",
+    slug: slugValue(row.slug),
     name: row.name ?? "",
     shortDescription: row.short_description ?? "",
     description: row.description ?? "",
@@ -235,7 +256,7 @@ function toSupabasePayload(product: ProductMutationInput) {
     updated_at: new Date().toISOString(),
   };
 
-  if (hasProductField(product, "slug")) payload.slug = product.slug;
+  if (hasProductField(product, "slug")) payload.slug = slugValue(product.slug);
   if (hasProductField(product, "name")) payload.name = product.name;
   if (hasProductField(product, "shortDescription")) {
     payload.short_description = product.shortDescription ?? "";
@@ -246,20 +267,20 @@ function toSupabasePayload(product: ProductMutationInput) {
   if (hasProductField(product, "category")) {
     payload.category = product.category ?? "Reusable Period Panty";
   }
-  if (hasProductField(product, "price")) payload.price = product.price ?? 0;
+  if (hasProductField(product, "price")) payload.price = numberValue(product.price) ?? 0;
   if (hasProductField(product, "compareAtPrice")) {
-    payload.compare_at_price = product.compareAtPrice ?? null;
+    payload.compare_at_price = numberValue(product.compareAtPrice) ?? null;
   }
   if (hasProductField(product, "currency")) {
     payload.currency = product.currency ?? "USD";
   }
-  if (hasProductField(product, "status")) payload.status = product.status ?? "draft";
+  if (hasProductField(product, "status")) payload.status = normalizeStatus(product.status);
   if (hasProductField(product, "featured")) payload.featured = Boolean(product.featured);
   if (hasProductField(product, "stockStatus")) {
-    payload.stock_status = product.stockStatus ?? "in_stock";
+    payload.stock_status = normalizeStockStatus(product.stockStatus);
   }
   if (hasProductField(product, "stockQuantity")) {
-    payload.stock_quantity = product.stockQuantity ?? null;
+    payload.stock_quantity = numberValue(product.stockQuantity) ?? null;
   }
   if (hasProductField(product, "sizes")) payload.sizes = product.sizes ?? [];
   if (hasProductField(product, "colors")) payload.colors = product.colors ?? [];
@@ -308,6 +329,15 @@ async function listProductsFromSupabase() {
 }
 
 async function createProductInSupabase(input: ProductCatalogItem) {
+  const payload = {
+    ...toSupabasePayload(input),
+    created_at: input.createdAt ?? new Date().toISOString(),
+  };
+
+  if (isUuid(input.id)) {
+    Object.assign(payload, { id: input.id });
+  }
+
   const response = await fetch(
     supabaseEndpoint(`${SUPABASE_PRODUCTS_TABLE}?select=*`),
     {
@@ -316,11 +346,7 @@ async function createProductInSupabase(input: ProductCatalogItem) {
         ...supabaseHeaders(),
         prefer: "return=representation",
       },
-      body: JSON.stringify({
-        id: input.id,
-        ...toSupabasePayload(input),
-        created_at: input.createdAt ?? new Date().toISOString(),
-      }),
+      body: JSON.stringify(payload),
     }
   );
 
@@ -364,19 +390,32 @@ async function safelyUseSupabase<T>(action: () => Promise<T>) {
   }
 }
 
-export async function listProducts(options: { includeDrafts?: boolean } = {}) {
-  const includeDrafts = Boolean(options.includeDrafts);
+function logProductSource(
+  source: ProductStorageMode,
+  details: { count: number; scope: "admin" | "public"; reason?: string }
+) {
+  const reason = details.reason ? `, reason=${details.reason}` : "";
+  console.info(
+    `Product source: ${source} (${details.count} rows, scope=${details.scope}${reason})`
+  );
+}
+
+export async function listProducts(
+  options: { includeDrafts?: boolean; scope?: "admin" | "public" } = {}
+) {
+  const scope = options.scope ?? (options.includeDrafts ? "admin" : "public");
+  const includeDrafts = scope === "admin" || Boolean(options.includeDrafts);
   const supabaseProducts = await safelyUseSupabase(listProductsFromSupabase);
 
   if (supabaseProducts && supabaseProducts.length > 0) {
-    console.info(
-      `Product storefront source: supabase (${supabaseProducts.length} rows, includeDrafts=${includeDrafts})`
-    );
+    const products = includeDrafts
+        ? supabaseProducts
+        : supabaseProducts.filter((product) => product.status === "active");
+
+    logProductSource("supabase", { count: products.length, scope });
 
     return {
-      products: includeDrafts
-        ? supabaseProducts
-        : supabaseProducts.filter((product) => product.status === "active"),
+      products,
       storageMode: "supabase" as ProductStorageMode,
     };
   }
@@ -385,17 +424,19 @@ export async function listProducts(options: { includeDrafts?: boolean } = {}) {
     ? demoProducts
     : demoProducts.filter((product) => product.status === "active");
 
-  console.info(
-    `Product storefront source: ${
-      hasSupabaseConfig() ? "fallback-static" : "demo-memory"
-    } (${products.length} rows, includeDrafts=${includeDrafts})`
-  );
+  const storageMode = hasSupabaseConfig()
+    ? ("fallback-static" as ProductStorageMode)
+    : ("demo-memory" as ProductStorageMode);
+
+  logProductSource(storageMode, {
+    count: products.length,
+    scope,
+    reason: hasSupabaseConfig() ? "supabase-empty-or-unavailable" : "missing-supabase-config",
+  });
 
   return {
     products,
-    storageMode: hasSupabaseConfig()
-      ? ("fallback-static" as ProductStorageMode)
-      : ("demo-memory" as ProductStorageMode),
+    storageMode,
   };
 }
 
@@ -448,11 +489,9 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
 
 export async function createProduct(input: ProductMutationInput) {
   const product = buildProductInput(input);
-  const supabaseProduct = await safelyUseSupabase(() =>
-    createProductInSupabase(product)
-  );
 
-  if (supabaseProduct) {
+  if (hasSupabaseConfig()) {
+    const supabaseProduct = await createProductInSupabase(product);
     return { product: supabaseProduct, storageMode: "supabase" as ProductStorageMode };
   }
 
@@ -463,12 +502,14 @@ export async function createProduct(input: ProductMutationInput) {
 export async function updateProduct(id: string, updates: ProductMutationInput) {
   const existing = demoProducts.find((product) => product.id === id);
   const merged = buildProductInput({ ...existing, ...updates, id });
-  const supabaseProduct = await safelyUseSupabase(() =>
-    updateProductInSupabase(id, updates)
-  );
 
-  if (supabaseProduct) {
+  if (hasSupabaseConfig()) {
+    const supabaseProduct = await updateProductInSupabase(id, updates);
     return { product: supabaseProduct, storageMode: "supabase" as ProductStorageMode };
+  }
+
+  if (!existing) {
+    return { product: null, storageMode: "demo-memory" as ProductStorageMode };
   }
 
   demoProducts = demoProducts.map((product) =>
