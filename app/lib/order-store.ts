@@ -1,6 +1,12 @@
+import {
+  orderSources,
+  paymentVerificationStatuses,
+  proofReceivedStatuses,
+} from "@/app/lib/order-types";
 import type {
   OrderCartItem,
   OrderRecord,
+  OrderOperationsUpdate,
   OrderSaveResult,
   OrderStorageMode,
   OrderStatus,
@@ -30,6 +36,17 @@ type SupabaseOrderRow = {
   sender_number?: string | null;
   transaction_id?: string | null;
   status?: string | null;
+  courier_name?: string | null;
+  tracking_id?: string | null;
+  delivery_charge?: number | string | null;
+  customer_confirmation_note?: string | null;
+  payment_verification_status?: string | null;
+  refund_exchange_request?: string | null;
+  size_issue_report?: string | null;
+  proof_received?: string | null;
+  admin_internal_note?: string | null;
+  order_source?: string | null;
+  assigned_staff?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 
@@ -130,6 +147,24 @@ function normalizeItems(value: unknown): OrderCartItem[] {
     variant: textValue(item.variant),
     quantity: numberValue(item.quantity) ?? 0,
   }));
+}
+
+function normalizePaymentVerificationStatus(value: unknown) {
+  return paymentVerificationStatuses.includes(value as never)
+    ? (value as OrderRecord["paymentVerificationStatus"])
+    : undefined;
+}
+
+function normalizeProofReceived(value: unknown) {
+  return proofReceivedStatuses.includes(value as never)
+    ? (value as OrderRecord["proofReceived"])
+    : undefined;
+}
+
+function normalizeOrderSource(value: unknown) {
+  return orderSources.includes(value as never)
+    ? (value as OrderRecord["orderSource"])
+    : undefined;
 }
 
 function countItems(items: OrderCartItem[]) {
@@ -249,6 +284,44 @@ async function updateOrderStatusInSupabase(
   orderRef: string,
   status: OrderStatus
 ) {
+  return updateOrderOperationsInSupabase(orderRef, { status });
+}
+
+function orderOperationsToSupabasePayload(updates: OrderOperationsUpdate) {
+  const payload: Record<string, string | number | null> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.status !== undefined) payload.status = updates.status;
+  if ("courierName" in updates) payload.courier_name = nullableText(updates.courierName);
+  if ("trackingId" in updates) payload.tracking_id = nullableText(updates.trackingId);
+  if ("deliveryCharge" in updates) payload.delivery_charge = updates.deliveryCharge ?? null;
+  if ("customerConfirmationNote" in updates) {
+    payload.customer_confirmation_note = nullableText(updates.customerConfirmationNote);
+  }
+  if ("paymentVerificationStatus" in updates) {
+    payload.payment_verification_status = updates.paymentVerificationStatus ?? null;
+  }
+  if ("refundExchangeRequest" in updates) {
+    payload.refund_exchange_request = nullableText(updates.refundExchangeRequest);
+  }
+  if ("sizeIssueReport" in updates) {
+    payload.size_issue_report = nullableText(updates.sizeIssueReport);
+  }
+  if ("proofReceived" in updates) payload.proof_received = updates.proofReceived ?? null;
+  if ("adminInternalNote" in updates) {
+    payload.admin_internal_note = nullableText(updates.adminInternalNote);
+  }
+  if ("orderSource" in updates) payload.order_source = updates.orderSource ?? null;
+  if ("assignedStaff" in updates) payload.assigned_staff = nullableText(updates.assignedStaff);
+
+  return payload;
+}
+
+async function updateOrderOperationsInSupabase(
+  orderRef: string,
+  updates: OrderOperationsUpdate
+) {
   const response = await fetch(
     supabaseEndpoint(
       `${SUPABASE_ORDERS_TABLE}?order_ref=eq.${encodeURIComponent(
@@ -261,12 +334,12 @@ async function updateOrderStatusInSupabase(
         ...supabaseHeaders(),
         prefer: "return=representation",
       },
-      body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+      body: JSON.stringify(orderOperationsToSupabasePayload(updates)),
     }
   );
 
   if (!response.ok) {
-    throw await supabaseError(response, "order status update");
+    throw await supabaseError(response, "order operations update");
   }
 
   const rows = (await response.json()) as SupabaseOrderRow[];
@@ -328,6 +401,19 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     totalAmount: total,
     status: normalizeStatus(row.status),
     createdAt: row.created_at ?? "",
+    courierName: row.courier_name ?? undefined,
+    trackingId: row.tracking_id ?? undefined,
+    deliveryCharge: numberValue(row.delivery_charge),
+    customerConfirmationNote: row.customer_confirmation_note ?? undefined,
+    paymentVerificationStatus: normalizePaymentVerificationStatus(
+      row.payment_verification_status
+    ),
+    refundExchangeRequest: row.refund_exchange_request ?? undefined,
+    sizeIssueReport: row.size_issue_report ?? undefined,
+    proofReceived: normalizeProofReceived(row.proof_received),
+    adminInternalNote: row.admin_internal_note ?? undefined,
+    orderSource: normalizeOrderSource(row.order_source),
+    assignedStaff: row.assigned_staff ?? undefined,
   };
 }
 
@@ -398,5 +484,26 @@ export async function updateOrderStatus(orderRef: string, status: OrderStatus) {
   if (!order) return { order: null, storageMode };
 
   order.status = status;
+  return { order, storageMode };
+}
+
+export async function updateOrderOperations(
+  orderRef: string,
+  updates: OrderOperationsUpdate
+) {
+  const storageMode = getStorageMode();
+
+  if (storageMode === "supabase") {
+    const order = await updateOrderOperationsInSupabase(orderRef, updates);
+    return { order, storageMode };
+  }
+
+  const order = demoOrders.find(
+    (item) => item.orderReference === orderRef || item.orderId === orderRef
+  );
+
+  if (!order) return { order: null, storageMode };
+
+  Object.assign(order, updates);
   return { order, storageMode };
 }

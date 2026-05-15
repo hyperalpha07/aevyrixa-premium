@@ -85,6 +85,9 @@ function safeOrderSummary(order: OrderRecord) {
     cityArea: order.customer.cityArea,
     total: order.totalAmount,
     paymentMethod: paymentMethodLabel(order),
+    courierName: order.courierName,
+    trackingId: order.trackingId,
+    deliveryCharge: order.deliveryCharge,
     items: order.items.map(itemSummary),
     timeline: timelineForStatus(order.status),
   };

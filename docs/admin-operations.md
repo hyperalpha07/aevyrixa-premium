@@ -37,6 +37,11 @@ Status updates call `PATCH /api/orders/[orderRef]` and update the visible
 analytics cards immediately. Refreshing admin should show the same status from
 Supabase when the backend is configured.
 
+The same admin-only endpoint now also accepts order fulfillment and support
+operations fields. The quick status dropdown still sends status-only updates,
+while the selected order panel's Save Operations button sends the broader
+operations payload.
+
 ## Search, Filters, and Sort
 
 The order management page filters the already-loaded order list in the browser.
@@ -73,30 +78,88 @@ The Orders page detail panel is grouped for daily operations:
 - Customer: name, phone, email when available, city/area, delivery address, and
   useful copy actions.
 - Payment: payment method, wallet provider, payment type, receiver number,
-  sender number, transaction/reference ID, total, and a payment verification
-  placeholder.
-- Delivery: delivery address, delivery note, and planned operations rows.
+  sender number, transaction/reference ID, total, and payment verification
+  status.
+- Delivery: delivery address, delivery note, courier name, tracking ID,
+  delivery charge, and assigned staff.
 - Items: product name, size/color/absorbency or variant details, quantity, unit
   price, and line total.
-- Support / Future Ops: after-sales and internal operations placeholders.
+- Support / Internal Ops: after-sales, proof, source, and internal note fields.
 
-The following future fields are planned but are currently UI placeholders only
-until the database schema is extended:
+## Fulfillment Fields
 
-- Courier name.
-- Tracking ID.
-- Delivery charge.
-- Customer confirmation note.
-- Payment verification status.
-- Refund/exchange request.
-- Size issue report.
-- Photo/video proof received.
-- Admin internal note.
-- Order source.
-- Assigned staff.
+Use the operations form on the selected order panel for production handling:
 
-Do not treat these placeholder rows as saved order data yet. Adding persistence
-for them requires a later Supabase schema and API phase.
+- Courier Name: delivery partner name such as Pathao, RedX, or Steadfast.
+- Tracking ID: courier tracking or consignment reference.
+- Delivery Charge: numeric delivery fee.
+- Payment Verification Status: Pending, Verified, Failed, or Not Required.
+- Customer Confirmation Note: call or message confirmation notes.
+- Assigned Staff: staff member responsible for follow-up.
+- Order Source: Website, Facebook, Manual, or Other.
+- Admin Internal Note: private operational notes.
+- Refund / Exchange Request: support request details.
+- Size Issue Report: fit or sizing problem notes.
+- Proof Received: No, Yes, or Requested.
+
+For shipped orders, add Courier Name and Tracking ID before or immediately
+after setting status to `Shipped`.
+
+Admin-only fields:
+
+- `paymentVerificationStatus`
+- `customerConfirmationNote`
+- `refundExchangeRequest`
+- `sizeIssueReport`
+- `proofReceived`
+- `adminInternalNote`
+- `orderSource`
+- `assignedStaff`
+
+Customer-safe fields:
+
+- `status`
+- `courierName`
+- `trackingId`
+- `deliveryCharge`
+
+The public tracking endpoint returns only customer-safe order information after
+matching order reference and phone number. It must not expose admin internal
+notes, payment verification handling, proof status, refund/exchange details, or
+size issue reports.
+
+## Supabase SQL
+
+If these columns do not exist, admin operations updates will fail gracefully in
+the UI with a migration warning and the existing checkout flow will continue to
+save new orders. Apply this SQL in Supabase before relying on persistence:
+
+```sql
+alter table public.orders
+  add column if not exists courier_name text,
+  add column if not exists tracking_id text,
+  add column if not exists delivery_charge numeric,
+  add column if not exists customer_confirmation_note text,
+  add column if not exists payment_verification_status text
+    check (
+      payment_verification_status is null
+      or payment_verification_status in ('Pending', 'Verified', 'Failed', 'Not Required')
+    ),
+  add column if not exists refund_exchange_request text,
+  add column if not exists size_issue_report text,
+  add column if not exists proof_received text
+    check (
+      proof_received is null
+      or proof_received in ('No', 'Yes', 'Requested')
+    ),
+  add column if not exists admin_internal_note text,
+  add column if not exists order_source text
+    check (
+      order_source is null
+      or order_source in ('Website', 'Facebook', 'Manual', 'Other')
+    ),
+  add column if not exists assigned_staff text;
+```
 
 ## Notifications
 

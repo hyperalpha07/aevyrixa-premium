@@ -16,6 +16,9 @@ type TrackedOrder = {
   cityArea: string;
   total: number;
   paymentMethod: string;
+  courierName?: string;
+  trackingId?: string;
+  deliveryCharge?: number;
   items: {
     name: string;
     quantity: number;
@@ -247,6 +250,18 @@ function TrackOrderContent() {
                 <SummaryItem label="Total" value={formatCurrency(order.total)} />
                 <SummaryItem label="Payment" value={order.paymentMethod} />
                 <SummaryItem label="City/Area" value={order.cityArea} />
+                {order.courierName && (
+                  <SummaryItem label="Courier" value={order.courierName} />
+                )}
+                {order.trackingId && (
+                  <SummaryItem label="Tracking ID" value={order.trackingId} />
+                )}
+                {typeof order.deliveryCharge === "number" && (
+                  <SummaryItem
+                    label="Delivery charge"
+                    value={formatCurrency(order.deliveryCharge)}
+                  />
+                )}
                 {order.customerName && (
                   <SummaryItem label="Customer" value={order.customerName} />
                 )}

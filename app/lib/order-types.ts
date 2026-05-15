@@ -16,10 +16,22 @@ export const paymentMethods = [
 ] as const;
 
 export const paymentTypes = ["Send Money", "Merchant Payment", "Cash Out"] as const;
+export const paymentVerificationStatuses = [
+  "Pending",
+  "Verified",
+  "Failed",
+  "Not Required",
+] as const;
+export const proofReceivedStatuses = ["No", "Yes", "Requested"] as const;
+export const orderSources = ["Website", "Facebook", "Manual", "Other"] as const;
 
 export type OrderStatus = (typeof orderStatuses)[number];
 export type PaymentMethod = (typeof paymentMethods)[number];
 export type PaymentType = (typeof paymentTypes)[number];
+export type PaymentVerificationStatus =
+  (typeof paymentVerificationStatuses)[number];
+export type ProofReceivedStatus = (typeof proofReceivedStatuses)[number];
+export type OrderSource = (typeof orderSources)[number];
 
 export type OrderCustomer = {
   fullName: string;
@@ -73,7 +85,36 @@ export type OrderRecord = {
   totalAmount: number;
   status: OrderStatus;
   createdAt: string;
+  courierName?: string;
+  trackingId?: string;
+  deliveryCharge?: number;
+  customerConfirmationNote?: string;
+  paymentVerificationStatus?: PaymentVerificationStatus;
+  refundExchangeRequest?: string;
+  sizeIssueReport?: string;
+  proofReceived?: ProofReceivedStatus;
+  adminInternalNote?: string;
+  orderSource?: OrderSource;
+  assignedStaff?: string;
 };
+
+export type OrderOperationsUpdate = Partial<
+  Pick<
+    OrderRecord,
+    | "status"
+    | "courierName"
+    | "trackingId"
+    | "deliveryCharge"
+    | "customerConfirmationNote"
+    | "paymentVerificationStatus"
+    | "refundExchangeRequest"
+    | "sizeIssueReport"
+    | "proofReceived"
+    | "adminInternalNote"
+    | "orderSource"
+    | "assignedStaff"
+  >
+>;
 
 export type OrderSubmissionInput = Omit<
   OrderRecord,

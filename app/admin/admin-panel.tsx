@@ -35,7 +35,18 @@ import {
   walletProviders,
   type WalletProvider,
 } from "@/app/lib/admin-settings";
-import { orderStatuses, paymentMethods, type OrderStatus } from "@/app/lib/order-types";
+import {
+  orderSources,
+  orderStatuses,
+  paymentMethods,
+  paymentVerificationStatuses,
+  proofReceivedStatuses,
+  type OrderOperationsUpdate,
+  type OrderSource,
+  type OrderStatus,
+  type PaymentVerificationStatus,
+  type ProofReceivedStatus,
+} from "@/app/lib/order-types";
 import type {
   ProductCatalogItem,
   ProductStockStatus,
@@ -103,6 +114,17 @@ type StoredOrder = {
   totalAmount?: number;
   status: OrderStatus;
   createdAt?: string;
+  courierName?: string;
+  trackingId?: string;
+  deliveryCharge?: number;
+  customerConfirmationNote?: string;
+  paymentVerificationStatus?: PaymentVerificationStatus;
+  refundExchangeRequest?: string;
+  sizeIssueReport?: string;
+  proofReceived?: ProofReceivedStatus;
+  adminInternalNote?: string;
+  orderSource?: OrderSource;
+  assignedStaff?: string;
 };
 
 type DashboardMetrics = {
@@ -211,7 +233,12 @@ function textValue(value: unknown) {
 }
 
 function numberValue(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
 }
 
 function stringArrayValue(value: unknown) {
@@ -280,6 +307,25 @@ function normalizeOrder(value: unknown): StoredOrder | null {
     totalAmount: numberValue(value.totalAmount),
     status: normalizeStatus(value.status),
     createdAt: textValue(value.createdAt),
+    courierName: textValue(value.courierName),
+    trackingId: textValue(value.trackingId),
+    deliveryCharge: numberValue(value.deliveryCharge),
+    customerConfirmationNote: textValue(value.customerConfirmationNote),
+    paymentVerificationStatus: paymentVerificationStatuses.includes(
+      value.paymentVerificationStatus as never
+    )
+      ? (value.paymentVerificationStatus as PaymentVerificationStatus)
+      : undefined,
+    refundExchangeRequest: textValue(value.refundExchangeRequest),
+    sizeIssueReport: textValue(value.sizeIssueReport),
+    proofReceived: proofReceivedStatuses.includes(value.proofReceived as never)
+      ? (value.proofReceived as ProofReceivedStatus)
+      : undefined,
+    adminInternalNote: textValue(value.adminInternalNote),
+    orderSource: orderSources.includes(value.orderSource as never)
+      ? (value.orderSource as OrderSource)
+      : undefined,
+    assignedStaff: textValue(value.assignedStaff),
   };
 }
 
@@ -426,13 +472,20 @@ async function readOrdersFromApi() {
 }
 
 async function updateOrderStatusInApi(orderId: string, status: OrderStatus) {
+  return updateOrderOperationsInApi(orderId, { status });
+}
+
+async function updateOrderOperationsInApi(
+  orderId: string,
+  updates: OrderOperationsUpdate
+) {
   try {
     const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
       method: "PATCH",
       headers: {
         "content-type": "application/json",
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(updates),
     });
 
     if (!response.ok) return null;
@@ -442,7 +495,7 @@ async function updateOrderStatusInApi(orderId: string, status: OrderStatus) {
 
     return normalizeOrder(payload.order);
   } catch (error) {
-    console.error("Failed to update backend order status:", error);
+    console.error("Failed to update backend order operations:", error);
     return null;
   }
 }
@@ -1004,6 +1057,36 @@ export default function AdminPanel({ view }: { view: AdminView }) {
     });
   };
 
+  const updateOrderOperations = async (
+    orderKey: string,
+    updates: OrderOperationsUpdate
+  ) => {
+    setOrders((current) => {
+      const nextOrders = current.map((order) =>
+        orderReferenceKey(order) === orderKey || order.orderId === orderKey
+          ? { ...order, ...updates }
+          : order
+      );
+      writeOrdersToStorage(nextOrders);
+      return nextOrders;
+    });
+
+    const backendOrder = await updateOrderOperationsInApi(orderKey, updates);
+    if (!backendOrder) return false;
+
+    setOrders((current) => {
+      const nextOrders = current.map((order) =>
+        orderReferenceKey(order) === orderKey || order.orderId === orderKey
+          ? { ...order, ...backendOrder }
+          : order
+      );
+      writeOrdersToStorage(nextOrders);
+      return nextOrders;
+    });
+
+    return true;
+  };
+
   const saveProducts = (nextProducts: AdminProduct[]) => {
     setAdminProducts(nextProducts);
     writeProductsToStorage(nextProducts);
@@ -1116,6 +1199,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                   )
                 }
                 onStatusChange={updateOrderStatus}
+                onOperationsSave={updateOrderOperations}
               />
             ) : view === "products" ? (
               <ProductsSection products={adminProducts} onSaveProducts={saveProducts} />
@@ -1230,11 +1314,16 @@ function OrdersSection({
   expandedOrderId,
   onToggleDetails,
   onStatusChange,
+  onOperationsSave,
 }: {
   orders: StoredOrder[];
   expandedOrderId: string | null;
   onToggleDetails: (orderId: string) => void;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
+  onOperationsSave: (
+    orderId: string,
+    updates: OrderOperationsUpdate
+  ) => Promise<boolean>;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
@@ -1322,7 +1411,11 @@ function OrdersSection({
         </div>
         <div className="min-w-0 xl:sticky xl:top-6">
           {selectedOrder ? (
-            <OrderDetails order={selectedOrder} />
+            <OrderDetails
+              key={orderReferenceKey(selectedOrder)}
+              order={selectedOrder}
+              onOperationsSave={onOperationsSave}
+            />
           ) : (
             <EmptyDetailPanel />
           )}
@@ -2013,12 +2106,14 @@ function TextField({
   onChange,
   placeholder,
   required,
+  inputMode,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  inputMode?: "text" | "decimal" | "numeric" | "tel" | "email" | "url" | "search";
 }) {
   return (
     <label className="block min-w-0">
@@ -2030,6 +2125,7 @@ function TextField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
+        inputMode={inputMode}
         className="w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
       />
     </label>
@@ -2296,8 +2392,73 @@ function OrderCard({
   );
 }
 
-function OrderDetails({ order }: { order: StoredOrder }) {
+type OrderOperationsDraft = {
+  courierName: string;
+  trackingId: string;
+  deliveryCharge: string;
+  customerConfirmationNote: string;
+  paymentVerificationStatus: PaymentVerificationStatus;
+  refundExchangeRequest: string;
+  sizeIssueReport: string;
+  proofReceived: ProofReceivedStatus;
+  adminInternalNote: string;
+  orderSource: OrderSource;
+  assignedStaff: string;
+};
+
+function operationsDraftFromOrder(order: StoredOrder): OrderOperationsDraft {
+  return {
+    courierName: order.courierName ?? "",
+    trackingId: order.trackingId ?? "",
+    deliveryCharge:
+      typeof order.deliveryCharge === "number" ? String(order.deliveryCharge) : "",
+    customerConfirmationNote: order.customerConfirmationNote ?? "",
+    paymentVerificationStatus: order.paymentVerificationStatus ?? "Pending",
+    refundExchangeRequest: order.refundExchangeRequest ?? "",
+    sizeIssueReport: order.sizeIssueReport ?? "",
+    proofReceived: order.proofReceived ?? "No",
+    adminInternalNote: order.adminInternalNote ?? "",
+    orderSource: order.orderSource ?? "Website",
+    assignedStaff: order.assignedStaff ?? "",
+  };
+}
+
+function operationsDraftToUpdate(draft: OrderOperationsDraft): OrderOperationsUpdate {
+  const deliveryCharge = draft.deliveryCharge.trim()
+    ? Number(draft.deliveryCharge)
+    : undefined;
+
+  return {
+    courierName: draft.courierName,
+    trackingId: draft.trackingId,
+    deliveryCharge: Number.isFinite(deliveryCharge) ? deliveryCharge : undefined,
+    customerConfirmationNote: draft.customerConfirmationNote,
+    paymentVerificationStatus: draft.paymentVerificationStatus,
+    refundExchangeRequest: draft.refundExchangeRequest,
+    sizeIssueReport: draft.sizeIssueReport,
+    proofReceived: draft.proofReceived,
+    adminInternalNote: draft.adminInternalNote,
+    orderSource: draft.orderSource,
+    assignedStaff: draft.assignedStaff,
+  };
+}
+
+function OrderDetails({
+  order,
+  onOperationsSave,
+}: {
+  order: StoredOrder;
+  onOperationsSave: (
+    orderId: string,
+    updates: OrderOperationsUpdate
+  ) => Promise<boolean>;
+}) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [operationsDraft, setOperationsDraft] = useState<OrderOperationsDraft>(() =>
+    operationsDraftFromOrder(order)
+  );
+  const [operationsMessage, setOperationsMessage] = useState("");
+  const [isSavingOperations, setIsSavingOperations] = useState(false);
   const reference = orderReferenceKey(order);
   const transactionReference = order.paymentDetails.transactionReference;
   const copiedLabel =
@@ -2333,6 +2494,36 @@ function OrderDetails({ order }: { order: StoredOrder }) {
     } catch (error) {
       console.error("Copy failed:", error);
     }
+  };
+
+  const setOperationField = <K extends keyof OrderOperationsDraft>(
+    key: K,
+    value: OrderOperationsDraft[K]
+  ) => {
+    setOperationsDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleOperationsSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (
+      operationsDraft.deliveryCharge.trim() &&
+      !Number.isFinite(Number(operationsDraft.deliveryCharge))
+    ) {
+      setOperationsMessage("Delivery charge must be a valid number.");
+      return;
+    }
+
+    setIsSavingOperations(true);
+    setOperationsMessage("");
+
+    const saved = await onOperationsSave(reference, operationsDraftToUpdate(operationsDraft));
+    setIsSavingOperations(false);
+    setOperationsMessage(
+      saved
+        ? "Operations saved."
+        : "Saved locally, but backend persistence failed. Confirm the Phase 19 Supabase columns exist."
+    );
   };
 
   return (
@@ -2428,7 +2619,7 @@ function OrderDetails({ order }: { order: StoredOrder }) {
             ["Sender number", order.paymentDetails.walletSenderNumber],
             ["Transaction / reference ID", transactionReference, "payment-reference"],
             ["Total", formatCurrency(orderTotal(order))],
-            ["Payment verification", "Payment verification will be added in a future operations phase."],
+            ["Payment verification", order.paymentVerificationStatus],
           ]}
           copiedKey={copiedKey}
           onCopy={copyValue}
@@ -2438,10 +2629,15 @@ function OrderDetails({ order }: { order: StoredOrder }) {
           rows={[
             ["Delivery address", order.customer.address, "delivery-address"],
             ["Delivery note", order.customer.deliveryNote],
-            ["Courier name", "Not assigned yet"],
-            ["Tracking ID", "Not assigned yet"],
-            ["Delivery charge", "To be confirmed"],
-            ["Assigned staff", "Not assigned yet"],
+            ["Courier name", order.courierName],
+            ["Tracking ID", order.trackingId],
+            [
+              "Delivery charge",
+              typeof order.deliveryCharge === "number"
+                ? formatCurrency(order.deliveryCharge)
+                : undefined,
+            ],
+            ["Assigned staff", order.assignedStaff],
           ]}
           copiedKey={copiedKey}
           onCopy={copyValue}
@@ -2450,8 +2646,102 @@ function OrderDetails({ order }: { order: StoredOrder }) {
 
       <div className="mt-4 grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]">
         <ItemsPanel order={order} />
-        <FutureOpsPanel />
+        <SupportOpsPanel order={order} />
       </div>
+
+      <form
+        onSubmit={handleOperationsSubmit}
+        className="mt-4 min-w-0 rounded-2xl border border-cyan-200/18 bg-cyan-200/[0.045] p-4"
+      >
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h4 className="text-sm font-semibold text-white">Order Operations</h4>
+            <p className="mt-1 text-sm leading-6 text-white/52">
+              Fulfillment, payment verification, support, and internal handling fields.
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={isSavingOperations}
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-2xl border border-cyan-200/30 bg-cyan-200/[0.12] px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/50 hover:bg-cyan-200/[0.18] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
+          >
+            {isSavingOperations ? "Saving..." : "Save Operations"}
+          </button>
+        </div>
+        <div className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
+          <TextField
+            label="Courier Name"
+            value={operationsDraft.courierName}
+            onChange={(value) => setOperationField("courierName", value)}
+            placeholder="Pathao, RedX, Steadfast"
+          />
+          <TextField
+            label="Tracking ID"
+            value={operationsDraft.trackingId}
+            onChange={(value) => setOperationField("trackingId", value)}
+            placeholder="Courier tracking number"
+          />
+          <TextField
+            label="Delivery Charge"
+            value={operationsDraft.deliveryCharge}
+            onChange={(value) => setOperationField("deliveryCharge", value)}
+            placeholder="0"
+            inputMode="decimal"
+          />
+          <SelectField
+            label="Payment Verification Status"
+            value={operationsDraft.paymentVerificationStatus}
+            options={paymentVerificationStatuses}
+            onChange={(value) => setOperationField("paymentVerificationStatus", value)}
+          />
+          <TextField
+            label="Assigned Staff"
+            value={operationsDraft.assignedStaff}
+            onChange={(value) => setOperationField("assignedStaff", value)}
+            placeholder="Team member name"
+          />
+          <SelectField
+            label="Order Source"
+            value={operationsDraft.orderSource}
+            options={orderSources}
+            onChange={(value) => setOperationField("orderSource", value)}
+          />
+          <SelectField
+            label="Proof Received"
+            value={operationsDraft.proofReceived}
+            options={proofReceivedStatuses}
+            onChange={(value) => setOperationField("proofReceived", value)}
+          />
+          <TextAreaField
+            label="Customer Confirmation Note"
+            value={operationsDraft.customerConfirmationNote}
+            onChange={(value) => setOperationField("customerConfirmationNote", value)}
+          />
+          <TextAreaField
+            label="Refund / Exchange Request"
+            value={operationsDraft.refundExchangeRequest}
+            onChange={(value) => setOperationField("refundExchangeRequest", value)}
+          />
+          <TextAreaField
+            label="Size Issue Report"
+            value={operationsDraft.sizeIssueReport}
+            onChange={(value) => setOperationField("sizeIssueReport", value)}
+          />
+          <div className="md:col-span-2">
+            <TextAreaField
+              label="Admin Internal Note"
+              value={operationsDraft.adminInternalNote}
+              onChange={(value) => setOperationField("adminInternalNote", value)}
+              tall
+            />
+          </div>
+        </div>
+        {operationsMessage && (
+          <p className="mt-4 rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-sm leading-6 text-white/68">
+            {operationsMessage}
+          </p>
+        )}
+      </form>
     </section>
   );
 }
@@ -2522,22 +2812,25 @@ function ItemsPanel({ order }: { order: StoredOrder }) {
   );
 }
 
-function FutureOpsPanel() {
+function SupportOpsPanel({ order }: { order: StoredOrder }) {
   return (
     <div className="min-w-0 rounded-2xl border border-violet-200/15 bg-violet-200/[0.045] p-4">
       <div className="flex min-w-0 items-center justify-between gap-3">
-        <h4 className="text-sm font-semibold text-white">Support / Future Ops</h4>
+        <h4 className="text-sm font-semibold text-white">Support / Internal Ops</h4>
         <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
-          Planned
+          Admin
         </span>
       </div>
       <div className="mt-4 grid gap-3">
-        <DetailLine label="Customer confirmation note" value="Not added yet" />
-        <DetailLine label="Refund / exchange request" value="None" />
-        <DetailLine label="Size issue report" value="None" />
-        <DetailLine label="Photo / video proof received" value="Not uploaded" />
-        <DetailLine label="Admin internal note" value="Not added yet" />
-        <DetailLine label="Order source" value="Website" />
+        <DetailLine
+          label="Customer confirmation note"
+          value={order.customerConfirmationNote}
+        />
+        <DetailLine label="Refund / exchange request" value={order.refundExchangeRequest} />
+        <DetailLine label="Size issue report" value={order.sizeIssueReport} />
+        <DetailLine label="Photo / video proof received" value={order.proofReceived} />
+        <DetailLine label="Admin internal note" value={order.adminInternalNote} />
+        <DetailLine label="Order source" value={order.orderSource} />
       </div>
     </div>
   );
@@ -2551,7 +2844,7 @@ function EmptyDetailPanel() {
       </div>
       <h3 className="mt-4 text-xl font-semibold text-white">Select an order</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/56">
-        Open a card to review customer, payment, delivery, item, and future operations details.
+        Open a card to review customer, payment, delivery, item, and operations details.
       </p>
     </section>
   );
