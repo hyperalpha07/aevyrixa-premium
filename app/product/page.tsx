@@ -6,6 +6,7 @@ import { listProducts } from "@/app/lib/product-store";
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 const themeStyles: Record<
   ProductVisualTheme,

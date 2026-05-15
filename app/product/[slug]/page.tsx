@@ -3,6 +3,7 @@ import { getProductBySlug } from "@/app/lib/product-store";
 import ProductDetailClient from "@/app/product/[slug]/product-detail-client";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function ProductPage({
   params,

@@ -16,6 +16,7 @@ import HomeMotionController from "@/app/components/home-motion-controller";
 import { listProducts } from "@/app/lib/product-store";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 const trustItems = [
   "Discreet Privacy Packaging",

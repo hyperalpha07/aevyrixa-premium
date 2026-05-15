@@ -6,6 +6,7 @@ import {
 import type { ProductMutationInput } from "@/app/lib/product-types";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -77,4 +78,3 @@ export async function DELETE(
     );
   }
 }
-

@@ -104,7 +104,10 @@ function stringArrayValue(value: unknown) {
 }
 
 function normalizeStatus(value: unknown): ProductStatus {
-  return value === "draft" ? "draft" : "active";
+  if (typeof value !== "string") return "draft";
+
+  const status = value.trim().toLowerCase();
+  return status === "active" ? "active" : "draft";
 }
 
 function normalizeStockStatus(value: unknown) {
@@ -366,6 +369,10 @@ export async function listProducts(options: { includeDrafts?: boolean } = {}) {
   const supabaseProducts = await safelyUseSupabase(listProductsFromSupabase);
 
   if (supabaseProducts && supabaseProducts.length > 0) {
+    console.info(
+      `Product storefront source: supabase (${supabaseProducts.length} rows, includeDrafts=${includeDrafts})`
+    );
+
     return {
       products: includeDrafts
         ? supabaseProducts
@@ -377,6 +384,12 @@ export async function listProducts(options: { includeDrafts?: boolean } = {}) {
   const products = includeDrafts
     ? demoProducts
     : demoProducts.filter((product) => product.status === "active");
+
+  console.info(
+    `Product storefront source: ${
+      hasSupabaseConfig() ? "fallback-static" : "demo-memory"
+    } (${products.length} rows, includeDrafts=${includeDrafts})`
+  );
 
   return {
     products,
@@ -393,6 +406,12 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
   if (supabaseProducts && supabaseProducts.length > 0) {
     const supabaseProduct =
       supabaseProducts.find((product) => product.slug === slug) ?? null;
+
+    console.info(
+      `Product detail source: supabase (slug=${slug}, found=${Boolean(
+        supabaseProduct
+      )}, includeDrafts=${includeDrafts})`
+    );
 
     if (!supabaseProduct) {
       return { product: null, storageMode: "supabase" as ProductStorageMode };
@@ -412,6 +431,12 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
     demoProducts.find(
       (item) => item.slug === slug && (includeDrafts || item.status === "active")
     ) ?? null;
+
+  console.info(
+    `Product detail source: ${
+      hasSupabaseConfig() ? "fallback-static" : "demo-memory"
+    } (slug=${slug}, found=${Boolean(product)}, includeDrafts=${includeDrafts})`
+  );
 
   return {
     product,
