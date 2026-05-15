@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { CheckCircle2, Copy, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
+import { isPurchasableStock } from "@/app/lib/product-display";
 import {
   ADMIN_SETTINGS_KEY,
   defaultAdminSettings,
@@ -147,6 +148,9 @@ export default function CheckoutPage() {
   const isSubmitDisabled =
     form.paymentMethod === "Mobile Wallet Payment" &&
     form.paymentType !== "Send Money";
+  const hasUnavailableItems = items.some(
+    (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
+  );
 
   const copyReceiverNumber = async () => {
     try {
@@ -245,7 +249,13 @@ export default function CheckoutPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isSubmitting || isSubmitDisabled || !validateForm() || items.length === 0) {
+    if (
+      isSubmitting ||
+      isSubmitDisabled ||
+      hasUnavailableItems ||
+      !validateForm() ||
+      items.length === 0
+    ) {
       return;
     }
 
@@ -604,14 +614,18 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitDisabled || isSubmitting}
-                className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
-                  isSubmitDisabled || isSubmitting
+              disabled={isSubmitDisabled || isSubmitting || hasUnavailableItems}
+              className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+                  isSubmitDisabled || isSubmitting || hasUnavailableItems
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
                     : "bg-gradient-to-r from-cyan-300 to-fuchsia-300 text-black hover:scale-[1.01]"
                 }`}
               >
-                {isSubmitting ? "Submitting Order..." : "Submit Order"}
+                {hasUnavailableItems
+                  ? "Remove out-of-stock item"
+                  : isSubmitting
+                    ? "Submitting Order..."
+                    : "Submit Order"}
               </button>
             </form>
 
@@ -724,11 +738,17 @@ function OrderSummary({
                 <h3 className="break-words text-sm font-semibold leading-6 text-white [overflow-wrap:anywhere]">
                   {item.name}
                 </h3>
-                {(item.size || item.color || item.absorbency) && (
+                {(item.variant || item.size || item.color || item.absorbency) && (
                   <p className="mt-1 break-words text-xs leading-5 text-white/45 [overflow-wrap:anywhere]">
-                    {[item.size, item.color, item.absorbency]
-                      .filter(Boolean)
-                      .join(" / ")}
+                    {item.variant ||
+                      [item.size, item.color, item.absorbency]
+                        .filter(Boolean)
+                        .join(" / ")}
+                  </p>
+                )}
+                {item.stockStatus === "out_of_stock" && (
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-200">
+                    Out of stock
                   </p>
                 )}
                 <p className="mt-2 text-xs text-white/55">Qty {item.quantity}</p>

@@ -121,9 +121,13 @@ function normalizeItems(value: unknown): OrderCartItem[] {
     name: textValue(item.name) ?? "",
     price: numberValue(item.price) ?? 0,
     image: textValue(item.image) ?? "",
+    visualTheme: textValue(item.visualTheme) as OrderCartItem["visualTheme"],
+    visualVariant: textValue(item.visualVariant),
+    stockStatus: textValue(item.stockStatus) as OrderCartItem["stockStatus"],
     size: textValue(item.size),
     color: textValue(item.color),
     absorbency: textValue(item.absorbency),
+    variant: textValue(item.variant),
     quantity: numberValue(item.quantity) ?? 0,
   }));
 }

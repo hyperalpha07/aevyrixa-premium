@@ -48,9 +48,13 @@ export type OrderCartItem = Pick<
   | "name"
   | "price"
   | "image"
+  | "visualTheme"
+  | "visualVariant"
+  | "stockStatus"
   | "size"
   | "color"
   | "absorbency"
+  | "variant"
   | "quantity"
 >;
 

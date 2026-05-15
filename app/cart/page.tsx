@@ -5,6 +5,7 @@ import { PackageCheck, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
+import { isPurchasableStock } from "@/app/lib/product-display";
 
 const emptyCartTrustNotes = [
   { label: "Discreet Privacy Packaging", icon: PackageCheck },
@@ -21,6 +22,9 @@ export default function CartPage() {
     removeItem,
     clearCart,
   } = useCart();
+  const hasUnavailableItems = items.some(
+    (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
+  );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
@@ -126,11 +130,17 @@ export default function CartPage() {
                           <p className="mt-2 text-sm text-cyan-300">
                             ${item.price.toFixed(2)}
                           </p>
-                          {(item.size || item.color || item.absorbency) && (
+                          {(item.variant || item.size || item.color || item.absorbency) && (
                             <p className="mt-2 text-xs leading-5 text-white/45">
-                              {[item.size, item.color, item.absorbency]
-                                .filter(Boolean)
-                                .join(" / ")}
+                              {item.variant ||
+                                [item.size, item.color, item.absorbency]
+                                  .filter(Boolean)
+                                  .join(" / ")}
+                            </p>
+                          )}
+                          {item.stockStatus === "out_of_stock" && (
+                            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-200">
+                              Out of stock
                             </p>
                           )}
                         </div>
@@ -212,12 +222,21 @@ export default function CartPage() {
               </div>
 
               <div className="mt-6 space-y-3">
-                <Link
-                  href="/checkout"
-                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01]"
-                >
-                  Proceed to Checkout
-                </Link>
+                {hasUnavailableItems ? (
+                  <button
+                    disabled
+                    className="flex w-full cursor-not-allowed items-center justify-center rounded-full border border-white/10 bg-white/[0.06] px-6 py-3.5 text-sm font-semibold text-white/35"
+                  >
+                    Remove out-of-stock item
+                  </button>
+                ) : (
+                  <Link
+                    href="/checkout"
+                    className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01]"
+                  >
+                    Proceed to Checkout
+                  </Link>
+                )}
 
                 <Link
                   href="/product"

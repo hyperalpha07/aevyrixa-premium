@@ -16,7 +16,13 @@ import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
 import { useCart } from "@/app/components/cart/cart-context";
 import {
-  catalogItemToLegacyProduct,
+  displayBenefits,
+  displayCare,
+  isPurchasableStock,
+  publicProduct,
+  stockStatusLabel,
+} from "@/app/lib/product-display";
+import {
   formatProductPrice,
   type ProductVisualTheme,
 } from "@/app/lib/products";
@@ -99,16 +105,19 @@ export default function ProductDetailClient({
 }) {
   const router = useRouter();
   const { addItem } = useCart();
-  const legacyProduct = catalogItemToLegacyProduct(product);
-  const style = themeStyles[product.visualTheme];
+  const displayProduct = publicProduct(product);
+  const benefits = displayBenefits(displayProduct);
+  const care = displayCare(displayProduct);
+  const style = themeStyles[displayProduct.visualTheme] ?? themeStyles["blush-violet"];
+  const canAddToCart = isPurchasableStock(displayProduct.stockStatus);
   const [selectedSize, setSelectedSize] = useState<string>(
-    legacyProduct.sizes[1] || legacyProduct.sizes[0] || "M"
+    displayProduct.sizes[0] || ""
   );
   const [selectedColor, setSelectedColor] = useState<string>(
-    legacyProduct.colors[0] || "Black"
+    displayProduct.colors[0] || ""
   );
   const [selectedAbsorbency, setSelectedAbsorbency] = useState<string>(
-    product.absorbency
+    displayProduct.absorbencyOptions[0] || displayProduct.absorbency
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -116,18 +125,27 @@ export default function ProductDetailClient({
   const increaseQuantity = () => setQuantity((current) => current + 1);
 
   const handleAddToCart = (goToCart = false) => {
+    if (!canAddToCart) return;
+
+    const variantSummary = [selectedSize, selectedColor, selectedAbsorbency]
+      .filter(Boolean)
+      .join(" / ");
+
     addItem(
       {
-        id: buildCartLineId(product, selectedSize, selectedColor, selectedAbsorbency),
-        productId: product.id,
-        slug: product.slug,
-        name: product.name,
-        price: product.price,
-        image: product.visualTheme,
-        visualTheme: product.visualTheme,
-        size: selectedSize,
-        color: selectedColor,
-        absorbency: selectedAbsorbency,
+        id: buildCartLineId(displayProduct, selectedSize, selectedColor, selectedAbsorbency),
+        productId: displayProduct.id,
+        slug: displayProduct.slug,
+        name: displayProduct.name,
+        price: displayProduct.price,
+        image: displayProduct.visualTheme,
+        visualTheme: displayProduct.visualTheme,
+        visualVariant: displayProduct.visualVariant,
+        stockStatus: displayProduct.stockStatus,
+        size: selectedSize || undefined,
+        color: selectedColor || undefined,
+        absorbency: selectedAbsorbency || undefined,
+        variant: variantSummary || undefined,
       },
       quantity
     );
@@ -145,13 +163,13 @@ export default function ProductDetailClient({
         <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
       </div>
 
-      <SiteHeader active="product" productHref={`/product/${product.slug}`} />
+      <SiteHeader active="product" productHref={`/product/${displayProduct.slug}`} />
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
         <div className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}>
           <div className="overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
             <div className="aspect-[0.92] min-h-[340px] w-full sm:aspect-square">
-              <ProductVisual visualTheme={product.visualTheme} label={product.absorbency} />
+              <ProductVisual visualTheme={displayProduct.visualTheme} label={displayProduct.absorbency} />
             </div>
           </div>
         </div>
@@ -163,28 +181,31 @@ export default function ProductDetailClient({
 
           <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
             <span className={`rounded-full border px-3 py-1 text-xs font-medium ${style.badge}`}>
-              {product.absorbency}
+              {displayProduct.absorbency}
             </span>
             <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-white/42 [overflow-wrap:anywhere] min-[420px]:tracking-[0.24em]">
-              {product.category}
+              {displayProduct.category}
+            </span>
+            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
+              {stockStatusLabel(displayProduct.stockStatus)}
             </span>
           </div>
 
           <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
-            {product.name}
+            {displayProduct.name}
           </h1>
 
           <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/68 [overflow-wrap:anywhere]">
-            {product.description}
+            {displayProduct.description}
           </p>
 
           <div className="mt-6 flex flex-wrap items-end gap-3">
-            <span className="text-4xl font-semibold">{formatProductPrice(product)}</span>
-            {typeof product.compareAtPrice === "number" && (
+            <span className="text-4xl font-semibold">{formatProductPrice(displayProduct)}</span>
+            {typeof displayProduct.compareAtPrice === "number" && (
               <span className="pb-1 text-lg text-white/35 line-through">
                 {formatProductPrice({
-                  price: product.compareAtPrice,
-                  currency: product.currency,
+                  price: displayProduct.compareAtPrice,
+                  currency: displayProduct.currency,
                 })}
               </span>
             )}
@@ -194,21 +215,21 @@ export default function ProductDetailClient({
             <div className="space-y-6">
               <VariantSelector
                 label="Size"
-                options={legacyProduct.sizes}
+                options={displayProduct.sizes}
                 selected={selectedSize}
                 onSelect={setSelectedSize}
                 selectedClassName={style.selected}
               />
               <VariantSelector
                 label="Color"
-                options={legacyProduct.colors}
+                options={displayProduct.colors}
                 selected={selectedColor}
                 onSelect={setSelectedColor}
                 selectedClassName={style.selected}
               />
               <VariantSelector
                 label="Absorbency"
-                options={legacyProduct.absorbencyOptions}
+                options={displayProduct.absorbencyOptions}
                 selected={selectedAbsorbency}
                 onSelect={setSelectedAbsorbency}
                 selectedClassName={style.selected}
@@ -242,15 +263,25 @@ export default function ProductDetailClient({
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   onClick={() => handleAddToCart(false)}
-                  className={`aev-action-primary rounded-full bg-gradient-to-r px-6 py-3.5 text-sm font-semibold transition hover:scale-[1.01] ${style.primary}`}
+                  disabled={!canAddToCart}
+                  className={`aev-action-primary rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+                    canAddToCart
+                      ? `bg-gradient-to-r hover:scale-[1.01] ${style.primary}`
+                      : "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
+                  }`}
                 >
-                  Add to Cart
+                  {canAddToCart ? "Add to Cart" : "Out of Stock"}
                 </button>
                 <button
                   onClick={() => handleAddToCart(true)}
-                  className="aev-action-secondary rounded-full border border-white/12 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08]"
+                  disabled={!canAddToCart}
+                  className={`aev-action-secondary rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
+                    canAddToCart
+                      ? "border-white/12 bg-white/[0.04] text-white hover:border-cyan-200/35 hover:bg-white/[0.08]"
+                      : "cursor-not-allowed border-white/10 bg-white/[0.04] text-white/35"
+                  }`}
                 >
-                  Add and View Cart
+                  {canAddToCart ? "Add and View Cart" : "Unavailable"}
                 </button>
               </div>
             </div>
@@ -277,7 +308,7 @@ export default function ProductDetailClient({
           </p>
           <h2 className="mt-3 text-3xl font-semibold">Made for a calmer routine</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {legacyProduct.benefits.map((benefit) => (
+            {benefits.map((benefit) => (
               <div key={benefit} className="flex gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/68">
                 <Check className={`mt-0.5 h-4 w-4 shrink-0 ${style.accent}`} />
                 <span>{benefit}</span>
@@ -292,7 +323,7 @@ export default function ProductDetailClient({
           </p>
           <h2 className="mt-3 text-3xl font-semibold">Simple wash steps</h2>
           <div className="mt-5 space-y-3">
-            {legacyProduct.care.map((step, index) => (
+            {care.map((step, index) => (
               <div key={step} className="flex gap-3 text-sm leading-7 text-white/68">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-xs text-white">
                   {index + 1}
@@ -334,6 +365,8 @@ function VariantSelector({
   onSelect: (value: string) => void;
   selectedClassName: string;
 }) {
+  if (options.length === 0) return null;
+
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-white/50">
@@ -357,4 +390,3 @@ function VariantSelector({
     </div>
   );
 }
-

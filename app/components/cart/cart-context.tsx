@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import type { ProductStockStatus, ProductVisualTheme } from "@/app/lib/product-types";
 
 export type CartItem = {
   id: string;
@@ -15,10 +16,13 @@ export type CartItem = {
   name: string;
   price: number;
   image: string;
-  visualTheme?: "blush-violet" | "cyan-night" | "rose-gold";
+  visualTheme?: ProductVisualTheme;
+  visualVariant?: string;
+  stockStatus?: ProductStockStatus;
   size?: string;
   color?: string;
   absorbency?: string;
+  variant?: string;
   quantity: number;
 };
 

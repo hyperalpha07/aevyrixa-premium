@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCart } from "./cart-context";
 import ProductVisual from "@/app/components/product-visual";
+import { isPurchasableStock } from "@/app/lib/product-display";
 
 export default function CartDrawer() {
   const {
@@ -16,6 +17,9 @@ export default function CartDrawer() {
     subtotal,
     totalItems,
   } = useCart();
+  const hasUnavailableItems = items.some(
+    (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
+  );
 
   useEffect(() => {
     if (!isOpen) {
@@ -128,11 +132,17 @@ export default function CartDrawer() {
                             <p className="mt-1 text-sm text-cyan-300">
                               ${item.price.toFixed(2)}
                             </p>
-                            {(item.size || item.color || item.absorbency) && (
+                            {(item.variant || item.size || item.color || item.absorbency) && (
                               <p className="mt-1 text-xs leading-5 text-white/45">
-                                {[item.size, item.color, item.absorbency]
-                                  .filter(Boolean)
-                                  .join(" / ")}
+                                {item.variant ||
+                                  [item.size, item.color, item.absorbency]
+                                    .filter(Boolean)
+                                    .join(" / ")}
+                              </p>
+                            )}
+                            {item.stockStatus === "out_of_stock" && (
+                              <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-200">
+                                Out of stock
                               </p>
                             )}
                           </div>
@@ -207,13 +217,22 @@ export default function CartDrawer() {
                 View Cart
               </Link>
 
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-                className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-4 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
-              >
-                Checkout
-              </Link>
+              {hasUnavailableItems ? (
+                <button
+                  disabled
+                  className="flex w-full cursor-not-allowed items-center justify-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white/35"
+                >
+                  Remove out-of-stock item
+                </button>
+              ) : (
+                <Link
+                  href="/checkout"
+                  onClick={closeCart}
+                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-4 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
+                >
+                  Checkout
+                </Link>
+              )}
             </div>
 
             <p className="mt-4 text-center text-[11px] uppercase tracking-[0.2em] text-white/40">

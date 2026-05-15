@@ -1,5 +1,7 @@
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { createOrder, listOrders } from "@/app/lib/order-store";
+import { getProductBySlug } from "@/app/lib/product-store";
+import { isPurchasableStock } from "@/app/lib/product-display";
 import {
   paymentMethods,
   paymentTypes,
@@ -91,9 +93,13 @@ function validateOrderPayload(payload: unknown): {
       name: text(item.name),
       price: numberValue(item.price),
       image: text(item.image),
+      visualTheme: optionalText(item.visualTheme) as OrderCartItem["visualTheme"],
+      visualVariant: optionalText(item.visualVariant),
+      stockStatus: optionalText(item.stockStatus) as OrderCartItem["stockStatus"],
       size: optionalText(item.size),
       color: optionalText(item.color),
       absorbency: optionalText(item.absorbency),
+      variant: optionalText(item.variant),
       quantity: numberValue(item.quantity),
     }))
     .filter((item) => item.id && item.name && item.quantity > 0);
@@ -138,6 +144,26 @@ function validateOrderPayload(payload: unknown): {
   };
 }
 
+async function unavailableOrderItems(items: OrderCartItem[]) {
+  const unavailable: string[] = [];
+
+  for (const item of items) {
+    if (!item.slug) continue;
+
+    const { product } = await getProductBySlug(item.slug);
+    if (!product) {
+      unavailable.push(`${item.name} is no longer available.`);
+      continue;
+    }
+
+    if (!isPurchasableStock(product.stockStatus)) {
+      unavailable.push(`${item.name} is currently out of stock.`);
+    }
+  }
+
+  return unavailable;
+}
+
 export async function GET() {
   try {
     const result = await listOrders();
@@ -164,6 +190,11 @@ export async function POST(request: Request) {
   if (!input) return Response.json({ errors }, { status: 400 });
 
   try {
+    const itemAvailabilityErrors = await unavailableOrderItems(input.items);
+    if (itemAvailabilityErrors.length > 0) {
+      return Response.json({ errors: itemAvailabilityErrors }, { status: 409 });
+    }
+
     const result = await createOrder(input);
 
     try {

@@ -64,11 +64,14 @@ type OrderSort = "Newest first" | "Oldest first" | "Highest total" | "Lowest tot
 
 type StoredOrderItem = {
   id?: string;
+  productId?: string;
+  slug?: string;
   name?: string;
   price?: number;
   size?: string;
   color?: string;
   absorbency?: string;
+  variant?: string;
   quantity?: number;
 };
 
@@ -235,11 +238,14 @@ function normalizeOrder(value: unknown): StoredOrder | null {
   const items = Array.isArray(value.items)
     ? value.items.filter(isRecord).map((item) => ({
         id: textValue(item.id),
+        productId: textValue(item.productId),
+        slug: textValue(item.slug),
         name: textValue(item.name),
         price: numberValue(item.price),
         size: textValue(item.size),
         color: textValue(item.color),
         absorbency: textValue(item.absorbency),
+        variant: textValue(item.variant),
         quantity: numberValue(item.quantity),
       }))
     : [];
@@ -705,7 +711,7 @@ function slugify(value: string) {
 }
 
 function itemVariantSummary(item: StoredOrderItem) {
-  return [item.size, item.color, item.absorbency].filter(Boolean).join(" / ");
+  return item.variant || [item.size, item.color, item.absorbency].filter(Boolean).join(" / ");
 }
 
 function mainItemSummary(order: StoredOrder) {
@@ -768,7 +774,12 @@ function buildOrderSummary(order: StoredOrder) {
     `Reference: ${order.paymentDetails.transactionReference ?? "Not provided"}`,
     `Total: ${formatCurrency(orderTotal(order))}`,
     `Items: ${order.items
-      .map((item) => `${item.name ?? "Unnamed item"} x ${item.quantity ?? 0}`)
+      .map((item) => {
+        const variants = itemVariantSummary(item);
+        return `${item.name ?? "Unnamed item"}${variants ? ` (${variants})` : ""} x ${
+          item.quantity ?? 0
+        }`;
+      })
       .join(", ") || "Not recorded"}`,
   ].join("\n");
 }
@@ -2265,6 +2276,25 @@ function ItemsPanel({ order }: { order: StoredOrder }) {
                     <p className="mt-1 whitespace-normal break-words text-xs leading-5 text-white/48 [overflow-wrap:break-word]">
                       {itemVariantSummary(item) || "No variant recorded"}
                     </p>
+                    {(item.size || item.color || item.absorbency) && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {item.size && (
+                          <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
+                            Size: {item.size}
+                          </span>
+                        )}
+                        {item.color && (
+                          <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
+                            Color: {item.color}
+                          </span>
+                        )}
+                        {item.absorbency && (
+                          <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
+                            Absorbency: {item.absorbency}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <DetailLine label="Quantity" value={String(quantity)} />
                   <DetailLine label="Unit price" value={formatCurrency(unitPrice)} />

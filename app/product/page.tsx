@@ -3,6 +3,7 @@ import { ArrowRight, Droplets, Sparkles, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
 import { listProducts } from "@/app/lib/product-store";
+import { publicProduct, stockStatusLabel } from "@/app/lib/product-display";
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
 
 export const dynamic = "force-dynamic";
@@ -38,8 +39,9 @@ const themeStyles: Record<
 
 export default async function ProductCollectionPage() {
   const { products } = await listProducts();
-  const primaryProductHref = products[0]
-    ? `/product/${products[0].slug}`
+  const displayProducts = products.map(publicProduct);
+  const primaryProductHref = displayProducts[0]
+    ? `/product/${displayProducts[0].slug}`
     : "/product";
 
   return (
@@ -85,8 +87,8 @@ export default async function ProductCollectionPage() {
 
       <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6">
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => {
-            const style = themeStyles[product.visualTheme];
+          {displayProducts.map((product) => {
+            const style = themeStyles[product.visualTheme] ?? themeStyles["blush-violet"];
 
             return (
               <article
@@ -109,6 +111,14 @@ export default async function ProductCollectionPage() {
                     </span>
                     <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-white/42 [overflow-wrap:anywhere] min-[420px]:tracking-[0.22em]">
                       {product.category}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
+                      {stockStatusLabel(product.stockStatus)}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
+                      {product.visualTheme.replace("-", " ")}
                     </span>
                   </div>
 
