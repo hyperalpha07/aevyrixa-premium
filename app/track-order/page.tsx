@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
+import { formatCurrency } from "@/app/lib/currency";
 
 type TimelineState = "complete" | "active" | "inactive";
 
@@ -12,7 +13,6 @@ type TrackedOrder = {
   orderRef: string;
   status: "Pending" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
   createdAt: string;
-  customerName?: string;
   cityArea: string;
   total: number;
   paymentMethod: string;
@@ -29,14 +29,6 @@ type TrackedOrder = {
     state: TimelineState;
   }[];
 };
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function formatDate(value: string) {
   if (!value) return "Not available";
@@ -261,9 +253,6 @@ function TrackOrderContent() {
                     label="Delivery charge"
                     value={formatCurrency(order.deliveryCharge)}
                   />
-                )}
-                {order.customerName && (
-                  <SummaryItem label="Customer" value={order.customerName} />
                 )}
               </div>
 

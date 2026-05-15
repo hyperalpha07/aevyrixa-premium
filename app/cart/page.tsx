@@ -6,6 +6,7 @@ import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
+import { formatCurrency } from "@/app/lib/currency";
 
 const emptyCartTrustNotes = [
   { label: "Discreet Privacy Packaging", icon: PackageCheck },
@@ -128,7 +129,7 @@ export default function CartPage() {
                             {item.name}
                           </h2>
                           <p className="mt-2 text-sm text-cyan-300">
-                            ${item.price.toFixed(2)}
+                            {formatCurrency(item.price)}
                           </p>
                           {(item.variant || item.size || item.color || item.absorbency) && (
                             <p className="mt-2 text-xs leading-5 text-white/45">
@@ -147,7 +148,7 @@ export default function CartPage() {
 
                         <div className="text-left md:text-right">
                           <p className="text-lg font-semibold text-white">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            {formatCurrency(item.price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -216,7 +217,7 @@ export default function CartPage() {
 
                   <div className="flex items-center justify-between text-lg font-semibold text-white">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{formatCurrency(subtotal)}</span>
                   </div>
                 </div>
               </div>

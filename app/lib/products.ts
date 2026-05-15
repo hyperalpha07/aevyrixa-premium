@@ -1,4 +1,5 @@
 import type { ProductCatalogItem, ProductVisualTheme } from "@/app/lib/product-types";
+import { formatCurrency, SITE_CURRENCY } from "@/app/lib/currency";
 
 export type { ProductCatalogItem, ProductVisualTheme } from "@/app/lib/product-types";
 
@@ -35,9 +36,9 @@ export const products: Product[] = [
       "Soft reusable period underwear for lighter routine days with a smooth, discreet fit.",
     description:
       "Everyday Comfort is designed for light-flow days, backup coverage, and calm daily wear. The silhouette feels refined under outfits while the reusable layered gusset supports a simpler care routine.",
-    price: "$34.00",
-    compareAtPrice: "$44.00",
-    numericPrice: 34,
+    price: "BDT 1,200",
+    compareAtPrice: "BDT 1,500",
+    numericPrice: 1200,
     category: "Reusable Period Panty",
     sizes: productSizes,
     colors: productColors,
@@ -68,9 +69,9 @@ export const products: Product[] = [
       "A supportive reusable panty for heavier routine days with secure coverage and soft structure.",
     description:
       "Heavy Flow Support brings a more anchored Her Care feel for days when you want extra coverage. The design focuses on comfort, discretion, and reusable protection without a bulky look.",
-    price: "$39.00",
-    compareAtPrice: "$52.00",
-    numericPrice: 39,
+    price: "BDT 1,450",
+    compareAtPrice: "BDT 1,800",
+    numericPrice: 1450,
     category: "Reusable Period Panty",
     sizes: productSizes,
     colors: productColors,
@@ -101,9 +102,9 @@ export const products: Product[] = [
       "Extended comfort for sleep, travel, and long wear moments with a soft secure feel.",
     description:
       "Night Comfort is shaped for overnight routines and longer wear windows. It pairs extended coverage with a smooth waistband and soft materials so rest feels less interrupted.",
-    price: "$42.00",
-    compareAtPrice: "$56.00",
-    numericPrice: 42,
+    price: "BDT 1,650",
+    compareAtPrice: "BDT 2,100",
+    numericPrice: 1650,
     category: "Reusable Period Panty",
     sizes: productSizes,
     colors: productColors,
@@ -143,7 +144,7 @@ export function legacyProductToCatalogItem(
     category: product.category,
     price: product.numericPrice,
     compareAtPrice: priceTextToNumber(product.compareAtPrice),
-    currency: "USD",
+    currency: SITE_CURRENCY,
     status: "active",
     featured: true,
     stockStatus: "in_stock",
@@ -204,8 +205,7 @@ export function catalogItemToLegacyProduct(
 }
 
 export function formatProductPrice(product: Pick<ProductCatalogItem, "price" | "currency">) {
-  const symbol = product.currency === "BDT" ? "৳" : "$";
-  return `${symbol}${product.price.toFixed(2)}`;
+  return formatCurrency(product.price);
 }
 
 function priceTextToNumber(value?: string) {

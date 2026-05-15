@@ -3,6 +3,7 @@ import type {
   ProductStockStatus,
   ProductVisualTheme,
 } from "@/app/lib/product-types";
+import { SITE_CURRENCY } from "@/app/lib/currency";
 
 export const fallbackProductCopy = {
   category: "Reusable Period Panty",
@@ -77,7 +78,7 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
       cleanText(product.shortDescription) || fallbackProductCopy.shortDescription,
     description: cleanText(product.description) || fallbackProductCopy.description,
     category: cleanText(product.category) || fallbackProductCopy.category,
-    currency: cleanText(product.currency) || "USD",
+    currency: SITE_CURRENCY,
     price: typeof product.price === "number" && Number.isFinite(product.price)
       ? product.price
       : 0,

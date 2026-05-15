@@ -7,6 +7,7 @@ import { CheckCircle2, Copy, PackageCheck, ShieldCheck, Truck } from "lucide-rea
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import { isPurchasableStock } from "@/app/lib/product-display";
+import { formatCurrency } from "@/app/lib/currency";
 import {
   ADMIN_SETTINGS_KEY,
   defaultAdminSettings,
@@ -744,7 +745,7 @@ function OrderSummary({
                 <p className="mt-2 text-xs text-white/55">Qty {item.quantity}</p>
               </div>
               <p className="shrink-0 text-sm font-semibold text-white">
-                ${(item.price * item.quantity).toFixed(2)}
+                {formatCurrency(item.price * item.quantity)}
               </p>
             </div>
           </div>
@@ -772,7 +773,7 @@ function OrderSummary({
           <div className="h-px bg-white/10" />
           <div className="flex items-center justify-between text-lg font-semibold text-white">
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>{formatCurrency(subtotal)}</span>
           </div>
         </div>
       </div>
@@ -812,7 +813,7 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
     ["Order Reference", order.orderId],
     ["Customer Name", order.customerName],
     ["Customer Phone", order.customerPhone],
-    ["Order Total", `$${order.total.toFixed(2)}`],
+    ["Order Total", formatCurrency(order.total)],
     ["Selected Payment Method", order.paymentMethod],
     ] as Array<[string, string | undefined]>
   ).filter((item): item is [string, string] => Boolean(item[1]));

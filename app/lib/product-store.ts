@@ -7,6 +7,7 @@ import {
   type ProductStorageMode,
 } from "@/app/lib/product-types";
 import { legacyProductToCatalogItem, products as staticProducts } from "@/app/lib/products";
+import { SITE_CURRENCY } from "@/app/lib/currency";
 
 const SUPABASE_PRODUCTS_TABLE = "products";
 
@@ -248,7 +249,7 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
     category: textValue(input.category) || "Reusable Period Panty",
     price: numberValue(input.price) ?? 0,
     compareAtPrice: numberValue(input.compareAtPrice),
-    currency: textValue(input.currency) || "USD",
+    currency: SITE_CURRENCY,
     status: normalizeStatus(input.status),
     featured: Boolean(input.featured),
     stockStatus: normalizeStockStatus(input.stockStatus),
@@ -286,7 +287,7 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     category: row.category ?? "Reusable Period Panty",
     price: numberValue(row.price) ?? 0,
     compareAtPrice: numberValue(row.compare_at_price),
-    currency: row.currency ?? "USD",
+    currency: SITE_CURRENCY,
     status: normalizeStatus(row.status),
     featured: Boolean(row.featured),
     stockStatus: normalizeStockStatus(row.stock_status),
@@ -337,7 +338,7 @@ function toSupabasePayload(product: ProductMutationInput) {
     payload.compare_at_price = numberValue(product.compareAtPrice) ?? null;
   }
   if (hasProductField(product, "currency")) {
-    payload.currency = product.currency ?? "USD";
+    payload.currency = SITE_CURRENCY;
   }
   if (hasProductField(product, "status")) payload.status = normalizeStatus(product.status);
   if (hasProductField(product, "featured")) payload.featured = Boolean(product.featured);
@@ -389,7 +390,7 @@ function toSupabaseCreatePayload(product: ProductCatalogItem) {
     category: textValue(product.category) || "Reusable Period Panty",
     price: numberValue(product.price) ?? 0,
     compare_at_price: numberValue(product.compareAtPrice) ?? null,
-    currency: textValue(product.currency) || "USD",
+    currency: SITE_CURRENCY,
     status: normalizeStatus(product.status),
     featured: Boolean(product.featured),
     stock_status: normalizeStockStatus(product.stockStatus),

@@ -1,3 +1,4 @@
+import { formatCurrency } from "@/app/lib/currency";
 import type { OrderRecord } from "@/app/lib/order-types";
 
 type NotificationResult =
@@ -20,14 +21,6 @@ function formatDate(value: string) {
     timeStyle: "short",
     timeZone: "Asia/Dhaka",
   }).format(date);
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 function buildTelegramMessage(order: OrderRecord) {

@@ -24,10 +24,6 @@ function normalizePhone(value: string) {
   return value.replace(/[^\d+]/g, "").replace(/^\+?88/, "");
 }
 
-function firstNameOnly(fullName: string) {
-  return fullName.trim().split(/\s+/)[0] || undefined;
-}
-
 function paymentMethodLabel(order: OrderRecord) {
   const { paymentMethod, walletProvider } = order.paymentDetails;
   if (paymentMethod === "Mobile Wallet Payment" && walletProvider) {
@@ -81,7 +77,6 @@ function safeOrderSummary(order: OrderRecord) {
     orderRef: order.orderReference || order.orderId,
     status: order.status,
     createdAt: order.createdAt,
-    customerName: firstNameOnly(order.customer.fullName),
     cityArea: order.customer.cityArea,
     total: order.totalAmount,
     paymentMethod: paymentMethodLabel(order),

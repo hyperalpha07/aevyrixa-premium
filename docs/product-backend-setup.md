@@ -20,7 +20,7 @@ create table if not exists public.products (
   category text,
   price numeric(10, 2) not null default 0,
   compare_at_price numeric(10, 2),
-  currency text not null default 'USD',
+  currency text not null default 'BDT',
   status text not null default 'draft'
     check (status in ('active', 'draft')),
   featured boolean not null default false,

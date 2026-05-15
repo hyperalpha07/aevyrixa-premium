@@ -27,6 +27,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { products as seedProducts, type ProductVisualTheme } from "@/app/lib/products";
+import { formatCurrency, SITE_CURRENCY } from "@/app/lib/currency";
 import {
   ADMIN_SETTINGS_KEY,
   defaultAdminSettings,
@@ -511,10 +512,9 @@ function optionalPriceTextToNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function formatAdminPrice(value?: number, currency = "USD") {
+function formatAdminPrice(value?: number) {
   if (typeof value !== "number") return "";
-  const symbol = currency === "BDT" ? "৳" : "$";
-  return `${symbol}${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
 
 function storeStatus(status: ProductStatus): StoreProductStatus {
@@ -535,7 +535,7 @@ function productToApiPayload(product: AdminProduct) {
     category: product.category,
     price: priceTextToNumber(product.price),
     compareAtPrice: optionalPriceTextToNumber(product.compareAtPrice),
-    currency: "USD",
+    currency: SITE_CURRENCY,
     status: storeStatus(product.status),
     featured: product.featured,
     stockStatus: product.stockStatus,
@@ -561,8 +561,8 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
     slug: product.slug,
     shortDescription: product.shortDescription,
     description: product.description,
-    price: formatAdminPrice(product.price, product.currency),
-    compareAtPrice: formatAdminPrice(product.compareAtPrice, product.currency),
+    price: formatAdminPrice(product.price),
+    compareAtPrice: formatAdminPrice(product.compareAtPrice),
     category: product.category,
     sizes: product.sizes,
     colors: product.colors,
@@ -769,10 +769,6 @@ function readSettingsFromStorage() {
 
 function writeSettingsToStorage(settings: AdminSettings) {
   localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
-}
-
-function formatCurrency(value?: number) {
-  return `$${(value ?? 0).toFixed(2)}`;
 }
 
 function orderTotal(order: StoredOrder) {
@@ -1756,7 +1752,7 @@ function ProductsSection({
                       )}
                     </div>
                   </div>
-                  <DetailLine label="Price" value={product.price || "$0.00"} />
+                  <DetailLine label="Price" value={product.price || formatCurrency(0)} />
                   <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
                   <div className="grid gap-2">
                     {product.deletedAt ? (
@@ -1888,8 +1884,8 @@ function ProductEditor({
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <TextField label="Product name" value={draft.name} onChange={(value) => updateField("name", value)} required />
         <TextField label="Slug" value={draft.slug} onChange={(value) => updateField("slug", slugify(value))} required />
-        <TextField label="Price" value={draft.price} onChange={(value) => updateField("price", value)} placeholder="$39.00" />
-        <TextField label="Compare-at price" value={draft.compareAtPrice} onChange={(value) => updateField("compareAtPrice", value)} placeholder="$52.00" />
+        <TextField label="Price" value={draft.price} onChange={(value) => updateField("price", value)} placeholder="BDT 1,450" />
+        <TextField label="Compare-at price" value={draft.compareAtPrice} onChange={(value) => updateField("compareAtPrice", value)} placeholder="BDT 1,800" />
         <TextField label="Category" value={draft.category} onChange={(value) => updateField("category", value)} />
         <TextField label="Absorbency" value={draft.absorbency} onChange={(value) => updateField("absorbency", value)} />
         <TextField label="Sizes" value={sizes} onChange={setSizes} placeholder="XS, S, M, L, XL" />

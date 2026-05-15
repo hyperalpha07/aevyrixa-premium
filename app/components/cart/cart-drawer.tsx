@@ -6,6 +6,7 @@ import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCart } from "./cart-context";
 import ProductVisual from "@/app/components/product-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
+import { formatCurrency } from "@/app/lib/currency";
 
 export default function CartDrawer() {
   const {
@@ -130,7 +131,7 @@ export default function CartDrawer() {
                               {item.name}
                             </h4>
                             <p className="mt-1 text-sm text-cyan-300">
-                              ${item.price.toFixed(2)}
+                              {formatCurrency(item.price)}
                             </p>
                             {(item.variant || item.size || item.color || item.absorbency) && (
                               <p className="mt-1 text-xs leading-5 text-white/45">
@@ -183,7 +184,7 @@ export default function CartDrawer() {
                           </div>
 
                           <p className="text-sm font-semibold text-white">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            {formatCurrency(item.price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -199,7 +200,7 @@ export default function CartDrawer() {
               <div className="flex items-center justify-between text-sm text-white/60">
                 <span>Subtotal</span>
                 <span className="text-lg font-semibold text-white">
-                  ${subtotal.toFixed(2)}
+                  {formatCurrency(subtotal)}
                 </span>
               </div>
 
