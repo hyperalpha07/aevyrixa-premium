@@ -224,6 +224,27 @@ async function listOrdersFromSupabase() {
   return rows.map(mapSupabaseOrder);
 }
 
+async function getOrderByReferenceFromSupabase(orderRef: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_ORDERS_TABLE}?order_ref=eq.${encodeURIComponent(
+        orderRef
+      )}&select=*&limit=1`
+    ),
+    {
+      headers: supabaseHeaders(),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw await supabaseError(response, "order lookup");
+  }
+
+  const rows = (await response.json()) as SupabaseOrderRow[];
+  return rows[0] ? mapSupabaseOrder(rows[0]) : null;
+}
+
 async function updateOrderStatusInSupabase(
   orderRef: string,
   status: OrderStatus
@@ -339,6 +360,24 @@ export async function listOrders() {
   // See saveOrder fallback note: admin keeps browser localStorage as the
   // visible fallback until Supabase/Postgres is connected.
   return { orders: demoOrders, storageMode };
+}
+
+export async function getOrderByReference(orderRef: string) {
+  const storageMode = getStorageMode();
+
+  if (storageMode === "supabase") {
+    return {
+      order: await getOrderByReferenceFromSupabase(orderRef),
+      storageMode,
+    };
+  }
+
+  const order =
+    demoOrders.find(
+      (item) => item.orderReference === orderRef || item.orderId === orderRef
+    ) ?? null;
+
+  return { order, storageMode };
 }
 
 export async function updateOrderStatus(orderRef: string, status: OrderStatus) {
