@@ -73,6 +73,11 @@ type AdminView = "dashboard" | "orders" | "products" | "settings";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type StatusFilter = "All" | OrderStatus;
 type OrderSort = "Newest first" | "Oldest first" | "Highest total" | "Lowest total";
+type SettingsStorageMode =
+  | "supabase"
+  | "fallback-default"
+  | "fallback-missing-table"
+  | "fallback-error";
 
 type StoredOrderItem = {
   id?: string;
@@ -140,6 +145,14 @@ type DashboardMetrics = {
   mobileWalletOrders: number;
   codOrders: number;
   bankTransferOrders: number;
+};
+
+type SettingsApiResponse = {
+  settings?: AdminSettings;
+  storageMode?: SettingsStorageMode;
+  backendConnected?: boolean;
+  message?: string;
+  errors?: string[];
 };
 
 type AdminProduct = {
@@ -771,6 +784,79 @@ function writeSettingsToStorage(settings: AdminSettings) {
   localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
 }
 
+async function readSettingsFromApi() {
+  try {
+    const response = await fetch("/api/settings", { cache: "no-store" });
+    const payload = (await response.json()) as SettingsApiResponse;
+
+    if (!payload.settings) return null;
+    const localSettings = readSettingsFromStorage();
+
+    return {
+      settings: normalizeAdminSettings({
+        ...localSettings,
+        ...payload.settings,
+        walletReceiverNumbers: localSettings.walletReceiverNumbers,
+        bankTransferInstruction: localSettings.bankTransferInstruction,
+      }),
+      storageMode: payload.storageMode ?? "fallback-error",
+      backendConnected: Boolean(payload.backendConnected),
+      message: payload.message,
+    };
+  } catch (error) {
+    console.error("Failed to load backend settings:", error);
+    return null;
+  }
+}
+
+async function saveSettingsToApi(settings: AdminSettings) {
+  let response: Response;
+  let payload: SettingsApiResponse;
+
+  try {
+    response = await fetch("/api/settings", {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+    payload = (await response.json()) as SettingsApiResponse;
+  } catch (error) {
+    console.error("Failed to save backend settings:", error);
+    return {
+      settings: null,
+      storageMode: "fallback-error" as SettingsStorageMode,
+      backendConnected: false,
+      message:
+        "Settings backend not connected. Local fallback was updated only.",
+    };
+  }
+
+  if (!response.ok || !payload.settings) {
+    return {
+      settings: null,
+      storageMode: payload.storageMode ?? "fallback-error",
+      backendConnected: false,
+      message:
+        payload.errors?.[0] ||
+        "Settings backend not connected. Local fallback was updated only.",
+    };
+  }
+
+  return {
+    settings: normalizeAdminSettings({
+      ...settings,
+      ...payload.settings,
+      walletReceiverNumbers: settings.walletReceiverNumbers,
+      bankTransferInstruction: settings.bankTransferInstruction,
+    }),
+    storageMode: payload.storageMode ?? "supabase",
+    backendConnected: Boolean(payload.backendConnected),
+    message: payload.message,
+  };
+}
+
 function orderTotal(order: StoredOrder) {
   return order.totalAmount ?? order.totals.subtotal ?? 0;
 }
@@ -962,6 +1048,11 @@ export default function AdminPanel({ view }: { view: AdminView }) {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [adminProducts, setAdminProducts] = useState<AdminProduct[]>([]);
   const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
+  const [settingsStorageMode, setSettingsStorageMode] =
+    useState<SettingsStorageMode>("fallback-default");
+  const [settingsBackendMessage, setSettingsBackendMessage] = useState(
+    "Settings backend not connected. Using safe local fallback."
+  );
   const [isLoaded, setIsLoaded] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
@@ -969,6 +1060,20 @@ export default function AdminPanel({ view }: { view: AdminView }) {
     const timerId = window.setTimeout(() => {
       setSettings(readSettingsFromStorage());
       setIsLoaded(true);
+
+      void readSettingsFromApi().then((backendSettings) => {
+        if (!backendSettings) return;
+
+        setSettings(backendSettings.settings);
+        setSettingsStorageMode(backendSettings.storageMode);
+        setSettingsBackendMessage(
+          backendSettings.message ||
+            (backendSettings.backendConnected
+              ? "Settings are connected to Supabase."
+              : "Settings backend not connected. Using safe fallback defaults.")
+        );
+        writeSettingsToStorage(backendSettings.settings);
+      });
 
       const localOrders = readOrdersFromStorage();
       setOrders(localOrders);
@@ -1088,9 +1193,25 @@ export default function AdminPanel({ view }: { view: AdminView }) {
     writeProductsToStorage(nextProducts);
   };
 
-  const saveSettings = (nextSettings: AdminSettings) => {
+  const saveSettings = async (nextSettings: AdminSettings) => {
     setSettings(nextSettings);
     writeSettingsToStorage(nextSettings);
+    const result = await saveSettingsToApi(nextSettings);
+
+    setSettingsStorageMode(result.storageMode);
+    setSettingsBackendMessage(
+      result.message ||
+        (result.backendConnected
+          ? "Settings saved to Supabase."
+          : "Settings backend not connected. Local fallback was updated only.")
+    );
+
+    if (result.settings) {
+      setSettings(result.settings);
+      writeSettingsToStorage(result.settings);
+    }
+
+    return result;
   };
 
   const handleLogout = async () => {
@@ -1200,7 +1321,12 @@ export default function AdminPanel({ view }: { view: AdminView }) {
             ) : view === "products" ? (
               <ProductsSection products={adminProducts} onSaveProducts={saveProducts} />
             ) : view === "settings" ? (
-              <SettingsSection settings={settings} onSaveSettings={saveSettings} />
+              <SettingsSection
+                settings={settings}
+                storageMode={settingsStorageMode}
+                backendMessage={settingsBackendMessage}
+                onSaveSettings={saveSettings}
+              />
             ) : (
               <DashboardSection
                 metrics={metrics}
@@ -1967,28 +2093,50 @@ function ProductEditor({
 
 function SettingsSection({
   settings,
+  storageMode,
+  backendMessage,
   onSaveSettings,
 }: {
   settings: AdminSettings;
-  onSaveSettings: (settings: AdminSettings) => void;
+  storageMode: SettingsStorageMode;
+  backendMessage: string;
+  onSaveSettings: (settings: AdminSettings) => Promise<{
+    settings: AdminSettings | null;
+    storageMode: SettingsStorageMode;
+    backendConnected: boolean;
+    message?: string;
+  }>;
 }) {
   const [draft, setDraft] = useState(settings);
   const [statusMessage, setStatusMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setDraft(settings);
   }, [settings]);
 
-  const saveSettings = (event: FormEvent<HTMLFormElement>) => {
+  const saveSettings = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSaveSettings(draft);
-    setStatusMessage("Settings saved. Checkout will use these local payment details.");
+    setIsSaving(true);
+    const result = await onSaveSettings(draft);
+    setIsSaving(false);
+    setStatusMessage(
+      result.backendConnected
+        ? "Settings saved. Public support details now use the Supabase settings row."
+        : "Settings saved locally only. Settings backend is not connected."
+    );
   };
 
-  const resetSettings = () => {
+  const resetSettings = async () => {
     setDraft(defaultSettings);
-    onSaveSettings(defaultSettings);
-    setStatusMessage("Settings reset to defaults.");
+    setIsSaving(true);
+    const result = await onSaveSettings(defaultSettings);
+    setIsSaving(false);
+    setStatusMessage(
+      result.backendConnected
+        ? "Settings reset to defaults and saved to Supabase."
+        : "Settings reset locally only. Settings backend is not connected."
+    );
   };
 
   const updateWalletNumber = (provider: WalletProvider, value: string) => {
@@ -2003,8 +2151,14 @@ function SettingsSection({
 
   return (
     <form onSubmit={saveSettings} className="mt-6 space-y-5">
-      <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.045] p-4 text-sm leading-6 text-cyan-50/72">
-        These settings are stored locally for testing. Backend/database sync will be added later.
+      <div
+        className={`rounded-[1.25rem] border p-4 text-sm leading-6 ${
+          storageMode === "supabase"
+            ? "border-emerald-200/20 bg-emerald-200/[0.07] text-emerald-50/80"
+            : "border-amber-200/22 bg-amber-200/[0.07] text-amber-50/82"
+        }`}
+      >
+        {backendMessage}
       </div>
 
       {statusMessage && (
@@ -2029,20 +2183,90 @@ function SettingsSection({
             onChange={(value) => setDraft((current) => ({ ...current, storeName: value }))}
           />
           <TextField
-            label="Guarantee text"
-            value={draft.guaranteeText}
-            onChange={(value) => setDraft((current) => ({ ...current, guaranteeText: value }))}
+            label="Support phone"
+            value={draft.supportPhone}
+            onChange={(value) => setDraft((current) => ({ ...current, supportPhone: value }))}
+            inputMode="tel"
+          />
+          <TextField
+            label="WhatsApp number"
+            value={draft.supportWhatsApp}
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, supportWhatsApp: value }))
+            }
+            inputMode="tel"
+          />
+          <TextField
+            label="Support email"
+            value={draft.supportEmail}
+            onChange={(value) => setDraft((current) => ({ ...current, supportEmail: value }))}
+            inputMode="email"
+          />
+          <TextField
+            label="Facebook page URL"
+            value={draft.facebookPageUrl}
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, facebookPageUrl: value }))
+            }
+            inputMode="url"
+          />
+          <TextField
+            label="Business location"
+            value={draft.businessLocation}
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, businessLocation: value }))
+            }
           />
           <TextAreaField
-            label="Delivery note"
-            value={draft.deliveryNote}
-            onChange={(value) => setDraft((current) => ({ ...current, deliveryNote: value }))}
+            label="Delivery coverage"
+            value={draft.deliveryCoverageText}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                deliveryCoverageText: value,
+                deliveryNote: value,
+              }))
+            }
             tall
           />
           <TextAreaField
-            label="COD instruction"
-            value={draft.codInstruction}
-            onChange={(value) => setDraft((current) => ({ ...current, codInstruction: value }))}
+            label="COD message"
+            value={draft.codMessage}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                codMessage: value,
+                codInstruction: value,
+              }))
+            }
+            tall
+          />
+          <TextAreaField
+            label="Privacy packaging message"
+            value={draft.privacyPackagingMessage}
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, privacyPackagingMessage: value }))
+            }
+            tall
+          />
+          <TextAreaField
+            label="3-Day Hygiene-Safe Support message"
+            value={draft.supportWindowMessage}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                supportWindowMessage: value,
+                guaranteeText: value,
+              }))
+            }
+            tall
+          />
+          <TextAreaField
+            label="Order confirmation support note"
+            value={draft.orderConfirmationMessage}
+            onChange={(value) =>
+              setDraft((current) => ({ ...current, orderConfirmationMessage: value }))
+            }
             tall
           />
         </div>
@@ -2081,15 +2305,17 @@ function SettingsSection({
         <button
           type="button"
           onClick={resetSettings}
+          disabled={isSaving}
           className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white/68 transition hover:border-white/25 hover:text-white"
         >
           Reset to defaults
         </button>
         <button
           type="submit"
+          disabled={isSaving}
           className="rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
         >
-          Save settings
+          {isSaving ? "Saving..." : "Save settings"}
         </button>
       </div>
     </form>

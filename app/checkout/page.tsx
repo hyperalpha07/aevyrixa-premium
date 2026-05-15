@@ -12,6 +12,7 @@ import {
   ADMIN_SETTINGS_KEY,
   defaultAdminSettings,
   normalizeAdminSettings,
+  whatsappHref,
   walletProviders,
   type AdminSettings,
   type WalletProvider,
@@ -98,6 +99,19 @@ function readAdminSettingsFromStorage() {
   }
 }
 
+async function readAdminSettingsFromApi() {
+  try {
+    const response = await fetch("/api/settings", { cache: "no-store" });
+    const payload = (await response.json()) as { settings?: unknown };
+    return payload.settings
+      ? normalizeAdminSettings(payload.settings)
+      : defaultAdminSettings;
+  } catch (error) {
+    console.error("Failed to load checkout backend settings:", error);
+    return defaultAdminSettings;
+  }
+}
+
 export default function CheckoutPage() {
   const { items, totalItems, subtotal, isLoaded, clearCart } = useCart();
   const [form, setForm] = useState<CheckoutForm>(initialForm);
@@ -112,6 +126,16 @@ export default function CheckoutPage() {
   useEffect(() => {
     const timerId = window.setTimeout(() => {
       setAdminSettings(readAdminSettingsFromStorage());
+      void readAdminSettingsFromApi().then((backendSettings) => {
+        setAdminSettings((current) =>
+          normalizeAdminSettings({
+            ...current,
+            ...backendSettings,
+            walletReceiverNumbers: current.walletReceiverNumbers,
+            bankTransferInstruction: current.bankTransferInstruction,
+          })
+        );
+      });
     }, 0);
 
     return () => window.clearTimeout(timerId);
@@ -366,7 +390,7 @@ export default function CheckoutPage() {
             Loading checkout...
           </div>
         ) : preparedOrder ? (
-          <ConfirmationPanel order={preparedOrder} />
+          <ConfirmationPanel order={preparedOrder} settings={adminSettings} />
         ) : items.length === 0 ? (
           <EmptyCheckoutState />
         ) : (
@@ -622,8 +646,9 @@ export default function CheckoutPage() {
 
             <OrderSummary
               storeName={adminSettings.storeName}
-              deliveryNote={adminSettings.deliveryNote}
-              guarantee={adminSettings.guaranteeText}
+              deliveryNote={adminSettings.deliveryCoverageText}
+              privacyPackagingMessage={adminSettings.privacyPackagingMessage}
+              guarantee={adminSettings.supportWindowMessage}
             />
           </div>
         )}
@@ -701,10 +726,12 @@ function PremiumNotice({ children }: { children: ReactNode }) {
 function OrderSummary({
   storeName,
   deliveryNote,
+  privacyPackagingMessage,
   guarantee,
 }: {
   storeName: string;
   deliveryNote: string;
+  privacyPackagingMessage: string;
   guarantee: string;
 }) {
   const { items, totalItems, subtotal } = useCart();
@@ -764,7 +791,7 @@ function OrderSummary({
           </div>
           <div className="flex items-start gap-3">
             <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />
-            <span className="leading-6">Discreet Privacy Packaging</span>
+            <span className="leading-6">{privacyPackagingMessage}</span>
           </div>
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-200" />
@@ -805,9 +832,16 @@ function EmptyCheckoutState() {
   );
 }
 
-function ConfirmationPanel({ order }: { order: PreparedOrder }) {
+function ConfirmationPanel({
+  order,
+  settings,
+}: {
+  order: PreparedOrder;
+  settings: AdminSettings;
+}) {
   const [copiedOrderRef, setCopiedOrderRef] = useState(false);
   const trackOrderHref = `/track-order?ref=${encodeURIComponent(order.orderId)}`;
+  const whatsappUrl = whatsappHref(settings.supportWhatsApp);
   const detailItems = (
     [
     ["Order Reference", order.orderId],
@@ -847,6 +881,9 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
       <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/68">
         We have received your order request. Our team will confirm delivery and
         payment details directly before dispatch preparation begins.
+      </p>
+      <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/68">
+        {settings.orderConfirmationMessage || "Need help? Contact Aevyrixa support with your order reference."}
       </p>
       <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-cyan-100/25 bg-black/25 p-5 text-left">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
@@ -911,6 +948,16 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
         >
           Continue Shopping
         </Link>
+        {whatsappUrl && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center rounded-full border border-cyan-100/25 bg-cyan-100/10 px-6 py-3 text-sm font-medium text-cyan-50 transition hover:bg-cyan-100/15 sm:w-auto"
+          >
+            Chat on WhatsApp
+          </a>
+        )}
       </div>
     </div>
   );

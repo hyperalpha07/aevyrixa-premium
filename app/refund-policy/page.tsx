@@ -1,6 +1,11 @@
 import InfoPageShell from "@/app/components/info-page-shell";
+import { getStoreSettings } from "@/app/lib/settings-store";
 
-export default function RefundPolicyPage() {
+export const dynamic = "force-dynamic";
+
+export default async function RefundPolicyPage() {
+  const { settings } = await getStoreSettings();
+
   return (
     <InfoPageShell
       eyebrow="Refund Policy"
@@ -9,11 +14,11 @@ export default function RefundPolicyPage() {
       sections={[
         {
           title: "3-Day Support Window",
-          copy: "Customers may request support within 3 days of delivery for size concerns, wrong item, damaged item, or order issues.",
+          copy: settings.supportWindowMessage,
         },
         {
           title: "Hygiene-Sensitive Conditions",
-          copy: "Eligible items must be unused, unwashed, unstained, odor-free, undamaged, and kept with original packaging, tags, and hygiene liner/seal where applicable.",
+          copy: settings.hygieneReturnMessage,
         },
         {
           title: "Size Check Rule",

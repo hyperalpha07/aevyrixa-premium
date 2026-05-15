@@ -1,23 +1,28 @@
 import InfoPageShell from "@/app/components/info-page-shell";
+import { getStoreSettings } from "@/app/lib/settings-store";
 
-export default function ShippingPolicyPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ShippingPolicyPage() {
+  const { settings } = await getStoreSettings();
+
   return (
     <InfoPageShell
       eyebrow="Shipping Policy"
       title="Discreet Delivery Across Bangladesh"
-      intro="Orders are reviewed and confirmed before dispatch so delivery details stay clear and private."
+      intro={settings.deliveryCoverageText}
       sections={[
         {
           title: "Bangladesh Delivery",
-          copy: "Estimated delivery is 2-7 working days across Bangladesh after order confirmation.",
+          copy: settings.deliveryCoverageText,
         },
         {
           title: "Discreet Privacy Packaging",
-          copy: "Your order is packed with privacy-focused handling. Outer packaging will not expose sensitive product details.",
+          copy: settings.privacyPackagingMessage,
         },
         {
           title: "Delivery Review",
-          copy: "Delivery cost, courier details, and estimated timing are confirmed by our team before dispatch.",
+          copy: `${settings.codMessage} Delivery cost, courier details, and estimated timing are confirmed by our team before dispatch.`,
         },
         {
           title: "Parcel Check",

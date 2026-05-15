@@ -1,11 +1,17 @@
 "use client";
 
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import { formatCurrency } from "@/app/lib/currency";
+import {
+  defaultAdminSettings,
+  normalizeAdminSettings,
+  whatsappHref,
+  type AdminSettings,
+} from "@/app/lib/admin-settings";
 
 type TimelineState = "complete" | "active" | "inactive";
 
@@ -74,12 +80,32 @@ function TrackOrderContent() {
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
 
   const isCancelled = order?.status === "Cancelled";
-  const supportNote = useMemo(
-    () => "Need help? Contact Aevyrixa support with your order reference.",
-    []
-  );
+  const whatsappUrl = whatsappHref(settings.supportWhatsApp);
+  const supportContact = settings.supportWhatsApp || settings.supportPhone;
+  const supportNote = useMemo(() => {
+    const contact = supportContact ? ` at ${supportContact}` : "";
+    return `Need help? Contact Aevyrixa support${contact} with your order reference.`;
+  }, [supportContact]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void fetch("/api/settings", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload: { settings?: unknown }) => {
+        if (isActive && payload.settings) {
+          setSettings(normalizeAdminSettings(payload.settings));
+        }
+      })
+      .catch(() => null);
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -282,7 +308,19 @@ function TrackOrderContent() {
                 </ul>
               </div>
 
-              <p className="mt-5 text-sm leading-7 text-white/58">{supportNote}</p>
+              <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/62">
+                <p>{supportNote}</p>
+                {whatsappUrl && (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex font-semibold text-cyan-100 transition hover:text-white"
+                  >
+                    Chat with Aevyrixa Support
+                  </a>
+                )}
+              </div>
             </section>
           )}
         </div>

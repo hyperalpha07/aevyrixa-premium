@@ -1,5 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  defaultAdminSettings,
+  normalizeAdminSettings,
+  whatsappHref,
+  type AdminSettings,
+} from "@/app/lib/admin-settings";
 
 const footerGroups = [
   {
@@ -30,6 +39,27 @@ const footerGroups = [
 ];
 
 export default function SiteFooter() {
+  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void fetch("/api/settings", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload: { settings?: unknown }) => {
+        if (isActive && payload.settings) {
+          setSettings(normalizeAdminSettings(payload.settings));
+        }
+      })
+      .catch(() => null);
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const whatsappUrl = whatsappHref(settings.supportWhatsApp);
+
   return (
     <footer className="border-t border-white/10 bg-[#02040d] px-4 pb-24 pt-12 text-white sm:px-6 sm:pb-16">
       <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
@@ -56,8 +86,24 @@ export default function SiteFooter() {
           </div>
           <p className="mt-5 max-w-sm text-sm leading-7 text-white/56">
             Premium reusable period care designed around comfort, discretion,
-            and a more confident everyday routine.
+            BDT pricing, Bangladesh delivery/COD support, and discreet privacy
+            packaging.
           </p>
+          <div className="mt-5 space-y-2 text-sm leading-6 text-white/58">
+            <p>{settings.supportWindowMessage}</p>
+            {settings.supportPhone && <p>Support: {settings.supportPhone}</p>}
+            {settings.supportEmail && <p>Email: {settings.supportEmail}</p>}
+            {whatsappUrl && (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex font-semibold text-cyan-100 transition hover:text-white"
+              >
+                Chat with Aevyrixa Support
+              </a>
+            )}
+          </div>
         </div>
 
         {footerGroups.map((group) => (
@@ -81,7 +127,7 @@ export default function SiteFooter() {
 
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/42 sm:flex-row sm:items-center sm:justify-between">
         <p>Copyright 2026 Aevyrixa. All rights reserved.</p>
-        <p>Reusable care guidance is informational and not medical advice.</p>
+        <p>{settings.privacyPackagingMessage}</p>
       </div>
     </footer>
   );
