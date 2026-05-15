@@ -223,43 +223,74 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
   };
 }
 
-function toSupabasePayload(product: ProductMutationInput) {
-  return {
-    slug: product.slug,
-    name: product.name,
-    short_description: product.shortDescription ?? "",
-    description: product.description ?? "",
-    category: product.category ?? "Reusable Period Panty",
-    price: product.price ?? 0,
-    compare_at_price: product.compareAtPrice ?? null,
-    currency: product.currency ?? "USD",
-    status: product.status ?? "draft",
-    featured: Boolean(product.featured),
-    stock_status: product.stockStatus ?? "in_stock",
-    stock_quantity: product.stockQuantity ?? null,
-    sizes: product.sizes ?? [],
-    colors: product.colors ?? [],
-    visual: product.visual ?? product.visualTheme ?? "blush-violet",
-    visual_theme: product.visualTheme ?? product.visual ?? "blush-violet",
-    visual_variant: product.visualVariant ?? product.visualTheme ?? product.visual ?? null,
-    absorbency: product.absorbency ?? "Moderate",
-    absorbency_options: product.absorbencyOptions ?? [],
-    image_url: product.imageUrl ?? null,
-    video_url: product.videoUrl ?? null,
-    poster_url: product.posterUrl ?? null,
-    benefits: product.benefits ?? [],
-    care: product.care ?? [],
-    seo_title: product.seoTitle ?? null,
-    seo_description: product.seoDescription ?? null,
-    updated_at: new Date().toISOString(),
-  };
+function hasProductField(product: ProductMutationInput, field: keyof ProductMutationInput) {
+  return Object.prototype.hasOwnProperty.call(product, field);
 }
 
-async function listProductsFromSupabase(includeDrafts: boolean) {
-  const statusFilter = includeDrafts ? "" : "&status=eq.active";
+function toSupabasePayload(product: ProductMutationInput) {
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (hasProductField(product, "slug")) payload.slug = product.slug;
+  if (hasProductField(product, "name")) payload.name = product.name;
+  if (hasProductField(product, "shortDescription")) {
+    payload.short_description = product.shortDescription ?? "";
+  }
+  if (hasProductField(product, "description")) {
+    payload.description = product.description ?? "";
+  }
+  if (hasProductField(product, "category")) {
+    payload.category = product.category ?? "Reusable Period Panty";
+  }
+  if (hasProductField(product, "price")) payload.price = product.price ?? 0;
+  if (hasProductField(product, "compareAtPrice")) {
+    payload.compare_at_price = product.compareAtPrice ?? null;
+  }
+  if (hasProductField(product, "currency")) {
+    payload.currency = product.currency ?? "USD";
+  }
+  if (hasProductField(product, "status")) payload.status = product.status ?? "draft";
+  if (hasProductField(product, "featured")) payload.featured = Boolean(product.featured);
+  if (hasProductField(product, "stockStatus")) {
+    payload.stock_status = product.stockStatus ?? "in_stock";
+  }
+  if (hasProductField(product, "stockQuantity")) {
+    payload.stock_quantity = product.stockQuantity ?? null;
+  }
+  if (hasProductField(product, "sizes")) payload.sizes = product.sizes ?? [];
+  if (hasProductField(product, "colors")) payload.colors = product.colors ?? [];
+  if (hasProductField(product, "visual") || hasProductField(product, "visualTheme")) {
+    payload.visual = product.visual ?? product.visualTheme ?? "blush-violet";
+    payload.visual_theme = product.visualTheme ?? product.visual ?? "blush-violet";
+  }
+  if (hasProductField(product, "visualVariant")) {
+    payload.visual_variant =
+      product.visualVariant ?? product.visualTheme ?? product.visual ?? null;
+  }
+  if (hasProductField(product, "absorbency")) {
+    payload.absorbency = product.absorbency ?? "Moderate";
+  }
+  if (hasProductField(product, "absorbencyOptions")) {
+    payload.absorbency_options = product.absorbencyOptions ?? [];
+  }
+  if (hasProductField(product, "imageUrl")) payload.image_url = product.imageUrl ?? null;
+  if (hasProductField(product, "videoUrl")) payload.video_url = product.videoUrl ?? null;
+  if (hasProductField(product, "posterUrl")) payload.poster_url = product.posterUrl ?? null;
+  if (hasProductField(product, "benefits")) payload.benefits = product.benefits ?? [];
+  if (hasProductField(product, "care")) payload.care = product.care ?? [];
+  if (hasProductField(product, "seoTitle")) payload.seo_title = product.seoTitle ?? null;
+  if (hasProductField(product, "seoDescription")) {
+    payload.seo_description = product.seoDescription ?? null;
+  }
+
+  return payload;
+}
+
+async function listProductsFromSupabase() {
   const response = await fetch(
     supabaseEndpoint(
-      `${SUPABASE_PRODUCTS_TABLE}?select=*&order=created_at.desc${statusFilter}`
+      `${SUPABASE_PRODUCTS_TABLE}?select=*&order=created_at.desc`
     ),
     {
       headers: supabaseHeaders(),
@@ -271,23 +302,6 @@ async function listProductsFromSupabase(includeDrafts: boolean) {
 
   const rows = (await response.json()) as SupabaseProductRow[];
   return rows.map(mapSupabaseProduct);
-}
-
-async function getProductBySlugFromSupabase(slug: string) {
-  const response = await fetch(
-    supabaseEndpoint(
-      `${SUPABASE_PRODUCTS_TABLE}?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`
-    ),
-    {
-      headers: supabaseHeaders(),
-      cache: "no-store",
-    }
-  );
-
-  if (!response.ok) throw await supabaseError(response, "product by slug");
-
-  const rows = (await response.json()) as SupabaseProductRow[];
-  return rows[0] ? mapSupabaseProduct(rows[0]) : null;
 }
 
 async function createProductInSupabase(input: ProductCatalogItem) {
@@ -349,12 +363,15 @@ async function safelyUseSupabase<T>(action: () => Promise<T>) {
 
 export async function listProducts(options: { includeDrafts?: boolean } = {}) {
   const includeDrafts = Boolean(options.includeDrafts);
-  const supabaseProducts = await safelyUseSupabase(() =>
-    listProductsFromSupabase(includeDrafts)
-  );
+  const supabaseProducts = await safelyUseSupabase(listProductsFromSupabase);
 
-  if (supabaseProducts) {
-    return { products: supabaseProducts, storageMode: "supabase" as ProductStorageMode };
+  if (supabaseProducts && supabaseProducts.length > 0) {
+    return {
+      products: includeDrafts
+        ? supabaseProducts
+        : supabaseProducts.filter((product) => product.status === "active"),
+      storageMode: "supabase" as ProductStorageMode,
+    };
   }
 
   const products = includeDrafts
@@ -370,17 +387,25 @@ export async function listProducts(options: { includeDrafts?: boolean } = {}) {
 }
 
 export async function getProductBySlug(slug: string, options: { includeDrafts?: boolean } = {}) {
-  const supabaseProduct = await safelyUseSupabase(() =>
-    getProductBySlugFromSupabase(slug)
-  );
   const includeDrafts = Boolean(options.includeDrafts);
+  const supabaseProducts = await safelyUseSupabase(listProductsFromSupabase);
 
-  if (supabaseProduct) {
+  if (supabaseProducts && supabaseProducts.length > 0) {
+    const supabaseProduct =
+      supabaseProducts.find((product) => product.slug === slug) ?? null;
+
+    if (!supabaseProduct) {
+      return { product: null, storageMode: "supabase" as ProductStorageMode };
+    }
+
     if (!includeDrafts && supabaseProduct.status !== "active") {
       return { product: null, storageMode: "supabase" as ProductStorageMode };
     }
 
-    return { product: supabaseProduct, storageMode: "supabase" as ProductStorageMode };
+    return {
+      product: supabaseProduct,
+      storageMode: "supabase" as ProductStorageMode,
+    };
   }
 
   const product =
@@ -442,4 +467,3 @@ export async function deleteProduct(id: string) {
 
 // TODO: Expand this adapter when inventory variants become first-class rows.
 // Product-level stock fields are intentionally simple for Phase 15.
-

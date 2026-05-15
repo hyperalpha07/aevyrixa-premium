@@ -113,7 +113,7 @@ export default async function Home() {
       <HomeMotionController />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.16),transparent_28%),linear-gradient(180deg,#030612_0%,#07101f_46%,#050612_100%)]" />
 
-      <SiteHeader active="home" />
+      <SiteHeader active="home" productHref={featuredProductHref} />
 
       <section className="aev-hero-stage relative isolate overflow-hidden px-4 pb-18 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />

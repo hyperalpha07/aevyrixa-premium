@@ -37,6 +37,9 @@ const themeStyles: Record<
 
 export default async function ProductCollectionPage() {
   const { products } = await listProducts();
+  const primaryProductHref = products[0]
+    ? `/product/${products[0].slug}`
+    : "/product";
 
   return (
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
@@ -46,7 +49,7 @@ export default async function ProductCollectionPage() {
         <div className="absolute bottom-[-14%] left-[30%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
       </div>
 
-      <SiteHeader active="shop" productHref="/product/everyday-comfort" />
+      <SiteHeader active="shop" productHref={primaryProductHref} />
 
       <section className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 md:pb-12 md:pt-16">
         <div className="max-w-3xl">

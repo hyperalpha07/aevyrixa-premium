@@ -517,7 +517,7 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
 
 async function readProductsFromApi() {
   try {
-    const response = await fetch("/api/products?admin=1", { cache: "no-store" });
+    const response = await fetch("/api/products?scope=admin", { cache: "no-store" });
     if (!response.ok) return null;
 
     const payload = (await response.json()) as unknown;

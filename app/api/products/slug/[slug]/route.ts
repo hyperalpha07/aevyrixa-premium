@@ -11,7 +11,9 @@ export async function GET(
 
   try {
     const result = await getProductBySlug(slug, {
-      includeDrafts: url.searchParams.get("admin") === "1",
+      includeDrafts:
+        url.searchParams.get("scope") === "admin" ||
+        url.searchParams.get("admin") === "1",
     });
 
     if (!result.product) {
@@ -30,4 +32,3 @@ export async function GET(
     );
   }
 }
-

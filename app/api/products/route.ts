@@ -18,7 +18,10 @@ function productInput(payload: unknown): ProductMutationInput | null {
 
 function includeDraftsFromRequest(request: Request) {
   const url = new URL(request.url);
-  return url.searchParams.get("admin") === "1";
+  return (
+    url.searchParams.get("scope") === "admin" ||
+    url.searchParams.get("admin") === "1"
+  );
 }
 
 export async function GET(request: Request) {
@@ -65,4 +68,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
