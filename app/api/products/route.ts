@@ -1,6 +1,7 @@
 import {
   createProduct,
   listProducts,
+  productStoreErrorResponse,
   validateProductInput,
 } from "@/app/lib/product-store";
 import type { ProductMutationInput } from "@/app/lib/product-types";
@@ -69,9 +70,10 @@ export async function POST(request: Request) {
     return json(result, { status: 201 });
   } catch (error) {
     console.error("Failed to create product:", error);
-    return json(
-      { errors: ["Product could not be created."], detail: error instanceof Error ? error.message : undefined },
-      { status: 500 }
+    const response = productStoreErrorResponse(
+      error,
+      "Product could not be created."
     );
+    return json(response.body, { status: response.status });
   }
 }

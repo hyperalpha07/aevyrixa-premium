@@ -42,6 +42,23 @@ type SupabaseProductRow = {
   updated_at?: string | null;
 };
 
+class ProductStoreError extends Error {
+  status: number;
+  publicMessage: string;
+  code: string;
+
+  constructor(
+    message: string,
+    options: { status?: number; publicMessage?: string; code?: string } = {}
+  ) {
+    super(message);
+    this.name = "ProductStoreError";
+    this.status = options.status ?? 500;
+    this.publicMessage = options.publicMessage ?? "Product operation failed.";
+    this.code = options.code ?? "PRODUCT_STORE_ERROR";
+  }
+}
+
 const fallbackProducts = staticProducts.map((product) =>
   legacyProductToCatalogItem(product)
 );
@@ -74,7 +91,41 @@ function supabaseEndpoint(pathAndQuery: string) {
 async function supabaseError(response: Response, action: string) {
   const detail = await response.text().catch(() => "");
   const suffix = detail ? ` ${detail.slice(0, 240)}` : "";
-  return new Error(`Supabase ${action} failed with ${response.status}.${suffix}`);
+  let publicMessage = `Product ${action} failed.`;
+  let code = "SUPABASE_PRODUCT_ERROR";
+
+  try {
+    const parsed = JSON.parse(detail) as { code?: unknown; message?: unknown };
+    if (parsed.code === "23505") {
+      publicMessage = "A product with this slug already exists.";
+      code = "PRODUCT_SLUG_EXISTS";
+    } else if (response.status >= 400 && response.status < 500) {
+      publicMessage = "Product data was rejected by the backend.";
+    }
+  } catch {
+    if (response.status >= 400 && response.status < 500) {
+      publicMessage = "Product data was rejected by the backend.";
+    }
+  }
+
+  return new ProductStoreError(
+    `Supabase ${action} failed with ${response.status}.${suffix}`,
+    { status: response.status, publicMessage, code }
+  );
+}
+
+export function productStoreErrorResponse(error: unknown, fallback: string) {
+  if (error instanceof ProductStoreError) {
+    return {
+      status: error.status,
+      body: { errors: [error.publicMessage], code: error.code },
+    };
+  }
+
+  return {
+    status: 500,
+    body: { errors: [fallback], code: "PRODUCT_STORE_ERROR" },
+  };
 }
 
 function textValue(value: unknown) {
@@ -91,12 +142,6 @@ function slugValue(value: unknown) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-}
-
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value
-  );
 }
 
 function numberValue(value: unknown) {
@@ -192,18 +237,18 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
     featured: Boolean(input.featured),
     stockStatus: normalizeStockStatus(input.stockStatus),
     stockQuantity: numberValue(input.stockQuantity),
-    sizes: input.sizes ?? [],
-    colors: input.colors ?? [],
+    sizes: stringArrayValue(input.sizes),
+    colors: stringArrayValue(input.colors),
     absorbency: textValue(input.absorbency) || "Moderate",
-    absorbencyOptions: input.absorbencyOptions ?? [],
+    absorbencyOptions: stringArrayValue(input.absorbencyOptions),
     visual: visualTheme,
     visualTheme,
     visualVariant: optionalText(input.visualVariant) ?? visualTheme,
     imageUrl: optionalText(input.imageUrl),
     videoUrl: optionalText(input.videoUrl),
     posterUrl: optionalText(input.posterUrl),
-    benefits: input.benefits ?? [],
-    care: input.care ?? [],
+    benefits: stringArrayValue(input.benefits),
+    care: stringArrayValue(input.care),
     seoTitle: optionalText(input.seoTitle),
     seoDescription: optionalText(input.seoDescription),
     createdAt: input.createdAt ?? now,
@@ -311,6 +356,36 @@ function toSupabasePayload(product: ProductMutationInput) {
   return payload;
 }
 
+function toSupabaseCreatePayload(product: ProductCatalogItem) {
+  return {
+    slug: slugValue(product.slug),
+    name: textValue(product.name),
+    short_description: textValue(product.shortDescription),
+    description: textValue(product.description),
+    category: textValue(product.category) || "Reusable Period Panty",
+    price: numberValue(product.price) ?? 0,
+    compare_at_price: numberValue(product.compareAtPrice) ?? null,
+    currency: textValue(product.currency) || "USD",
+    status: normalizeStatus(product.status),
+    featured: Boolean(product.featured),
+    stock_status: normalizeStockStatus(product.stockStatus),
+    stock_quantity: numberValue(product.stockQuantity) ?? null,
+    sizes: stringArrayValue(product.sizes),
+    colors: stringArrayValue(product.colors),
+    absorbency: textValue(product.absorbency) || "Moderate",
+    absorbency_options: stringArrayValue(product.absorbencyOptions),
+    visual: normalizeVisual(product.visual),
+    visual_theme: normalizeVisual(product.visualTheme),
+    visual_variant: optionalText(product.visualVariant) ?? normalizeVisual(product.visualTheme),
+    benefits: stringArrayValue(product.benefits),
+    care: stringArrayValue(product.care),
+    seo_title: optionalText(product.seoTitle) ?? null,
+    seo_description: optionalText(product.seoDescription) ?? null,
+    image_url: optionalText(product.imageUrl) ?? null,
+    poster_url: optionalText(product.posterUrl) ?? null,
+  };
+}
+
 async function listProductsFromSupabase() {
   const response = await fetch(
     supabaseEndpoint(
@@ -329,14 +404,7 @@ async function listProductsFromSupabase() {
 }
 
 async function createProductInSupabase(input: ProductCatalogItem) {
-  const payload = {
-    ...toSupabasePayload(input),
-    created_at: input.createdAt ?? new Date().toISOString(),
-  };
-
-  if (isUuid(input.id)) {
-    Object.assign(payload, { id: input.id });
-  }
+  const payload = toSupabaseCreatePayload(input);
 
   const response = await fetch(
     supabaseEndpoint(`${SUPABASE_PRODUCTS_TABLE}?select=*`),
@@ -353,7 +421,15 @@ async function createProductInSupabase(input: ProductCatalogItem) {
   if (!response.ok) throw await supabaseError(response, "product insert");
 
   const rows = (await response.json()) as SupabaseProductRow[];
-  return rows[0] ? mapSupabaseProduct(rows[0]) : input;
+  if (!rows[0]) {
+    throw new ProductStoreError("Supabase product insert returned no rows.", {
+      status: 502,
+      publicMessage: "Product was created but the backend did not return it.",
+      code: "PRODUCT_CREATE_EMPTY_RESPONSE",
+    });
+  }
+
+  return mapSupabaseProduct(rows[0]);
 }
 
 async function updateProductInSupabase(id: string, updates: ProductMutationInput) {
