@@ -7,12 +7,12 @@ const footerGroups = [
     links: [
       { label: "Her Care Collection", href: "/product" },
       { label: "Period Panty", href: "/product/everyday-comfort" },
-      { label: "Track Order", href: "/track-order" },
     ],
   },
   {
     title: "Support",
     links: [
+      { label: "Track Order", href: "/track-order" },
       { label: "FAQ", href: "/faq" },
       { label: "Contact", href: "/contact" },
       { label: "Refund Policy", href: "/refund-policy" },

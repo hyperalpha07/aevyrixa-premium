@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 
@@ -20,7 +21,6 @@ type TrackedOrder = {
     quantity: number;
     variant?: string;
   }[];
-  deliveryNote?: string;
   timeline: {
     label: string;
     state: TimelineState;
@@ -64,7 +64,17 @@ function stepClasses(state: TimelineState) {
 }
 
 export default function TrackOrderPage() {
-  const [orderRef, setOrderRef] = useState("");
+  return (
+    <Suspense fallback={<TrackOrderFallback />}>
+      <TrackOrderContent />
+    </Suspense>
+  );
+}
+
+function TrackOrderContent() {
+  const searchParams = useSearchParams();
+  const initialOrderRef = searchParams.get("ref")?.trim() ?? "";
+  const [orderRef, setOrderRef] = useState(initialOrderRef);
   const [customerPhone, setCustomerPhone] = useState("");
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [error, setError] = useState("");
@@ -112,7 +122,7 @@ export default function TrackOrderPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_48%,#030612_100%)]" />
-      <SiteHeader />
+      <SiteHeader active="track" />
 
       <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-8 px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.88fr_1.12fr]">
         <div className="min-w-0">
@@ -150,7 +160,7 @@ export default function TrackOrderPage() {
                 required
                 value={orderRef}
                 onChange={(event) => setOrderRef(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-cyan-200/50"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm uppercase text-white outline-none transition placeholder:normal-case placeholder:text-white/30 focus:border-cyan-200/50"
                 placeholder="AEV-..."
                 autoComplete="off"
               />
@@ -268,21 +278,26 @@ export default function TrackOrderPage() {
                 </ul>
               </div>
 
-              {order.deliveryNote && (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/66">
-                  <span className="font-semibold text-white/78">
-                    Delivery note:
-                  </span>{" "}
-                  {order.deliveryNote}
-                </div>
-              )}
-
               <p className="mt-5 text-sm leading-7 text-white/58">{supportNote}</p>
             </section>
           )}
         </div>
       </section>
 
+      <SiteFooter />
+    </main>
+  );
+}
+
+function TrackOrderFallback() {
+  return (
+    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
+      <SiteHeader active="track" />
+      <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-6 text-white/65 backdrop-blur-2xl">
+          Loading order tracking...
+        </div>
+      </section>
       <SiteFooter />
     </main>
   );

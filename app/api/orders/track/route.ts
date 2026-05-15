@@ -86,7 +86,6 @@ function safeOrderSummary(order: OrderRecord) {
     total: order.totalAmount,
     paymentMethod: paymentMethodLabel(order),
     items: order.items.map(itemSummary),
-    deliveryNote: order.customer.deliveryNote,
     timeline: timelineForStatus(order.status),
   };
 }

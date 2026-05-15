@@ -58,13 +58,8 @@ type PreparedOrder = {
   orderId: string;
   customerName: string;
   customerPhone: string;
-  paymentMethod: PaymentMethod;
-  walletProvider?: WalletProvider;
-  paymentType?: PaymentType;
-  receiverNumber?: string;
-  walletSenderNumber?: string;
-  transactionReference?: string;
   total: number;
+  paymentMethod: PaymentMethod;
 };
 
 type OrderApiResponse = {
@@ -329,13 +324,8 @@ export default function CheckoutPage() {
         orderId: result.order.orderReference || result.order.orderId,
         customerName: result.order.customer.fullName,
         customerPhone: result.order.customer.phone,
-        paymentMethod: result.order.paymentDetails.paymentMethod,
-        walletProvider: result.order.paymentDetails.walletProvider,
-        paymentType: result.order.paymentDetails.paymentType,
-        receiverNumber: result.order.paymentDetails.receiverNumber,
-        walletSenderNumber: result.order.paymentDetails.walletSenderNumber,
-        transactionReference: result.order.paymentDetails.transactionReference,
         total: result.order.totalAmount,
+        paymentMethod: result.order.paymentDetails.paymentMethod,
       });
       clearCart();
     } catch (error) {
@@ -815,6 +805,8 @@ function EmptyCheckoutState() {
 }
 
 function ConfirmationPanel({ order }: { order: PreparedOrder }) {
+  const [copiedOrderRef, setCopiedOrderRef] = useState(false);
+  const trackOrderHref = `/track-order?ref=${encodeURIComponent(order.orderId)}`;
   const detailItems = (
     [
     ["Order Reference", order.orderId],
@@ -822,11 +814,6 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
     ["Customer Phone", order.customerPhone],
     ["Order Total", `$${order.total.toFixed(2)}`],
     ["Selected Payment Method", order.paymentMethod],
-    ["Wallet Provider", order.walletProvider],
-    ["Payment Type", order.paymentType],
-    ["Receiver Number", order.receiverNumber],
-    ["Wallet Sender Number", order.walletSenderNumber],
-    ["Transaction ID / Reference", order.transactionReference],
     ] as Array<[string, string | undefined]>
   ).filter((item): item is [string, string] => Boolean(item[1]));
   const nextSteps = [
@@ -834,6 +821,16 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
     "Team confirms details",
     "Dispatch preparation",
   ];
+
+  const copyOrderReference = async () => {
+    try {
+      await navigator.clipboard.writeText(order.orderId);
+      setCopiedOrderRef(true);
+      window.setTimeout(() => setCopiedOrderRef(false), 1800);
+    } catch {
+      setCopiedOrderRef(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl rounded-[1.75rem] border border-cyan-200/25 bg-cyan-200/[0.08] p-5 text-center shadow-[0_0_48px_rgba(34,211,238,0.12)] backdrop-blur-2xl sm:p-10">
@@ -850,6 +847,28 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
         We have received your order request. Our team will confirm delivery and
         payment details directly before dispatch preparation begins.
       </p>
+      <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-cyan-100/25 bg-black/25 p-5 text-left">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
+          Order Reference
+        </p>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere]">
+            {order.orderId}
+          </p>
+          <button
+            type="button"
+            onClick={copyOrderReference}
+            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-cyan-100/15 sm:w-auto"
+          >
+            <Copy className="h-4 w-4" />
+            {copiedOrderRef ? "Copied" : "Copy Order Reference"}
+          </button>
+        </div>
+        <p className="mt-4 text-sm leading-7 text-white/70">
+          Please save your order reference. You can track your order anytime
+          using your order reference and phone number.
+        </p>
+      </div>
       <div className="mx-auto mt-7 grid max-w-3xl gap-3 sm:grid-cols-3">
         {nextSteps.map((step, index) => (
           <div
@@ -880,14 +899,14 @@ function ConfirmationPanel({ order }: { order: PreparedOrder }) {
       </div>
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
-          href="/cart"
-          className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-6 py-3 text-sm font-medium text-white transition hover:bg-white/[0.09] sm:w-auto"
+          href={trackOrderHref}
+          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
         >
-          Review Cart
+          Track Your Order
         </Link>
         <Link
           href="/product"
-          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
+          className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-6 py-3 text-sm font-medium text-white transition hover:bg-white/[0.09] sm:w-auto"
         >
           Continue Shopping
         </Link>

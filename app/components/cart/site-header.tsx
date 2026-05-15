@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
+import { PackageSearch, ShoppingBag } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 
 type SiteHeaderProps = {
-  active?: "home" | "shop" | "product" | "cart";
+  active?: "home" | "shop" | "product" | "track" | "cart";
   productHref?: string;
 };
 
@@ -49,6 +49,18 @@ export default function SiteHeader({
         </Link>
 
         <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <Link
+            href="/track-order"
+            className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
+              active === "track"
+                ? "border-fuchsia-400/35 bg-white/10 text-white"
+                : "border-white/10 bg-white/5 text-white/82 hover:border-fuchsia-400/35 hover:bg-white/10"
+            }`}
+            aria-label="Track Order"
+          >
+            <PackageSearch className="h-4 w-4" />
+            <span className="hidden min-[390px]:inline">Track</span>
+          </Link>
           <button
             type="button"
             onClick={toggleCart}
@@ -84,6 +96,13 @@ export default function SiteHeader({
             className={`${navBase} ${active === "product" ? navActive : navMuted}`}
           >
             Product
+          </Link>
+
+          <Link
+            href="/track-order"
+            className={`${navBase} ${active === "track" ? navActive : navMuted}`}
+          >
+            Track Order
           </Link>
 
           <button
