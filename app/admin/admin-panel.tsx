@@ -1657,9 +1657,10 @@ function ProductsSection({
             </span>
             <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
             <input
+              type="search"
               value={productSearchTerm}
               onChange={(event) => setProductSearchTerm(event.target.value)}
-              placeholder="Name, slug, category, absorbency"
+              placeholder="Search products by name, slug, category..."
               className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
             />
           </label>
