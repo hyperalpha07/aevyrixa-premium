@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { hasAdminSession } from "@/app/lib/admin-auth";
 import AdminPanel from "../admin-panel";
 
 export const metadata: Metadata = {
@@ -6,6 +8,8 @@ export const metadata: Metadata = {
   description: "Manage local Aevyrixa Her Care test orders.",
 };
 
-export default function AdminOrdersPage() {
+export default async function AdminOrdersPage() {
+  if (!(await hasAdminSession())) redirect("/admin/login");
+
   return <AdminPanel view="orders" />;
 }

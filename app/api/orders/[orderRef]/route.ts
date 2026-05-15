@@ -1,3 +1,7 @@
+import {
+  unauthorizedAdminResponse,
+  verifyAdminRequest,
+} from "@/app/lib/admin-auth";
 import { updateOrderStatus } from "@/app/lib/order-store";
 import { orderStatuses, type OrderStatus } from "@/app/lib/order-types";
 
@@ -11,6 +15,8 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ orderRef: string }> }
 ) {
+  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+
   const { orderRef } = await context.params;
   let payload: unknown;
 

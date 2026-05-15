@@ -1,3 +1,7 @@
+import {
+  unauthorizedAdminResponse,
+  verifyAdminRequest,
+} from "@/app/lib/admin-auth";
 import { getProductBySlug } from "@/app/lib/product-store";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +19,17 @@ export async function GET(
 ) {
   const { slug } = await context.params;
   const url = new URL(request.url);
+  const includeDrafts =
+    url.searchParams.get("scope") === "admin" ||
+    url.searchParams.get("admin") === "1";
+
+  if (includeDrafts && !verifyAdminRequest(request)) {
+    return unauthorizedAdminResponse();
+  }
 
   try {
     const result = await getProductBySlug(slug, {
-      includeDrafts:
-        url.searchParams.get("scope") === "admin" ||
-        url.searchParams.get("admin") === "1",
+      includeDrafts,
     });
 
     if (!result.product) {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -43,9 +44,7 @@ import type {
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
-const ADMIN_SESSION_KEY = "aevyrixa-admin-session";
 const ADMIN_PRODUCTS_KEY = "aevyrixa-admin-products";
-const ADMIN_PASSCODE = "AEV-ADMIN-2026";
 
 const productStatuses = ["Active", "Draft"] as const;
 const stockStatuses: ProductStockStatus[] = [
@@ -910,16 +909,15 @@ function buildPaymentSummary(order: StoredOrder) {
 }
 
 export default function AdminPanel({ view }: { view: AdminView }) {
+  const router = useRouter();
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [adminProducts, setAdminProducts] = useState<AdminProduct[]>([]);
   const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
-      setIsAuthenticated(localStorage.getItem(ADMIN_SESSION_KEY) === "active");
       setSettings(readSettingsFromStorage());
       setIsLoaded(true);
 
@@ -1016,19 +1014,11 @@ export default function AdminPanel({ view }: { view: AdminView }) {
     writeSettingsToStorage(nextSettings);
   };
 
-  const handleLogin = (passcode: string) => {
-    if (passcode !== ADMIN_PASSCODE) return false;
-
-    // Temporary local testing gate only. This localStorage session is not production security.
-    localStorage.setItem(ADMIN_SESSION_KEY, "active");
-    setIsAuthenticated(true);
-    return true;
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem(ADMIN_SESSION_KEY);
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => null);
     setExpandedOrderId(null);
+    router.replace("/admin/login");
+    router.refresh();
   };
 
   if (!isLoaded) {
@@ -1039,10 +1029,6 @@ export default function AdminPanel({ view }: { view: AdminView }) {
         </div>
       </main>
     );
-  }
-
-  if (!isAuthenticated) {
-    return <AdminLogin onLogin={handleLogin} />;
   }
 
   return (
@@ -1146,78 +1132,6 @@ export default function AdminPanel({ view }: { view: AdminView }) {
           </div>
         </section>
       </div>
-    </main>
-  );
-}
-
-function AdminLogin({ onLogin }: { onLogin: (passcode: string) => boolean }) {
-  const [passcode, setPasscode] = useState("");
-  const [error, setError] = useState("");
-
-  const submitLogin = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const accepted = onLogin(passcode.trim());
-    setError(accepted ? "" : "Passcode not recognized.");
-  };
-
-  return (
-    <main className="grid min-h-screen place-items-center overflow-x-hidden bg-[#030712] px-4 py-10 text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-20%] top-[-10%] h-[340px] w-[340px] rounded-full bg-cyan-400/16 blur-[130px]" />
-        <div className="absolute right-[-18%] top-[22%] h-[360px] w-[360px] rounded-full bg-fuchsia-400/14 blur-[150px]" />
-      </div>
-      <form
-        onSubmit={submitLogin}
-        className="w-full max-w-md rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5 shadow-[0_0_70px_rgba(34,211,238,0.10)] backdrop-blur-2xl sm:p-7"
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10 text-cyan-100">
-          <ShieldCheck className="h-5 w-5" />
-        </div>
-        <p className="mt-5 text-xs uppercase tracking-[0.28em] text-cyan-200/70">
-          Aevyrixa Admin
-        </p>
-        <h1 className="mt-2 break-words text-3xl font-semibold tracking-tight">
-          Access gate
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-white/56">
-          Temporary local testing access for the custom admin panel.
-        </p>
-
-        <label className="mt-6 block">
-          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/45">
-            Admin Passcode
-          </span>
-          <input
-            value={passcode}
-            onChange={(event) => setPasscode(event.target.value)}
-            type="password"
-            autoComplete="current-password"
-            className="w-full rounded-2xl border border-white/10 bg-black/28 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/45"
-            placeholder="Enter passcode"
-          />
-        </label>
-
-        {error && (
-          <p className="mt-3 rounded-2xl border border-rose-200/20 bg-rose-200/10 px-3 py-2 text-sm text-rose-100">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
-        >
-          Enter Admin
-        </button>
-
-        <Link
-          href="/"
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-medium text-white/70 transition hover:border-cyan-200/35 hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Store
-        </Link>
-      </form>
     </main>
   );
 }

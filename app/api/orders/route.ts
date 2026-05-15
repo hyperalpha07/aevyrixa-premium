@@ -1,3 +1,7 @@
+import {
+  unauthorizedAdminResponse,
+  verifyAdminRequest,
+} from "@/app/lib/admin-auth";
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { createOrder, listOrders } from "@/app/lib/order-store";
 import { getProductBySlug } from "@/app/lib/product-store";
@@ -164,7 +168,9 @@ async function unavailableOrderItems(items: OrderCartItem[]) {
   return unavailable;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+
   try {
     const result = await listOrders();
     return Response.json(result);

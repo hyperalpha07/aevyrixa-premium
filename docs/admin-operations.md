@@ -105,3 +105,53 @@ saves successfully. Admin status changes do not trigger Telegram notifications.
 
 The service role key and Telegram credentials are read only by server route
 code. They must not be exposed in client components.
+
+## Admin Security
+
+Production admin access requires these Vercel environment variables:
+
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+
+Add them in Vercel under Project Settings -> Environment Variables, then
+redeploy the production deployment so the server can read them. Do not commit
+real admin usernames, passwords, Supabase keys, service role keys, or Telegram
+tokens to the repository.
+
+Admin login is handled by `POST /api/admin/login`. The password is sent only to
+server route code, and the browser receives an httpOnly signed session cookie.
+Client JavaScript cannot read the admin password or the session cookie value.
+`POST /api/admin/logout` clears the cookie.
+
+The protected admin pages are:
+
+- `/admin`
+- `/admin/orders`
+- `/admin/products`
+- `/admin/settings`
+
+Logged-out users are redirected to `/admin/login`.
+
+Admin-only API behavior:
+
+- `GET /api/orders` requires an admin session.
+- `PATCH /api/orders/[orderRef]` requires an admin session.
+- `GET /api/products?scope=admin` requires an admin session.
+- `GET /api/products?scope=deleted` requires an admin session.
+- Product create, update, restore, soft delete, and permanent delete require an
+  admin session.
+- Draft product lookup through `/api/products/slug/[slug]?scope=admin` requires
+  an admin session.
+
+Public API behavior:
+
+- `GET /api/products` returns only active, non-deleted products.
+- `GET /api/products/slug/[slug]` returns only public product details.
+- `POST /api/orders` remains public for checkout order creation and still runs
+  Telegram notification after a successful save.
+- `POST /api/orders/track` remains public but only returns a customer-safe
+  order summary after matching order reference and phone number.
+
+For local development only, if `ADMIN_USERNAME` and `ADMIN_PASSWORD` are not set
+and `NODE_ENV` is not `production`, the app accepts the fallback credentials
+`admin` / `admin`. Vercel production must use real environment variables.

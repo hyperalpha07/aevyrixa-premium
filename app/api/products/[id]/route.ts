@@ -1,4 +1,8 @@
 import {
+  unauthorizedAdminResponse,
+  verifyAdminRequest,
+} from "@/app/lib/admin-auth";
+import {
   deleteProduct,
   permanentlyDeleteProduct,
   productStoreErrorResponse,
@@ -25,6 +29,8 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+
   const { id } = await context.params;
   let payload: unknown;
 
@@ -89,6 +95,8 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+
   const { id } = await context.params;
   const url = new URL(request.url);
   const permanent = url.searchParams.get("permanent") === "1";

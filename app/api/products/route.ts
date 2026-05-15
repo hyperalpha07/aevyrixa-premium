@@ -1,4 +1,8 @@
 import {
+  unauthorizedAdminResponse,
+  verifyAdminRequest,
+} from "@/app/lib/admin-auth";
+import {
   createProduct,
   listProducts,
   productStoreErrorResponse,
@@ -33,9 +37,14 @@ function json(payload: unknown, init: ResponseInit = {}) {
 }
 
 export async function GET(request: Request) {
+  const scope = includeDraftsFromRequest(request);
+  if (scope !== "public" && !verifyAdminRequest(request)) {
+    return unauthorizedAdminResponse();
+  }
+
   try {
     const result = await listProducts({
-      scope: includeDraftsFromRequest(request),
+      scope,
     });
 
     return json(result);
@@ -49,6 +58,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+
   let payload: unknown;
 
   try {
