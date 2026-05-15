@@ -1407,6 +1407,7 @@ function ProductsSection({
   onSaveProducts: (products: AdminProduct[]) => void;
 }) {
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const inlineEditorRef = useRef<HTMLDivElement | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [productFilter, setProductFilter] = useState<ProductFilter>("All");
@@ -1429,6 +1430,23 @@ function ProductsSection({
       return true;
     });
   }, [productFilter, products]);
+  const editingProductId = editingProduct?.id;
+  const isEditingExistingProduct = Boolean(
+    editingProductId && products.some((product) => product.id === editingProductId)
+  );
+
+  useEffect(() => {
+    if (!editingProductId || !isEditingExistingProduct) return;
+
+    const scrollTimer = window.setTimeout(() => {
+      inlineEditorRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }, 0);
+
+    return () => window.clearTimeout(scrollTimer);
+  }, [editingProductId, isEditingExistingProduct]);
 
   const addProduct = () => {
     setProductFilter("All");
@@ -1619,7 +1637,7 @@ function ProductsSection({
         ))}
       </div>
 
-      {editingProduct && (
+      {editingProduct && !isEditingExistingProduct && (
         <ProductEditor
           key={editingProduct.id}
           product={editingProduct}
@@ -1636,92 +1654,111 @@ function ProductsSection({
           </div>
         )}
 
-        {visibleProducts.map((product) => (
-          <article
-            key={product.id}
-            className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4"
-          >
-            <div className="grid min-w-0 gap-4 xl:grid-cols-[1fr_120px_130px_160px] xl:items-center">
-              <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <h3 className="break-words text-base font-semibold text-white [overflow-wrap:break-word]">
-                    {product.name}
-                  </h3>
-                  <ProductStatusBadge status={product.status} />
-                  {product.deletedAt && (
-                    <span className="inline-flex w-fit items-center rounded-full border border-rose-200/25 bg-rose-200/10 px-3 py-1 text-xs font-semibold text-rose-100">
-                      Deleted
-                    </span>
-                  )}
+        {visibleProducts.map((product) => {
+          const isEditingThisProduct = editingProductId === product.id;
+
+          return (
+            <article
+              key={product.id}
+              className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4"
+            >
+              <div className="grid min-w-0 gap-4 xl:grid-cols-[1fr_120px_130px_160px] xl:items-center">
+                <div className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h3 className="break-words text-base font-semibold text-white [overflow-wrap:break-word]">
+                      {product.name}
+                    </h3>
+                    <ProductStatusBadge status={product.status} />
+                    {product.deletedAt && (
+                      <span className="inline-flex w-fit items-center rounded-full border border-rose-200/25 bg-rose-200/10 px-3 py-1 text-xs font-semibold text-rose-100">
+                        Deleted
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
+                    <DetailLine label="Slug" value={product.slug} />
+                    <DetailLine label="Category" value={product.category} />
+                    <DetailLine label="Absorbency" value={product.absorbency} />
+                    <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
+                    <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
+                    {product.deletedAt && (
+                      <DetailLine label="Deleted" value={formatDate(product.deletedAt)} />
+                    )}
+                  </div>
                 </div>
-                <div className="mt-3 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
-                  <DetailLine label="Slug" value={product.slug} />
-                  <DetailLine label="Category" value={product.category} />
-                  <DetailLine label="Absorbency" value={product.absorbency} />
-                  <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
-                  <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
-                  {product.deletedAt && (
-                    <DetailLine label="Deleted" value={formatDate(product.deletedAt)} />
+                <DetailLine label="Price" value={product.price || "$0.00"} />
+                <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
+                <div className="grid gap-2">
+                  {product.deletedAt ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => restoreProduct(product.id)}
+                        disabled={isSavingProduct}
+                        className="rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-2.5 text-sm font-medium text-emerald-50/85 transition hover:border-emerald-100/40 hover:text-white"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => permanentlyDeleteProduct(product)}
+                        disabled={isSavingProduct}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/20 bg-rose-200/[0.08] px-3 py-2.5 text-sm font-medium text-rose-100/85 transition hover:border-rose-100/40 hover:text-white"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Permanently Delete
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setEditingProduct(product)}
+                        disabled={isSavingProduct}
+                        className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
+                          isEditingThisProduct
+                            ? "border-cyan-100/40 bg-cyan-200/12 text-white"
+                            : "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/30 hover:text-white"
+                        }`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        {isEditingThisProduct ? "Editing" : "Edit"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleStatus(product.id)}
+                        disabled={isSavingProduct}
+                        className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
+                      >
+                        {product.status === "Active" ? "Set Draft" : "Set Active"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteProduct(product.id)}
+                        disabled={isSavingProduct}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
-              <DetailLine label="Price" value={product.price || "$0.00"} />
-              <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
-              <div className="grid gap-2">
-                {product.deletedAt ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => restoreProduct(product.id)}
-                      disabled={isSavingProduct}
-                      className="rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-2.5 text-sm font-medium text-emerald-50/85 transition hover:border-emerald-100/40 hover:text-white"
-                    >
-                      Restore
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => permanentlyDeleteProduct(product)}
-                      disabled={isSavingProduct}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/20 bg-rose-200/[0.08] px-3 py-2.5 text-sm font-medium text-rose-100/85 transition hover:border-rose-100/40 hover:text-white"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Permanently Delete
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setEditingProduct(product)}
-                      disabled={isSavingProduct}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm font-medium text-white/76 transition hover:border-cyan-200/30 hover:text-white"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleStatus(product.id)}
-                      disabled={isSavingProduct}
-                      className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
-                    >
-                      {product.status === "Active" ? "Set Draft" : "Set Active"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteProduct(product.id)}
-                      disabled={isSavingProduct}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </article>
-        ))}
+              {editingProduct && isEditingThisProduct && !product.deletedAt && (
+                <div ref={inlineEditorRef} className="mt-4">
+                  <ProductEditor
+                    key={editingProduct.id}
+                    product={editingProduct}
+                    onCancel={() => setEditingProduct(null)}
+                    onSave={saveProduct}
+                    isSaving={isSavingProduct}
+                  />
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
     </div>
   );
