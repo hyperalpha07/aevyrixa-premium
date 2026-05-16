@@ -73,8 +73,8 @@ export async function POST(request: Request) {
     return json({ errors: ["Invalid product payload."] }, { status: 400 });
   }
 
-  const { errors } = validateProductInput(input);
-  if (errors.length > 0) return json({ errors }, { status: 400 });
+  const { errors, fields } = validateProductInput(input);
+  if (errors.length > 0) return json({ errors, fields }, { status: 400 });
 
   try {
     const result = await createProduct(input);

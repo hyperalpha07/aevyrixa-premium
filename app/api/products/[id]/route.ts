@@ -67,8 +67,8 @@ export async function PATCH(
   }
 
   const input = payload as ProductMutationInput;
-  const { errors } = validateProductInput(input, { partial: true });
-  if (errors.length > 0) return json({ errors }, { status: 400 });
+  const { errors, fields } = validateProductInput(input, { partial: true });
+  if (errors.length > 0) return json({ errors, fields }, { status: 400 });
 
   try {
     const result = await updateProduct(id, input);

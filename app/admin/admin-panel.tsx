@@ -655,10 +655,22 @@ async function readProductsFromApi() {
 
 function apiErrorMessage(payload: unknown, fallback: string) {
   if (!isRecord(payload)) return fallback;
+
+  const parts: string[] = [];
+
   if (Array.isArray(payload.errors)) {
     const errors = payload.errors.filter((error): error is string => typeof error === "string");
-    if (errors.length > 0) return errors.join(" ");
+    if (errors.length > 0) parts.push(...errors);
   }
+
+  if (isRecord(payload.fields)) {
+    const fieldMessages = Object.entries(payload.fields)
+      .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+      .map(([field, msg]) => `${field}: ${msg}`);
+    if (fieldMessages.length > 0) parts.push(fieldMessages.join(" | "));
+  }
+
+  if (parts.length > 0) return parts.join(" ");
   return textValue(payload.detail) || fallback;
 }
 
@@ -1568,6 +1580,7 @@ function ProductsSection({
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const inlineEditorRef = useRef<HTMLDivElement | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [productFilter, setProductFilter] = useState<ProductFilter>("All");
   const [productSearchTerm, setProductSearchTerm] = useState("");
@@ -1651,17 +1664,19 @@ function ProductsSection({
 
     setIsSavingProduct(true);
     setStatusMessage("");
+    setSaveError(null);
 
     try {
       const backendProduct = await saveProductToApi(nextProduct, exists);
       onSaveProducts(replaceSavedProduct(products, nextProduct, backendProduct, exists));
       setEditingProduct(null);
+      setSaveError(null);
       setStatusMessage("Product saved to backend.");
     } catch (error) {
       console.error("Failed to save backend product:", error);
-      setStatusMessage(
-        error instanceof Error ? error.message : "Product could not be saved."
-      );
+      const msg = error instanceof Error ? error.message : "Product could not be saved.";
+      setSaveError(msg);
+      setStatusMessage(msg);
     } finally {
       setIsSavingProduct(false);
     }
@@ -1844,9 +1859,10 @@ function ProductsSection({
         <ProductEditor
           key={editingProduct.id}
           product={editingProduct}
-          onCancel={() => setEditingProduct(null)}
+          onCancel={() => { setEditingProduct(null); setSaveError(null); }}
           onSave={saveProduct}
           isSaving={isSavingProduct}
+          saveError={saveError}
         />
       )}
 
@@ -1954,9 +1970,10 @@ function ProductsSection({
                   <ProductEditor
                     key={editingProduct.id}
                     product={editingProduct}
-                    onCancel={() => setEditingProduct(null)}
+                    onCancel={() => { setEditingProduct(null); setSaveError(null); }}
                     onSave={saveProduct}
                     isSaving={isSavingProduct}
+                    saveError={saveError}
                   />
                 </div>
               )}
@@ -1973,33 +1990,56 @@ function ProductEditor({
   onCancel,
   onSave,
   isSaving,
+  saveError,
 }: {
   product: AdminProduct;
   onCancel: () => void;
   onSave: (product: AdminProduct) => void | Promise<void>;
   isSaving: boolean;
+  saveError?: string | null;
 }) {
   const [draft, setDraft] = useState(product);
   const [sizes, setSizes] = useState(listToText(product.sizes));
   const [colors, setColors] = useState(listToText(product.colors));
   const [benefits, setBenefits] = useState(listToLines(product.benefits));
   const [care, setCare] = useState(listToLines(product.care));
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const updateField = (field: keyof AdminProduct, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
+    setLocalError(null);
   };
 
   const submitProduct = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSave({
+    setLocalError(null);
+
+    const next = {
       ...draft,
       slug: draft.slug || slugify(draft.name),
       sizes: textToList(sizes),
       colors: textToList(colors),
       benefits: linesToList(benefits),
       care: linesToList(care),
-    });
+    };
+
+    if (next.status === "Active") {
+      const missing: string[] = [];
+      if (!next.shortDescription.trim()) missing.push("Short description");
+      if (!next.description.trim()) missing.push("Description");
+      if (!next.category.trim()) missing.push("Category");
+      if (missing.length > 0) {
+        setLocalError(
+          `Active products require: ${missing.join(", ")}. Fill these fields or set status to Draft.`
+        );
+        return;
+      }
+    }
+
+    onSave(next);
   };
+
+  const displayError = saveError ?? localError;
 
   return (
     <form
@@ -2083,6 +2123,12 @@ function ProductEditor({
         <TextAreaField label="Benefits" value={benefits} onChange={setBenefits} tall />
         <TextAreaField label="Care" value={care} onChange={setCare} tall />
       </div>
+
+      {displayError && (
+        <div className="mt-4 rounded-xl border border-rose-200/25 bg-rose-200/[0.08] p-3 text-sm leading-5 text-rose-100/90">
+          {displayError}
+        </div>
+      )}
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button

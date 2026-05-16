@@ -50,16 +50,18 @@ class ProductStoreError extends Error {
   status: number;
   publicMessage: string;
   code: string;
+  fields?: Record<string, string>;
 
   constructor(
     message: string,
-    options: { status?: number; publicMessage?: string; code?: string } = {}
+    options: { status?: number; publicMessage?: string; code?: string; fields?: Record<string, string> } = {}
   ) {
     super(message);
     this.name = "ProductStoreError";
     this.status = options.status ?? 500;
     this.publicMessage = options.publicMessage ?? "Product operation failed.";
     this.code = options.code ?? "PRODUCT_STORE_ERROR";
+    this.fields = options.fields;
   }
 }
 
@@ -99,7 +101,12 @@ async function supabaseError(response: Response, action: string) {
   let code = "SUPABASE_PRODUCT_ERROR";
 
   try {
-    const parsed = JSON.parse(detail) as { code?: unknown; message?: unknown };
+    const parsed = JSON.parse(detail) as {
+      code?: unknown;
+      message?: unknown;
+      hint?: unknown;
+      details?: unknown;
+    };
     if (parsed.code === "23505") {
       publicMessage = "A product with this slug already exists.";
       code = "PRODUCT_SLUG_EXISTS";
@@ -113,8 +120,15 @@ async function supabaseError(response: Response, action: string) {
       publicMessage =
         "Product trash columns are missing. Add deleted_at timestamptz and deleted_reason text to public.products.";
       code = "PRODUCT_TRASH_COLUMNS_MISSING";
+    } else if (parsed.code === "42703" && typeof parsed.message === "string") {
+      publicMessage = `Column missing in products table: ${parsed.message.trim()}`;
+      code = "PRODUCT_COLUMN_MISSING";
     } else if (response.status >= 400 && response.status < 500) {
-      publicMessage = "Product data was rejected by the backend.";
+      const msg = typeof parsed.message === "string" ? parsed.message.trim() : "";
+      const hint = typeof parsed.hint === "string" ? parsed.hint.trim() : "";
+      publicMessage = msg
+        ? `Validation failed: ${msg}${hint ? ` — ${hint}` : ""}`
+        : "Product data was rejected by the backend.";
     }
   } catch {
     const trashColumnInError =
@@ -138,10 +152,14 @@ async function supabaseError(response: Response, action: string) {
 
 export function productStoreErrorResponse(error: unknown, fallback: string) {
   if (error instanceof ProductStoreError) {
-    return {
-      status: error.status,
-      body: { errors: [error.publicMessage], code: error.code },
+    const body: Record<string, unknown> = {
+      errors: [error.publicMessage],
+      code: error.code,
     };
+    if (error.fields && Object.keys(error.fields).length > 0) {
+      body.fields = error.fields;
+    }
+    return { status: error.status, body };
   }
 
   return {
@@ -214,6 +232,13 @@ export function validateProductInput(
   options: { partial?: boolean } = {}
 ) {
   const errors: string[] = [];
+  const fields: Record<string, string> = {};
+
+  const addError = (field: string | null, message: string) => {
+    errors.push(message);
+    if (field) fields[field] = message;
+  };
+
   const slug = slugValue(input.slug);
   const name = textValue(input.name);
   const price = numberValue(input.price);
@@ -224,23 +249,36 @@ export function validateProductInput(
       ? undefined
       : textValue(input.stockStatus).toLowerCase();
 
-  if (!options.partial && !name) errors.push("Product name is required.");
+  if (!options.partial && !name) addError("name", "Product name is required.");
   if (!options.partial && !slug) {
-    errors.push("Slug is required.");
+    addError("slug", "Slug is required.");
   } else if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    errors.push("Slug must be lowercase kebab-case.");
+    addError("slug", "Slug must be lowercase kebab-case.");
   }
   if ((!options.partial || input.price !== undefined) && (price === undefined || price < 0)) {
-    errors.push("Price must be a non-negative number.");
+    addError("price", "Price must be a non-negative number.");
   }
   if (status !== undefined && !productStatuses.includes(status as never)) {
-    errors.push("Status must be active or draft.");
+    addError("status", "Status must be active or draft.");
   }
   if (stockStatus !== undefined && !productStockStatuses.includes(stockStatus as never)) {
-    errors.push("Stock status is invalid.");
+    addError("stockStatus", "Stock status is invalid.");
   }
 
-  return { errors };
+  // Active products require more complete data; draft products are saved with minimal fields.
+  if (!options.partial && status === "active") {
+    if (!textValue(input.shortDescription)) {
+      addError("shortDescription", "Short description is required for active products.");
+    }
+    if (!textValue(input.description)) {
+      addError("description", "Description is required for active products.");
+    }
+    if (!textValue(input.category)) {
+      addError("category", "Category is required for active products.");
+    }
+  }
+
+  return { errors, fields };
 }
 
 export function buildProductInput(input: ProductMutationInput): ProductCatalogItem {
