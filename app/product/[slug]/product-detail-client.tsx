@@ -238,7 +238,7 @@ export default function ProductDetailClient({
 
         {/* LEFT — Media gallery */}
         <div
-          className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}
+          className={`aev-shop-card min-w-0 self-start rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}
         >
           {/* Main media display */}
           <div className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
