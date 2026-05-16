@@ -38,6 +38,7 @@ export type ProductCatalogItem = {
   seoDescription?: string;
   deletedAt?: string;
   deletedReason?: string;
+  deletedBy?: string;
   createdAt?: string;
   updatedAt?: string;
 };

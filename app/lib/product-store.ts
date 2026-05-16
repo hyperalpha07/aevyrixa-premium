@@ -41,6 +41,7 @@ type SupabaseProductRow = {
   seo_description?: string | null;
   deleted_at?: string | null;
   deleted_reason?: string | null;
+  deleted_by?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -103,10 +104,11 @@ async function supabaseError(response: Response, action: string) {
       publicMessage = "A product with this slug already exists.";
       code = "PRODUCT_SLUG_EXISTS";
     } else if (
-      parsed.code === "PGRST204" ||
-      (typeof parsed.message === "string" &&
-        (parsed.message.includes("deleted_at") ||
-          parsed.message.includes("deleted_reason")))
+      parsed.code === "42703" &&
+      typeof parsed.message === "string" &&
+      (parsed.message.includes("deleted_at") ||
+        parsed.message.includes("deleted_reason") ||
+        parsed.message.includes("deleted_by"))
     ) {
       publicMessage =
         "Product trash columns are missing. Add deleted_at timestamptz and deleted_reason text to public.products.";
@@ -115,12 +117,15 @@ async function supabaseError(response: Response, action: string) {
       publicMessage = "Product data was rejected by the backend.";
     }
   } catch {
-    if (detail.includes("deleted_at") || detail.includes("deleted_reason")) {
+    const trashColumnInError =
+      detail.includes("deleted_at") ||
+      detail.includes("deleted_reason") ||
+      detail.includes("deleted_by");
+    if (trashColumnInError && detail.includes("does not exist")) {
       publicMessage =
         "Product trash columns are missing. Add deleted_at timestamptz and deleted_reason text to public.products.";
       code = "PRODUCT_TRASH_COLUMNS_MISSING";
-    } else
-    if (response.status >= 400 && response.status < 500) {
+    } else if (response.status >= 400 && response.status < 500) {
       publicMessage = "Product data was rejected by the backend.";
     }
   }
@@ -312,6 +317,7 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     seoDescription: row.seo_description ?? undefined,
     deletedAt: row.deleted_at ?? undefined,
     deletedReason: row.deleted_reason ?? undefined,
+    deletedBy: row.deleted_by ?? undefined,
     createdAt: row.created_at ?? undefined,
     updatedAt: row.updated_at ?? undefined,
   };
@@ -542,6 +548,7 @@ async function softDeleteProductInSupabase(id: string) {
       body: JSON.stringify({
         deleted_at: new Date().toISOString(),
         deleted_reason: "Deleted from admin",
+        deleted_by: "admin",
         updated_at: new Date().toISOString(),
       }),
     }
@@ -567,6 +574,7 @@ async function restoreProductInSupabase(id: string) {
       body: JSON.stringify({
         deleted_at: null,
         deleted_reason: null,
+        deleted_by: null,
         status: "draft",
         updated_at: new Date().toISOString(),
       }),
