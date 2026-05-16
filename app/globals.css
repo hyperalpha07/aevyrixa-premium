@@ -1802,3 +1802,82 @@ button {
     min-height: 21rem;
   }
 }
+
+/* ─── Phase 28: Product Media Gallery ─── */
+
+@keyframes aev-media-img-in {
+  from {
+    opacity: 0;
+    transform: scale(1.012);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.aev-media-img-reveal {
+  animation: aev-media-img-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.aev-media-thumb-active {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18), 0 0 10px rgba(255, 255, 255, 0.06);
+}
+
+@keyframes aev-lightbox-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes aev-lightbox-img-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.aev-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(5, 8, 22, 0.88);
+  backdrop-filter: blur(14px);
+  animation: aev-lightbox-in 180ms ease both;
+}
+
+.aev-lightbox-img {
+  max-height: 88vh;
+  max-width: 88vw;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.65),
+    0 0 60px rgba(34, 211, 238, 0.06);
+  animation: aev-lightbox-img-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-media-img-reveal,
+  .aev-lightbox-overlay,
+  .aev-lightbox-img {
+    animation: none !important;
+  }
+}

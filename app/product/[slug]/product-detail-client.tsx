@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -205,6 +205,34 @@ export default function ProductDetailClient({
   const selectedMedia = mediaItems.length > 0 ? mediaItems[safeIndex] : null;
   const showThumbnails = mediaItems.length > 1;
 
+  // Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxOpen]);
+
+  // Touch swipe for mobile gallery navigation
+  const touchStartXRef = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || mediaItems.length < 2) return;
+    const delta = e.changedTouches[0].clientX - touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (Math.abs(delta) < 50) return;
+    if (delta < 0) {
+      setSelectedMediaIndex((i) => (i + 1) % mediaItems.length);
+    } else {
+      setSelectedMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length);
+    }
+  };
+
   const hasSavings =
     typeof displayProduct.compareAtPrice === "number" &&
     displayProduct.compareAtPrice > displayProduct.price;
@@ -241,7 +269,11 @@ export default function ProductDetailClient({
           className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}
         >
           {/* Main media display */}
-          <div className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
+          <div
+            className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {/* Premium glow behind product */}
             <div
               className={`pointer-events-none absolute inset-0 scale-90 rounded-full opacity-40 blur-[60px] ${style.glow}`}
@@ -258,9 +290,11 @@ export default function ProductDetailClient({
               ) : selectedMedia?.type === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
+                  key={safeIndex}
                   src={selectedMedia.url}
                   alt={displayProduct.name}
-                  className="h-full w-full object-contain p-4"
+                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-4"
+                  onClick={() => setLightboxOpen(true)}
                 />
               ) : (
                 <ProductVisual
@@ -269,6 +303,14 @@ export default function ProductDetailClient({
                 />
               )}
             </div>
+            {/* Category label overlay */}
+            {displayProduct.category && (
+              <div className="pointer-events-none absolute bottom-3 left-3 z-10">
+                <span className="rounded-full border border-white/10 bg-black/40 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-white/52 backdrop-blur-sm">
+                  {displayProduct.category}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Thumbnail strip — shown when multiple images or image + video */}
@@ -285,8 +327,8 @@ export default function ProductDetailClient({
                   }
                   className={`shrink-0 h-[68px] w-[68px] overflow-hidden rounded-xl border transition ${
                     safeIndex === index
-                      ? "border-white/55 bg-white/10"
-                      : "border-white/10 bg-[#07111f] hover:border-white/25"
+                      ? "aev-media-thumb-active border-white/65 bg-white/12"
+                      : "border-white/10 bg-[#07111f] hover:border-white/28"
                   }`}
                 >
                   {item.type === "image" ? (
@@ -703,6 +745,34 @@ export default function ProductDetailClient({
       )}
 
       <SiteFooter settings={settings} />
+
+      {/* ── Lightbox ── */}
+      {lightboxOpen && selectedMedia?.type === "image" && (
+        <div
+          className="aev-lightbox-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product image enlarged view"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close image view"
+            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/50 p-2 text-white/70 backdrop-blur-md transition hover:text-white"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={selectedMedia.url}
+            alt={displayProduct.name}
+            className="aev-lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       {/* ── Mobile sticky add-to-cart bar ── */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#07111f]/95 px-4 pb-4 pt-3 backdrop-blur-md lg:hidden">
