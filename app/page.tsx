@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ArrowRight,
   ChevronDown,
   Droplets,
   Leaf,
@@ -78,6 +79,69 @@ const heroTrustBadges = [
   "3-Day Support",
   "Comfort Fit",
   "Reusable Protection",
+];
+
+const hereCareCategories = [
+  {
+    name: "Reusable Period Care",
+    tagline: "Comfortable reusable protection for light to moderate flow.",
+    accent: "from-cyan-200/75 to-cyan-500/15",
+    glow: "bg-cyan-300/10",
+  },
+  {
+    name: "Comfort Panty",
+    tagline: "Soft stretch everyday wear designed for all-day comfort.",
+    accent: "from-fuchsia-200/75 to-fuchsia-500/15",
+    glow: "bg-fuchsia-300/10",
+  },
+  {
+    name: "Soft Support Bra",
+    tagline: "Gentle support with smooth fabric for daily wear.",
+    accent: "from-violet-200/75 to-violet-500/15",
+    glow: "bg-violet-300/10",
+  },
+  {
+    name: "Nightwear",
+    tagline: "Relaxed, breathable comfort for restful evenings.",
+    accent: "from-rose-200/75 to-rose-500/15",
+    glow: "bg-rose-300/10",
+  },
+  {
+    name: "Hygiene Essentials",
+    tagline: "Curated essentials for your daily hygiene routine.",
+    accent: "from-amber-200/75 to-amber-500/15",
+    glow: "bg-amber-300/10",
+  },
+  {
+    name: "Bundles",
+    tagline: "Thoughtful care sets at a considered price.",
+    accent: "from-sky-200/75 to-sky-500/15",
+    glow: "bg-sky-300/10",
+  },
+  {
+    name: "New Arrivals",
+    tagline: "Fresh additions to the Her Care collection.",
+    accent: "from-emerald-200/75 to-emerald-500/15",
+    glow: "bg-emerald-300/10",
+  },
+];
+
+const careLayerItems = [
+  {
+    label: "Comfort Knit Layer",
+    desc: "Soft, stretch-fit fabric that moves naturally with your body through the day.",
+    dotBg: "bg-cyan-300/60",
+  },
+  {
+    label: "Absorbent Core",
+    desc: "A slim internal layer for quiet, discreet support during light to moderate flow.",
+    dotBg: "bg-violet-300/60",
+  },
+  {
+    label: "Protective Shell",
+    desc: "A smooth outer layer with a refined silhouette and clean, everyday finish.",
+    dotBg: "bg-rose-300/60",
+  },
 ];
 
 export default async function Home() {
@@ -235,6 +299,49 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Phase 27: Her Care Categories ── */}
+      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+              Her Care Collection
+            </p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              Seven categories, one calm care routine.
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-white/62">
+              Explore the full range of reusable period care, soft comfort
+              wear, and hygiene essentials thoughtfully curated for your
+              everyday routine.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {hereCareCategories.map(({ name, tagline, accent, glow }) => (
+              <a
+                key={name}
+                href="/product"
+                className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl sm:p-6"
+              >
+                <div
+                  className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`}
+                />
+                <div
+                  className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`}
+                />
+                <h3 className="text-base font-semibold text-white">{name}</h3>
+                <p className="mt-2 text-sm leading-6 text-white/58">
+                  {tagline}
+                </p>
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
+                  Explore
+                  <ArrowRight size={12} strokeWidth={2.2} />
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="how-it-works" className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
@@ -271,6 +378,69 @@ export default async function Home() {
                 </p>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Phase 27: Care Layer Explorer ── */}
+      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+            <div className="aev-reveal min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                Her Care Layer System
+              </p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                Layered comfort built for calm, discreet daily wear.
+              </h2>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-white/65">
+                Each piece is designed with softness at every layer — from the
+                fabric you feel against your skin to the discreet structure
+                supporting your day.
+              </p>
+              <div className="mt-8 space-y-3">
+                {careLayerItems.map(({ label, desc, dotBg }) => (
+                  <div
+                    key={label}
+                    className="aev-reveal flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+                  >
+                    <div
+                      className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotBg} ring-4 ring-white/10`}
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        {label}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-white/58">
+                        {desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stacked floating layer cards */}
+            <div className="aev-reveal flex items-center justify-center py-6 lg:py-0">
+              <div className="relative h-72 w-full max-w-sm sm:h-80">
+                <div className="aev-layer-explorer-card aev-layer-explorer-card-three absolute inset-x-7 top-9 h-full rounded-[2rem] border border-rose-100/16 bg-gradient-to-br from-rose-100/[0.055] to-transparent shadow-[0_24px_72px_rgba(0,0,0,0.26)] backdrop-blur-sm" />
+                <div className="aev-layer-explorer-card aev-layer-explorer-card-two absolute inset-x-3.5 top-4 h-full rounded-[2rem] border border-violet-100/18 bg-gradient-to-br from-violet-100/[0.065] to-transparent shadow-[0_28px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm" />
+                <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-cyan-100/22 bg-gradient-to-br from-cyan-100/[0.08] to-white/[0.03] shadow-[0_34px_90px_rgba(0,0,0,0.32),0_0_52px_rgba(34,211,238,0.09)] backdrop-blur-md">
+                  <div className="absolute inset-x-[15%] top-[22%] h-px bg-gradient-to-r from-transparent via-cyan-100/60 to-transparent" />
+                  <div className="absolute inset-x-[22%] top-[44%] h-px bg-gradient-to-r from-transparent via-violet-100/52 to-transparent" />
+                  <div className="absolute inset-x-[28%] top-[63%] h-px bg-gradient-to-r from-transparent via-rose-100/48 to-transparent" />
+                  <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/12 blur-2xl" />
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-cyan-100/68">
+                      Care Layer System
+                    </p>
+                    <p className="mt-1.5 text-base font-semibold text-white">
+                      Her Care Collection
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -354,6 +524,69 @@ export default async function Home() {
             variant="experience"
             className="aev-reveal"
           />
+        </div>
+      </section>
+
+      {/* ── Phase 27: Hygiene-Safe Support Timeline ── */}
+      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            Care Routine
+          </p>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            3-Day Hygiene-Safe Support
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-white/60">
+            A simple, repeatable care routine that keeps your reusable pieces
+            feeling fresh, soft, and ready for next use.
+          </p>
+
+          <div className="relative mt-12">
+            <div
+              className="aev-timeline-line absolute left-[20%] right-[20%] top-7 hidden h-px bg-gradient-to-r from-transparent via-cyan-200/38 to-transparent sm:block"
+              aria-hidden="true"
+            />
+            <div className="grid gap-8 sm:grid-cols-3">
+              {(
+                [
+                  {
+                    step: "01",
+                    label: "Wear",
+                    desc: "Choose comfort, wear with quiet confidence during your day.",
+                    delay: "0s",
+                  },
+                  {
+                    step: "02",
+                    label: "Rinse",
+                    desc: "Cool water rinse after wear, gently clearing residue.",
+                    delay: "1.2s",
+                  },
+                  {
+                    step: "03",
+                    label: "Air Dry",
+                    desc: "Wash gently, air dry, then fold and store ready for next use.",
+                    delay: "2.4s",
+                  },
+                ] as const
+              ).map(({ step, label, desc, delay }) => (
+                <div
+                  key={step}
+                  className="aev-reveal flex flex-col items-center gap-3 text-center"
+                >
+                  <div
+                    className="aev-timeline-dot flex h-14 w-14 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10 text-sm font-semibold text-cyan-100"
+                    style={{ animationDelay: delay }}
+                  >
+                    {step}
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">{label}</h3>
+                  <p className="max-w-[20ch] text-sm leading-7 text-white/58">
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

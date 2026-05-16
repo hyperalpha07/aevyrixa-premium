@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Droplets, Sparkles, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
+import HomeMotionController from "@/app/components/home-motion-controller";
 import { listProducts } from "@/app/lib/product-store";
 import { publicProduct, stockStatusLabel } from "@/app/lib/product-display";
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
@@ -51,6 +52,7 @@ export default async function ProductCollectionPage() {
 
   return (
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
+      <HomeMotionController targetClass=".aev-cinematic-page" />
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-[-18%] top-[4%] h-[300px] w-[300px] rounded-full bg-cyan-400/14 blur-[120px]" />
         <div className="absolute right-[-18%] top-[22%] h-[340px] w-[340px] rounded-full bg-fuchsia-400/14 blur-[130px]" />
@@ -101,7 +103,7 @@ export default async function ProductCollectionPage() {
             return (
               <article
                 key={product.id}
-                className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.75rem] border bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 ${style.border}`}
+                className={`aev-shop-card aev-reveal group min-w-0 overflow-hidden rounded-[1.75rem] border bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 ${style.border}`}
               >
                 <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#07111f]">
                   <div className="relative aspect-[1.08] w-full">

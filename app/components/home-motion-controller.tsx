@@ -2,9 +2,13 @@
 
 import { useEffect } from "react";
 
-export default function HomeMotionController() {
+export default function HomeMotionController({
+  targetClass = ".aev-home",
+}: {
+  targetClass?: string;
+}) {
   useEffect(() => {
-    const root = document.querySelector(".aev-home");
+    const root = document.querySelector(targetClass);
 
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       root?.querySelectorAll(".aev-reveal").forEach((element) => {
@@ -40,7 +44,7 @@ export default function HomeMotionController() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [targetClass]);
 
   return null;
 }
