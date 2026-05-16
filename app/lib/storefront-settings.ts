@@ -25,6 +25,20 @@ function shortBrandName(storeName: string) {
   return storeName.replace(/\s+Her\s+Care\s*$/i, "").trim() || storeName;
 }
 
+function footerSentence(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+function footerDeliveryText(brandTagline: string, deliveryText: string) {
+  const trimmed = deliveryText.trim();
+  if (!/bangladesh$/i.test(brandTagline.trim())) return trimmed;
+
+  return trimmed.replace(/^Bangladesh\s+delivery\b/i, "Delivery");
+}
+
 export function normalizeStorefrontSettings(value: unknown): StorefrontSettings {
   const settings = normalizeAdminSettings(value);
   const brandDisplayName = settings.storeName || defaultAdminSettings.storeName;
@@ -49,7 +63,14 @@ export function normalizeStorefrontSettings(value: unknown): StorefrontSettings 
     brandDisplayName,
     brandShortName,
     brandTagline,
-    footerDescription: `${brandTagline} ${settings.deliveryCoverageText} ${settings.privacyPackagingMessage}`,
+    footerDescription: [
+      brandTagline,
+      footerDeliveryText(brandTagline, settings.deliveryCoverageText),
+      settings.privacyPackagingMessage,
+    ]
+      .map(footerSentence)
+      .filter(Boolean)
+      .join(" "),
     supportContact,
     whatsappUrl: whatsappHref(settings.supportWhatsApp),
     socialLinks,
