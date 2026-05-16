@@ -1,11 +1,17 @@
 import InfoPageShell from "@/app/components/info-page-shell";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
-export default function FaqPage() {
+export const dynamic = "force-dynamic";
+
+export default async function FaqPage() {
+  const { settings } = await loadStorefrontSettings();
+
   return (
     <InfoPageShell
+      settings={settings}
       eyebrow="FAQ"
       title="Clear answers before you choose your Her Care essentials."
-      intro="Find practical guidance on sizing, washing, delivery, payment, order confirmation, and 3-Day Hygiene-Safe Support."
+      intro={`Find practical guidance on sizing, washing, delivery, payment, order confirmation, and ${settings.supportWindowMessage}.`}
       sections={[
         {
           title: "How do I choose a size?",
@@ -17,11 +23,11 @@ export default function FaqPage() {
         },
         {
           title: "What delivery experience should I expect?",
-          copy: "Orders are reviewed first, then our team confirms delivery details before dispatch. Delivery is estimated 2-7 working days across Bangladesh after confirmation, and privacy packaging does not expose sensitive product details.",
+          copy: `${settings.deliverySettings.estimatedDeliveryTime} ${settings.privacyPackagingMessage}`,
         },
         {
-          title: "What does 3-Day Hygiene-Safe Support cover?",
-          copy: "Request support within 3 days of delivery for size issues, wrong item, damaged item, or order concerns. Approval depends on product condition, packaging, proof, and support review.",
+          title: "What support is available?",
+          copy: settings.supportWindowMessage,
         },
         {
           title: "Can used items be exchanged or refunded?",
@@ -33,7 +39,7 @@ export default function FaqPage() {
         },
         {
           title: "Which payment methods are available?",
-          copy: "Checkout currently supports Cash on Delivery, Mobile Wallet Payment, and Bank Transfer options shown during checkout.",
+          copy: `${settings.codMessage} Enabled mobile wallet and bank transfer options are shown during checkout.`,
         },
         {
           title: "Will I receive order confirmation?",

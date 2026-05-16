@@ -1,10 +1,16 @@
 import InfoPageShell from "@/app/components/info-page-shell";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
-export default function TermsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function TermsPage() {
+  const { settings } = await loadStorefrontSettings();
+
   return (
     <InfoPageShell
+      settings={settings}
       eyebrow="Terms"
-      title="Clear terms for browsing and ordering from Aevyrixa Her Care."
+      title={`Clear terms for browsing and ordering from ${settings.brandDisplayName}.`}
       intro="These terms keep the early-stage customer experience transparent while product, order, and backend systems continue to develop."
       sections={[
         {
@@ -13,7 +19,7 @@ export default function TermsPage() {
         },
         {
           title: "Order confirmation",
-          copy: "Submitting checkout details creates an order request. The Aevyrixa Her Care team confirms product, size, payment, and delivery details before dispatch.",
+          copy: `Submitting checkout details creates an order request. The ${settings.brandDisplayName} team confirms product, size, payment, and delivery details before dispatch.`,
         },
         {
           title: "Product availability",
@@ -25,7 +31,7 @@ export default function TermsPage() {
         },
         {
           title: "Hygiene-sensitive eligibility",
-          copy: "Support, exchange, or refund eligibility depends on unused condition, original packaging, hygiene liner/seal where applicable, proof, and support review.",
+          copy: `${settings.supportWindowMessage} ${settings.hygieneReturnMessage}`,
         },
         {
           title: "Used intimate products",
@@ -37,7 +43,7 @@ export default function TermsPage() {
         },
         {
           title: "Policy changes",
-          copy: "Aevyrixa Her Care may update website content and policies as operations mature.",
+          copy: `${settings.brandDisplayName} may update website content and policies as operations mature.`,
         },
       ]}
     />

@@ -1,13 +1,14 @@
 import InfoPageShell from "@/app/components/info-page-shell";
-import { getStoreSettings } from "@/app/lib/settings-store";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShippingPolicyPage() {
-  const { settings } = await getStoreSettings();
+  const { settings } = await loadStorefrontSettings();
 
   return (
     <InfoPageShell
+      settings={settings}
       eyebrow="Shipping Policy"
       title="Discreet Delivery Across Bangladesh"
       intro={settings.deliveryCoverageText}

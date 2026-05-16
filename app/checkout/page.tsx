@@ -11,12 +11,16 @@ import { formatCurrency } from "@/app/lib/currency";
 import {
   ADMIN_SETTINGS_KEY,
   defaultAdminSettings,
-  normalizeAdminSettings,
   whatsappHref,
   walletProviders,
   type AdminSettings,
   type WalletProvider,
 } from "@/app/lib/admin-settings";
+import {
+  defaultStorefrontSettings,
+  normalizeStorefrontSettings,
+  type StorefrontSettings,
+} from "@/app/lib/storefront-settings";
 import {
   paymentMethods,
   paymentTypes,
@@ -98,11 +102,11 @@ function readAdminSettingsFromStorage() {
   try {
     const stored = localStorage.getItem(ADMIN_SETTINGS_KEY);
     return stored
-      ? normalizeAdminSettings(JSON.parse(stored) as unknown)
-      : defaultAdminSettings;
+      ? normalizeStorefrontSettings(JSON.parse(stored) as unknown)
+      : defaultStorefrontSettings;
   } catch (error) {
     console.error("Failed to load checkout settings:", error);
-    return defaultAdminSettings;
+    return defaultStorefrontSettings;
   }
 }
 
@@ -111,11 +115,11 @@ async function readAdminSettingsFromApi() {
     const response = await fetch("/api/settings", { cache: "no-store" });
     const payload = (await response.json()) as { settings?: unknown };
     return payload.settings
-      ? normalizeAdminSettings(payload.settings)
-      : defaultAdminSettings;
+      ? normalizeStorefrontSettings(payload.settings)
+      : defaultStorefrontSettings;
   } catch (error) {
     console.error("Failed to load checkout backend settings:", error);
-    return defaultAdminSettings;
+    return defaultStorefrontSettings;
   }
 }
 
@@ -128,7 +132,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedReceiver, setCopiedReceiver] = useState(false);
   const [adminSettings, setAdminSettings] =
-    useState<AdminSettings>(defaultAdminSettings);
+    useState<StorefrontSettings>(defaultStorefrontSettings);
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -408,12 +412,12 @@ export default function CheckoutPage() {
         <div className="absolute bottom-[-12%] left-[24%] h-[260px] w-[260px] rounded-full bg-rose-300/10 blur-[120px]" />
       </div>
 
-      <SiteHeader active="cart" />
+      <SiteHeader active="cart" settings={adminSettings} />
 
       <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 pb-24 pt-10 sm:px-6 md:pt-16">
         <div className="mb-8 w-full max-w-3xl min-w-0 md:mb-10">
           <p className="text-xs uppercase tracking-[0.32em] text-cyan-200/70 sm:text-sm sm:tracking-[0.42em]">
-            Aevyrixa Checkout
+            {adminSettings.brandShortName} Checkout
           </p>
           <h1 className="mt-4 max-w-full break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
             Complete Your Order
@@ -623,7 +627,7 @@ export default function CheckoutPage() {
                             </button>
                           </div>
                           <p className="mt-4 text-sm leading-6 text-white/72">
-                            Send Money to this verified Aevyrixa receiver number,
+                            Send Money to this verified {adminSettings.brandShortName} receiver number,
                             then enter your sender number and transaction ID
                             below.
                           </p>
@@ -882,7 +886,7 @@ function ConfirmationPanel({
   settings,
 }: {
   order: PreparedOrder;
-  settings: AdminSettings;
+  settings: StorefrontSettings;
 }) {
   const [copiedOrderRef, setCopiedOrderRef] = useState(false);
   const trackOrderHref = `/track-order?ref=${encodeURIComponent(order.orderId)}`;
@@ -928,7 +932,8 @@ function ConfirmationPanel({
         payment details directly before dispatch preparation begins.
       </p>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/68">
-        {settings.orderConfirmationMessage || "Need help? Contact Aevyrixa support with your order reference."}
+        {settings.orderConfirmationMessage ||
+          `Need help? Contact ${settings.brandShortName} support with your order reference.`}
       </p>
       <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-cyan-100/25 bg-black/25 p-5 text-left">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/70">

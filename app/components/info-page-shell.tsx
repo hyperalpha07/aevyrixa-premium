@@ -1,6 +1,10 @@
 import Link from "next/link";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
+import {
+  defaultStorefrontSettings,
+  type StorefrontSettings,
+} from "@/app/lib/storefront-settings";
 
 export type InfoSection = {
   title: string;
@@ -15,6 +19,7 @@ export default function InfoPageShell({
   sections,
   ctaLabel = "Shop Her Care",
   ctaHref = "/product",
+  settings = defaultStorefrontSettings,
 }: {
   eyebrow: string;
   title: string;
@@ -22,12 +27,13 @@ export default function InfoPageShell({
   sections: InfoSection[];
   ctaLabel?: string;
   ctaHref?: string;
+  settings?: StorefrontSettings;
 }) {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_48%,#030612_100%)]" />
 
-      <SiteHeader />
+      <SiteHeader settings={settings} />
 
       <section className="mx-auto w-full min-w-0 max-w-7xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16">
         <div className="min-w-0 max-w-3xl">
@@ -79,7 +85,7 @@ export default function InfoPageShell({
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter settings={settings} />
     </main>
   );
 }

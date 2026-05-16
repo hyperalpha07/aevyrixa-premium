@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCart } from "./cart-context";
 import ProductVisual from "@/app/components/product-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { formatCurrency } from "@/app/lib/currency";
+import {
+  defaultStorefrontSettings,
+  fetchStorefrontSettings,
+  type StorefrontSettings,
+} from "@/app/lib/storefront-settings";
 
 export default function CartDrawer() {
   const {
@@ -21,6 +26,21 @@ export default function CartDrawer() {
   const hasUnavailableItems = items.some(
     (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
   );
+  const [settings, setSettings] = useState<StorefrontSettings>(
+    defaultStorefrontSettings
+  );
+
+  useEffect(() => {
+    let isActive = true;
+
+    void fetchStorefrontSettings().then((nextSettings) => {
+      if (isActive) setSettings(nextSettings);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,7 +84,7 @@ export default function CartDrawer() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.3em] text-cyan-300/70">
-                  AEVYRIXA Cart
+                  {settings.brandShortName} Cart
                 </p>
                 <h2 className="mt-1 text-lg font-semibold text-white">
                   Your Cart
@@ -97,7 +117,7 @@ export default function CartDrawer() {
 
                 <p className="mt-3 max-w-xs text-sm leading-7 text-white/60">
                   Add premium Her Care products to your cart and build a more
-                  comfortable reusable routine.
+                  comfortable reusable routine with {settings.brandShortName}.
                 </p>
 
                 <Link
@@ -237,7 +257,7 @@ export default function CartDrawer() {
             </div>
 
             <p className="mt-4 text-center text-[11px] uppercase tracking-[0.2em] text-white/40">
-              Secure Payment | Discreet Privacy Packaging | 3-Day Hygiene-Safe Support
+              Secure Payment | {settings.privacyPackagingMessage} | {settings.supportWindowMessage}
             </p>
           </div>
         </div>

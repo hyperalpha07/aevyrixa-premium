@@ -1,16 +1,17 @@
 import InfoPageShell from "@/app/components/info-page-shell";
-import { getStoreSettings } from "@/app/lib/settings-store";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
 
 export default async function RefundPolicyPage() {
-  const { settings } = await getStoreSettings();
+  const { settings } = await loadStorefrontSettings();
 
   return (
     <InfoPageShell
+      settings={settings}
       eyebrow="Refund Policy"
-      title="3-Day Hygiene-Safe Support for Her Care Orders"
-      intro="Aevyrixa Her Care keeps support fair and transparent while respecting hygiene-sensitive product handling."
+      title={`${settings.supportWindowMessage} for Her Care Orders`}
+      intro={`${settings.brandDisplayName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
       sections={[
         {
           title: "3-Day Support Window",
@@ -34,11 +35,11 @@ export default async function RefundPolicyPage() {
         },
         {
           title: "Review First",
-          copy: "All support, exchange, or refund requests are reviewed by the Aevyrixa Her Care team before approval.",
+          copy: `All support, exchange, or refund requests are reviewed by the ${settings.brandDisplayName} team before approval.`,
         },
         {
           title: "Return Cost",
-          copy: "If the issue is caused by Aevyrixa, we will support the correction. If the request is due to customer size preference or change of mind, delivery/return cost may be the customer's responsibility.",
+          copy: `If the issue is caused by ${settings.brandShortName}, we will support the correction. If the request is due to customer size preference or change of mind, delivery/return cost may be the customer's responsibility.`,
         },
       ]}
     />

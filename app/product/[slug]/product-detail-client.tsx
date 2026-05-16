@@ -27,6 +27,8 @@ import {
   type ProductVisualTheme,
 } from "@/app/lib/products";
 import type { ProductCatalogItem } from "@/app/lib/product-types";
+import SiteFooter from "@/app/components/site-footer";
+import type { StorefrontSettings } from "@/app/lib/storefront-settings";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -61,13 +63,6 @@ const themeStyles: Record<
   },
 };
 
-const trustBadges = [
-  { label: "Discreet Privacy Packaging", icon: PackageCheck },
-  { label: "3-Day Hygiene-Safe Support", icon: ShieldCheck },
-  { label: "Comfort Fit", icon: HeartHandshake },
-  { label: "Reusable Protection", icon: Recycle },
-];
-
 const faqs = [
   {
     question: "Can I wear it on its own?",
@@ -100,8 +95,10 @@ function buildCartLineId(
 
 export default function ProductDetailClient({
   product,
+  settings,
 }: {
   product: ProductCatalogItem;
+  settings: StorefrontSettings;
 }) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -163,7 +160,11 @@ export default function ProductDetailClient({
         <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
       </div>
 
-      <SiteHeader active="product" productHref={`/product/${displayProduct.slug}`} />
+      <SiteHeader
+        active="product"
+        productHref={`/product/${displayProduct.slug}`}
+        settings={settings}
+      />
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
         <div className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}>
@@ -288,7 +289,12 @@ export default function ProductDetailClient({
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {trustBadges.map(({ label, icon: Icon }) => (
+            {[
+              { label: settings.privacyPackagingMessage, icon: PackageCheck },
+              { label: settings.supportWindowMessage, icon: ShieldCheck },
+              { label: "Comfort Fit", icon: HeartHandshake },
+              { label: "Reusable Protection", icon: Recycle },
+            ].map(({ label, icon: Icon }) => (
               <div
                 key={label}
                 className="aev-cinematic-chip flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/72"
@@ -348,6 +354,7 @@ export default function ProductDetailClient({
           </div>
         </div>
       </section>
+      <SiteFooter settings={settings} />
     </main>
   );
 }

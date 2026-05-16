@@ -4,11 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  defaultAdminSettings,
-  normalizeAdminSettings,
-  whatsappHref,
-  type AdminSettings,
-} from "@/app/lib/admin-settings";
+  defaultStorefrontSettings,
+  fetchStorefrontSettings,
+  type StorefrontSettings,
+} from "@/app/lib/storefront-settings";
 
 const footerGroups = [
   {
@@ -38,18 +37,19 @@ const footerGroups = [
   },
 ];
 
-export default function SiteFooter() {
-  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
+export default function SiteFooter({
+  settings: initialSettings = defaultStorefrontSettings,
+}: {
+  settings?: StorefrontSettings;
+}) {
+  const [settings, setSettings] = useState<StorefrontSettings>(initialSettings);
 
   useEffect(() => {
     let isActive = true;
 
-    void fetch("/api/settings", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((payload: { settings?: unknown }) => {
-        if (isActive && payload.settings) {
-          setSettings(normalizeAdminSettings(payload.settings));
-        }
+    void fetchStorefrontSettings()
+      .then((nextSettings) => {
+        if (isActive) setSettings(nextSettings);
       })
       .catch(() => null);
 
@@ -57,8 +57,6 @@ export default function SiteFooter() {
       isActive = false;
     };
   }, []);
-
-  const whatsappUrl = whatsappHref(settings.supportWhatsApp);
 
   return (
     <footer className="border-t border-white/10 bg-[#02040d] px-4 pb-24 pt-12 text-white sm:px-6 sm:pb-16">
@@ -77,7 +75,7 @@ export default function SiteFooter() {
             </div>
             <div className="min-w-0">
               <p className="truncate text-lg font-bold tracking-[0.22em] text-white">
-                Aevyrixa
+                {settings.brandShortName}
               </p>
               <p className="text-[0.64rem] font-semibold uppercase tracking-[0.3em] text-cyan-200/68">
                 Her Care
@@ -85,23 +83,37 @@ export default function SiteFooter() {
             </div>
           </div>
           <p className="mt-5 max-w-sm text-sm leading-7 text-white/56">
-            Premium reusable period care designed around comfort, discretion,
-            BDT pricing, Bangladesh delivery/COD support, and discreet privacy
-            packaging.
+            {settings.footerDescription}
           </p>
           <div className="mt-5 space-y-2 text-sm leading-6 text-white/58">
             <p>{settings.supportWindowMessage}</p>
             {settings.supportPhone && <p>Support: {settings.supportPhone}</p>}
             {settings.supportEmail && <p>Email: {settings.supportEmail}</p>}
-            {whatsappUrl && (
+            {settings.businessLocation && <p>Location: {settings.businessLocation}</p>}
+            {settings.whatsappUrl && (
               <a
-                href={whatsappUrl}
+                href={settings.whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex font-semibold text-cyan-100 transition hover:text-white"
               >
-                Chat with Aevyrixa Support
+                Chat with {settings.brandShortName} Support
               </a>
+            )}
+            {settings.socialLinks.length > 0 && (
+              <div className="flex flex-wrap gap-3 pt-1">
+                {settings.socialLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-white/64 transition hover:text-cyan-100"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -126,7 +138,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/42 sm:flex-row sm:items-center sm:justify-between">
-        <p>Copyright 2026 Aevyrixa. All rights reserved.</p>
+        <p>Copyright 2026 {settings.brandShortName}. All rights reserved.</p>
         <p>{settings.privacyPackagingMessage}</p>
       </div>
     </footer>

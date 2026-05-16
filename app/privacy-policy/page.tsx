@@ -1,11 +1,17 @@
 import InfoPageShell from "@/app/components/info-page-shell";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
-export default function PrivacyPolicyPage() {
+export const dynamic = "force-dynamic";
+
+export default async function PrivacyPolicyPage() {
+  const { settings } = await loadStorefrontSettings();
+
   return (
     <InfoPageShell
+      settings={settings}
       eyebrow="Privacy Policy"
       title="Simple privacy standards for an early-stage Her Care store."
-      intro="Aevyrixa Her Care uses customer information only to process orders, provide support, and improve the customer experience."
+      intro={`${settings.brandDisplayName} uses customer information only to process orders, provide support, and improve the customer experience.`}
       sections={[
         {
           title: "Information we collect",
@@ -15,13 +21,13 @@ export default function PrivacyPolicyPage() {
           title: "How information is used",
           items: [
             "To confirm and prepare customer orders.",
-            "To provide delivery and payment support.",
+            `To provide delivery and payment support through ${settings.supportPhone || settings.supportEmail || "configured support channels"}.`,
             "To review support, exchange, refund, or product concern requests.",
           ],
         },
         {
           title: "No selling customer data",
-          copy: "Aevyrixa Her Care does not sell customer data. Customer details are handled for store operations and support only.",
+          copy: `${settings.brandDisplayName} does not sell customer data. Customer details are handled for store operations and support only.`,
         },
         {
           title: "Future updates",

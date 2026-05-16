@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { PackageCheck, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { formatCurrency } from "@/app/lib/currency";
-
-const emptyCartTrustNotes = [
-  { label: "Discreet Privacy Packaging", icon: PackageCheck },
-  { label: "3-Day Hygiene-Safe Support", icon: ShieldCheck },
-  { label: "Comfort Fit", icon: Sparkles },
-];
+import {
+  defaultStorefrontSettings,
+  fetchStorefrontSettings,
+  type StorefrontSettings,
+} from "@/app/lib/storefront-settings";
 
 export default function CartPage() {
   const {
@@ -26,6 +26,27 @@ export default function CartPage() {
   const hasUnavailableItems = items.some(
     (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
   );
+  const [settings, setSettings] = useState<StorefrontSettings>(
+    defaultStorefrontSettings
+  );
+
+  useEffect(() => {
+    let isActive = true;
+
+    void fetchStorefrontSettings().then((nextSettings) => {
+      if (isActive) setSettings(nextSettings);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const emptyCartTrustNotes = [
+    { label: settings.privacyPackagingMessage, icon: PackageCheck },
+    { label: settings.supportWindowMessage, icon: ShieldCheck },
+    { label: "Comfort Fit", icon: Sparkles },
+  ];
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
@@ -35,13 +56,13 @@ export default function CartPage() {
         <div className="absolute bottom-[-8%] left-[30%] h-[280px] w-[280px] rounded-full bg-amber-400/10 blur-[120px]" />
       </div>
 
-      <SiteHeader active="cart" />
+      <SiteHeader active="cart" settings={settings} />
 
       <section className="mx-auto max-w-7xl px-6 py-12 md:py-16">
         <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
-              AEVYRIXA Cart
+              {settings.brandShortName} Cart
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
               Your Shopping Cart
@@ -210,7 +231,7 @@ export default function CartPage() {
 
                   <div className="flex items-center justify-between text-sm text-white/65">
                     <span>Support</span>
-                    <span>3-Day Support Window</span>
+              <span>{settings.supportWindowMessage}</span>
                   </div>
 
                   <div className="h-px bg-white/10" />
@@ -248,7 +269,7 @@ export default function CartPage() {
               </div>
 
               <p className="mt-5 text-center text-xs uppercase tracking-[0.2em] text-white/45">
-                Secure Payment | Discreet Privacy Packaging | 3-Day Hygiene-Safe Support
+                Secure Payment | {settings.privacyPackagingMessage} | {settings.supportWindowMessage}
               </p>
             </div>
           </div>

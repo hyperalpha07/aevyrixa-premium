@@ -1,19 +1,17 @@
 import Link from "next/link";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
-import { whatsappHref } from "@/app/lib/admin-settings";
-import { getStoreSettings } from "@/app/lib/settings-store";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {
-  const { settings } = await getStoreSettings();
-  const whatsappUrl = whatsappHref(settings.supportWhatsApp);
+  const { settings } = await loadStorefrontSettings();
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_48%,#030612_100%)]" />
-      <SiteHeader />
+      <SiteHeader settings={settings} />
 
       <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-8 px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="min-w-0">
@@ -24,18 +22,18 @@ export default async function ContactPage() {
             Support for orders, sizing, and Her Care questions.
           </h1>
           <p className="mt-5 break-words text-base leading-8 text-white/66 [overflow-wrap:anywhere]">
-            Contact Aevyrixa support for Bangladesh delivery, COD questions,
-            size guidance, order tracking, and 3-Day Hygiene-Safe Support.
+            Contact {settings.brandShortName} support for delivery, COD
+            questions, size guidance, order tracking, and policy support.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            {whatsappUrl && (
+            {settings.whatsappUrl && (
               <a
-                href={whatsappUrl}
+                href={settings.whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-7 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
               >
-                Chat with Aevyrixa Support
+                Chat with {settings.brandShortName} Support
               </a>
             )}
             <Link
@@ -65,20 +63,25 @@ export default async function ContactPage() {
             <p>{settings.supportWindowMessage}</p>
             <p>{settings.hygieneReturnMessage}</p>
           </div>
-          {settings.facebookPageUrl && (
-            <a
-              href={settings.facebookPageUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white transition hover:border-cyan-200/40 sm:w-auto"
-            >
-              Visit Facebook Page
-            </a>
+          {settings.socialLinks.length > 0 && (
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {settings.socialLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white transition hover:border-cyan-200/40 sm:w-auto"
+                >
+                  Visit {link.label}
+                </a>
+              ))}
+            </div>
           )}
         </section>
       </section>
 
-      <SiteFooter />
+      <SiteFooter settings={settings} />
     </main>
   );
 }

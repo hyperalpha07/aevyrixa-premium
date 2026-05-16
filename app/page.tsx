@@ -14,16 +14,10 @@ import SiteFooter from "@/app/components/site-footer";
 import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import { listProducts } from "@/app/lib/product-store";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
-
-const trustItems = [
-  "Discreet Privacy Packaging",
-  "3-Day Hygiene-Safe Support",
-  "Comfort Fit",
-  "Reusable Protection",
-];
 
 const confidenceCards = [
   {
@@ -79,42 +73,46 @@ const careCards = [
   },
 ];
 
-const faqs = [
-  {
-    question: "How much protection should I expect?",
-    answer:
-      "Aevyrixa Her Care is designed to help manage light to moderate flow with layered protection, without overpromising protection levels.",
-  },
-  {
-    question: "Can I wear it by itself?",
-    answer:
-      "Many customers use period underwear on its own for lighter days. For heavier flow, pair it with your preferred backup protection.",
-  },
-  {
-    question: "How do I wash it?",
-    answer:
-      "Rinse with cool water, machine wash or hand wash with mild detergent, then air dry before storing.",
-  },
-  {
-    question: "What support is available?",
-    answer:
-      "Aevyrixa Her Care offers 3-Day Hygiene-Safe Support. Approval depends on product condition, packaging, proof, and support review.",
-  },
-];
-
 export default async function Home() {
-  const { products } = await listProducts();
+  const [{ products }, { settings }] = await Promise.all([
+    listProducts(),
+    loadStorefrontSettings(),
+  ]);
   const featuredProduct = products.find((product) => product.featured) ?? products[0];
   const featuredProductHref = featuredProduct
     ? `/product/${featuredProduct.slug}`
     : "/product/everyday-comfort";
+  const faqs = [
+    {
+      question: "How much protection should I expect?",
+      answer: `${settings.brandDisplayName} is designed to help manage light to moderate flow with layered protection, without overpromising protection levels.`,
+    },
+    {
+      question: "Can I wear it by itself?",
+      answer:
+        "Many customers use period underwear on its own for lighter days. For heavier flow, pair it with your preferred backup protection.",
+    },
+    {
+      question: "How do I wash it?",
+      answer:
+        "Rinse with cool water, machine wash or hand wash with mild detergent, then air dry before storing.",
+    },
+    {
+      question: "What support is available?",
+      answer: settings.supportWindowMessage,
+    },
+  ];
 
   return (
     <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
       <HomeMotionController />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.16),transparent_28%),linear-gradient(180deg,#030612_0%,#07101f_46%,#050612_100%)]" />
 
-      <SiteHeader active="home" productHref={featuredProductHref} />
+      <SiteHeader
+        active="home"
+        productHref={featuredProductHref}
+        settings={settings}
+      />
 
       <section className="aev-hero-stage relative isolate overflow-hidden px-4 pb-18 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
@@ -129,18 +127,13 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
           <div className="min-w-0">
             <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-cyan-200/20 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/90 shadow-[0_0_28px_rgba(34,211,238,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
-              Aevyrixa Her Care
+              {settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
             </p>
             <h1 className="aev-hero-headline mt-7 max-w-4xl text-[1.7rem] font-semibold leading-[1.05] tracking-tight text-white min-[430px]:text-[2.15rem] sm:text-6xl lg:text-7xl">
-              <span className="block">Reusable Period</span>
-              <span className="block">Care, Reimagined</span>
-              <span className="block sm:inline">for Modern</span>
-              <span className="block sm:inline"> Confidence</span>
+              {settings.appearanceSettings.homepageHeroTitle}
             </h1>
             <p className="aev-hero-copy mt-6 max-w-2xl text-pretty text-base leading-8 text-white/72 sm:text-lg">
-              <span className="block">Soft, discreet, reusable protection</span>
-              <span className="block">designed for comfort, confidence,</span>
-              <span className="block">and everyday movement.</span>
+              {settings.appearanceSettings.homepageHeroSubtitle}
             </p>
 
             <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[768px]:flex-row sm:mt-10">
@@ -148,7 +141,7 @@ export default async function Home() {
                 href="/product"
                 className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
               >
-                Shop Her Care
+                {settings.appearanceSettings.primaryCtaText}
               </Link>
               <a
                 href="#how-it-works"
@@ -159,7 +152,7 @@ export default async function Home() {
             </div>
 
             <div className="aev-hero-trust mt-9 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-              {trustItems.map((item) => (
+              {settings.trustBadges.map((item) => (
                 <div
                   key={item}
                   className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-4 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/76 backdrop-blur-xl"
@@ -185,7 +178,7 @@ export default async function Home() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[0.66rem] font-semibold uppercase tracking-[0.3em] text-rose-100/70">
-                      Aevyrixa Her Care
+                      {settings.brandDisplayName}
                     </p>
                     <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
                       Period Panty
@@ -247,9 +240,9 @@ export default async function Home() {
               </h2>
             </div>
             <p className="max-w-3xl text-base leading-8 text-white/65 lg:justify-self-end">
-              Aevyrixa Her Care is designed to feel intuitive from first wear to
-              wash day: choose thoughtfully, wear comfortably, and care for it
-              gently.
+              {settings.brandDisplayName} is designed to feel intuitive from
+              first wear to wash day: choose thoughtfully, wear comfortably,
+              and care for it gently.
             </p>
           </div>
 
@@ -303,7 +296,7 @@ export default async function Home() {
               {[
                 "Soft fabric feel with flexible everyday support.",
                 "Layered protection designed for light to moderate flow.",
-                "Reusable routine with discreet Privacy Packaging.",
+                settings.privacyPackagingMessage,
               ].map((benefit) => (
                 <div
                   key={benefit}
@@ -442,15 +435,15 @@ export default async function Home() {
                 Make period care feel softer, calmer, and more considered.
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
-                Discover premium reusable protection with discreet delivery and
-                3-Day Hygiene-Safe Support.
+                Discover premium reusable protection with discreet delivery.
+                {` ${settings.supportWindowMessage}`}
               </p>
               <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                 <Link
                   href="/product"
                   className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
                 >
-                  Shop Her Care
+                  {settings.appearanceSettings.primaryCtaText}
                 </Link>
                 <a
                   href="#faq"
@@ -464,7 +457,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter settings={settings} />
     </main>
   );
 }

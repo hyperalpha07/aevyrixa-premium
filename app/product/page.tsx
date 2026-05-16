@@ -5,6 +5,8 @@ import ProductVisual from "@/app/components/product-visual";
 import { listProducts } from "@/app/lib/product-store";
 import { publicProduct, stockStatusLabel } from "@/app/lib/product-display";
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import SiteFooter from "@/app/components/site-footer";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -38,7 +40,10 @@ const themeStyles: Record<
 };
 
 export default async function ProductCollectionPage() {
-  const { products } = await listProducts();
+  const [{ products }, { settings }] = await Promise.all([
+    listProducts(),
+    loadStorefrontSettings(),
+  ]);
   const displayProducts = products.map(publicProduct);
   const primaryProductHref = displayProducts[0]
     ? `/product/${displayProducts[0].slug}`
@@ -52,26 +57,29 @@ export default async function ProductCollectionPage() {
         <div className="absolute bottom-[-14%] left-[30%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
       </div>
 
-      <SiteHeader active="shop" productHref={primaryProductHref} />
+      <SiteHeader
+        active="shop"
+        productHref={primaryProductHref}
+        settings={settings}
+      />
 
       <section className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 md:pb-12 md:pt-16">
         <div className="max-w-3xl">
           <p className="text-xs uppercase tracking-[0.32em] text-cyan-200/70 sm:text-sm sm:tracking-[0.42em]">
-            Aevyrixa Her Care
+            {settings.brandDisplayName}
           </p>
           <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
             Premium reusable period panty care
           </h1>
           <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/65 [overflow-wrap:anywhere] md:text-lg">
-            Clean, discreet, reusable essentials shaped around comfort,
-            confidence, and a refined Her Care routine.
+            {settings.brandTagline}
           </p>
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           {[
-            ["Discreet Privacy Packaging", Truck],
-            ["Comfort-Led Fit", Sparkles],
+            [settings.privacyPackagingMessage, Truck],
+            [settings.supportWindowMessage, Sparkles],
             ["Reusable Protection", Droplets],
           ].map(([label, Icon]) => (
             <div
@@ -156,6 +164,7 @@ export default async function ProductCollectionPage() {
           })}
         </div>
       </section>
+      <SiteFooter settings={settings} />
     </main>
   );
 }

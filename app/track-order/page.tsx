@@ -7,11 +7,10 @@ import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import { formatCurrency } from "@/app/lib/currency";
 import {
-  defaultAdminSettings,
-  normalizeAdminSettings,
-  whatsappHref,
-  type AdminSettings,
-} from "@/app/lib/admin-settings";
+  defaultStorefrontSettings,
+  fetchStorefrontSettings,
+  type StorefrontSettings,
+} from "@/app/lib/storefront-settings";
 
 type TimelineState = "complete" | "active" | "inactive";
 
@@ -80,10 +79,11 @@ function TrackOrderContent() {
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
+  const [settings, setSettings] = useState<StorefrontSettings>(
+    defaultStorefrontSettings
+  );
 
   const isCancelled = order?.status === "Cancelled";
-  const whatsappUrl = whatsappHref(settings.supportWhatsApp);
   const supportContact = settings.supportWhatsApp || settings.supportPhone;
   const supportNote = useMemo(() => {
     const contact = supportContact ? ` at ${supportContact}` : "";
@@ -96,12 +96,9 @@ function TrackOrderContent() {
   useEffect(() => {
     let isActive = true;
 
-    void fetch("/api/settings", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((payload: { settings?: unknown }) => {
-        if (isActive && payload.settings) {
-          setSettings(normalizeAdminSettings(payload.settings));
-        }
+    void fetchStorefrontSettings()
+      .then((nextSettings) => {
+        if (isActive) setSettings(nextSettings);
       })
       .catch(() => null);
 
@@ -146,7 +143,7 @@ function TrackOrderContent() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_48%,#030612_100%)]" />
-      <SiteHeader active="track" />
+      <SiteHeader active="track" settings={settings} />
 
       <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-8 px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.88fr_1.12fr]">
         <div className="min-w-0">
@@ -154,7 +151,7 @@ function TrackOrderContent() {
             Track Order
           </p>
           <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
-            Check your Aevyrixa order status.
+            Check your {settings.brandShortName} order status.
           </h1>
           <p className="mt-5 break-words text-base leading-8 text-white/66 [overflow-wrap:anywhere]">
             Enter your order reference and the phone number used at checkout.
@@ -313,14 +310,14 @@ function TrackOrderContent() {
 
               <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/62">
                 <p>{supportNote}</p>
-                {whatsappUrl && (
+                {settings.whatsappUrl && (
                   <a
-                    href={whatsappUrl}
+                    href={settings.whatsappUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-2 inline-flex font-semibold text-cyan-100 transition hover:text-white"
                   >
-                    Chat with Aevyrixa Support
+                    Chat with {settings.brandShortName} Support
                   </a>
                 )}
               </div>
@@ -329,7 +326,7 @@ function TrackOrderContent() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter settings={settings} />
     </main>
   );
 }

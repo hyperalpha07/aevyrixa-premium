@@ -1,15 +1,21 @@
 import InfoPageShell from "@/app/components/info-page-shell";
+import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
-export default function AboutPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AboutPage() {
+  const { settings } = await loadStorefrontSettings();
+
   return (
     <InfoPageShell
-      eyebrow="About Aevyrixa"
+      settings={settings}
+      eyebrow={`About ${settings.brandShortName}`}
       title="Reusable Her Care, designed with comfort and discretion."
-      intro="Aevyrixa Her Care is building a premium reusable period panty and women hygiene experience for customers who want practical care to feel refined, considered, and easy to trust."
+      intro={`${settings.brandDisplayName} is building a premium reusable period panty and women hygiene experience for customers who want practical care to feel refined, considered, and easy to trust.`}
       sections={[
         {
           title: "Brand story",
-          copy: "Aevyrixa started with a simple belief: intimate care products should feel personal without feeling clinical, and reusable choices should look and feel elevated enough for everyday life.",
+          copy: `${settings.brandShortName} started with a simple belief: intimate care products should feel personal without feeling clinical, and reusable choices should look and feel elevated enough for everyday life.`,
         },
         {
           title: "Her Care focus",
@@ -19,13 +25,13 @@ export default function AboutPage() {
           title: "What guides us",
           items: [
             "Comfort-first product selection for everyday movement.",
-            "Discreet delivery and support language that respects privacy.",
+            settings.privacyPackagingMessage,
             "Reusable care guidance that stays clear, practical, and non-medical.",
           ],
         },
         {
           title: "Promise",
-          copy: "We keep the experience transparent: clear product information, 3-Day Hygiene-Safe Support, and direct order confirmation before dispatch.",
+          copy: `We keep the experience transparent: clear product information, ${settings.supportWindowMessage}, and direct order confirmation before dispatch.`,
         },
       ]}
     />
