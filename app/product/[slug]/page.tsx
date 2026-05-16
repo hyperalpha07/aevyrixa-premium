@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProductBySlug } from "@/app/lib/product-store";
+import { getProductBySlug, listProducts } from "@/app/lib/product-store";
 import ProductDetailClient from "@/app/product/[slug]/product-detail-client";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
@@ -12,14 +12,25 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [{ product }, { settings }] = await Promise.all([
+  const [{ product }, { settings }, { products }] = await Promise.all([
     getProductBySlug(slug),
     loadStorefrontSettings(),
+    listProducts(),
   ]);
 
   if (!product) {
     notFound();
   }
 
-  return <ProductDetailClient product={product} settings={settings} />;
+  const relatedProducts = products
+    .filter((p) => p.id !== product.id)
+    .slice(0, 3);
+
+  return (
+    <ProductDetailClient
+      product={product}
+      settings={settings}
+      relatedProducts={relatedProducts}
+    />
+  );
 }
