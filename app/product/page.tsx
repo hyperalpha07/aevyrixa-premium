@@ -69,7 +69,7 @@ export default async function ProductCollectionPage() {
             {settings.brandDisplayName}
           </p>
           <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
-            Premium reusable period panty care
+            Premium women's comfort &amp; reusable care
           </h1>
           <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/65 [overflow-wrap:anywhere] md:text-lg">
             {settings.brandTagline}

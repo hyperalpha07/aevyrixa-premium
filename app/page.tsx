@@ -188,7 +188,7 @@ export default async function Home() {
                       {settings.brandDisplayName}
                     </p>
                     <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
-                      Period Panty
+                      Her Care Collection
                     </h2>
                   </div>
                   <div className="rounded-full border border-cyan-200/20 bg-cyan-200/10 p-3 text-cyan-100">
@@ -294,9 +294,9 @@ export default async function Home() {
               Premium comfort, reusable care, and discreet protection in one calm system.
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-              A polished reusable period panty made for soft contact, discreet
-              wear, gentle care after use, and privacy-minded delivery from
-              order to arrival.
+              Premium reusable care essentials made for soft comfort, discreet
+              daily wear, gentle care after use, and privacy-minded delivery
+              from order to arrival.
             </p>
 
             <div className="mt-8 grid gap-3">
@@ -439,10 +439,10 @@ export default async function Home() {
                 Ready for reusable confidence?
               </p>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                Make period care feel softer, calmer, and more considered.
+                Discover Her Care essentials that feel softer, calmer, and more considered.
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
-                Discover premium reusable protection with discreet delivery.
+                Premium women's comfort, hygiene, and reusable care with discreet delivery.
                 {` ${settings.supportWindowMessage}`}
               </p>
               <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">

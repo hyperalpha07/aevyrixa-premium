@@ -18,7 +18,7 @@ export default async function FaqPage() {
           copy: "Start with your usual underwear size. For size checking after delivery, try the product only over clean underwear or clean fitted clothing.",
         },
         {
-          title: "How should I wash reusable period panty products?",
+          title: "How should I wash reusable care products?",
           copy: "Rinse with cool water after wear, wash with mild detergent, and air dry fully. Avoid bleach, fabric softener, and high heat.",
         },
         {

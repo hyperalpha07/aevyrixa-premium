@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | Aevyrixa Her Care",
   },
   description:
-    "Aevyrixa Her Care offers reusable period panty essentials with discreet privacy packaging, careful order review, and 3-Day Hygiene-Safe Support.",
+    "Aevyrixa Her Care is a premium women's comfort, hygiene, reusable care, and intimate essentials brand in Bangladesh. Discreet privacy packaging, careful order review, and 3-Day Hygiene-Safe Support.",
   icons: {
     icon: "/favicon.ico",
   },

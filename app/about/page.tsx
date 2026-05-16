@@ -10,8 +10,8 @@ export default async function AboutPage() {
     <InfoPageShell
       settings={settings}
       eyebrow={`About ${settings.brandShortName}`}
-      title="Reusable Her Care, designed with comfort and discretion."
-      intro={`${settings.brandDisplayName} is building a premium reusable period panty and women hygiene experience for customers who want practical care to feel refined, considered, and easy to trust.`}
+      title="Premium Her Care, designed for comfort, discretion, and everyday confidence."
+      intro={`${settings.brandDisplayName} is a premium women's comfort, hygiene, reusable care, and intimate essentials brand built for customers who want practical care to feel refined, considered, and easy to trust.`}
       sections={[
         {
           title: "Brand story",
@@ -19,7 +19,7 @@ export default async function AboutPage() {
         },
         {
           title: "Her Care focus",
-          copy: "Our store focuses on reusable period panty essentials and women hygiene care that support comfort, discretion, and calm routines.",
+          copy: "Our store brings together reusable period care, comfort wear, hygiene essentials, and intimate care — all designed for comfort, discretion, and calm routines.",
         },
         {
           title: "What guides us",

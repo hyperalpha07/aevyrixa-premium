@@ -169,7 +169,7 @@ type UnknownRecord = Record<string, unknown>;
 const defaultGroups: AdminSettingsGroups = {
   storeProfile: {
     storeName: "Aevyrixa Her Care",
-    brandSubtitle: "Premium her care essentials for Bangladesh",
+    brandSubtitle: "Premium women's comfort, hygiene & reusable care for Bangladesh",
     businessLocation: "Dhaka, Bangladesh",
     supportPhone: "01644037384",
     supportWhatsApp: "01644037384",
@@ -271,7 +271,7 @@ const defaultGroups: AdminSettingsGroups = {
   seoSettings: {
     homepageSeoTitle: "Aevyrixa Her Care",
     homepageMetaDescription:
-      "Premium her care essentials with discreet Bangladesh delivery.",
+      "Aevyrixa Her Care — premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
     defaultProductSeoSuffix: " | Aevyrixa Her Care",
     facebookPixelId: "",
     tiktokPixelId: "",
@@ -283,7 +283,7 @@ const defaultGroups: AdminSettingsGroups = {
     heroBadgeText: "3-Day Hygiene-Safe Support",
     homepageHeroTitle: "Aevyrixa Her Care",
     homepageHeroSubtitle:
-      "Premium her care essentials with discreet Bangladesh delivery.",
+      "Premium women's comfort, hygiene & reusable care with discreet Bangladesh delivery.",
     primaryCtaText: "Shop Now",
     secondaryCtaText: "Track Order",
     announcementBarEnabled: false,
@@ -294,7 +294,7 @@ const defaultGroups: AdminSettingsGroups = {
     testMode: false,
     debugMode: false,
     purgeDeletedProductsAfterDays: "",
-    systemVersionLabel: "Aevyrixa Control Room — Phase 24 Stabilized",
+    systemVersionLabel: "Aevyrixa Control Room — Phase 26 Brand Repositioning",
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
 };

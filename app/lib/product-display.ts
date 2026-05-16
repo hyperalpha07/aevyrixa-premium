@@ -6,7 +6,7 @@ import type {
 import { SITE_CURRENCY } from "@/app/lib/currency";
 
 export const fallbackProductCopy = {
-  category: "Reusable Period Panty",
+  category: "Reusable Period Care",
   shortDescription:
     "Premium reusable Her Care comfort with a discreet, polished fit.",
   description:

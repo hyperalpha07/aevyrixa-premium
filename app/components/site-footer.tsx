@@ -14,7 +14,10 @@ const footerGroups = [
     title: "Shop",
     links: [
       { label: "Her Care Collection", href: "/product" },
-      { label: "Period Panty", href: "/product/everyday-comfort" },
+      { label: "Reusable Period Care", href: "/product" },
+      { label: "Comfort Panty", href: "/product" },
+      { label: "Hygiene Essentials", href: "/product" },
+      { label: "New Arrivals", href: "/product" },
     ],
   },
   {
@@ -122,8 +125,8 @@ export default function SiteFooter({
           <div key={group.title}>
             <h3 className="font-semibold text-white">{group.title}</h3>
             <ul className="mt-4 space-y-3 text-sm text-white/55">
-              {group.links.map((link) => (
-                <li key={link.href}>
+              {group.links.map((link, linkIndex) => (
+                <li key={`${group.title}-${link.label}-${link.href}-${linkIndex}`}>
                   <Link
                     href={link.href}
                     className="transition hover:text-cyan-200"
