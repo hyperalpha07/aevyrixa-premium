@@ -73,6 +73,13 @@ const careCards = [
   },
 ];
 
+const heroTrustBadges = [
+  "Discreet Packaging",
+  "3-Day Support",
+  "Comfort Fit",
+  "Reusable Protection",
+];
+
 export default async function Home() {
   const [{ products }, { settings }] = await Promise.all([
     listProducts(),
@@ -151,11 +158,11 @@ export default async function Home() {
               </a>
             </div>
 
-            <div className="aev-hero-trust mt-9 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-              {settings.trustBadges.map((item) => (
+            <div className="aev-hero-trust mt-9 grid gap-2.5 min-[430px]:grid-cols-2">
+              {heroTrustBadges.map((item) => (
                 <div
                   key={item}
-                  className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-4 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/76 backdrop-blur-xl"
+                  className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-4 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/76 backdrop-blur-xl sm:px-5"
                 >
                   {item}
                 </div>
