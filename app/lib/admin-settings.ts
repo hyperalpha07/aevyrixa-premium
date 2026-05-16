@@ -294,7 +294,7 @@ const defaultGroups: AdminSettingsGroups = {
     testMode: false,
     debugMode: false,
     purgeDeletedProductsAfterDays: "",
-    systemVersionLabel: "Phase 21",
+    systemVersionLabel: "Aevyrixa Control Room — Phase 24 Stabilized",
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
 };

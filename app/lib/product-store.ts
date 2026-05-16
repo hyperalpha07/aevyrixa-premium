@@ -197,6 +197,10 @@ function normalizeVisual(value: unknown): ProductCatalogItem["visualTheme"] {
     return value;
   }
 
+  if (process.env.NODE_ENV === "development" && value !== undefined && value !== null && value !== "") {
+    console.warn(`[product-store] Unknown visual theme "${String(value)}" — falling back to "blush-violet".`);
+  }
+
   return "blush-violet";
 }
 
@@ -407,10 +411,12 @@ function toSupabaseCreatePayload(product: ProductCatalogItem) {
     seo_title: optionalText(product.seoTitle) ?? null,
     seo_description: optionalText(product.seoDescription) ?? null,
     image_url: optionalText(product.imageUrl) ?? null,
+    video_url: optionalText(product.videoUrl) ?? null,
     poster_url: optionalText(product.posterUrl) ?? null,
   };
 }
 
+// TODO: Add limit/offset pagination when product catalog grows beyond ~200 rows.
 async function listProductsFromSupabase() {
   const response = await fetch(
     supabaseEndpoint(
@@ -426,6 +432,23 @@ async function listProductsFromSupabase() {
 
   const rows = (await response.json()) as SupabaseProductRow[];
   return rows.map(mapSupabaseProduct);
+}
+
+async function getProductBySlugFromSupabase(slug: string) {
+  const response = await fetch(
+    supabaseEndpoint(
+      `${SUPABASE_PRODUCTS_TABLE}?slug=eq.${encodeURIComponent(slug)}&deleted_at=is.null&select=*&limit=1`
+    ),
+    {
+      headers: supabaseHeaders(),
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) throw await supabaseError(response, "product slug lookup");
+
+  const rows = (await response.json()) as SupabaseProductRow[];
+  return rows[0] ? mapSupabaseProduct(rows[0]) : null;
 }
 
 async function getProductByIdFromSupabase(id: string) {
@@ -665,29 +688,38 @@ export async function listProducts(
 
 export async function getProductBySlug(slug: string, options: { includeDrafts?: boolean } = {}) {
   const includeDrafts = Boolean(options.includeDrafts);
-  const supabaseProducts = await safelyUseSupabase(listProductsFromSupabase);
 
-  if (supabaseProducts && supabaseProducts.length > 0) {
-    const supabaseProduct =
-      supabaseProducts.find((product) => product.slug === slug && !product.deletedAt) ?? null;
+  if (hasSupabaseConfig()) {
+    const supabaseProduct = await safelyUseSupabase(() => getProductBySlugFromSupabase(slug));
+
+    if (supabaseProduct !== null) {
+      console.info(
+        `Product detail source: supabase (slug=${slug}, found=${Boolean(supabaseProduct)}, includeDrafts=${includeDrafts})`
+      );
+
+      if (!includeDrafts && supabaseProduct.status !== "active") {
+        return { product: null, storageMode: "supabase" as ProductStorageMode };
+      }
+
+      return {
+        product: supabaseProduct,
+        storageMode: "supabase" as ProductStorageMode,
+      };
+    }
+
+    // safelyUseSupabase returned null: Supabase unavailable or table missing — fall through to static.
+    const fallbackProduct =
+      demoProducts.find(
+        (item) => item.slug === slug && !item.deletedAt && (includeDrafts || item.status === "active")
+      ) ?? null;
 
     console.info(
-      `Product detail source: supabase (slug=${slug}, found=${Boolean(
-        supabaseProduct
-      )}, includeDrafts=${includeDrafts})`
+      `Product detail source: fallback-static (slug=${slug}, found=${Boolean(fallbackProduct)}, includeDrafts=${includeDrafts})`
     );
 
-    if (!supabaseProduct) {
-      return { product: null, storageMode: "supabase" as ProductStorageMode };
-    }
-
-    if (!includeDrafts && supabaseProduct.status !== "active") {
-      return { product: null, storageMode: "supabase" as ProductStorageMode };
-    }
-
     return {
-      product: supabaseProduct,
-      storageMode: "supabase" as ProductStorageMode,
+      product: fallbackProduct,
+      storageMode: "fallback-static" as ProductStorageMode,
     };
   }
 
@@ -700,16 +732,12 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
     ) ?? null;
 
   console.info(
-    `Product detail source: ${
-      hasSupabaseConfig() ? "fallback-static" : "demo-memory"
-    } (slug=${slug}, found=${Boolean(product)}, includeDrafts=${includeDrafts})`
+    `Product detail source: demo-memory (slug=${slug}, found=${Boolean(product)}, includeDrafts=${includeDrafts})`
   );
 
   return {
     product,
-    storageMode: hasSupabaseConfig()
-      ? ("fallback-static" as ProductStorageMode)
-      : ("demo-memory" as ProductStorageMode),
+    storageMode: "demo-memory" as ProductStorageMode,
   };
 }
 

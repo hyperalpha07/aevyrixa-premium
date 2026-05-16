@@ -242,9 +242,10 @@ async function saveOrderToSupabase(order: OrderRecord) {
   return rows[0] ? mapSupabaseOrder(rows[0]) : order;
 }
 
-async function listOrdersFromSupabase() {
+// TODO: Add cursor/offset pagination when order volume requires it.
+async function listOrdersFromSupabase(limit = 100) {
   const response = await fetch(
-    supabaseEndpoint(`${SUPABASE_ORDERS_TABLE}?select=*&order=created_at.desc`),
+    supabaseEndpoint(`${SUPABASE_ORDERS_TABLE}?select=*&order=created_at.desc&limit=${limit}`),
     {
       headers: supabaseHeaders(),
       cache: "no-store",

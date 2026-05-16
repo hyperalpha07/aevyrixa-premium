@@ -180,6 +180,9 @@ type AdminProduct = {
   stockQuantity?: number;
   visualTheme: ProductVisualTheme;
   visualVariant: string;
+  imageUrl: string;
+  videoUrl: string;
+  posterUrl: string;
   deletedAt?: string;
   deletedReason?: string;
 };
@@ -220,6 +223,9 @@ const emptyProduct: AdminProduct = {
   stockQuantity: undefined,
   visualTheme: "blush-violet",
   visualVariant: "default",
+  imageUrl: "",
+  videoUrl: "",
+  posterUrl: "",
 };
 
 const defaultSettings = defaultAdminSettings;
@@ -385,6 +391,9 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     stockQuantity: numberValue(value.stockQuantity) || undefined,
     visualTheme,
     visualVariant: textValue(value.visualVariant) || visualTheme,
+    imageUrl: textValue(value.imageUrl) || "",
+    videoUrl: textValue(value.videoUrl) || "",
+    posterUrl: textValue(value.posterUrl) || "",
     deletedAt: textValue(value.deletedAt),
     deletedReason: textValue(value.deletedReason),
   };
@@ -413,6 +422,9 @@ function productSeed(): AdminProduct[] {
     stockQuantity: undefined,
     visualTheme: product.visualTheme,
     visualVariant: product.visualTheme,
+    imageUrl: "",
+    videoUrl: "",
+    posterUrl: "",
     deletedAt: undefined,
     deletedReason: undefined,
   }));
@@ -567,6 +579,9 @@ function productToApiPayload(product: AdminProduct) {
     care: product.care,
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
+    imageUrl: product.imageUrl || undefined,
+    videoUrl: product.videoUrl || undefined,
+    posterUrl: product.posterUrl || undefined,
   };
 }
 
@@ -593,6 +608,9 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
     stockQuantity: product.stockQuantity,
     visualTheme: product.visualTheme,
     visualVariant: product.visualVariant ?? product.visualTheme,
+    imageUrl: product.imageUrl ?? "",
+    videoUrl: product.videoUrl ?? "",
+    posterUrl: product.posterUrl ?? "",
     deletedAt: product.deletedAt,
     deletedReason: product.deletedReason,
   };
@@ -2055,6 +2073,9 @@ function ProductEditor({
           }
         />
         <TextField label="Visual variant" value={draft.visualVariant} onChange={(value) => updateField("visualVariant", value)} />
+        <TextField label="Image URL" value={draft.imageUrl} onChange={(value) => updateField("imageUrl", value)} placeholder="https://..." />
+        <TextField label="Video URL" value={draft.videoUrl} onChange={(value) => updateField("videoUrl", value)} placeholder="https://..." />
+        <TextField label="Poster URL" value={draft.posterUrl} onChange={(value) => updateField("posterUrl", value)} placeholder="https://..." />
         <TextField label="SEO title" value={draft.seoTitle} onChange={(value) => updateField("seoTitle", value)} />
         <TextAreaField label="Short description" value={draft.shortDescription} onChange={(value) => updateField("shortDescription", value)} />
         <TextAreaField label="SEO description" value={draft.seoDescription} onChange={(value) => updateField("seoDescription", value)} />

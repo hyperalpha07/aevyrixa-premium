@@ -29,8 +29,6 @@ import {
   type PaymentType,
 } from "@/app/lib/order-types";
 
-const DRAFT_ORDER_STORAGE_KEY = "aevyrixa-draft-order";
-const DRAFT_ORDERS_STORAGE_KEY = "aevyrixa-draft-orders";
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
 
 type CheckoutForm = {
@@ -262,53 +260,6 @@ export default function CheckoutPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const saveDraftOrder = (draftOrder: unknown) => {
-    try {
-      localStorage.setItem(DRAFT_ORDER_STORAGE_KEY, JSON.stringify(draftOrder));
-
-      try {
-        const savedOrders = localStorage.getItem(DRAFT_ORDERS_STORAGE_KEY);
-        const parsedOrders = savedOrders
-          ? (JSON.parse(savedOrders) as unknown)
-          : [];
-        const existingOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
-        const draftRecord =
-          typeof draftOrder === "object" && draftOrder !== null
-            ? (draftOrder as Partial<OrderRecord>)
-            : {};
-        const draftReference = draftRecord.orderReference || draftRecord.orderId;
-        const nextOrders = draftReference
-          ? existingOrders.filter((order) => {
-              if (typeof order !== "object" || order === null) return true;
-              const record = order as Partial<OrderRecord>;
-              return (
-                record.orderReference !== draftReference &&
-                record.orderId !== draftReference
-              );
-            })
-          : existingOrders;
-
-        // Temporary browser fallback until Supabase/Postgres becomes the
-        // production source of truth. Admin reads this same key immediately.
-        localStorage.setItem(
-          DRAFT_ORDERS_STORAGE_KEY,
-          JSON.stringify([draftOrder, ...nextOrders])
-        );
-      } catch (error) {
-        console.error("Failed to save order history:", error);
-        localStorage.setItem(
-          DRAFT_ORDERS_STORAGE_KEY,
-          JSON.stringify([draftOrder])
-        );
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Failed to save order:", error);
-      return false;
-    }
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -385,8 +336,6 @@ export default function CheckoutPage() {
         );
         return;
       }
-
-      saveDraftOrder(result.order);
 
       setPreparedOrder({
         orderId: result.order.orderReference || result.order.orderId,
