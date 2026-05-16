@@ -29,7 +29,10 @@ import {
   ShoppingBag,
   Sparkles,
   Trash2,
+  Upload,
+  Video as VideoIcon,
   Wallet,
+  X,
 } from "lucide-react";
 import { products as seedProducts, type ProductVisualTheme } from "@/app/lib/products";
 import { formatCurrency, SITE_CURRENCY } from "@/app/lib/currency";
@@ -2004,11 +2007,58 @@ function ProductEditor({
   const [benefits, setBenefits] = useState(listToLines(product.benefits));
   const [care, setCare] = useState(listToLines(product.care));
   const [localError, setLocalError] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
 
   const updateField = (field: keyof AdminProduct, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
     setLocalError(null);
   };
+
+  async function handleMediaUpload(file: File, mediaType: "image" | "video") {
+    const isImage = mediaType === "image";
+    if (isImage) { setImageUploading(true); setImageUploadError(null); }
+    else { setVideoUploading(true); setVideoUploadError(null); }
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("productSlug", draft.slug || "draft");
+
+      const response = await fetch("/api/product-media/upload", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+
+      const payload = (await response.json()) as Record<string, unknown>;
+
+      if (!response.ok || typeof payload.url !== "string") {
+        const msg = Array.isArray(payload.errors) && typeof payload.errors[0] === "string"
+          ? payload.errors[0]
+          : "Upload failed.";
+        if (isImage) setImageUploadError(msg);
+        else setVideoUploadError(msg);
+        return;
+      }
+
+      const uploadedUrl = payload.url as string;
+      if (isImage) {
+        setDraft((current) => ({ ...current, imageUrl: uploadedUrl }));
+      } else {
+        setDraft((current) => ({ ...current, videoUrl: uploadedUrl }));
+      }
+    } catch {
+      const msg = "Upload failed. Check your connection.";
+      if (isImage) setImageUploadError(msg);
+      else setVideoUploadError(msg);
+    } finally {
+      if (isImage) setImageUploading(false);
+      else setVideoUploading(false);
+    }
+  }
 
   const submitProduct = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -2113,9 +2163,26 @@ function ProductEditor({
           }
         />
         <TextField label="Visual variant" value={draft.visualVariant} onChange={(value) => updateField("visualVariant", value)} />
-        <TextField label="Image URL" value={draft.imageUrl} onChange={(value) => updateField("imageUrl", value)} placeholder="https://..." />
-        <TextField label="Video URL" value={draft.videoUrl} onChange={(value) => updateField("videoUrl", value)} placeholder="https://..." />
-        <TextField label="Poster URL" value={draft.posterUrl} onChange={(value) => updateField("posterUrl", value)} placeholder="https://..." />
+        <MediaUploadField
+          label="Product image"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          mediaType="image"
+          currentUrl={draft.imageUrl}
+          uploading={imageUploading}
+          error={imageUploadError}
+          onUpload={(file) => handleMediaUpload(file, "image")}
+          onClear={() => setDraft((current) => ({ ...current, imageUrl: "" }))}
+        />
+        <MediaUploadField
+          label="Product video"
+          accept="video/mp4,video/webm,video/quicktime"
+          mediaType="video"
+          currentUrl={draft.videoUrl}
+          uploading={videoUploading}
+          error={videoUploadError}
+          onUpload={(file) => handleMediaUpload(file, "video")}
+          onClear={() => setDraft((current) => ({ ...current, videoUrl: "" }))}
+        />
         <TextField label="SEO title" value={draft.seoTitle} onChange={(value) => updateField("seoTitle", value)} />
         <TextAreaField label="Short description" value={draft.shortDescription} onChange={(value) => updateField("shortDescription", value)} />
         <TextAreaField label="SEO description" value={draft.seoDescription} onChange={(value) => updateField("seoDescription", value)} />
@@ -3169,6 +3236,92 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
       <div className="w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white/58">
         {value}
       </div>
+    </div>
+  );
+}
+
+function MediaUploadField({
+  label,
+  accept,
+  mediaType,
+  currentUrl,
+  uploading,
+  error,
+  onUpload,
+  onClear,
+}: {
+  label: string;
+  accept: string;
+  mediaType: "image" | "video";
+  currentUrl: string;
+  uploading: boolean;
+  error: string | null;
+  onUpload: (file: File) => void;
+  onClear: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isImage = mediaType === "image";
+
+  return (
+    <div className="block min-w-0">
+      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+        {label}
+      </span>
+      {currentUrl ? (
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/24">
+          {isImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={currentUrl}
+              alt=""
+              className="h-36 w-full object-cover object-center"
+            />
+          ) : (
+            <div className="flex h-20 items-center gap-3 px-4">
+              <VideoIcon className="h-5 w-5 shrink-0 text-cyan-200/70" />
+              <span className="min-w-0 truncate text-sm text-white/70">
+                {currentUrl}
+              </span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={onClear}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white/75 transition hover:text-white"
+            title="Remove"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-white/18 bg-black/18 px-4 py-4 text-sm text-white/45 transition hover:border-cyan-200/40 hover:text-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Upload className="h-4 w-4 shrink-0" />
+          <span>
+            {uploading
+              ? "Uploading..."
+              : `Upload ${isImage ? "image" : "video"}`}
+          </span>
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onUpload(file);
+          event.target.value = "";
+        }}
+      />
+      {error && (
+        <p className="mt-1.5 text-xs text-rose-300/90">{error}</p>
+      )}
     </div>
   );
 }

@@ -105,10 +105,19 @@ export default async function ProductCollectionPage() {
               >
                 <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#07111f]">
                   <div className="relative aspect-[1.08] w-full">
-                    <ProductVisual
-                      visualTheme={product.visualTheme}
-                      label={product.absorbency}
-                    />
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="absolute inset-0 h-full w-full object-cover object-center"
+                      />
+                    ) : (
+                      <ProductVisual
+                        visualTheme={product.visualTheme}
+                        label={product.absorbency}
+                      />
+                    )}
                   </div>
                 </div>
 

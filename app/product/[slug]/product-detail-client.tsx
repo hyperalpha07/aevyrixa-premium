@@ -170,9 +170,33 @@ export default function ProductDetailClient({
         <div className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}>
           <div className="overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
             <div className="aspect-[0.92] min-h-[340px] w-full sm:aspect-square">
-              <ProductVisual visualTheme={displayProduct.visualTheme} label={displayProduct.absorbency} />
+              {displayProduct.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={displayProduct.imageUrl}
+                  alt={displayProduct.name}
+                  className="h-full w-full object-cover object-center"
+                />
+              ) : (
+                <ProductVisual
+                  visualTheme={displayProduct.visualTheme}
+                  label={displayProduct.absorbency}
+                />
+              )}
             </div>
           </div>
+          {displayProduct.videoUrl && (
+            <div className="mt-3 overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#07111f]">
+              <video
+                src={displayProduct.videoUrl}
+                poster={displayProduct.posterUrl ?? displayProduct.imageUrl}
+                controls
+                playsInline
+                className="w-full"
+                style={{ maxHeight: "280px" }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="min-w-0">

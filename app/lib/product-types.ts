@@ -32,6 +32,11 @@ export type ProductCatalogItem = {
   imageUrl?: string;
   videoUrl?: string;
   posterUrl?: string;
+  primaryImageUrl?: string;
+  primaryImagePath?: string;
+  videoPath?: string;
+  images?: string[];
+  media?: unknown[];
   benefits: string[];
   care: string[];
   seoTitle?: string;
