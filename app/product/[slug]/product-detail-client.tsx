@@ -138,8 +138,7 @@ export default function ProductDetailClient({
   );
   const [quantity, setQuantity] = useState(1);
 
-  const decreaseQuantity = () =>
-    setQuantity((q) => Math.max(1, q - 1));
+  const decreaseQuantity = () => setQuantity((q) => Math.max(1, q - 1));
   const increaseQuantity = () => setQuantity((q) => q + 1);
 
   const handleAddToCart = (goToCart = false) => {
@@ -222,9 +221,9 @@ export default function ProductDetailClient({
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] pb-24 text-white lg:pb-0">
       {/* Background glows */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-cyan-400/14 blur-[120px]" />
-        <div className="absolute right-[-18%] top-[20%] h-[360px] w-[360px] rounded-full bg-fuchsia-400/14 blur-[140px]" />
-        <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
+        <div className="absolute left-[-18%] top-[5%] h-[360px] w-[360px] rounded-full bg-cyan-400/14 blur-[140px]" />
+        <div className="absolute right-[-18%] top-[20%] h-[420px] w-[420px] rounded-full bg-fuchsia-400/14 blur-[160px]" />
+        <div className="absolute bottom-[-14%] left-[28%] h-[320px] w-[320px] rounded-full bg-rose-200/10 blur-[130px]" />
       </div>
 
       <SiteHeader
@@ -233,20 +232,20 @@ export default function ProductDetailClient({
         settings={settings}
       />
 
-      {/* ── Main product section ── */}
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
+      {/* ── Hero: 2-column product section ── */}
+      <section className="mx-auto grid max-w-[1280px] gap-10 px-5 py-10 sm:px-8 md:py-16 lg:grid-cols-[44fr_56fr] lg:gap-14 xl:px-10">
 
         {/* LEFT — Media gallery */}
         <div
           className={`aev-shop-card min-w-0 self-start rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}
         >
-          {/* Main media display */}
+          {/* Main media frame */}
           <div className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]">
-            {/* Premium glow behind product */}
             <div
               className={`pointer-events-none absolute inset-0 scale-90 rounded-full opacity-40 blur-[60px] ${style.glow}`}
             />
-            <div className="aspect-square w-full">
+            {/* Taller portrait ratio for more premium presence */}
+            <div className="aspect-[4/5] w-full">
               {selectedMedia?.type === "video" ? (
                 <video
                   src={selectedMedia.url}
@@ -260,7 +259,7 @@ export default function ProductDetailClient({
                 <img
                   src={selectedMedia.url}
                   alt={displayProduct.name}
-                  className="h-full w-full object-contain p-4"
+                  className="h-full w-full object-contain p-6"
                 />
               ) : (
                 <ProductVisual
@@ -271,7 +270,7 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          {/* Thumbnail strip — shown when multiple images or image + video */}
+          {/* Thumbnail strip — only when multiple media items */}
           {showThumbnails && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {mediaItems.map((item, index) => (
@@ -283,7 +282,7 @@ export default function ProductDetailClient({
                       ? "Play video"
                       : `Product image ${index + 1}`
                   }
-                  className={`shrink-0 h-[68px] w-[68px] overflow-hidden rounded-xl border transition ${
+                  className={`shrink-0 h-[72px] w-[72px] overflow-hidden rounded-xl border transition ${
                     safeIndex === index
                       ? "border-white/55 bg-white/10"
                       : "border-white/10 bg-[#07111f] hover:border-white/25"
@@ -306,7 +305,7 @@ export default function ProductDetailClient({
             </div>
           )}
 
-          {/* If single image + video: always show video card below */}
+          {/* Single image + video: show video card below */}
           {!showThumbnails && displayProduct.videoUrl && (
             <div className="mt-3 overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#07111f]">
               <video
@@ -315,13 +314,13 @@ export default function ProductDetailClient({
                 controls
                 playsInline
                 className="w-full"
-                style={{ maxHeight: "260px" }}
+                style={{ maxHeight: "280px" }}
               />
             </div>
           )}
         </div>
 
-        {/* RIGHT — Product information */}
+        {/* RIGHT — Buy box */}
         <div className="min-w-0">
           <Link
             href="/product"
@@ -342,7 +341,7 @@ export default function ProductDetailClient({
                 Featured
               </span>
             )}
-            <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-white/42 [overflow-wrap:anywhere] min-[420px]:tracking-[0.24em]">
+            <span className="max-w-full break-words text-xs uppercase tracking-[0.18em] text-white/42 [overflow-wrap:anywhere]">
               {displayProduct.category}
             </span>
             <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
@@ -351,11 +350,11 @@ export default function ProductDetailClient({
           </div>
 
           {/* Product name */}
-          <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
+          <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-4xl lg:text-5xl">
             {displayProduct.name}
           </h1>
 
-          {/* Short description — accent tagline */}
+          {/* Accent tagline */}
           {displayProduct.shortDescription && (
             <p
               className={`mt-3 text-base font-medium leading-7 ${style.accent}`}
@@ -364,14 +363,14 @@ export default function ProductDetailClient({
             </p>
           )}
 
-          {/* Main description */}
-          <p className="mt-4 max-w-2xl break-words text-base leading-8 text-white/68 [overflow-wrap:anywhere]">
+          {/* Description */}
+          <p className="mt-4 break-words text-base leading-8 text-white/68 [overflow-wrap:anywhere]">
             {displayProduct.description}
           </p>
 
           {/* Price */}
           <div className="mt-6 flex flex-wrap items-end gap-3">
-            <span className="text-4xl font-semibold">
+            <span className="text-4xl font-bold tracking-tight">
               {formatProductPrice(displayProduct)}
             </span>
             {typeof displayProduct.compareAtPrice === "number" && (
@@ -391,7 +390,7 @@ export default function ProductDetailClient({
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-product-buy-panel mt-7 rounded-[1.65rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-5 ${style.panel}`}
+            className={`aev-product-buy-panel mt-7 rounded-[1.65rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6 ${style.panel}`}
           >
             <div className="space-y-6">
               <VariantSelector
@@ -448,7 +447,7 @@ export default function ProductDetailClient({
                 <button
                   onClick={() => handleAddToCart(false)}
                   disabled={!canAddToCart}
-                  className={`aev-action-primary rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+                  className={`aev-action-primary rounded-full px-6 py-4 text-sm font-bold tracking-wide transition ${
                     canAddToCart
                       ? `bg-gradient-to-r hover:scale-[1.01] ${style.primary}`
                       : "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
@@ -459,7 +458,7 @@ export default function ProductDetailClient({
                 <button
                   onClick={() => handleAddToCart(true)}
                   disabled={!canAddToCart}
-                  className={`aev-action-secondary rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
+                  className={`aev-action-secondary rounded-full border px-6 py-4 text-sm font-semibold tracking-wide transition ${
                     canAddToCart
                       ? "border-white/12 bg-white/[0.04] text-white hover:border-cyan-200/35 hover:bg-white/[0.08]"
                       : "cursor-not-allowed border-white/10 bg-white/[0.04] text-white/35"
@@ -471,7 +470,7 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          {/* ── Trust chips — 5 Her Care specific blocks ── */}
+          {/* ── Trust chips ── */}
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
               {
@@ -508,12 +507,8 @@ export default function ProductDetailClient({
                   className={`mt-0.5 h-4 w-4 shrink-0 ${style.accent}`}
                 />
                 <div>
-                  <p className="text-sm font-semibold text-white/90">
-                    {label}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-5 text-white/52">
-                    {desc}
-                  </p>
+                  <p className="text-sm font-semibold text-white/90">{label}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-white/52">{desc}</p>
                 </div>
               </div>
             ))}
@@ -521,11 +516,11 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      {/* ── Benefits, Care, Policy, FAQ ── */}
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-12 sm:px-6 lg:grid-cols-[1fr_0.9fr]">
+      {/* ── Below fold: full-width sections ── */}
+      <div className="mx-auto max-w-[1280px] space-y-5 px-5 pb-12 sm:px-8 xl:px-10">
 
         {/* Benefits */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 backdrop-blur-2xl sm:p-8">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
@@ -534,7 +529,7 @@ export default function ProductDetailClient({
           <h2 className="mt-3 text-3xl font-semibold">
             Made for a calmer routine
           </h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {benefits.map((benefit) => (
               <div
                 key={benefit}
@@ -549,19 +544,19 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        {/* Care guide */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+        {/* Care Guide */}
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 backdrop-blur-2xl sm:p-8">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             Care Guide
           </p>
           <h2 className="mt-3 text-3xl font-semibold">Simple wash steps</h2>
-          <div className="mt-5 space-y-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {care.map((step, index) => (
               <div
                 key={step}
-                className="flex gap-3 text-sm leading-7 text-white/68"
+                className="flex gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/68"
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-xs text-white">
                   {index + 1}
@@ -572,20 +567,22 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        {/* Hygiene & Support Policy */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6 lg:col-span-2">
+        {/* Her Care Support Policy */}
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 backdrop-blur-2xl sm:p-8">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             Support & Hygiene Policy
           </p>
-          <h2 className="mt-3 text-2xl font-semibold">Her Care support details</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="mt-3 text-2xl font-semibold">
+            Her Care support details
+          </h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 icon: ShieldCheck,
                 title: "3-Day Hygiene-Safe Support",
-                body: "3-Day Hygiene-Safe Support is available for eligible order, size, wrong item, or damaged item concerns. Product must remain unused, unwashed, and in original packaging/hygiene seal condition.",
+                body: "Available for eligible order, size, wrong item, or damaged item concerns. Product must remain unused, unwashed, and in original packaging/hygiene seal condition.",
               },
               {
                 icon: PackageCheck,
@@ -600,7 +597,7 @@ export default function ProductDetailClient({
             ].map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                className="rounded-2xl border border-white/10 bg-black/20 p-5"
               >
                 <Icon className={`h-5 w-5 ${style.accent}`} />
                 <h3 className="mt-3 font-semibold text-white">{title}</h3>
@@ -611,17 +608,18 @@ export default function ProductDetailClient({
         </div>
 
         {/* FAQ */}
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6 lg:col-span-2">
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 backdrop-blur-2xl sm:p-8">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             FAQ
           </p>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <h2 className="mt-3 text-2xl font-semibold">Common questions</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
             {faqs.map((faq) => (
               <div
                 key={faq.question}
-                className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                className="rounded-2xl border border-white/10 bg-black/20 p-5"
               >
                 <h3 className="font-semibold text-white">{faq.question}</h3>
                 <p className="mt-2 text-sm leading-7 text-white/62">
@@ -631,11 +629,11 @@ export default function ProductDetailClient({
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ── Related products ── */}
       {displayRelated.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
+        <section className="mx-auto max-w-[1280px] px-5 pb-12 sm:px-8 xl:px-10">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
@@ -654,13 +652,13 @@ export default function ProductDetailClient({
                   className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.75rem] border bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 ${rpStyle.border}`}
                 >
                   <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#07111f]">
-                    <div className="relative aspect-square w-full">
+                    <div className="relative aspect-[4/5] w-full">
                       {rp.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={rp.imageUrl}
                           alt={rp.name}
-                          className="absolute inset-0 h-full w-full object-contain p-3"
+                          className="absolute inset-0 h-full w-full object-contain p-4"
                         />
                       ) : (
                         <ProductVisual
