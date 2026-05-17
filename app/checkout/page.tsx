@@ -91,7 +91,7 @@ const initialForm: CheckoutForm = {
 };
 
 const isBangladeshMobileNumber = (value: string) =>
-  value.trim().match(/^01\d{9}$/) !== null;
+  value.trim().match(/^01[3-9]\d{8}$/) !== null;
 
 function isWalletProviderEnabled(provider: WalletProvider, settings: AdminSettings) {
   if (provider === "bKash") return settings.paymentSettings.bkashEnabled;
