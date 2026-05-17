@@ -26,6 +26,7 @@ const footerGroups = [
       { label: "Track Order", href: "/track-order" },
       { label: "FAQ", href: "/faq" },
       { label: "Contact", href: "/contact" },
+      { label: "Request Support", href: "/support" },
       { label: "Refund Policy", href: "/refund-policy" },
       { label: "Shipping Policy", href: "/shipping-policy" },
     ],
