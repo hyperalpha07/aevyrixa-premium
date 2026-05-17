@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/app/components/cart/cart-context";
 import CartDrawer from "@/app/components/cart/cart-drawer";
 import AnalyticsScripts from "@/app/components/analytics-scripts";
+import WhatsAppWidget from "@/app/components/whatsapp-widget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,6 +67,7 @@ export default function RootLayout({
           {children}
           <CartDrawer />
         </CartProvider>
+        <WhatsAppWidget />
         <AnalyticsScripts gaId={gaId} fbPixelId={fbPixelId} ttPixelId={ttPixelId} />
       </body>
     </html>

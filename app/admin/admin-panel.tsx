@@ -42,6 +42,7 @@ import {
   defaultAdminSettings,
   normalizeAdminSettings,
   type AdminSettings,
+  type HomepageMediaSettings,
 } from "@/app/lib/admin-settings";
 import {
   orderSources,
@@ -829,6 +830,30 @@ function writeSettingsToStorage(settings: AdminSettings) {
   localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
 }
 
+// Returns true when Supabase has no saved homepage media (column missing or all empty).
+// Used to avoid overwriting localStorage-persisted media URLs with Supabase defaults.
+function isDefaultHomepageMediaSettings(hms: HomepageMediaSettings): boolean {
+  return (
+    !hms.heroMedia.imageUrl &&
+    !hms.heroMedia.videoUrl &&
+    hms.heroMedia.mode === "animation" &&
+    !hms.careMedia.imageUrl &&
+    !hms.careMedia.videoUrl &&
+    hms.careMedia.mode === "animation" &&
+    !hms.experienceMedia.imageUrl &&
+    !hms.experienceMedia.videoUrl &&
+    hms.experienceMedia.mode === "animation" &&
+    !hms.categoryReusablePeriodCareImageUrl &&
+    !hms.categoryComfortPantyImageUrl &&
+    !hms.categorySoftSupportBraImageUrl &&
+    !hms.categoryNightwearImageUrl &&
+    !hms.categoryHygieneEssentialsImageUrl &&
+    !hms.categoryBundlesImageUrl &&
+    !hms.categoryNewArrivalsImageUrl &&
+    !hms.whatsappWidgetEnabled
+  );
+}
+
 async function readSettingsFromApi() {
   try {
     const response = await fetch("/api/settings", { cache: "no-store" });
@@ -840,8 +865,19 @@ async function readSettingsFromApi() {
 
     // When backend is not connected, payload.settings holds hardcoded defaults.
     // Merging defaults over local settings would wipe locally-saved values.
+    // For homepageMediaSettings: if Supabase returns all-default values (column
+    // missing or genuinely empty), preserve the localStorage version so that
+    // uploaded URLs and configured modes are not wiped on refresh.
     const mergedSettings = backendConnected
-      ? normalizeAdminSettings({ ...localSettings, ...payload.settings })
+      ? normalizeAdminSettings({
+          ...localSettings,
+          ...payload.settings,
+          homepageMediaSettings: isDefaultHomepageMediaSettings(
+            payload.settings.homepageMediaSettings
+          )
+            ? localSettings.homepageMediaSettings
+            : payload.settings.homepageMediaSettings,
+        })
       : localSettings;
 
     return {
