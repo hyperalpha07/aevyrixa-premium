@@ -6,7 +6,10 @@
       "Bash(Format-Table -AutoSize)",
       "Bash(npm run *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(grep -r -i \"USD\\\\|\\\\$[0-9]\\\\|money back\\\\|100% leak\\\\|7-Day Money\\\\|30-Day Money\\\\|medical cure\\\\|unrealistic\" app/faq app/support app/refund-policy app/shipping-policy app/privacy-policy app/terms app/contact)",
+      "Bash(grep -r -i \"USD\\\\|\\\\\\\\\\\\$[0-9]\\\\|money back\\\\|100% leak\\\\|7-Day Money\\\\|30-Day Money\\\\|medical cure\" app/ --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(git commit *)"
     ]
   }
 }
