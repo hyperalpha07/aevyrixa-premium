@@ -120,6 +120,31 @@ export type AppearanceSettings = {
   announcementBarText: string;
 };
 
+export type HomepageSectionMedia = {
+  mode: "animation" | "image" | "video";
+  imageUrl: string;
+  videoUrl: string;
+  altText: string;
+};
+
+export type HomepageCategoryState = "active" | "coming_soon";
+
+export type HomepageMediaSettings = {
+  heroMedia: HomepageSectionMedia;
+  careMedia: HomepageSectionMedia;
+  experienceMedia: HomepageSectionMedia;
+  categoryReusablePeriodCare: HomepageCategoryState;
+  categoryComfortPanty: HomepageCategoryState;
+  categorySoftSupportBra: HomepageCategoryState;
+  categoryNightwear: HomepageCategoryState;
+  categoryHygieneEssentials: HomepageCategoryState;
+  categoryBundles: HomepageCategoryState;
+  categoryNewArrivals: HomepageCategoryState;
+  whatsappWidgetEnabled: boolean;
+  whatsappWidgetLabel: string;
+  whatsappWidgetLiveText: string;
+};
+
 export type AdvancedSettings = {
   maintenanceMode: boolean;
   testMode: boolean;
@@ -140,6 +165,7 @@ export type AdminSettingsGroups = {
   seoSettings: SeoSettings;
   appearanceSettings: AppearanceSettings;
   advancedSettings: AdvancedSettings;
+  homepageMediaSettings: HomepageMediaSettings;
 };
 
 export type AdminSettings = AdminSettingsGroups & {
@@ -294,8 +320,23 @@ const defaultGroups: AdminSettingsGroups = {
     testMode: false,
     debugMode: false,
     purgeDeletedProductsAfterDays: "",
-    systemVersionLabel: "Aevyrixa Control Room — Phase 30 Support + Policy System",
+    systemVersionLabel: "Aevyrixa Control Room — Phase 35 Homepage CMS Media Control",
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
+  },
+  homepageMediaSettings: {
+    heroMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
+    careMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
+    experienceMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
+    categoryReusablePeriodCare: "active",
+    categoryComfortPanty: "coming_soon",
+    categorySoftSupportBra: "coming_soon",
+    categoryNightwear: "coming_soon",
+    categoryHygieneEssentials: "coming_soon",
+    categoryBundles: "coming_soon",
+    categoryNewArrivals: "coming_soon",
+    whatsappWidgetEnabled: false,
+    whatsappWidgetLabel: "Support",
+    whatsappWidgetLiveText: "",
   },
 };
 
@@ -372,6 +413,23 @@ function nestedRecord(value: UnknownRecord, key: keyof AdminSettingsGroups) {
   return isRecord(value[key]) ? value[key] : {};
 }
 
+function sectionMediaModeValue(value: unknown): "animation" | "image" | "video" {
+  return value === "image" || value === "video" ? value : "animation";
+}
+
+function categoryStateValue(value: unknown, fallback: HomepageCategoryState): HomepageCategoryState {
+  return value === "active" || value === "coming_soon" ? value : fallback;
+}
+
+function sectionMediaValue(raw: UnknownRecord): HomepageSectionMedia {
+  return {
+    mode: sectionMediaModeValue(raw.mode),
+    imageUrl: publicUrlValue(raw.imageUrl),
+    videoUrl: publicUrlValue(raw.videoUrl),
+    altText: safeText(raw.altText, ""),
+  };
+}
+
 function guaranteeTextValue(value: unknown) {
   const guaranteeText = textValue(value);
   if (!guaranteeText) return defaultGroups.policySettings.hygieneSafeSupportMessage;
@@ -439,6 +497,7 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
   const seoSettings = nestedRecord(value, "seoSettings");
   const appearanceSettings = nestedRecord(value, "appearanceSettings");
   const advancedSettings = nestedRecord(value, "advancedSettings");
+  const homepageMediaRaw = isRecord(value.homepageMediaSettings) ? value.homepageMediaSettings : {};
   const storedWallets = isRecord(value.walletReceiverNumbers)
     ? value.walletReceiverNumbers
     : {};
@@ -790,6 +849,57 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         defaultGroups.advancedSettings.backupReminderText
       ),
     },
+    homepageMediaSettings: {
+      heroMedia: sectionMediaValue(
+        isRecord(homepageMediaRaw.heroMedia) ? homepageMediaRaw.heroMedia : {}
+      ),
+      careMedia: sectionMediaValue(
+        isRecord(homepageMediaRaw.careMedia) ? homepageMediaRaw.careMedia : {}
+      ),
+      experienceMedia: sectionMediaValue(
+        isRecord(homepageMediaRaw.experienceMedia) ? homepageMediaRaw.experienceMedia : {}
+      ),
+      categoryReusablePeriodCare: categoryStateValue(
+        homepageMediaRaw.categoryReusablePeriodCare,
+        defaultGroups.homepageMediaSettings.categoryReusablePeriodCare
+      ),
+      categoryComfortPanty: categoryStateValue(
+        homepageMediaRaw.categoryComfortPanty,
+        defaultGroups.homepageMediaSettings.categoryComfortPanty
+      ),
+      categorySoftSupportBra: categoryStateValue(
+        homepageMediaRaw.categorySoftSupportBra,
+        defaultGroups.homepageMediaSettings.categorySoftSupportBra
+      ),
+      categoryNightwear: categoryStateValue(
+        homepageMediaRaw.categoryNightwear,
+        defaultGroups.homepageMediaSettings.categoryNightwear
+      ),
+      categoryHygieneEssentials: categoryStateValue(
+        homepageMediaRaw.categoryHygieneEssentials,
+        defaultGroups.homepageMediaSettings.categoryHygieneEssentials
+      ),
+      categoryBundles: categoryStateValue(
+        homepageMediaRaw.categoryBundles,
+        defaultGroups.homepageMediaSettings.categoryBundles
+      ),
+      categoryNewArrivals: categoryStateValue(
+        homepageMediaRaw.categoryNewArrivals,
+        defaultGroups.homepageMediaSettings.categoryNewArrivals
+      ),
+      whatsappWidgetEnabled: booleanValue(
+        homepageMediaRaw.whatsappWidgetEnabled,
+        defaultGroups.homepageMediaSettings.whatsappWidgetEnabled
+      ),
+      whatsappWidgetLabel: safeText(
+        homepageMediaRaw.whatsappWidgetLabel,
+        defaultGroups.homepageMediaSettings.whatsappWidgetLabel
+      ),
+      whatsappWidgetLiveText: safeText(
+        homepageMediaRaw.whatsappWidgetLiveText,
+        defaultGroups.homepageMediaSettings.whatsappWidgetLiveText
+      ),
+    },
   };
 
   return buildAdminSettings(groups);
@@ -808,6 +918,7 @@ export function publicAdminSettings(settings: AdminSettings) {
     policySettings: normalized.policySettings,
     seoSettings: normalized.seoSettings,
     appearanceSettings: normalized.appearanceSettings,
+    homepageMediaSettings: normalized.homepageMediaSettings,
   });
 }
 

@@ -17,6 +17,7 @@ import {
   Copy,
   CreditCard,
   Gauge,
+  Globe,
   LogOut,
   PackageCheck,
   Phone,
@@ -2412,6 +2413,24 @@ function SettingsSection({
     advancedSettings: { ...current.advancedSettings, ...updates },
   }));
 
+  const updateHomepageMediaSettings = (
+    updates: Partial<AdminSettings["homepageMediaSettings"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    homepageMediaSettings: { ...current.homepageMediaSettings, ...updates },
+  }));
+
+  const updateHomepageSectionMedia = (
+    section: "heroMedia" | "careMedia" | "experienceMedia",
+    updates: Partial<AdminSettings["homepageMediaSettings"]["heroMedia"]>
+  ) => setDraft((current) => normalizeAdminSettings({
+    ...current,
+    homepageMediaSettings: {
+      ...current.homepageMediaSettings,
+      [section]: { ...current.homepageMediaSettings[section], ...updates },
+    },
+  }));
+
   const settingsTabs = [
     { id: "storeProfile", label: "Store Profile", icon: Phone },
     { id: "paymentSettings", label: "Payment", icon: Wallet },
@@ -2422,6 +2441,7 @@ function SettingsSection({
     { id: "notificationSettings", label: "Notifications", icon: BellIcon },
     { id: "seoSettings", label: "SEO", icon: Search },
     { id: "appearanceSettings", label: "Appearance", icon: Sparkles },
+    { id: "homepageMediaSettings", label: "Homepage Media", icon: Globe },
     { id: "advancedSettings", label: "Advanced", icon: Settings },
   ] as const;
 
@@ -3132,6 +3152,184 @@ function SettingsSection({
                 />
               </div>
             </SettingsCard>
+          )}
+
+          {activeSection === "homepageMediaSettings" && (
+            <>
+              <SettingsCard
+                eyebrow="Homepage Media — Hero"
+                title="Hero section media"
+                description="If image or video URL is provided, it replaces the coded hero animation. Leave mode as 'animation' to keep the current visual."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <SelectField
+                    label="Hero media mode"
+                    value={draft.homepageMediaSettings.heroMedia.mode}
+                    options={["animation", "image", "video"] as const}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { mode: value })}
+                  />
+                  <TextField
+                    label="Hero image URL (https)"
+                    value={draft.homepageMediaSettings.heroMedia.imageUrl}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { imageUrl: value })}
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Hero video URL (https, mp4)"
+                    value={draft.homepageMediaSettings.heroMedia.videoUrl}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { videoUrl: value })}
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Hero alt text"
+                    value={draft.homepageMediaSettings.heroMedia.altText}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { altText: value })}
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Media — Care Motion"
+                title="Care system section media"
+                description="Controls the left panel in the 'Premium comfort, reusable care' section. Animation fallback is always kept."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <SelectField
+                    label="Care media mode"
+                    value={draft.homepageMediaSettings.careMedia.mode}
+                    options={["animation", "image", "video"] as const}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { mode: value })}
+                  />
+                  <TextField
+                    label="Care image URL (https)"
+                    value={draft.homepageMediaSettings.careMedia.imageUrl}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { imageUrl: value })}
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Care video URL (https, mp4)"
+                    value={draft.homepageMediaSettings.careMedia.videoUrl}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { videoUrl: value })}
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Care alt text"
+                    value={draft.homepageMediaSettings.careMedia.altText}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { altText: value })}
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Media — Experience"
+                title="Cinematic experience section media"
+                description="Controls the right panel in the 'A cinematic care experience' section."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <SelectField
+                    label="Experience media mode"
+                    value={draft.homepageMediaSettings.experienceMedia.mode}
+                    options={["animation", "image", "video"] as const}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { mode: value })}
+                  />
+                  <TextField
+                    label="Experience image URL (https)"
+                    value={draft.homepageMediaSettings.experienceMedia.imageUrl}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { imageUrl: value })}
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Experience video URL (https, mp4)"
+                    value={draft.homepageMediaSettings.experienceMedia.videoUrl}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { videoUrl: value })}
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Experience alt text"
+                    value={draft.homepageMediaSettings.experienceMedia.altText}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { altText: value })}
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Media — Categories"
+                title="Category states"
+                description="Set each category as active (links to /product) or coming soon (non-clickable with badge). Only 'Reusable Period Care' is active by default."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <SelectField
+                    label="Reusable Period Care"
+                    value={draft.homepageMediaSettings.categoryReusablePeriodCare}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categoryReusablePeriodCare: value })}
+                  />
+                  <SelectField
+                    label="Comfort Panty"
+                    value={draft.homepageMediaSettings.categoryComfortPanty}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categoryComfortPanty: value })}
+                  />
+                  <SelectField
+                    label="Soft Support Bra"
+                    value={draft.homepageMediaSettings.categorySoftSupportBra}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categorySoftSupportBra: value })}
+                  />
+                  <SelectField
+                    label="Nightwear"
+                    value={draft.homepageMediaSettings.categoryNightwear}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categoryNightwear: value })}
+                  />
+                  <SelectField
+                    label="Hygiene Essentials"
+                    value={draft.homepageMediaSettings.categoryHygieneEssentials}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categoryHygieneEssentials: value })}
+                  />
+                  <SelectField
+                    label="Bundles"
+                    value={draft.homepageMediaSettings.categoryBundles}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categoryBundles: value })}
+                  />
+                  <SelectField
+                    label="New Arrivals"
+                    value={draft.homepageMediaSettings.categoryNewArrivals}
+                    options={["active", "coming_soon"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ categoryNewArrivals: value })}
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Media — WhatsApp Widget"
+                title="Floating support widget"
+                description="Shows a floating WhatsApp button using the support WhatsApp number from Store Profile. Hide if no number is set."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ToggleField
+                    label="Enable WhatsApp widget"
+                    checked={draft.homepageMediaSettings.whatsappWidgetEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetEnabled: value })}
+                  />
+                  <TextField
+                    label="Widget button label"
+                    value={draft.homepageMediaSettings.whatsappWidgetLabel}
+                    onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetLabel: value })}
+                  />
+                  <TextField
+                    label="Live support text (optional)"
+                    value={draft.homepageMediaSettings.whatsappWidgetLiveText}
+                    onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetLiveText: value })}
+                  />
+                  <div className="rounded-2xl border border-amber-200/20 bg-amber-200/[0.07] p-4 text-sm leading-6 text-amber-50/78">
+                    WhatsApp number is taken from Store Profile → Support WhatsApp. Widget is hidden if no number is set.
+                  </div>
+                </div>
+              </SettingsCard>
+            </>
           )}
 
           {activeSection === "advancedSettings" && (

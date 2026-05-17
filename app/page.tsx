@@ -17,6 +17,7 @@ import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { whatsappHref } from "@/app/lib/admin-settings";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -126,48 +127,55 @@ const heroTrustBadges = [
   "Reusable Protection",
 ];
 
-const hereCareCategories = [
+const hereCareBase = [
   {
     name: "Reusable Period Care",
     tagline: "Comfortable reusable protection for light to moderate flow.",
     accent: "from-cyan-200/75 to-cyan-500/15",
     glow: "bg-cyan-300/10",
+    key: "categoryReusablePeriodCare" as const,
   },
   {
     name: "Comfort Panty",
     tagline: "Soft stretch everyday wear designed for all-day comfort.",
     accent: "from-fuchsia-200/75 to-fuchsia-500/15",
     glow: "bg-fuchsia-300/10",
+    key: "categoryComfortPanty" as const,
   },
   {
     name: "Soft Support Bra",
     tagline: "Gentle support with smooth fabric for daily wear.",
     accent: "from-violet-200/75 to-violet-500/15",
     glow: "bg-violet-300/10",
+    key: "categorySoftSupportBra" as const,
   },
   {
     name: "Nightwear",
     tagline: "Relaxed, breathable comfort for restful evenings.",
     accent: "from-rose-200/75 to-rose-500/15",
     glow: "bg-rose-300/10",
+    key: "categoryNightwear" as const,
   },
   {
     name: "Hygiene Essentials",
     tagline: "Curated essentials for your daily hygiene routine.",
     accent: "from-amber-200/75 to-amber-500/15",
     glow: "bg-amber-300/10",
+    key: "categoryHygieneEssentials" as const,
   },
   {
     name: "Bundles",
     tagline: "Thoughtful care sets at a considered price.",
     accent: "from-sky-200/75 to-sky-500/15",
     glow: "bg-sky-300/10",
+    key: "categoryBundles" as const,
   },
   {
     name: "New Arrivals",
     tagline: "Fresh additions to the Her Care collection.",
     accent: "from-emerald-200/75 to-emerald-500/15",
     glow: "bg-emerald-300/10",
+    key: "categoryNewArrivals" as const,
   },
 ];
 
@@ -198,6 +206,20 @@ export default async function Home() {
   const featuredProductHref = featuredProduct
     ? `/product/${featuredProduct.slug}`
     : "/product/everyday-comfort";
+
+  const hms = settings.homepageMediaSettings;
+  const hereCareCategories = hereCareBase.map((cat) => ({
+    ...cat,
+    comingSoon: hms[cat.key] === "coming_soon",
+  }));
+
+  const heroMedia = hms.heroMedia;
+  const careMedia = hms.careMedia;
+  const experienceMedia = hms.experienceMedia;
+
+  const whatsappUrl = settings.supportWhatsApp
+    ? whatsappHref(settings.supportWhatsApp)
+    : "";
   const faqs = [
     {
       question: "How much protection should I expect?",
@@ -287,13 +309,41 @@ export default async function Home() {
             <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
             <div className="aev-product-edge absolute -inset-2 rounded-[2.4rem] border border-cyan-100/10" />
             <div className="aev-product-float relative">
-              <AevyrixaMotionPanel
-                mp4Src="/videos/aevyrixa-hero-motion.mp4"
-                eyebrow="Reusable Layer System"
-                title="Period care in motion"
-                copy="Floating comfort layers, glass reflections, and soft cyan-violet light create a cinematic product intro without explicit visuals."
-                variant="hero"
-              />
+              {heroMedia.mode === "image" && heroMedia.imageUrl ? (
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "26rem" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroMedia.imageUrl}
+                    alt={heroMedia.altText || "Her Care hero"}
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/70 via-[#030714]/20 to-transparent" />
+                  <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_58%)] opacity-40 pointer-events-none" />
+                </div>
+              ) : heroMedia.mode === "video" && heroMedia.videoUrl ? (
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "26rem" }}>
+                  <video
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  >
+                    <source src={heroMedia.videoUrl} type="video/mp4" />
+                  </video>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_58%)] opacity-40 pointer-events-none" />
+                </div>
+              ) : (
+                <AevyrixaMotionPanel
+                  mp4Src="/videos/aevyrixa-hero-motion.mp4"
+                  eyebrow="Reusable Layer System"
+                  title="Period care in motion"
+                  copy="Floating comfort layers, glass reflections, and soft cyan-violet light create a cinematic product intro without explicit visuals."
+                  variant="hero"
+                />
+              )}
               <div className="aev-hero-product-chip absolute bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/12 bg-[#050816]/72 p-4 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -365,28 +415,46 @@ export default async function Home() {
             </p>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {hereCareCategories.map(({ name, tagline, accent, glow }) => (
-              <a
-                key={name}
-                href="/product"
-                className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl sm:p-6"
-              >
+            {hereCareCategories.map(({ name, tagline, accent, glow, comingSoon }) => {
+              const inner = (
+                <>
+                  <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+                  <div className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`} />
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-base font-semibold text-white">{name}</h3>
+                    {comingSoon && (
+                      <span className="mt-0.5 shrink-0 rounded-full border border-white/15 bg-white/[0.07] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-white/48">
+                        Soon
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-white/58">{tagline}</p>
+                  {!comingSoon && (
+                    <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
+                      Explore
+                      <ArrowRight size={12} strokeWidth={2.2} />
+                    </div>
+                  )}
+                </>
+              );
+
+              return comingSoon ? (
                 <div
-                  className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`}
-                />
-                <div
-                  className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`}
-                />
-                <h3 className="text-base font-semibold text-white">{name}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/58">
-                  {tagline}
-                </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
-                  Explore
-                  <ArrowRight size={12} strokeWidth={2.2} />
+                  key={name}
+                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.032] p-5 backdrop-blur-2xl opacity-70 sm:p-6"
+                >
+                  {inner}
                 </div>
-              </a>
-            ))}
+              ) : (
+                <a
+                  key={name}
+                  href="/product"
+                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-6"
+                >
+                  {inner}
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -496,14 +564,27 @@ export default async function Home() {
 
       <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
-          <AevyrixaMotionPanel
-            mp4Src="/videos/aevyrixa-care-system.mp4"
-            eyebrow="Aevyrixa Care Motion"
-            title="Layered reusable care, softly engineered."
-            copy="Comfort knit, absorbent core, and a protective layer move as abstract fabric forms, supporting discreet daily confidence and privacy packaging."
-            variant="care"
-            className="aev-reveal"
-          />
+          {careMedia.mode === "image" && careMedia.imageUrl ? (
+            <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={careMedia.imageUrl}
+                alt={careMedia.altText || "Care system"}
+                className="absolute inset-0 h-full w-full object-cover opacity-88"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/65 via-[#030714]/10 to-transparent" />
+            </div>
+          ) : (
+            <AevyrixaMotionPanel
+              mp4Src={careMedia.mode === "video" && careMedia.videoUrl ? careMedia.videoUrl : "/videos/aevyrixa-care-system.mp4"}
+              eyebrow="Aevyrixa Care Motion"
+              title="Layered reusable care, softly engineered."
+              copy="Comfort knit, absorbent core, and a protective layer move as abstract fabric forms, supporting discreet daily confidence and privacy packaging."
+              variant="care"
+              className="aev-reveal"
+            />
+          )}
 
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
@@ -564,15 +645,28 @@ export default async function Home() {
             </p>
           </div>
 
-          <AevyrixaMotionPanel
-            mp4Src="/videos/aevyrixa-experience.mp4"
-            eyebrow="Premium Experience"
-            title="Video-style motion, coded fallback."
-            copy="A cinematic glass frame with flowing care layers, soft reflections, and reveal motion keeps the brand alive even when video files are not installed."
-            labels={["Comfort", "Discretion", "Privacy Pack"]}
-            variant="experience"
-            className="aev-reveal"
-          />
+          {experienceMedia.mode === "image" && experienceMedia.imageUrl ? (
+            <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={experienceMedia.imageUrl}
+                alt={experienceMedia.altText || "Cinematic experience"}
+                className="absolute inset-0 h-full w-full object-cover opacity-88"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/65 via-[#030714]/10 to-transparent" />
+            </div>
+          ) : (
+            <AevyrixaMotionPanel
+              mp4Src={experienceMedia.mode === "video" && experienceMedia.videoUrl ? experienceMedia.videoUrl : "/videos/aevyrixa-experience.mp4"}
+              eyebrow="Premium Experience"
+              title="Video-style motion, coded fallback."
+              copy="A cinematic glass frame with flowing care layers, soft reflections, and reveal motion keeps the brand alive even when video files are not installed."
+              labels={["Comfort", "Discretion", "Privacy Pack"]}
+              variant="experience"
+              className="aev-reveal"
+            />
+          )}
         </div>
       </section>
 
@@ -745,6 +839,29 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {hms.whatsappWidgetEnabled && whatsappUrl && (
+        <div className="fixed bottom-6 right-4 z-50 sm:right-6">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-3 rounded-full border border-white/20 bg-[#1a1a2e]/90 px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(0,0,0,0.36)] backdrop-blur-xl transition hover:border-green-200/40 hover:bg-[#1e2240]"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-5 w-5 shrink-0 fill-green-400"
+              aria-hidden="true"
+            >
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            </svg>
+            <span>{hms.whatsappWidgetLabel || "Support"}</span>
+            {hms.whatsappWidgetLiveText && (
+              <span className="text-green-400/80">{hms.whatsappWidgetLiveText}</span>
+            )}
+          </a>
+        </div>
+      )}
 
       <SiteFooter settings={settings} />
     </main>

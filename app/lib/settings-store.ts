@@ -33,6 +33,7 @@ type SupabaseSettingsRow = {
   seo_settings?: unknown;
   appearance_settings?: unknown;
   advanced_settings?: unknown;
+  homepage_media_settings?: unknown;
   store_name?: string | null;
   support_phone?: string | null;
   support_whatsapp?: string | null;
@@ -129,6 +130,7 @@ function mapSupabaseRow(row: SupabaseSettingsRow) {
     seoSettings: row.seo_settings,
     appearanceSettings: row.appearance_settings,
     advancedSettings: row.advanced_settings,
+    homepageMediaSettings: row.homepage_media_settings,
     storeName: row.store_name,
     supportPhone: row.support_phone,
     supportWhatsApp: row.support_whatsapp,
@@ -184,6 +186,7 @@ function toSupabasePayload(settings: AdminSettings) {
     seo_settings: normalized.seoSettings,
     appearance_settings: normalized.appearanceSettings,
     advanced_settings: normalized.advancedSettings,
+    homepage_media_settings: normalized.homepageMediaSettings,
   };
 }
 
@@ -221,7 +224,7 @@ async function upsertSettingsInSupabase(settings: AdminSettings) {
     const detail = await response.text().catch(() => "");
     const isMissingGroupedColumn =
       response.status === 400 &&
-      /store_profile|payment_settings|checkout_settings|delivery_settings|policy_settings|order_settings|notification_settings|seo_settings|appearance_settings|advanced_settings|schema cache|column/i.test(
+      /store_profile|payment_settings|checkout_settings|delivery_settings|policy_settings|order_settings|notification_settings|seo_settings|appearance_settings|advanced_settings|homepage_media_settings|schema cache|column/i.test(
         detail
       );
 
@@ -364,5 +367,6 @@ export function toPublicSettingsPayload(settings: AdminSettings) {
     walletReceiverNumbers: normalized.walletReceiverNumbers,
     bankTransferInstruction: normalized.bankTransferInstruction,
     codInstruction: normalized.codInstruction,
+    homepageMediaSettings: normalized.homepageMediaSettings,
   };
 }
