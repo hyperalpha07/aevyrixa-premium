@@ -225,8 +225,20 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-white/65">
-                    <span>Shipping</span>
-                    <span>Calculated at checkout</span>
+                    <span>Delivery (Inside Dhaka)</span>
+                    <span>
+                      {formatCurrency(
+                        parseInt(settings.deliverySettings.insideDhakaDeliveryCharge) || 80
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-white/65">
+                    <span>Delivery (Outside Dhaka)</span>
+                    <span>
+                      {formatCurrency(
+                        parseInt(settings.deliverySettings.outsideDhakaDeliveryCharge) || 130
+                      )}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-white/65">
@@ -269,7 +281,7 @@ export default function CartPage() {
               </div>
 
               <p className="mt-5 text-center text-xs uppercase tracking-[0.2em] text-white/45">
-                Secure Payment | {settings.privacyPackagingMessage} | {settings.supportWindowMessage}
+                Secure Order | {settings.privacyPackagingMessage} | {settings.supportWindowMessage}
               </p>
             </div>
           </div>

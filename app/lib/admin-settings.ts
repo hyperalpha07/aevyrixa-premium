@@ -182,7 +182,7 @@ const defaultGroups: AdminSettingsGroups = {
   paymentSettings: {
     codEnabled: true,
     codMessage:
-      "Cash on Delivery is supported for eligible Bangladesh orders after confirmation.",
+      "Cash on Delivery is available for eligible Bangladesh orders. Our team will confirm your phone and delivery address before dispatch.",
     bkashEnabled: true,
     bkashReceiverNumber: "01644037384",
     nagadEnabled: true,
@@ -218,8 +218,8 @@ const defaultGroups: AdminSettingsGroups = {
     deliveryCoverageText:
       "Bangladesh delivery is available with order confirmation before dispatch.",
     defaultDeliveryCharge: "",
-    insideDhakaDeliveryCharge: "",
-    outsideDhakaDeliveryCharge: "",
+    insideDhakaDeliveryCharge: "80",
+    outsideDhakaDeliveryCharge: "130",
     courierPartners: "",
     defaultCourier: "",
     estimatedDeliveryTime:
@@ -294,7 +294,7 @@ const defaultGroups: AdminSettingsGroups = {
     testMode: false,
     debugMode: false,
     purgeDeletedProductsAfterDays: "",
-    systemVersionLabel: "Aevyrixa Control Room — Phase 26 Brand Repositioning",
+    systemVersionLabel: "Aevyrixa Control Room — Phase 29 Checkout Bangladesh Polish",
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
 };

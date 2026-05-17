@@ -31,6 +31,8 @@ import {
 
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
 
+type DeliveryZone = "Inside Dhaka" | "Outside Dhaka" | "";
+
 type CheckoutForm = {
   fullName: string;
   phone: string;
@@ -39,6 +41,7 @@ type CheckoutForm = {
   address: string;
   sizeFitNote: string;
   deliveryNote: string;
+  deliveryZone: DeliveryZone;
   paymentMethod: PaymentMethod;
   walletProvider: WalletProvider;
   paymentType: PaymentType;
@@ -79,6 +82,7 @@ const initialForm: CheckoutForm = {
   address: "",
   sizeFitNote: "",
   deliveryNote: "",
+  deliveryZone: "",
   paymentMethod: "Cash on Delivery",
   walletProvider: "bKash",
   paymentType: "Send Money",
@@ -290,6 +294,11 @@ export default function CheckoutPage() {
       ? form.transactionReference.trim()
       : undefined;
 
+    const zoneNote = form.deliveryZone ? `Zone: ${form.deliveryZone}` : "";
+    const combinedDeliveryNote = [zoneNote, form.deliveryNote.trim()]
+      .filter(Boolean)
+      .join(" | ");
+
     const orderPayload = {
       customer: {
         fullName: form.fullName.trim(),
@@ -298,7 +307,7 @@ export default function CheckoutPage() {
         cityArea: form.cityArea.trim(),
         address: form.address.trim(),
         sizeFitNote: form.sizeFitNote.trim(),
-        deliveryNote: form.deliveryNote.trim(),
+        deliveryNote: combinedDeliveryNote,
       },
       paymentDetails: {
         paymentMethod: form.paymentMethod,
@@ -452,6 +461,46 @@ export default function CheckoutPage() {
                   value={form.deliveryNote}
                   onChange={(value) => updateField("deliveryNote", value)}
                 />
+              </div>
+
+              <div className="mt-6">
+                <p className="text-sm font-semibold text-white">Delivery Zone</p>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  {(["Inside Dhaka", "Outside Dhaka"] as const).map((zone) => {
+                    const charge =
+                      zone === "Inside Dhaka"
+                        ? parseInt(adminSettings.deliverySettings.insideDhakaDeliveryCharge) || 80
+                        : parseInt(adminSettings.deliverySettings.outsideDhakaDeliveryCharge) || 130;
+                    return (
+                      <label
+                        key={zone}
+                        className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
+                          form.deliveryZone === zone
+                            ? "border-cyan-200/45 bg-cyan-200/10 text-white"
+                            : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="deliveryZone"
+                          value={zone}
+                          checked={form.deliveryZone === zone}
+                          onChange={() => updateField("deliveryZone", zone)}
+                          className="h-4 w-4 shrink-0 accent-cyan-200"
+                        />
+                        <div className="min-w-0">
+                          <span className="block font-medium">{zone}</span>
+                          <span className="block text-xs text-white/50">
+                            Delivery: {formatCurrency(charge)}
+                          </span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-xs leading-5 text-white/45">
+                  Delivery charge may vary by location. Our team will confirm the final delivery cost before dispatch.
+                </p>
               </div>
 
               <div className="mt-6">
@@ -609,12 +658,38 @@ export default function CheckoutPage() {
                     )}
                   </div>
                 )}
+                {form.paymentMethod === "Mobile Wallet Payment" && !isWalletSendMoney && (
+                  <p className="mt-3 text-xs leading-5 text-white/50">
+                    Payment instructions will be confirmed after order placement if mobile wallet or bank transfer is selected.
+                  </p>
+                )}
                 {form.paymentMethod === "Bank Transfer" && (
-                  <PremiumNotice>{adminSettings.bankTransferInstruction}</PremiumNotice>
+                  <PremiumNotice>
+                    {adminSettings.bankTransferInstruction}
+                    <span className="mt-2 block text-xs text-white/50">
+                      Payment instructions will be confirmed after order placement.
+                    </span>
+                  </PremiumNotice>
                 )}
                 {form.paymentMethod === "Cash on Delivery" && (
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/68">
-                    {adminSettings.codInstruction}
+                  <div className="mt-4 space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-sm leading-6 text-white/68">
+                      {adminSettings.codInstruction}
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <div className="flex items-start gap-2 text-xs leading-5 text-white/55">
+                        <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200" />
+                        <span>Phone &amp; address confirmed before dispatch</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs leading-5 text-white/55">
+                        <PackageCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200" />
+                        <span>{adminSettings.privacyPackagingMessage || "Discreet privacy packaging"}</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs leading-5 text-white/55">
+                        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fuchsia-200" />
+                        <span>{adminSettings.supportWindowMessage || "3-Day Hygiene-Safe Support"}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -647,6 +722,9 @@ export default function CheckoutPage() {
               deliveryNote={adminSettings.deliveryCoverageText}
               privacyPackagingMessage={adminSettings.privacyPackagingMessage}
               guarantee={adminSettings.supportWindowMessage}
+              deliveryZone={form.deliveryZone}
+              insideDhakaCharge={adminSettings.deliverySettings.insideDhakaDeliveryCharge}
+              outsideDhakaCharge={adminSettings.deliverySettings.outsideDhakaDeliveryCharge}
             />
           </div>
         )}
@@ -726,13 +804,25 @@ function OrderSummary({
   deliveryNote,
   privacyPackagingMessage,
   guarantee,
+  deliveryZone,
+  insideDhakaCharge,
+  outsideDhakaCharge,
 }: {
   storeName: string;
   deliveryNote: string;
   privacyPackagingMessage: string;
   guarantee: string;
+  deliveryZone: DeliveryZone;
+  insideDhakaCharge: string;
+  outsideDhakaCharge: string;
 }) {
   const { items, totalItems, subtotal } = useCart();
+
+  const deliveryChargeAmount = deliveryZone
+    ? deliveryZone === "Inside Dhaka"
+      ? parseInt(insideDhakaCharge) || 80
+      : parseInt(outsideDhakaCharge) || 130
+    : 0;
 
   return (
     <aside className="min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6 lg:sticky lg:top-6">
@@ -796,10 +886,37 @@ function OrderSummary({
             <span className="leading-6">{guarantee}</span>
           </div>
           <div className="h-px bg-white/10" />
-          <div className="flex items-center justify-between text-lg font-semibold text-white">
-            <span>Subtotal</span>
-            <span>{formatCurrency(subtotal)}</span>
+          <div className="flex items-center justify-between gap-4">
+            <span>Product Subtotal</span>
+            <span className="font-medium text-white">{formatCurrency(subtotal)}</span>
           </div>
+          {deliveryZone ? (
+            <div className="flex items-center justify-between gap-4">
+              <span>Delivery ({deliveryZone})</span>
+              <span className="font-medium text-white">
+                {formatCurrency(deliveryChargeAmount)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-4">
+              <span>Delivery</span>
+              <span className="text-xs italic text-white/45">Select zone above</span>
+            </div>
+          )}
+          <div className="h-px bg-white/10" />
+          <div className="flex items-center justify-between text-lg font-semibold text-white">
+            <span>Total Payable</span>
+            <span>
+              {deliveryZone
+                ? formatCurrency(subtotal + deliveryChargeAmount)
+                : formatCurrency(subtotal)}
+            </span>
+          </div>
+          {!deliveryZone && (
+            <p className="text-xs leading-5 text-white/45">
+              + delivery charge confirmed before dispatch
+            </p>
+          )}
         </div>
       </div>
     </aside>
