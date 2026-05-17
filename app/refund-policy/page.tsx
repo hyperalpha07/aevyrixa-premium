@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Refund & Exchange Policy — Hygiene-Safe Support",
+  description:
+    "Aevyrixa Her Care refund and exchange policy. 3-Day Hygiene-Safe Support window. Unused, unwashed items in original packaging eligible for review. Used intimate products cannot be returned.",
+};
 
 export default async function RefundPolicyPage() {
   const { settings } = await loadStorefrontSettings();

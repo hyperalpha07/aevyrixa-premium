@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Contact — Order Support & Her Care Questions",
+  description:
+    "Get in touch with Aevyrixa Her Care support for delivery, COD, size guidance, order tracking, and policy questions. WhatsApp and phone support available.",
+};
 
 export default async function ContactPage() {
   const { settings } = await loadStorefrontSettings();

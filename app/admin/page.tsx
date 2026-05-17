@@ -6,6 +6,7 @@ import AdminPanel from "./admin-panel";
 export const metadata: Metadata = {
   title: "Aevyrixa Admin",
   description: "Local admin dashboard for Aevyrixa Her Care test orders.",
+  robots: { index: false, follow: false },
 };
 
 export default async function AdminPage() {

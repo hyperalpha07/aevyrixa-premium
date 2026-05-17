@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy — Aevyrixa Her Care",
+  description:
+    "Aevyrixa Her Care privacy policy. Customer information is used only to process orders, provide support, and improve the experience. No customer data is sold.",
+};
 
 export default async function PrivacyPolicyPage() {
   const { settings } = await loadStorefrontSettings();

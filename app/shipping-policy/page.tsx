@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Shipping Policy — Discreet Delivery Across Bangladesh",
+  description:
+    "Aevyrixa Her Care ships discreetly across Bangladesh. Estimated delivery 2–7 working days. Inside Dhaka and outside Dhaka delivery charges. Privacy packaging on all orders.",
+};
 
 export default async function ShippingPolicyPage() {
   const { settings } = await loadStorefrontSettings();

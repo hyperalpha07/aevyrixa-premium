@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions — Aevyrixa Her Care",
+  description:
+    "Terms and conditions for browsing and ordering from Aevyrixa Her Care. Transparent terms for website use, order confirmation, delivery, payment, and hygiene-sensitive product handling.",
+};
 
 export default async function TermsPage() {
   const { settings } = await loadStorefrontSettings();

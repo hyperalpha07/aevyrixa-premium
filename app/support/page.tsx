@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Support — 3-Day Hygiene-Safe Support",
+  description:
+    "Contact Aevyrixa Her Care support for order concerns, size questions, or product issues. 3-Day Hygiene-Safe Support with personal team review for every eligible request.",
+};
 
 export default async function SupportPage() {
   const { settings } = await loadStorefrontSettings();

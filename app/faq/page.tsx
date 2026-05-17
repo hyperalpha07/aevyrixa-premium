@@ -1,12 +1,87 @@
+import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
 
+export const metadata: Metadata = {
+  title: "FAQ — Her Care Products, Delivery & Support",
+  description:
+    "Answers to common questions about Aevyrixa Her Care products, sizing, delivery, payment, and 3-Day Hygiene-Safe Support. Bangladesh delivery, BDT pricing.",
+};
+
 export default async function FaqPage() {
   const { settings } = await loadStorefrontSettings();
 
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is Aevyrixa Her Care?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `${settings.brandDisplayName} is a premium women's comfort, hygiene, reusable care, and intimate essentials brand. We deliver discreetly across Bangladesh with direct order confirmation before dispatch.`,
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What products do you sell?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Our store carries reusable period care, comfort panties, hygiene essentials, and intimate care products — all selected for comfort, discretion, and everyday confidence.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do I choose a size?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Start with your usual underwear size. If you are between sizes, we recommend sizing up. Contact us before ordering if you need size guidance.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is 3-Day Hygiene-Safe Support?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: settings.supportWindowMessage,
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How does delivery work?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: settings.deliverySettings.estimatedDeliveryTime,
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do you offer privacy packaging?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: settings.privacyPackagingMessage,
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What payment methods are available?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `${settings.codMessage} Enabled mobile wallet and bank transfer options are shown during checkout.`,
+        },
+      },
+    ],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+      />
     <InfoPageShell
       settings={settings}
       eyebrow="FAQ"
@@ -67,5 +142,6 @@ export default async function FaqPage() {
         },
       ]}
     />
+    </>
   );
 }

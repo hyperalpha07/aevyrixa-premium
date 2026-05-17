@@ -6,6 +6,7 @@ import AdminLoginForm from "./admin-login-form";
 export const metadata: Metadata = {
   title: "Admin Login | Aevyrixa",
   description: "Secure login for Aevyrixa Her Care admin.",
+  robots: { index: false, follow: false },
 };
 
 export default async function AdminLoginPage() {

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/app/components/cart/cart-context";
 import CartDrawer from "@/app/components/cart/cart-drawer";
+import AnalyticsScripts from "@/app/components/analytics-scripts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +15,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://www.aevyrixa.com";
+const OG_FALLBACK_IMAGE = `${SITE_URL}/og-image.jpg`;
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Aevyrixa Her Care",
     template: "%s | Aevyrixa Her Care",
@@ -24,6 +29,22 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  openGraph: {
+    type: "website",
+    siteName: "Aevyrixa Her Care",
+    title: "Aevyrixa Her Care",
+    description:
+      "Premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
+    url: SITE_URL,
+    images: [{ url: OG_FALLBACK_IMAGE, width: 1200, height: 630, alt: "Aevyrixa Her Care" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aevyrixa Her Care",
+    description:
+      "Premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
+    images: [OG_FALLBACK_IMAGE],
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +52,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID ?? "";
+  const fbPixelId = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID ?? "";
+  const ttPixelId = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID ?? "";
+
   return (
     <html
       lang="en"
@@ -41,6 +66,7 @@ export default function RootLayout({
           {children}
           <CartDrawer />
         </CartProvider>
+        <AnalyticsScripts gaId={gaId} fbPixelId={fbPixelId} ttPixelId={ttPixelId} />
       </body>
     </html>
   );

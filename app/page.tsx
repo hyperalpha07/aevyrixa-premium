@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,6 +20,50 @@ import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
+export const metadata: Metadata = {
+  title: "Aevyrixa Her Care — Premium Women's Comfort & Reusable Care in Bangladesh",
+  description:
+    "Aevyrixa Her Care offers premium women's comfort, hygiene, reusable care, and intimate essentials in Bangladesh. Discreet privacy packaging, 3-Day Hygiene-Safe Support, BDT pricing.",
+  openGraph: {
+    title: "Aevyrixa Her Care — Premium Women's Comfort & Reusable Care",
+    description:
+      "Premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
+    url: "https://www.aevyrixa.com",
+    type: "website",
+  },
+  twitter: {
+    title: "Aevyrixa Her Care — Premium Women's Comfort & Reusable Care",
+    description:
+      "Premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
+  },
+};
+
+const homepageStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://www.aevyrixa.com/#organization",
+      name: "Aevyrixa Her Care",
+      url: "https://www.aevyrixa.com",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.aevyrixa.com/favicon.ico",
+      },
+      description:
+        "Premium women's comfort, hygiene, reusable care, and intimate essentials brand in Bangladesh.",
+      areaServed: "BD",
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.aevyrixa.com/#website",
+      url: "https://www.aevyrixa.com",
+      name: "Aevyrixa Her Care",
+      publisher: { "@id": "https://www.aevyrixa.com/#organization" },
+    },
+  ],
+};
 
 const confidenceCards = [
   {
@@ -176,6 +221,10 @@ export default async function Home() {
 
   return (
     <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageStructuredData) }}
+      />
       <HomeMotionController />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.16),transparent_28%),linear-gradient(180deg,#030612_0%,#07101f_46%,#050612_100%)]" />
 

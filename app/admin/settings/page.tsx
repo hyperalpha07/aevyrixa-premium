@@ -6,6 +6,7 @@ import AdminPanel from "../admin-panel";
 export const metadata: Metadata = {
   title: "Settings | Aevyrixa Admin",
   description: "Manage local Aevyrixa Her Care admin settings placeholders.",
+  robots: { index: false, follow: false },
 };
 
 export default async function AdminSettingsPage() {

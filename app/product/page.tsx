@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Droplets, Sparkles, Truck } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -11,6 +12,24 @@ import SiteFooter from "@/app/components/site-footer";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
+export const metadata: Metadata = {
+  title: "Shop — Women's Comfort & Reusable Care Essentials",
+  description:
+    "Explore Aevyrixa Her Care's collection of reusable period care, comfort essentials, and hygiene products. 3-Day Hygiene-Safe Support, BDT pricing, discreet Bangladesh delivery.",
+  openGraph: {
+    title: "Shop Aevyrixa Her Care — Women's Comfort & Reusable Care",
+    description:
+      "Reusable period care, comfort essentials, and hygiene products with discreet Bangladesh delivery and hygiene-safe support.",
+    url: "https://www.aevyrixa.com/product",
+    type: "website",
+  },
+  twitter: {
+    title: "Shop Aevyrixa Her Care — Women's Comfort & Reusable Care",
+    description:
+      "Reusable period care, comfort essentials, and hygiene products with discreet Bangladesh delivery and hygiene-safe support.",
+  },
+};
 
 const themeStyles: Record<
   ProductVisualTheme,
