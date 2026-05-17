@@ -24,6 +24,7 @@ import {
   displayCare,
   isPurchasableStock,
   publicProduct,
+  stockBadgeClass,
   stockStatusLabel,
 } from "@/app/lib/product-display";
 import {
@@ -387,7 +388,7 @@ export default function ProductDetailClient({
             <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-white/42 [overflow-wrap:anywhere] min-[420px]:tracking-[0.24em]">
               {displayProduct.category}
             </span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${stockBadgeClass(displayProduct.stockStatus)}`}>
               {stockStatusLabel(displayProduct.stockStatus)}
             </span>
           </div>

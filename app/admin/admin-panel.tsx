@@ -186,6 +186,7 @@ type AdminProduct = {
   imageUrl: string;
   videoUrl: string;
   posterUrl: string;
+  images: string[];
   deletedAt?: string;
   deletedReason?: string;
 };
@@ -229,6 +230,7 @@ const emptyProduct: AdminProduct = {
   imageUrl: "",
   videoUrl: "",
   posterUrl: "",
+  images: [],
 };
 
 const defaultSettings = defaultAdminSettings;
@@ -397,6 +399,7 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     imageUrl: textValue(value.imageUrl) || "",
     videoUrl: textValue(value.videoUrl) || "",
     posterUrl: textValue(value.posterUrl) || "",
+    images: stringArrayValue(value.images),
     deletedAt: textValue(value.deletedAt),
     deletedReason: textValue(value.deletedReason),
   };
@@ -428,6 +431,7 @@ function productSeed(): AdminProduct[] {
     imageUrl: "",
     videoUrl: "",
     posterUrl: "",
+    images: [],
     deletedAt: undefined,
     deletedReason: undefined,
   }));
@@ -585,6 +589,7 @@ function productToApiPayload(product: AdminProduct) {
     imageUrl: product.imageUrl || undefined,
     videoUrl: product.videoUrl || undefined,
     posterUrl: product.posterUrl || undefined,
+    images: product.images.length > 0 ? product.images : undefined,
   };
 }
 
@@ -614,6 +619,9 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
     imageUrl: product.imageUrl ?? "",
     videoUrl: product.videoUrl ?? "",
     posterUrl: product.posterUrl ?? "",
+    images: Array.isArray(product.images)
+      ? (product.images as unknown[]).filter((u): u is string => typeof u === "string")
+      : [],
     deletedAt: product.deletedAt,
     deletedReason: product.deletedReason,
   };
@@ -2009,17 +2017,19 @@ function ProductEditor({
   const [localError, setLocalError] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const [galleryUploadError, setGalleryUploadError] = useState<string | null>(null);
 
   const updateField = (field: keyof AdminProduct, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
     setLocalError(null);
   };
 
-  async function handleMediaUpload(file: File, mediaType: "image" | "video") {
-    const isImage = mediaType === "image";
-    if (isImage) { setImageUploading(true); setImageUploadError(null); }
+  async function handleMediaUpload(file: File, mediaType: "image" | "video" | "gallery") {
+    if (mediaType === "image") { setImageUploading(true); setImageUploadError(null); }
+    else if (mediaType === "gallery") { setGalleryUploading(true); setGalleryUploadError(null); }
     else { setVideoUploading(true); setVideoUploadError(null); }
 
     try {
@@ -2039,26 +2049,67 @@ function ProductEditor({
         const msg = Array.isArray(payload.errors) && typeof payload.errors[0] === "string"
           ? payload.errors[0]
           : "Upload failed.";
-        if (isImage) setImageUploadError(msg);
+        if (mediaType === "image") setImageUploadError(msg);
+        else if (mediaType === "gallery") setGalleryUploadError(msg);
         else setVideoUploadError(msg);
         return;
       }
 
       const uploadedUrl = payload.url as string;
-      if (isImage) {
+      if (mediaType === "image") {
         setDraft((current) => ({ ...current, imageUrl: uploadedUrl }));
+      } else if (mediaType === "gallery") {
+        setDraft((current) => ({
+          ...current,
+          images: [...(current.images || []), uploadedUrl],
+        }));
       } else {
         setDraft((current) => ({ ...current, videoUrl: uploadedUrl }));
       }
     } catch {
       const msg = "Upload failed. Check your connection.";
-      if (isImage) setImageUploadError(msg);
+      if (mediaType === "image") setImageUploadError(msg);
+      else if (mediaType === "gallery") setGalleryUploadError(msg);
       else setVideoUploadError(msg);
     } finally {
-      if (isImage) setImageUploading(false);
+      if (mediaType === "image") setImageUploading(false);
+      else if (mediaType === "gallery") setGalleryUploading(false);
       else setVideoUploading(false);
     }
   }
+
+  const handleGalleryRemove = (index: number) => {
+    setDraft((current) => ({
+      ...current,
+      images: (current.images || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleGalleryMoveUp = (index: number) => {
+    if (index === 0) return;
+    setDraft((current) => {
+      const imgs = [...(current.images || [])];
+      [imgs[index - 1], imgs[index]] = [imgs[index], imgs[index - 1]];
+      return { ...current, images: imgs };
+    });
+  };
+
+  const handleGalleryMoveDown = (index: number) => {
+    setDraft((current) => {
+      const imgs = [...(current.images || [])];
+      if (index >= imgs.length - 1) return current;
+      [imgs[index], imgs[index + 1]] = [imgs[index + 1], imgs[index]];
+      return { ...current, images: imgs };
+    });
+  };
+
+  const handleGallerySetMain = (url: string) => {
+    setDraft((current) => ({
+      ...current,
+      imageUrl: url,
+      images: (current.images || []).filter((img) => img !== url),
+    }));
+  };
 
   const submitProduct = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -2163,26 +2214,47 @@ function ProductEditor({
           }
         />
         <TextField label="Visual variant" value={draft.visualVariant} onChange={(value) => updateField("visualVariant", value)} />
-        <MediaUploadField
-          label="Product image"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          mediaType="image"
-          currentUrl={draft.imageUrl}
-          uploading={imageUploading}
-          error={imageUploadError}
-          onUpload={(file) => handleMediaUpload(file, "image")}
-          onClear={() => setDraft((current) => ({ ...current, imageUrl: "" }))}
-        />
-        <MediaUploadField
-          label="Product video"
-          accept="video/mp4,video/webm,video/quicktime"
-          mediaType="video"
-          currentUrl={draft.videoUrl}
-          uploading={videoUploading}
-          error={videoUploadError}
-          onUpload={(file) => handleMediaUpload(file, "video")}
-          onClear={() => setDraft((current) => ({ ...current, videoUrl: "" }))}
-        />
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <div className="border-t border-white/8 pt-4">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/60">
+              Product Media
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MediaUploadField
+                label="Main Image"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                mediaType="image"
+                currentUrl={draft.imageUrl}
+                uploading={imageUploading}
+                error={imageUploadError}
+                onUpload={(file) => handleMediaUpload(file, "image")}
+                onClear={() => setDraft((current) => ({ ...current, imageUrl: "" }))}
+              />
+              <MediaUploadField
+                label="Product Video"
+                accept="video/mp4,video/webm,video/quicktime"
+                mediaType="video"
+                currentUrl={draft.videoUrl}
+                uploading={videoUploading}
+                error={videoUploadError}
+                onUpload={(file) => handleMediaUpload(file, "video")}
+                onClear={() => setDraft((current) => ({ ...current, videoUrl: "" }))}
+              />
+            </div>
+            <div className="mt-4">
+              <GalleryImagesManager
+                images={draft.images || []}
+                uploading={galleryUploading}
+                uploadError={galleryUploadError}
+                onUpload={(file) => handleMediaUpload(file, "gallery")}
+                onRemove={handleGalleryRemove}
+                onMoveUp={handleGalleryMoveUp}
+                onMoveDown={handleGalleryMoveDown}
+                onSetMain={handleGallerySetMain}
+              />
+            </div>
+          </div>
+        </div>
         <TextField label="SEO title" value={draft.seoTitle} onChange={(value) => updateField("seoTitle", value)} />
         <TextAreaField label="Short description" value={draft.shortDescription} onChange={(value) => updateField("shortDescription", value)} />
         <TextAreaField label="SEO description" value={draft.seoDescription} onChange={(value) => updateField("seoDescription", value)} />
@@ -3321,6 +3393,137 @@ function MediaUploadField({
       />
       {error && (
         <p className="mt-1.5 text-xs text-rose-300/90">{error}</p>
+      )}
+    </div>
+  );
+}
+
+function GalleryImagesManager({
+  images,
+  uploading,
+  uploadError,
+  onUpload,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  onSetMain,
+}: {
+  images: string[];
+  uploading: boolean;
+  uploadError: string | null;
+  onUpload: (file: File) => void;
+  onRemove: (index: number) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
+  onSetMain: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="block min-w-0">
+      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+        Gallery Images
+        {images.length > 0 && (
+          <span className="ml-2 rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] normal-case text-white/40">
+            {images.length}
+          </span>
+        )}
+      </span>
+
+      {images.length > 0 && (
+        <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          {images.map((url, index) => (
+            <div
+              key={`${url}-${index}`}
+              className="group relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-black/24"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt={`Gallery image ${index + 1}`}
+                className="h-full w-full object-cover"
+              />
+              {/* Action overlay */}
+              <div className="absolute inset-0 flex flex-col justify-between bg-black/55 opacity-0 transition group-hover:opacity-100">
+                {/* Top: remove */}
+                <div className="flex justify-end p-1">
+                  <button
+                    type="button"
+                    onClick={() => onRemove(index)}
+                    title="Remove image"
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/80 text-white hover:bg-rose-400"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                {/* Bottom: actions */}
+                <div className="flex gap-1 p-1">
+                  <button
+                    type="button"
+                    onClick={() => onSetMain(url)}
+                    title="Set as main image"
+                    className="flex-1 rounded-lg bg-cyan-200/20 py-1 text-[10px] font-semibold text-cyan-100 hover:bg-cyan-200/35"
+                  >
+                    Main
+                  </button>
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => onMoveUp(index)}
+                      title="Move left"
+                      className="rounded-lg bg-white/10 px-1.5 py-1 text-[11px] text-white/70 hover:bg-white/20"
+                    >
+                      ←
+                    </button>
+                  )}
+                  {index < images.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onMoveDown(index)}
+                      title="Move right"
+                      className="rounded-lg bg-white/10 px-1.5 py-1 text-[11px] text-white/70 hover:bg-white/20"
+                    >
+                      →
+                    </button>
+                  )}
+                </div>
+              </div>
+              {/* Index label */}
+              <span className="pointer-events-none absolute left-1 top-1 rounded bg-black/60 px-1 py-0.5 text-[9px] text-white/60">
+                {index + 1}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-white/18 bg-black/18 px-4 py-3.5 text-sm text-white/45 transition hover:border-cyan-200/40 hover:text-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <Upload className="h-4 w-4 shrink-0" />
+        <span>{uploading ? "Uploading..." : "Add gallery image"}</span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onUpload(file);
+          event.target.value = "";
+        }}
+      />
+      {uploadError && (
+        <p className="mt-1.5 text-xs text-rose-300/90">{uploadError}</p>
+      )}
+      {images.length > 0 && (
+        <p className="mt-1.5 text-xs text-white/30">
+          Hover an image for options. &ldquo;Main&rdquo; sets it as the cover image and removes it from the gallery.
+        </p>
       )}
     </div>
   );

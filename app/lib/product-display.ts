@@ -61,6 +61,21 @@ export function stockStatusLabel(status: ProductStockStatus) {
   return labels[status] ?? labels.in_stock;
 }
 
+export function stockBadgeClass(status: ProductStockStatus): string {
+  switch (status) {
+    case "in_stock":
+      return "border-emerald-400/30 bg-emerald-400/12 text-emerald-300";
+    case "low_stock":
+      return "border-amber-300/35 bg-amber-300/12 text-amber-200";
+    case "out_of_stock":
+      return "border-rose-400/30 bg-rose-400/12 text-rose-300";
+    case "preorder":
+      return "border-cyan-400/30 bg-cyan-400/12 text-cyan-200";
+    default:
+      return "border-white/10 bg-black/20 text-white/58";
+  }
+}
+
 export function isPurchasableStock(status: ProductStockStatus) {
   return status === "in_stock" || status === "low_stock" || status === "preorder";
 }

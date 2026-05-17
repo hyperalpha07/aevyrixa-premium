@@ -5,7 +5,7 @@ import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import { listProducts } from "@/app/lib/product-store";
-import { publicProduct, stockStatusLabel } from "@/app/lib/product-display";
+import { publicProduct, stockBadgeClass, stockStatusLabel } from "@/app/lib/product-display";
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import SiteFooter from "@/app/components/site-footer";
@@ -152,7 +152,7 @@ export default async function ProductCollectionPage() {
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
+                    <span className={`rounded-full border px-3 py-1 text-xs font-medium ${stockBadgeClass(product.stockStatus)}`}>
                       {stockStatusLabel(product.stockStatus)}
                     </span>
                     <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-medium text-white/58">
