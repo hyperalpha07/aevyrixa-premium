@@ -836,11 +836,18 @@ async function readSettingsFromApi() {
 
     if (!payload.settings) return null;
     const localSettings = readSettingsFromStorage();
+    const backendConnected = Boolean(payload.backendConnected);
+
+    // When backend is not connected, payload.settings holds hardcoded defaults.
+    // Merging defaults over local settings would wipe locally-saved values.
+    const mergedSettings = backendConnected
+      ? normalizeAdminSettings({ ...localSettings, ...payload.settings })
+      : localSettings;
 
     return {
-      settings: normalizeAdminSettings({ ...localSettings, ...payload.settings }),
-      storageMode: payload.storageMode ?? "fallback-error",
-      backendConnected: Boolean(payload.backendConnected),
+      settings: mergedSettings,
+      storageMode: payload.storageMode ?? (backendConnected ? "supabase" : "fallback-default"),
+      backendConnected,
       message: payload.message,
     };
   } catch (error) {
@@ -2311,6 +2318,8 @@ function SettingsSection({
   const [activeSection, setActiveSection] = useState("storeProfile");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [hmUploading, setHmUploading] = useState<Record<string, boolean>>({});
+  const [hmUploadError, setHmUploadError] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
     setDraft(settings);
@@ -2551,6 +2560,12 @@ function SettingsSection({
                   label="TikTok URL"
                   value={draft.storeProfile.tiktokUrl}
                   onChange={(value) => updateStoreProfile({ tiktokUrl: value })}
+                  inputMode="url"
+                />
+                <TextField
+                  label="YouTube channel URL"
+                  value={draft.storeProfile.youtubeUrl}
+                  onChange={(value) => updateStoreProfile({ youtubeUrl: value })}
                   inputMode="url"
                 />
               </div>
@@ -3168,14 +3183,63 @@ function SettingsSection({
                     options={["animation", "image", "video"] as const}
                     onChange={(value) => updateHomepageSectionMedia("heroMedia", { mode: value })}
                   />
+                  <MediaUploadField
+                    label="Hero image (upload or URL)"
+                    accept="image/jpeg,image/png,image/webp"
+                    mediaType="image"
+                    currentUrl={draft.homepageMediaSettings.heroMedia.imageUrl}
+                    uploading={!!hmUploading["heroImage"]}
+                    error={hmUploadError["heroImage"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, heroImage: true }));
+                      setHmUploadError((prev) => ({ ...prev, heroImage: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "hero");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, heroImage: "Upload failed." })); }
+                        else { updateHomepageSectionMedia("heroMedia", { imageUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, heroImage: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, heroImage: false })); }
+                    }}
+                    onClear={() => updateHomepageSectionMedia("heroMedia", { imageUrl: "" })}
+                  />
                   <TextField
-                    label="Hero image URL (https)"
+                    label="Hero image URL (fallback, https)"
                     value={draft.homepageMediaSettings.heroMedia.imageUrl}
                     onChange={(value) => updateHomepageSectionMedia("heroMedia", { imageUrl: value })}
                     inputMode="url"
                   />
+                  <MediaUploadField
+                    label="Hero video (upload or URL)"
+                    accept="video/mp4,video/webm"
+                    mediaType="video"
+                    currentUrl={draft.homepageMediaSettings.heroMedia.videoUrl}
+                    uploading={!!hmUploading["heroVideo"]}
+                    error={hmUploadError["heroVideo"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, heroVideo: true }));
+                      setHmUploadError((prev) => ({ ...prev, heroVideo: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "hero");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") {
+                          setHmUploadError((prev) => ({ ...prev, heroVideo: "Upload failed." }));
+                        } else {
+                          updateHomepageSectionMedia("heroMedia", { videoUrl: pl.url as string });
+                        }
+                      } catch { setHmUploadError((prev) => ({ ...prev, heroVideo: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, heroVideo: false })); }
+                    }}
+                    onClear={() => updateHomepageSectionMedia("heroMedia", { videoUrl: "" })}
+                  />
                   <TextField
-                    label="Hero video URL (https, mp4)"
+                    label="Hero video URL (fallback, https)"
                     value={draft.homepageMediaSettings.heroMedia.videoUrl}
                     onChange={(value) => updateHomepageSectionMedia("heroMedia", { videoUrl: value })}
                     inputMode="url"
@@ -3200,14 +3264,60 @@ function SettingsSection({
                     options={["animation", "image", "video"] as const}
                     onChange={(value) => updateHomepageSectionMedia("careMedia", { mode: value })}
                   />
+                  <MediaUploadField
+                    label="Care image (upload or URL)"
+                    accept="image/jpeg,image/png,image/webp"
+                    mediaType="image"
+                    currentUrl={draft.homepageMediaSettings.careMedia.imageUrl}
+                    uploading={!!hmUploading["careImage"]}
+                    error={hmUploadError["careImage"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, careImage: true }));
+                      setHmUploadError((prev) => ({ ...prev, careImage: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "care");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, careImage: "Upload failed." })); }
+                        else { updateHomepageSectionMedia("careMedia", { imageUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, careImage: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, careImage: false })); }
+                    }}
+                    onClear={() => updateHomepageSectionMedia("careMedia", { imageUrl: "" })}
+                  />
                   <TextField
-                    label="Care image URL (https)"
+                    label="Care image URL (fallback, https)"
                     value={draft.homepageMediaSettings.careMedia.imageUrl}
                     onChange={(value) => updateHomepageSectionMedia("careMedia", { imageUrl: value })}
                     inputMode="url"
                   />
+                  <MediaUploadField
+                    label="Care video (upload or URL)"
+                    accept="video/mp4,video/webm"
+                    mediaType="video"
+                    currentUrl={draft.homepageMediaSettings.careMedia.videoUrl}
+                    uploading={!!hmUploading["careVideo"]}
+                    error={hmUploadError["careVideo"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, careVideo: true }));
+                      setHmUploadError((prev) => ({ ...prev, careVideo: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "care");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, careVideo: "Upload failed." })); }
+                        else { updateHomepageSectionMedia("careMedia", { videoUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, careVideo: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, careVideo: false })); }
+                    }}
+                    onClear={() => updateHomepageSectionMedia("careMedia", { videoUrl: "" })}
+                  />
                   <TextField
-                    label="Care video URL (https, mp4)"
+                    label="Care video URL (fallback, https)"
                     value={draft.homepageMediaSettings.careMedia.videoUrl}
                     onChange={(value) => updateHomepageSectionMedia("careMedia", { videoUrl: value })}
                     inputMode="url"
@@ -3232,14 +3342,60 @@ function SettingsSection({
                     options={["animation", "image", "video"] as const}
                     onChange={(value) => updateHomepageSectionMedia("experienceMedia", { mode: value })}
                   />
+                  <MediaUploadField
+                    label="Experience image (upload or URL)"
+                    accept="image/jpeg,image/png,image/webp"
+                    mediaType="image"
+                    currentUrl={draft.homepageMediaSettings.experienceMedia.imageUrl}
+                    uploading={!!hmUploading["expImage"]}
+                    error={hmUploadError["expImage"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, expImage: true }));
+                      setHmUploadError((prev) => ({ ...prev, expImage: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "experience");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, expImage: "Upload failed." })); }
+                        else { updateHomepageSectionMedia("experienceMedia", { imageUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, expImage: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, expImage: false })); }
+                    }}
+                    onClear={() => updateHomepageSectionMedia("experienceMedia", { imageUrl: "" })}
+                  />
                   <TextField
-                    label="Experience image URL (https)"
+                    label="Experience image URL (fallback, https)"
                     value={draft.homepageMediaSettings.experienceMedia.imageUrl}
                     onChange={(value) => updateHomepageSectionMedia("experienceMedia", { imageUrl: value })}
                     inputMode="url"
                   />
+                  <MediaUploadField
+                    label="Experience video (upload or URL)"
+                    accept="video/mp4,video/webm"
+                    mediaType="video"
+                    currentUrl={draft.homepageMediaSettings.experienceMedia.videoUrl}
+                    uploading={!!hmUploading["expVideo"]}
+                    error={hmUploadError["expVideo"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, expVideo: true }));
+                      setHmUploadError((prev) => ({ ...prev, expVideo: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "experience");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, expVideo: "Upload failed." })); }
+                        else { updateHomepageSectionMedia("experienceMedia", { videoUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, expVideo: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, expVideo: false })); }
+                    }}
+                    onClear={() => updateHomepageSectionMedia("experienceMedia", { videoUrl: "" })}
+                  />
                   <TextField
-                    label="Experience video URL (https, mp4)"
+                    label="Experience video URL (fallback, https)"
                     value={draft.homepageMediaSettings.experienceMedia.videoUrl}
                     onChange={(value) => updateHomepageSectionMedia("experienceMedia", { videoUrl: value })}
                     inputMode="url"
@@ -3254,52 +3410,85 @@ function SettingsSection({
 
               <SettingsCard
                 eyebrow="Homepage Media — Categories"
-                title="Category states"
-                description="Set each category as active (links to /product) or coming soon (non-clickable with badge). Only 'Reusable Period Care' is active by default."
+                title="Category status and media"
+                description="Set each category as active, coming soon, or hidden. Upload an image or video per card as optional overlay. Hidden categories are not shown on the storefront."
               >
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <SelectField
-                    label="Reusable Period Care"
-                    value={draft.homepageMediaSettings.categoryReusablePeriodCare}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categoryReusablePeriodCare: value })}
-                  />
-                  <SelectField
-                    label="Comfort Panty"
-                    value={draft.homepageMediaSettings.categoryComfortPanty}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categoryComfortPanty: value })}
-                  />
-                  <SelectField
-                    label="Soft Support Bra"
-                    value={draft.homepageMediaSettings.categorySoftSupportBra}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categorySoftSupportBra: value })}
-                  />
-                  <SelectField
-                    label="Nightwear"
-                    value={draft.homepageMediaSettings.categoryNightwear}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categoryNightwear: value })}
-                  />
-                  <SelectField
-                    label="Hygiene Essentials"
-                    value={draft.homepageMediaSettings.categoryHygieneEssentials}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categoryHygieneEssentials: value })}
-                  />
-                  <SelectField
-                    label="Bundles"
-                    value={draft.homepageMediaSettings.categoryBundles}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categoryBundles: value })}
-                  />
-                  <SelectField
-                    label="New Arrivals"
-                    value={draft.homepageMediaSettings.categoryNewArrivals}
-                    options={["active", "coming_soon"] as const}
-                    onChange={(value) => updateHomepageMediaSettings({ categoryNewArrivals: value })}
-                  />
+                <div className="space-y-3">
+                {(
+                  [
+                    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", slug: "reusable" },
+                    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", slug: "comfort-panty" },
+                    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", slug: "soft-bra" },
+                    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", slug: "nightwear" },
+                    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", slug: "hygiene" },
+                    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", slug: "bundles" },
+                    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", slug: "new-arrivals" },
+                  ] as const
+                ).map(({ label, stateKey, imgKey, vidKey, slug }) => {
+                  const imgUploadKey = `cat-${slug}-img`;
+                  const vidUploadKey = `cat-${slug}-vid`;
+                  return (
+                    <div key={slug} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-medium text-white">{label}</span>
+                        <SelectField
+                          label=""
+                          value={draft.homepageMediaSettings[stateKey]}
+                          options={["active", "coming_soon", "hidden"] as const}
+                          onChange={(value) => updateHomepageMediaSettings({ [stateKey]: value })}
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <MediaUploadField
+                          label="Card image"
+                          accept="image/jpeg,image/png,image/webp"
+                          mediaType="image"
+                          currentUrl={draft.homepageMediaSettings[imgKey]}
+                          uploading={!!hmUploading[imgUploadKey]}
+                          error={hmUploadError[imgUploadKey] ?? null}
+                          onUpload={async (file) => {
+                            setHmUploading((prev) => ({ ...prev, [imgUploadKey]: true }));
+                            setHmUploadError((prev) => ({ ...prev, [imgUploadKey]: null }));
+                            try {
+                              const form = new FormData();
+                              form.append("file", file);
+                              form.append("section", `category-${slug}`);
+                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                              const pl = (await res.json()) as Record<string, unknown>;
+                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, [imgUploadKey]: "Upload failed." })); }
+                              else { updateHomepageMediaSettings({ [imgKey]: pl.url as string }); }
+                            } catch { setHmUploadError((prev) => ({ ...prev, [imgUploadKey]: "Upload failed." })); }
+                            finally { setHmUploading((prev) => ({ ...prev, [imgUploadKey]: false })); }
+                          }}
+                          onClear={() => updateHomepageMediaSettings({ [imgKey]: "" })}
+                        />
+                        <MediaUploadField
+                          label="Card video"
+                          accept="video/mp4,video/webm"
+                          mediaType="video"
+                          currentUrl={draft.homepageMediaSettings[vidKey]}
+                          uploading={!!hmUploading[vidUploadKey]}
+                          error={hmUploadError[vidUploadKey] ?? null}
+                          onUpload={async (file) => {
+                            setHmUploading((prev) => ({ ...prev, [vidUploadKey]: true }));
+                            setHmUploadError((prev) => ({ ...prev, [vidUploadKey]: null }));
+                            try {
+                              const form = new FormData();
+                              form.append("file", file);
+                              form.append("section", `category-${slug}`);
+                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                              const pl = (await res.json()) as Record<string, unknown>;
+                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, [vidUploadKey]: "Upload failed." })); }
+                              else { updateHomepageMediaSettings({ [vidKey]: pl.url as string }); }
+                            } catch { setHmUploadError((prev) => ({ ...prev, [vidUploadKey]: "Upload failed." })); }
+                            finally { setHmUploading((prev) => ({ ...prev, [vidUploadKey]: false })); }
+                          }}
+                          onClear={() => updateHomepageMediaSettings({ [vidKey]: "" })}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
                 </div>
               </SettingsCard>
 

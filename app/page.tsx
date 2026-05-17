@@ -208,10 +208,21 @@ export default async function Home() {
     : "/product/everyday-comfort";
 
   const hms = settings.homepageMediaSettings;
-  const hereCareCategories = hereCareBase.map((cat) => ({
-    ...cat,
-    comingSoon: hms[cat.key] === "coming_soon",
-  }));
+  const hereCareCategories = hereCareBase
+    .map((cat) => {
+      const state = hms[cat.key];
+      const imageKey = `${cat.key}ImageUrl` as keyof typeof hms;
+      const videoKey = `${cat.key}VideoUrl` as keyof typeof hms;
+      return {
+        ...cat,
+        state,
+        comingSoon: state === "coming_soon",
+        hidden: state === "hidden",
+        categoryImageUrl: (hms[imageKey] as string) || "",
+        categoryVideoUrl: (hms[videoKey] as string) || "",
+      };
+    })
+    .filter((cat) => !cat.hidden);
 
   const heroMedia = hms.heroMedia;
   const careMedia = hms.careMedia;
@@ -415,12 +426,32 @@ export default async function Home() {
             </p>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {hereCareCategories.map(({ name, tagline, accent, glow, comingSoon }) => {
+            {hereCareCategories.map(({ name, tagline, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl }) => {
+              const hasMedia = Boolean(categoryImageUrl || categoryVideoUrl);
               const inner = (
                 <>
+                  {hasMedia && categoryVideoUrl ? (
+                    <video
+                      className="absolute inset-0 h-full w-full object-cover opacity-30"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    >
+                      <source src={categoryVideoUrl} type="video/mp4" />
+                    </video>
+                  ) : hasMedia && categoryImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={categoryImageUrl}
+                      alt={name}
+                      className="absolute inset-0 h-full w-full object-cover opacity-30"
+                      loading="lazy"
+                    />
+                  ) : null}
                   <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
                   <div className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`} />
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="relative flex items-start justify-between gap-2">
                     <h3 className="text-base font-semibold text-white">{name}</h3>
                     {comingSoon && (
                       <span className="mt-0.5 shrink-0 rounded-full border border-white/15 bg-white/[0.07] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-white/48">
@@ -428,9 +459,9 @@ export default async function Home() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-white/58">{tagline}</p>
+                  <p className="relative mt-2 text-sm leading-6 text-white/58">{tagline}</p>
                   {!comingSoon && (
-                    <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
+                    <div className="relative mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
                       Explore
                       <ArrowRight size={12} strokeWidth={2.2} />
                     </div>
@@ -449,7 +480,7 @@ export default async function Home() {
                 <a
                   key={name}
                   href="/product"
-                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-6"
+                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_0_32px_rgba(34,211,238,0.10)] sm:p-6"
                 >
                   {inner}
                 </a>

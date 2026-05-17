@@ -22,6 +22,7 @@ export type StoreProfileSettings = {
   facebookPageUrl: string;
   instagramUrl: string;
   tiktokUrl: string;
+  youtubeUrl: string;
   storeStatus: StoreStatus;
 };
 
@@ -127,19 +128,33 @@ export type HomepageSectionMedia = {
   altText: string;
 };
 
-export type HomepageCategoryState = "active" | "coming_soon";
+export type HomepageCategoryState = "active" | "coming_soon" | "hidden";
 
 export type HomepageMediaSettings = {
   heroMedia: HomepageSectionMedia;
   careMedia: HomepageSectionMedia;
   experienceMedia: HomepageSectionMedia;
   categoryReusablePeriodCare: HomepageCategoryState;
+  categoryReusablePeriodCareImageUrl: string;
+  categoryReusablePeriodCareVideoUrl: string;
   categoryComfortPanty: HomepageCategoryState;
+  categoryComfortPantyImageUrl: string;
+  categoryComfortPantyVideoUrl: string;
   categorySoftSupportBra: HomepageCategoryState;
+  categorySoftSupportBraImageUrl: string;
+  categorySoftSupportBraVideoUrl: string;
   categoryNightwear: HomepageCategoryState;
+  categoryNightwearImageUrl: string;
+  categoryNightwearVideoUrl: string;
   categoryHygieneEssentials: HomepageCategoryState;
+  categoryHygieneEssentialsImageUrl: string;
+  categoryHygieneEssentialsVideoUrl: string;
   categoryBundles: HomepageCategoryState;
+  categoryBundlesImageUrl: string;
+  categoryBundlesVideoUrl: string;
   categoryNewArrivals: HomepageCategoryState;
+  categoryNewArrivalsImageUrl: string;
+  categoryNewArrivalsVideoUrl: string;
   whatsappWidgetEnabled: boolean;
   whatsappWidgetLabel: string;
   whatsappWidgetLiveText: string;
@@ -176,6 +191,7 @@ export type AdminSettings = AdminSettingsGroups & {
   facebookPageUrl: string;
   instagramUrl: string;
   tiktokUrl: string;
+  youtubeUrl: string;
   businessLocation: string;
   deliveryCoverageText: string;
   codMessage: string;
@@ -203,6 +219,7 @@ const defaultGroups: AdminSettingsGroups = {
     facebookPageUrl: "",
     instagramUrl: "",
     tiktokUrl: "",
+    youtubeUrl: "",
     storeStatus: "live",
   },
   paymentSettings: {
@@ -328,12 +345,26 @@ const defaultGroups: AdminSettingsGroups = {
     careMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
     experienceMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
     categoryReusablePeriodCare: "active",
+    categoryReusablePeriodCareImageUrl: "",
+    categoryReusablePeriodCareVideoUrl: "",
     categoryComfortPanty: "coming_soon",
+    categoryComfortPantyImageUrl: "",
+    categoryComfortPantyVideoUrl: "",
     categorySoftSupportBra: "coming_soon",
+    categorySoftSupportBraImageUrl: "",
+    categorySoftSupportBraVideoUrl: "",
     categoryNightwear: "coming_soon",
+    categoryNightwearImageUrl: "",
+    categoryNightwearVideoUrl: "",
     categoryHygieneEssentials: "coming_soon",
+    categoryHygieneEssentialsImageUrl: "",
+    categoryHygieneEssentialsVideoUrl: "",
     categoryBundles: "coming_soon",
+    categoryBundlesImageUrl: "",
+    categoryBundlesVideoUrl: "",
     categoryNewArrivals: "coming_soon",
+    categoryNewArrivalsImageUrl: "",
+    categoryNewArrivalsVideoUrl: "",
     whatsappWidgetEnabled: false,
     whatsappWidgetLabel: "Support",
     whatsappWidgetLiveText: "",
@@ -418,7 +449,7 @@ function sectionMediaModeValue(value: unknown): "animation" | "image" | "video" 
 }
 
 function categoryStateValue(value: unknown, fallback: HomepageCategoryState): HomepageCategoryState {
-  return value === "active" || value === "coming_soon" ? value : fallback;
+  return value === "active" || value === "coming_soon" || value === "hidden" ? value : fallback;
 }
 
 function sectionMediaValue(raw: UnknownRecord): HomepageSectionMedia {
@@ -464,6 +495,7 @@ function buildAdminSettings(groups: AdminSettingsGroups): AdminSettings {
     facebookPageUrl: groups.storeProfile.facebookPageUrl,
     instagramUrl: groups.storeProfile.instagramUrl,
     tiktokUrl: groups.storeProfile.tiktokUrl,
+    youtubeUrl: groups.storeProfile.youtubeUrl,
     businessLocation: groups.storeProfile.businessLocation,
     deliveryCoverageText: groups.deliverySettings.deliveryCoverageText,
     codMessage: groups.paymentSettings.codMessage,
@@ -534,6 +566,7 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       instagramUrl:
         publicUrlValue(storeProfile.instagramUrl) || publicUrlValue(value.instagramUrl),
       tiktokUrl: publicUrlValue(storeProfile.tiktokUrl) || publicUrlValue(value.tiktokUrl),
+      youtubeUrl: publicUrlValue(storeProfile.youtubeUrl) || publicUrlValue(value.youtubeUrl),
       storeStatus: storeStatusValue(storeProfile.storeStatus),
     },
     paymentSettings: {
@@ -863,30 +896,44 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         homepageMediaRaw.categoryReusablePeriodCare,
         defaultGroups.homepageMediaSettings.categoryReusablePeriodCare
       ),
+      categoryReusablePeriodCareImageUrl: publicUrlValue(homepageMediaRaw.categoryReusablePeriodCareImageUrl),
+      categoryReusablePeriodCareVideoUrl: publicUrlValue(homepageMediaRaw.categoryReusablePeriodCareVideoUrl),
       categoryComfortPanty: categoryStateValue(
         homepageMediaRaw.categoryComfortPanty,
         defaultGroups.homepageMediaSettings.categoryComfortPanty
       ),
+      categoryComfortPantyImageUrl: publicUrlValue(homepageMediaRaw.categoryComfortPantyImageUrl),
+      categoryComfortPantyVideoUrl: publicUrlValue(homepageMediaRaw.categoryComfortPantyVideoUrl),
       categorySoftSupportBra: categoryStateValue(
         homepageMediaRaw.categorySoftSupportBra,
         defaultGroups.homepageMediaSettings.categorySoftSupportBra
       ),
+      categorySoftSupportBraImageUrl: publicUrlValue(homepageMediaRaw.categorySoftSupportBraImageUrl),
+      categorySoftSupportBraVideoUrl: publicUrlValue(homepageMediaRaw.categorySoftSupportBraVideoUrl),
       categoryNightwear: categoryStateValue(
         homepageMediaRaw.categoryNightwear,
         defaultGroups.homepageMediaSettings.categoryNightwear
       ),
+      categoryNightwearImageUrl: publicUrlValue(homepageMediaRaw.categoryNightwearImageUrl),
+      categoryNightwearVideoUrl: publicUrlValue(homepageMediaRaw.categoryNightwearVideoUrl),
       categoryHygieneEssentials: categoryStateValue(
         homepageMediaRaw.categoryHygieneEssentials,
         defaultGroups.homepageMediaSettings.categoryHygieneEssentials
       ),
+      categoryHygieneEssentialsImageUrl: publicUrlValue(homepageMediaRaw.categoryHygieneEssentialsImageUrl),
+      categoryHygieneEssentialsVideoUrl: publicUrlValue(homepageMediaRaw.categoryHygieneEssentialsVideoUrl),
       categoryBundles: categoryStateValue(
         homepageMediaRaw.categoryBundles,
         defaultGroups.homepageMediaSettings.categoryBundles
       ),
+      categoryBundlesImageUrl: publicUrlValue(homepageMediaRaw.categoryBundlesImageUrl),
+      categoryBundlesVideoUrl: publicUrlValue(homepageMediaRaw.categoryBundlesVideoUrl),
       categoryNewArrivals: categoryStateValue(
         homepageMediaRaw.categoryNewArrivals,
         defaultGroups.homepageMediaSettings.categoryNewArrivals
       ),
+      categoryNewArrivalsImageUrl: publicUrlValue(homepageMediaRaw.categoryNewArrivalsImageUrl),
+      categoryNewArrivalsVideoUrl: publicUrlValue(homepageMediaRaw.categoryNewArrivalsVideoUrl),
       whatsappWidgetEnabled: booleanValue(
         homepageMediaRaw.whatsappWidgetEnabled,
         defaultGroups.homepageMediaSettings.whatsappWidgetEnabled

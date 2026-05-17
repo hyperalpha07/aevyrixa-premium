@@ -9,7 +9,9 @@
       "Bash(git commit -m ' *)",
       "Bash(grep -r -i \"USD\\\\|\\\\$[0-9]\\\\|money back\\\\|100% leak\\\\|7-Day Money\\\\|30-Day Money\\\\|medical cure\\\\|unrealistic\" app/faq app/support app/refund-policy app/shipping-policy app/privacy-policy app/terms app/contact)",
       "Bash(grep -r -i \"USD\\\\|\\\\\\\\\\\\$[0-9]\\\\|money back\\\\|100% leak\\\\|7-Day Money\\\\|30-Day Money\\\\|medical cure\" app/ --include=\"*.tsx\" --include=\"*.ts\")",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(grep -rn \"USD\\\\|\\\\\\\\\\\\$\\\\|7-Day Money Back\\\\|30-Day Money Back\\\\|money back guarantee\\\\|100% leak-proof\\\\|medical cure\" --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.js\" app/ public/)",
+      "Bash(grep -rn \"7-Day Money\\\\|30-Day Money\\\\|money back\\\\|100% leak\\\\|medical cure\\\\|\\\\bUSD\\\\b\\\\|\\\\b\\\\$[0-9]\" --include=\"*.tsx\" --include=\"*.ts\" app/)"
     ]
   }
 }

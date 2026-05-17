@@ -249,10 +249,10 @@ async function upsertSettingsInSupabase(settings: AdminSettings) {
 
     if (!legacyResponse.ok) throw await supabaseError(legacyResponse, "legacy upsert");
 
-    const legacyRows = (await legacyResponse.json()) as SupabaseSettingsRow[];
-    return legacyRows[0]
-      ? normalizeAdminSettings({ ...settings, ...mapSupabaseRow(legacyRows[0]) })
-      : normalizeAdminSettings(settings);
+    await legacyResponse.json();
+    // Legacy mode: JSONB group columns don't exist in the table.
+    // Return the original settings unchanged to preserve all group state.
+    return normalizeAdminSettings(settings);
   }
 
   const rows = (await response.json()) as SupabaseSettingsRow[];
@@ -355,6 +355,7 @@ export function toPublicSettingsPayload(settings: AdminSettings) {
     facebookPageUrl: normalized.facebookPageUrl,
     instagramUrl: normalized.instagramUrl,
     tiktokUrl: normalized.tiktokUrl,
+    youtubeUrl: normalized.youtubeUrl,
     businessLocation: normalized.businessLocation,
     deliveryCoverageText: normalized.deliveryCoverageText,
     codMessage: normalized.codMessage,

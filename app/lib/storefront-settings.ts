@@ -6,7 +6,7 @@ import {
 } from "@/app/lib/admin-settings";
 
 export type StorefrontSocialLink = {
-  label: "Facebook" | "Instagram" | "TikTok";
+  label: "Facebook" | "Instagram" | "TikTok" | "YouTube";
   href: string;
 };
 
@@ -52,6 +52,7 @@ export function normalizeStorefrontSettings(value: unknown): StorefrontSettings 
     ["Facebook", settings.facebookPageUrl],
     ["Instagram", settings.instagramUrl],
     ["TikTok", settings.tiktokUrl],
+    ["YouTube", settings.youtubeUrl],
   ]
     .filter((link): link is [StorefrontSocialLink["label"], string] =>
       Boolean(link[1])
