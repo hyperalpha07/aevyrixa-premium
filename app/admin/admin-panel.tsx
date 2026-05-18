@@ -43,9 +43,12 @@ import { products as seedProducts, type ProductVisualTheme } from "@/app/lib/pro
 import { formatCurrency, SITE_CURRENCY } from "@/app/lib/currency";
 import {
   ADMIN_SETTINGS_KEY,
+  courierIntegrationModes,
+  courierOptions,
   defaultAdminSettings,
   normalizeAdminSettings,
   type AdminSettings,
+  type CourierOption,
   type CtaSectionMediaMode,
   type HomepageMediaSettings,
   type LayerComfortMediaMode,
@@ -1492,6 +1495,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
             {view === "orders" ? (
               <OrdersSection
                 orders={orders}
+                settings={settings}
                 expandedOrderId={expandedOrderId}
                 onToggleDetails={(orderId) =>
                   setExpandedOrderId((current) =>
@@ -1627,12 +1631,14 @@ function DashboardSection({
 
 function OrdersSection({
   orders,
+  settings,
   expandedOrderId,
   onToggleDetails,
   onStatusChange,
   onOperationsSave,
 }: {
   orders: StoredOrder[];
+  settings: AdminSettings;
   expandedOrderId: string | null;
   onToggleDetails: (orderId: string) => void;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
@@ -1767,7 +1773,7 @@ function OrdersSection({
           )}
         </div>
       </section>
-      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(380px,520px)_minmax(0,1fr)] xl:items-start">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,500px)_minmax(0,1fr)] xl:items-start">
         <div className="min-w-0 xl:max-h-[calc(100vh-13rem)] xl:overflow-y-auto xl:pr-1">
           <OrderList
             orders={visibleOrders}
@@ -1781,6 +1787,7 @@ function OrdersSection({
             <OrderDetails
               key={orderReferenceKey(selectedOrder)}
               order={selectedOrder}
+              settings={settings}
               onOperationsSave={onOperationsSave}
             />
           ) : (
@@ -3210,19 +3217,87 @@ function SettingsSection({
                   }
                   inputMode="decimal"
                 />
-                <TextField
+                <div className="min-w-0 rounded-2xl border border-cyan-200/18 bg-cyan-200/[0.055] p-4 lg:col-span-2">
+                  <h4 className="text-sm font-semibold text-white">
+                    Courier Integration
+                  </h4>
+                  <p className="mt-2 text-sm leading-6 text-white/58">
+                    Manual mode is active by default. Courier API settings are prepared for future server-side integration; do not store API keys here.
+                  </p>
+                </div>
+                <SelectField
                   label="Default courier"
                   value={draft.deliverySettings.defaultCourier}
+                  options={courierOptions}
                   onChange={(value) =>
                     updateDeliverySettings({ defaultCourier: value })
                   }
+                  helper="Used to prefill empty order operation courier fields. Admin can still change each order."
                 />
+                <SelectField
+                  label="Courier integration mode"
+                  value={draft.deliverySettings.courierIntegrationMode}
+                  options={courierIntegrationModes}
+                  onChange={(value) =>
+                    updateDeliverySettings({ courierIntegrationMode: value })
+                  }
+                  helper="Manual is the safe default. API modes are placeholders until merchant credentials are approved."
+                />
+                <label className="flex min-w-0 items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <input
+                    type="checkbox"
+                    checked={draft.deliverySettings.autoCourierBookingEnabled}
+                    onChange={(event) =>
+                      updateDeliverySettings({
+                        autoCourierBookingEnabled: event.target.checked,
+                      })
+                    }
+                    className="mt-1 h-4 w-4 shrink-0 accent-cyan-200"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-xs uppercase tracking-[0.18em] text-white/40">
+                      Auto courier booking
+                    </span>
+                    <span className="mt-2 block text-xs leading-5 text-white/52">
+                      Saved for future API integration. No real courier booking calls are made now.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex min-w-0 items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <input
+                    type="checkbox"
+                    checked={draft.deliverySettings.autoTrackingSyncEnabled}
+                    onChange={(event) =>
+                      updateDeliverySettings({
+                        autoTrackingSyncEnabled: event.target.checked,
+                      })
+                    }
+                    className="mt-1 h-4 w-4 shrink-0 accent-cyan-200"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-xs uppercase tracking-[0.18em] text-white/40">
+                      Auto tracking sync
+                    </span>
+                    <span className="mt-2 block text-xs leading-5 text-white/52">
+                      Saved for future API integration. Delivery status remains manually updated.
+                    </span>
+                  </span>
+                </label>
                 <TextAreaField
                   label="Courier partners"
                   value={draft.deliverySettings.courierPartners}
                   onChange={(value) =>
                     updateDeliverySettings({ courierPartners: value })
                   }
+                  tall
+                />
+                <TextAreaField
+                  label="Courier API-ready note"
+                  value={draft.deliverySettings.courierApiReadyNote}
+                  onChange={(value) =>
+                    updateDeliverySettings({ courierApiReadyNote: value })
+                  }
+                  helper="Do not place courier API secrets here. Use server-side Vercel environment variables when integration is implemented."
                   tall
                 />
                 <TextAreaField
@@ -4998,6 +5073,7 @@ function TextField({
   placeholder,
   required,
   inputMode,
+  helper,
 }: {
   label: string;
   value: string;
@@ -5005,10 +5081,11 @@ function TextField({
   placeholder?: string;
   required?: boolean;
   inputMode?: "text" | "decimal" | "numeric" | "tel" | "email" | "url" | "search";
+  helper?: string;
 }) {
   return (
     <label className="block min-w-0">
-      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+      <span className="mb-2 block break-words text-xs uppercase tracking-[0.18em] text-white/40 [overflow-wrap:anywhere]">
         {label}
       </span>
       <input
@@ -5017,8 +5094,9 @@ function TextField({
         placeholder={placeholder}
         required={required}
         inputMode={inputMode}
-        className="w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+        className="w-full min-w-0 rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
       />
+      {helper && <span className="mt-2 block text-xs leading-5 text-white/42">{helper}</span>}
     </label>
   );
 }
@@ -5028,23 +5106,26 @@ function TextAreaField({
   value,
   onChange,
   tall,
+  helper,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   tall?: boolean;
+  helper?: string;
 }) {
   return (
     <label className="block min-w-0">
-      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+      <span className="mb-2 block break-words text-xs uppercase tracking-[0.18em] text-white/40 [overflow-wrap:anywhere]">
         {label}
       </span>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={tall ? 6 : 3}
-        className="w-full resize-y rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+        className="w-full min-w-0 resize-y rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
       />
+      {helper && <span className="mt-2 block text-xs leading-5 text-white/42">{helper}</span>}
     </label>
   );
 }
@@ -5054,21 +5135,23 @@ function SelectField<T extends string>({
   value,
   options,
   onChange,
+  helper,
 }: {
   label: string;
   value: T;
   options: readonly T[];
   onChange: (value: T) => void;
+  helper?: string;
 }) {
   return (
     <label className="relative block min-w-0">
-      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+      <span className="mb-2 block break-words text-xs uppercase tracking-[0.18em] text-white/40 [overflow-wrap:anywhere]">
         {label}
       </span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value as T)}
-        className="w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-4 py-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-200/40"
+        className="w-full min-w-0 appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-4 py-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-200/40"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -5076,7 +5159,8 @@ function SelectField<T extends string>({
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute bottom-3.5 right-3 h-4 w-4 text-white/45" />
+      <ChevronDown className="pointer-events-none absolute right-3 top-10 h-4 w-4 text-white/45" />
+      {helper && <span className="mt-2 block text-xs leading-5 text-white/42">{helper}</span>}
     </label>
   );
 }
@@ -5314,9 +5398,24 @@ type OrderOperationsDraft = {
   cancelledReason: string;
 };
 
-function operationsDraftFromOrder(order: StoredOrder): OrderOperationsDraft {
+function defaultCourierFromSettings(settings: AdminSettings) {
+  const courier = settings.deliverySettings.defaultCourier;
+  return courier && courier !== "Not selected" && courier !== "Custom" ? courier : "";
+}
+
+function courierSelectValue(courierName: string): CourierOption {
+  if (!courierName.trim()) return "Not selected";
+  return courierOptions.includes(courierName as CourierOption)
+    ? (courierName as CourierOption)
+    : "Custom";
+}
+
+function operationsDraftFromOrder(
+  order: StoredOrder,
+  settings: AdminSettings
+): OrderOperationsDraft {
   return {
-    courierName: order.courierName ?? "",
+    courierName: order.courierName ?? defaultCourierFromSettings(settings),
     trackingId: order.trackingId ?? "",
     deliveryStatus: order.deliveryStatus ?? "pending",
     deliveryCharge:
@@ -5370,9 +5469,11 @@ function operationsDraftToUpdate(draft: OrderOperationsDraft): OrderOperationsUp
 
 function OrderDetails({
   order,
+  settings,
   onOperationsSave,
 }: {
   order: StoredOrder;
+  settings: AdminSettings;
   onOperationsSave: (
     orderId: string,
     updates: OrderOperationsUpdate
@@ -5380,12 +5481,17 @@ function OrderDetails({
 }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [operationsDraft, setOperationsDraft] = useState<OrderOperationsDraft>(() =>
-    operationsDraftFromOrder(order)
+    operationsDraftFromOrder(order, settings)
+  );
+  const [courierChoice, setCourierChoice] = useState<CourierOption>(() =>
+    courierSelectValue(operationsDraftFromOrder(order, settings).courierName)
   );
   const [operationsMessage, setOperationsMessage] = useState("");
   const [isSavingOperations, setIsSavingOperations] = useState(false);
   const reference = orderReferenceKey(order);
   const transactionReference = order.paymentDetails.transactionReference;
+  const selectedCourierOption = courierChoice;
+  const courierIntegrationMode = settings.deliverySettings.courierIntegrationMode;
   const copiedLabel =
     copiedKey === "summary"
       ? "Order summary copied"
@@ -5642,24 +5748,52 @@ function OrderDetails({
             {isSavingOperations ? "Saving..." : "Save Operations"}
           </button>
         </div>
-        <div className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
-          <TextField
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/18 p-4 text-sm leading-6 text-white/58">
+          {courierIntegrationMode === "manual"
+            ? "Manual mode is active. Courier booking and tracking are updated by admin. API mode can be enabled later after merchant API credentials are approved."
+            : "Courier API mode is selected in settings, but live booking is intentionally disabled until merchant credentials and endpoint docs are confirmed. Keep using manual updates for now."}
+        </div>
+        <div className="mt-4 grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
+          <SelectField
             label="Courier Name"
-            value={operationsDraft.courierName}
-            onChange={(value) => setOperationField("courierName", value)}
-            placeholder="Pathao, RedX, Steadfast"
+            value={selectedCourierOption}
+            options={courierOptions}
+            onChange={(value) => {
+              setCourierChoice(value);
+              setOperationField(
+                "courierName",
+                value === "Not selected"
+                  ? ""
+                  : value === "Custom"
+                    ? courierSelectValue(operationsDraft.courierName) === "Custom"
+                      ? operationsDraft.courierName
+                      : ""
+                    : value
+              );
+            }}
+            helper="Select the courier you will use after confirming the order."
           />
+          {selectedCourierOption === "Custom" && (
+            <TextField
+              label="Custom Courier Name"
+              value={operationsDraft.courierName}
+              onChange={(value) => setOperationField("courierName", value)}
+              placeholder="Courier partner name"
+            />
+          )}
           <TextField
             label="Tracking ID"
             value={operationsDraft.trackingId}
             onChange={(value) => setOperationField("trackingId", value)}
             placeholder="Courier tracking number"
+            helper="Enter the tracking/consignment ID after creating the parcel in the courier dashboard."
           />
           <SelectField
             label="Delivery Status"
             value={operationsDraft.deliveryStatus}
             options={deliveryStatuses}
             onChange={(value) => setOperationField("deliveryStatus", value)}
+            helper="Update manually unless courier API integration is added later."
           />
           <TextField
             label="Delivery Charge"
@@ -5667,6 +5801,7 @@ function OrderDetails({
             onChange={(value) => setOperationField("deliveryCharge", value)}
             placeholder="0"
             inputMode="decimal"
+            helper="Usually comes from checkout delivery selection. Edit only if needed."
           />
           <TextField
             label="Delivery Area"
@@ -5679,12 +5814,14 @@ function OrderDetails({
             value={operationsDraft.deliveryZone}
             onChange={(value) => setOperationField("deliveryZone", value)}
             placeholder="Inside Dhaka / Outside Dhaka"
+            helper="Comes from customer checkout selection, such as Inside Dhaka or Outside Dhaka."
           />
           <SelectField
             label="Payment Status"
             value={operationsDraft.paymentStatus}
             options={paymentStatuses}
             onChange={(value) => setOperationField("paymentStatus", value)}
+            helper="Use this to track manual verification for COD/mobile wallet/bank payments."
           />
           <SelectField
             label="Payment Verification Status"
@@ -5751,9 +5888,20 @@ function OrderDetails({
               label="Admin Internal Note"
               value={operationsDraft.adminInternalNote}
               onChange={(value) => setOperationField("adminInternalNote", value)}
+              helper="Admin-only note. Customers cannot see this."
               tall
             />
           </div>
+        </div>
+        <div className="mt-4 grid min-w-0 gap-3 text-xs leading-5 text-white/45 sm:grid-cols-2">
+          <p className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.06] p-3">
+            <span className="font-semibold text-amber-100">Test Order: </span>
+            Use this for fake/test orders. Test orders can be hidden from the active queue.
+          </p>
+          <p className="rounded-2xl border border-white/10 bg-black/18 p-3">
+            <span className="font-semibold text-white/72">Archive: </span>
+            Archive hides an order from the active queue without permanently deleting it.
+          </p>
         </div>
         {operationsMessage && (
           <p className="mt-4 rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-sm leading-6 text-white/68">

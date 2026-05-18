@@ -63,11 +63,38 @@ export type DeliverySettings = {
   insideDhakaDeliveryCharge: string;
   outsideDhakaDeliveryCharge: string;
   courierPartners: string;
-  defaultCourier: string;
+  defaultCourier: CourierOption;
+  courierIntegrationMode: CourierIntegrationMode;
+  autoCourierBookingEnabled: boolean;
+  autoTrackingSyncEnabled: boolean;
+  courierApiReadyNote: string;
   estimatedDeliveryTime: string;
   dispatchConfirmationMessage: string;
   trackingSupportMessage: string;
 };
+
+export const courierOptions = [
+  "Not selected",
+  "Pathao",
+  "Steadfast",
+  "RedX",
+  "Paperfly",
+  "eCourier",
+  "Sundarban Courier",
+  "SA Paribahan",
+  "Custom",
+] as const;
+
+export const courierIntegrationModes = [
+  "manual",
+  "pathao",
+  "steadfast",
+  "redx",
+  "custom",
+] as const;
+
+export type CourierOption = (typeof courierOptions)[number];
+export type CourierIntegrationMode = (typeof courierIntegrationModes)[number];
 
 export type PolicySettings = {
   hygieneSafeSupportMessage: string;
@@ -332,7 +359,12 @@ const defaultGroups: AdminSettingsGroups = {
     insideDhakaDeliveryCharge: "80",
     outsideDhakaDeliveryCharge: "130",
     courierPartners: "",
-    defaultCourier: "",
+    defaultCourier: "Not selected",
+    courierIntegrationMode: "manual",
+    autoCourierBookingEnabled: false,
+    autoTrackingSyncEnabled: false,
+    courierApiReadyNote:
+      "Manual mode is active. Courier booking and tracking are updated by admin. API mode can be enabled later after merchant API credentials are approved.",
     estimatedDeliveryTime:
       "Bangladesh delivery estimate is 2-7 working days after confirmation. Our team reviews delivery details before dispatch.",
     dispatchConfirmationMessage:
@@ -597,6 +629,18 @@ function layerComfortMediaModeValue(value: unknown): LayerComfortMediaMode {
     : "animation";
 }
 
+function courierOptionValue(value: unknown): CourierOption {
+  return courierOptions.includes(value as CourierOption)
+    ? (value as CourierOption)
+    : defaultGroups.deliverySettings.defaultCourier;
+}
+
+function courierIntegrationModeValue(value: unknown): CourierIntegrationMode {
+  return courierIntegrationModes.includes(value as CourierIntegrationMode)
+    ? (value as CourierIntegrationMode)
+    : defaultGroups.deliverySettings.courierIntegrationMode;
+}
+
 function sectionMediaValue(raw: UnknownRecord): HomepageSectionMedia {
   return {
     mode: sectionMediaModeValue(raw.mode),
@@ -847,9 +891,21 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         deliverySettings.courierPartners,
         defaultGroups.deliverySettings.courierPartners
       ),
-      defaultCourier: safeText(
-        deliverySettings.defaultCourier,
-        defaultGroups.deliverySettings.defaultCourier
+      defaultCourier: courierOptionValue(deliverySettings.defaultCourier),
+      courierIntegrationMode: courierIntegrationModeValue(
+        deliverySettings.courierIntegrationMode
+      ),
+      autoCourierBookingEnabled: booleanValue(
+        deliverySettings.autoCourierBookingEnabled,
+        defaultGroups.deliverySettings.autoCourierBookingEnabled
+      ),
+      autoTrackingSyncEnabled: booleanValue(
+        deliverySettings.autoTrackingSyncEnabled,
+        defaultGroups.deliverySettings.autoTrackingSyncEnabled
+      ),
+      courierApiReadyNote: safeText(
+        deliverySettings.courierApiReadyNote,
+        defaultGroups.deliverySettings.courierApiReadyNote
       ),
       estimatedDeliveryTime:
         textValue(deliverySettings.estimatedDeliveryTime) ||

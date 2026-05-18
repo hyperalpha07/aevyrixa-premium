@@ -80,7 +80,6 @@ function safeOrderSummary(order: OrderRecord) {
     cityArea: order.customer.cityArea,
     total: order.totalAmount,
     paymentMethod: paymentMethodLabel(order),
-    paymentStatus: order.paymentStatus,
     courierName: order.courierName,
     trackingId: order.trackingId,
     deliveryStatus: order.deliveryStatus,

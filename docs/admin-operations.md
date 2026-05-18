@@ -138,8 +138,14 @@ save new orders. Apply this SQL in Supabase before relying on persistence:
 alter table public.orders
   add column if not exists courier_name text,
   add column if not exists tracking_id text,
+  add column if not exists delivery_status text,
   add column if not exists delivery_charge numeric,
+  add column if not exists delivery_area text,
+  add column if not exists delivery_zone text,
   add column if not exists customer_confirmation_note text,
+  add column if not exists payment_status text,
+  add column if not exists payment_reference text,
+  add column if not exists payment_note text,
   add column if not exists payment_verification_status text
     check (
       payment_verification_status is null
@@ -158,8 +164,26 @@ alter table public.orders
       order_source is null
       or order_source in ('Website', 'Facebook', 'Manual', 'Other')
     ),
-  add column if not exists assigned_staff text;
+  add column if not exists assigned_staff text,
+  add column if not exists is_test_order boolean not null default false,
+  add column if not exists archived_at timestamptz,
+  add column if not exists deleted_at timestamptz,
+  add column if not exists soft_deleted_at timestamptz,
+  add column if not exists cancelled_reason text;
 ```
+
+Future courier API credentials must stay in server-side environment variables,
+not public storefront/admin settings:
+
+- `PATHAO_CLIENT_ID`
+- `PATHAO_CLIENT_SECRET`
+- `PATHAO_USERNAME`
+- `PATHAO_PASSWORD`
+- `PATHAO_STORE_ID`
+- `STEADFAST_API_KEY`
+- `STEADFAST_SECRET_KEY`
+- `REDX_API_KEY`
+- `COURIER_API_BASE_URL`
 
 ## Notifications
 

@@ -56,7 +56,9 @@ type SupabaseOrderRow = {
   admin_internal_note?: string | null;
   order_source?: string | null;
   is_test_order?: boolean | string | null;
+  test_order?: boolean | string | null;
   archived_at?: string | null;
+  is_archived?: boolean | string | null;
   deleted_at?: string | null;
   soft_deleted_at?: string | null;
   cancelled_reason?: string | null;
@@ -232,10 +234,9 @@ async function supabaseError(response: Response, action: string) {
   return new Error(`Supabase ${action} failed with ${response.status}.${suffix}`);
 }
 
-function orderToSupabaseInsertPayload(order: OrderRecord) {
+function orderToSupabaseInsertPayload(order: OrderRecord, includeOperationDefaults = true) {
   const now = new Date().toISOString();
-
-  return {
+  const payload: Record<string, unknown> = {
     order_ref: order.orderReference,
     customer_name: order.customer.fullName,
     customer_phone: order.customer.phone,
@@ -258,9 +259,18 @@ function orderToSupabaseInsertPayload(order: OrderRecord) {
     created_at: order.createdAt,
     updated_at: now,
   };
+
+  if (includeOperationDefaults) {
+    payload.delivery_area = nullableText(order.deliveryArea);
+    payload.delivery_zone = nullableText(order.deliveryZone);
+    payload.payment_status = order.paymentStatus ?? null;
+    payload.payment_reference = nullableText(order.paymentReference);
+  }
+
+  return payload;
 }
 
-async function saveOrderToSupabase(order: OrderRecord) {
+async function insertOrderPayload(order: OrderRecord, includeOperationDefaults: boolean) {
   const response = await fetch(
     supabaseEndpoint(`${SUPABASE_ORDERS_TABLE}?select=*`),
     {
@@ -269,12 +279,32 @@ async function saveOrderToSupabase(order: OrderRecord) {
         ...supabaseHeaders(),
         prefer: "return=representation",
       },
-      body: JSON.stringify(orderToSupabaseInsertPayload(order)),
+      body: JSON.stringify(orderToSupabaseInsertPayload(order, includeOperationDefaults)),
     }
   );
 
+  return response;
+}
+
+async function saveOrderToSupabase(order: OrderRecord) {
+  let response = await insertOrderPayload(order, true);
+
   if (!response.ok) {
-    throw await supabaseError(response, "order insert");
+    const detail = await response.text().catch(() => "");
+    const missingOptionalOperationColumn =
+      response.status === 400 &&
+      /delivery_area|delivery_zone|payment_status|payment_reference|schema cache|column/i.test(
+        detail
+      );
+
+    if (!missingOptionalOperationColumn) {
+      throw await supabaseError(new Response(detail, { status: response.status }), "order insert");
+    }
+
+    response = await insertOrderPayload(order, false);
+    if (!response.ok) {
+      throw await supabaseError(response, "order insert");
+    }
   }
 
   const rows = (await response.json()) as SupabaseOrderRow[];
@@ -378,7 +408,8 @@ async function updateOrderOperationsInSupabase(
   orderRef: string,
   updates: OrderOperationsUpdate
 ) {
-  const response = await fetch(
+  let payload = orderOperationsToSupabasePayload(updates);
+  let response = await fetch(
     supabaseEndpoint(
       `${SUPABASE_ORDERS_TABLE}?order_ref=eq.${encodeURIComponent(
         orderRef
@@ -390,12 +421,54 @@ async function updateOrderOperationsInSupabase(
         ...supabaseHeaders(),
         prefer: "return=representation",
       },
-      body: JSON.stringify(orderOperationsToSupabasePayload(updates)),
+      body: JSON.stringify(payload),
     }
   );
 
   if (!response.ok) {
-    throw await supabaseError(response, "order operations update");
+    const detail = await response.text().catch(() => "");
+    const canRetryTestOrder =
+      "isTestOrder" in updates &&
+      /is_test_order|schema cache|column/i.test(detail);
+    const canRetryArchive =
+      "archivedAt" in updates && /archived_at|schema cache|column/i.test(detail);
+
+    if (!canRetryTestOrder && !canRetryArchive) {
+      throw await supabaseError(
+        new Response(detail, { status: response.status }),
+        "order operations update"
+      );
+    }
+
+    payload = { ...payload };
+    if (canRetryTestOrder) {
+      delete payload.is_test_order;
+      payload.test_order = updates.isTestOrder ?? null;
+    }
+    if (canRetryArchive) {
+      delete payload.archived_at;
+      payload.is_archived = Boolean(updates.archivedAt);
+    }
+
+    response = await fetch(
+      supabaseEndpoint(
+        `${SUPABASE_ORDERS_TABLE}?order_ref=eq.${encodeURIComponent(
+          orderRef
+        )}&select=*`
+      ),
+      {
+        method: "PATCH",
+        headers: {
+          ...supabaseHeaders(),
+          prefer: "return=representation",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      throw await supabaseError(response, "order operations update");
+    }
   }
 
   const rows = (await response.json()) as SupabaseOrderRow[];
@@ -480,8 +553,10 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     adminInternalNote: row.admin_internal_note ?? undefined,
     orderSource: normalizeOrderSource(row.order_source),
     assignedStaff: row.assigned_staff ?? undefined,
-    isTestOrder: booleanValue(row.is_test_order),
-    archivedAt: row.archived_at ?? undefined,
+    isTestOrder: booleanValue(row.is_test_order ?? row.test_order),
+    archivedAt:
+      row.archived_at ??
+      (booleanValue(row.is_archived) ? row.updated_at ?? row.created_at ?? undefined : undefined),
     deletedAt: row.deleted_at ?? undefined,
     softDeletedAt: row.soft_deleted_at ?? undefined,
     cancelledReason: row.cancelled_reason ?? undefined,

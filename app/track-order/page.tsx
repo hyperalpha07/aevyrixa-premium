@@ -21,7 +21,6 @@ type TrackedOrder = {
   cityArea: string;
   total: number;
   paymentMethod: string;
-  paymentStatus?: "pending" | "verified" | "failed" | "refunded";
   courierName?: string;
   trackingId?: string;
   deliveryStatus?:
@@ -284,12 +283,6 @@ function TrackOrderContent() {
                 <SummaryItem label="Created" value={formatDate(order.createdAt)} />
                 <SummaryItem label="Total" value={formatCurrency(order.total)} />
                 <SummaryItem label="Payment" value={order.paymentMethod} />
-                {order.paymentStatus && (
-                  <SummaryItem
-                    label="Payment status"
-                    value={readableStatus(order.paymentStatus)}
-                  />
-                )}
                 <SummaryItem label="City/Area" value={order.cityArea} />
                 {order.deliveryStatus && (
                   <SummaryItem
