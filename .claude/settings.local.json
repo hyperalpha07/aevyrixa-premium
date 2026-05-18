@@ -20,7 +20,11 @@
       "Bash(Select-Object Name)",
       "Bash(mkdir -p \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\api\\\\admin\\\\support\\\\conversations\\\\[id]\")",
       "Bash(mkdir -p \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\api\\\\admin\\\\support\\\\conversations\\\\[id]\\\\reply\")",
-      "Bash(dir C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\track-order *)"
+      "Bash(dir C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\track-order *)",
+      "Bash(dir C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\.env*)",
+      "Bash(Get-ChildItem *)",
+      "Bash(curl *)",
+      "Bash(python3 -c 'import uuid; print\\(uuid.uuid4\\(\\)\\)')"
     ]
   }
 }

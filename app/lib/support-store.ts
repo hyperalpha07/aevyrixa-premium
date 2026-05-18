@@ -87,15 +87,15 @@ async function dbPatch(path: string, body: unknown): Promise<void> {
 export async function createConversation(sourcePage: string): Promise<SupportConversation> {
   if (!hasConfig()) throw new Error("Support backend not configured.");
 
+  const now = new Date().toISOString();
   const rows = await dbPost<SupportConversation[]>(
     "support_conversations?select=*",
     {
-      id: crypto.randomUUID(),
       public_token: crypto.randomUUID(),
       status: "open",
       source_page: sourcePage || "homepage",
-      created_at: new Date().toISOString(),
-      updated_at: null,
+      created_at: now,
+      updated_at: now,
     }
   );
 
@@ -131,6 +131,7 @@ export async function addMessage(
 ): Promise<SupportMessage> {
   if (!hasConfig()) throw new Error("Support backend not configured.");
 
+  const now = new Date().toISOString();
   const rows = await dbPost<SupportMessage[]>(
     "support_messages?select=*",
     {
@@ -138,11 +139,18 @@ export async function addMessage(
       conversation_id: conversationId,
       body: body.trim(),
       sender_type: senderType,
-      created_at: new Date().toISOString(),
+      created_at: now,
     }
   );
 
   if (!rows[0]) throw new Error("Failed to save support message.");
+
+  // Best-effort: update last_message_at + updated_at on the conversation
+  dbPatch(
+    `support_conversations?id=eq.${encodeURIComponent(conversationId)}`,
+    { last_message_at: now, updated_at: now }
+  ).catch(() => null);
+
   return rows[0];
 }
 

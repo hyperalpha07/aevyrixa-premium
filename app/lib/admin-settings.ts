@@ -122,6 +122,7 @@ export type AppearanceSettings = {
 };
 
 export type WidgetPlacement = "homepage" | "all" | "product" | "support" | "cart";
+export type LayerComfortMediaMode = "animation" | "image_text" | "video_text" | "background_media_text" | "media_only";
 
 export type HomepageSectionMedia = {
   mode: "animation" | "image" | "video";
@@ -204,6 +205,20 @@ export type HomepageMediaSettings = {
   ctaSectionImageUrl: string;
   ctaSectionVideoUrl: string;
   ctaSectionAltText: string;
+  layerComfortEnabled: boolean;
+  layerComfortEyebrow: string;
+  layerComfortHeading: string;
+  layerComfortDescription: string;
+  layerComfortLayer1Title: string;
+  layerComfortLayer1Description: string;
+  layerComfortLayer2Title: string;
+  layerComfortLayer2Description: string;
+  layerComfortLayer3Title: string;
+  layerComfortLayer3Description: string;
+  layerComfortMediaMode: LayerComfortMediaMode;
+  layerComfortImageUrl: string;
+  layerComfortVideoUrl: string;
+  layerComfortAltText: string;
 };
 
 export type AdvancedSettings = {
@@ -452,6 +467,20 @@ const defaultGroups: AdminSettingsGroups = {
     ctaSectionImageUrl: "",
     ctaSectionVideoUrl: "",
     ctaSectionAltText: "",
+    layerComfortEnabled: true,
+    layerComfortEyebrow: "Her Care Layer System",
+    layerComfortHeading: "Layered comfort built for calm, discreet daily wear.",
+    layerComfortDescription: "Each piece is designed with softness at every layer — from the fabric you feel against your skin to the discreet structure supporting your day.",
+    layerComfortLayer1Title: "Comfort Knit Layer",
+    layerComfortLayer1Description: "Soft, stretch-fit fabric that moves naturally with your body through the day.",
+    layerComfortLayer2Title: "Absorbent Core",
+    layerComfortLayer2Description: "A slim internal layer for quiet, discreet support during light to moderate flow.",
+    layerComfortLayer3Title: "Protective Shell",
+    layerComfortLayer3Description: "A smooth outer layer with a refined silhouette and clean, everyday finish.",
+    layerComfortMediaMode: "animation" as LayerComfortMediaMode,
+    layerComfortImageUrl: "",
+    layerComfortVideoUrl: "",
+    layerComfortAltText: "",
   },
 };
 
@@ -546,6 +575,12 @@ function ctaSectionMediaModeValue(value: unknown): CtaSectionMediaMode {
   return value === "image_text" || value === "video_text" || value === "background_media_text"
     ? value
     : "no_media";
+}
+
+function layerComfortMediaModeValue(value: unknown): LayerComfortMediaMode {
+  return value === "image_text" || value === "video_text" || value === "background_media_text" || value === "media_only"
+    ? value
+    : "animation";
 }
 
 function sectionMediaValue(raw: UnknownRecord): HomepageSectionMedia {
@@ -1124,6 +1159,50 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ctaSectionImageUrl: publicUrlValue(homepageMediaRaw.ctaSectionImageUrl),
       ctaSectionVideoUrl: publicUrlValue(homepageMediaRaw.ctaSectionVideoUrl),
       ctaSectionAltText: safeText(homepageMediaRaw.ctaSectionAltText, ""),
+      layerComfortEnabled: booleanValue(
+        homepageMediaRaw.layerComfortEnabled,
+        defaultGroups.homepageMediaSettings.layerComfortEnabled
+      ),
+      layerComfortEyebrow: safeText(
+        homepageMediaRaw.layerComfortEyebrow,
+        defaultGroups.homepageMediaSettings.layerComfortEyebrow
+      ),
+      layerComfortHeading: safeText(
+        homepageMediaRaw.layerComfortHeading,
+        defaultGroups.homepageMediaSettings.layerComfortHeading
+      ),
+      layerComfortDescription: safeText(
+        homepageMediaRaw.layerComfortDescription,
+        defaultGroups.homepageMediaSettings.layerComfortDescription
+      ),
+      layerComfortLayer1Title: safeText(
+        homepageMediaRaw.layerComfortLayer1Title,
+        defaultGroups.homepageMediaSettings.layerComfortLayer1Title
+      ),
+      layerComfortLayer1Description: safeText(
+        homepageMediaRaw.layerComfortLayer1Description,
+        defaultGroups.homepageMediaSettings.layerComfortLayer1Description
+      ),
+      layerComfortLayer2Title: safeText(
+        homepageMediaRaw.layerComfortLayer2Title,
+        defaultGroups.homepageMediaSettings.layerComfortLayer2Title
+      ),
+      layerComfortLayer2Description: safeText(
+        homepageMediaRaw.layerComfortLayer2Description,
+        defaultGroups.homepageMediaSettings.layerComfortLayer2Description
+      ),
+      layerComfortLayer3Title: safeText(
+        homepageMediaRaw.layerComfortLayer3Title,
+        defaultGroups.homepageMediaSettings.layerComfortLayer3Title
+      ),
+      layerComfortLayer3Description: safeText(
+        homepageMediaRaw.layerComfortLayer3Description,
+        defaultGroups.homepageMediaSettings.layerComfortLayer3Description
+      ),
+      layerComfortMediaMode: layerComfortMediaModeValue(homepageMediaRaw.layerComfortMediaMode),
+      layerComfortImageUrl: publicUrlValue(homepageMediaRaw.layerComfortImageUrl),
+      layerComfortVideoUrl: publicUrlValue(homepageMediaRaw.layerComfortVideoUrl),
+      layerComfortAltText: safeText(homepageMediaRaw.layerComfortAltText, ""),
     },
   };
 

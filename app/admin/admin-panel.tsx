@@ -47,6 +47,7 @@ import {
   type AdminSettings,
   type CtaSectionMediaMode,
   type HomepageMediaSettings,
+  type LayerComfortMediaMode,
 } from "@/app/lib/admin-settings";
 import {
   orderSources,
@@ -865,7 +866,9 @@ function isDefaultHomepageMediaSettings(hms: HomepageMediaSettings): boolean {
     !hms.categoryHygieneEssentialsImageUrl &&
     !hms.categoryBundlesImageUrl &&
     !hms.categoryNewArrivalsImageUrl &&
-    !hms.whatsappWidgetEnabled
+    !hms.whatsappWidgetEnabled &&
+    !hms.layerComfortImageUrl &&
+    !hms.layerComfortVideoUrl
   );
 }
 
@@ -3346,6 +3349,139 @@ function SettingsSection({
                     value={draft.homepageMediaSettings.heroMedia.ctaLink}
                     onChange={(value) => updateHomepageSectionMedia("heroMedia", { ctaLink: value })}
                     placeholder="/product"
+                    inputMode="url"
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Media — Layer Explorer"
+                title="Layered Comfort section"
+                description="Controls the 'Layered comfort built for calm, discreet daily wear.' section. Animation fallback is always kept when no media is set."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ToggleField
+                    label="Show section"
+                    checked={draft.homepageMediaSettings.layerComfortEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortEnabled: value })}
+                  />
+                  <TextField
+                    label="Eyebrow label"
+                    value={draft.homepageMediaSettings.layerComfortEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortEyebrow: value })}
+                    placeholder="Her Care Layer System"
+                  />
+                  <TextField
+                    label="Heading"
+                    value={draft.homepageMediaSettings.layerComfortHeading}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortHeading: value })}
+                    placeholder="Layered comfort built for calm, discreet daily wear."
+                  />
+                  <TextAreaField
+                    label="Description"
+                    value={draft.homepageMediaSettings.layerComfortDescription}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortDescription: value })}
+                  />
+                  <TextField
+                    label="Layer 1 title"
+                    value={draft.homepageMediaSettings.layerComfortLayer1Title}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer1Title: value })}
+                    placeholder="Comfort Knit Layer"
+                  />
+                  <TextAreaField
+                    label="Layer 1 description"
+                    value={draft.homepageMediaSettings.layerComfortLayer1Description}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer1Description: value })}
+                  />
+                  <TextField
+                    label="Layer 2 title"
+                    value={draft.homepageMediaSettings.layerComfortLayer2Title}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer2Title: value })}
+                    placeholder="Absorbent Core"
+                  />
+                  <TextAreaField
+                    label="Layer 2 description"
+                    value={draft.homepageMediaSettings.layerComfortLayer2Description}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer2Description: value })}
+                  />
+                  <TextField
+                    label="Layer 3 title"
+                    value={draft.homepageMediaSettings.layerComfortLayer3Title}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer3Title: value })}
+                    placeholder="Protective Shell"
+                  />
+                  <TextAreaField
+                    label="Layer 3 description"
+                    value={draft.homepageMediaSettings.layerComfortLayer3Description}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer3Description: value })}
+                  />
+                  <SelectField
+                    label="Media mode"
+                    value={draft.homepageMediaSettings.layerComfortMediaMode}
+                    options={["animation", "image_text", "video_text", "background_media_text", "media_only"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortMediaMode: value as LayerComfortMediaMode })}
+                  />
+                  <TextField
+                    label="Alt text"
+                    value={draft.homepageMediaSettings.layerComfortAltText}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortAltText: value })}
+                  />
+                  <MediaUploadField
+                    label="Image (upload or URL)"
+                    accept="image/jpeg,image/png,image/webp"
+                    mediaType="image"
+                    currentUrl={draft.homepageMediaSettings.layerComfortImageUrl}
+                    uploading={!!hmUploading["layerComfortImage"]}
+                    error={hmUploadError["layerComfortImage"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, layerComfortImage: true }));
+                      setHmUploadError((prev) => ({ ...prev, layerComfortImage: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "layer-comfort");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, layerComfortImage: "Upload failed." })); }
+                        else { updateHomepageMediaSettings({ layerComfortImageUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, layerComfortImage: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, layerComfortImage: false })); }
+                    }}
+                    onClear={() => updateHomepageMediaSettings({ layerComfortImageUrl: "" })}
+                  />
+                  <TextField
+                    label="Image URL (fallback, https)"
+                    value={draft.homepageMediaSettings.layerComfortImageUrl}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortImageUrl: value })}
+                    inputMode="url"
+                  />
+                  <MediaUploadField
+                    label="Video (upload or URL)"
+                    accept="video/mp4,video/webm"
+                    mediaType="video"
+                    currentUrl={draft.homepageMediaSettings.layerComfortVideoUrl}
+                    uploading={!!hmUploading["layerComfortVideo"]}
+                    error={hmUploadError["layerComfortVideo"] ?? null}
+                    onUpload={async (file) => {
+                      setHmUploading((prev) => ({ ...prev, layerComfortVideo: true }));
+                      setHmUploadError((prev) => ({ ...prev, layerComfortVideo: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", "layer-comfort");
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, layerComfortVideo: "Upload failed." })); }
+                        else { updateHomepageMediaSettings({ layerComfortVideoUrl: pl.url as string }); }
+                      } catch { setHmUploadError((prev) => ({ ...prev, layerComfortVideo: "Upload failed." })); }
+                      finally { setHmUploading((prev) => ({ ...prev, layerComfortVideo: false })); }
+                    }}
+                    onClear={() => updateHomepageMediaSettings({ layerComfortVideoUrl: "" })}
+                  />
+                  <TextField
+                    label="Video URL (fallback, https)"
+                    value={draft.homepageMediaSettings.layerComfortVideoUrl}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortVideoUrl: value })}
                     inputMode="url"
                   />
                 </div>

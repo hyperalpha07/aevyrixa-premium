@@ -183,23 +183,6 @@ const hereCareBase = [
   },
 ];
 
-const careLayerItems = [
-  {
-    label: "Comfort Knit Layer",
-    desc: "Soft, stretch-fit fabric that moves naturally with your body through the day.",
-    dotBg: "bg-cyan-300/60",
-  },
-  {
-    label: "Absorbent Core",
-    desc: "A slim internal layer for quiet, discreet support during light to moderate flow.",
-    dotBg: "bg-violet-300/60",
-  },
-  {
-    label: "Protective Shell",
-    desc: "A smooth outer layer with a refined silhouette and clean, everyday finish.",
-    dotBg: "bg-rose-300/60",
-  },
-];
 
 export default async function Home() {
   const [{ products }, { settings }] = await Promise.all([
@@ -241,6 +224,12 @@ export default async function Home() {
   const heroMedia = hms.heroMedia;
   const careMedia = hms.careMedia;
   const experienceMedia = hms.experienceMedia;
+  const lc = hms; // shorthand for layerComfort fields
+  const lcLayerItems = [
+    { label: lc.layerComfortLayer1Title, desc: lc.layerComfortLayer1Description, dotBg: "bg-cyan-300/60" },
+    { label: lc.layerComfortLayer2Title, desc: lc.layerComfortLayer2Description, dotBg: "bg-violet-300/60" },
+    { label: lc.layerComfortLayer3Title, desc: lc.layerComfortLayer3Description, dotBg: "bg-rose-300/60" },
+  ];
 
   const whatsappUrl = settings.supportWhatsApp
     ? whatsappHref(settings.supportWhatsApp)
@@ -549,68 +538,150 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Phase 27: Care Layer Explorer ── */}
-      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
-            <div className="aev-reveal min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-                Her Care Layer System
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                Layered comfort built for calm, discreet daily wear.
-              </h2>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-white/65">
-                Each piece is designed with softness at every layer — from the
-                fabric you feel against your skin to the discreet structure
-                supporting your day.
-              </p>
-              <div className="mt-8 space-y-3">
-                {careLayerItems.map(({ label, desc, dotBg }) => (
-                  <div
-                    key={label}
-                    className="aev-reveal flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
-                  >
-                    <div
-                      className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotBg} ring-4 ring-white/10`}
+      {/* ── Layer Explorer — CMS-controlled ── */}
+      {lc.layerComfortEnabled !== false && (
+        <section className={`aev-scroll-section px-4 py-16 sm:px-6 sm:py-20 ${lc.layerComfortMediaMode === "background_media_text" ? "relative overflow-hidden" : ""}`}>
+          {/* Background media for background_media_text mode */}
+          {lc.layerComfortMediaMode === "background_media_text" && lc.layerComfortImageUrl && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={lc.layerComfortImageUrl}
+                alt={lc.layerComfortAltText || "Layered comfort"}
+                className="absolute inset-0 h-full w-full object-cover opacity-30"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#030714]/70 via-[#030714]/50 to-[#030714]/80" />
+            </>
+          )}
+          {lc.layerComfortMediaMode === "background_media_text" && lc.layerComfortVideoUrl && !lc.layerComfortImageUrl && (
+            <>
+              <video
+                src={lc.layerComfortVideoUrl}
+                className="absolute inset-0 h-full w-full object-cover opacity-30"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#030714]/70 via-[#030714]/50 to-[#030714]/80" />
+            </>
+          )}
+          <div className={`mx-auto max-w-7xl ${lc.layerComfortMediaMode === "background_media_text" ? "relative" : ""}`}>
+            {lc.layerComfortMediaMode === "media_only" ? (
+              /* media_only mode — show just the image or video */
+              <div className="aev-reveal group relative isolate overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "26rem" }}>
+                {lc.layerComfortImageUrl ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={lc.layerComfortImageUrl}
+                      alt={lc.layerComfortAltText || "Layered comfort"}
+                      className="absolute inset-0 h-full w-full object-cover opacity-88"
+                      loading="lazy"
                     />
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        {label}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-white/58">
-                        {desc}
-                      </p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/65 via-transparent to-transparent" />
+                  </>
+                ) : lc.layerComfortVideoUrl ? (
+                  <video
+                    src={lc.layerComfortVideoUrl}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  />
+                ) : (
+                  /* Fallback: animation */
+                  <div className="flex h-full items-center justify-center py-12">
+                    <div className="relative h-72 w-full max-w-sm sm:h-80">
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-three absolute inset-x-7 top-9 h-full rounded-[2rem] border border-rose-100/16 bg-gradient-to-br from-rose-100/[0.055] to-transparent shadow-[0_24px_72px_rgba(0,0,0,0.26)] backdrop-blur-sm" />
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-two absolute inset-x-3.5 top-4 h-full rounded-[2rem] border border-violet-100/18 bg-gradient-to-br from-violet-100/[0.065] to-transparent shadow-[0_28px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm" />
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-cyan-100/22 bg-gradient-to-br from-cyan-100/[0.08] to-white/[0.03] shadow-[0_34px_90px_rgba(0,0,0,0.32),0_0_52px_rgba(34,211,238,0.09)] backdrop-blur-md" />
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-
-            {/* Stacked floating layer cards */}
-            <div className="aev-reveal flex items-center justify-center py-6 lg:py-0">
-              <div className="relative h-72 w-full max-w-sm sm:h-80">
-                <div className="aev-layer-explorer-card aev-layer-explorer-card-three absolute inset-x-7 top-9 h-full rounded-[2rem] border border-rose-100/16 bg-gradient-to-br from-rose-100/[0.055] to-transparent shadow-[0_24px_72px_rgba(0,0,0,0.26)] backdrop-blur-sm" />
-                <div className="aev-layer-explorer-card aev-layer-explorer-card-two absolute inset-x-3.5 top-4 h-full rounded-[2rem] border border-violet-100/18 bg-gradient-to-br from-violet-100/[0.065] to-transparent shadow-[0_28px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm" />
-                <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-cyan-100/22 bg-gradient-to-br from-cyan-100/[0.08] to-white/[0.03] shadow-[0_34px_90px_rgba(0,0,0,0.32),0_0_52px_rgba(34,211,238,0.09)] backdrop-blur-md">
-                  <div className="absolute inset-x-[15%] top-[22%] h-px bg-gradient-to-r from-transparent via-cyan-100/60 to-transparent" />
-                  <div className="absolute inset-x-[22%] top-[44%] h-px bg-gradient-to-r from-transparent via-violet-100/52 to-transparent" />
-                  <div className="absolute inset-x-[28%] top-[63%] h-px bg-gradient-to-r from-transparent via-rose-100/48 to-transparent" />
-                  <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/12 blur-2xl" />
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-cyan-100/68">
-                      Care Layer System
-                    </p>
-                    <p className="mt-1.5 text-base font-semibold text-white">
-                      Her Care Collection
-                    </p>
+            ) : (
+              /* grid layout: text left, media right */
+              <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+                <div className="aev-reveal min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                    {lc.layerComfortEyebrow}
+                  </p>
+                  <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                    {lc.layerComfortHeading}
+                  </h2>
+                  <p className="mt-5 max-w-2xl text-base leading-8 text-white/65">
+                    {lc.layerComfortDescription}
+                  </p>
+                  <div className="mt-8 space-y-3">
+                    {lcLayerItems.map(({ label, desc, dotBg }) => (
+                      <div
+                        key={label}
+                        className="aev-reveal flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+                      >
+                        <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotBg} ring-4 ring-white/10`} />
+                        <div>
+                          <p className="text-sm font-semibold text-white">{label}</p>
+                          <p className="mt-1 text-sm leading-6 text-white/58">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
+
+                {/* Right side: image, video, or animation */}
+                <div className="aev-reveal flex items-center justify-center py-6 lg:py-0">
+                  {(lc.layerComfortMediaMode === "image_text") && lc.layerComfortImageUrl ? (
+                    <div className="group relative isolate w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "20rem" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={lc.layerComfortImageUrl}
+                        alt={lc.layerComfortAltText || "Layered comfort"}
+                        className="absolute inset-0 h-full w-full object-cover opacity-88"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/65 via-[#030714]/10 to-transparent" />
+                    </div>
+                  ) : (lc.layerComfortMediaMode === "video_text") && lc.layerComfortVideoUrl ? (
+                    <div className="group relative isolate w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "20rem" }}>
+                      <video
+                        src={lc.layerComfortVideoUrl}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                      />
+                    </div>
+                  ) : (
+                    /* Default: stacked floating layer cards animation */
+                    <div className="relative h-72 w-full max-w-sm sm:h-80">
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-three absolute inset-x-7 top-9 h-full rounded-[2rem] border border-rose-100/16 bg-gradient-to-br from-rose-100/[0.055] to-transparent shadow-[0_24px_72px_rgba(0,0,0,0.26)] backdrop-blur-sm" />
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-two absolute inset-x-3.5 top-4 h-full rounded-[2rem] border border-violet-100/18 bg-gradient-to-br from-violet-100/[0.065] to-transparent shadow-[0_28px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm" />
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-cyan-100/22 bg-gradient-to-br from-cyan-100/[0.08] to-white/[0.03] shadow-[0_34px_90px_rgba(0,0,0,0.32),0_0_52px_rgba(34,211,238,0.09)] backdrop-blur-md">
+                        <div className="absolute inset-x-[15%] top-[22%] h-px bg-gradient-to-r from-transparent via-cyan-100/60 to-transparent" />
+                        <div className="absolute inset-x-[22%] top-[44%] h-px bg-gradient-to-r from-transparent via-violet-100/52 to-transparent" />
+                        <div className="absolute inset-x-[28%] top-[63%] h-px bg-gradient-to-r from-transparent via-rose-100/48 to-transparent" />
+                        <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/12 blur-2xl" />
+                        <div className="absolute bottom-6 left-6 right-6">
+                          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-cyan-100/68">
+                            Care Layer System
+                          </p>
+                          <p className="mt-1.5 text-base font-semibold text-white">
+                            Her Care Collection
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">

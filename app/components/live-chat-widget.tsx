@@ -165,13 +165,17 @@ export default function LiveChatWidget({
 
       try {
         let currentSession = session;
+        let firstMessageSent = false;
 
         if (!currentSession) {
-          // Create conversation
+          // Create conversation and include first message in same request
           const convRes = await fetch("/api/support/conversations", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ sourcePage: window.location.pathname }),
+            body: JSON.stringify({
+              sourcePage: window.location.pathname,
+              message: trimmed,
+            }),
           });
 
           if (!convRes.ok) {
@@ -182,6 +186,7 @@ export default function LiveChatWidget({
           const convData = (await convRes.json()) as {
             id: string;
             public_token: string;
+            messages?: ChatMessage[];
           };
 
           currentSession = {
@@ -191,33 +196,41 @@ export default function LiveChatWidget({
 
           saveSession(currentSession);
           setSession(currentSession);
-        }
 
-        const msgRes = await fetch(
-          `/api/support/conversations/${encodeURIComponent(currentSession.conversationId)}/messages`,
-          {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              body: trimmed,
-              token: currentSession.publicToken,
-            }),
+          if (Array.isArray(convData.messages) && convData.messages.length > 0) {
+            setMessages((prev) => [...prev, ...convData.messages!]);
+            firstMessageSent = true;
           }
-        );
-
-        if (msgRes.status === 410) {
-          setConversationClosed(true);
-          setSendError("This conversation has been closed.");
-          return;
         }
 
-        if (!msgRes.ok) {
-          setSendError("Failed to send. Please try again.");
-          return;
+        if (!firstMessageSent) {
+          const msgRes = await fetch(
+            `/api/support/conversations/${encodeURIComponent(currentSession.conversationId)}/messages`,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                body: trimmed,
+                token: currentSession.publicToken,
+              }),
+            }
+          );
+
+          if (msgRes.status === 410) {
+            setConversationClosed(true);
+            setSendError("This conversation has been closed.");
+            return;
+          }
+
+          if (!msgRes.ok) {
+            setSendError("Failed to send. Please try again.");
+            return;
+          }
+
+          const newMsg = (await msgRes.json()) as ChatMessage;
+          setMessages((prev) => [...prev, newMsg]);
         }
 
-        const newMsg = (await msgRes.json()) as ChatMessage;
-        setMessages((prev) => [...prev, newMsg]);
         setInputText("");
         setTimeout(scrollToBottom, 50);
       } catch {
