@@ -1,7 +1,9 @@
 import {
+  forbiddenAdminResponse,
   unauthorizedAdminResponse,
-  verifyAdminRequest,
+  verifyAdminRequestPermission,
 } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   deleteProduct,
   permanentlyDeleteProduct,
@@ -29,7 +31,8 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = verifyAdminRequestPermission(request, "products.edit");
+  if (!session) return forbiddenAdminResponse();
 
   const { id } = await context.params;
   let payload: unknown;
@@ -55,6 +58,12 @@ export async function PATCH(
         );
       }
 
+      await logStaffActivity({
+        actor: session,
+        action: "product.restored",
+        targetType: "product",
+        targetId: id,
+      });
       return json(result);
     } catch (error) {
       console.error("Failed to restore product:", error);
@@ -80,6 +89,13 @@ export async function PATCH(
       );
     }
 
+    await logStaffActivity({
+      actor: session,
+      action: "product.updated",
+      targetType: "product",
+      targetId: id,
+      metadata: { fields: Object.keys(input) },
+    });
     return json(result);
   } catch (error) {
     console.error("Failed to update product:", error);
@@ -95,7 +111,8 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = verifyAdminRequestPermission(request, "products.edit");
+  if (!session) return forbiddenAdminResponse();
 
   const { id } = await context.params;
   const url = new URL(request.url);
@@ -112,6 +129,12 @@ export async function DELETE(
         );
       }
 
+      await logStaffActivity({
+        actor: session,
+        action: "product.permanently_deleted",
+        targetType: "product",
+        targetId: id,
+      });
       return json(result);
     }
 
@@ -124,6 +147,12 @@ export async function DELETE(
       );
     }
 
+    await logStaffActivity({
+      actor: session,
+      action: "product.deleted",
+      targetType: "product",
+      targetId: id,
+    });
     return json(result);
   } catch (error) {
     console.error("Failed to delete product:", error);

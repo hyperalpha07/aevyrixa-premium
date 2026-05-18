@@ -1,5 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import {
+  hasPermission,
+  normalizePermissions,
+  type AdminPermission,
+  type AdminSessionUser,
+} from "@/app/lib/admin-permissions";
 
 export const ADMIN_SESSION_COOKIE = "aevyrixa_admin_session";
 
@@ -63,11 +69,21 @@ function safeEqual(first: string, second: string) {
   return timingSafeEqual(firstBuffer, secondBuffer);
 }
 
-export function createAdminSessionToken(username: string) {
+export function createAdminSessionToken(user: string | AdminSessionUser) {
   const expiresAt = Date.now() + sessionMaxAgeSeconds * 1000;
-  const session = Buffer.from(JSON.stringify({ username, expiresAt })).toString(
-    "base64url"
-  );
+  const payloadUser =
+    typeof user === "string"
+      ? {
+          userType: "owner",
+          username: user,
+          displayName: "Owner",
+          role: "owner",
+          permissions: normalizePermissions("owner", {}),
+        }
+      : user;
+  const session = Buffer.from(
+    JSON.stringify({ ...payloadUser, expiresAt })
+  ).toString("base64url");
   const payload = `${sessionVersion}.${session}`;
   const signature = signSessionPayload(payload);
 
@@ -76,31 +92,91 @@ export function createAdminSessionToken(username: string) {
   return `${payload}.${signature}`;
 }
 
-export function verifyAdminSessionToken(token?: string | null) {
-  if (!token) return false;
+export function getAdminSessionFromToken(token?: string | null): AdminSessionUser | null {
+  if (!token) return null;
 
   const [version, session, signature, ...extra] = token.split(".");
-  if (extra.length > 0) return false;
+  if (extra.length > 0) return null;
 
-  if (version !== sessionVersion) return false;
+  if (version !== sessionVersion) return null;
 
-  let parsedSession: { username?: unknown; expiresAt?: unknown };
+  let parsedSession: {
+    username?: unknown;
+    expiresAt?: unknown;
+    userType?: unknown;
+    staffId?: unknown;
+    displayName?: unknown;
+    role?: unknown;
+    permissions?: unknown;
+  };
 
   try {
     parsedSession = JSON.parse(Buffer.from(session, "base64url").toString("utf8"));
   } catch {
-    return false;
+    return null;
   }
 
   const credentials = getAdminCredentials();
-  if (!credentials || parsedSession.username !== credentials.username) return false;
+  if (!credentials || typeof parsedSession.username !== "string") return null;
 
   const expiresAt = Number(parsedSession.expiresAt);
-  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return false;
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return null;
 
   const expectedSignature = signSessionPayload(`${version}.${session}`);
+  if (!expectedSignature || !safeEqual(signature, expectedSignature)) return null;
 
-  return Boolean(expectedSignature && safeEqual(signature, expectedSignature));
+  if (!parsedSession.userType) {
+    if (parsedSession.username !== credentials.username) return null;
+    return {
+      userType: "owner",
+      username: credentials.username,
+      displayName: "Owner",
+      role: "owner",
+      permissions: normalizePermissions("owner", {}),
+    };
+  }
+
+  if (parsedSession.userType === "owner") {
+    if (parsedSession.username !== credentials.username) return null;
+    return {
+      userType: "owner",
+      username: credentials.username,
+      displayName:
+        typeof parsedSession.displayName === "string"
+          ? parsedSession.displayName
+          : "Owner",
+      role: "owner",
+      permissions: normalizePermissions("owner", parsedSession.permissions),
+    };
+  }
+
+  if (parsedSession.userType !== "staff") return null;
+
+  const staffRole =
+    parsedSession.role === "manager" ||
+    parsedSession.role === "order_staff" ||
+    parsedSession.role === "product_staff" ||
+    parsedSession.role === "support_staff" ||
+    parsedSession.role === "viewer"
+      ? parsedSession.role
+      : "viewer";
+
+  return {
+    userType: "staff",
+    staffId:
+      typeof parsedSession.staffId === "string" ? parsedSession.staffId : undefined,
+    username: parsedSession.username,
+    displayName:
+      typeof parsedSession.displayName === "string"
+        ? parsedSession.displayName
+        : parsedSession.username,
+    role: staffRole,
+    permissions: normalizePermissions(staffRole, parsedSession.permissions),
+  };
+}
+
+export function verifyAdminSessionToken(token?: string | null) {
+  return Boolean(getAdminSessionFromToken(token));
 }
 
 export async function hasAdminSession() {
@@ -108,14 +184,38 @@ export async function hasAdminSession() {
   return verifyAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
+export async function getAdminSession() {
+  const cookieStore = await cookies();
+  return getAdminSessionFromToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+}
+
 export function verifyAdminRequest(request: Request) {
   return verifyAdminSessionToken(readCookie(request, ADMIN_SESSION_COOKIE));
+}
+
+export function getAdminRequestSession(request: Request) {
+  return getAdminSessionFromToken(readCookie(request, ADMIN_SESSION_COOKIE));
+}
+
+export function verifyAdminRequestPermission(
+  request: Request,
+  permission: AdminPermission
+) {
+  const session = getAdminRequestSession(request);
+  return hasPermission(session, permission) ? session : null;
 }
 
 export function unauthorizedAdminResponse() {
   return Response.json(
     { errors: ["Admin authentication is required."] },
     { status: 401 }
+  );
+}
+
+export function forbiddenAdminResponse() {
+  return Response.json(
+    { errors: ["You do not have permission to perform this action."] },
+    { status: 403 }
   );
 }
 

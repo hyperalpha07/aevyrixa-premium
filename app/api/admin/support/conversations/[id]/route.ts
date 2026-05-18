@@ -1,4 +1,5 @@
-import { unauthorizedAdminResponse, verifyAdminRequest } from "@/app/lib/admin-auth";
+import { forbiddenAdminResponse, verifyAdminRequestPermission } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   getConversationById,
   getMessagesByConversation,
@@ -18,7 +19,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  if (!verifyAdminRequestPermission(request, "support.view")) return forbiddenAdminResponse();
 
   const { id } = await params;
 
@@ -51,7 +52,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = verifyAdminRequestPermission(request, "support.close");
+  if (!session) return forbiddenAdminResponse();
 
   const { id } = await params;
 
@@ -69,6 +71,13 @@ export async function PATCH(
 
   try {
     await updateConversationStatus(id, status);
+    await logStaffActivity({
+      actor: session,
+      action: "support.status_updated",
+      targetType: "conversation",
+      targetId: id,
+      metadata: { status },
+    });
     return json({ ok: true, status });
   } catch (error) {
     console.error("Failed to update conversation status:", error);

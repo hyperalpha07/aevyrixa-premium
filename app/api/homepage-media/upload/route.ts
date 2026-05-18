@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import {
+  forbiddenAdminResponse,
   unauthorizedAdminResponse,
-  verifyAdminRequest,
+  verifyAdminRequestPermission,
 } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +60,8 @@ function json(payload: unknown, init: ResponseInit = {}) {
 }
 
 export async function POST(request: Request) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = verifyAdminRequestPermission(request, "homepage.manage");
+  if (!session) return forbiddenAdminResponse();
 
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -146,6 +149,14 @@ export async function POST(request: Request) {
       { status: 502 }
     );
   }
+
+  await logStaffActivity({
+    actor: session,
+    action: "homepage.media_uploaded",
+    targetType: "homepage-media",
+    targetId: objectPath,
+    metadata: { type: isImage ? "image" : "video" },
+  });
 
   return json({
     url: publicStorageUrl(objectPath),

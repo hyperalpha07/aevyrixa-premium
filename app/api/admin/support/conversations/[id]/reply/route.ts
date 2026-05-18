@@ -1,4 +1,5 @@
-import { unauthorizedAdminResponse, verifyAdminRequest } from "@/app/lib/admin-auth";
+import { forbiddenAdminResponse, verifyAdminRequestPermission } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   addMessage,
   getConversationById,
@@ -16,7 +17,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = verifyAdminRequestPermission(request, "support.reply");
+  if (!session) return forbiddenAdminResponse();
 
   const { id } = await params;
 
@@ -38,6 +40,12 @@ export async function POST(
     }
 
     const message = await addMessage(id, body, "admin");
+    await logStaffActivity({
+      actor: session,
+      action: "support.reply_sent",
+      targetType: "conversation",
+      targetId: id,
+    });
 
     return json({
       id: message.id,

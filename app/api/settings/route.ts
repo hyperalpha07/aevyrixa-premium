@@ -1,7 +1,10 @@
 import {
+  forbiddenAdminResponse,
   unauthorizedAdminResponse,
   verifyAdminRequest,
+  verifyAdminRequestPermission,
 } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import { normalizeAdminSettings } from "@/app/lib/admin-settings";
 import {
   getStoreSettings,
@@ -30,7 +33,11 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session =
+    verifyAdminRequestPermission(request, "settings.editBasic") ||
+    verifyAdminRequestPermission(request, "homepage.manage") ||
+    verifyAdminRequestPermission(request, "categories.manage");
+  if (!session) return forbiddenAdminResponse();
 
   let payload: unknown;
 
@@ -42,6 +49,12 @@ export async function PATCH(request: Request) {
 
   try {
     const result = await saveStoreSettings(normalizeAdminSettings(payload));
+    await logStaffActivity({
+      actor: session,
+      action: "settings.saved",
+      targetType: "settings",
+      targetId: "public",
+    });
     return json(result);
   } catch (error) {
     console.error("Failed to save store settings:", error);

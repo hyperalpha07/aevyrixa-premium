@@ -35,6 +35,7 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  Users,
   Video as VideoIcon,
   Wallet,
   X,
@@ -74,6 +75,17 @@ import type {
   ProductStockStatus,
   ProductStatus as StoreProductStatus,
 } from "@/app/lib/product-types";
+import {
+  adminPermissionKeys,
+  hasPermission,
+  permissionGroups,
+  permissionLabels,
+  roleDefaultPermissions,
+  roleLabels,
+  type AdminPermission,
+  type AdminRole,
+  type AdminSessionUser,
+} from "@/app/lib/admin-permissions";
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
@@ -100,7 +112,7 @@ const CMS_CATEGORY_NAMES = [
 
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
-type AdminView = "dashboard" | "orders" | "products" | "settings" | "support" | "categories";
+type AdminView = "dashboard" | "orders" | "products" | "settings" | "support" | "categories" | "staff";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type PaymentStatusFilter = "All" | PaymentStatus;
 type StatusFilter = "All" | OrderStatus;
@@ -233,18 +245,50 @@ type AdminProduct = {
 
 type UnknownRecord = Record<string, unknown>;
 
+type AdminStaffClientRecord = {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  role: AdminRole;
+  permissions: Record<AdminPermission, boolean>;
+  isActive: boolean;
+  lastLoginAt?: string;
+  createdAt?: string;
+};
+
+type AdminActivityClientRecord = {
+  id: string;
+  actorName?: string;
+  action: string;
+  targetType?: string;
+  targetId?: string;
+  createdAt?: string;
+};
+
+const staffRoleOptions: AdminRole[] = [
+  "manager",
+  "order_staff",
+  "product_staff",
+  "support_staff",
+  "viewer",
+];
+
 const navItems = [
-  { label: "Dashboard", href: "/admin", icon: Gauge, view: "dashboard" },
-  { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders" },
-  { label: "Products", href: "/admin/products", icon: Boxes, view: "products" },
-  { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories" },
-  { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings" },
-  { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support" },
+  { label: "Dashboard", href: "/admin", icon: Gauge, view: "dashboard", permission: "dashboard.view" },
+  { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders", permission: "orders.view" },
+  { label: "Products", href: "/admin/products", icon: Boxes, view: "products", permission: "products.view" },
+  { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories", permission: "categories.manage" },
+  { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
+  { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view" },
+  { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
 ] satisfies Array<{
   label: string;
   href: string;
   icon: typeof Gauge;
   view: AdminView;
+  permission: AdminPermission;
+  fallbackPermission?: AdminPermission;
 }>;
 
 const emptyProduct: AdminProduct = {
@@ -1229,8 +1273,15 @@ function buildPaymentSummary(order: StoredOrder) {
   ].join("\n");
 }
 
-export default function AdminPanel({ view }: { view: AdminView }) {
+export default function AdminPanel({
+  view,
+  initialSession,
+}: {
+  view: AdminView;
+  initialSession: AdminSessionUser;
+}) {
   const router = useRouter();
+  const [session] = useState<AdminSessionUser>(initialSession);
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [adminProducts, setAdminProducts] = useState<AdminProduct[]>([]);
   const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
@@ -1319,6 +1370,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
   }, [orders]);
 
   const updateOrderStatus = (orderKey: string, status: OrderStatus) => {
+    if (!hasPermission(session, "orders.editStatus")) return;
     setOrders((current) => {
       const nextOrders = current.map((order) =>
         orderReferenceKey(order) === orderKey || order.orderId === orderKey
@@ -1348,6 +1400,22 @@ export default function AdminPanel({ view }: { view: AdminView }) {
     orderKey: string,
     updates: OrderOperationsUpdate
   ) => {
+    if (
+      (("archivedAt" in updates || "isTestOrder" in updates) &&
+        !hasPermission(session, "orders.archiveTest")) ||
+      (("courierName" in updates ||
+        "trackingId" in updates ||
+        "deliveryStatus" in updates ||
+        "deliveryCharge" in updates ||
+        "deliveryArea" in updates ||
+        "deliveryZone" in updates ||
+        "deliveryNote" in updates) &&
+        !hasPermission(session, "orders.editCourier")) ||
+      ("status" in updates && !hasPermission(session, "orders.editStatus"))
+    ) {
+      return false;
+    }
+
     setOrders((current) => {
       const nextOrders = current.map((order) =>
         orderReferenceKey(order) === orderKey || order.orderId === orderKey
@@ -1446,7 +1514,7 @@ export default function AdminPanel({ view }: { view: AdminView }) {
           </div>
 
           <nav className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-            {navItems.map((item) => {
+            {navItems.filter((item) => hasPermission(session, item.permission) || (item.fallbackPermission && hasPermission(session, item.fallbackPermission))).map((item) => {
               const Icon = item.icon;
               const isActive = item.view === view;
 
@@ -1504,15 +1572,17 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 }
                 onStatusChange={updateOrderStatus}
                 onOperationsSave={updateOrderOperations}
+                session={session}
               />
             ) : view === "products" ? (
-              <ProductsSection products={adminProducts} onSaveProducts={saveProducts} />
+              <ProductsSection products={adminProducts} onSaveProducts={saveProducts} session={session} />
             ) : view === "settings" ? (
               <SettingsSection
                 settings={settings}
                 storageMode={settingsStorageMode}
                 backendMessage={settingsBackendMessage}
                 onSaveSettings={saveSettings}
+                session={session}
               />
             ) : view === "categories" ? (
               <CategoriesSection
@@ -1520,15 +1590,19 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 storageMode={settingsStorageMode}
                 backendMessage={settingsBackendMessage}
                 onSaveSettings={saveSettings}
+                session={session}
               />
             ) : view === "support" ? (
-              <SupportSection />
+              <SupportSection session={session} />
+            ) : view === "staff" ? (
+              <StaffSection session={session} />
             ) : (
               <DashboardSection
                 metrics={metrics}
                 orders={orders}
                 products={adminProducts}
                 onStatusChange={updateOrderStatus}
+                session={session}
               />
             )}
           </div>
@@ -1544,6 +1618,7 @@ function viewTitle(view: AdminView) {
   if (view === "settings") return "Settings";
   if (view === "support") return "Support Inbox";
   if (view === "categories") return "Category Management";
+  if (view === "staff") return "Staff & Permissions";
   return "Dashboard";
 }
 
@@ -1552,11 +1627,13 @@ function DashboardSection({
   orders,
   products,
   onStatusChange,
+  session,
 }: {
   metrics: DashboardMetrics;
   orders: StoredOrder[];
   products: AdminProduct[];
   onStatusChange: (orderId: string, status: OrderStatus) => void;
+  session: AdminSessionUser;
 }) {
   const recentOrders = orders.slice(0, 5);
   const activeProducts = products.filter(
@@ -1608,6 +1685,7 @@ function DashboardSection({
           <RecentOrderList
             orders={recentOrders}
             onStatusChange={onStatusChange}
+            canEditStatus={hasPermission(session, "orders.editStatus")}
           />
         </div>
         <div className="grid gap-4">
@@ -1617,12 +1695,14 @@ function DashboardSection({
             href="/admin/products"
             icon={Boxes}
           />
-          <AdminSummaryCard
-            title="Settings"
-            value="Local placeholders"
-            href="/admin/settings"
-            icon={Settings}
-          />
+          {hasPermission(session, "settings.view") && (
+            <AdminSummaryCard
+              title="Settings"
+              value="Local placeholders"
+              href="/admin/settings"
+              icon={Settings}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -1636,6 +1716,7 @@ function OrdersSection({
   onToggleDetails,
   onStatusChange,
   onOperationsSave,
+  session,
 }: {
   orders: StoredOrder[];
   settings: AdminSettings;
@@ -1646,6 +1727,7 @@ function OrdersSection({
     orderId: string,
     updates: OrderOperationsUpdate
   ) => Promise<boolean>;
+  session: AdminSessionUser;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
@@ -1780,6 +1862,7 @@ function OrdersSection({
             expandedOrderId={expandedOrderId}
             onToggleDetails={onToggleDetails}
             onStatusChange={onStatusChange}
+            canEditStatus={hasPermission(session, "orders.editStatus")}
           />
         </div>
         <div className="min-w-0 xl:sticky xl:top-6">
@@ -1789,6 +1872,7 @@ function OrdersSection({
               order={selectedOrder}
               settings={settings}
               onOperationsSave={onOperationsSave}
+              session={session}
             />
           ) : (
             <EmptyDetailPanel />
@@ -1802,9 +1886,11 @@ function OrdersSection({
 function ProductsSection({
   products,
   onSaveProducts,
+  session,
 }: {
   products: AdminProduct[];
   onSaveProducts: (products: AdminProduct[]) => void;
+  session: AdminSessionUser;
 }) {
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const inlineEditorRef = useRef<HTMLDivElement | null>(null);
@@ -1844,6 +1930,8 @@ function ProductsSection({
   const isEditingExistingProduct = Boolean(
     editingProductId && products.some((product) => product.id === editingProductId)
   );
+  const canEditProducts = hasPermission(session, "products.edit");
+  const canUploadProductMedia = hasPermission(session, "products.media");
 
   useEffect(() => {
     if (!editingProductId || !isEditingExistingProduct) return;
@@ -1859,6 +1947,7 @@ function ProductsSection({
   }, [editingProductId, isEditingExistingProduct]);
 
   const addProduct = () => {
+    if (!canEditProducts) return;
     setProductFilter("All");
     setProductSearchTerm("");
     setEditingProduct({
@@ -1882,6 +1971,10 @@ function ProductsSection({
   };
 
   const saveProduct = async (product: AdminProduct) => {
+    if (!canEditProducts) {
+      setSaveError("You do not have permission to perform this action.");
+      return;
+    }
     const slug = product.slug || slugify(product.name);
     const nextProduct = {
       ...product,
@@ -2020,6 +2113,7 @@ function ProductsSection({
         <button
           type="button"
           onClick={addProduct}
+          disabled={!canEditProducts}
           className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45 hover:bg-cyan-200/15"
         >
           <Plus className="h-4 w-4" />
@@ -2092,6 +2186,7 @@ function ProductsSection({
           onSave={saveProduct}
           isSaving={isSavingProduct}
           saveError={saveError}
+          canUploadMedia={canUploadProductMedia}
         />
       )}
 
@@ -2162,7 +2257,7 @@ function ProductsSection({
                         <button
                           type="button"
                           onClick={() => setEditingProduct(product)}
-                          disabled={isSavingProduct}
+                          disabled={isSavingProduct || !canEditProducts}
                           className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
                             isEditingThisProduct
                               ? "border-cyan-100/40 bg-cyan-200/12 text-white"
@@ -2175,7 +2270,7 @@ function ProductsSection({
                         <button
                           type="button"
                           onClick={() => toggleStatus(product.id)}
-                          disabled={isSavingProduct}
+                          disabled={isSavingProduct || !canEditProducts}
                           className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
                         >
                           {product.status === "Active" ? "Set Draft" : "Set Active"}
@@ -2183,7 +2278,7 @@ function ProductsSection({
                         <button
                           type="button"
                           onClick={() => deleteProduct(product.id)}
-                          disabled={isSavingProduct}
+                          disabled={isSavingProduct || !canEditProducts}
                           className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -2203,6 +2298,7 @@ function ProductsSection({
                     onSave={saveProduct}
                     isSaving={isSavingProduct}
                     saveError={saveError}
+                    canUploadMedia={canUploadProductMedia}
                   />
                 </div>
               )}
@@ -2220,12 +2316,14 @@ function ProductEditor({
   onSave,
   isSaving,
   saveError,
+  canUploadMedia,
 }: {
   product: AdminProduct;
   onCancel: () => void;
   onSave: (product: AdminProduct) => void | Promise<void>;
   isSaving: boolean;
   saveError?: string | null;
+  canUploadMedia: boolean;
 }) {
   const [draft, setDraft] = useState(product);
   const [sizes, setSizes] = useState(listToText(product.sizes));
@@ -2246,6 +2344,13 @@ function ProductEditor({
   };
 
   async function handleMediaUpload(file: File, mediaType: "image" | "video" | "gallery") {
+    if (!canUploadMedia) {
+      const msg = "You do not have permission to perform this action.";
+      if (mediaType === "image") setImageUploadError(msg);
+      else if (mediaType === "gallery") setGalleryUploadError(msg);
+      else setVideoUploadError(msg);
+      return;
+    }
     if (mediaType === "image") { setImageUploading(true); setImageUploadError(null); }
     else if (mediaType === "gallery") { setGalleryUploading(true); setGalleryUploadError(null); }
     else { setVideoUploading(true); setVideoUploadError(null); }
@@ -2528,6 +2633,7 @@ function CategoriesSection({
   storageMode,
   backendMessage,
   onSaveSettings,
+  session,
 }: {
   settings: AdminSettings;
   storageMode: SettingsStorageMode;
@@ -2538,6 +2644,7 @@ function CategoriesSection({
     backendConnected: boolean;
     message?: string;
   }>;
+  session: AdminSessionUser;
 }) {
   const [draft, setDraft] = useState(settings);
   const [statusMessage, setStatusMessage] = useState("");
@@ -2551,6 +2658,10 @@ function CategoriesSection({
 
   const saveCategories = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!hasPermission(session, "categories.manage")) {
+      setStatusMessage("You do not have permission to perform this action.");
+      return;
+    }
     setIsSaving(true);
     const result = await onSaveSettings(draft);
     setIsSaving(false);
@@ -2732,6 +2843,7 @@ function SettingsSection({
   storageMode,
   backendMessage,
   onSaveSettings,
+  session,
 }: {
   settings: AdminSettings;
   storageMode: SettingsStorageMode;
@@ -2742,6 +2854,7 @@ function SettingsSection({
     backendConnected: boolean;
     message?: string;
   }>;
+  session: AdminSessionUser;
 }) {
   const [draft, setDraft] = useState(settings);
   const [activeSection, setActiveSection] = useState("storeProfile");
@@ -2756,6 +2869,10 @@ function SettingsSection({
 
   const saveSettings = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!hasPermission(session, "settings.editBasic") && !hasPermission(session, "homepage.manage")) {
+      setStatusMessage("You do not have permission to perform this action.");
+      return;
+    }
     setIsSaving(true);
     const result = await onSaveSettings(draft);
     setIsSaving(false);
@@ -2767,6 +2884,10 @@ function SettingsSection({
   };
 
   const resetSettings = async () => {
+    if (!hasPermission(session, "settings.editSensitive")) {
+      setStatusMessage("You do not have permission to perform this action.");
+      return;
+    }
     setDraft(defaultSettings);
     setIsSaving(true);
     const result = await onSaveSettings(defaultSettings);
@@ -2883,6 +3004,15 @@ function SettingsSection({
     { id: "advancedSettings", label: "Advanced", icon: Settings },
   ] as const;
 
+  const visibleSettingsTabs = settingsTabs.filter((tab) => {
+    if (tab.id === "paymentSettings" || tab.id === "deliverySettings") {
+      return hasPermission(session, "settings.editSensitive");
+    }
+    if (tab.id === "seoSettings") return hasPermission(session, "settings.editSeoAnalytics");
+    if (tab.id === "homepageMediaSettings") return hasPermission(session, "homepage.manage");
+    return hasPermission(session, "settings.view");
+  });
+
   return (
     <form onSubmit={saveSettings} className="mt-6 space-y-5">
       <div
@@ -2903,7 +3033,7 @@ function SettingsSection({
 
       <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
         <nav className="grid gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3 xl:sticky xl:top-5 xl:self-start">
-          {settingsTabs.map((item) => {
+          {visibleSettingsTabs.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
             return (
@@ -4462,7 +4592,7 @@ const convStatusStyles: Record<ConvStatus, string> = {
   closed: "border-white/20 bg-white/[0.05] text-white/48",
 };
 
-function SupportSection() {
+function SupportSection({ session }: { session: AdminSessionUser }) {
   const [conversations, setConversations] = useState<AdminConvSummary[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<AdminConvDetail | null>(null);
@@ -4472,6 +4602,8 @@ function SupportSection() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const detailEndRef = useRef<HTMLDivElement>(null);
+  const canReply = hasPermission(session, "support.reply");
+  const canClose = hasPermission(session, "support.close");
 
   const loadConversations = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -4514,6 +4646,10 @@ function SupportSection() {
   const sendReply = async () => {
     const body = replyText.trim();
     if (!body || !selectedId || sending) return;
+    if (!canReply) {
+      setSendError("You do not have permission to perform this action.");
+      return;
+    }
     setSending(true);
     setSendError("");
     try {
@@ -4535,6 +4671,7 @@ function SupportSection() {
 
   const updateStatus = async (id: string, status: ConvStatus) => {
     try {
+      if (!canClose) return;
       await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
@@ -4635,7 +4772,7 @@ function SupportSection() {
                   </span>
                   <span className="text-xs text-white/40">From: {detail.source_page}</span>
                   <div className="ml-auto flex gap-2">
-                    {detail.status !== "open" && (
+                    {canClose && detail.status !== "open" && (
                       <button
                         type="button"
                         onClick={() => updateStatus(detail.id, "open")}
@@ -4644,7 +4781,7 @@ function SupportSection() {
                         Reopen
                       </button>
                     )}
-                    {detail.status !== "pending" && (
+                    {canClose && detail.status !== "pending" && (
                       <button
                         type="button"
                         onClick={() => updateStatus(detail.id, "pending")}
@@ -4653,7 +4790,7 @@ function SupportSection() {
                         Pending
                       </button>
                     )}
-                    {detail.status !== "closed" && (
+                    {canClose && detail.status !== "closed" && (
                       <button
                         type="button"
                         onClick={() => updateStatus(detail.id, "closed")}
@@ -4698,7 +4835,7 @@ function SupportSection() {
                 </div>
 
                 {/* Reply */}
-                {detail.status !== "closed" && (
+                {detail.status !== "closed" && canReply && (
                   <div>
                     {sendError && (
                       <p className="mb-2 text-xs text-rose-300/80">{sendError}</p>
@@ -4751,6 +4888,323 @@ function SupportSection() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function emptyStaffDraft(): AdminStaffClientRecord & { password: string } {
+  const role: AdminRole = "viewer";
+  return {
+    id: "",
+    name: "",
+    email: "",
+    username: "",
+    role,
+    permissions: { ...roleDefaultPermissionsToMap(role) },
+    isActive: true,
+    password: "",
+  };
+}
+
+function roleDefaultPermissionsToMap(role: AdminRole) {
+  return adminPermissionKeys.reduce((result, key) => {
+    result[key] = roleDefaultPermissions[role].includes(key);
+    return result;
+  }, {} as Record<AdminPermission, boolean>);
+}
+
+function StaffSection({ session }: { session: AdminSessionUser }) {
+  const [staff, setStaff] = useState<AdminStaffClientRecord[]>([]);
+  const [activityLogs, setActivityLogs] = useState<AdminActivityClientRecord[]>([]);
+  const [draft, setDraft] = useState<ReturnType<typeof emptyStaffDraft>>(emptyStaffDraft);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const canManageStaff = hasPermission(session, "staff.manage");
+  const canViewActivity = hasPermission(session, "activity.view");
+
+  const loadStaff = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/staff", { cache: "no-store" });
+      const payload = (await response.json().catch(() => null)) as {
+        staff?: AdminStaffClientRecord[];
+        activityLogs?: AdminActivityClientRecord[];
+        errors?: string[];
+      } | null;
+
+      if (!response.ok) {
+        setError(payload?.errors?.[0] ?? "Staff backend is not available.");
+        return;
+      }
+
+      setStaff(Array.isArray(payload?.staff) ? payload.staff : []);
+      setActivityLogs(Array.isArray(payload?.activityLogs) ? payload.activityLogs : []);
+    } catch {
+      setError("Staff backend is not available.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadStaff();
+  }, [loadStaff]);
+
+  const startCreate = () => {
+    setEditingId(null);
+    setDraft(emptyStaffDraft());
+    setMessage("");
+    setError("");
+  };
+
+  const startEdit = (record: AdminStaffClientRecord) => {
+    setEditingId(record.id);
+    setDraft({ ...record, password: "" });
+    setMessage("");
+    setError("");
+  };
+
+  const updateDraftRole = (role: AdminRole) => {
+    setDraft((current) => ({
+      ...current,
+      role,
+      permissions: roleDefaultPermissionsToMap(role),
+    }));
+  };
+
+  const saveStaff = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canManageStaff) {
+      setError("You do not have permission to perform this action.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        editingId ? `/api/admin/staff/${encodeURIComponent(editingId)}` : "/api/admin/staff",
+        {
+          method: editingId ? "PATCH" : "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(draft),
+        }
+      );
+      const payload = (await response.json().catch(() => null)) as {
+        staff?: AdminStaffClientRecord;
+        errors?: string[];
+      } | null;
+
+      if (!response.ok || !payload?.staff) {
+        setError(payload?.errors?.[0] ?? "Staff could not be saved.");
+        return;
+      }
+
+      setStaff((current) =>
+        editingId
+          ? current.map((item) => (item.id === payload.staff?.id ? payload.staff : item))
+          : [payload.staff as AdminStaffClientRecord, ...current]
+      );
+      setDraft(emptyStaffDraft());
+      setEditingId(null);
+      setMessage("Staff account saved.");
+      void loadStaff();
+    } catch {
+      setError("Staff could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleActive = async (record: AdminStaffClientRecord) => {
+    if (!canManageStaff) return;
+    setDraft({ ...record, password: "", isActive: !record.isActive });
+    setEditingId(record.id);
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/admin/staff/${encodeURIComponent(record.id)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isActive: !record.isActive }),
+      });
+      if (response.ok) void loadStaff();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 space-y-5">
+      <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
+        Owner access remains controlled by the server environment credentials. Staff accounts are Supabase-backed and cannot manage staff or sensitive settings unless explicitly allowed.
+      </div>
+
+      {error && (
+        <div className="rounded-[1.25rem] border border-rose-200/22 bg-rose-200/[0.08] p-4 text-sm leading-6 text-rose-50/86">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="rounded-[1.25rem] border border-emerald-200/20 bg-emerald-200/[0.07] p-4 text-sm leading-6 text-emerald-50/80">
+          {message}
+        </div>
+      )}
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <section className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SectionHeader title="Staff accounts" />
+            {canManageStaff && (
+              <button
+                type="button"
+                onClick={startCreate}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45"
+              >
+                <Plus className="h-4 w-4" />
+                Add staff
+              </button>
+            )}
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {loading && <p className="text-sm text-white/45">Loading staff...</p>}
+            {!loading && staff.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-white/12 bg-black/18 p-5 text-sm text-white/45">
+                No staff accounts found.
+              </p>
+            )}
+            {staff.map((record) => (
+              <article key={record.id} className="rounded-2xl border border-white/10 bg-black/22 p-4">
+                <div className="grid gap-3 lg:grid-cols-[1fr_150px_120px_180px] lg:items-center">
+                  <div className="min-w-0">
+                    <h3 className="break-words text-base font-semibold text-white">{record.name}</h3>
+                    <p className="mt-1 break-words text-sm text-white/52">
+                      {record.username}{record.email ? ` · ${record.email}` : ""}
+                    </p>
+                  </div>
+                  <span className="text-sm text-white/70">{roleLabels[record.role]}</span>
+                  <span className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${record.isActive ? "border-emerald-200/25 bg-emerald-200/10 text-emerald-100" : "border-white/15 bg-white/[0.05] text-white/45"}`}>
+                    {record.isActive ? "Active" : "Inactive"}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(record)}
+                      disabled={!canManageStaff}
+                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-semibold text-white/70 transition hover:border-cyan-200/30 hover:text-white disabled:opacity-40"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleActive(record)}
+                      disabled={!canManageStaff || saving}
+                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-semibold text-white/70 transition hover:border-cyan-200/30 hover:text-white disabled:opacity-40"
+                    >
+                      {record.isActive ? "Deactivate" : "Reactivate"}
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-white/38">
+                  Last login: {record.lastLoginAt ? formatDate(record.lastLoginAt) : "Never"}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <form onSubmit={saveStaff} className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <SectionHeader title={editingId ? "Edit staff" : "Create staff"} />
+          <div className="mt-4 space-y-3">
+            <TextField label="Name" value={draft.name} onChange={(value) => setDraft((current) => ({ ...current, name: value }))} required />
+            <TextField label="Username" value={draft.username} onChange={(value) => setDraft((current) => ({ ...current, username: value }))} required />
+            <TextField label="Email optional" value={draft.email} onChange={(value) => setDraft((current) => ({ ...current, email: value }))} inputMode="email" />
+            <TextField
+              label={editingId ? "Reset password" : "Temporary password"}
+              value={draft.password}
+              onChange={(value) => setDraft((current) => ({ ...current, password: value }))}
+              placeholder={editingId ? "Leave blank to keep current password" : "At least 8 characters"}
+            />
+            <SelectField
+              label="Role"
+              value={draft.role}
+              options={staffRoleOptions}
+              onChange={(value) => updateDraftRole(value as AdminRole)}
+            />
+            <ToggleField
+              label="Active"
+              checked={draft.isActive}
+              onChange={(value) => setDraft((current) => ({ ...current, isActive: value }))}
+            />
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {permissionGroups.map((group) => (
+              <div key={group.title} className="rounded-2xl border border-white/10 bg-black/18 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/60">{group.title}</p>
+                <div className="mt-3 grid gap-2">
+                  {group.permissions.map((permission) => (
+                    <label key={permission} className="flex items-center gap-3 text-sm text-white/68">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(draft.permissions[permission])}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            permissions: {
+                              ...current.permissions,
+                              [permission]: event.target.checked,
+                            },
+                          }))
+                        }
+                        className="h-4 w-4 accent-cyan-200"
+                      />
+                      <span>{permissionLabels[permission]}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving || !canManageStaff}
+            className="mt-5 w-full rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] disabled:opacity-50"
+          >
+            {saving ? "Saving..." : editingId ? "Save staff" : "Create staff"}
+          </button>
+        </form>
+      </div>
+
+      {canViewActivity && (
+        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <SectionHeader title="Activity logs" />
+          <div className="mt-4 grid gap-2">
+            {activityLogs.length === 0 && (
+              <p className="text-sm text-white/45">No activity logs yet.</p>
+            )}
+            {activityLogs.map((log) => (
+              <div key={log.id} className="grid gap-2 rounded-2xl border border-white/10 bg-black/18 p-3 text-sm text-white/62 sm:grid-cols-[1fr_160px]">
+                <span>
+                  <span className="font-semibold text-white/82">{log.actorName || "Admin"}</span>{" "}
+                  {log.action}
+                  {log.targetType ? ` · ${log.targetType}` : ""}
+                </span>
+                <span className="text-xs text-white/38">
+                  {log.createdAt ? formatDate(log.createdAt) : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -5251,11 +5705,13 @@ function OrderList({
   expandedOrderId,
   onToggleDetails,
   onStatusChange,
+  canEditStatus,
 }: {
   orders: StoredOrder[];
   expandedOrderId: string | null;
   onToggleDetails: (orderId: string) => void;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
+  canEditStatus: boolean;
 }) {
   if (orders.length === 0) {
     return (
@@ -5280,6 +5736,7 @@ function OrderList({
           isExpanded={expandedOrderId === order.orderId}
           onToggleDetails={() => onToggleDetails(order.orderId)}
           onStatusChange={(status) => onStatusChange(orderReferenceKey(order), status)}
+          canEditStatus={canEditStatus}
         />
       ))}
     </div>
@@ -5291,11 +5748,13 @@ function OrderCard({
   isExpanded,
   onToggleDetails,
   onStatusChange,
+  canEditStatus,
 }: {
   order: StoredOrder;
   isExpanded: boolean;
   onToggleDetails: () => void;
   onStatusChange: (status: OrderStatus) => void;
+  canEditStatus: boolean;
 }) {
   const reference = orderReferenceKey(order);
 
@@ -5471,6 +5930,7 @@ function OrderDetails({
   order,
   settings,
   onOperationsSave,
+  session,
 }: {
   order: StoredOrder;
   settings: AdminSettings;
@@ -5478,6 +5938,7 @@ function OrderDetails({
     orderId: string,
     updates: OrderOperationsUpdate
   ) => Promise<boolean>;
+  session: AdminSessionUser;
 }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [operationsDraft, setOperationsDraft] = useState<OrderOperationsDraft>(() =>
@@ -5492,6 +5953,8 @@ function OrderDetails({
   const transactionReference = order.paymentDetails.transactionReference;
   const selectedCourierOption = courierChoice;
   const courierIntegrationMode = settings.deliverySettings.courierIntegrationMode;
+  const canEditCourier = hasPermission(session, "orders.editCourier");
+  const canArchiveTest = hasPermission(session, "orders.archiveTest");
   const copiedLabel =
     copiedKey === "summary"
       ? "Order summary copied"
@@ -5573,10 +6036,13 @@ function OrderDetails({
   };
 
   const archiveOrder = () =>
+    canArchiveTest &&
     saveQuickOperation({ archivedAt: new Date().toISOString() }, "Order archived.");
   const restoreOrder = () =>
+    canArchiveTest &&
     saveQuickOperation({ archivedAt: "" }, "Order restored to active queue.");
   const markTestOrder = () =>
+    canArchiveTest &&
     saveQuickOperation({ isTestOrder: !order.isTestOrder }, "Test order flag updated.");
 
   return (
@@ -5642,7 +6108,7 @@ function OrderDetails({
             <button
               type="button"
               onClick={markTestOrder}
-              disabled={isSavingOperations}
+              disabled={isSavingOperations || !canArchiveTest}
               className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-2xl border border-amber-200/25 bg-amber-200/[0.08] px-4 py-2 text-sm font-semibold text-amber-50 transition hover:border-amber-100/45 hover:bg-amber-200/[0.13] disabled:cursor-not-allowed disabled:opacity-55 sm:min-w-[140px]"
             >
               {order.isTestOrder ? "Unmark Test" : "Mark Test"}
@@ -5650,7 +6116,7 @@ function OrderDetails({
             <button
               type="button"
               onClick={order.archivedAt ? restoreOrder : archiveOrder}
-              disabled={isSavingOperations}
+              disabled={isSavingOperations || !canArchiveTest}
               className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.055] px-4 py-2 text-sm font-semibold text-white/76 transition hover:border-cyan-200/35 hover:bg-cyan-200/[0.10] hover:text-white disabled:cursor-not-allowed disabled:opacity-55 sm:min-w-[130px]"
             >
               {order.archivedAt ? "Restore" : "Archive"}
@@ -5742,7 +6208,7 @@ function OrderDetails({
           </div>
           <button
             type="submit"
-            disabled={isSavingOperations}
+            disabled={isSavingOperations || !canEditCourier}
             className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-2xl border border-cyan-200/30 bg-cyan-200/[0.12] px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/50 hover:bg-cyan-200/[0.18] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
           >
             {isSavingOperations ? "Saving..." : "Save Operations"}
@@ -5753,7 +6219,15 @@ function OrderDetails({
             ? "Manual mode is active. Courier booking and tracking are updated by admin. API mode can be enabled later after merchant API credentials are approved."
             : "Courier API mode is selected in settings, but live booking is intentionally disabled until merchant credentials and endpoint docs are confirmed. Keep using manual updates for now."}
         </div>
-        <div className="mt-4 grid min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]">
+        {!canEditCourier && (
+          <p className="mt-4 rounded-2xl border border-amber-200/20 bg-amber-200/[0.07] px-4 py-3 text-sm text-amber-50/80">
+            You do not have permission to perform this action.
+          </p>
+        )}
+        <fieldset
+          disabled={!canEditCourier}
+          className="mt-4 grid min-w-0 gap-4 disabled:opacity-60 [grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))]"
+        >
           <SelectField
             label="Courier Name"
             value={selectedCourierOption}
@@ -5892,7 +6366,7 @@ function OrderDetails({
               tall
             />
           </div>
-        </div>
+        </fieldset>
         <div className="mt-4 grid min-w-0 gap-3 text-xs leading-5 text-white/45 sm:grid-cols-2">
           <p className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.06] p-3">
             <span className="font-semibold text-amber-100">Test Order: </span>
@@ -6057,9 +6531,11 @@ function DetailGroup({
 function RecentOrderList({
   orders,
   onStatusChange,
+  canEditStatus,
 }: {
   orders: StoredOrder[];
   onStatusChange: (orderId: string, status: OrderStatus) => void;
+  canEditStatus: boolean;
 }) {
   if (orders.length === 0) {
     return (
@@ -6082,6 +6558,7 @@ function RecentOrderList({
           key={order.orderId}
           order={order}
           onStatusChange={(status) => onStatusChange(orderReferenceKey(order), status)}
+          canEditStatus={canEditStatus}
         />
       ))}
     </div>
@@ -6091,9 +6568,11 @@ function RecentOrderList({
 function RecentOrderCard({
   order,
   onStatusChange,
+  canEditStatus,
 }: {
   order: StoredOrder;
   onStatusChange: (status: OrderStatus) => void;
+  canEditStatus: boolean;
 }) {
   const reference = orderReferenceKey(order);
 
@@ -6128,6 +6607,7 @@ function RecentOrderCard({
           <select
             value={order.status}
             onChange={(event) => onStatusChange(event.target.value as OrderStatus)}
+            disabled={!canEditStatus}
             className="min-h-12 w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-3 py-3 pr-9 text-sm font-medium text-white outline-none transition focus:border-cyan-200/40"
           >
             {orderStatuses.map((status) => (

@@ -5,15 +5,17 @@ import { hasPermission } from "@/app/lib/admin-permissions";
 import AdminPanel from "../admin-panel";
 
 export const metadata: Metadata = {
-  title: "Support Inbox | Aevyrixa Admin",
-  description: "Manage customer support conversations.",
+  title: "Staff | Aevyrixa Admin",
+  description: "Manage staff roles and permissions.",
   robots: { index: false, follow: false },
 };
 
-export default async function AdminSupportPage() {
+export default async function AdminStaffPage() {
   const session = await getAdminSession();
   if (!session) redirect("/admin/login");
-  if (!hasPermission(session, "support.view")) redirect("/admin");
+  if (!hasPermission(session, "staff.manage") && !hasPermission(session, "activity.view")) {
+    redirect("/admin");
+  }
 
-  return <AdminPanel view="support" initialSession={session} />;
+  return <AdminPanel view="staff" initialSession={session} />;
 }

@@ -1,7 +1,10 @@
 import {
+  forbiddenAdminResponse,
+  getAdminRequestSession,
   unauthorizedAdminResponse,
-  verifyAdminRequest,
 } from "@/app/lib/admin-auth";
+import { hasPermission } from "@/app/lib/admin-permissions";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import { updateOrderOperations } from "@/app/lib/order-store";
 import {
   deliveryStatuses,
@@ -161,7 +164,8 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ orderRef: string }> }
 ) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = getAdminRequestSession(request);
+  if (!session) return unauthorizedAdminResponse();
 
   const { orderRef } = await context.params;
   let payload: unknown;
@@ -175,6 +179,29 @@ export async function PATCH(
   const { updates, errors } = validateOperationsPayload(payload);
   if (!updates) return Response.json({ errors }, { status: 400 });
 
+  const needsArchivePermission = "archivedAt" in updates || "isTestOrder" in updates;
+  const needsCourierPermission =
+    "courierName" in updates ||
+    "trackingId" in updates ||
+    "deliveryStatus" in updates ||
+    "deliveryCharge" in updates ||
+    "deliveryArea" in updates ||
+    "deliveryZone" in updates ||
+    "deliveryNote" in updates;
+  const needsStatusPermission = "status" in updates;
+
+  if (
+    (needsArchivePermission && !hasPermission(session, "orders.archiveTest")) ||
+    (needsCourierPermission && !hasPermission(session, "orders.editCourier")) ||
+    (needsStatusPermission && !hasPermission(session, "orders.editStatus")) ||
+    (!needsArchivePermission &&
+      !needsCourierPermission &&
+      !needsStatusPermission &&
+      !hasPermission(session, "orders.editStatus"))
+  ) {
+    return forbiddenAdminResponse();
+  }
+
   try {
     const result = await updateOrderOperations(orderRef, updates);
 
@@ -184,6 +211,14 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    await logStaffActivity({
+      actor: session,
+      action: needsCourierPermission ? "order.courier_updated" : "order.updated",
+      targetType: "order",
+      targetId: orderRef,
+      metadata: { fields: Object.keys(updates) },
+    });
 
     return Response.json(result);
   } catch (error) {

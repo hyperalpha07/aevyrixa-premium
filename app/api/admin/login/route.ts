@@ -4,6 +4,8 @@ import {
   createAdminSessionToken,
   getAdminCredentials,
 } from "@/app/lib/admin-auth";
+import { normalizePermissions } from "@/app/lib/admin-permissions";
+import { authenticateStaff } from "@/app/lib/admin-staff";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -45,10 +47,47 @@ export async function POST(request: Request) {
   const password = isRecord(payload) ? passwordText(payload.password) : "";
 
   if (username !== credentials.username || password !== credentials.password) {
-    return Response.json({ errors: ["Invalid admin credentials."] }, { status: 401 });
+    const staff = await authenticateStaff(username, password).catch((error) => {
+      console.error("Staff login lookup failed:", error);
+      return null;
+    });
+
+    if (!staff) {
+      return Response.json({ errors: ["Invalid admin credentials."] }, { status: 401 });
+    }
+
+    const token = createAdminSessionToken({
+      userType: "staff",
+      staffId: staff.id,
+      username: staff.username,
+      displayName: staff.name,
+      role: staff.role,
+      permissions: staff.permissions,
+    });
+
+    if (!token) {
+      return Response.json(
+        { errors: ["Admin session could not be created."] },
+        { status: 500 }
+      );
+    }
+
+    const response = NextResponse.json({
+      ok: true,
+      userType: "staff",
+      role: staff.role,
+    });
+    response.cookies.set(ADMIN_SESSION_COOKIE, token, adminSessionCookieOptions());
+    return response;
   }
 
-  const token = createAdminSessionToken(credentials.username);
+  const token = createAdminSessionToken({
+    userType: "owner",
+    username: credentials.username,
+    displayName: "Owner",
+    role: "owner",
+    permissions: normalizePermissions("owner", {}),
+  });
   if (!token) {
     return Response.json(
       { errors: ["Admin session could not be created."] },

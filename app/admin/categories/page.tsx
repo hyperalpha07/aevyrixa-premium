@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { hasAdminSession } from "@/app/lib/admin-auth";
+import { getAdminSession } from "@/app/lib/admin-auth";
+import { hasPermission } from "@/app/lib/admin-permissions";
 import AdminPanel from "../admin-panel";
 
 export const metadata: Metadata = {
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCategoriesPage() {
-  if (!(await hasAdminSession())) redirect("/admin/login");
+  const session = await getAdminSession();
+  if (!session) redirect("/admin/login");
+  if (!hasPermission(session, "categories.manage")) redirect("/admin");
 
-  return <AdminPanel view="categories" />;
+  return <AdminPanel view="categories" initialSession={session} />;
 }

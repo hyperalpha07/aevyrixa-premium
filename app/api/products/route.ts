@@ -1,7 +1,10 @@
 import {
+  forbiddenAdminResponse,
   unauthorizedAdminResponse,
   verifyAdminRequest,
+  verifyAdminRequestPermission,
 } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   createProduct,
   listProducts,
@@ -38,8 +41,8 @@ function json(payload: unknown, init: ResponseInit = {}) {
 
 export async function GET(request: Request) {
   const scope = includeDraftsFromRequest(request);
-  if (scope !== "public" && !verifyAdminRequest(request)) {
-    return unauthorizedAdminResponse();
+  if (scope !== "public" && !verifyAdminRequestPermission(request, "products.view")) {
+    return forbiddenAdminResponse();
   }
 
   try {
@@ -58,7 +61,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!verifyAdminRequest(request)) return unauthorizedAdminResponse();
+  const session = verifyAdminRequestPermission(request, "products.edit");
+  if (!session) return forbiddenAdminResponse();
 
   let payload: unknown;
 
@@ -78,6 +82,13 @@ export async function POST(request: Request) {
 
   try {
     const result = await createProduct(input);
+    await logStaffActivity({
+      actor: session,
+      action: "product.created",
+      targetType: "product",
+      targetId: result.product?.id,
+      metadata: { name: result.product?.name },
+    });
     return json(result, { status: 201 });
   } catch (error) {
     console.error("Failed to create product:", error);
