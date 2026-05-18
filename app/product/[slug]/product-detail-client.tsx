@@ -362,6 +362,22 @@ export default function ProductDetailClient({
               />
             </div>
           )}
+
+          {/* Product info cards below media */}
+          <div className="mt-3 space-y-2">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
+              <PackageCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+              <span>{settings.privacyPackagingMessage || "Orders ship in discreet privacy packaging."}</span>
+            </div>
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
+              <ShieldCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+              <span>{settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible concerns."}</span>
+            </div>
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
+              <Truck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+              <span>COD available. Delivery confirmed before dispatch.</span>
+            </div>
+          </div>
         </div>
 
         {/* RIGHT — Product information */}

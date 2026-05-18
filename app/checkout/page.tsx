@@ -55,6 +55,7 @@ type CheckoutErrors = Partial<
     | "phone"
     | "cityArea"
     | "address"
+    | "deliveryZone"
     | "walletSenderNumber"
     | "transactionReference",
     string
@@ -244,6 +245,10 @@ export default function CheckoutPage() {
 
     if (!form.address.trim()) {
       nextErrors.address = "Full delivery address is required.";
+    }
+
+    if (!form.deliveryZone) {
+      nextErrors.deliveryZone = "Please select a delivery zone to continue.";
     }
 
     if (isWalletSendMoney) {
@@ -498,6 +503,9 @@ export default function CheckoutPage() {
                     );
                   })}
                 </div>
+                {errors.deliveryZone && (
+                  <p className="mt-2 text-xs text-rose-200">{errors.deliveryZone}</p>
+                )}
                 <p className="mt-2 text-xs leading-5 text-white/45">
                   Delivery charge may vary by location. Our team will confirm the final delivery cost before dispatch.
                 </p>

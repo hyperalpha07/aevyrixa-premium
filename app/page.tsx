@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Droplets,
   Leaf,
+  MessageCircle,
   RotateCcw,
   Ruler,
   ShieldCheck,
@@ -15,9 +16,12 @@ import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
+import ProductVisual from "@/app/components/product-visual";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { whatsappHref } from "@/app/lib/admin-settings";
+import { publicProduct } from "@/app/lib/product-display";
+import { formatProductPrice } from "@/app/lib/products";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -202,6 +206,10 @@ export default async function Home() {
     listProducts(),
     loadStorefrontSettings(),
   ]);
+  const activeProducts = products
+    .filter((p) => p.status === "active" && !p.deletedAt)
+    .slice(0, 3)
+    .map(publicProduct);
   const featuredProduct = products.find((product) => product.featured) ?? products[0];
   const featuredProductHref = featuredProduct
     ? `/product/${featuredProduct.slug}`
@@ -286,21 +294,21 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
           <div className="min-w-0">
             <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-cyan-200/20 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/90 shadow-[0_0_28px_rgba(34,211,238,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
-              {settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
+              {heroMedia.eyebrow || settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
             </p>
             <h1 className="aev-hero-headline mt-7 max-w-4xl text-[1.7rem] font-semibold leading-[1.05] tracking-tight text-white min-[430px]:text-[2.15rem] sm:text-6xl lg:text-7xl">
-              {settings.appearanceSettings.homepageHeroTitle}
+              {heroMedia.heading || settings.appearanceSettings.homepageHeroTitle}
             </h1>
             <p className="aev-hero-copy mt-6 max-w-2xl text-pretty text-base leading-8 text-white/72 sm:text-lg">
-              {settings.appearanceSettings.homepageHeroSubtitle}
+              {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
             </p>
 
             <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[768px]:flex-row sm:mt-10">
               <Link
-                href="/product"
+                href={heroMedia.ctaLink || "/product"}
                 className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
               >
-                {settings.appearanceSettings.primaryCtaText}
+                {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
               </Link>
               <a
                 href="#how-it-works"
@@ -438,7 +446,7 @@ export default async function Home() {
                 <>
                   {hasMedia && categoryVideoUrl ? (
                     <video
-                      className="absolute inset-0 h-full w-full object-cover opacity-70"
+                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-opacity duration-500 group-hover:opacity-100"
                       autoPlay
                       muted
                       loop
@@ -451,12 +459,12 @@ export default async function Home() {
                     <img
                       src={categoryImageUrl}
                       alt={displayName}
-                      className="absolute inset-0 h-full w-full object-cover opacity-70"
+                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-opacity duration-500 group-hover:opacity-100"
                       loading="lazy"
                     />
                   ) : null}
                   {hasMedia && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
                   )}
                   <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
                   <div className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`} />
@@ -630,15 +638,13 @@ export default async function Home() {
 
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-              Aevyrixa Care Motion
+              {careMedia.eyebrow || "Aevyrixa Care Motion"}
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              Premium comfort, reusable care, and discreet protection in one calm system.
+              {careMedia.heading || "Premium comfort, reusable care, and discreet protection in one calm system."}
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-              Premium reusable care essentials made for soft comfort, discreet
-              daily wear, gentle care after use, and privacy-minded delivery
-              from order to arrival.
+              {careMedia.subheading || "Premium reusable care essentials made for soft comfort, discreet daily wear, gentle care after use, and privacy-minded delivery from order to arrival."}
             </p>
 
             <div className="mt-8 grid gap-3">
@@ -662,10 +668,10 @@ export default async function Home() {
             </div>
 
             <Link
-              href={featuredProductHref}
+              href={careMedia.ctaLink || featuredProductHref}
               className="aev-action-primary mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
             >
-              View Product
+              {careMedia.ctaText || "View Product"}
             </Link>
           </div>
         </div>
@@ -675,15 +681,13 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
           <div className="aev-reveal min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-              Aevyrixa Experience
+              {experienceMedia.eyebrow || "Aevyrixa Experience"}
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              A cinematic care experience that stays calm, premium, and lightweight.
+              {experienceMedia.heading || "A cinematic care experience that stays calm, premium, and lightweight."}
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-              Moving glass, layered fabric forms, soft glow, and tactile tap
-              feedback create a video-style moment while staying fast and
-              mobile-safe.
+              {experienceMedia.subheading || "Moving glass, layered fabric forms, soft glow, and tactile tap feedback create a video-style moment while staying fast and mobile-safe."}
             </p>
           </div>
 
@@ -882,7 +886,85 @@ export default async function Home() {
         </div>
       </section>
 
-      {hms.whatsappWidgetEnabled && whatsappUrl && (
+      {/* Featured products section */}
+      {activeProducts.length > 0 && (
+        <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                Her Care Products
+              </p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                Explore our collection.
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-white/62">
+                Premium reusable care essentials with discreet delivery across Bangladesh.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {activeProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="aev-reveal group min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_0_32px_rgba(34,211,238,0.12)]"
+                >
+                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#07111f]">
+                    <div className="relative aspect-square w-full">
+                      {product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="absolute inset-0 h-full w-full object-contain p-3"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <ProductVisual
+                          visualTheme={product.visualTheme}
+                          label={product.absorbency}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="px-2 pb-3 pt-4">
+                    <h3 className="break-words text-lg font-semibold leading-tight text-white [overflow-wrap:anywhere]">
+                      {product.name}
+                    </h3>
+                    {product.shortDescription && (
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/62">
+                        {product.shortDescription}
+                      </p>
+                    )}
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <span className="text-2xl font-semibold text-white">
+                        {formatProductPrice(product)}
+                      </span>
+                      <Link
+                        href={`/product/${product.slug}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08]"
+                      >
+                        View
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="mt-8 flex justify-center">
+              <Link
+                href="/product"
+                className="aev-action-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
+              >
+                View All Products
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {hms.whatsappWidgetEnabled && whatsappUrl &&
+        (hms.whatsappWidgetPlacement === "homepage" || hms.whatsappWidgetPlacement === "all") && (
         <div className="fixed bottom-6 right-4 z-50 sm:right-6">
           <a
             href={whatsappUrl}
@@ -901,6 +983,19 @@ export default async function Home() {
             {hms.whatsappWidgetLiveText && (
               <span className="text-green-400/80">{hms.whatsappWidgetLiveText}</span>
             )}
+          </a>
+        </div>
+      )}
+
+      {hms.liveChatEnabled &&
+        (hms.liveChatPlacement === "homepage" || hms.liveChatPlacement === "all") && (
+        <div className="fixed bottom-6 left-4 z-50 sm:left-6">
+          <a
+            href={hms.liveChatLink || "/support"}
+            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-[#1a1a2e]/90 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(0,0,0,0.36)] backdrop-blur-xl transition hover:border-cyan-200/40 hover:bg-[#1e2240]"
+          >
+            <MessageCircle className="h-4 w-4 shrink-0 text-cyan-300" />
+            <span>{hms.liveChatLabel || "Need Help?"}</span>
           </a>
         </div>
       )}

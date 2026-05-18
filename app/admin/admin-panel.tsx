@@ -3310,6 +3310,36 @@ function SettingsSection({
                     value={draft.homepageMediaSettings.heroMedia.altText}
                     onChange={(value) => updateHomepageSectionMedia("heroMedia", { altText: value })}
                   />
+                  <TextField
+                    label="Hero eyebrow (small label, optional)"
+                    value={draft.homepageMediaSettings.heroMedia.eyebrow}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { eyebrow: value })}
+                    placeholder="e.g. Reusable Period Care"
+                  />
+                  <TextField
+                    label="Hero heading override (optional)"
+                    value={draft.homepageMediaSettings.heroMedia.heading}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { heading: value })}
+                    placeholder="Overrides Appearance hero title if set"
+                  />
+                  <TextAreaField
+                    label="Hero subheading override (optional — overrides Appearance hero subtitle if set)"
+                    value={draft.homepageMediaSettings.heroMedia.subheading}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { subheading: value })}
+                  />
+                  <TextField
+                    label="Hero CTA button text (optional)"
+                    value={draft.homepageMediaSettings.heroMedia.ctaText}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { ctaText: value })}
+                    placeholder="e.g. Shop Now"
+                  />
+                  <TextField
+                    label="Hero CTA link (optional)"
+                    value={draft.homepageMediaSettings.heroMedia.ctaLink}
+                    onChange={(value) => updateHomepageSectionMedia("heroMedia", { ctaLink: value })}
+                    placeholder="/product"
+                    inputMode="url"
+                  />
                 </div>
               </SettingsCard>
 
@@ -3388,6 +3418,35 @@ function SettingsSection({
                     value={draft.homepageMediaSettings.careMedia.altText}
                     onChange={(value) => updateHomepageSectionMedia("careMedia", { altText: value })}
                   />
+                  <TextField
+                    label="Care eyebrow (optional)"
+                    value={draft.homepageMediaSettings.careMedia.eyebrow}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { eyebrow: value })}
+                    placeholder="e.g. Aevyrixa Care Motion"
+                  />
+                  <TextField
+                    label="Care heading override (optional)"
+                    value={draft.homepageMediaSettings.careMedia.heading}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { heading: value })}
+                  />
+                  <TextAreaField
+                    label="Care subheading override (optional)"
+                    value={draft.homepageMediaSettings.careMedia.subheading}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { subheading: value })}
+                  />
+                  <TextField
+                    label="Care CTA text (optional)"
+                    value={draft.homepageMediaSettings.careMedia.ctaText}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { ctaText: value })}
+                    placeholder="e.g. View Product"
+                  />
+                  <TextField
+                    label="Care CTA link (optional)"
+                    value={draft.homepageMediaSettings.careMedia.ctaLink}
+                    onChange={(value) => updateHomepageSectionMedia("careMedia", { ctaLink: value })}
+                    placeholder="/product"
+                    inputMode="url"
+                  />
                 </div>
               </SettingsCard>
 
@@ -3465,6 +3524,33 @@ function SettingsSection({
                     label="Experience alt text"
                     value={draft.homepageMediaSettings.experienceMedia.altText}
                     onChange={(value) => updateHomepageSectionMedia("experienceMedia", { altText: value })}
+                  />
+                  <TextField
+                    label="Experience eyebrow (optional)"
+                    value={draft.homepageMediaSettings.experienceMedia.eyebrow}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { eyebrow: value })}
+                    placeholder="e.g. Aevyrixa Experience"
+                  />
+                  <TextField
+                    label="Experience heading override (optional)"
+                    value={draft.homepageMediaSettings.experienceMedia.heading}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { heading: value })}
+                  />
+                  <TextAreaField
+                    label="Experience subheading override (optional)"
+                    value={draft.homepageMediaSettings.experienceMedia.subheading}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { subheading: value })}
+                  />
+                  <TextField
+                    label="Experience CTA text (optional)"
+                    value={draft.homepageMediaSettings.experienceMedia.ctaText}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { ctaText: value })}
+                  />
+                  <TextField
+                    label="Experience CTA link (optional)"
+                    value={draft.homepageMediaSettings.experienceMedia.ctaLink}
+                    onChange={(value) => updateHomepageSectionMedia("experienceMedia", { ctaLink: value })}
+                    inputMode="url"
                   />
                 </div>
               </SettingsCard>
@@ -3576,8 +3662,8 @@ function SettingsSection({
 
               <SettingsCard
                 eyebrow="Homepage Media — WhatsApp Widget"
-                title="Floating support widget"
-                description="Shows a floating WhatsApp button using the support WhatsApp number from Store Profile. Hide if no number is set."
+                title="Floating WhatsApp support button"
+                description="Shows a floating WhatsApp button. WhatsApp number is taken from Store Profile → Support WhatsApp. Widget hides if no number is set."
               >
                 <div className="grid gap-4 lg:grid-cols-2">
                   <ToggleField
@@ -3585,18 +3671,59 @@ function SettingsSection({
                     checked={draft.homepageMediaSettings.whatsappWidgetEnabled}
                     onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetEnabled: value })}
                   />
+                  <SelectField
+                    label="Widget placement"
+                    value={draft.homepageMediaSettings.whatsappWidgetPlacement}
+                    options={["homepage", "all", "product", "support", "cart"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetPlacement: value })}
+                  />
                   <TextField
                     label="Widget button label"
                     value={draft.homepageMediaSettings.whatsappWidgetLabel}
                     onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetLabel: value })}
+                    placeholder="Support"
                   />
                   <TextField
                     label="Live support text (optional)"
                     value={draft.homepageMediaSettings.whatsappWidgetLiveText}
                     onChange={(value) => updateHomepageMediaSettings({ whatsappWidgetLiveText: value })}
+                    placeholder="e.g. Online now"
                   />
-                  <div className="rounded-2xl border border-amber-200/20 bg-amber-200/[0.07] p-4 text-sm leading-6 text-amber-50/78">
-                    WhatsApp number is taken from Store Profile → Support WhatsApp. Widget is hidden if no number is set.
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Media — Live Chat / Need Help"
+                title="Floating support link button"
+                description="Shows a floating 'Need Help?' button. Use to link to your support page or a live chat URL. No real-time chat backend is required."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ToggleField
+                    label="Enable Live Chat / Need Help button"
+                    checked={draft.homepageMediaSettings.liveChatEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ liveChatEnabled: value })}
+                  />
+                  <SelectField
+                    label="Placement"
+                    value={draft.homepageMediaSettings.liveChatPlacement}
+                    options={["homepage", "all", "product", "support", "cart"] as const}
+                    onChange={(value) => updateHomepageMediaSettings({ liveChatPlacement: value })}
+                  />
+                  <TextField
+                    label="Button label"
+                    value={draft.homepageMediaSettings.liveChatLabel}
+                    onChange={(value) => updateHomepageMediaSettings({ liveChatLabel: value })}
+                    placeholder="Need Help?"
+                  />
+                  <TextField
+                    label="Link / URL"
+                    value={draft.homepageMediaSettings.liveChatLink}
+                    onChange={(value) => updateHomepageMediaSettings({ liveChatLink: value })}
+                    placeholder="/support"
+                    inputMode="url"
+                  />
+                  <div className="rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.06] p-4 text-sm leading-6 text-cyan-50/75 lg:col-span-2">
+                    If a third-party live chat widget is installed separately, you can hide this button. Otherwise use /support or a WhatsApp link as the fallback.
                   </div>
                 </div>
               </SettingsCard>

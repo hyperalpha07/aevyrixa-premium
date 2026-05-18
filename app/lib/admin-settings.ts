@@ -121,11 +121,18 @@ export type AppearanceSettings = {
   announcementBarText: string;
 };
 
+export type WidgetPlacement = "homepage" | "all" | "product" | "support" | "cart";
+
 export type HomepageSectionMedia = {
   mode: "animation" | "image" | "video";
   imageUrl: string;
   videoUrl: string;
   altText: string;
+  eyebrow: string;
+  heading: string;
+  subheading: string;
+  ctaText: string;
+  ctaLink: string;
 };
 
 export type HomepageCategoryState = "active" | "coming_soon" | "hidden";
@@ -179,6 +186,11 @@ export type HomepageMediaSettings = {
   whatsappWidgetEnabled: boolean;
   whatsappWidgetLabel: string;
   whatsappWidgetLiveText: string;
+  whatsappWidgetPlacement: WidgetPlacement;
+  liveChatEnabled: boolean;
+  liveChatLabel: string;
+  liveChatLink: string;
+  liveChatPlacement: WidgetPlacement;
 };
 
 export type AdvancedSettings = {
@@ -362,9 +374,9 @@ const defaultGroups: AdminSettingsGroups = {
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
   homepageMediaSettings: {
-    heroMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
-    careMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
-    experienceMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "" },
+    heroMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
+    careMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
+    experienceMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
     categoryReusablePeriodCare: "active",
     categoryReusablePeriodCareImageUrl: "",
     categoryReusablePeriodCareVideoUrl: "",
@@ -410,6 +422,11 @@ const defaultGroups: AdminSettingsGroups = {
     whatsappWidgetEnabled: false,
     whatsappWidgetLabel: "Support",
     whatsappWidgetLiveText: "",
+    whatsappWidgetPlacement: "homepage" as WidgetPlacement,
+    liveChatEnabled: false,
+    liveChatLabel: "Need Help?",
+    liveChatLink: "/support",
+    liveChatPlacement: "homepage" as WidgetPlacement,
   },
 };
 
@@ -494,12 +511,23 @@ function categoryStateValue(value: unknown, fallback: HomepageCategoryState): Ho
   return value === "active" || value === "coming_soon" || value === "hidden" ? value : fallback;
 }
 
+function widgetPlacementValue(value: unknown, fallback: WidgetPlacement): WidgetPlacement {
+  return value === "homepage" || value === "all" || value === "product" || value === "support" || value === "cart"
+    ? value
+    : fallback;
+}
+
 function sectionMediaValue(raw: UnknownRecord): HomepageSectionMedia {
   return {
     mode: sectionMediaModeValue(raw.mode),
     imageUrl: publicUrlValue(raw.imageUrl),
     videoUrl: publicUrlValue(raw.videoUrl),
     altText: safeText(raw.altText, ""),
+    eyebrow: safeText(raw.eyebrow, ""),
+    heading: safeText(raw.heading, ""),
+    subheading: safeText(raw.subheading, ""),
+    ctaText: safeText(raw.ctaText, ""),
+    ctaLink: safeText(raw.ctaLink, ""),
   };
 }
 
@@ -1008,6 +1036,26 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       whatsappWidgetLiveText: safeText(
         homepageMediaRaw.whatsappWidgetLiveText,
         defaultGroups.homepageMediaSettings.whatsappWidgetLiveText
+      ),
+      whatsappWidgetPlacement: widgetPlacementValue(
+        homepageMediaRaw.whatsappWidgetPlacement,
+        defaultGroups.homepageMediaSettings.whatsappWidgetPlacement
+      ),
+      liveChatEnabled: booleanValue(
+        homepageMediaRaw.liveChatEnabled,
+        defaultGroups.homepageMediaSettings.liveChatEnabled
+      ),
+      liveChatLabel: safeText(
+        homepageMediaRaw.liveChatLabel,
+        defaultGroups.homepageMediaSettings.liveChatLabel
+      ),
+      liveChatLink: safeText(
+        homepageMediaRaw.liveChatLink,
+        defaultGroups.homepageMediaSettings.liveChatLink
+      ),
+      liveChatPlacement: widgetPlacementValue(
+        homepageMediaRaw.liveChatPlacement,
+        defaultGroups.homepageMediaSettings.liveChatPlacement
       ),
     },
   };
