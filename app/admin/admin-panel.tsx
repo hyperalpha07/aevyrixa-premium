@@ -193,16 +193,40 @@ type StoredOrder = {
 
 type DashboardMetrics = {
   totalOrders: number;
+  todayOrders: number;
   pendingOrders: number;
   confirmedOrders: number;
   shippedOrders: number;
   deliveredOrders: number;
   cancelledOrders: number;
-  estimatedRevenue: number;
-  todayOrders: number;
+  archivedTestOrders: number;
+  totalRevenue: number;
+  todayRevenue: number;
+  pendingPaymentAmount: number;
+  paidRevenue: number;
   mobileWalletOrders: number;
   codOrders: number;
   bankTransferOrders: number;
+};
+
+type DashboardRangePreset =
+  | "today"
+  | "last7"
+  | "last30"
+  | "month"
+  | "custom";
+
+type DashboardRange = {
+  preset: DashboardRangePreset;
+  start: Date;
+  end: Date;
+  label: string;
+};
+
+type ChartDatum = {
+  label: string;
+  value: number;
+  amount?: number;
 };
 
 type SettingsApiResponse = {
@@ -241,6 +265,8 @@ type AdminProduct = {
   images: string[];
   deletedAt?: string;
   deletedReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -264,6 +290,11 @@ type AdminActivityClientRecord = {
   targetType?: string;
   targetId?: string;
   createdAt?: string;
+};
+
+type DashboardSupportConversation = AdminConvSummary & {
+  unread_customer_count?: number;
+  updated_at?: string | null;
 };
 
 const staffRoleOptions: AdminRole[] = [
@@ -526,6 +557,8 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     images: stringArrayValue(value.images),
     deletedAt: textValue(value.deletedAt),
     deletedReason: textValue(value.deletedReason),
+    createdAt: textValue(value.createdAt),
+    updatedAt: textValue(value.updatedAt),
   };
 }
 
@@ -558,6 +591,8 @@ function productSeed(): AdminProduct[] {
     images: [],
     deletedAt: undefined,
     deletedReason: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
   }));
 }
 
@@ -748,6 +783,8 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
       : [],
     deletedAt: product.deletedAt,
     deletedReason: product.deletedReason,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
   };
 }
 
@@ -1088,6 +1125,155 @@ function isToday(value?: string) {
   );
 }
 
+function startOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfLocalDay(date: Date) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function dateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateInput(value: string) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function buildDashboardRange(
+  preset: DashboardRangePreset,
+  customStart: string,
+  customEnd: string
+): DashboardRange {
+  const now = new Date();
+  const todayStart = startOfLocalDay(now);
+  const todayEnd = endOfLocalDay(now);
+
+  if (preset === "last7") {
+    return {
+      preset,
+      start: addDays(todayStart, -6),
+      end: todayEnd,
+      label: "Last 7 days",
+    };
+  }
+
+  if (preset === "last30") {
+    return {
+      preset,
+      start: addDays(todayStart, -29),
+      end: todayEnd,
+      label: "Last 30 days",
+    };
+  }
+
+  if (preset === "month") {
+    return {
+      preset,
+      start: new Date(now.getFullYear(), now.getMonth(), 1),
+      end: todayEnd,
+      label: "This month",
+    };
+  }
+
+  if (preset === "custom") {
+    const parsedStart = parseDateInput(customStart);
+    const parsedEnd = parseDateInput(customEnd);
+    const start = parsedStart ? startOfLocalDay(parsedStart) : todayStart;
+    const end = parsedEnd ? endOfLocalDay(parsedEnd) : todayEnd;
+    const safeStart = start.getTime() <= end.getTime() ? start : end;
+    const safeEnd = start.getTime() <= end.getTime() ? end : endOfLocalDay(start);
+
+    return {
+      preset,
+      start: safeStart,
+      end: safeEnd,
+      label: "Custom range",
+    };
+  }
+
+  return {
+    preset: "today",
+    start: todayStart,
+    end: todayEnd,
+    label: "Today",
+  };
+}
+
+function isWithinDashboardRange(value: string | undefined, range: DashboardRange) {
+  if (!value) return false;
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) return false;
+  return time >= range.start.getTime() && time <= range.end.getTime();
+}
+
+function dayKey(date: Date) {
+  return dateInputValue(date);
+}
+
+function shortDayLabel(key: string) {
+  const date = parseDateInput(key);
+  if (!date) return key;
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+}
+
+function buildDailySeries(orders: StoredOrder[], range: DashboardRange) {
+  const days: ChartDatum[] = [];
+  const cursor = startOfLocalDay(range.start);
+  const end = startOfLocalDay(range.end);
+
+  while (cursor.getTime() <= end.getTime() && days.length < 62) {
+    days.push({ label: shortDayLabel(dayKey(cursor)), value: 0, amount: 0 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const dayIndex = new Map<string, ChartDatum>();
+  const indexCursor = startOfLocalDay(range.start);
+  for (const item of days) {
+    dayIndex.set(dayKey(indexCursor), item);
+    indexCursor.setDate(indexCursor.getDate() + 1);
+  }
+
+  orders.forEach((order) => {
+    if (!order.createdAt) return;
+    const created = new Date(order.createdAt);
+    if (Number.isNaN(created.getTime())) return;
+    const item = dayIndex.get(dayKey(created));
+    if (!item) return;
+    item.value += 1;
+    if (order.status !== "Cancelled") item.amount = (item.amount ?? 0) + orderTotal(order);
+  });
+
+  return days;
+}
+
+function countBy<T extends string>(values: readonly T[], rows: T[]) {
+  return values.map((value) => ({
+    label: value.replace(/_/g, " "),
+    value: rows.filter((row) => row === value).length,
+  }));
+}
+
 function listToText(values: string[]) {
   return values.join(", ");
 }
@@ -1295,79 +1481,70 @@ export default function AdminPanel({
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
-      setSettings(readSettingsFromStorage());
+      const canLoadSettings =
+        hasPermission(session, "settings.view") ||
+        hasPermission(session, "settings.editBasic") ||
+        hasPermission(session, "settings.editSensitive") ||
+        hasPermission(session, "settings.editSeoAnalytics") ||
+        hasPermission(session, "homepage.manage") ||
+        hasPermission(session, "categories.manage");
+      const canLoadOrders = hasPermission(session, "orders.view");
+      const canLoadProducts = hasPermission(session, "products.view");
+
+      if (canLoadSettings) {
+        setSettings(readSettingsFromStorage());
+      }
       setIsLoaded(true);
 
-      void readSettingsFromApi().then((backendSettings) => {
-        if (!backendSettings) return;
+      if (canLoadSettings) {
+        void readSettingsFromApi().then((backendSettings) => {
+          if (!backendSettings) return;
 
-        setSettings(backendSettings.settings);
-        setSettingsStorageMode(backendSettings.storageMode);
-        setSettingsBackendMessage(
-          backendSettings.message ||
-            (backendSettings.backendConnected
-              ? "Settings are connected to Supabase."
-              : "Settings backend not connected. Using safe fallback defaults.")
-        );
-        writeSettingsToStorage(backendSettings.settings);
-      });
+          setSettings(backendSettings.settings);
+          setSettingsStorageMode(backendSettings.storageMode);
+          setSettingsBackendMessage(
+            backendSettings.message ||
+              (backendSettings.backendConnected
+                ? "Settings are connected to Supabase."
+                : "Settings backend not connected. Using safe fallback defaults.")
+          );
+          writeSettingsToStorage(backendSettings.settings);
+        });
+      }
 
-      const localOrders = readOrdersFromStorage();
-      setOrders(localOrders);
+      if (canLoadOrders) {
+        const localOrders = readOrdersFromStorage();
+        setOrders(localOrders);
 
-      void readOrdersFromApi().then((backendOrders) => {
-        const latestLocalOrders = readOrdersFromStorage();
+        void readOrdersFromApi().then((backendOrders) => {
+          const latestLocalOrders = readOrdersFromStorage();
 
-        // Temporary no-database bridge: merge API demo-memory with the browser
-        // fallback so checkout-submitted orders remain visible until the real
-        // Supabase/Postgres order table replaces localStorage in the next phase.
-        const nextOrders = backendOrders
-          ? mergeOrders(backendOrders, latestLocalOrders)
-          : latestLocalOrders;
+          // Temporary no-database bridge: merge API demo-memory with the browser
+          // fallback so checkout-submitted orders remain visible until the real
+          // Supabase/Postgres order table replaces localStorage in the next phase.
+          const nextOrders = backendOrders
+            ? mergeOrders(backendOrders, latestLocalOrders)
+            : latestLocalOrders;
 
-        setOrders(nextOrders);
-        writeOrdersToStorage(nextOrders);
-      });
+          setOrders(nextOrders);
+          writeOrdersToStorage(nextOrders);
+        });
+      }
 
-      void readProductsFromApi().then((backendProducts) => {
-        if (!backendProducts) {
-          setAdminProducts(readProductsFromStorage());
-          return;
-        }
-        setAdminProducts(backendProducts);
-        writeProductsToStorage(backendProducts);
-      });
+      if (canLoadProducts) {
+        void readProductsFromApi().then((backendProducts) => {
+          if (!backendProducts) {
+            setAdminProducts(readProductsFromStorage());
+            return;
+          }
+          setAdminProducts(backendProducts);
+          writeProductsToStorage(backendProducts);
+        });
+      }
     }, 0);
 
     return () => window.clearTimeout(timerId);
-  }, []);
-
-  const metrics = useMemo(() => {
-    const activeOrders = orders.filter((order) => order.status !== "Cancelled");
-
-    return {
-      totalOrders: orders.length,
-      pendingOrders: orders.filter((order) => order.status === "Pending").length,
-      confirmedOrders: orders.filter((order) => order.status === "Confirmed").length,
-      shippedOrders: orders.filter((order) => order.status === "Shipped").length,
-      deliveredOrders: orders.filter((order) => order.status === "Delivered").length,
-      cancelledOrders: orders.filter((order) => order.status === "Cancelled").length,
-      estimatedRevenue: activeOrders.reduce(
-        (sum, order) => sum + orderTotal(order),
-        0
-      ),
-      todayOrders: orders.filter((order) => isToday(order.createdAt)).length,
-      mobileWalletOrders: orders.filter(
-        (order) => order.paymentDetails.paymentMethod === "Mobile Wallet Payment"
-      ).length,
-      codOrders: orders.filter(
-        (order) => order.paymentDetails.paymentMethod === "Cash on Delivery"
-      ).length,
-      bankTransferOrders: orders.filter(
-        (order) => order.paymentDetails.paymentMethod === "Bank Transfer"
-      ).length,
-    };
-  }, [orders]);
+  }, [session]);
 
   const updateOrderStatus = (orderKey: string, status: OrderStatus) => {
     if (!hasPermission(session, "orders.editStatus")) return;
@@ -1598,9 +1775,9 @@ export default function AdminPanel({
               <StaffSection session={session} />
             ) : (
               <DashboardSection
-                metrics={metrics}
                 orders={orders}
                 products={adminProducts}
+                settings={settings}
                 onStatusChange={updateOrderStatus}
                 session={session}
               />
@@ -1623,88 +1800,566 @@ function viewTitle(view: AdminView) {
 }
 
 function DashboardSection({
-  metrics,
   orders,
   products,
+  settings,
   onStatusChange,
   session,
 }: {
-  metrics: DashboardMetrics;
   orders: StoredOrder[];
   products: AdminProduct[];
+  settings: AdminSettings;
   onStatusChange: (orderId: string, status: OrderStatus) => void;
   session: AdminSessionUser;
 }) {
-  const recentOrders = orders.slice(0, 5);
+  const [rangePreset, setRangePreset] = useState<DashboardRangePreset>("last7");
+  const [customStart, setCustomStart] = useState(dateInputValue(addDays(new Date(), -6)));
+  const [customEnd, setCustomEnd] = useState(dateInputValue(new Date()));
+  const [supportConversations, setSupportConversations] = useState<DashboardSupportConversation[]>([]);
+  const [activityLogs, setActivityLogs] = useState<AdminActivityClientRecord[]>([]);
+  const canViewOrders = hasPermission(session, "orders.view");
+  const canViewProducts = hasPermission(session, "products.view");
+  const canViewSupport = hasPermission(session, "support.view");
+  const canViewActivity = hasPermission(session, "activity.view");
+  const canViewAnalytics = hasPermission(session, "analytics.view");
+
+  useEffect(() => {
+    if (!canViewSupport) return;
+
+    void fetch("/api/admin/support/conversations", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { conversations?: DashboardSupportConversation[] } | null) => {
+        if (Array.isArray(payload?.conversations)) {
+          setSupportConversations(payload.conversations);
+        }
+      })
+      .catch(() => null);
+  }, [canViewSupport]);
+
+  useEffect(() => {
+    if (!canViewActivity) return;
+
+    void fetch("/api/admin/staff", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { activityLogs?: AdminActivityClientRecord[] } | null) => {
+        if (Array.isArray(payload?.activityLogs)) setActivityLogs(payload.activityLogs);
+      })
+      .catch(() => null);
+  }, [canViewActivity]);
+
+  const range = useMemo(
+    () => buildDashboardRange(rangePreset, customStart, customEnd),
+    [rangePreset, customStart, customEnd]
+  );
+
+  const rangeOrders = useMemo(
+    () => orders.filter((order) => isWithinDashboardRange(order.createdAt, range)),
+    [orders, range]
+  );
+
+  const metrics = useMemo<DashboardMetrics>(() => {
+    const activeOrders = rangeOrders.filter((order) => order.status !== "Cancelled");
+    const paidOrders = activeOrders.filter(
+      (order) =>
+        order.paymentStatus === "verified" ||
+        order.paymentVerificationStatus === "Verified" ||
+        order.status === "Delivered"
+    );
+    const pendingPaymentOrders = rangeOrders.filter(
+      (order) =>
+        order.paymentStatus === "pending" ||
+        order.paymentVerificationStatus === "Pending"
+    );
+
+    return {
+      totalOrders: rangeOrders.length,
+      todayOrders: orders.filter((order) => isToday(order.createdAt)).length,
+      pendingOrders: rangeOrders.filter((order) => order.status === "Pending").length,
+      confirmedOrders: rangeOrders.filter((order) => order.status === "Confirmed").length,
+      shippedOrders: rangeOrders.filter((order) => order.status === "Shipped").length,
+      deliveredOrders: rangeOrders.filter((order) => order.status === "Delivered").length,
+      cancelledOrders: rangeOrders.filter((order) => order.status === "Cancelled").length,
+      archivedTestOrders: rangeOrders.filter(
+        (order) => Boolean(order.archivedAt) || Boolean(order.isTestOrder)
+      ).length,
+      totalRevenue: activeOrders.reduce((sum, order) => sum + orderTotal(order), 0),
+      todayRevenue: orders
+        .filter((order) => isToday(order.createdAt) && order.status !== "Cancelled")
+        .reduce((sum, order) => sum + orderTotal(order), 0),
+      pendingPaymentAmount: pendingPaymentOrders.reduce(
+        (sum, order) => sum + orderTotal(order),
+        0
+      ),
+      paidRevenue: paidOrders.reduce((sum, order) => sum + orderTotal(order), 0),
+      mobileWalletOrders: rangeOrders.filter(
+        (order) => order.paymentDetails.paymentMethod === "Mobile Wallet Payment"
+      ).length,
+      codOrders: rangeOrders.filter(
+        (order) => order.paymentDetails.paymentMethod === "Cash on Delivery"
+      ).length,
+      bankTransferOrders: rangeOrders.filter(
+        (order) => order.paymentDetails.paymentMethod === "Bank Transfer"
+      ).length,
+    };
+  }, [orders, rangeOrders]);
+
+  const lowStockThreshold = Math.max(
+    0,
+    Number(settings.orderSettings.lowStockAlertThreshold || 0) || 0
+  );
   const activeProducts = products.filter(
     (product) => product.status === "Active" && !product.deletedAt
-  ).length;
-  const availableProducts = products.filter((product) => !product.deletedAt).length;
+  );
+  const draftProducts = products.filter(
+    (product) => product.status === "Draft" && !product.deletedAt
+  );
+  const outOfStockProducts = products.filter(
+    (product) => product.stockStatus === "out_of_stock" && !product.deletedAt
+  );
+  const lowStockProducts = products.filter((product) => {
+    if (product.deletedAt) return false;
+    if (product.stockStatus === "low_stock") return true;
+    return (
+      typeof product.stockQuantity === "number" &&
+      lowStockThreshold > 0 &&
+      product.stockQuantity <= lowStockThreshold
+    );
+  });
+
+  const orderDaily = useMemo(() => buildDailySeries(rangeOrders, range), [rangeOrders, range]);
+  const statusDistribution = useMemo(
+    () => countBy(orderStatuses, rangeOrders.map((order) => order.status)),
+    [rangeOrders]
+  );
+  const paymentDistribution = useMemo(
+    () =>
+      countBy(
+        paymentMethods,
+        rangeOrders
+          .map((order) => order.paymentDetails.paymentMethod)
+          .filter((method): method is (typeof paymentMethods)[number] =>
+            paymentMethods.includes(method as never)
+          )
+      ),
+    [rangeOrders]
+  );
+  const deliveryZoneDistribution = useMemo(() => {
+    const counts = new Map<string, number>();
+    rangeOrders.forEach((order) => {
+      const zone = order.deliveryZone || order.deliveryArea;
+      if (!zone) return;
+      counts.set(zone, (counts.get(zone) ?? 0) + 1);
+    });
+    return Array.from(counts, ([label, value]) => ({ label, value })).slice(0, 6);
+  }, [rangeOrders]);
+  const deliveryStatusDistribution = useMemo(
+    () =>
+      countBy(
+        deliveryStatuses,
+        rangeOrders
+          .map((order) => order.deliveryStatus)
+          .filter((status): status is DeliveryStatus => Boolean(status))
+      ),
+    [rangeOrders]
+  );
+  const paymentStatusDistribution = useMemo(
+    () =>
+      countBy(
+        paymentStatuses,
+        rangeOrders
+          .map((order) => order.paymentStatus)
+          .filter((status): status is PaymentStatus => Boolean(status))
+      ),
+    [rangeOrders]
+  );
+  const courierDistribution = useMemo(() => {
+    const counts = new Map<string, number>();
+    rangeOrders.forEach((order) => {
+      if (!order.courierName) return;
+      counts.set(order.courierName, (counts.get(order.courierName) ?? 0) + 1);
+    });
+    return Array.from(counts, ([label, value]) => ({ label, value })).slice(0, 6);
+  }, [rangeOrders]);
+  const bestSellingProducts = useMemo(() => {
+    const counts = new Map<string, { label: string; value: number; amount: number }>();
+    rangeOrders.forEach((order) => {
+      if (order.status === "Cancelled") return;
+      order.items.forEach((item) => {
+        const label = item.name || item.slug || item.id || "Unnamed product";
+        const quantity = item.quantity ?? 0;
+        const current = counts.get(label) ?? { label, value: 0, amount: 0 };
+        current.value += quantity;
+        current.amount += quantity * (item.price ?? 0);
+        counts.set(label, current);
+      });
+    });
+    return Array.from(counts.values())
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [rangeOrders]);
+  const recentProducts = products
+    .filter((product) => !product.deletedAt && product.updatedAt)
+    .sort((a, b) => Date.parse(b.updatedAt ?? "") - Date.parse(a.updatedAt ?? ""))
+    .slice(0, 5);
+  const recentOperations = rangeOrders
+    .filter(
+      (order) =>
+        order.deliveryStatus ||
+        order.courierName ||
+        order.paymentStatus ||
+        order.paymentVerificationStatus ||
+        order.archivedAt ||
+        order.isTestOrder
+    )
+    .slice(0, 5);
+  const supportInRange = supportConversations.filter((conversation) =>
+    isWithinDashboardRange(conversation.created_at, range)
+  );
+  const openSupport = supportInRange.filter((conversation) => conversation.status === "open").length;
+  const closedSupport = supportInRange.filter((conversation) => conversation.status === "closed").length;
+  const unreadSupport = supportInRange.reduce(
+    (sum, conversation) => sum + (conversation.unread_customer_count ?? 0),
+    0
+  );
+  const activityInRange = activityLogs.filter((log) => isWithinDashboardRange(log.createdAt, range));
+  const activityDistribution = useMemo(() => {
+    const groups = ["order", "product", "settings", "support", "staff"];
+    return groups.map((group) => ({
+      label: group,
+      value: activityInRange.filter((log) =>
+        `${log.action} ${log.targetType ?? ""}`.toLowerCase().includes(group)
+      ).length,
+    }));
+  }, [activityInRange]);
+  const recentOrders = rangeOrders.slice(0, 5);
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
-        <MetricCard label="Total Orders" value={String(metrics.totalOrders)} icon={ShoppingBag} />
-        <MetricCard label="Pending" value={String(metrics.pendingOrders)} icon={Sparkles} />
-        <MetricCard label="Confirmed" value={String(metrics.confirmedOrders)} icon={ShieldCheck} />
-        <MetricCard label="Shipped" value={String(metrics.shippedOrders)} icon={PackageCheck} />
-        <MetricCard label="Delivered" value={String(metrics.deliveredOrders)} icon={ShieldCheck} />
-        <MetricCard label="Cancelled" value={String(metrics.cancelledOrders)} icon={ClipboardList} />
-        <MetricCard
-          label="Estimated Revenue"
-          value={formatCurrency(metrics.estimatedRevenue)}
-          icon={PackageCheck}
-        />
-        <MetricCard label="Today Orders" value={String(metrics.todayOrders)} icon={Gauge} />
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">
-        <MetricCard
-          label="Mobile Wallet Orders"
-          value={String(metrics.mobileWalletOrders)}
-          icon={Wallet}
-          compact
-        />
-        <MetricCard
-          label="COD Orders"
-          value={String(metrics.codOrders)}
-          icon={PackageCheck}
-          compact
-        />
-        <MetricCard
-          label="Bank Transfer Orders"
-          value={String(metrics.bankTransferOrders)}
-          icon={CreditCard}
-          compact
-        />
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0">
-          <SectionHeader title="Recent order preview" href="/admin/orders" action="Open orders workspace" />
-          <RecentOrderList
-            orders={recentOrders}
-            onStatusChange={onStatusChange}
-            canEditStatus={hasPermission(session, "orders.editStatus")}
-          />
+      <section className="rounded-[1.35rem] border border-white/10 bg-black/20 p-4">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/65">
+              Analytics range
+            </p>
+            <h3 className="mt-2 break-words text-xl font-semibold text-white">
+              {range.label}
+            </h3>
+            <p className="mt-1 text-sm text-white/45">
+              {dateInputValue(range.start)} to {dateInputValue(range.end)}
+            </p>
+          </div>
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-[repeat(5,minmax(116px,1fr))]">
+            {[
+              ["today", "Today"],
+              ["last7", "Last 7 days"],
+              ["last30", "Last 30 days"],
+              ["month", "This month"],
+              ["custom", "Custom"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setRangePreset(value as DashboardRangePreset)}
+                className={`min-h-11 rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
+                  rangePreset === value
+                    ? "border-cyan-200/40 bg-cyan-200/12 text-cyan-50"
+                    : "border-white/10 bg-white/[0.04] text-white/58 hover:border-white/20 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4">
-          <AdminSummaryCard
-            title="Products"
-            value={`${activeProducts}/${availableProducts} active`}
-            href="/admin/products"
-            icon={Boxes}
-          />
-          {hasPermission(session, "settings.view") && (
-            <AdminSummaryCard
-              title="Settings"
-              value="Local placeholders"
-              href="/admin/settings"
-              icon={Settings}
+        {rangePreset === "custom" && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <TextField
+              label="Start date"
+              value={customStart}
+              onChange={setCustomStart}
+              inputMode="numeric"
             />
-          )}
+            <TextField
+              label="End date"
+              value={customEnd}
+              onChange={setCustomEnd}
+              inputMode="numeric"
+            />
+          </div>
+        )}
+      </section>
+
+      {!canViewAnalytics && (
+        <div className="rounded-[1.25rem] border border-amber-200/18 bg-amber-200/[0.065] p-4 text-sm leading-6 text-amber-50/78">
+          Your account can view permitted operational sections. Full analytics access is limited by staff permissions.
         </div>
-      </div>
+      )}
+
+      {canViewOrders && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+            <MetricCard label="Today orders" value={String(metrics.todayOrders)} icon={Gauge} />
+            <MetricCard label="Total orders" value={String(metrics.totalOrders)} icon={ShoppingBag} />
+            <MetricCard label="Pending" value={String(metrics.pendingOrders)} icon={Sparkles} />
+            <MetricCard label="Confirmed" value={String(metrics.confirmedOrders)} icon={ShieldCheck} />
+            <MetricCard label="Cancelled" value={String(metrics.cancelledOrders)} icon={ClipboardList} />
+            <MetricCard label="Delivered" value={String(metrics.deliveredOrders)} icon={PackageCheck} />
+            <MetricCard label="Archived / test" value={String(metrics.archivedTestOrders)} icon={ShieldCheck} />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Today revenue" value={formatCurrency(metrics.todayRevenue)} icon={Wallet} compact />
+            <MetricCard label="Total revenue" value={formatCurrency(metrics.totalRevenue)} icon={CreditCard} compact />
+            <MetricCard label="Confirmed / paid revenue" value={formatCurrency(metrics.paidRevenue)} icon={ShieldCheck} compact />
+            <MetricCard label="Pending payment" value={formatCurrency(metrics.pendingPaymentAmount)} icon={Wallet} compact />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <DailyBars title="Orders by day" data={orderDaily} valueLabel={(item) => String(item.value)} />
+            <DailyBars
+              title="Revenue by day"
+              data={orderDaily.map((item) => ({ ...item, value: item.amount ?? 0 }))}
+              valueLabel={(item) => formatCurrency(item.value)}
+            />
+            <DistributionCard title="Order status distribution" data={statusDistribution} />
+            <DistributionCard title="Payment method distribution" data={paymentDistribution} />
+            <DistributionCard title="Delivery status count" data={deliveryStatusDistribution} />
+            <DistributionCard title="Payment status count" data={paymentStatusDistribution} />
+            <DistributionCard title="Courier usage count" data={courierDistribution} emptyLabel="No courier data yet." />
+            <DistributionCard title="Delivery zone distribution" data={deliveryZoneDistribution} emptyLabel="No delivery zone data yet." />
+          </div>
+
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="min-w-0">
+              <SectionHeader title="Recent order preview" href="/admin/orders" action="Open orders workspace" />
+              <RecentOrderList
+                orders={recentOrders}
+                onStatusChange={onStatusChange}
+                canEditStatus={hasPermission(session, "orders.editStatus")}
+              />
+            </div>
+            <InsightList
+              title="Recent operations"
+              emptyLabel="No recent operation fields in this range."
+              items={recentOperations.map((order) => ({
+                title: orderReferenceKey(order),
+                meta: [
+                  order.deliveryStatus ? `Delivery: ${order.deliveryStatus.replace(/_/g, " ")}` : "",
+                  order.paymentStatus ? `Payment: ${order.paymentStatus}` : "",
+                  order.courierName ? `Courier: ${order.courierName}` : "",
+                  order.isTestOrder ? "Test" : "",
+                  order.archivedAt ? "Archived" : "",
+                ].filter(Boolean).join(" | "),
+              }))}
+            />
+          </div>
+        </>
+      )}
+
+      {canViewProducts && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Active products" value={String(activeProducts.length)} icon={Boxes} compact />
+            <MetricCard label="Draft products" value={String(draftProducts.length)} icon={Pencil} compact />
+            <MetricCard label="Out of stock" value={String(outOfStockProducts.length)} icon={BellIcon} compact />
+            <MetricCard label="Low stock" value={String(lowStockProducts.length)} icon={PackageCheck} compact />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <DistributionCard
+              title="Best selling products"
+              data={bestSellingProducts}
+              emptyLabel="Order item data is not available for this range."
+            />
+            <InsightList
+              title="Low stock alerts"
+              emptyLabel="No low-stock products."
+              items={lowStockProducts.slice(0, 6).map((product) => ({
+                title: product.name,
+                meta: `Stock: ${product.stockQuantity ?? product.stockStatus.replace(/_/g, " ")}`,
+              }))}
+            />
+            <InsightList
+              title="Out-of-stock list"
+              emptyLabel="No out-of-stock products."
+              items={outOfStockProducts.slice(0, 6).map((product) => ({
+                title: product.name,
+                meta: product.category,
+              }))}
+            />
+            <InsightList
+              title="Recently updated products"
+              emptyLabel="No product update timestamps yet."
+              items={recentProducts.map((product) => ({
+                title: product.name,
+                meta: product.updatedAt ? formatDate(product.updatedAt) : "Not recorded",
+              }))}
+            />
+          </div>
+        </>
+      )}
+
+      {canViewSupport && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MetricCard label="Open support" value={String(openSupport)} icon={MessageSquare} compact />
+            <MetricCard label="Unread messages" value={String(unreadSupport)} icon={BellIcon} compact />
+            <MetricCard label="Closed support" value={String(closedSupport)} icon={ShieldCheck} compact />
+          </div>
+          <InsightList
+            title="Recent support conversations"
+            emptyLabel="No support conversations in this range."
+            items={supportInRange.slice(0, 5).map((conversation) => ({
+              title: `${convStatusLabels[conversation.status]} conversation`,
+              meta: `${conversation.source_page || "homepage"} | ${formatDate(conversation.created_at)}`,
+            }))}
+          />
+        </>
+      )}
+
+      {canViewActivity && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <DistributionCard title="Staff actions count" data={activityDistribution} emptyLabel="No activity logs in this range." />
+          <InsightList
+            title="Recent admin activity"
+            emptyLabel="No activity logs yet."
+            items={activityInRange.slice(0, 6).map((log) => ({
+              title: `${log.actorName || "Admin"} ${log.action}`,
+              meta: [log.targetType, log.createdAt ? formatDate(log.createdAt) : ""]
+                .filter(Boolean)
+                .join(" | "),
+            }))}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DailyBars({
+  title,
+  data,
+  valueLabel,
+}: {
+  title: string;
+  data: ChartDatum[];
+  valueLabel: (item: ChartDatum) => string;
+}) {
+  const max = Math.max(...data.map((item) => item.value), 0);
+
+  return (
+    <section className="min-w-0 rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
+      <SectionHeader title={title} />
+      {data.length === 0 || max === 0 ? (
+        <NoDataState label="No data yet." />
+      ) : (
+        <div className="mt-4 flex h-48 min-w-0 items-end gap-2 overflow-hidden">
+          {data.map((item) => {
+            const height = Math.max(8, Math.round((item.value / max) * 100));
+
+            return (
+              <div key={item.label} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                <div className="flex h-36 w-full items-end rounded-xl border border-white/10 bg-white/[0.035] p-1">
+                  <div
+                    className="w-full rounded-lg bg-gradient-to-t from-cyan-300/80 to-fuchsia-200/80"
+                    style={{ height: `${height}%` }}
+                    title={`${item.label}: ${valueLabel(item)}`}
+                  />
+                </div>
+                <p className="w-full truncate text-center text-[10px] text-white/38">
+                  {item.label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DistributionCard({
+  title,
+  data,
+  emptyLabel = "No data yet.",
+}: {
+  title: string;
+  data: ChartDatum[];
+  emptyLabel?: string;
+}) {
+  const visibleData = data.filter((item) => item.value > 0);
+  const max = Math.max(...visibleData.map((item) => item.value), 0);
+
+  return (
+    <section className="min-w-0 rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
+      <SectionHeader title={title} />
+      {visibleData.length === 0 ? (
+        <NoDataState label={emptyLabel} />
+      ) : (
+        <div className="mt-4 space-y-3">
+          {visibleData.map((item) => (
+            <div key={item.label} className="min-w-0">
+              <div className="mb-1.5 flex min-w-0 items-center justify-between gap-3">
+                <p className="truncate text-sm text-white/70">{item.label}</p>
+                <p className="shrink-0 text-sm font-semibold text-white">
+                  {item.value}
+                </p>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                <div
+                  className="h-full rounded-full bg-cyan-200/75"
+                  style={{ width: `${Math.max(4, (item.value / max) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function InsightList({
+  title,
+  items,
+  emptyLabel,
+}: {
+  title: string;
+  items: Array<{ title: string; meta?: string }>;
+  emptyLabel: string;
+}) {
+  return (
+    <section className="min-w-0 rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
+      <SectionHeader title={title} />
+      {items.length === 0 ? (
+        <NoDataState label={emptyLabel} />
+      ) : (
+        <div className="mt-4 space-y-2">
+          {items.map((item, index) => (
+            <div
+              key={`${item.title}-${index}`}
+              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
+            >
+              <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
+                {item.title}
+              </p>
+              {item.meta && (
+                <p className="mt-1 break-words text-xs leading-5 text-white/48 [overflow-wrap:anywhere]">
+                  {item.meta}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function NoDataState({ label }: { label: string }) {
+  return (
+    <div className="mt-4 rounded-2xl border border-dashed border-white/12 bg-white/[0.025] p-5 text-center text-sm text-white/42">
+      {label}
     </div>
   );
 }
