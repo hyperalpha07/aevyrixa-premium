@@ -18,6 +18,9 @@ export type CategoryCmsEntry = {
   description: string;
   linkUrl: string;
   status: HomepageCategoryState;
+  sortOrder: number;
+  imageUrl: string;
+  videoUrl: string;
 };
 
 export type StorefrontSettings = AdminSettings & {
@@ -64,20 +67,28 @@ const categoryDefs = [
 
 function buildCategories(settings: AdminSettings): CategoryCmsEntry[] {
   const hms = settings.homepageMediaSettings;
-  return categoryDefs.map(({ key, slug }) => {
-    const status = hms[key as keyof typeof hms] as HomepageCategoryState;
-    const titleKey = `${key}Title` as keyof typeof hms;
-    const descKey = `${key}Description` as keyof typeof hms;
-    const linkKey = `${key}LinkUrl` as keyof typeof hms;
-    return {
-      key,
-      slug,
-      title: (hms[titleKey] as string) || key,
-      description: (hms[descKey] as string) || "",
-      linkUrl: (hms[linkKey] as string) || "",
-      status,
-    };
-  });
+  return categoryDefs
+    .map(({ key, slug }) => {
+      const status = hms[key as keyof typeof hms] as HomepageCategoryState;
+      const titleKey = `${key}Title` as keyof typeof hms;
+      const descKey = `${key}Description` as keyof typeof hms;
+      const linkKey = `${key}LinkUrl` as keyof typeof hms;
+      const sortKey = `${key}SortOrder` as keyof typeof hms;
+      const imgKey = `${key}ImageUrl` as keyof typeof hms;
+      const vidKey = `${key}VideoUrl` as keyof typeof hms;
+      return {
+        key,
+        slug,
+        title: (hms[titleKey] as string) || key,
+        description: (hms[descKey] as string) || "",
+        linkUrl: (hms[linkKey] as string) || "",
+        status,
+        sortOrder: Number((hms[sortKey] as string) || "99") || 99,
+        imageUrl: (hms[imgKey] as string) || "",
+        videoUrl: (hms[vidKey] as string) || "",
+      };
+    })
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export function normalizeStorefrontSettings(value: unknown): StorefrontSettings {

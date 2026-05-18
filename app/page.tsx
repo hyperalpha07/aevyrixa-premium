@@ -207,6 +207,7 @@ export default async function Home() {
       const titleKey = `${cat.key}Title` as keyof typeof hms;
       const descKey = `${cat.key}Description` as keyof typeof hms;
       const linkKey = `${cat.key}LinkUrl` as keyof typeof hms;
+      const sortKey = `${cat.key}SortOrder` as keyof typeof hms;
       return {
         ...cat,
         state,
@@ -217,9 +218,11 @@ export default async function Home() {
         displayName: (hms[titleKey] as string) || cat.name,
         displayTagline: (hms[descKey] as string) || cat.tagline,
         displayLinkUrl: (hms[linkKey] as string) || (state === "active" ? "/product" : ""),
+        sortOrder: Number((hms[sortKey] as string) || "99") || 99,
       };
     })
-    .filter((cat) => !cat.hidden);
+    .filter((cat) => !cat.hidden)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   const heroMedia = hms.heroMedia;
   const careMedia = hms.careMedia;
@@ -453,23 +456,23 @@ export default async function Home() {
                     />
                   ) : null}
                   {hasMedia && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
                   )}
                   <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
-                  <div className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`} />
+                  <div className={`absolute right-4 top-4 h-16 w-16 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-[1.7] group-hover:opacity-80`} />
                   <div className="relative flex items-start justify-between gap-2">
                     <h3 className="text-base font-semibold text-white drop-shadow-sm">{displayName}</h3>
                     {comingSoon && (
-                      <span className="mt-0.5 shrink-0 rounded-full border border-white/15 bg-white/[0.07] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-white/60">
-                        Soon
+                      <span className="mt-0.5 shrink-0 rounded-full border border-amber-200/25 bg-amber-200/[0.08] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-amber-100/70">
+                        Coming Soon
                       </span>
                     )}
                   </div>
                   <p className="relative mt-2 text-sm leading-6 text-white/68 drop-shadow-sm">{displayTagline}</p>
                   {!comingSoon && displayLinkUrl && (
-                    <div className="relative mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
+                    <div className="relative mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:gap-2 group-hover:text-cyan-200">
                       Explore
-                      <ArrowRight size={12} strokeWidth={2.2} />
+                      <ArrowRight size={12} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
                     </div>
                   )}
                 </>
@@ -481,14 +484,14 @@ export default async function Home() {
                 <a
                   key={displayName}
                   href={displayLinkUrl}
-                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_0_32px_rgba(34,211,238,0.12)] sm:p-6"
+                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-cyan-100/30 hover:bg-white/[0.07] hover:shadow-[0_0_36px_rgba(34,211,238,0.14)] sm:p-6"
                 >
                   {inner}
                 </a>
               ) : (
                 <div
                   key={displayName}
-                  className={`aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.032] p-5 backdrop-blur-2xl sm:p-6 ${comingSoon ? "opacity-70" : ""}`}
+                  className={`aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-2xl sm:p-6 ${comingSoon ? "opacity-65" : ""}`}
                 >
                   {inner}
                 </div>

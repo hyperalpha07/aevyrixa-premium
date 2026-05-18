@@ -185,6 +185,13 @@ export type HomepageMediaSettings = {
   categoryNewArrivalsTitle: string;
   categoryNewArrivalsDescription: string;
   categoryNewArrivalsLinkUrl: string;
+  categoryReusablePeriodCareSortOrder: string;
+  categoryComfortPantySortOrder: string;
+  categorySoftSupportBraSortOrder: string;
+  categoryNightwearSortOrder: string;
+  categoryHygieneEssentialsSortOrder: string;
+  categoryBundlesSortOrder: string;
+  categoryNewArrivalsSortOrder: string;
   whatsappWidgetEnabled: boolean;
   whatsappWidgetLabel: string;
   whatsappWidgetLiveText: string;
@@ -398,7 +405,7 @@ const defaultGroups: AdminSettingsGroups = {
     testMode: false,
     debugMode: false,
     purgeDeletedProductsAfterDays: "",
-    systemVersionLabel: "Aevyrixa Control Room — Phase 36 Category CMS",
+    systemVersionLabel: "Aevyrixa Control Room — Phase 36+ Category CMS Enhanced",
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
   homepageMediaSettings: {
@@ -447,6 +454,13 @@ const defaultGroups: AdminSettingsGroups = {
     categoryNewArrivalsTitle: "New Arrivals",
     categoryNewArrivalsDescription: "Fresh additions to the Her Care collection.",
     categoryNewArrivalsLinkUrl: "",
+    categoryReusablePeriodCareSortOrder: "1",
+    categoryComfortPantySortOrder: "2",
+    categorySoftSupportBraSortOrder: "3",
+    categoryNightwearSortOrder: "4",
+    categoryHygieneEssentialsSortOrder: "5",
+    categoryBundlesSortOrder: "6",
+    categoryNewArrivalsSortOrder: "7",
     whatsappWidgetEnabled: false,
     whatsappWidgetLabel: "Support",
     whatsappWidgetLiveText: "",
@@ -1091,6 +1105,13 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       categoryNewArrivalsTitle: safeText(homepageMediaRaw.categoryNewArrivalsTitle, defaultGroups.homepageMediaSettings.categoryNewArrivalsTitle),
       categoryNewArrivalsDescription: safeText(homepageMediaRaw.categoryNewArrivalsDescription, defaultGroups.homepageMediaSettings.categoryNewArrivalsDescription),
       categoryNewArrivalsLinkUrl: safeText(homepageMediaRaw.categoryNewArrivalsLinkUrl, defaultGroups.homepageMediaSettings.categoryNewArrivalsLinkUrl),
+      categoryReusablePeriodCareSortOrder: safeText(homepageMediaRaw.categoryReusablePeriodCareSortOrder, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareSortOrder),
+      categoryComfortPantySortOrder: safeText(homepageMediaRaw.categoryComfortPantySortOrder, defaultGroups.homepageMediaSettings.categoryComfortPantySortOrder),
+      categorySoftSupportBraSortOrder: safeText(homepageMediaRaw.categorySoftSupportBraSortOrder, defaultGroups.homepageMediaSettings.categorySoftSupportBraSortOrder),
+      categoryNightwearSortOrder: safeText(homepageMediaRaw.categoryNightwearSortOrder, defaultGroups.homepageMediaSettings.categoryNightwearSortOrder),
+      categoryHygieneEssentialsSortOrder: safeText(homepageMediaRaw.categoryHygieneEssentialsSortOrder, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsSortOrder),
+      categoryBundlesSortOrder: safeText(homepageMediaRaw.categoryBundlesSortOrder, defaultGroups.homepageMediaSettings.categoryBundlesSortOrder),
+      categoryNewArrivalsSortOrder: safeText(homepageMediaRaw.categoryNewArrivalsSortOrder, defaultGroups.homepageMediaSettings.categoryNewArrivalsSortOrder),
       whatsappWidgetEnabled: booleanValue(
         homepageMediaRaw.whatsappWidgetEnabled,
         defaultGroups.homepageMediaSettings.whatsappWidgetEnabled

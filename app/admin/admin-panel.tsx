@@ -14,6 +14,7 @@ import {
   Boxes,
   ChevronDown,
   ClipboardList,
+  Tag,
   Copy,
   CreditCard,
   Gauge,
@@ -92,7 +93,7 @@ const CMS_CATEGORY_NAMES = [
 
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
-type AdminView = "dashboard" | "orders" | "products" | "settings" | "support";
+type AdminView = "dashboard" | "orders" | "products" | "settings" | "support" | "categories";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type StatusFilter = "All" | OrderStatus;
 type OrderSort = "Newest first" | "Oldest first" | "Highest total" | "Lowest total";
@@ -214,6 +215,7 @@ const navItems = [
   { label: "Dashboard", href: "/admin", icon: Gauge, view: "dashboard" },
   { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders" },
   { label: "Products", href: "/admin/products", icon: Boxes, view: "products" },
+  { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories" },
   { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings" },
   { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support" },
 ] satisfies Array<{
@@ -1423,6 +1425,13 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 backendMessage={settingsBackendMessage}
                 onSaveSettings={saveSettings}
               />
+            ) : view === "categories" ? (
+              <CategoriesSection
+                settings={settings}
+                storageMode={settingsStorageMode}
+                backendMessage={settingsBackendMessage}
+                onSaveSettings={saveSettings}
+              />
             ) : view === "support" ? (
               <SupportSection />
             ) : (
@@ -1445,6 +1454,7 @@ function viewTitle(view: AdminView) {
   if (view === "products") return "Products";
   if (view === "settings") return "Settings";
   if (view === "support") return "Support Inbox";
+  if (view === "categories") return "Category Management";
   return "Dashboard";
 }
 
@@ -2370,6 +2380,210 @@ function ProductEditor({
   );
 }
 
+function CategoriesSection({
+  settings,
+  storageMode,
+  backendMessage,
+  onSaveSettings,
+}: {
+  settings: AdminSettings;
+  storageMode: SettingsStorageMode;
+  backendMessage: string;
+  onSaveSettings: (settings: AdminSettings) => Promise<{
+    settings: AdminSettings | null;
+    storageMode: SettingsStorageMode;
+    backendConnected: boolean;
+    message?: string;
+  }>;
+}) {
+  const [draft, setDraft] = useState(settings);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [catUploading, setCatUploading] = useState<Record<string, boolean>>({});
+  const [catUploadError, setCatUploadError] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    setDraft(settings);
+  }, [settings]);
+
+  const saveCategories = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSaving(true);
+    const result = await onSaveSettings(draft);
+    setIsSaving(false);
+    setStatusMessage(
+      result.backendConnected
+        ? "Categories saved. Changes are now live on the storefront."
+        : "Categories saved locally only. Settings backend is not connected."
+    );
+  };
+
+  const updateCat = (updates: Partial<AdminSettings["homepageMediaSettings"]>) =>
+    setDraft((current) => normalizeAdminSettings({
+      ...current,
+      homepageMediaSettings: { ...current.homepageMediaSettings, ...updates },
+    }));
+
+  const catDefs = [
+    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", titleKey: "categoryReusablePeriodCareTitle", descKey: "categoryReusablePeriodCareDescription", linkKey: "categoryReusablePeriodCareLinkUrl", sortKey: "categoryReusablePeriodCareSortOrder", slug: "reusable" },
+    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", titleKey: "categoryComfortPantyTitle", descKey: "categoryComfortPantyDescription", linkKey: "categoryComfortPantyLinkUrl", sortKey: "categoryComfortPantySortOrder", slug: "comfort-panty" },
+    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", titleKey: "categorySoftSupportBraTitle", descKey: "categorySoftSupportBraDescription", linkKey: "categorySoftSupportBraLinkUrl", sortKey: "categorySoftSupportBraSortOrder", slug: "soft-bra" },
+    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", titleKey: "categoryNightwearTitle", descKey: "categoryNightwearDescription", linkKey: "categoryNightwearLinkUrl", sortKey: "categoryNightwearSortOrder", slug: "nightwear" },
+    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", titleKey: "categoryHygieneEssentialsTitle", descKey: "categoryHygieneEssentialsDescription", linkKey: "categoryHygieneEssentialsLinkUrl", sortKey: "categoryHygieneEssentialsSortOrder", slug: "hygiene" },
+    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", titleKey: "categoryBundlesTitle", descKey: "categoryBundlesDescription", linkKey: "categoryBundlesLinkUrl", sortKey: "categoryBundlesSortOrder", slug: "bundles" },
+    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", titleKey: "categoryNewArrivalsTitle", descKey: "categoryNewArrivalsDescription", linkKey: "categoryNewArrivalsLinkUrl", sortKey: "categoryNewArrivalsSortOrder", slug: "new-arrivals" },
+  ] as const;
+
+  return (
+    <form onSubmit={saveCategories} className="mt-6 space-y-5">
+      <div
+        className={`rounded-[1.25rem] border p-4 text-sm leading-6 ${
+          storageMode === "supabase"
+            ? "border-emerald-200/20 bg-emerald-200/[0.07] text-emerald-50/80"
+            : "border-amber-200/22 bg-amber-200/[0.07] text-amber-50/82"
+        }`}
+      >
+        {backendMessage}
+      </div>
+
+      {statusMessage && (
+        <div className="rounded-[1.25rem] border border-emerald-200/20 bg-emerald-200/[0.07] p-4 text-sm leading-6 text-emerald-50/80">
+          {statusMessage}
+        </div>
+      )}
+
+      <SettingsCard
+        eyebrow="Category Management"
+        title="All seven categories — status, content, media, and sort order"
+        description="Set each category to active (clickable), coming soon (badge shown, not clickable), or hidden (not shown). Active categories need a Link URL. Sort order controls display sequence on the homepage."
+      >
+        <div className="space-y-5">
+          {catDefs.map(({ label, stateKey, imgKey, vidKey, titleKey, descKey, linkKey, sortKey, slug }) => {
+            const imgUploadKey = `cat-${slug}-img`;
+            const vidUploadKey = `cat-${slug}-vid`;
+            const currentState = draft.homepageMediaSettings[stateKey];
+            return (
+              <div key={slug} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 shrink-0 text-cyan-200/70" />
+                    <span className="text-sm font-semibold text-white">{label}</span>
+                    <span className={`rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wider ${
+                      currentState === "active"
+                        ? "border-emerald-200/30 bg-emerald-200/10 text-emerald-200/90"
+                        : currentState === "coming_soon"
+                        ? "border-amber-200/30 bg-amber-200/10 text-amber-200/80"
+                        : "border-white/15 bg-white/[0.04] text-white/40"
+                    }`}>
+                      {currentState === "active" ? "Active" : currentState === "coming_soon" ? "Coming Soon" : "Hidden"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <SelectField
+                      label="Status"
+                      value={currentState}
+                      options={["active", "coming_soon", "hidden"] as const}
+                      onChange={(value) => updateCat({ [stateKey]: value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <TextField
+                    label="Display title"
+                    value={draft.homepageMediaSettings[titleKey]}
+                    onChange={(value) => updateCat({ [titleKey]: value })}
+                    placeholder={label}
+                  />
+                  <TextField
+                    label="Short description"
+                    value={draft.homepageMediaSettings[descKey]}
+                    onChange={(value) => updateCat({ [descKey]: value })}
+                    placeholder="Short tagline..."
+                  />
+                  <TextField
+                    label="Link URL"
+                    value={draft.homepageMediaSettings[linkKey]}
+                    onChange={(value) => updateCat({ [linkKey]: value })}
+                    placeholder="/product"
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Sort order"
+                    value={draft.homepageMediaSettings[sortKey]}
+                    onChange={(value) => updateCat({ [sortKey]: value })}
+                    placeholder="1"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <MediaUploadField
+                    label="Card image"
+                    accept="image/jpeg,image/png,image/webp"
+                    mediaType="image"
+                    currentUrl={draft.homepageMediaSettings[imgKey]}
+                    uploading={!!catUploading[imgUploadKey]}
+                    error={catUploadError[imgUploadKey] ?? null}
+                    onUpload={async (file) => {
+                      setCatUploading((prev) => ({ ...prev, [imgUploadKey]: true }));
+                      setCatUploadError((prev) => ({ ...prev, [imgUploadKey]: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", `category-${slug}`);
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setCatUploadError((prev) => ({ ...prev, [imgUploadKey]: "Upload failed." })); }
+                        else { updateCat({ [imgKey]: pl.url as string }); }
+                      } catch { setCatUploadError((prev) => ({ ...prev, [imgUploadKey]: "Upload failed." })); }
+                      finally { setCatUploading((prev) => ({ ...prev, [imgUploadKey]: false })); }
+                    }}
+                    onClear={() => updateCat({ [imgKey]: "" })}
+                  />
+                  <MediaUploadField
+                    label="Card video"
+                    accept="video/mp4,video/webm"
+                    mediaType="video"
+                    currentUrl={draft.homepageMediaSettings[vidKey]}
+                    uploading={!!catUploading[vidUploadKey]}
+                    error={catUploadError[vidUploadKey] ?? null}
+                    onUpload={async (file) => {
+                      setCatUploading((prev) => ({ ...prev, [vidUploadKey]: true }));
+                      setCatUploadError((prev) => ({ ...prev, [vidUploadKey]: null }));
+                      try {
+                        const form = new FormData();
+                        form.append("file", file);
+                        form.append("section", `category-${slug}`);
+                        const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                        const pl = (await res.json()) as Record<string, unknown>;
+                        if (!res.ok || typeof pl.url !== "string") { setCatUploadError((prev) => ({ ...prev, [vidUploadKey]: "Upload failed." })); }
+                        else { updateCat({ [vidKey]: pl.url as string }); }
+                      } catch { setCatUploadError((prev) => ({ ...prev, [vidUploadKey]: "Upload failed." })); }
+                      finally { setCatUploading((prev) => ({ ...prev, [vidUploadKey]: false })); }
+                    }}
+                    onClear={() => updateCat({ [vidKey]: "" })}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SettingsCard>
+
+      <div className="flex items-center justify-end gap-3 rounded-[1.25rem] border border-white/10 bg-white/[0.03] px-5 py-4">
+        {statusMessage && (
+          <p className="mr-auto text-sm text-emerald-200/80">{statusMessage}</p>
+        )}
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] disabled:opacity-60"
+        >
+          {isSaving ? "Saving..." : "Save categories"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function SettingsSection({
   settings,
   storageMode,
@@ -2522,7 +2736,7 @@ function SettingsSection({
     { id: "notificationSettings", label: "Notifications", icon: BellIcon },
     { id: "seoSettings", label: "SEO", icon: Search },
     { id: "appearanceSettings", label: "Appearance", icon: Sparkles },
-    { id: "homepageMediaSettings", label: "Media & Categories", icon: Globe },
+    { id: "homepageMediaSettings", label: "Homepage Media", icon: Globe },
     { id: "advancedSettings", label: "Advanced", icon: Settings },
   ] as const;
 
@@ -3701,106 +3915,18 @@ function SettingsSection({
 
               <SettingsCard
                 eyebrow="Category CMS"
-                title="Category cards — content, status, and media"
-                description="Control each category's display title, tagline, link, status (active / coming soon / hidden), and optional image or video overlay. Hidden categories are not shown on the storefront. Link URL is required for active categories to be clickable."
+                title="Manage categories"
+                description="Category cards, status (active / coming soon / hidden), media, sort order, and link URLs are managed in the dedicated Categories workspace."
               >
-                <div className="space-y-4">
-                {(
-                  [
-                    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", titleKey: "categoryReusablePeriodCareTitle", descKey: "categoryReusablePeriodCareDescription", linkKey: "categoryReusablePeriodCareLinkUrl", slug: "reusable" },
-                    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", titleKey: "categoryComfortPantyTitle", descKey: "categoryComfortPantyDescription", linkKey: "categoryComfortPantyLinkUrl", slug: "comfort-panty" },
-                    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", titleKey: "categorySoftSupportBraTitle", descKey: "categorySoftSupportBraDescription", linkKey: "categorySoftSupportBraLinkUrl", slug: "soft-bra" },
-                    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", titleKey: "categoryNightwearTitle", descKey: "categoryNightwearDescription", linkKey: "categoryNightwearLinkUrl", slug: "nightwear" },
-                    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", titleKey: "categoryHygieneEssentialsTitle", descKey: "categoryHygieneEssentialsDescription", linkKey: "categoryHygieneEssentialsLinkUrl", slug: "hygiene" },
-                    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", titleKey: "categoryBundlesTitle", descKey: "categoryBundlesDescription", linkKey: "categoryBundlesLinkUrl", slug: "bundles" },
-                    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", titleKey: "categoryNewArrivalsTitle", descKey: "categoryNewArrivalsDescription", linkKey: "categoryNewArrivalsLinkUrl", slug: "new-arrivals" },
-                  ] as const
-                ).map(({ label, stateKey, imgKey, vidKey, titleKey, descKey, linkKey, slug }) => {
-                  const imgUploadKey = `cat-${slug}-img`;
-                  const vidUploadKey = `cat-${slug}-vid`;
-                  return (
-                    <div key={slug} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-semibold text-white">{label}</span>
-                        <SelectField
-                          label=""
-                          value={draft.homepageMediaSettings[stateKey]}
-                          options={["active", "coming_soon", "hidden"] as const}
-                          onChange={(value) => updateHomepageMediaSettings({ [stateKey]: value })}
-                        />
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <TextField
-                          label="Display title"
-                          value={draft.homepageMediaSettings[titleKey]}
-                          onChange={(value) => updateHomepageMediaSettings({ [titleKey]: value })}
-                          placeholder={label}
-                        />
-                        <TextField
-                          label="Short description"
-                          value={draft.homepageMediaSettings[descKey]}
-                          onChange={(value) => updateHomepageMediaSettings({ [descKey]: value })}
-                          placeholder="Short tagline for this category..."
-                        />
-                        <TextField
-                          label="Link URL (active)"
-                          value={draft.homepageMediaSettings[linkKey]}
-                          onChange={(value) => updateHomepageMediaSettings({ [linkKey]: value })}
-                          placeholder="/product"
-                          inputMode="url"
-                        />
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <MediaUploadField
-                          label="Card image"
-                          accept="image/jpeg,image/png,image/webp"
-                          mediaType="image"
-                          currentUrl={draft.homepageMediaSettings[imgKey]}
-                          uploading={!!hmUploading[imgUploadKey]}
-                          error={hmUploadError[imgUploadKey] ?? null}
-                          onUpload={async (file) => {
-                            setHmUploading((prev) => ({ ...prev, [imgUploadKey]: true }));
-                            setHmUploadError((prev) => ({ ...prev, [imgUploadKey]: null }));
-                            try {
-                              const form = new FormData();
-                              form.append("file", file);
-                              form.append("section", `category-${slug}`);
-                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
-                              const pl = (await res.json()) as Record<string, unknown>;
-                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, [imgUploadKey]: "Upload failed." })); }
-                              else { updateHomepageMediaSettings({ [imgKey]: pl.url as string }); }
-                            } catch { setHmUploadError((prev) => ({ ...prev, [imgUploadKey]: "Upload failed." })); }
-                            finally { setHmUploading((prev) => ({ ...prev, [imgUploadKey]: false })); }
-                          }}
-                          onClear={() => updateHomepageMediaSettings({ [imgKey]: "" })}
-                        />
-                        <MediaUploadField
-                          label="Card video"
-                          accept="video/mp4,video/webm"
-                          mediaType="video"
-                          currentUrl={draft.homepageMediaSettings[vidKey]}
-                          uploading={!!hmUploading[vidUploadKey]}
-                          error={hmUploadError[vidUploadKey] ?? null}
-                          onUpload={async (file) => {
-                            setHmUploading((prev) => ({ ...prev, [vidUploadKey]: true }));
-                            setHmUploadError((prev) => ({ ...prev, [vidUploadKey]: null }));
-                            try {
-                              const form = new FormData();
-                              form.append("file", file);
-                              form.append("section", `category-${slug}`);
-                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
-                              const pl = (await res.json()) as Record<string, unknown>;
-                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, [vidUploadKey]: "Upload failed." })); }
-                              else { updateHomepageMediaSettings({ [vidKey]: pl.url as string }); }
-                            } catch { setHmUploadError((prev) => ({ ...prev, [vidUploadKey]: "Upload failed." })); }
-                            finally { setHmUploading((prev) => ({ ...prev, [vidUploadKey]: false })); }
-                          }}
-                          onClear={() => updateHomepageMediaSettings({ [vidKey]: "" })}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                <div className="flex items-center gap-4">
+                  <Link
+                    href="/admin/categories"
+                    className="inline-flex items-center gap-2 rounded-full border border-cyan-200/30 bg-cyan-200/10 px-5 py-2.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-200/50 hover:bg-cyan-200/15"
+                  >
+                    <Tag className="h-4 w-4 shrink-0" />
+                    Open Category Management
+                  </Link>
+                  <p className="text-sm text-white/50">7 categories · active / coming soon / hidden</p>
                 </div>
               </SettingsCard>
 
