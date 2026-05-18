@@ -191,6 +191,14 @@ export type HomepageMediaSettings = {
   liveChatLabel: string;
   liveChatLink: string;
   liveChatPlacement: WidgetPlacement;
+  ctaSectionEnabled: boolean;
+  ctaSectionEyebrow: string;
+  ctaSectionHeading: string;
+  ctaSectionDescription: string;
+  ctaSectionPrimaryCtaText: string;
+  ctaSectionPrimaryCtaLink: string;
+  ctaSectionSecondaryCtaText: string;
+  ctaSectionSecondaryCtaLink: string;
 };
 
 export type AdvancedSettings = {
@@ -427,6 +435,14 @@ const defaultGroups: AdminSettingsGroups = {
     liveChatLabel: "Need Help?",
     liveChatLink: "/support",
     liveChatPlacement: "homepage" as WidgetPlacement,
+    ctaSectionEnabled: true,
+    ctaSectionEyebrow: "Ready for reusable confidence?",
+    ctaSectionHeading: "Discover Her Care essentials that feel softer, calmer, and more considered.",
+    ctaSectionDescription: "Premium women's comfort, hygiene, and reusable care with discreet delivery.",
+    ctaSectionPrimaryCtaText: "",
+    ctaSectionPrimaryCtaLink: "/product",
+    ctaSectionSecondaryCtaText: "Read FAQs",
+    ctaSectionSecondaryCtaLink: "#faq",
   },
 };
 
@@ -1056,6 +1072,38 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       liveChatPlacement: widgetPlacementValue(
         homepageMediaRaw.liveChatPlacement,
         defaultGroups.homepageMediaSettings.liveChatPlacement
+      ),
+      ctaSectionEnabled: booleanValue(
+        homepageMediaRaw.ctaSectionEnabled,
+        defaultGroups.homepageMediaSettings.ctaSectionEnabled
+      ),
+      ctaSectionEyebrow: safeText(
+        homepageMediaRaw.ctaSectionEyebrow,
+        defaultGroups.homepageMediaSettings.ctaSectionEyebrow
+      ),
+      ctaSectionHeading: safeText(
+        homepageMediaRaw.ctaSectionHeading,
+        defaultGroups.homepageMediaSettings.ctaSectionHeading
+      ),
+      ctaSectionDescription: safeText(
+        homepageMediaRaw.ctaSectionDescription,
+        defaultGroups.homepageMediaSettings.ctaSectionDescription
+      ),
+      ctaSectionPrimaryCtaText: safeText(
+        homepageMediaRaw.ctaSectionPrimaryCtaText,
+        defaultGroups.homepageMediaSettings.ctaSectionPrimaryCtaText
+      ),
+      ctaSectionPrimaryCtaLink: safeText(
+        homepageMediaRaw.ctaSectionPrimaryCtaLink,
+        defaultGroups.homepageMediaSettings.ctaSectionPrimaryCtaLink
+      ),
+      ctaSectionSecondaryCtaText: safeText(
+        homepageMediaRaw.ctaSectionSecondaryCtaText,
+        defaultGroups.homepageMediaSettings.ctaSectionSecondaryCtaText
+      ),
+      ctaSectionSecondaryCtaLink: safeText(
+        homepageMediaRaw.ctaSectionSecondaryCtaLink,
+        defaultGroups.homepageMediaSettings.ctaSectionSecondaryCtaLink
       ),
     },
   };

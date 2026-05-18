@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Droplets,
   Leaf,
-  MessageCircle,
   RotateCcw,
   Ruler,
   ShieldCheck,
@@ -17,6 +16,7 @@ import SiteFooter from "@/app/components/site-footer";
 import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import ProductVisual from "@/app/components/product-visual";
+import LiveChatWidget from "@/app/components/live-chat-widget";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { whatsappHref } from "@/app/lib/admin-settings";
@@ -852,39 +852,45 @@ export default async function Home() {
         </div>
       </section>
 
+      {hms.ctaSectionEnabled && (
       <section className="px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-20">
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] shadow-2xl">
           <div className="relative px-5 py-12 text-center sm:px-8 sm:py-16 lg:px-12 lg:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.18),transparent_32%),radial-gradient(circle_at_82%_68%,rgba(168,85,247,0.18),transparent_30%),linear-gradient(135deg,rgba(244,196,212,0.1),transparent_38%)]" />
             <div className="relative mx-auto max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
-                Ready for reusable confidence?
-              </p>
+              {hms.ctaSectionEyebrow && (
+                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
+                  {hms.ctaSectionEyebrow}
+                </p>
+              )}
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                Discover Her Care essentials that feel softer, calmer, and more considered.
+                {hms.ctaSectionHeading}
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
-                Premium women's comfort, hygiene, and reusable care with discreet delivery.
+                {hms.ctaSectionDescription}
                 {` ${settings.supportWindowMessage}`}
               </p>
               <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                 <Link
-                  href="/product"
+                  href={hms.ctaSectionPrimaryCtaLink || "/product"}
                   className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
                 >
-                  {settings.appearanceSettings.primaryCtaText}
+                  {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                 </Link>
-                <a
-                  href="#faq"
-                  className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
-                >
-                  Read FAQs
-                </a>
+                {hms.ctaSectionSecondaryCtaText && (
+                  <a
+                    href={hms.ctaSectionSecondaryCtaLink || "#faq"}
+                    className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
+                  >
+                    {hms.ctaSectionSecondaryCtaText}
+                  </a>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* Featured products section */}
       {activeProducts.length > 0 && (
@@ -987,18 +993,18 @@ export default async function Home() {
         </div>
       )}
 
-      {hms.liveChatEnabled &&
-        (hms.liveChatPlacement === "homepage" || hms.liveChatPlacement === "all") && (
-        <div className="fixed bottom-6 left-4 z-50 sm:left-6">
-          <a
-            href={hms.liveChatLink || "/support"}
-            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-[#1a1a2e]/90 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(0,0,0,0.36)] backdrop-blur-xl transition hover:border-cyan-200/40 hover:bg-[#1e2240]"
-          >
-            <MessageCircle className="h-4 w-4 shrink-0 text-cyan-300" />
-            <span>{hms.liveChatLabel || "Need Help?"}</span>
-          </a>
-        </div>
-      )}
+      <LiveChatWidget
+        enabled={hms.liveChatEnabled}
+        label={hms.liveChatLabel}
+        placement={hms.liveChatPlacement}
+        whatsappAlsoEnabled={
+          hms.whatsappWidgetEnabled &&
+          !!whatsappUrl &&
+          (hms.whatsappWidgetPlacement === "homepage" || hms.whatsappWidgetPlacement === "all")
+        }
+        whatsappUrl={whatsappUrl}
+        supportPhone={settings.supportPhone}
+      />
 
       <SiteFooter settings={settings} />
     </main>

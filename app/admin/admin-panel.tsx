@@ -3661,6 +3661,62 @@ function SettingsSection({
               </SettingsCard>
 
               <SettingsCard
+                eyebrow="Homepage Content — CTA Section"
+                title="Bottom call-to-action section"
+                description="The full-width conversion banner near the bottom of the homepage. Edit the eyebrow, heading, description, and CTA buttons."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ToggleField
+                    label="Show CTA section"
+                    checked={draft.homepageMediaSettings.ctaSectionEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionEnabled: value })}
+                  />
+                  <TextField
+                    label="Eyebrow label"
+                    value={draft.homepageMediaSettings.ctaSectionEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionEyebrow: value })}
+                    placeholder="Ready for reusable confidence?"
+                  />
+                  <TextField
+                    label="Heading"
+                    value={draft.homepageMediaSettings.ctaSectionHeading}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionHeading: value })}
+                    placeholder="Discover Her Care essentials…"
+                  />
+                  <TextField
+                    label="Description"
+                    value={draft.homepageMediaSettings.ctaSectionDescription}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionDescription: value })}
+                    placeholder="Premium women's comfort…"
+                  />
+                  <TextField
+                    label="Primary CTA text"
+                    value={draft.homepageMediaSettings.ctaSectionPrimaryCtaText}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionPrimaryCtaText: value })}
+                    placeholder="Shop Now (falls back to Appearance setting)"
+                  />
+                  <TextField
+                    label="Primary CTA link"
+                    value={draft.homepageMediaSettings.ctaSectionPrimaryCtaLink}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionPrimaryCtaLink: value })}
+                    placeholder="/product"
+                  />
+                  <TextField
+                    label="Secondary CTA text"
+                    value={draft.homepageMediaSettings.ctaSectionSecondaryCtaText}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionSecondaryCtaText: value })}
+                    placeholder="Read FAQs"
+                  />
+                  <TextField
+                    label="Secondary CTA link"
+                    value={draft.homepageMediaSettings.ctaSectionSecondaryCtaLink}
+                    onChange={(value) => updateHomepageMediaSettings({ ctaSectionSecondaryCtaLink: value })}
+                    placeholder="#faq"
+                  />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
                 eyebrow="Homepage Media — WhatsApp Widget"
                 title="Floating WhatsApp support button"
                 description="Shows a floating WhatsApp button. WhatsApp number is taken from Store Profile → Support WhatsApp. Widget hides if no number is set."
@@ -3694,8 +3750,8 @@ function SettingsSection({
 
               <SettingsCard
                 eyebrow="Homepage Media — Live Chat / Need Help"
-                title="Floating support link button"
-                description="Shows a floating 'Need Help?' button. Use to link to your support page or a live chat URL. No real-time chat backend is required."
+                title="Floating support panel button"
+                description="Shows a floating 'Need Help?' button on the bottom-right. Clicking opens an inline support panel with quick actions (Track Order, Product Help, Size Help, WhatsApp). No live agent required."
               >
                 <div className="grid gap-4 lg:grid-cols-2">
                   <ToggleField
@@ -3715,15 +3771,8 @@ function SettingsSection({
                     onChange={(value) => updateHomepageMediaSettings({ liveChatLabel: value })}
                     placeholder="Need Help?"
                   />
-                  <TextField
-                    label="Link / URL"
-                    value={draft.homepageMediaSettings.liveChatLink}
-                    onChange={(value) => updateHomepageMediaSettings({ liveChatLink: value })}
-                    placeholder="/support"
-                    inputMode="url"
-                  />
                   <div className="rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.06] p-4 text-sm leading-6 text-cyan-50/75 lg:col-span-2">
-                    If a third-party live chat widget is installed separately, you can hide this button. Otherwise use /support or a WhatsApp link as the fallback.
+                    Button appears bottom-right and stacks above the WhatsApp widget if both are enabled. Clicking opens an inline support panel — no page navigation.
                   </div>
                 </div>
               </SettingsCard>
