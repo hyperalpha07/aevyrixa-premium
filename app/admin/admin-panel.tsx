@@ -141,6 +141,7 @@ type StoredOrderItem = {
 type StoredOrder = {
   orderId: string;
   orderReference?: string;
+  customerId?: string;
   customer: {
     fullName?: string;
     phone?: string;
@@ -453,6 +454,7 @@ function normalizeOrder(value: unknown): StoredOrder | null {
   return {
     orderId,
     orderReference,
+    customerId: textValue(value.customerId),
     customer: {
       fullName: textValue(customer.fullName),
       phone: textValue(customer.phone),
@@ -7126,6 +7128,10 @@ function SupportOpsPanel({ order }: { order: StoredOrder }) {
         <DetailLine label="Size issue report" value={order.sizeIssueReport} />
         <DetailLine label="Photo / video proof received" value={order.proofReceived} />
         <DetailLine label="Admin internal note" value={order.adminInternalNote} />
+        <DetailLine
+          label="Customer account"
+          value={order.customerId ? `Linked (${order.customerId})` : "Not linked"}
+        />
         <DetailLine label="Order source" value={order.orderSource} />
         <DetailLine label="Assigned staff" value={order.assignedStaff} />
         <DetailLine label="Cancelled reason" value={order.cancelledReason} />

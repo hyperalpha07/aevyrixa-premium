@@ -21,6 +21,7 @@ const SUPABASE_ORDERS_TABLE = "orders";
 type SupabaseOrderRow = {
   id?: string;
   order_ref?: string;
+  customer_id?: string | null;
   customer_name?: string | null;
   customer_phone?: string | null;
   customer_email?: string | null;
@@ -98,6 +99,7 @@ function buildOrder(input: OrderSubmissionInput): OrderRecord {
   return {
     orderId: orderReference,
     orderReference,
+    customerId: input.customerId,
     customer: input.customer,
     paymentDetails: input.paymentDetails,
     items: input.items,
@@ -261,6 +263,7 @@ function orderToSupabaseInsertPayload(order: OrderRecord, includeOperationDefaul
   };
 
   if (includeOperationDefaults) {
+    payload.customer_id = nullableText(order.customerId);
     payload.delivery_area = nullableText(order.deliveryArea);
     payload.delivery_zone = nullableText(order.deliveryZone);
     payload.payment_status = order.paymentStatus ?? null;
@@ -293,7 +296,7 @@ async function saveOrderToSupabase(order: OrderRecord) {
     const detail = await response.text().catch(() => "");
     const missingOptionalOperationColumn =
       response.status === 400 &&
-      /delivery_area|delivery_zone|payment_status|payment_reference|schema cache|column/i.test(
+      /customer_id|delivery_area|delivery_zone|payment_status|payment_reference|schema cache|column/i.test(
         detail
       );
 
@@ -491,6 +494,7 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
   return {
     orderId: orderReference,
     orderReference,
+    customerId: row.customer_id ?? undefined,
     customer: {
       fullName: row.customer_name ?? textValue(legacyCustomer.fullName) ?? "",
       phone: row.customer_phone ?? textValue(legacyCustomer.phone) ?? "",

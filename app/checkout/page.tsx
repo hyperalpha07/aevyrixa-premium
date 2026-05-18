@@ -75,6 +75,25 @@ type OrderApiResponse = {
   errors?: string[];
 };
 
+type SavedAddress = {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  cityArea: string;
+  address: string;
+  deliveryZone?: DeliveryZone;
+  isDefault: boolean;
+};
+
+type AccountSessionResponse = {
+  customer?: {
+    fullName: string;
+    phone: string;
+    email?: string;
+  } | null;
+};
+
 const initialForm: CheckoutForm = {
   fullName: "",
   phone: "",
@@ -136,6 +155,9 @@ export default function CheckoutPage() {
   const [copiedReceiver, setCopiedReceiver] = useState(false);
   const [adminSettings, setAdminSettings] =
     useState<StorefrontSettings>(defaultStorefrontSettings);
+  const [isLoggedInCustomer, setIsLoggedInCustomer] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedSavedAddressId, setSelectedSavedAddressId] = useState("");
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -146,6 +168,49 @@ export default function CheckoutPage() {
     }, 0);
 
     return () => window.clearTimeout(timerId);
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadAccount() {
+      try {
+        const sessionResponse = await fetch("/api/account/session", {
+          cache: "no-store",
+        });
+        if (!sessionResponse.ok) return;
+        const session = (await sessionResponse.json()) as AccountSessionResponse;
+        if (!isActive || !session.customer) return;
+
+        setIsLoggedInCustomer(true);
+        setForm((current) => ({
+          ...current,
+          fullName: current.fullName || session.customer?.fullName || "",
+          phone: current.phone || session.customer?.phone || "",
+          email: current.email || session.customer?.email || "",
+        }));
+
+        const addressResponse = await fetch("/api/account/addresses", {
+          cache: "no-store",
+        });
+        if (!addressResponse.ok) return;
+        const payload = (await addressResponse.json()) as {
+          addresses?: SavedAddress[];
+        };
+        if (!isActive) return;
+        const addresses = payload.addresses ?? [];
+        setSavedAddresses(addresses);
+        const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
+        if (defaultAddress) applySavedAddress(defaultAddress);
+      } catch {
+        if (isActive) setIsLoggedInCustomer(false);
+      }
+    }
+
+    void loadAccount();
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const updateField = <Field extends keyof CheckoutForm>(
@@ -164,6 +229,21 @@ export default function CheckoutPage() {
 
   const updatePaymentMethod = (paymentMethod: PaymentMethod) => {
     setForm((current) => ({ ...current, paymentMethod }));
+  };
+
+  const applySavedAddress = (address: SavedAddress) => {
+    setSelectedSavedAddressId(address.id);
+    setForm((current) => ({
+      ...current,
+      fullName: address.fullName || current.fullName,
+      phone: address.phone || current.phone,
+      cityArea: address.cityArea,
+      address: address.address,
+      deliveryZone:
+        address.deliveryZone === "Inside Dhaka" || address.deliveryZone === "Outside Dhaka"
+          ? address.deliveryZone
+          : current.deliveryZone,
+    }));
   };
 
   const selectedReceiverNumber =
@@ -428,6 +508,50 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {isLoggedInCustomer && (
+                  <div className="sm:col-span-2 rounded-2xl border border-cyan-100/20 bg-cyan-100/[0.07] p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          Logged in account
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-white/55">
+                          You can use a saved address or edit the fields for this order.
+                        </p>
+                      </div>
+                      <Link
+                        href="/account/addresses"
+                        className="inline-flex w-full items-center justify-center rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-100/15 sm:w-auto"
+                      >
+                        Manage addresses
+                      </Link>
+                    </div>
+                    {savedAddresses.length > 0 && (
+                      <label className="mt-4 block">
+                        <span className="text-sm font-medium text-white/75">
+                          Saved address
+                        </span>
+                        <select
+                          value={selectedSavedAddressId}
+                          onChange={(event) => {
+                            const address = savedAddresses.find(
+                              (item) => item.id === event.target.value
+                            );
+                            if (address) applySavedAddress(address);
+                          }}
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/45"
+                        >
+                          {savedAddresses.map((address) => (
+                            <option key={address.id} value={address.id}>
+                              {address.label}
+                              {address.isDefault ? " (default)" : ""} - {address.cityArea}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                )}
                 <TextField
                   label="Full Name *"
                   value={form.fullName}

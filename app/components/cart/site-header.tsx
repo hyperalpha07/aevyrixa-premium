@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { PackageSearch, ShoppingBag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { PackageSearch, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 import {
   defaultStorefrontSettings,
@@ -10,7 +11,7 @@ import {
 } from "@/app/lib/storefront-settings";
 
 type SiteHeaderProps = {
-  active?: "home" | "shop" | "product" | "track" | "cart";
+  active?: "home" | "shop" | "product" | "track" | "cart" | "account";
   productHref?: string;
   settings?: StorefrontSettings;
 };
@@ -21,6 +22,21 @@ export default function SiteHeader({
   settings = defaultStorefrontSettings,
 }: SiteHeaderProps) {
   const { totalItems, toggleCart } = useCart();
+  const [hasAccountSession, setHasAccountSession] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    void fetch("/api/account/session", { cache: "no-store" })
+      .then((response) => {
+        if (isActive) setHasAccountSession(response.ok);
+      })
+      .catch(() => {
+        if (isActive) setHasAccountSession(false);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const navBase =
     "aev-nav-control rounded-full border px-5 py-2.5 text-white transition duration-300";
@@ -55,6 +71,17 @@ export default function SiteHeader({
         </Link>
 
         <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <Link
+            href={hasAccountSession ? "/account" : "/account/login"}
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
+              active === "account"
+                ? "border-fuchsia-400/35 bg-white/10 text-white"
+                : "border-white/10 bg-white/5 text-white/82 hover:border-fuchsia-400/35 hover:bg-white/10"
+            }`}
+            aria-label={hasAccountSession ? "Account" : "Login"}
+          >
+            <UserRound className="h-4 w-4" />
+          </Link>
           <Link
             href="/track-order"
             className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
@@ -109,6 +136,13 @@ export default function SiteHeader({
             className={`${navBase} ${active === "track" ? navActive : navMuted}`}
           >
             Track Order
+          </Link>
+
+          <Link
+            href={hasAccountSession ? "/account" : "/account/login"}
+            className={`${navBase} ${active === "account" ? navActive : navMuted}`}
+          >
+            {hasAccountSession ? "Account" : "Login"}
           </Link>
 
           <button

@@ -4,6 +4,8 @@ import {
   verifyAdminRequestPermission,
 } from "@/app/lib/admin-auth";
 import { notifyNewOrder } from "@/app/lib/order-notifications";
+import { getCustomerFromRequest } from "@/app/api/account/_utils";
+import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
 import { createOrder, listOrders } from "@/app/lib/order-store";
 import { getProductBySlug } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
@@ -221,7 +223,14 @@ export async function POST(request: Request) {
       return Response.json({ errors: itemAvailabilityErrors }, { status: 409 });
     }
 
-    const result = await createOrder(input);
+    const customer = await getCustomerFromRequest(request).catch(() => null);
+    const orderInput =
+      customer &&
+      normalizeCustomerPhone(customer.phone) === normalizeCustomerPhone(input.customer.phone)
+        ? { ...input, customerId: customer.id }
+        : input;
+
+    const result = await createOrder(orderInput);
 
     try {
       const notificationResult = await notifyNewOrder(result.order);

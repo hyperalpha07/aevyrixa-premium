@@ -96,6 +96,7 @@ export type OrderTotals = {
 export type OrderRecord = {
   orderId: string;
   orderReference: string;
+  customerId?: string;
   customer: OrderCustomer;
   paymentDetails: OrderPaymentDetails;
   items: OrderCartItem[];
