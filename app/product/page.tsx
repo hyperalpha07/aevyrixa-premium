@@ -59,15 +59,30 @@ const themeStyles: Record<
   },
 };
 
-export default async function ProductCollectionPage() {
-  const [{ products }, { settings }] = await Promise.all([
+export default async function ProductCollectionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const [{ products }, { settings }, resolvedParams] = await Promise.all([
     listProducts(),
     loadStorefrontSettings(),
+    searchParams,
   ]);
+  const activeCategory = typeof resolvedParams.category === "string" ? resolvedParams.category : "";
+
   const displayProducts = products.map(publicProduct);
   const primaryProductHref = displayProducts[0]
     ? `/product/${displayProducts[0].slug}`
     : "/product";
+
+  const distinctCategories = [
+    ...new Set(displayProducts.map((p) => p.category).filter(Boolean)),
+  ].sort();
+
+  const filteredProducts = activeCategory
+    ? displayProducts.filter((p) => p.category === activeCategory)
+    : displayProducts;
 
   return (
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
@@ -112,11 +127,44 @@ export default async function ProductCollectionPage() {
             </div>
           ))}
         </div>
+
+        {distinctCategories.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-2">
+            <Link
+              href="/product"
+              className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                !activeCategory
+                  ? "border-cyan-200/50 bg-cyan-200/15 text-cyan-100"
+                  : "border-white/12 bg-white/[0.05] text-white/58 hover:border-cyan-200/30 hover:text-cyan-100"
+              }`}
+            >
+              All
+            </Link>
+            {distinctCategories.map((cat) => (
+              <Link
+                key={cat}
+                href={`/product?category=${encodeURIComponent(cat)}`}
+                className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                  activeCategory === cat
+                    ? "border-cyan-200/50 bg-cyan-200/15 text-cyan-100"
+                    : "border-white/12 bg-white/[0.05] text-white/58 hover:border-cyan-200/30 hover:text-cyan-100"
+                }`}
+              >
+                {cat}
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6">
+        {filteredProducts.length === 0 && (
+          <div className="py-16 text-center text-sm text-white/45">
+            No products in this category yet.
+          </div>
+        )}
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {displayProducts.map((product) => {
+          {filteredProducts.map((product) => {
             const style = themeStyles[product.visualTheme] ?? themeStyles["blush-violet"];
 
             return (

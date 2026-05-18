@@ -75,6 +75,16 @@ const stockStatuses: ProductStockStatus[] = [
 ];
 const visualThemes: ProductVisualTheme[] = ["blush-violet", "cyan-night", "rose-gold"];
 
+const CMS_CATEGORY_NAMES = [
+  "Reusable Period Care",
+  "Comfort Panty",
+  "Soft Support Bra",
+  "Nightwear",
+  "Hygiene Essentials",
+  "Bundles",
+  "New Arrivals",
+] as const;
+
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
 type AdminView = "dashboard" | "orders" | "products" | "settings";
@@ -2208,7 +2218,22 @@ function ProductEditor({
         <TextField label="Slug" value={draft.slug} onChange={(value) => updateField("slug", slugify(value))} required />
         <TextField label="Price" value={draft.price} onChange={(value) => updateField("price", value)} placeholder="BDT 1,450" />
         <TextField label="Compare-at price" value={draft.compareAtPrice} onChange={(value) => updateField("compareAtPrice", value)} placeholder="BDT 1,800" />
-        <TextField label="Category" value={draft.category} onChange={(value) => updateField("category", value)} />
+        <label className="relative block min-w-0">
+          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">Category</span>
+          <select
+            value={draft.category}
+            onChange={(e) => updateField("category", e.target.value)}
+            className="w-full appearance-none rounded-2xl border border-white/10 bg-black/24 px-4 py-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-200/40"
+          >
+            {(CMS_CATEGORY_NAMES as readonly string[]).map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+            {!(CMS_CATEGORY_NAMES as readonly string[]).includes(draft.category) && draft.category && (
+              <option value={draft.category}>{draft.category} (legacy)</option>
+            )}
+          </select>
+          <ChevronDown className="pointer-events-none absolute bottom-3.5 right-3 h-4 w-4 text-white/45" />
+        </label>
         <TextField label="Absorbency" value={draft.absorbency} onChange={(value) => updateField("absorbency", value)} />
         <TextField label="Sizes" value={sizes} onChange={setSizes} placeholder="XS, S, M, L, XL" />
         <TextField label="Colors" value={colors} onChange={setColors} placeholder="Black, Nude, Soft Pink" />
@@ -2486,7 +2511,7 @@ function SettingsSection({
     { id: "notificationSettings", label: "Notifications", icon: BellIcon },
     { id: "seoSettings", label: "SEO", icon: Search },
     { id: "appearanceSettings", label: "Appearance", icon: Sparkles },
-    { id: "homepageMediaSettings", label: "Homepage Media", icon: Globe },
+    { id: "homepageMediaSettings", label: "Media & Categories", icon: Globe },
     { id: "advancedSettings", label: "Advanced", icon: Settings },
   ] as const;
 
@@ -3445,33 +3470,54 @@ function SettingsSection({
               </SettingsCard>
 
               <SettingsCard
-                eyebrow="Homepage Media — Categories"
-                title="Category status and media"
-                description="Set each category as active, coming soon, or hidden. Upload an image or video per card as optional overlay. Hidden categories are not shown on the storefront."
+                eyebrow="Category CMS"
+                title="Category cards — content, status, and media"
+                description="Control each category's display title, tagline, link, status (active / coming soon / hidden), and optional image or video overlay. Hidden categories are not shown on the storefront. Link URL is required for active categories to be clickable."
               >
-                <div className="space-y-3">
+                <div className="space-y-4">
                 {(
                   [
-                    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", slug: "reusable" },
-                    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", slug: "comfort-panty" },
-                    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", slug: "soft-bra" },
-                    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", slug: "nightwear" },
-                    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", slug: "hygiene" },
-                    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", slug: "bundles" },
-                    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", slug: "new-arrivals" },
+                    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", titleKey: "categoryReusablePeriodCareTitle", descKey: "categoryReusablePeriodCareDescription", linkKey: "categoryReusablePeriodCareLinkUrl", slug: "reusable" },
+                    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", titleKey: "categoryComfortPantyTitle", descKey: "categoryComfortPantyDescription", linkKey: "categoryComfortPantyLinkUrl", slug: "comfort-panty" },
+                    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", titleKey: "categorySoftSupportBraTitle", descKey: "categorySoftSupportBraDescription", linkKey: "categorySoftSupportBraLinkUrl", slug: "soft-bra" },
+                    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", titleKey: "categoryNightwearTitle", descKey: "categoryNightwearDescription", linkKey: "categoryNightwearLinkUrl", slug: "nightwear" },
+                    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", titleKey: "categoryHygieneEssentialsTitle", descKey: "categoryHygieneEssentialsDescription", linkKey: "categoryHygieneEssentialsLinkUrl", slug: "hygiene" },
+                    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", titleKey: "categoryBundlesTitle", descKey: "categoryBundlesDescription", linkKey: "categoryBundlesLinkUrl", slug: "bundles" },
+                    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", titleKey: "categoryNewArrivalsTitle", descKey: "categoryNewArrivalsDescription", linkKey: "categoryNewArrivalsLinkUrl", slug: "new-arrivals" },
                   ] as const
-                ).map(({ label, stateKey, imgKey, vidKey, slug }) => {
+                ).map(({ label, stateKey, imgKey, vidKey, titleKey, descKey, linkKey, slug }) => {
                   const imgUploadKey = `cat-${slug}-img`;
                   const vidUploadKey = `cat-${slug}-vid`;
                   return (
                     <div key={slug} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium text-white">{label}</span>
+                        <span className="text-sm font-semibold text-white">{label}</span>
                         <SelectField
                           label=""
                           value={draft.homepageMediaSettings[stateKey]}
                           options={["active", "coming_soon", "hidden"] as const}
                           onChange={(value) => updateHomepageMediaSettings({ [stateKey]: value })}
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <TextField
+                          label="Display title"
+                          value={draft.homepageMediaSettings[titleKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [titleKey]: value })}
+                          placeholder={label}
+                        />
+                        <TextField
+                          label="Short description"
+                          value={draft.homepageMediaSettings[descKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [descKey]: value })}
+                          placeholder="Short tagline for this category..."
+                        />
+                        <TextField
+                          label="Link URL (active)"
+                          value={draft.homepageMediaSettings[linkKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [linkKey]: value })}
+                          placeholder="/product"
+                          inputMode="url"
                         />
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">

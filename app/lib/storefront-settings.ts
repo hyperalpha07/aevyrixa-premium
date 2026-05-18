@@ -3,11 +3,21 @@ import {
   normalizeAdminSettings,
   whatsappHref,
   type AdminSettings,
+  type HomepageCategoryState,
 } from "@/app/lib/admin-settings";
 
 export type StorefrontSocialLink = {
   label: "Facebook" | "Instagram" | "TikTok" | "YouTube";
   href: string;
+};
+
+export type CategoryCmsEntry = {
+  key: string;
+  slug: string;
+  title: string;
+  description: string;
+  linkUrl: string;
+  status: HomepageCategoryState;
 };
 
 export type StorefrontSettings = AdminSettings & {
@@ -19,6 +29,9 @@ export type StorefrontSettings = AdminSettings & {
   whatsappUrl: string;
   socialLinks: StorefrontSocialLink[];
   trustBadges: string[];
+  allCategories: CategoryCmsEntry[];
+  activeCategories: CategoryCmsEntry[];
+  shopFooterCategories: CategoryCmsEntry[];
 };
 
 function shortBrandName(storeName: string) {
@@ -37,6 +50,34 @@ function footerDeliveryText(brandTagline: string, deliveryText: string) {
   if (!/bangladesh$/i.test(brandTagline.trim())) return trimmed;
 
   return trimmed.replace(/^Bangladesh\s+delivery\b/i, "Delivery");
+}
+
+const categoryDefs = [
+  { key: "categoryReusablePeriodCare", slug: "reusable-period-care" },
+  { key: "categoryComfortPanty", slug: "comfort-panty" },
+  { key: "categorySoftSupportBra", slug: "soft-support-bra" },
+  { key: "categoryNightwear", slug: "nightwear" },
+  { key: "categoryHygieneEssentials", slug: "hygiene-essentials" },
+  { key: "categoryBundles", slug: "bundles" },
+  { key: "categoryNewArrivals", slug: "new-arrivals" },
+] as const;
+
+function buildCategories(settings: AdminSettings): CategoryCmsEntry[] {
+  const hms = settings.homepageMediaSettings;
+  return categoryDefs.map(({ key, slug }) => {
+    const status = hms[key as keyof typeof hms] as HomepageCategoryState;
+    const titleKey = `${key}Title` as keyof typeof hms;
+    const descKey = `${key}Description` as keyof typeof hms;
+    const linkKey = `${key}LinkUrl` as keyof typeof hms;
+    return {
+      key,
+      slug,
+      title: (hms[titleKey] as string) || key,
+      description: (hms[descKey] as string) || "",
+      linkUrl: (hms[linkKey] as string) || "",
+      status,
+    };
+  });
 }
 
 export function normalizeStorefrontSettings(value: unknown): StorefrontSettings {
@@ -58,6 +99,10 @@ export function normalizeStorefrontSettings(value: unknown): StorefrontSettings 
       Boolean(link[1])
     )
     .map(([label, href]) => ({ label, href }));
+
+  const allCategories = buildCategories(settings);
+  const activeCategories = allCategories.filter((c) => c.status === "active");
+  const shopFooterCategories = activeCategories.filter((c) => c.linkUrl);
 
   return {
     ...settings,
@@ -81,6 +126,9 @@ export function normalizeStorefrontSettings(value: unknown): StorefrontSettings 
       "Comfort Fit",
       "Reusable Protection",
     ],
+    allCategories,
+    activeCategories,
+    shopFooterCategories,
   };
 }
 

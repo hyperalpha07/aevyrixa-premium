@@ -213,6 +213,9 @@ export default async function Home() {
       const state = hms[cat.key];
       const imageKey = `${cat.key}ImageUrl` as keyof typeof hms;
       const videoKey = `${cat.key}VideoUrl` as keyof typeof hms;
+      const titleKey = `${cat.key}Title` as keyof typeof hms;
+      const descKey = `${cat.key}Description` as keyof typeof hms;
+      const linkKey = `${cat.key}LinkUrl` as keyof typeof hms;
       return {
         ...cat,
         state,
@@ -220,6 +223,9 @@ export default async function Home() {
         hidden: state === "hidden",
         categoryImageUrl: (hms[imageKey] as string) || "",
         categoryVideoUrl: (hms[videoKey] as string) || "",
+        displayName: (hms[titleKey] as string) || cat.name,
+        displayTagline: (hms[descKey] as string) || cat.tagline,
+        displayLinkUrl: (hms[linkKey] as string) || (state === "active" ? "/product" : ""),
       };
     })
     .filter((cat) => !cat.hidden);
@@ -426,13 +432,13 @@ export default async function Home() {
             </p>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {hereCareCategories.map(({ name, tagline, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl }) => {
+            {hereCareCategories.map(({ displayName, displayTagline, displayLinkUrl, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl }) => {
               const hasMedia = Boolean(categoryImageUrl || categoryVideoUrl);
               const inner = (
                 <>
                   {hasMedia && categoryVideoUrl ? (
                     <video
-                      className="absolute inset-0 h-full w-full object-cover opacity-30"
+                      className="absolute inset-0 h-full w-full object-cover opacity-70"
                       autoPlay
                       muted
                       loop
@@ -444,23 +450,26 @@ export default async function Home() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={categoryImageUrl}
-                      alt={name}
-                      className="absolute inset-0 h-full w-full object-cover opacity-30"
+                      alt={displayName}
+                      className="absolute inset-0 h-full w-full object-cover opacity-70"
                       loading="lazy"
                     />
                   ) : null}
+                  {hasMedia && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  )}
                   <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
                   <div className={`absolute right-4 top-4 h-14 w-14 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-150`} />
                   <div className="relative flex items-start justify-between gap-2">
-                    <h3 className="text-base font-semibold text-white">{name}</h3>
+                    <h3 className="text-base font-semibold text-white drop-shadow-sm">{displayName}</h3>
                     {comingSoon && (
-                      <span className="mt-0.5 shrink-0 rounded-full border border-white/15 bg-white/[0.07] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-white/48">
+                      <span className="mt-0.5 shrink-0 rounded-full border border-white/15 bg-white/[0.07] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-white/60">
                         Soon
                       </span>
                     )}
                   </div>
-                  <p className="relative mt-2 text-sm leading-6 text-white/58">{tagline}</p>
-                  {!comingSoon && (
+                  <p className="relative mt-2 text-sm leading-6 text-white/68 drop-shadow-sm">{displayTagline}</p>
+                  {!comingSoon && displayLinkUrl && (
                     <div className="relative mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:text-cyan-200">
                       Explore
                       <ArrowRight size={12} strokeWidth={2.2} />
@@ -469,21 +478,23 @@ export default async function Home() {
                 </>
               );
 
-              return comingSoon ? (
-                <div
-                  key={name}
-                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.032] p-5 backdrop-blur-2xl opacity-70 sm:p-6"
-                >
-                  {inner}
-                </div>
-              ) : (
+              const isClickable = !comingSoon && Boolean(displayLinkUrl);
+
+              return isClickable ? (
                 <a
-                  key={name}
-                  href="/product"
-                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_0_32px_rgba(34,211,238,0.10)] sm:p-6"
+                  key={displayName}
+                  href={displayLinkUrl}
+                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.048] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_0_32px_rgba(34,211,238,0.12)] sm:p-6"
                 >
                   {inner}
                 </a>
+              ) : (
+                <div
+                  key={displayName}
+                  className={`aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.032] p-5 backdrop-blur-2xl sm:p-6 ${comingSoon ? "opacity-70" : ""}`}
+                >
+                  {inner}
+                </div>
               );
             })}
           </div>

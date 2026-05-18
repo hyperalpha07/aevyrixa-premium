@@ -9,12 +9,8 @@ import {
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
 
-const shopLinks = [
+const defaultShopLinks = [
   { label: "Her Care Collection", href: "/product" },
-  { label: "Reusable Period Care", href: "/product" },
-  { label: "Comfort Panty", href: "/product" },
-  { label: "Hygiene Essentials", href: "/product" },
-  { label: "New Arrivals", href: "/product" },
 ];
 
 const supportLinks = [
@@ -51,7 +47,12 @@ export default function SiteFooter({
     };
   }, []);
 
-  const { whatsappUrl, socialLinks, supportEmail, brandShortName, brandTagline, privacyPackagingMessage } = settings;
+  const { whatsappUrl, socialLinks, supportEmail, brandShortName, brandTagline, privacyPackagingMessage, shopFooterCategories } = settings;
+
+  const shopLinks = [
+    ...defaultShopLinks,
+    ...shopFooterCategories.map((c) => ({ label: c.title, href: c.linkUrl })),
+  ];
 
   return (
     <footer className="border-t border-white/10 bg-[#02040d] px-4 pb-24 pt-12 text-white sm:px-6 sm:pb-16">

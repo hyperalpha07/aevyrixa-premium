@@ -137,24 +137,45 @@ export type HomepageMediaSettings = {
   categoryReusablePeriodCare: HomepageCategoryState;
   categoryReusablePeriodCareImageUrl: string;
   categoryReusablePeriodCareVideoUrl: string;
+  categoryReusablePeriodCareTitle: string;
+  categoryReusablePeriodCareDescription: string;
+  categoryReusablePeriodCareLinkUrl: string;
   categoryComfortPanty: HomepageCategoryState;
   categoryComfortPantyImageUrl: string;
   categoryComfortPantyVideoUrl: string;
+  categoryComfortPantyTitle: string;
+  categoryComfortPantyDescription: string;
+  categoryComfortPantyLinkUrl: string;
   categorySoftSupportBra: HomepageCategoryState;
   categorySoftSupportBraImageUrl: string;
   categorySoftSupportBraVideoUrl: string;
+  categorySoftSupportBraTitle: string;
+  categorySoftSupportBraDescription: string;
+  categorySoftSupportBraLinkUrl: string;
   categoryNightwear: HomepageCategoryState;
   categoryNightwearImageUrl: string;
   categoryNightwearVideoUrl: string;
+  categoryNightwearTitle: string;
+  categoryNightwearDescription: string;
+  categoryNightwearLinkUrl: string;
   categoryHygieneEssentials: HomepageCategoryState;
   categoryHygieneEssentialsImageUrl: string;
   categoryHygieneEssentialsVideoUrl: string;
+  categoryHygieneEssentialsTitle: string;
+  categoryHygieneEssentialsDescription: string;
+  categoryHygieneEssentialsLinkUrl: string;
   categoryBundles: HomepageCategoryState;
   categoryBundlesImageUrl: string;
   categoryBundlesVideoUrl: string;
+  categoryBundlesTitle: string;
+  categoryBundlesDescription: string;
+  categoryBundlesLinkUrl: string;
   categoryNewArrivals: HomepageCategoryState;
   categoryNewArrivalsImageUrl: string;
   categoryNewArrivalsVideoUrl: string;
+  categoryNewArrivalsTitle: string;
+  categoryNewArrivalsDescription: string;
+  categoryNewArrivalsLinkUrl: string;
   whatsappWidgetEnabled: boolean;
   whatsappWidgetLabel: string;
   whatsappWidgetLiveText: string;
@@ -337,7 +358,7 @@ const defaultGroups: AdminSettingsGroups = {
     testMode: false,
     debugMode: false,
     purgeDeletedProductsAfterDays: "",
-    systemVersionLabel: "Aevyrixa Control Room — Phase 35 Homepage CMS Media Control",
+    systemVersionLabel: "Aevyrixa Control Room — Phase 36 Category CMS",
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
   homepageMediaSettings: {
@@ -347,24 +368,45 @@ const defaultGroups: AdminSettingsGroups = {
     categoryReusablePeriodCare: "active",
     categoryReusablePeriodCareImageUrl: "",
     categoryReusablePeriodCareVideoUrl: "",
+    categoryReusablePeriodCareTitle: "Reusable Period Care",
+    categoryReusablePeriodCareDescription: "Comfortable reusable protection for light to moderate flow.",
+    categoryReusablePeriodCareLinkUrl: "/product",
     categoryComfortPanty: "coming_soon",
     categoryComfortPantyImageUrl: "",
     categoryComfortPantyVideoUrl: "",
+    categoryComfortPantyTitle: "Comfort Panty",
+    categoryComfortPantyDescription: "Soft stretch everyday wear designed for all-day comfort.",
+    categoryComfortPantyLinkUrl: "",
     categorySoftSupportBra: "coming_soon",
     categorySoftSupportBraImageUrl: "",
     categorySoftSupportBraVideoUrl: "",
+    categorySoftSupportBraTitle: "Soft Support Bra",
+    categorySoftSupportBraDescription: "Gentle support with smooth fabric for daily wear.",
+    categorySoftSupportBraLinkUrl: "",
     categoryNightwear: "coming_soon",
     categoryNightwearImageUrl: "",
     categoryNightwearVideoUrl: "",
+    categoryNightwearTitle: "Nightwear",
+    categoryNightwearDescription: "Relaxed, breathable comfort for restful evenings.",
+    categoryNightwearLinkUrl: "",
     categoryHygieneEssentials: "coming_soon",
     categoryHygieneEssentialsImageUrl: "",
     categoryHygieneEssentialsVideoUrl: "",
+    categoryHygieneEssentialsTitle: "Hygiene Essentials",
+    categoryHygieneEssentialsDescription: "Curated essentials for your daily hygiene routine.",
+    categoryHygieneEssentialsLinkUrl: "",
     categoryBundles: "coming_soon",
     categoryBundlesImageUrl: "",
     categoryBundlesVideoUrl: "",
+    categoryBundlesTitle: "Bundles",
+    categoryBundlesDescription: "Thoughtful care sets at a considered price.",
+    categoryBundlesLinkUrl: "",
     categoryNewArrivals: "coming_soon",
     categoryNewArrivalsImageUrl: "",
     categoryNewArrivalsVideoUrl: "",
+    categoryNewArrivalsTitle: "New Arrivals",
+    categoryNewArrivalsDescription: "Fresh additions to the Her Care collection.",
+    categoryNewArrivalsLinkUrl: "",
     whatsappWidgetEnabled: false,
     whatsappWidgetLabel: "Support",
     whatsappWidgetLiveText: "",
@@ -898,42 +940,63 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryReusablePeriodCareImageUrl: publicUrlValue(homepageMediaRaw.categoryReusablePeriodCareImageUrl),
       categoryReusablePeriodCareVideoUrl: publicUrlValue(homepageMediaRaw.categoryReusablePeriodCareVideoUrl),
+      categoryReusablePeriodCareTitle: safeText(homepageMediaRaw.categoryReusablePeriodCareTitle, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareTitle),
+      categoryReusablePeriodCareDescription: safeText(homepageMediaRaw.categoryReusablePeriodCareDescription, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareDescription),
+      categoryReusablePeriodCareLinkUrl: safeText(homepageMediaRaw.categoryReusablePeriodCareLinkUrl, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareLinkUrl),
       categoryComfortPanty: categoryStateValue(
         homepageMediaRaw.categoryComfortPanty,
         defaultGroups.homepageMediaSettings.categoryComfortPanty
       ),
       categoryComfortPantyImageUrl: publicUrlValue(homepageMediaRaw.categoryComfortPantyImageUrl),
       categoryComfortPantyVideoUrl: publicUrlValue(homepageMediaRaw.categoryComfortPantyVideoUrl),
+      categoryComfortPantyTitle: safeText(homepageMediaRaw.categoryComfortPantyTitle, defaultGroups.homepageMediaSettings.categoryComfortPantyTitle),
+      categoryComfortPantyDescription: safeText(homepageMediaRaw.categoryComfortPantyDescription, defaultGroups.homepageMediaSettings.categoryComfortPantyDescription),
+      categoryComfortPantyLinkUrl: safeText(homepageMediaRaw.categoryComfortPantyLinkUrl, defaultGroups.homepageMediaSettings.categoryComfortPantyLinkUrl),
       categorySoftSupportBra: categoryStateValue(
         homepageMediaRaw.categorySoftSupportBra,
         defaultGroups.homepageMediaSettings.categorySoftSupportBra
       ),
       categorySoftSupportBraImageUrl: publicUrlValue(homepageMediaRaw.categorySoftSupportBraImageUrl),
       categorySoftSupportBraVideoUrl: publicUrlValue(homepageMediaRaw.categorySoftSupportBraVideoUrl),
+      categorySoftSupportBraTitle: safeText(homepageMediaRaw.categorySoftSupportBraTitle, defaultGroups.homepageMediaSettings.categorySoftSupportBraTitle),
+      categorySoftSupportBraDescription: safeText(homepageMediaRaw.categorySoftSupportBraDescription, defaultGroups.homepageMediaSettings.categorySoftSupportBraDescription),
+      categorySoftSupportBraLinkUrl: safeText(homepageMediaRaw.categorySoftSupportBraLinkUrl, defaultGroups.homepageMediaSettings.categorySoftSupportBraLinkUrl),
       categoryNightwear: categoryStateValue(
         homepageMediaRaw.categoryNightwear,
         defaultGroups.homepageMediaSettings.categoryNightwear
       ),
       categoryNightwearImageUrl: publicUrlValue(homepageMediaRaw.categoryNightwearImageUrl),
       categoryNightwearVideoUrl: publicUrlValue(homepageMediaRaw.categoryNightwearVideoUrl),
+      categoryNightwearTitle: safeText(homepageMediaRaw.categoryNightwearTitle, defaultGroups.homepageMediaSettings.categoryNightwearTitle),
+      categoryNightwearDescription: safeText(homepageMediaRaw.categoryNightwearDescription, defaultGroups.homepageMediaSettings.categoryNightwearDescription),
+      categoryNightwearLinkUrl: safeText(homepageMediaRaw.categoryNightwearLinkUrl, defaultGroups.homepageMediaSettings.categoryNightwearLinkUrl),
       categoryHygieneEssentials: categoryStateValue(
         homepageMediaRaw.categoryHygieneEssentials,
         defaultGroups.homepageMediaSettings.categoryHygieneEssentials
       ),
       categoryHygieneEssentialsImageUrl: publicUrlValue(homepageMediaRaw.categoryHygieneEssentialsImageUrl),
       categoryHygieneEssentialsVideoUrl: publicUrlValue(homepageMediaRaw.categoryHygieneEssentialsVideoUrl),
+      categoryHygieneEssentialsTitle: safeText(homepageMediaRaw.categoryHygieneEssentialsTitle, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsTitle),
+      categoryHygieneEssentialsDescription: safeText(homepageMediaRaw.categoryHygieneEssentialsDescription, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsDescription),
+      categoryHygieneEssentialsLinkUrl: safeText(homepageMediaRaw.categoryHygieneEssentialsLinkUrl, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsLinkUrl),
       categoryBundles: categoryStateValue(
         homepageMediaRaw.categoryBundles,
         defaultGroups.homepageMediaSettings.categoryBundles
       ),
       categoryBundlesImageUrl: publicUrlValue(homepageMediaRaw.categoryBundlesImageUrl),
       categoryBundlesVideoUrl: publicUrlValue(homepageMediaRaw.categoryBundlesVideoUrl),
+      categoryBundlesTitle: safeText(homepageMediaRaw.categoryBundlesTitle, defaultGroups.homepageMediaSettings.categoryBundlesTitle),
+      categoryBundlesDescription: safeText(homepageMediaRaw.categoryBundlesDescription, defaultGroups.homepageMediaSettings.categoryBundlesDescription),
+      categoryBundlesLinkUrl: safeText(homepageMediaRaw.categoryBundlesLinkUrl, defaultGroups.homepageMediaSettings.categoryBundlesLinkUrl),
       categoryNewArrivals: categoryStateValue(
         homepageMediaRaw.categoryNewArrivals,
         defaultGroups.homepageMediaSettings.categoryNewArrivals
       ),
       categoryNewArrivalsImageUrl: publicUrlValue(homepageMediaRaw.categoryNewArrivalsImageUrl),
       categoryNewArrivalsVideoUrl: publicUrlValue(homepageMediaRaw.categoryNewArrivalsVideoUrl),
+      categoryNewArrivalsTitle: safeText(homepageMediaRaw.categoryNewArrivalsTitle, defaultGroups.homepageMediaSettings.categoryNewArrivalsTitle),
+      categoryNewArrivalsDescription: safeText(homepageMediaRaw.categoryNewArrivalsDescription, defaultGroups.homepageMediaSettings.categoryNewArrivalsDescription),
+      categoryNewArrivalsLinkUrl: safeText(homepageMediaRaw.categoryNewArrivalsLinkUrl, defaultGroups.homepageMediaSettings.categoryNewArrivalsLinkUrl),
       whatsappWidgetEnabled: booleanValue(
         homepageMediaRaw.whatsappWidgetEnabled,
         defaultGroups.homepageMediaSettings.whatsappWidgetEnabled
