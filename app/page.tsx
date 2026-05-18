@@ -855,39 +855,157 @@ export default async function Home() {
       {hms.ctaSectionEnabled && (
       <section className="px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-20">
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] shadow-2xl">
-          <div className="relative px-5 py-12 text-center sm:px-8 sm:py-16 lg:px-12 lg:py-20">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.18),transparent_32%),radial-gradient(circle_at_82%_68%,rgba(168,85,247,0.18),transparent_30%),linear-gradient(135deg,rgba(244,196,212,0.1),transparent_38%)]" />
-            <div className="relative mx-auto max-w-3xl">
-              {hms.ctaSectionEyebrow && (
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
-                  {hms.ctaSectionEyebrow}
-                </p>
+          {/* background_media_text mode */}
+          {(hms.ctaSectionMediaMode === "background_media_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
+            <div className="relative min-h-[28rem] overflow-hidden">
+              {hms.ctaSectionVideoUrl ? (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video
+                  src={hms.ctaSectionVideoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 h-full w-full object-cover"
+                  aria-label={hms.ctaSectionAltText || "CTA background video"}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={hms.ctaSectionImageUrl}
+                  alt={hms.ctaSectionAltText || "CTA background"}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               )}
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                {hms.ctaSectionHeading}
-              </h2>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
-                {hms.ctaSectionDescription}
-                {` ${settings.supportWindowMessage}`}
-              </p>
-              <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
-                <Link
-                  href={hms.ctaSectionPrimaryCtaLink || "/product"}
-                  className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
-                >
-                  {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
-                </Link>
-                {hms.ctaSectionSecondaryCtaText && (
-                  <a
-                    href={hms.ctaSectionSecondaryCtaLink || "#faq"}
-                    className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
-                  >
-                    {hms.ctaSectionSecondaryCtaText}
-                  </a>
+              <div className="absolute inset-0 bg-[#050816]/72 backdrop-blur-[1px]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_32%)]" />
+              <div className="relative flex min-h-[28rem] flex-col items-center justify-center px-5 py-16 text-center sm:px-8 lg:px-12">
+                {hms.ctaSectionEyebrow && (
+                  <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
+                    {hms.ctaSectionEyebrow}
+                  </p>
                 )}
+                <h2 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                  {hms.ctaSectionHeading}
+                </h2>
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
+                  {hms.ctaSectionDescription}
+                  {` ${settings.supportWindowMessage}`}
+                </p>
+                <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
+                  <Link
+                    href={hms.ctaSectionPrimaryCtaLink || "/product"}
+                    className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                  >
+                    {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
+                  </Link>
+                  {hms.ctaSectionSecondaryCtaText && (
+                    <a
+                      href={hms.ctaSectionSecondaryCtaLink || "#faq"}
+                      className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
+                    >
+                      {hms.ctaSectionSecondaryCtaText}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (hms.ctaSectionMediaMode === "image_text" || hms.ctaSectionMediaMode === "video_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
+            /* image_text / video_text: side-by-side layout */
+            <div className="grid items-center gap-0 lg:grid-cols-2">
+              {/* Media side */}
+              <div className="relative order-2 overflow-hidden lg:order-1 lg:min-h-[26rem]">
+                {hms.ctaSectionVideoUrl && hms.ctaSectionMediaMode === "video_text" ? (
+                  // eslint-disable-next-line jsx-a11y/media-has-caption
+                  <video
+                    src={hms.ctaSectionVideoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="h-56 w-full object-cover lg:absolute lg:inset-0 lg:h-full"
+                    aria-label={hms.ctaSectionAltText || "CTA video"}
+                  />
+                ) : hms.ctaSectionImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={hms.ctaSectionImageUrl}
+                    alt={hms.ctaSectionAltText || ""}
+                    className="h-56 w-full object-cover lg:absolute lg:inset-0 lg:h-full"
+                  />
+                ) : null}
+              </div>
+              {/* Text side */}
+              <div className="relative order-1 px-5 py-12 text-center sm:px-8 sm:py-16 lg:order-2 lg:text-left">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.14),transparent_40%)]" />
+                <div className="relative">
+                  {hms.ctaSectionEyebrow && (
+                    <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
+                      {hms.ctaSectionEyebrow}
+                    </p>
+                  )}
+                  <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                    {hms.ctaSectionHeading}
+                  </h2>
+                  <p className="mt-5 text-base leading-8 text-white/66">
+                    {hms.ctaSectionDescription}
+                    {` ${settings.supportWindowMessage}`}
+                  </p>
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+                    <Link
+                      href={hms.ctaSectionPrimaryCtaLink || "/product"}
+                      className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                    >
+                      {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
+                    </Link>
+                    {hms.ctaSectionSecondaryCtaText && (
+                      <a
+                        href={hms.ctaSectionSecondaryCtaLink || "#faq"}
+                        className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
+                      >
+                        {hms.ctaSectionSecondaryCtaText}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* no_media or no URL provided — original centered text layout */
+            <div className="relative px-5 py-12 text-center sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.18),transparent_32%),radial-gradient(circle_at_82%_68%,rgba(168,85,247,0.18),transparent_30%),linear-gradient(135deg,rgba(244,196,212,0.1),transparent_38%)]" />
+              <div className="relative mx-auto max-w-3xl">
+                {hms.ctaSectionEyebrow && (
+                  <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
+                    {hms.ctaSectionEyebrow}
+                  </p>
+                )}
+                <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                  {hms.ctaSectionHeading}
+                </h2>
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
+                  {hms.ctaSectionDescription}
+                  {` ${settings.supportWindowMessage}`}
+                </p>
+                <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
+                  <Link
+                    href={hms.ctaSectionPrimaryCtaLink || "/product"}
+                    className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                  >
+                    {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
+                  </Link>
+                  {hms.ctaSectionSecondaryCtaText && (
+                    <a
+                      href={hms.ctaSectionSecondaryCtaLink || "#faq"}
+                      className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl"
+                    >
+                      {hms.ctaSectionSecondaryCtaText}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
       )}

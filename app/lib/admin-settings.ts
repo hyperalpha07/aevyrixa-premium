@@ -136,6 +136,7 @@ export type HomepageSectionMedia = {
 };
 
 export type HomepageCategoryState = "active" | "coming_soon" | "hidden";
+export type CtaSectionMediaMode = "no_media" | "image_text" | "video_text" | "background_media_text";
 
 export type HomepageMediaSettings = {
   heroMedia: HomepageSectionMedia;
@@ -199,6 +200,10 @@ export type HomepageMediaSettings = {
   ctaSectionPrimaryCtaLink: string;
   ctaSectionSecondaryCtaText: string;
   ctaSectionSecondaryCtaLink: string;
+  ctaSectionMediaMode: CtaSectionMediaMode;
+  ctaSectionImageUrl: string;
+  ctaSectionVideoUrl: string;
+  ctaSectionAltText: string;
 };
 
 export type AdvancedSettings = {
@@ -443,6 +448,10 @@ const defaultGroups: AdminSettingsGroups = {
     ctaSectionPrimaryCtaLink: "/product",
     ctaSectionSecondaryCtaText: "Read FAQs",
     ctaSectionSecondaryCtaLink: "#faq",
+    ctaSectionMediaMode: "no_media" as CtaSectionMediaMode,
+    ctaSectionImageUrl: "",
+    ctaSectionVideoUrl: "",
+    ctaSectionAltText: "",
   },
 };
 
@@ -531,6 +540,12 @@ function widgetPlacementValue(value: unknown, fallback: WidgetPlacement): Widget
   return value === "homepage" || value === "all" || value === "product" || value === "support" || value === "cart"
     ? value
     : fallback;
+}
+
+function ctaSectionMediaModeValue(value: unknown): CtaSectionMediaMode {
+  return value === "image_text" || value === "video_text" || value === "background_media_text"
+    ? value
+    : "no_media";
 }
 
 function sectionMediaValue(raw: UnknownRecord): HomepageSectionMedia {
@@ -1105,6 +1120,10 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         homepageMediaRaw.ctaSectionSecondaryCtaLink,
         defaultGroups.homepageMediaSettings.ctaSectionSecondaryCtaLink
       ),
+      ctaSectionMediaMode: ctaSectionMediaModeValue(homepageMediaRaw.ctaSectionMediaMode),
+      ctaSectionImageUrl: publicUrlValue(homepageMediaRaw.ctaSectionImageUrl),
+      ctaSectionVideoUrl: publicUrlValue(homepageMediaRaw.ctaSectionVideoUrl),
+      ctaSectionAltText: safeText(homepageMediaRaw.ctaSectionAltText, ""),
     },
   };
 

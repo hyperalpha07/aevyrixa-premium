@@ -15,7 +15,12 @@
       "Bash(node *)",
       "Bash(grep -rn \"USD\\\\|\\\\\\\\\\\\$[0-9]\\\\|money back guarantee\\\\|7-Day Money\\\\|30-Day Money\\\\|100% leak-proof\\\\|medical cure\" \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\" --include=\"*.tsx\" --include=\"*.ts\")",
       "Bash(grep -rn \"money back\\\\|7-Day Money\\\\|30-Day Money\\\\|100% leak\\\\| USD \\\\|medical cure\\\\|\\\\\\\\\\\\$[0-9]\" \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\" --include=\"*.tsx\" --include=\"*.ts\" -i)",
-      "Bash(grep -v \"node_modules\\\\|\\\\.next\\\\|replace\\\\|regex\\\\|pattern\\\\|test\\\\|sanitiz\\\\|guaranteeText\\\\|/7\\\\\\\\\\\\|money back/i\")"
+      "Bash(grep -v \"node_modules\\\\|\\\\.next\\\\|replace\\\\|regex\\\\|pattern\\\\|test\\\\|sanitiz\\\\|guaranteeText\\\\|/7\\\\\\\\\\\\|money back/i\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\api\\\\admin\\\\support\\\\conversations\\\\[id]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\api\\\\admin\\\\support\\\\conversations\\\\[id]\\\\reply\")",
+      "Bash(dir C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\\\\track-order *)"
     ]
   }
 }

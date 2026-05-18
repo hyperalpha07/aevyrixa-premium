@@ -7,7 +7,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   ReactNode,
 } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Bell as BellIcon,
@@ -19,12 +19,15 @@ import {
   Gauge,
   Globe,
   LogOut,
+  MessageSquare,
   PackageCheck,
   Phone,
   Pencil,
   Plus,
+  RefreshCw,
   Rows3,
   Search,
+  Send,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -42,6 +45,7 @@ import {
   defaultAdminSettings,
   normalizeAdminSettings,
   type AdminSettings,
+  type CtaSectionMediaMode,
   type HomepageMediaSettings,
 } from "@/app/lib/admin-settings";
 import {
@@ -87,7 +91,7 @@ const CMS_CATEGORY_NAMES = [
 
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
-type AdminView = "dashboard" | "orders" | "products" | "settings";
+type AdminView = "dashboard" | "orders" | "products" | "settings" | "support";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type StatusFilter = "All" | OrderStatus;
 type OrderSort = "Newest first" | "Oldest first" | "Highest total" | "Lowest total";
@@ -210,6 +214,7 @@ const navItems = [
   { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders" },
   { label: "Products", href: "/admin/products", icon: Boxes, view: "products" },
   { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings" },
+  { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support" },
 ] satisfies Array<{
   label: string;
   href: string;
@@ -1415,6 +1420,8 @@ export default function AdminPanel({ view }: { view: AdminView }) {
                 backendMessage={settingsBackendMessage}
                 onSaveSettings={saveSettings}
               />
+            ) : view === "support" ? (
+              <SupportSection />
             ) : (
               <DashboardSection
                 metrics={metrics}
@@ -1434,6 +1441,7 @@ function viewTitle(view: AdminView) {
   if (view === "orders") return "Orders";
   if (view === "products") return "Products";
   if (view === "settings") return "Settings";
+  if (view === "support") return "Support Inbox";
   return "Dashboard";
 }
 
@@ -3663,7 +3671,7 @@ function SettingsSection({
               <SettingsCard
                 eyebrow="Homepage Content — CTA Section"
                 title="Bottom call-to-action section"
-                description="The full-width conversion banner near the bottom of the homepage. Edit the eyebrow, heading, description, and CTA buttons."
+                description="The full-width conversion banner near the bottom of the homepage. Edit the eyebrow, heading, description, CTA buttons, and optional background media."
               >
                 <div className="grid gap-4 lg:grid-cols-2">
                   <ToggleField
@@ -3713,6 +3721,86 @@ function SettingsSection({
                     onChange={(value) => updateHomepageMediaSettings({ ctaSectionSecondaryCtaLink: value })}
                     placeholder="#faq"
                   />
+
+                  <div className="lg:col-span-2">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">CTA Media</p>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <SelectField
+                        label="Media mode"
+                        value={draft.homepageMediaSettings.ctaSectionMediaMode}
+                        options={["no_media", "image_text", "video_text", "background_media_text"] as const}
+                        onChange={(value) => updateHomepageMediaSettings({ ctaSectionMediaMode: value as CtaSectionMediaMode })}
+                      />
+                      <TextField
+                        label="Alt text"
+                        value={draft.homepageMediaSettings.ctaSectionAltText}
+                        onChange={(value) => updateHomepageMediaSettings({ ctaSectionAltText: value })}
+                        placeholder="Descriptive text for the image or video"
+                      />
+                      <div className="lg:col-span-2">
+                        <MediaUploadField
+                          label="CTA image"
+                          accept="image/jpeg,image/png,image/webp"
+                          mediaType="image"
+                          currentUrl={draft.homepageMediaSettings.ctaSectionImageUrl}
+                          uploading={!!hmUploading["ctaSectionImage"]}
+                          error={hmUploadError["ctaSectionImage"] ?? null}
+                          onUpload={async (file) => {
+                            setHmUploading((prev) => ({ ...prev, ctaSectionImage: true }));
+                            setHmUploadError((prev) => ({ ...prev, ctaSectionImage: null }));
+                            try {
+                              const form = new FormData();
+                              form.append("file", file);
+                              form.append("section", "cta-section");
+                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                              const pl = (await res.json()) as Record<string, unknown>;
+                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, ctaSectionImage: "Upload failed." })); }
+                              else { updateHomepageMediaSettings({ ctaSectionImageUrl: pl.url as string }); }
+                            } catch { setHmUploadError((prev) => ({ ...prev, ctaSectionImage: "Upload failed." })); }
+                            finally { setHmUploading((prev) => ({ ...prev, ctaSectionImage: false })); }
+                          }}
+                          onClear={() => updateHomepageMediaSettings({ ctaSectionImageUrl: "" })}
+                        />
+                      </div>
+                      <TextField
+                        label="Image URL (override or fallback)"
+                        value={draft.homepageMediaSettings.ctaSectionImageUrl}
+                        onChange={(value) => updateHomepageMediaSettings({ ctaSectionImageUrl: value })}
+                        placeholder="https://…"
+                      />
+                      <div className="lg:col-span-2">
+                        <MediaUploadField
+                          label="CTA video"
+                          accept="video/mp4,video/webm"
+                          mediaType="video"
+                          currentUrl={draft.homepageMediaSettings.ctaSectionVideoUrl}
+                          uploading={!!hmUploading["ctaSectionVideo"]}
+                          error={hmUploadError["ctaSectionVideo"] ?? null}
+                          onUpload={async (file) => {
+                            setHmUploading((prev) => ({ ...prev, ctaSectionVideo: true }));
+                            setHmUploadError((prev) => ({ ...prev, ctaSectionVideo: null }));
+                            try {
+                              const form = new FormData();
+                              form.append("file", file);
+                              form.append("section", "cta-section");
+                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                              const pl = (await res.json()) as Record<string, unknown>;
+                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, ctaSectionVideo: "Upload failed." })); }
+                              else { updateHomepageMediaSettings({ ctaSectionVideoUrl: pl.url as string }); }
+                            } catch { setHmUploadError((prev) => ({ ...prev, ctaSectionVideo: "Upload failed." })); }
+                            finally { setHmUploading((prev) => ({ ...prev, ctaSectionVideo: false })); }
+                          }}
+                          onClear={() => updateHomepageMediaSettings({ ctaSectionVideoUrl: "" })}
+                        />
+                      </div>
+                      <TextField
+                        label="Video URL (override or fallback)"
+                        value={draft.homepageMediaSettings.ctaSectionVideoUrl}
+                        onChange={(value) => updateHomepageMediaSettings({ ctaSectionVideoUrl: value })}
+                        placeholder="https://…"
+                      />
+                    </div>
+                  </div>
                 </div>
               </SettingsCard>
 
@@ -3860,6 +3948,337 @@ function SettingsSection({
         </button>
       </div>
     </form>
+  );
+}
+
+type ConvStatus = "open" | "pending" | "closed";
+
+type AdminConvSummary = {
+  id: string;
+  status: ConvStatus;
+  source_page: string;
+  created_at: string;
+  last_message: { body: string; sender_type: string; created_at: string } | null;
+  message_count: number;
+};
+
+type AdminConvMessage = {
+  id: string;
+  body: string;
+  sender_type: "customer" | "admin";
+  created_at: string;
+};
+
+type AdminConvDetail = {
+  id: string;
+  status: ConvStatus;
+  source_page: string;
+  created_at: string;
+  messages: AdminConvMessage[];
+};
+
+const convStatusLabels: Record<ConvStatus, string> = {
+  open: "Open",
+  pending: "Pending",
+  closed: "Closed",
+};
+
+const convStatusStyles: Record<ConvStatus, string> = {
+  open: "border-emerald-200/35 bg-emerald-200/12 text-emerald-100",
+  pending: "border-amber-200/35 bg-amber-200/12 text-amber-100",
+  closed: "border-white/20 bg-white/[0.05] text-white/48",
+};
+
+function SupportSection() {
+  const [conversations, setConversations] = useState<AdminConvSummary[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<AdminConvDetail | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const detailEndRef = useRef<HTMLDivElement>(null);
+
+  const loadConversations = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/support/conversations", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { conversations: AdminConvSummary[] };
+      if (Array.isArray(data.conversations)) setConversations(data.conversations);
+    } catch {
+      // ignore
+    } finally {
+      if (isRefresh) setRefreshing(false);
+      setLoading(false);
+    }
+  }, []);
+
+  const loadDetail = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as AdminConvDetail;
+      setDetail(data);
+      setTimeout(() => detailEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    void loadDetail(selectedId);
+    const interval = setInterval(() => loadDetail(selectedId), 8000);
+    return () => clearInterval(interval);
+  }, [selectedId, loadDetail]);
+
+  const sendReply = async () => {
+    const body = replyText.trim();
+    if (!body || !selectedId || sending) return;
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch(`/api/admin/support/conversations/${encodeURIComponent(selectedId)}/reply`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ body }),
+      });
+      if (!res.ok) { setSendError("Failed to send reply."); return; }
+      setReplyText("");
+      await loadDetail(selectedId);
+      await loadConversations();
+    } catch {
+      setSendError("Network error.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const updateStatus = async (id: string, status: ConvStatus) => {
+    try {
+      await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      setConversations((prev) => prev.map((c) => c.id === id ? { ...c, status } : c));
+      if (detail?.id === id) setDetail((d) => d ? { ...d, status } : d);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="mt-6">
+      {/* Conversations list */}
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm font-semibold text-white/70">
+          {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
+        </p>
+        <button
+          type="button"
+          onClick={() => loadConversations(true)}
+          disabled={refreshing}
+          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/60 transition hover:text-white disabled:opacity-40"
+        >
+          <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
+
+      {loading && (
+        <p className="py-8 text-center text-sm text-white/40">Loading conversations…</p>
+      )}
+
+      {!loading && conversations.length === 0 && (
+        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-8 text-center">
+          <MessageSquare className="mx-auto mb-3 h-8 w-8 text-white/20" />
+          <p className="text-sm text-white/45">No support conversations yet.</p>
+          <p className="mt-1 text-xs text-white/30">Customers can start a chat using the live chat widget on the homepage.</p>
+        </div>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+        {/* Left: conversation list */}
+        {conversations.length > 0 && (
+          <div className="space-y-2">
+            {conversations.map((conv) => (
+              <button
+                key={conv.id}
+                type="button"
+                onClick={() => setSelectedId(conv.id)}
+                className={`w-full rounded-[1.25rem] border p-4 text-left transition ${
+                  selectedId === conv.id
+                    ? "border-cyan-200/35 bg-cyan-200/[0.07]"
+                    : "border-white/10 bg-white/[0.03] hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span
+                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${convStatusStyles[conv.status]}`}
+                  >
+                    {convStatusLabels[conv.status]}
+                  </span>
+                  <span className="text-[11px] text-white/35">
+                    {new Date(conv.created_at).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-white/55">
+                  From: {conv.source_page || "homepage"}
+                </p>
+                {conv.last_message && (
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-white/75">
+                    {conv.last_message.sender_type === "admin" ? "You: " : ""}
+                    {conv.last_message.body}
+                  </p>
+                )}
+                <p className="mt-1 text-[11px] text-white/38">
+                  {conv.message_count} message{conv.message_count !== 1 ? "s" : ""}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Right: conversation detail */}
+        {selectedId && (
+          <div className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+            {detail ? (
+              <>
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${convStatusStyles[detail.status]}`}
+                  >
+                    {convStatusLabels[detail.status]}
+                  </span>
+                  <span className="text-xs text-white/40">From: {detail.source_page}</span>
+                  <div className="ml-auto flex gap-2">
+                    {detail.status !== "open" && (
+                      <button
+                        type="button"
+                        onClick={() => updateStatus(detail.id, "open")}
+                        className="rounded-full border border-emerald-200/25 bg-emerald-200/[0.07] px-3 py-1 text-xs font-medium text-emerald-200/80 transition hover:border-emerald-200/45"
+                      >
+                        Reopen
+                      </button>
+                    )}
+                    {detail.status !== "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => updateStatus(detail.id, "pending")}
+                        className="rounded-full border border-amber-200/25 bg-amber-200/[0.07] px-3 py-1 text-xs font-medium text-amber-200/80 transition hover:border-amber-200/45"
+                      >
+                        Pending
+                      </button>
+                    )}
+                    {detail.status !== "closed" && (
+                      <button
+                        type="button"
+                        onClick={() => updateStatus(detail.id, "closed")}
+                        className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55 transition hover:border-white/30"
+                      >
+                        Close
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="mb-4 max-h-80 overflow-y-auto rounded-2xl border border-white/[0.07] bg-black/20 p-4 space-y-2">
+                  {detail.messages.length === 0 && (
+                    <p className="text-center text-xs text-white/38">No messages yet.</p>
+                  )}
+                  {detail.messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.sender_type === "admin" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-5 ${
+                          msg.sender_type === "admin"
+                            ? "rounded-br-sm bg-cyan-500/20 text-cyan-50"
+                            : "rounded-bl-sm bg-white/[0.07] text-white/85"
+                        }`}
+                      >
+                        <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/35">
+                          {msg.sender_type === "admin" ? "You" : "Customer"}
+                          {" · "}
+                          {new Date(msg.created_at).toLocaleTimeString("en-GB", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                        <p className="break-words">{msg.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={detailEndRef} />
+                </div>
+
+                {/* Reply */}
+                {detail.status !== "closed" && (
+                  <div>
+                    {sendError && (
+                      <p className="mb-2 text-xs text-rose-300/80">{sendError}</p>
+                    )}
+                    <div className="flex items-end gap-2">
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                            e.preventDefault();
+                            void sendReply();
+                          }
+                        }}
+                        placeholder="Type a reply… (Ctrl+Enter to send)"
+                        rows={3}
+                        className="flex-1 resize-none rounded-2xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-200/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void sendReply()}
+                        disabled={sending || !replyText.trim()}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-400/90 text-black transition hover:bg-cyan-300 disabled:opacity-40"
+                      >
+                        {sending ? (
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/40 border-t-black" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {detail.status === "closed" && (
+                  <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center text-xs text-white/40">
+                    This conversation is closed. Reopen it to send a reply.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="py-8 text-center text-xs text-white/38">Loading…</p>
+            )}
+          </div>
+        )}
+
+        {!selectedId && conversations.length > 0 && (
+          <div className="hidden items-center justify-center rounded-[1.5rem] border border-white/[0.07] bg-white/[0.02] lg:flex">
+            <p className="text-sm text-white/30">Select a conversation to view details</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
