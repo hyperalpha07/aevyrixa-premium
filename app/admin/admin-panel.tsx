@@ -51,14 +51,18 @@ import {
   type LayerComfortMediaMode,
 } from "@/app/lib/admin-settings";
 import {
+  deliveryStatuses,
   orderSources,
   orderStatuses,
+  paymentStatuses,
   paymentMethods,
   paymentVerificationStatuses,
   proofReceivedStatuses,
+  type DeliveryStatus,
   type OrderOperationsUpdate,
   type OrderSource,
   type OrderStatus,
+  type PaymentStatus,
   type PaymentVerificationStatus,
   type ProofReceivedStatus,
 } from "@/app/lib/order-types";
@@ -95,7 +99,10 @@ type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
 type AdminView = "dashboard" | "orders" | "products" | "settings" | "support" | "categories";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
+type PaymentStatusFilter = "All" | PaymentStatus;
 type StatusFilter = "All" | OrderStatus;
+type DeliveryStatusFilter = "All" | DeliveryStatus;
+type SpecialOrderFilter = "Active" | "Include archived/test" | "Archived only" | "Test only";
 type OrderSort = "Newest first" | "Oldest first" | "Highest total" | "Lowest total";
 type SettingsStorageMode =
   | "supabase"
@@ -146,15 +153,27 @@ type StoredOrder = {
   createdAt?: string;
   courierName?: string;
   trackingId?: string;
+  deliveryStatus?: DeliveryStatus;
   deliveryCharge?: number;
+  deliveryArea?: string;
+  deliveryZone?: string;
+  deliveryNote?: string;
   customerConfirmationNote?: string;
+  paymentStatus?: PaymentStatus;
   paymentVerificationStatus?: PaymentVerificationStatus;
+  paymentReference?: string;
+  paymentNote?: string;
   refundExchangeRequest?: string;
   sizeIssueReport?: string;
   proofReceived?: ProofReceivedStatus;
   adminInternalNote?: string;
   orderSource?: OrderSource;
   assignedStaff?: string;
+  isTestOrder?: boolean;
+  archivedAt?: string;
+  deletedAt?: string;
+  softDeletedAt?: string;
+  cancelledReason?: string;
 };
 
 type DashboardMetrics = {
@@ -265,6 +284,14 @@ const statusStyles: Record<OrderStatus, string> = {
 
 const statusFilterOptions = ["All", ...orderStatuses] as const;
 const paymentFilterOptions = ["All", ...paymentMethods] as const;
+const paymentStatusFilterOptions = ["All", ...paymentStatuses] as const;
+const deliveryStatusFilterOptions = ["All", ...deliveryStatuses] as const;
+const specialOrderFilterOptions = [
+  "Active",
+  "Include archived/test",
+  "Archived only",
+  "Test only",
+] as const;
 const orderSortOptions = [
   "Newest first",
   "Oldest first",
@@ -300,6 +327,24 @@ function normalizeStatus(value: unknown): OrderStatus {
   if (lower === "draft" || lower === "pending") return "Pending";
 
   return orderStatuses.find((status) => status.toLowerCase() === lower) ?? "Pending";
+}
+
+function normalizeDeliveryStatus(value: unknown) {
+  return deliveryStatuses.includes(value as never)
+    ? (value as DeliveryStatus)
+    : undefined;
+}
+
+function normalizePaymentStatus(value: unknown) {
+  return paymentStatuses.includes(value as never)
+    ? (value as PaymentStatus)
+    : undefined;
+}
+
+function booleanValue(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return undefined;
 }
 
 function normalizeOrder(value: unknown): StoredOrder | null {
@@ -357,13 +402,20 @@ function normalizeOrder(value: unknown): StoredOrder | null {
     createdAt: textValue(value.createdAt),
     courierName: textValue(value.courierName),
     trackingId: textValue(value.trackingId),
+    deliveryStatus: normalizeDeliveryStatus(value.deliveryStatus),
     deliveryCharge: numberValue(value.deliveryCharge),
+    deliveryArea: textValue(value.deliveryArea),
+    deliveryZone: textValue(value.deliveryZone),
+    deliveryNote: textValue(value.deliveryNote),
     customerConfirmationNote: textValue(value.customerConfirmationNote),
+    paymentStatus: normalizePaymentStatus(value.paymentStatus),
     paymentVerificationStatus: paymentVerificationStatuses.includes(
       value.paymentVerificationStatus as never
     )
       ? (value.paymentVerificationStatus as PaymentVerificationStatus)
       : undefined,
+    paymentReference: textValue(value.paymentReference),
+    paymentNote: textValue(value.paymentNote),
     refundExchangeRequest: textValue(value.refundExchangeRequest),
     sizeIssueReport: textValue(value.sizeIssueReport),
     proofReceived: proofReceivedStatuses.includes(value.proofReceived as never)
@@ -374,6 +426,11 @@ function normalizeOrder(value: unknown): StoredOrder | null {
       ? (value.orderSource as OrderSource)
       : undefined,
     assignedStaff: textValue(value.assignedStaff),
+    isTestOrder: booleanValue(value.isTestOrder),
+    archivedAt: textValue(value.archivedAt),
+    deletedAt: textValue(value.deletedAt),
+    softDeletedAt: textValue(value.softDeletedAt),
+    cancelledReason: textValue(value.cancelledReason),
   };
 }
 
@@ -1033,6 +1090,9 @@ function orderSearchText(order: StoredOrder) {
     order.orderId,
     order.customer.fullName,
     order.customer.phone,
+    order.paymentDetails.transactionReference,
+    order.paymentReference,
+    order.trackingId,
   ]
     .filter(Boolean)
     .join(" ")
@@ -1063,6 +1123,9 @@ function filterAndSortOrders(
   searchTerm: string,
   statusFilter: StatusFilter,
   paymentFilter: PaymentFilter,
+  paymentStatusFilter: PaymentStatusFilter,
+  deliveryStatusFilter: DeliveryStatusFilter,
+  specialFilter: SpecialOrderFilter,
   sortOrder: OrderSort
 ) {
   const query = searchTerm.trim().toLowerCase();
@@ -1073,7 +1136,29 @@ function filterAndSortOrders(
       const matchesStatus = statusFilter === "All" || order.status === statusFilter;
       const matchesPayment =
         paymentFilter === "All" || order.paymentDetails.paymentMethod === paymentFilter;
-      return matchesSearch && matchesStatus && matchesPayment;
+      const matchesPaymentStatus =
+        paymentStatusFilter === "All" || order.paymentStatus === paymentStatusFilter;
+      const matchesDeliveryStatus =
+        deliveryStatusFilter === "All" || order.deliveryStatus === deliveryStatusFilter;
+      const isArchived = Boolean(order.archivedAt);
+      const isDeleted = Boolean(order.deletedAt || order.softDeletedAt);
+      const isTest = Boolean(order.isTestOrder);
+      const matchesSpecial =
+        specialFilter === "Include archived/test"
+          ? !isDeleted
+          : specialFilter === "Archived only"
+            ? isArchived && !isDeleted
+            : specialFilter === "Test only"
+              ? isTest && !isDeleted
+              : !isArchived && !isTest && !isDeleted;
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesPayment &&
+        matchesPaymentStatus &&
+        matchesDeliveryStatus &&
+        matchesSpecial
+      );
     })
     .sort((a, b) => {
       if (sortOrder === "Highest total") return orderTotal(b) - orderTotal(a);
@@ -1559,11 +1644,35 @@ function OrdersSection({
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("All");
+  const [paymentStatusFilter, setPaymentStatusFilter] =
+    useState<PaymentStatusFilter>("All");
+  const [deliveryStatusFilter, setDeliveryStatusFilter] =
+    useState<DeliveryStatusFilter>("All");
+  const [specialFilter, setSpecialFilter] = useState<SpecialOrderFilter>("Active");
   const [sortOrder, setSortOrder] = useState<OrderSort>("Newest first");
 
   const visibleOrders = useMemo(
-    () => filterAndSortOrders(orders, searchTerm, statusFilter, paymentFilter, sortOrder),
-    [orders, paymentFilter, searchTerm, sortOrder, statusFilter]
+    () =>
+      filterAndSortOrders(
+        orders,
+        searchTerm,
+        statusFilter,
+        paymentFilter,
+        paymentStatusFilter,
+        deliveryStatusFilter,
+        specialFilter,
+        sortOrder
+      ),
+    [
+      deliveryStatusFilter,
+      orders,
+      paymentFilter,
+      paymentStatusFilter,
+      searchTerm,
+      sortOrder,
+      specialFilter,
+      statusFilter,
+    ]
   );
   const selectedOrder =
     visibleOrders.find((order) => order.orderId === expandedOrderId) ?? null;
@@ -1579,7 +1688,7 @@ function OrdersSection({
         </div>
       </div>
       <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3 sm:p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(280px,1.5fr)_minmax(150px,0.7fr)_minmax(220px,0.9fr)_minmax(160px,0.7fr)]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1.3fr)_repeat(3,minmax(150px,0.7fr))] 2xl:grid-cols-[minmax(260px,1.3fr)_repeat(6,minmax(145px,0.65fr))]">
           <label className="relative block min-w-0">
             <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
               Search orders
@@ -1605,6 +1714,24 @@ function OrdersSection({
             onChange={setPaymentFilter}
           />
           <SelectField
+            label="Payment status"
+            value={paymentStatusFilter}
+            options={paymentStatusFilterOptions}
+            onChange={setPaymentStatusFilter}
+          />
+          <SelectField
+            label="Delivery status"
+            value={deliveryStatusFilter}
+            options={deliveryStatusFilterOptions}
+            onChange={setDeliveryStatusFilter}
+          />
+          <SelectField
+            label="Queue"
+            value={specialFilter}
+            options={specialOrderFilterOptions}
+            onChange={setSpecialFilter}
+          />
+          <SelectField
             label="Sort"
             value={sortOrder}
             options={orderSortOptions}
@@ -1615,13 +1742,22 @@ function OrdersSection({
           <span>
             Showing {visibleOrders.length} of {orders.length} orders
           </span>
-          {(searchTerm || statusFilter !== "All" || paymentFilter !== "All" || sortOrder !== "Newest first") && (
+          {(searchTerm ||
+            statusFilter !== "All" ||
+            paymentFilter !== "All" ||
+            paymentStatusFilter !== "All" ||
+            deliveryStatusFilter !== "All" ||
+            specialFilter !== "Active" ||
+            sortOrder !== "Newest first") && (
             <button
               type="button"
               onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("All");
                 setPaymentFilter("All");
+                setPaymentStatusFilter("All");
+                setDeliveryStatusFilter("All");
+                setSpecialFilter("Active");
                 setSortOrder("Newest first");
               }}
               className="w-fit rounded-full border border-white/10 px-3 py-2 font-medium text-white/65 transition hover:border-cyan-200/35 hover:text-white"
@@ -5101,6 +5237,14 @@ function OrderCard({
             <StatusBadge status={order.status} />
           </div>
         </div>
+        {(order.deliveryStatus || order.paymentStatus || order.isTestOrder || order.archivedAt) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {order.deliveryStatus && <TinyBadge label={`Delivery: ${order.deliveryStatus}`} />}
+            {order.paymentStatus && <TinyBadge label={`Payment: ${order.paymentStatus}`} />}
+            {order.isTestOrder && <TinyBadge label="Test order" tone="amber" />}
+            {order.archivedAt && <TinyBadge label="Archived" tone="slate" />}
+          </div>
+        )}
 
         <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
           <DetailLine label="Customer" value={order.customer.fullName} />
@@ -5108,6 +5252,7 @@ function OrderCard({
           <DetailLine label="City / Area" value={order.customer.cityArea} />
           <DetailLine label="Total" value={formatCurrency(orderTotal(order))} />
           <DetailLine label="Payment" value={order.paymentDetails.paymentMethod} />
+          <DetailLine label="Delivery status" value={order.deliveryStatus} />
           <DetailLine label="Created" value={formatDate(order.createdAt)} />
         </div>
 
@@ -5150,8 +5295,15 @@ function OrderCard({
 type OrderOperationsDraft = {
   courierName: string;
   trackingId: string;
+  deliveryStatus: DeliveryStatus;
   deliveryCharge: string;
+  deliveryArea: string;
+  deliveryZone: string;
+  deliveryNote: string;
   customerConfirmationNote: string;
+  paymentStatus: PaymentStatus;
+  paymentReference: string;
+  paymentNote: string;
   paymentVerificationStatus: PaymentVerificationStatus;
   refundExchangeRequest: string;
   sizeIssueReport: string;
@@ -5159,15 +5311,24 @@ type OrderOperationsDraft = {
   adminInternalNote: string;
   orderSource: OrderSource;
   assignedStaff: string;
+  cancelledReason: string;
 };
 
 function operationsDraftFromOrder(order: StoredOrder): OrderOperationsDraft {
   return {
     courierName: order.courierName ?? "",
     trackingId: order.trackingId ?? "",
+    deliveryStatus: order.deliveryStatus ?? "pending",
     deliveryCharge:
       typeof order.deliveryCharge === "number" ? String(order.deliveryCharge) : "",
+    deliveryArea: order.deliveryArea ?? order.customer.cityArea ?? "",
+    deliveryZone: order.deliveryZone ?? "",
+    deliveryNote: order.deliveryNote ?? order.customer.deliveryNote ?? "",
     customerConfirmationNote: order.customerConfirmationNote ?? "",
+    paymentStatus: order.paymentStatus ?? "pending",
+    paymentReference:
+      order.paymentReference ?? order.paymentDetails.transactionReference ?? "",
+    paymentNote: order.paymentNote ?? "",
     paymentVerificationStatus: order.paymentVerificationStatus ?? "Pending",
     refundExchangeRequest: order.refundExchangeRequest ?? "",
     sizeIssueReport: order.sizeIssueReport ?? "",
@@ -5175,6 +5336,7 @@ function operationsDraftFromOrder(order: StoredOrder): OrderOperationsDraft {
     adminInternalNote: order.adminInternalNote ?? "",
     orderSource: order.orderSource ?? "Website",
     assignedStaff: order.assignedStaff ?? "",
+    cancelledReason: order.cancelledReason ?? "",
   };
 }
 
@@ -5186,8 +5348,15 @@ function operationsDraftToUpdate(draft: OrderOperationsDraft): OrderOperationsUp
   return {
     courierName: draft.courierName,
     trackingId: draft.trackingId,
+    deliveryStatus: draft.deliveryStatus,
     deliveryCharge: Number.isFinite(deliveryCharge) ? deliveryCharge : undefined,
+    deliveryArea: draft.deliveryArea,
+    deliveryZone: draft.deliveryZone,
+    deliveryNote: draft.deliveryNote,
     customerConfirmationNote: draft.customerConfirmationNote,
+    paymentStatus: draft.paymentStatus,
+    paymentReference: draft.paymentReference,
+    paymentNote: draft.paymentNote,
     paymentVerificationStatus: draft.paymentVerificationStatus,
     refundExchangeRequest: draft.refundExchangeRequest,
     sizeIssueReport: draft.sizeIssueReport,
@@ -5195,6 +5364,7 @@ function operationsDraftToUpdate(draft: OrderOperationsDraft): OrderOperationsUp
     adminInternalNote: draft.adminInternalNote,
     orderSource: draft.orderSource,
     assignedStaff: draft.assignedStaff,
+    cancelledReason: draft.cancelledReason,
   };
 }
 
@@ -5277,9 +5447,31 @@ function OrderDetails({
     setOperationsMessage(
       saved
         ? "Operations saved."
-        : "Saved locally, but backend persistence failed. Confirm the Phase 19 Supabase columns exist."
+        : "Saved locally, but backend persistence failed. Confirm the Phase 37 Supabase columns exist."
     );
   };
+
+  const saveQuickOperation = async (
+    updates: OrderOperationsUpdate,
+    successMessage: string
+  ) => {
+    setIsSavingOperations(true);
+    setOperationsMessage("");
+    const saved = await onOperationsSave(reference, updates);
+    setIsSavingOperations(false);
+    setOperationsMessage(
+      saved
+        ? successMessage
+        : "Saved locally, but backend persistence failed. Confirm the Phase 37 Supabase columns exist."
+    );
+  };
+
+  const archiveOrder = () =>
+    saveQuickOperation({ archivedAt: new Date().toISOString() }, "Order archived.");
+  const restoreOrder = () =>
+    saveQuickOperation({ archivedAt: "" }, "Order restored to active queue.");
+  const markTestOrder = () =>
+    saveQuickOperation({ isTestOrder: !order.isTestOrder }, "Test order flag updated.");
 
   return (
     <section className="aev-admin-detail-panel min-w-0 rounded-[1.35rem] border border-cyan-200/20 bg-[#07101f]/95 p-4 shadow-[0_0_48px_rgba(34,211,238,0.10),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-5">
@@ -5294,6 +5486,9 @@ function OrderDetails({
                 {reference}
               </h4>
               <StatusBadge status={order.status} />
+              {order.deliveryStatus && <TinyBadge label={order.deliveryStatus} />}
+              {order.isTestOrder && <TinyBadge label="Test" tone="amber" />}
+              {order.archivedAt && <TinyBadge label="Archived" tone="slate" />}
             </div>
             <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
               <DetailLine label="Created" value={formatDate(order.createdAt)} />
@@ -5338,6 +5533,22 @@ function OrderDetails({
               <Phone className="h-4 w-4 shrink-0" />
               <span>Call Customer</span>
             </a>
+            <button
+              type="button"
+              onClick={markTestOrder}
+              disabled={isSavingOperations}
+              className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-2xl border border-amber-200/25 bg-amber-200/[0.08] px-4 py-2 text-sm font-semibold text-amber-50 transition hover:border-amber-100/45 hover:bg-amber-200/[0.13] disabled:cursor-not-allowed disabled:opacity-55 sm:min-w-[140px]"
+            >
+              {order.isTestOrder ? "Unmark Test" : "Mark Test"}
+            </button>
+            <button
+              type="button"
+              onClick={order.archivedAt ? restoreOrder : archiveOrder}
+              disabled={isSavingOperations}
+              className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.055] px-4 py-2 text-sm font-semibold text-white/76 transition hover:border-cyan-200/35 hover:bg-cyan-200/[0.10] hover:text-white disabled:cursor-not-allowed disabled:opacity-55 sm:min-w-[130px]"
+            >
+              {order.archivedAt ? "Restore" : "Archive"}
+            </button>
             <p
               role="status"
               aria-live="polite"
@@ -5375,6 +5586,9 @@ function OrderDetails({
             ["Transaction / reference ID", transactionReference, "payment-reference"],
             ["Total", formatCurrency(orderTotal(order))],
             ["Payment verification", order.paymentVerificationStatus],
+            ["Payment status", order.paymentStatus],
+            ["Payment reference", order.paymentReference, "payment-reference"],
+            ["Payment note", order.paymentNote],
           ]}
           copiedKey={copiedKey}
           onCopy={copyValue}
@@ -5384,6 +5598,10 @@ function OrderDetails({
           rows={[
             ["Delivery address", order.customer.address, "delivery-address"],
             ["Delivery note", order.customer.deliveryNote],
+            ["Operations delivery note", order.deliveryNote],
+            ["Delivery status", order.deliveryStatus],
+            ["Delivery area", order.deliveryArea],
+            ["Delivery zone", order.deliveryZone],
             ["Courier name", order.courierName],
             ["Tracking ID", order.trackingId],
             [
@@ -5393,6 +5611,7 @@ function OrderDetails({
                 : undefined,
             ],
             ["Assigned staff", order.assignedStaff],
+            ["Archived at", order.archivedAt ? formatDate(order.archivedAt) : undefined],
           ]}
           copiedKey={copiedKey}
           onCopy={copyValue}
@@ -5436,6 +5655,12 @@ function OrderDetails({
             onChange={(value) => setOperationField("trackingId", value)}
             placeholder="Courier tracking number"
           />
+          <SelectField
+            label="Delivery Status"
+            value={operationsDraft.deliveryStatus}
+            options={deliveryStatuses}
+            onChange={(value) => setOperationField("deliveryStatus", value)}
+          />
           <TextField
             label="Delivery Charge"
             value={operationsDraft.deliveryCharge}
@@ -5443,11 +5668,35 @@ function OrderDetails({
             placeholder="0"
             inputMode="decimal"
           />
+          <TextField
+            label="Delivery Area"
+            value={operationsDraft.deliveryArea}
+            onChange={(value) => setOperationField("deliveryArea", value)}
+            placeholder="Mirpur, Dhanmondi, Chattogram"
+          />
+          <TextField
+            label="Delivery Zone"
+            value={operationsDraft.deliveryZone}
+            onChange={(value) => setOperationField("deliveryZone", value)}
+            placeholder="Inside Dhaka / Outside Dhaka"
+          />
+          <SelectField
+            label="Payment Status"
+            value={operationsDraft.paymentStatus}
+            options={paymentStatuses}
+            onChange={(value) => setOperationField("paymentStatus", value)}
+          />
           <SelectField
             label="Payment Verification Status"
             value={operationsDraft.paymentVerificationStatus}
             options={paymentVerificationStatuses}
             onChange={(value) => setOperationField("paymentVerificationStatus", value)}
+          />
+          <TextField
+            label="Payment Reference / Transaction ID"
+            value={operationsDraft.paymentReference}
+            onChange={(value) => setOperationField("paymentReference", value)}
+            placeholder="bKash/Nagad/bank reference"
           />
           <TextField
             label="Assigned Staff"
@@ -5473,6 +5722,16 @@ function OrderDetails({
             onChange={(value) => setOperationField("customerConfirmationNote", value)}
           />
           <TextAreaField
+            label="Delivery Note"
+            value={operationsDraft.deliveryNote}
+            onChange={(value) => setOperationField("deliveryNote", value)}
+          />
+          <TextAreaField
+            label="Payment Note"
+            value={operationsDraft.paymentNote}
+            onChange={(value) => setOperationField("paymentNote", value)}
+          />
+          <TextAreaField
             label="Refund / Exchange Request"
             value={operationsDraft.refundExchangeRequest}
             onChange={(value) => setOperationField("refundExchangeRequest", value)}
@@ -5481,6 +5740,11 @@ function OrderDetails({
             label="Size Issue Report"
             value={operationsDraft.sizeIssueReport}
             onChange={(value) => setOperationField("sizeIssueReport", value)}
+          />
+          <TextAreaField
+            label="Cancelled Reason"
+            value={operationsDraft.cancelledReason}
+            onChange={(value) => setOperationField("cancelledReason", value)}
           />
           <div className="md:col-span-2">
             <TextAreaField
@@ -5586,6 +5850,9 @@ function SupportOpsPanel({ order }: { order: StoredOrder }) {
         <DetailLine label="Photo / video proof received" value={order.proofReceived} />
         <DetailLine label="Admin internal note" value={order.adminInternalNote} />
         <DetailLine label="Order source" value={order.orderSource} />
+        <DetailLine label="Assigned staff" value={order.assignedStaff} />
+        <DetailLine label="Cancelled reason" value={order.cancelledReason} />
+        <DetailLine label="Test order" value={order.isTestOrder ? "Yes" : "No"} />
       </div>
     </div>
   );
@@ -5903,6 +6170,29 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   );
 }
 
+function TinyBadge({
+  label,
+  tone = "cyan",
+}: {
+  label: string;
+  tone?: "cyan" | "amber" | "slate";
+}) {
+  const toneClass =
+    tone === "amber"
+      ? "border-amber-200/30 bg-amber-200/[0.09] text-amber-100"
+      : tone === "slate"
+        ? "border-white/15 bg-white/[0.06] text-white/58"
+        : "border-cyan-200/25 bg-cyan-200/[0.08] text-cyan-100";
+
+  return (
+    <span
+      className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${toneClass}`}
+    >
+      {label.replace(/_/g, " ")}
+    </span>
+  );
+}
+
 function ProductStatusBadge({ status }: { status: ProductStatus }) {
   return (
     <span
@@ -5916,4 +6206,3 @@ function ProductStatusBadge({ status }: { status: ProductStatus }) {
     </span>
   );
 }
-

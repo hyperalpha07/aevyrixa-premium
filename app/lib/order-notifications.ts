@@ -31,7 +31,12 @@ function buildTelegramMessage(order: OrderRecord) {
     `Customer name: ${order.customer.fullName}`,
     `Customer phone: ${order.customer.phone}`,
     `City/Area: ${order.customer.cityArea}`,
+    optionalLine("Delivery zone", order.deliveryZone),
+    optionalLine("Delivery area", order.deliveryArea),
     `Total: ${formatCurrency(order.totalAmount || order.totals.subtotal || 0)}`,
+    typeof order.deliveryCharge === "number"
+      ? `Delivery charge: ${formatCurrency(order.deliveryCharge)}`
+      : undefined,
     `Payment method: ${order.paymentDetails.paymentMethod}`,
     optionalLine("Wallet provider", order.paymentDetails.walletProvider),
     optionalLine("Payment type", order.paymentDetails.paymentType),

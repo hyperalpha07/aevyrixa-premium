@@ -1,5 +1,7 @@
 import {
+  deliveryStatuses,
   orderSources,
+  paymentStatuses,
   paymentVerificationStatuses,
   proofReceivedStatuses,
 } from "@/app/lib/order-types";
@@ -38,15 +40,26 @@ type SupabaseOrderRow = {
   status?: string | null;
   courier_name?: string | null;
   tracking_id?: string | null;
+  delivery_status?: string | null;
   delivery_charge?: number | string | null;
+  delivery_area?: string | null;
+  delivery_zone?: string | null;
+  assigned_staff?: string | null;
   customer_confirmation_note?: string | null;
+  payment_status?: string | null;
   payment_verification_status?: string | null;
+  payment_reference?: string | null;
+  payment_note?: string | null;
   refund_exchange_request?: string | null;
   size_issue_report?: string | null;
   proof_received?: string | null;
   admin_internal_note?: string | null;
   order_source?: string | null;
-  assigned_staff?: string | null;
+  is_test_order?: boolean | string | null;
+  archived_at?: string | null;
+  deleted_at?: string | null;
+  soft_deleted_at?: string | null;
+  cancelled_reason?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 
@@ -90,6 +103,13 @@ function buildOrder(input: OrderSubmissionInput): OrderRecord {
     totalAmount: input.totals.subtotal,
     status: "Pending",
     createdAt,
+    deliveryCharge: input.deliveryCharge,
+    deliveryArea: input.deliveryArea ?? input.customer.cityArea,
+    deliveryZone: input.deliveryZone,
+    deliveryNote: input.deliveryNote ?? input.customer.deliveryNote,
+    paymentStatus: input.paymentStatus,
+    paymentReference:
+      input.paymentReference ?? input.paymentDetails.transactionReference,
   };
 }
 
@@ -155,6 +175,24 @@ function normalizePaymentVerificationStatus(value: unknown) {
     : undefined;
 }
 
+function normalizePaymentStatus(value: unknown) {
+  return paymentStatuses.includes(value as never)
+    ? (value as OrderRecord["paymentStatus"])
+    : undefined;
+}
+
+function normalizeDeliveryStatus(value: unknown) {
+  return deliveryStatuses.includes(value as never)
+    ? (value as OrderRecord["deliveryStatus"])
+    : undefined;
+}
+
+function booleanValue(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return undefined;
+}
+
 function normalizeProofReceived(value: unknown) {
   return proofReceivedStatuses.includes(value as never)
     ? (value as OrderRecord["proofReceived"])
@@ -216,6 +254,7 @@ function orderToSupabaseInsertPayload(order: OrderRecord) {
     sender_number: nullableText(order.paymentDetails.walletSenderNumber),
     transaction_id: nullableText(order.paymentDetails.transactionReference),
     status: order.status,
+    delivery_charge: order.deliveryCharge ?? null,
     created_at: order.createdAt,
     updated_at: now,
   };
@@ -289,17 +328,26 @@ async function updateOrderStatusInSupabase(
 }
 
 function orderOperationsToSupabasePayload(updates: OrderOperationsUpdate) {
-  const payload: Record<string, string | number | null> = {
+  const payload: Record<string, string | number | boolean | null> = {
     updated_at: new Date().toISOString(),
   };
 
   if (updates.status !== undefined) payload.status = updates.status;
   if ("courierName" in updates) payload.courier_name = nullableText(updates.courierName);
   if ("trackingId" in updates) payload.tracking_id = nullableText(updates.trackingId);
+  if ("deliveryStatus" in updates) payload.delivery_status = updates.deliveryStatus ?? null;
   if ("deliveryCharge" in updates) payload.delivery_charge = updates.deliveryCharge ?? null;
+  if ("deliveryArea" in updates) payload.delivery_area = nullableText(updates.deliveryArea);
+  if ("deliveryZone" in updates) payload.delivery_zone = nullableText(updates.deliveryZone);
+  if ("deliveryNote" in updates) payload.delivery_note = nullableText(updates.deliveryNote);
   if ("customerConfirmationNote" in updates) {
     payload.customer_confirmation_note = nullableText(updates.customerConfirmationNote);
   }
+  if ("paymentStatus" in updates) payload.payment_status = updates.paymentStatus ?? null;
+  if ("paymentReference" in updates) {
+    payload.payment_reference = nullableText(updates.paymentReference);
+  }
+  if ("paymentNote" in updates) payload.payment_note = nullableText(updates.paymentNote);
   if ("paymentVerificationStatus" in updates) {
     payload.payment_verification_status = updates.paymentVerificationStatus ?? null;
   }
@@ -315,6 +363,13 @@ function orderOperationsToSupabasePayload(updates: OrderOperationsUpdate) {
   }
   if ("orderSource" in updates) payload.order_source = updates.orderSource ?? null;
   if ("assignedStaff" in updates) payload.assigned_staff = nullableText(updates.assignedStaff);
+  if ("isTestOrder" in updates) {
+    payload.is_test_order = updates.isTestOrder ?? null;
+  }
+  if ("archivedAt" in updates) payload.archived_at = updates.archivedAt ?? null;
+  if ("deletedAt" in updates) payload.deleted_at = updates.deletedAt ?? null;
+  if ("softDeletedAt" in updates) payload.soft_deleted_at = updates.softDeletedAt ?? null;
+  if ("cancelledReason" in updates) payload.cancelled_reason = nullableText(updates.cancelledReason);
 
   return payload;
 }
@@ -404,17 +459,32 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     createdAt: row.created_at ?? "",
     courierName: row.courier_name ?? undefined,
     trackingId: row.tracking_id ?? undefined,
+    deliveryStatus: normalizeDeliveryStatus(row.delivery_status),
     deliveryCharge: numberValue(row.delivery_charge),
+    deliveryArea: row.delivery_area ?? row.city_area ?? undefined,
+    deliveryZone: row.delivery_zone ?? undefined,
+    deliveryNote: row.delivery_note ?? textValue(legacyCustomer.deliveryNote),
     customerConfirmationNote: row.customer_confirmation_note ?? undefined,
+    paymentStatus: normalizePaymentStatus(row.payment_status),
     paymentVerificationStatus: normalizePaymentVerificationStatus(
       row.payment_verification_status
     ),
+    paymentReference:
+      row.payment_reference ??
+      row.transaction_id ??
+      textValue(legacyPayment.transactionReference),
+    paymentNote: row.payment_note ?? undefined,
     refundExchangeRequest: row.refund_exchange_request ?? undefined,
     sizeIssueReport: row.size_issue_report ?? undefined,
     proofReceived: normalizeProofReceived(row.proof_received),
     adminInternalNote: row.admin_internal_note ?? undefined,
     orderSource: normalizeOrderSource(row.order_source),
     assignedStaff: row.assigned_staff ?? undefined,
+    isTestOrder: booleanValue(row.is_test_order),
+    archivedAt: row.archived_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    softDeletedAt: row.soft_deleted_at ?? undefined,
+    cancelledReason: row.cancelled_reason ?? undefined,
   };
 }
 

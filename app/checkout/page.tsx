@@ -201,6 +201,12 @@ export default function CheckoutPage() {
   const hasUnavailableItems = items.some(
     (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
   );
+  const selectedDeliveryCharge =
+    form.deliveryZone === "Inside Dhaka"
+      ? parseInt(adminSettings.deliverySettings.insideDhakaDeliveryCharge) || 80
+      : form.deliveryZone === "Outside Dhaka"
+        ? parseInt(adminSettings.deliverySettings.outsideDhakaDeliveryCharge) || 130
+        : undefined;
 
   useEffect(() => {
     setForm((current) => ({
@@ -327,6 +333,10 @@ export default function CheckoutPage() {
         totalItems,
         subtotal,
       },
+      deliveryCharge: selectedDeliveryCharge,
+      deliveryArea: form.cityArea.trim(),
+      deliveryZone: form.deliveryZone,
+      deliveryNote: form.deliveryNote.trim(),
       status: "draft",
       createdAt: new Date().toISOString(),
     };

@@ -4,13 +4,17 @@ import {
 } from "@/app/lib/admin-auth";
 import { updateOrderOperations } from "@/app/lib/order-store";
 import {
+  deliveryStatuses,
   orderSources,
   orderStatuses,
+  paymentStatuses,
   paymentVerificationStatuses,
   proofReceivedStatuses,
+  type DeliveryStatus,
   type OrderOperationsUpdate,
   type OrderSource,
   type OrderStatus,
+  type PaymentStatus,
   type PaymentVerificationStatus,
   type ProofReceivedStatus,
 } from "@/app/lib/order-types";
@@ -35,6 +39,12 @@ function optionalNumber(value: unknown) {
   return Number.NaN;
 }
 
+function optionalBoolean(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return undefined;
+}
+
 function validateOperationsPayload(payload: unknown): {
   updates?: OrderOperationsUpdate;
   errors: string[];
@@ -55,11 +65,20 @@ function validateOperationsPayload(payload: unknown): {
   const textFields = [
     ["courierName", "courierName"],
     ["trackingId", "trackingId"],
+    ["deliveryArea", "deliveryArea"],
+    ["deliveryZone", "deliveryZone"],
+    ["deliveryNote", "deliveryNote"],
     ["customerConfirmationNote", "customerConfirmationNote"],
+    ["paymentReference", "paymentReference"],
+    ["paymentNote", "paymentNote"],
     ["refundExchangeRequest", "refundExchangeRequest"],
     ["sizeIssueReport", "sizeIssueReport"],
     ["adminInternalNote", "adminInternalNote"],
     ["assignedStaff", "assignedStaff"],
+    ["archivedAt", "archivedAt"],
+    ["deletedAt", "deletedAt"],
+    ["softDeletedAt", "softDeletedAt"],
+    ["cancelledReason", "cancelledReason"],
   ] as const;
 
   textFields.forEach(([payloadKey, updateKey]) => {
@@ -74,6 +93,22 @@ function validateOperationsPayload(payload: unknown): {
       errors.push("Delivery charge must be a positive number.");
     } else {
       updates.deliveryCharge = deliveryCharge;
+    }
+  }
+
+  if ("deliveryStatus" in payload) {
+    if (!deliveryStatuses.includes(payload.deliveryStatus as DeliveryStatus)) {
+      errors.push("Delivery status is invalid.");
+    } else {
+      updates.deliveryStatus = payload.deliveryStatus as DeliveryStatus;
+    }
+  }
+
+  if ("paymentStatus" in payload) {
+    if (!paymentStatuses.includes(payload.paymentStatus as PaymentStatus)) {
+      errors.push("Payment status is invalid.");
+    } else {
+      updates.paymentStatus = payload.paymentStatus as PaymentStatus;
     }
   }
 
@@ -103,6 +138,15 @@ function validateOperationsPayload(payload: unknown): {
       errors.push("Order source is invalid.");
     } else {
       updates.orderSource = payload.orderSource as OrderSource;
+    }
+  }
+
+  if ("isTestOrder" in payload) {
+    const isTestOrder = optionalBoolean(payload.isTestOrder);
+    if (typeof isTestOrder !== "boolean") {
+      errors.push("Test order flag is invalid.");
+    } else {
+      updates.isTestOrder = isTestOrder;
     }
   }
 
@@ -147,7 +191,7 @@ export async function PATCH(
     return Response.json(
       {
         errors: [
-          "Order operations could not be updated. If Supabase is configured, confirm the Phase 19 order operation columns exist.",
+          "Order operations could not be updated. If Supabase is configured, confirm the Phase 37 order operation columns exist.",
         ],
       },
       { status: 500 }

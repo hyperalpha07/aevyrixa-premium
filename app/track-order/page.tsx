@@ -21,9 +21,22 @@ type TrackedOrder = {
   cityArea: string;
   total: number;
   paymentMethod: string;
+  paymentStatus?: "pending" | "verified" | "failed" | "refunded";
   courierName?: string;
   trackingId?: string;
+  deliveryStatus?:
+    | "pending"
+    | "processing"
+    | "packed"
+    | "dispatched"
+    | "in_transit"
+    | "delivered"
+    | "failed"
+    | "returned";
   deliveryCharge?: number;
+  deliveryArea?: string;
+  deliveryZone?: string;
+  deliveryNote?: string;
   items: {
     name: string;
     quantity: number;
@@ -49,6 +62,10 @@ function formatDate(value: string) {
 
 function statusLabel(status: TrackedOrder["status"]) {
   return status === "Pending" ? "Order Received" : status;
+}
+
+function readableStatus(value?: string) {
+  return value ? value.replace(/_/g, " ") : "";
 }
 
 function stepClasses(state: TimelineState) {
@@ -267,7 +284,25 @@ function TrackOrderContent() {
                 <SummaryItem label="Created" value={formatDate(order.createdAt)} />
                 <SummaryItem label="Total" value={formatCurrency(order.total)} />
                 <SummaryItem label="Payment" value={order.paymentMethod} />
+                {order.paymentStatus && (
+                  <SummaryItem
+                    label="Payment status"
+                    value={readableStatus(order.paymentStatus)}
+                  />
+                )}
                 <SummaryItem label="City/Area" value={order.cityArea} />
+                {order.deliveryStatus && (
+                  <SummaryItem
+                    label="Delivery status"
+                    value={readableStatus(order.deliveryStatus)}
+                  />
+                )}
+                {order.deliveryZone && (
+                  <SummaryItem label="Delivery zone" value={order.deliveryZone} />
+                )}
+                {order.deliveryArea && order.deliveryArea !== order.cityArea && (
+                  <SummaryItem label="Delivery area" value={order.deliveryArea} />
+                )}
                 {order.courierName && (
                   <SummaryItem label="Courier" value={order.courierName} />
                 )}
@@ -279,6 +314,9 @@ function TrackOrderContent() {
                     label="Delivery charge"
                     value={formatCurrency(order.deliveryCharge)}
                   />
+                )}
+                {order.deliveryNote && (
+                  <SummaryItem label="Delivery note" value={order.deliveryNote} />
                 )}
               </div>
 

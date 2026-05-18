@@ -22,6 +22,22 @@ export const paymentVerificationStatuses = [
   "Failed",
   "Not Required",
 ] as const;
+export const paymentStatuses = [
+  "pending",
+  "verified",
+  "failed",
+  "refunded",
+] as const;
+export const deliveryStatuses = [
+  "pending",
+  "processing",
+  "packed",
+  "dispatched",
+  "in_transit",
+  "delivered",
+  "failed",
+  "returned",
+] as const;
 export const proofReceivedStatuses = ["No", "Yes", "Requested"] as const;
 export const orderSources = ["Website", "Facebook", "Manual", "Other"] as const;
 
@@ -30,6 +46,8 @@ export type PaymentMethod = (typeof paymentMethods)[number];
 export type PaymentType = (typeof paymentTypes)[number];
 export type PaymentVerificationStatus =
   (typeof paymentVerificationStatuses)[number];
+export type PaymentStatus = (typeof paymentStatuses)[number];
+export type DeliveryStatus = (typeof deliveryStatuses)[number];
 export type ProofReceivedStatus = (typeof proofReceivedStatuses)[number];
 export type OrderSource = (typeof orderSources)[number];
 
@@ -87,15 +105,27 @@ export type OrderRecord = {
   createdAt: string;
   courierName?: string;
   trackingId?: string;
+  deliveryStatus?: DeliveryStatus;
   deliveryCharge?: number;
+  deliveryArea?: string;
+  deliveryZone?: string;
+  deliveryNote?: string;
   customerConfirmationNote?: string;
+  paymentStatus?: PaymentStatus;
   paymentVerificationStatus?: PaymentVerificationStatus;
+  paymentReference?: string;
+  paymentNote?: string;
   refundExchangeRequest?: string;
   sizeIssueReport?: string;
   proofReceived?: ProofReceivedStatus;
   adminInternalNote?: string;
   orderSource?: OrderSource;
   assignedStaff?: string;
+  isTestOrder?: boolean;
+  archivedAt?: string;
+  deletedAt?: string;
+  softDeletedAt?: string;
+  cancelledReason?: string;
 };
 
 export type OrderOperationsUpdate = Partial<
@@ -104,8 +134,15 @@ export type OrderOperationsUpdate = Partial<
     | "status"
     | "courierName"
     | "trackingId"
+    | "deliveryStatus"
     | "deliveryCharge"
+    | "deliveryArea"
+    | "deliveryZone"
+    | "deliveryNote"
     | "customerConfirmationNote"
+    | "paymentStatus"
+    | "paymentReference"
+    | "paymentNote"
     | "paymentVerificationStatus"
     | "refundExchangeRequest"
     | "sizeIssueReport"
@@ -113,6 +150,11 @@ export type OrderOperationsUpdate = Partial<
     | "adminInternalNote"
     | "orderSource"
     | "assignedStaff"
+    | "isTestOrder"
+    | "archivedAt"
+    | "deletedAt"
+    | "softDeletedAt"
+    | "cancelledReason"
   >
 >;
 

@@ -80,9 +80,14 @@ function safeOrderSummary(order: OrderRecord) {
     cityArea: order.customer.cityArea,
     total: order.totalAmount,
     paymentMethod: paymentMethodLabel(order),
+    paymentStatus: order.paymentStatus,
     courierName: order.courierName,
     trackingId: order.trackingId,
+    deliveryStatus: order.deliveryStatus,
     deliveryCharge: order.deliveryCharge,
+    deliveryArea: order.deliveryArea || order.customer.cityArea,
+    deliveryZone: order.deliveryZone,
+    deliveryNote: order.deliveryNote || order.customer.deliveryNote,
     items: order.items.map(itemSummary),
     timeline: timelineForStatus(order.status),
   };
@@ -117,7 +122,7 @@ export async function POST(request: Request) {
   try {
     const { order } = await getOrderByReference(orderRef);
 
-    if (!order) return notFoundResponse();
+    if (!order || order.deletedAt || order.softDeletedAt) return notFoundResponse();
 
     const providedPhone = normalizePhone(customerPhone);
     const storedPhone = normalizePhone(order.customer.phone);

@@ -35,6 +35,16 @@ function numberValue(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function optionalNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
 function validateOrderPayload(payload: unknown): {
   input?: OrderSubmissionInput;
   errors: string[];
@@ -59,6 +69,7 @@ function validateOrderPayload(payload: unknown): {
   const paymentType = optionalText(paymentDetails.paymentType);
   const walletSenderNumber = optionalText(paymentDetails.walletSenderNumber);
   const transactionReference = optionalText(paymentDetails.transactionReference);
+  const deliveryCharge = optionalNumber(payload.deliveryCharge);
 
   if (!fullName) errors.push("Full name is required.");
   if (!phone || !bdMobilePattern.test(phone)) {
@@ -144,6 +155,12 @@ function validateOrderPayload(payload: unknown): {
         totalItems,
         subtotal,
       },
+      deliveryCharge,
+      deliveryArea: optionalText(payload.deliveryArea) || cityArea,
+      deliveryZone: optionalText(payload.deliveryZone),
+      deliveryNote: optionalText(payload.deliveryNote),
+      paymentReference: transactionReference,
+      paymentStatus: "pending",
     },
   };
 }
