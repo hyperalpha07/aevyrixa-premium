@@ -54,25 +54,25 @@ const themeStyles: Record<
   }
 > = {
   "blush-violet": {
-    border: "border-fuchsia-300/20 hover:border-fuchsia-200/45",
-    badge: "border-fuchsia-200/25 bg-fuchsia-300/10 text-fuchsia-100",
+    border: "border-[#b8814a]/20 hover:border-[#b8814a]/45",
+    badge: "border-[#b8814a]/22 bg-[#f5eeea] text-[#5c3d30]",
     button:
-      "border-fuchsia-200/25 bg-fuchsia-200/10 hover:border-fuchsia-100/45 hover:bg-fuchsia-200/15",
-    glow: "bg-fuchsia-300/18",
+      "border-[#b8814a]/25 bg-[#f5eeea] text-[#5c3d30] hover:border-[#b8814a]/45 hover:bg-[#f0e4d6]",
+    glow: "bg-[#b8814a]/[0.07]",
   },
   "cyan-night": {
-    border: "border-cyan-300/20 hover:border-cyan-200/45",
-    badge: "border-cyan-200/25 bg-cyan-300/10 text-cyan-100",
+    border: "border-[#4a8b7e]/22 hover:border-[#4a8b7e]/45",
+    badge: "border-[#4a8b7e]/22 bg-[#f0f7f5] text-[#2d5850]",
     button:
-      "border-cyan-200/25 bg-cyan-200/10 hover:border-cyan-100/45 hover:bg-cyan-200/15",
-    glow: "bg-cyan-300/18",
+      "border-[#4a8b7e]/25 bg-[#f0f7f5] text-[#2d5850] hover:border-[#4a8b7e]/45 hover:bg-[#e2f0ed]",
+    glow: "bg-[#4a8b7e]/[0.06]",
   },
   "rose-gold": {
-    border: "border-rose-200/25 hover:border-rose-100/50",
-    badge: "border-rose-100/30 bg-rose-200/10 text-rose-100",
+    border: "border-[#b8814a]/22 hover:border-[#b8814a]/48",
+    badge: "border-[#b8814a]/22 bg-[#f5eeea] text-[#5c3d30]",
     button:
-      "border-rose-100/30 bg-rose-200/10 hover:border-rose-100/55 hover:bg-rose-200/15",
-    glow: "bg-rose-200/18",
+      "border-[#b8814a]/25 bg-[#f5eeea] text-[#5c3d30] hover:border-[#b8814a]/48 hover:bg-[#f0e4d6]",
+    glow: "bg-[#b8814a]/[0.07]",
   },
 };
 
@@ -173,11 +173,11 @@ function ProductCard({
 
   return (
     <article
-      className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.35rem] border bg-white/[0.045] p-2.5 backdrop-blur-2xl transition duration-300 md:rounded-[1.75rem] md:p-3 md:hover:-translate-y-1 ${style.border}`}
+      className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.35rem] border bg-white p-2.5 shadow-sm transition duration-300 md:rounded-[1.75rem] md:p-3 md:hover:-translate-y-1 ${style.border}`}
     >
       <Link
         href={productHref}
-        className="block overflow-hidden rounded-[1.05rem] border border-white/10 bg-[#07111f] md:rounded-[1.35rem]"
+        className="block overflow-hidden rounded-[1.05rem] border border-[#b8814a]/10 bg-[#f5eeea] md:rounded-[1.35rem]"
         aria-label={`View ${product.name}`}
       >
         <div className={`relative w-full ${compact ? "aspect-[1.05]" : "aspect-square"}`}>
@@ -201,7 +201,7 @@ function ProductCard({
             {badges.slice(0, 2).map((badge) => (
               <span
                 key={badge}
-                className="rounded-full border border-cyan-100/25 bg-black/45 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-100 backdrop-blur-md"
+                className="rounded-full border border-[#b8814a]/25 bg-white/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5c3d30] backdrop-blur-md"
               >
                 {badge}
               </span>
@@ -221,20 +221,20 @@ function ProductCard({
         </div>
 
         <Link href={productHref}>
-          <h3 className="mt-2.5 line-clamp-2 break-words text-sm font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:text-base md:text-lg">
+          <h3 className="mt-2.5 line-clamp-2 break-words text-sm font-semibold leading-snug text-[#2c1a14] [overflow-wrap:anywhere] sm:text-base md:text-lg">
             {product.name}
           </h3>
         </Link>
-        <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-white/58 sm:text-sm sm:leading-6">
+        <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#8a6a5e] sm:text-sm sm:leading-6">
           {product.shortDescription}
         </p>
 
         <div className="mt-3 flex flex-wrap items-end gap-1.5 sm:gap-2">
-          <span className="text-lg font-semibold text-white sm:text-xl md:text-2xl">
+          <span className="text-lg font-semibold text-[#2c1a14] sm:text-xl md:text-2xl">
             {formatProductPrice(product)}
           </span>
           {typeof product.compareAtPrice === "number" && (
-            <span className="pb-0.5 text-xs text-white/35 line-through sm:text-sm">
+            <span className="pb-0.5 text-xs text-[#8a6a5e]/70 line-through sm:text-sm">
               {formatProductPrice({
                 price: product.compareAtPrice,
                 currency: product.currency,
@@ -246,7 +246,7 @@ function ProductCard({
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Link
             href={productHref}
-            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold text-white transition ${style.button}`}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${style.button}`}
           >
             View
             <ArrowRight className="h-4 w-4" />
@@ -255,7 +255,7 @@ function ProductCard({
             <button
               type="button"
               onClick={handleQuickAdd}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-cyan-100/30 bg-cyan-100/12 px-4 py-2.5 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/55 hover:bg-cyan-100/18"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#b8814a]/30 bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-4 py-2.5 text-sm font-semibold text-[#faf7f4] shadow-sm transition hover:shadow-md"
             >
               <ShoppingCart className="h-4 w-4" />
               Add
@@ -263,7 +263,7 @@ function ProductCard({
           ) : (
             <Link
               href={productHref}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2.5 text-sm font-semibold text-white/68 transition hover:border-white/25 hover:text-white"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#b8814a]/18 bg-[#f5eeea] px-4 py-2.5 text-sm font-semibold text-[#8a6a5e] transition hover:border-[#b8814a]/35 hover:text-[#2c1a14]"
             >
               Options
             </Link>
@@ -289,10 +289,10 @@ function CollectionSection({
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/70">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b8814a]/80">
             {eyebrow}
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">
+          <h2 className="mt-2 text-2xl font-semibold text-[#2c1a14] md:text-3xl">
             {title}
           </h2>
         </div>
@@ -445,31 +445,31 @@ export default function ShopDiscoveryClient({
       <section className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 md:pb-12 md:pt-14">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-cyan-200/70 sm:text-sm sm:tracking-[0.42em]">
+            <p className="text-xs uppercase tracking-[0.32em] text-[#b8814a]/80 sm:text-sm sm:tracking-[0.42em]">
               {settings.brandDisplayName}
             </p>
-            <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
+            <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-[#2c1a14] [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
               Premium product discovery for every care rhythm
             </h1>
-            <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/65 [overflow-wrap:anywhere] md:text-lg">
+            <p className="mt-5 max-w-2xl break-words text-base leading-8 text-[#5c3d30]/80 [overflow-wrap:anywhere] md:text-lg">
               Search, filter, and compare Aevyrixa Her Care essentials with clear BDT pricing, privacy packaging, and Bangladesh delivery.
             </p>
           </div>
 
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl">
+          <div className="rounded-[1.75rem] border border-[#b8814a]/14 bg-white p-4 shadow-sm">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-100/70" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#b8814a]/60" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search products, categories, comfort details"
-                className="min-h-13 w-full rounded-full border border-white/10 bg-black/24 py-3.5 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-white/38 focus:border-cyan-200/45"
+                className="min-h-13 w-full rounded-full border border-[#b8814a]/14 bg-[#f5eeea] py-3.5 pl-11 pr-11 text-sm text-[#2c1a14] outline-none transition placeholder:text-[#8a6a5e]/60 focus:border-[#b8814a]/40"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
+                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8a6a5e] transition hover:bg-[#f0e4d6] hover:text-[#2c1a14]"
                   aria-label="Clear search"
                 >
                   <X className="h-4 w-4" />
@@ -481,7 +481,7 @@ export default function ShopDiscoveryClient({
               <button
                 type="button"
                 onClick={() => setFiltersOpen((current) => !current)}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/40 hover:bg-cyan-100/15 lg:hidden"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-[#b8814a]/25 bg-[#f5eeea] px-4 py-2 text-sm font-semibold text-[#5c3d30] transition hover:border-[#b8814a]/40 hover:bg-[#f0e4d6] lg:hidden"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
@@ -490,7 +490,7 @@ export default function ShopDiscoveryClient({
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortMode)}
-                className="min-h-11 flex-1 rounded-full border border-white/10 bg-black/24 px-3 py-2 text-sm font-semibold text-white outline-none transition focus:border-cyan-200/45 sm:flex-none sm:px-4"
+                className="min-h-11 flex-1 rounded-full border border-[#b8814a]/14 bg-[#f5eeea] px-3 py-2 text-sm font-semibold text-[#2c1a14] outline-none transition focus:border-[#b8814a]/40 sm:flex-none sm:px-4"
                 aria-label="Sort products"
               >
                 <option value="featured">Featured</option>
@@ -502,7 +502,7 @@ export default function ShopDiscoveryClient({
               <button
                 type="button"
                 onClick={resetFilters}
-                className="min-h-11 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white/62 transition hover:border-white/25 hover:text-white sm:px-4"
+                className="min-h-11 rounded-full border border-[#b8814a]/14 bg-[#f5eeea] px-3 py-2 text-sm font-semibold text-[#8a6a5e] transition hover:border-[#b8814a]/30 hover:text-[#2c1a14] sm:px-4"
                 aria-label="Reset filters"
               >
                 Reset
@@ -510,7 +510,7 @@ export default function ShopDiscoveryClient({
             </div>
 
             {filtersOpen && (
-              <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-black/20 p-4 lg:hidden">
+              <div className="mt-5 rounded-[1.25rem] border border-[#b8814a]/12 bg-[#f5eeea] p-4 lg:hidden">
                 {filterPanel}
               </div>
             )}
@@ -526,9 +526,9 @@ export default function ShopDiscoveryClient({
           ].map(([label, Icon]) => (
             <div
               key={label as string}
-              className="aev-cinematic-chip flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-xs text-white/70 backdrop-blur-xl sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm"
+              className="aev-cinematic-chip flex items-center gap-2 rounded-xl border border-[#b8814a]/14 bg-white px-3 py-2.5 text-xs text-[#5c3d30] sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm"
             >
-              <Icon className="h-4 w-4 shrink-0 text-cyan-200" />
+              <Icon className="h-4 w-4 shrink-0 text-[#b8814a]" />
               <span>{label as string}</span>
             </div>
           ))}
@@ -541,39 +541,39 @@ export default function ShopDiscoveryClient({
           <button
             type="button"
             onClick={() => setCategory("Reusable Period Care")}
-            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-xl transition"
+            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-[#b8814a]/12 bg-white p-4 text-left shadow-sm transition"
           >
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-cyan-200/10 text-cyan-200">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#4a8b7e]/20 bg-[#e8f4f1] text-[#4a8b7e]">
               <ShieldCheck size={17} strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white group-hover:text-cyan-50">Period Care</p>
-              <p className="mt-0.5 text-xs leading-5 text-white/55">Reusable protection for light to moderate flow.</p>
+              <p className="text-sm font-semibold text-[#2c1a14]">Period Care</p>
+              <p className="mt-0.5 text-xs leading-5 text-[#8a6a5e]">Reusable protection for light to moderate flow.</p>
             </div>
           </button>
           <button
             type="button"
             onClick={() => setCategory("Comfort Panty")}
-            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-xl transition"
+            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-[#b8814a]/12 bg-white p-4 text-left shadow-sm transition"
           >
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-fuchsia-200/10 text-fuchsia-200">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#b8814a]/20 bg-[#f5eeea] text-[#b8814a]">
               <Sparkles size={17} strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white group-hover:text-fuchsia-50">Everyday Comfort</p>
-              <p className="mt-0.5 text-xs leading-5 text-white/55">Soft stretch panties and support bras for daily wear.</p>
+              <p className="text-sm font-semibold text-[#2c1a14]">Everyday Comfort</p>
+              <p className="mt-0.5 text-xs leading-5 text-[#8a6a5e]">Soft stretch panties and support bras for daily wear.</p>
             </div>
           </button>
           <Link
             href="/support"
-            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-xl transition"
+            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-[#b8814a]/12 bg-white p-4 text-left shadow-sm transition"
           >
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-rose-200/10 text-rose-200">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#9b4f70]/20 bg-[#f5ecf0] text-[#9b4f70]">
               <CheckCircle2 size={17} strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white group-hover:text-rose-50">Need help choosing?</p>
-              <p className="mt-0.5 text-xs leading-5 text-white/55">Get size and product guidance from our support team.</p>
+              <p className="text-sm font-semibold text-[#2c1a14]">Need help choosing?</p>
+              <p className="mt-0.5 text-xs leading-5 text-[#8a6a5e]">Get size and product guidance from our support team.</p>
             </div>
           </Link>
         </div>
@@ -596,12 +596,12 @@ export default function ShopDiscoveryClient({
       />
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-24 sm:px-6 lg:grid-cols-[280px_1fr]">
-        <aside className="hidden h-fit rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl lg:block">
+        <aside className="hidden h-fit rounded-[1.5rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm lg:block">
           <div className="mb-5 flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/70">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b8814a]/80">
               Filters
             </p>
-            <SlidersHorizontal className="h-4 w-4 text-cyan-200/70" />
+            <SlidersHorizontal className="h-4 w-4 text-[#b8814a]/60" />
           </div>
           {filterPanel}
         </aside>
@@ -609,31 +609,31 @@ export default function ShopDiscoveryClient({
         <div className="min-w-0">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/70">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b8814a]/80">
                 All Products
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">
+              <h2 className="mt-2 text-2xl font-semibold text-[#2c1a14] md:text-3xl">
                 {filteredProducts.length} result{filteredProducts.length === 1 ? "" : "s"}
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-6 text-white/52">
+            <p className="max-w-md text-sm leading-6 text-[#8a6a5e]">
               Active products only. Coming soon and hidden CMS categories are not shown as shop filters.
             </p>
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] px-5 py-16 text-center backdrop-blur-2xl">
-              <Sparkles className="mx-auto h-8 w-8 text-cyan-200/70" />
-              <h3 className="mt-4 text-xl font-semibold text-white">
+            <div className="rounded-[1.5rem] border border-[#b8814a]/12 bg-white px-5 py-16 text-center shadow-sm">
+              <Sparkles className="mx-auto h-8 w-8 text-[#b8814a]/60" />
+              <h3 className="mt-4 text-xl font-semibold text-[#2c1a14]">
                 No matching products
               </h3>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-white/58">
+              <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-[#8a6a5e]">
                 Adjust your search, category, price, stock, or signal filters to reveal more of the current Aevyrixa collection.
               </p>
               <button
                 type="button"
                 onClick={resetFilters}
-                className="mt-6 rounded-full border border-cyan-100/30 bg-cyan-100/10 px-5 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/55"
+                className="mt-6 rounded-full border border-[#b8814a]/28 bg-[#f5eeea] px-5 py-3 text-sm font-semibold text-[#5c3d30] transition hover:border-[#b8814a]/48 hover:bg-[#f0e4d6]"
               >
                 Clear filters
               </button>
@@ -660,7 +660,7 @@ function FilterGroup({
 }) {
   return (
     <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-white/42">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#8a6a5e]/70">
         {label}
       </p>
       <div className="flex flex-wrap gap-2">{children}</div>
@@ -683,8 +683,8 @@ function Chip({
       onClick={onClick}
       className={`min-h-10 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
         active
-          ? "border-cyan-200/50 bg-cyan-200/15 text-cyan-50"
-          : "border-white/10 bg-black/20 text-white/58 hover:border-cyan-200/30 hover:text-cyan-50"
+          ? "border-[#b8814a]/45 bg-[#b8814a] text-[#faf7f4] shadow-sm"
+          : "border-[#b8814a]/14 bg-[#f5eeea] text-[#5c3d30] hover:border-[#b8814a]/35 hover:bg-[#f0e4d6]"
       }`}
     >
       {children}

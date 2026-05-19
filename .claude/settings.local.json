@@ -25,7 +25,8 @@
       "Bash(Get-ChildItem *)",
       "Bash(curl *)",
       "Bash(python3 -c 'import uuid; print\\(uuid.uuid4\\(\\)\\)')",
-      "Bash(grep -ri \"money.back.guarantee\\\\|100% leak-proof\\\\|medical cure\\\\|\\\\bUSD\\\\b\\\\|\\\\$[0-9]\" \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\" --include=\"*.tsx\" --include=\"*.ts\")"
+      "Bash(grep -ri \"money.back.guarantee\\\\|100% leak-proof\\\\|medical cure\\\\|\\\\bUSD\\\\b\\\\|\\\\$[0-9]\" \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\" --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(grep -rn --include=\"*.tsx\" --include=\"*.ts\" -i \"USD\\\\|\\\\$\\\\s*[0-9]\\\\|money back guarantee\\\\|100%.*leak\\\\|medical cure\" \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\")"
     ]
   }
 }

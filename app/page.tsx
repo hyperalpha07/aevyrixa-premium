@@ -266,13 +266,13 @@ export default async function Home() {
   ];
 
   return (
-    <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#030612] text-white">
+    <main className="aev-home relative min-h-screen overflow-x-hidden bg-[#faf7f4] text-[#2c1a14]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageStructuredData) }}
       />
       <HomeMotionController />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.16),transparent_28%),linear-gradient(180deg,#030612_0%,#07101f_46%,#050612_100%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(184,129,74,0.05),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(74,139,126,0.04),transparent_28%),linear-gradient(180deg,#faf7f4_0%,#f5eeea_100%)]" />
 
       <SiteHeader
         active="home"
@@ -280,19 +280,19 @@ export default async function Home() {
         settings={settings}
       />
 
-      <section className="aev-hero-stage relative isolate overflow-hidden px-4 pb-14 pt-8 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
+      <section className="aev-hero-stage relative isolate overflow-hidden bg-[#2d1829] px-4 pb-14 pt-8 text-white sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
-          <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-cyan-300/18 blur-3xl" />
-          <div className="aev-float-slow absolute -left-16 top-32 h-72 w-72 rounded-full bg-violet-500/18 blur-3xl" />
-          <div className="aev-float absolute right-0 top-40 h-56 w-56 rounded-full bg-rose-200/12 blur-3xl" />
+          <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-[#b8814a]/12 blur-3xl" />
+          <div className="aev-float-slow absolute -left-16 top-32 h-72 w-72 rounded-full bg-[#9b4f70]/10 blur-3xl" />
+          <div className="aev-float absolute right-0 top-40 h-56 w-56 rounded-full bg-[#d4a07a]/08 blur-3xl" />
           <div className="aev-hero-shimmer absolute left-0 top-0 h-full w-full" />
         </div>
         <div className="aev-hero-load-wash pointer-events-none absolute inset-0 -z-10" />
 
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
           <div className="min-w-0">
-            <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-cyan-200/20 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-cyan-100/90 shadow-[0_0_28px_rgba(34,211,238,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
+            <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-[#d4a07a]/25 bg-white/[0.07] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-[#f5eeea]/90 backdrop-blur-xl sm:tracking-[0.36em]">
               {heroMedia.eyebrow || settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
             </p>
             <h1 className="aev-hero-headline mt-7 max-w-4xl text-[1.7rem] font-semibold leading-[1.05] tracking-tight text-white min-[430px]:text-[2.15rem] sm:text-6xl lg:text-7xl">
@@ -305,13 +305,13 @@ export default async function Home() {
             <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[500px]:flex-row sm:mt-10">
               <Link
                 href={heroMedia.ctaLink || "/product"}
-                className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
+                className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-7 text-sm font-bold text-[#faf7f4] shadow-[0_4px_28px_rgba(184,129,74,0.35)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_36px_rgba(184,129,74,0.45)]"
               >
                 {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
               </Link>
               <a
                 href="#how-it-works"
-                className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/40 hover:bg-white/[0.09]"
+                className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 bg-white/[0.07] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-[#d4a07a]/40 hover:bg-white/[0.10]"
               >
                 Explore How It Works
               </a>
@@ -321,7 +321,7 @@ export default async function Home() {
               {heroTrustBadges.map((item) => (
                 <div
                   key={item}
-                  className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-3 py-2.5 text-center text-[0.67rem] font-semibold uppercase tracking-[0.1em] text-white/76 backdrop-blur-xl sm:px-5 sm:py-3 sm:tracking-[0.12em]"
+                  className="aev-trust-badge rounded-full border border-[#d4a07a]/20 bg-white/[0.07] px-3 py-2.5 text-center text-[0.67rem] font-semibold uppercase tracking-[0.1em] text-white/82 backdrop-blur-xl sm:px-5 sm:py-3 sm:tracking-[0.12em]"
                 >
                   {item}
                 </div>
@@ -330,11 +330,11 @@ export default async function Home() {
           </div>
 
           <div className="aev-hero-visual relative min-w-0 max-w-full">
-            <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-300/14 via-violet-500/12 to-rose-200/10 blur-2xl" />
-            <div className="aev-product-edge absolute -inset-2 rounded-[2.4rem] border border-cyan-100/10" />
+            <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-[#b8814a]/10 via-[#9b4f70]/08 to-[#d4a07a]/08 blur-2xl" />
+            <div className="aev-product-edge absolute -inset-2 rounded-[2.4rem] border border-[#d4a07a]/12" />
             <div className="aev-product-float relative">
               {heroMedia.mode === "image" && heroMedia.imageUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={heroMedia.imageUrl}
@@ -346,7 +346,7 @@ export default async function Home() {
                   <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_58%)] opacity-40 pointer-events-none" />
                 </div>
               ) : heroMedia.mode === "video" && heroMedia.videoUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
                   <video
                     className="absolute inset-0 h-full w-full object-cover opacity-90"
                     autoPlay
@@ -368,24 +368,24 @@ export default async function Home() {
                   variant="hero"
                 />
               )}
-              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 rounded-[1.2rem] border border-white/12 bg-[#050816]/75 p-3.5 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
+              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 rounded-[1.2rem] border border-white/15 bg-[#2d1829]/80 p-3.5 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-rose-100/70 sm:text-[0.66rem] sm:tracking-[0.3em]">
+                    <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-[#d4a07a]/80 sm:text-[0.66rem] sm:tracking-[0.3em]">
                       {settings.brandDisplayName}
                     </p>
                     <h2 className="mt-1.5 text-base font-semibold text-white sm:mt-2 sm:text-xl lg:text-2xl">
                       Her Care Collection
                     </h2>
                   </div>
-                  <div className="rounded-full border border-cyan-200/20 bg-cyan-200/10 p-2.5 text-cyan-100 sm:p-3">
+                  <div className="rounded-full border border-[#d4a07a]/25 bg-[#d4a07a]/12 p-2.5 text-[#d4a07a] sm:p-3">
                     <Leaf size={18} strokeWidth={1.7} />
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-1.5 text-center text-[0.62rem] text-white/68 sm:mt-5 sm:gap-2 sm:text-[0.68rem]">
-                  <span className="rounded-full bg-white/[0.07] px-2 py-1.5 sm:py-2">Soft</span>
-                  <span className="rounded-full bg-white/[0.07] px-2 py-1.5 sm:py-2">Layered</span>
-                  <span className="rounded-full bg-white/[0.07] px-2 py-1.5 sm:py-2">Discreet</span>
+                <div className="mt-3 grid grid-cols-3 gap-1.5 text-center text-[0.62rem] text-white/75 sm:mt-5 sm:gap-2 sm:text-[0.68rem]">
+                  <span className="rounded-full bg-white/[0.08] px-2 py-1.5 sm:py-2">Soft</span>
+                  <span className="rounded-full bg-white/[0.08] px-2 py-1.5 sm:py-2">Layered</span>
+                  <span className="rounded-full bg-white/[0.08] px-2 py-1.5 sm:py-2">Discreet</span>
                 </div>
               </div>
             </div>
@@ -396,26 +396,26 @@ export default async function Home() {
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               Confidence System
             </p>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[#2c1a14] sm:text-4xl lg:text-5xl">
               Three quiet upgrades for the moments that usually feel uncertain.
             </h2>
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3 lg:gap-6">
-            {confidenceCards.map(({ title, copy, accent, icon: Icon }) => (
+            {confidenceCards.map(({ title, copy, icon: Icon }) => (
               <article
                 key={title}
-                className="aev-border-card aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:p-7"
+                className="aev-border-card aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 sm:p-7"
               >
-                <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105 sm:mb-10">
+                <div className="absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-[#b8814a]/40 via-[#d4a07a]/30 to-transparent" />
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#b8814a]/15 bg-[#f5eeea] text-[#b8814a] transition duration-300 group-hover:scale-105 sm:mb-10">
                   <Icon size={22} strokeWidth={1.7} />
                 </div>
-                <h3 className="text-2xl font-semibold text-white">{title}</h3>
-                <p className="mt-4 text-sm leading-7 text-white/65">{copy}</p>
+                <h3 className="text-2xl font-semibold text-[#2c1a14]">{title}</h3>
+                <p className="mt-4 text-sm leading-7 text-[#5c3d30]/80">{copy}</p>
               </article>
             ))}
           </div>
@@ -426,13 +426,13 @@ export default async function Home() {
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               Her Care Collection
             </p>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[#2c1a14] sm:text-4xl lg:text-5xl">
               Seven categories, one calm care routine.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-white/62">
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[#5c3d30]/80">
               Explore the full range of reusable period care, soft comfort
               wear, and hygiene essentials thoughtfully curated for your
               everyday routine.
@@ -471,43 +471,43 @@ export default async function Home() {
                   {(showBackgroundMedia || showMediaOnly) && (
                     <>
                       {renderMedia("absolute inset-0 h-full w-full object-cover opacity-88 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100")}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#030612]/56 via-[#030612]/8 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#2d1829]/60 via-[#2d1829]/10 to-transparent" />
                     </>
                   )}
-                  <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+                  <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#b8814a]/35 via-[#d4a07a]/25 to-transparent" />
                   <div className={`absolute right-4 top-4 h-16 w-16 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-[1.7] group-hover:opacity-80`} />
                   {(showImageVisual || showVideoVisual) && (
-                    <div className="relative mb-4 aspect-[1.2] overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#07101f]">
+                    <div className="relative mb-4 aspect-[1.2] overflow-hidden rounded-[1.15rem] border border-[#b8814a]/12 bg-[#f5eeea]">
                       {renderMedia("absolute inset-0 h-full w-full object-cover opacity-92 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100")}
-                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#030612]/28 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#f5eeea]/20 to-transparent" />
                     </div>
                   )}
                   {mode === "animation" && (
-                    <div className="relative mb-5 h-24 overflow-hidden rounded-[1.15rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-transparent">
-                      <div className="absolute left-5 top-5 h-12 w-24 rounded-full bg-cyan-200/12 blur-xl" />
-                      <div className="absolute right-6 top-8 h-12 w-20 rounded-full bg-fuchsia-200/12 blur-xl" />
-                      <div className="absolute inset-x-6 bottom-6 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+                    <div className="relative mb-5 h-24 overflow-hidden rounded-[1.15rem] border border-[#b8814a]/10 bg-gradient-to-br from-[#f5eeea] via-[#faf7f4] to-[#f0e4d6]/50">
+                      <div className="absolute left-5 top-5 h-12 w-24 rounded-full bg-[#b8814a]/[0.08] blur-xl" />
+                      <div className="absolute right-6 top-8 h-12 w-20 rounded-full bg-[#4a8b7e]/[0.06] blur-xl" />
+                      <div className="absolute inset-x-6 bottom-6 h-px bg-gradient-to-r from-transparent via-[#b8814a]/25 to-transparent" />
                     </div>
                   )}
-                  <div className={`relative ${showBackgroundMedia || showMediaOnly ? "mt-20 rounded-[1.15rem] border border-white/12 bg-[#030612]/58 p-4 shadow-2xl backdrop-blur-md" : ""}`}>
+                  <div className={`relative ${showBackgroundMedia || showMediaOnly ? "mt-20 rounded-[1.15rem] border border-white/15 bg-[#2d1829]/65 p-4 shadow-2xl backdrop-blur-md" : ""}`}>
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-base font-semibold leading-snug text-white drop-shadow-sm">{displayName}</h3>
+                      <h3 className={`text-base font-semibold leading-snug drop-shadow-sm ${showBackgroundMedia || showMediaOnly ? "text-white" : "text-[#2c1a14]"}`}>{displayName}</h3>
                       {comingSoon && (
-                        <span className="mt-0.5 shrink-0 rounded-full border border-amber-100/35 bg-amber-200/[0.14] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-50">
+                        <span className="mt-0.5 shrink-0 rounded-full border border-[#b8814a]/25 bg-[#f5eeea] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-[#8a6a5e]">
                           Coming Soon
                         </span>
                       )}
                     </div>
                     {mode !== "media_only" && (
-                      <p className="mt-2 text-sm leading-6 text-white/76 drop-shadow-sm">{displayTagline}</p>
+                      <p className={`mt-2 text-sm leading-6 drop-shadow-sm ${showBackgroundMedia || showMediaOnly ? "text-white/80" : "text-[#5c3d30]/80"}`}>{displayTagline}</p>
                     )}
                     {mode === "media_only" && !comingSoon && displayLinkUrl && (
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/75">
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#b8814a]/80">
                         View collection
                       </p>
                     )}
                     {!comingSoon && displayLinkUrl && mode !== "media_only" && (
-                      <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-100/78 transition duration-300 group-hover:gap-2 group-hover:text-cyan-100">
+                      <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#b8814a] transition duration-300 group-hover:gap-2 group-hover:text-[#5c3d30]">
                         Explore
                         <ArrowRight size={12} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
                       </div>
@@ -522,14 +522,14 @@ export default async function Home() {
                 <a
                   key={displayName}
                   href={displayLinkUrl}
-                  className="aev-category-card aev-reveal group relative min-h-[15rem] overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-cyan-100/30 hover:bg-white/[0.07] hover:shadow-[0_0_36px_rgba(34,211,238,0.14)] sm:p-6"
+                  className="aev-category-card aev-reveal group relative min-h-[15rem] overflow-hidden rounded-[1.6rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1.5 hover:border-[#b8814a]/28 hover:shadow-md sm:p-6"
                 >
                   {inner}
                 </a>
               ) : (
                 <div
                   key={displayName}
-                  className={`aev-category-card aev-reveal group relative min-h-[15rem] overflow-hidden rounded-[1.6rem] border bg-white/[0.03] p-5 backdrop-blur-2xl sm:p-6 ${comingSoon ? "border-amber-100/14" : "border-white/8"}`}
+                  className={`aev-category-card aev-reveal group relative min-h-[15rem] overflow-hidden rounded-[1.6rem] border bg-[#f5eeea] p-5 sm:p-6 ${comingSoon ? "border-[#b8814a]/10 opacity-75" : "border-[#b8814a]/8"}`}
                 >
                   {inner}
                 </div>
@@ -545,31 +545,31 @@ export default async function Home() {
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
                   Her Care Products
                 </p>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#2c1a14] sm:text-4xl lg:text-5xl">
                   Explore our collection.
                 </h2>
               </div>
               <Link
                 href="/product"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-100/78 transition hover:text-cyan-100"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#b8814a] transition hover:text-[#5c3d30]"
               >
                 View all
                 <ArrowRight size={14} strokeWidth={2.2} />
               </Link>
             </div>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 sm:text-base sm:leading-8">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5c3d30]/80 sm:text-base sm:leading-8">
               Premium reusable care essentials with discreet delivery across Bangladesh.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
               {activeProducts.map((product) => (
                 <article
                   key={product.id}
-                  className="aev-reveal aev-flagship-card group min-w-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/28 hover:shadow-[0_0_36px_rgba(34,211,238,0.13)] sm:rounded-[1.75rem]"
+                  className="aev-reveal aev-flagship-card group min-w-0 overflow-hidden rounded-[1.5rem] border border-[#b8814a]/12 bg-white p-3 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#b8814a]/28 hover:shadow-md sm:rounded-[1.75rem]"
                 >
-                  <Link href={`/product/${product.slug}`} className="block overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#07111f] sm:rounded-[1.35rem]">
+                  <Link href={`/product/${product.slug}`} className="block overflow-hidden rounded-[1.15rem] border border-[#b8814a]/10 bg-[#f5eeea] sm:rounded-[1.35rem]">
                     <div className="relative aspect-square w-full">
                       {product.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -588,21 +588,21 @@ export default async function Home() {
                     </div>
                   </Link>
                   <div className="px-1.5 pb-2.5 pt-3.5 sm:px-2 sm:pb-3 sm:pt-4">
-                    <h3 className="line-clamp-2 text-base font-semibold leading-snug text-white sm:text-lg">
+                    <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#2c1a14] sm:text-lg">
                       {product.name}
                     </h3>
                     {product.shortDescription && (
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-white/62">
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#5c3d30]/80">
                         {product.shortDescription}
                       </p>
                     )}
                     <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-                      <span className="text-xl font-semibold text-white sm:text-2xl">
+                      <span className="text-xl font-semibold text-[#2c1a14] sm:text-2xl">
                         {formatProductPrice(product)}
                       </span>
                       <Link
                         href={`/product/${product.slug}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08] sm:gap-2 sm:px-4 sm:text-sm"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#b8814a]/22 bg-[#f5eeea] px-3.5 py-2 text-xs font-semibold text-[#5c3d30] transition hover:border-[#b8814a]/40 hover:bg-[#f0e4d6] sm:gap-2 sm:px-4 sm:text-sm"
                       >
                         View
                         <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -615,7 +615,7 @@ export default async function Home() {
             <div className="mt-7 flex justify-center sm:mt-8">
               <Link
                 href="/product"
-                className="aev-action-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
+                className="aev-action-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-7 text-sm font-bold text-[#faf7f4] shadow-[0_4px_28px_rgba(184,129,74,0.28)] transition duration-300 hover:-translate-y-0.5"
               >
                 View All Products
                 <ArrowRight className="h-4 w-4" />
@@ -629,14 +629,14 @@ export default async function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
                 How It Works
               </p>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[#2c1a14] sm:text-4xl lg:text-5xl">
                 A simple reusable rhythm.
               </h2>
             </div>
-            <p className="max-w-3xl text-base leading-8 text-white/65 lg:justify-self-end">
+            <p className="max-w-3xl text-base leading-8 text-[#5c3d30]/80 lg:justify-self-end">
               {settings.brandDisplayName} is designed to feel intuitive from
               first wear to wash day: choose thoughtfully, wear comfortably,
               and care for it gently.
@@ -647,16 +647,16 @@ export default async function Home() {
             {howItWorks.map((step, index) => (
               <article
                 key={step.title}
-                className="aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#07101f]/82 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 sm:p-7"
+                className="aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#b8814a]/25 hover:shadow-md sm:p-7"
               >
-                <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-cyan-200/10 blur-2xl transition duration-300 group-hover:bg-violet-300/14" />
-                <div className="relative mb-12 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-lg font-semibold text-white">
+                <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-[#b8814a]/[0.05] blur-2xl transition duration-300 group-hover:bg-[#4a8b7e]/[0.07]" />
+                <div className="relative mb-12 flex h-14 w-14 items-center justify-center rounded-full border border-[#b8814a]/18 bg-[#f5eeea] text-lg font-semibold text-[#b8814a]">
                   0{index + 1}
                 </div>
-                <h3 className="relative text-xl font-semibold text-white">
+                <h3 className="relative text-xl font-semibold text-[#2c1a14]">
                   {step.title}
                 </h3>
-                <p className="relative mt-4 text-sm leading-7 text-white/64">
+                <p className="relative mt-4 text-sm leading-7 text-[#5c3d30]/80">
                   {step.copy}
                 </p>
               </article>
@@ -697,7 +697,7 @@ export default async function Home() {
           <div className={`mx-auto max-w-7xl ${lc.layerComfortMediaMode === "background_media_text" ? "relative" : ""}`}>
             {lc.layerComfortMediaMode === "media_only" ? (
               /* media_only mode — show just the image or video */
-              <div className="aev-reveal group relative isolate overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
+              <div className="aev-reveal group relative isolate overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
                 {lc.layerComfortImageUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -724,7 +724,7 @@ export default async function Home() {
                     <div className="relative h-72 w-full max-w-sm sm:h-80">
                       <div className="aev-layer-explorer-card aev-layer-explorer-card-three absolute inset-x-7 top-9 h-full rounded-[2rem] border border-rose-100/16 bg-gradient-to-br from-rose-100/[0.055] to-transparent shadow-[0_24px_72px_rgba(0,0,0,0.26)] backdrop-blur-sm" />
                       <div className="aev-layer-explorer-card aev-layer-explorer-card-two absolute inset-x-3.5 top-4 h-full rounded-[2rem] border border-violet-100/18 bg-gradient-to-br from-violet-100/[0.065] to-transparent shadow-[0_28px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm" />
-                      <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-cyan-100/22 bg-gradient-to-br from-cyan-100/[0.08] to-white/[0.03] shadow-[0_34px_90px_rgba(0,0,0,0.32),0_0_52px_rgba(34,211,238,0.09)] backdrop-blur-md" />
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-[#b8814a]/20 bg-gradient-to-br from-[#f5eeea] to-[#faf7f4] shadow-[0_34px_90px_rgba(150,100,70,0.14)] backdrop-blur-md" />
                     </div>
                   </div>
                 )}
@@ -733,25 +733,25 @@ export default async function Home() {
               /* grid layout: text left, media right */
               <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
                 <div className="aev-reveal min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                  <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
                     {lc.layerComfortEyebrow}
                   </p>
-                  <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                  <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#2c1a14] sm:text-5xl">
                     {lc.layerComfortHeading}
                   </h2>
-                  <p className="mt-5 max-w-2xl text-base leading-8 text-white/65">
+                  <p className="mt-5 max-w-2xl text-base leading-8 text-[#5c3d30]/80">
                     {lc.layerComfortDescription}
                   </p>
                   <div className="mt-8 space-y-3">
                     {lcLayerItems.map(({ label, desc, dotBg }) => (
                       <div
                         key={label}
-                        className="aev-reveal flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+                        className="aev-reveal flex gap-4 rounded-2xl border border-[#b8814a]/12 bg-white p-4 shadow-sm"
                       >
-                        <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotBg} ring-4 ring-white/10`} />
+                        <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotBg} ring-4 ring-[#b8814a]/10`} />
                         <div>
-                          <p className="text-sm font-semibold text-white">{label}</p>
-                          <p className="mt-1 text-sm leading-6 text-white/58">{desc}</p>
+                          <p className="text-sm font-semibold text-[#2c1a14]">{label}</p>
+                          <p className="mt-1 text-sm leading-6 text-[#5c3d30]/80">{desc}</p>
                         </div>
                       </div>
                     ))}
@@ -761,7 +761,7 @@ export default async function Home() {
                 {/* Right side: image, video, or animation */}
                 <div className="aev-reveal flex items-center justify-center py-6 lg:py-0">
                   {(lc.layerComfortMediaMode === "image_text") && lc.layerComfortImageUrl ? (
-                    <div className="group relative isolate w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "20rem" }}>
+                    <div className="group relative isolate w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "20rem" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={lc.layerComfortImageUrl}
@@ -772,7 +772,7 @@ export default async function Home() {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/65 via-[#030714]/10 to-transparent" />
                     </div>
                   ) : (lc.layerComfortMediaMode === "video_text") && lc.layerComfortVideoUrl ? (
-                    <div className="group relative isolate w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "20rem" }}>
+                    <div className="group relative isolate w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "20rem" }}>
                       <video
                         src={lc.layerComfortVideoUrl}
                         className="absolute inset-0 h-full w-full object-cover"
@@ -787,16 +787,16 @@ export default async function Home() {
                     <div className="relative h-72 w-full max-w-sm sm:h-80">
                       <div className="aev-layer-explorer-card aev-layer-explorer-card-three absolute inset-x-7 top-9 h-full rounded-[2rem] border border-rose-100/16 bg-gradient-to-br from-rose-100/[0.055] to-transparent shadow-[0_24px_72px_rgba(0,0,0,0.26)] backdrop-blur-sm" />
                       <div className="aev-layer-explorer-card aev-layer-explorer-card-two absolute inset-x-3.5 top-4 h-full rounded-[2rem] border border-violet-100/18 bg-gradient-to-br from-violet-100/[0.065] to-transparent shadow-[0_28px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm" />
-                      <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-cyan-100/22 bg-gradient-to-br from-cyan-100/[0.08] to-white/[0.03] shadow-[0_34px_90px_rgba(0,0,0,0.32),0_0_52px_rgba(34,211,238,0.09)] backdrop-blur-md">
-                        <div className="absolute inset-x-[15%] top-[22%] h-px bg-gradient-to-r from-transparent via-cyan-100/60 to-transparent" />
-                        <div className="absolute inset-x-[22%] top-[44%] h-px bg-gradient-to-r from-transparent via-violet-100/52 to-transparent" />
+                      <div className="aev-layer-explorer-card aev-layer-explorer-card-one absolute inset-x-0 top-0 h-full overflow-hidden rounded-[2rem] border border-[#b8814a]/20 bg-gradient-to-br from-[#f5eeea] to-[#faf7f4] shadow-[0_34px_90px_rgba(150,100,70,0.14)] backdrop-blur-md">
+                        <div className="absolute inset-x-[15%] top-[22%] h-px bg-gradient-to-r from-transparent via-[#b8814a]/35 to-transparent" />
+                        <div className="absolute inset-x-[22%] top-[44%] h-px bg-gradient-to-r from-transparent via-[#4a8b7e]/30 to-transparent" />
                         <div className="absolute inset-x-[28%] top-[63%] h-px bg-gradient-to-r from-transparent via-rose-100/48 to-transparent" />
-                        <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/12 blur-2xl" />
+                        <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#b8814a]/[0.08] blur-2xl" />
                         <div className="absolute bottom-6 left-6 right-6">
-                          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-cyan-100/68">
+                          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-[#b8814a]/70">
                             Care Layer System
                           </p>
-                          <p className="mt-1.5 text-base font-semibold text-white">
+                          <p className="mt-1.5 text-base font-semibold text-[#2c1a14]">
                             Her Care Collection
                           </p>
                         </div>
@@ -813,7 +813,7 @@ export default async function Home() {
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
           {careMedia.mode === "image" && careMedia.imageUrl ? (
-            <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
+            <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={careMedia.imageUrl}
@@ -835,13 +835,13 @@ export default async function Home() {
           )}
 
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               {careMedia.eyebrow || "Aevyrixa Care Motion"}
             </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#2c1a14] sm:text-5xl">
               {careMedia.heading || "Premium comfort, reusable care, and discreet protection in one calm system."}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
+            <p className="mt-5 max-w-2xl text-base leading-8 text-[#5c3d30]/80">
               {careMedia.subheading || "Premium reusable care essentials made for soft comfort, discreet daily wear, gentle care after use, and privacy-minded delivery from order to arrival."}
             </p>
 
@@ -853,10 +853,10 @@ export default async function Home() {
               ].map((benefit) => (
                 <div
                   key={benefit}
-                  className="aev-reveal flex gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4 text-sm leading-7 text-white/70"
+                  className="aev-reveal flex gap-3 rounded-2xl border border-[#b8814a]/12 bg-white p-4 text-sm leading-7 text-[#5c3d30]/80 shadow-sm"
                 >
                   <ShieldCheck
-                    className="mt-1 shrink-0 text-cyan-200"
+                    className="mt-1 shrink-0 text-[#4a8b7e]"
                     size={18}
                     strokeWidth={1.8}
                   />
@@ -867,7 +867,7 @@ export default async function Home() {
 
             <Link
               href={careMedia.ctaLink || featuredProductHref}
-              className="aev-action-primary mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
+              className="aev-action-primary mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-7 text-sm font-bold text-[#faf7f4] shadow-[0_4px_28px_rgba(184,129,74,0.28)] transition duration-300 hover:-translate-y-0.5"
             >
               {careMedia.ctaText || "View Product"}
             </Link>
@@ -878,19 +878,19 @@ export default async function Home() {
       <section className="aev-experience-section aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
           <div className="aev-reveal min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               {experienceMedia.eyebrow || "Designed for your day"}
             </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#2c1a14] sm:text-5xl">
               {experienceMedia.heading || "Every detail, designed for quiet everyday confidence."}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
+            <p className="mt-5 max-w-2xl text-base leading-8 text-[#5c3d30]/80">
               {experienceMedia.subheading || "Soft layered protection, gentle stretch, and a refined silhouette support your routine from first wear to wash day — without adjustment or worry."}
             </p>
           </div>
 
           {experienceMedia.mode === "image" && experienceMedia.imageUrl ? (
-            <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
+            <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#2d1829] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={experienceMedia.imageUrl}
@@ -917,20 +917,20 @@ export default async function Home() {
       {/* ── Phase 27: Hygiene-Safe Support Timeline ── */}
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
             Care Routine
           </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#2c1a14] sm:text-4xl">
             3-Day Hygiene-Safe Support
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-white/60">
+          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[#5c3d30]/80">
             A simple, repeatable care routine that keeps your reusable pieces
             feeling fresh, soft, and ready for next use.
           </p>
 
           <div className="relative mt-12">
             <div
-              className="aev-timeline-line absolute left-[20%] right-[20%] top-7 hidden h-px bg-gradient-to-r from-transparent via-cyan-200/38 to-transparent sm:block"
+              className="aev-timeline-line absolute left-[20%] right-[20%] top-7 hidden h-px bg-gradient-to-r from-transparent via-[#b8814a]/30 to-transparent sm:block"
               aria-hidden="true"
             />
             <div className="grid gap-8 sm:grid-cols-3">
@@ -961,13 +961,13 @@ export default async function Home() {
                   className="aev-reveal flex flex-col items-center gap-3 text-center"
                 >
                   <div
-                    className="aev-timeline-dot flex h-14 w-14 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10 text-sm font-semibold text-cyan-100"
+                    className="aev-timeline-dot flex h-14 w-14 items-center justify-center rounded-full border border-[#b8814a]/28 bg-[#f5eeea] text-sm font-semibold text-[#b8814a]"
                     style={{ animationDelay: delay }}
                   >
                     {step}
                   </div>
-                  <h3 className="text-lg font-semibold text-white">{label}</h3>
-                  <p className="max-w-[20ch] text-sm leading-7 text-white/58">
+                  <h3 className="text-lg font-semibold text-[#2c1a14]">{label}</h3>
+                  <p className="max-w-[20ch] text-sm leading-7 text-[#5c3d30]/80">
                     {desc}
                   </p>
                 </div>
@@ -980,15 +980,15 @@ export default async function Home() {
       {/* ── Phase 47C: Privacy from order to delivery ── */}
       <section className="px-4 py-10 sm:px-6 sm:py-14">
         <div className="mx-auto max-w-7xl">
-          <div className="overflow-hidden rounded-[2rem] border border-white/8 bg-gradient-to-br from-white/[0.04] to-white/[0.02] p-5 backdrop-blur-2xl sm:p-8">
+          <div className="overflow-hidden rounded-[2rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-8">
             <div className="mb-6 text-center sm:mb-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
                 Order to Arrival
               </p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#2c1a14] sm:text-3xl">
                 Privacy from order to delivery.
               </h2>
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5c3d30]/80">
                 Your care routine stays private. Every order ships with plain outer packaging — no product names or brand marks visible.
               </p>
             </div>
@@ -999,40 +999,40 @@ export default async function Home() {
                     icon: PackageCheck,
                     label: "Discreet Packaging",
                     desc: settings.privacyPackagingMessage || "Plain outer packaging — no product names or brand marks outside.",
-                    glow: "bg-rose-300/10",
+                    glow: "bg-[#b8814a]/[0.06]",
                   },
                   {
                     icon: ShieldCheck,
                     label: "Order Confirmation",
                     desc: "Receive a clear confirmation after we process your order. No unexpected surprises.",
-                    glow: "bg-cyan-300/10",
+                    glow: "bg-[#4a8b7e]/[0.05]",
                   },
                   {
                     icon: Truck,
                     label: "Bangladesh Delivery",
                     desc: settings.deliveryCoverageText || "Delivered across Bangladesh with courier tracking and support.",
-                    glow: "bg-violet-300/10",
+                    glow: "bg-[#9b4f70]/[0.05]",
                   },
                   {
                     icon: MessageCircle,
                     label: "3-Day Support",
                     desc: settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible product concerns after delivery.",
-                    glow: "bg-amber-300/10",
+                    glow: "bg-[#b8814a]/[0.05]",
                   },
                 ] as const
               ).map(({ icon: Icon, label, desc, glow }) => (
                 <div
                   key={label}
-                  className="aev-reveal aev-delivery-chip relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+                  className="aev-reveal aev-delivery-chip relative overflow-hidden rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4"
                 >
                   <div className={`pointer-events-none absolute right-3 top-3 h-12 w-12 rounded-full ${glow} blur-2xl aev-story-ambient-glow`} />
                   <div className="relative flex items-start gap-3">
-                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.07] text-cyan-200">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#b8814a]/15 bg-[#f5eeea] text-[#b8814a]">
                       <Icon size={17} strokeWidth={1.8} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{label}</p>
-                      <p className="mt-1 text-xs leading-5 text-white/58">{desc}</p>
+                      <p className="text-sm font-semibold text-[#2c1a14]">{label}</p>
+                      <p className="mt-1 text-xs leading-5 text-[#5c3d30]/80">{desc}</p>
                     </div>
                   </div>
                 </div>
@@ -1044,13 +1044,13 @@ export default async function Home() {
 
       <section className="px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
-          <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035))] p-5 backdrop-blur-2xl sm:p-8 lg:p-10">
+          <div className="rounded-[2rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
                   Size & Care
                 </p>
-                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#2c1a14] sm:text-5xl">
                   Clear care for a better fit and longer wear.
                 </h2>
               </div>
@@ -1059,13 +1059,13 @@ export default async function Home() {
                 {careCards.map(({ title, copy, icon: Icon }) => (
                   <article
                     key={title}
-                    className="aev-reveal aev-premium-card rounded-[1.35rem] border border-white/10 bg-[#050816]/58 p-5"
+                    className="aev-reveal aev-premium-card rounded-[1.35rem] border border-[#b8814a]/12 bg-[#faf7f4] p-5"
                   >
-                    <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.07] text-cyan-100">
+                    <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f5eeea] text-[#b8814a]">
                       <Icon size={20} strokeWidth={1.7} />
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-white/62">{copy}</p>
+                    <h3 className="text-lg font-semibold text-[#2c1a14]">{title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-[#5c3d30]/80">{copy}</p>
                   </article>
                 ))}
               </div>
@@ -1078,13 +1078,13 @@ export default async function Home() {
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               Find Your Care
             </p>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[#2c1a14] sm:text-3xl">
               Which one is right for you?
             </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-white/60">
+            <p className="mt-3 max-w-2xl text-base leading-7 text-[#5c3d30]/80">
               A quick guide to help you choose the right Her Care product for your routine.
             </p>
           </div>
@@ -1095,7 +1095,8 @@ export default async function Home() {
                   title: "Light to Moderate Flow Days",
                   desc: "Reusable period underwear supports everyday flow days. Soft, layered, and designed to wear comfortably through your regular schedule.",
                   href: "/product?category=Reusable+Period+Care",
-                  accent: "from-cyan-200/75 to-cyan-500/15",
+                  iconColor: "text-[#4a8b7e]",
+                  iconBg: "bg-[#e8f4f1] border-[#4a8b7e]/18",
                   tag: "Period Care",
                   icon: Droplets,
                 },
@@ -1103,7 +1104,8 @@ export default async function Home() {
                   title: "All-Day Comfort Wear",
                   desc: "Comfort panties and soft support bras for daily wear. Choose relaxed fit or gentle stretch based on your preference.",
                   href: "/product?category=Comfort+Panty",
-                  accent: "from-fuchsia-200/75 to-fuchsia-500/15",
+                  iconColor: "text-[#b8814a]",
+                  iconBg: "bg-[#f5eeea] border-[#b8814a]/18",
                   tag: "Comfort Wear",
                   icon: Sparkles,
                 },
@@ -1111,27 +1113,28 @@ export default async function Home() {
                   title: "Not sure? Get help first.",
                   desc: "Message support before you order. We help with size, coverage, and product selection — no pressure, just honest guidance.",
                   href: "/support",
-                  accent: "from-rose-200/75 to-amber-200/15",
+                  iconColor: "text-[#9b4f70]",
+                  iconBg: "bg-[#f5ecf0] border-[#9b4f70]/18",
                   tag: "Support",
                   icon: MessageCircle,
                 },
               ] as const
-            ).map(({ title, desc, href, accent, tag, icon: Icon }) => (
+            ).map(({ title, desc, href, iconColor, iconBg, tag, icon: Icon }) => (
               <a
                 key={title}
                 href={href}
-                className="aev-reveal aev-routine-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl sm:p-6"
+                className="aev-reveal aev-routine-card group relative overflow-hidden rounded-[1.6rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6"
               >
-                <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#b8814a]/30 via-[#d4a07a]/20 to-transparent" />
+                <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border ${iconBg} ${iconColor} transition duration-300 group-hover:scale-105`}>
                   <Icon size={20} strokeWidth={1.7} />
                 </div>
-                <span className="inline-block rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-white/70">
+                <span className="inline-block rounded-full border border-[#b8814a]/18 bg-[#f5eeea] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#8a6a5e]">
                   {tag}
                 </span>
-                <h3 className="mt-3 text-lg font-semibold text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/62">{desc}</p>
-                <div className="mt-5 flex items-center gap-1.5 text-xs font-semibold text-cyan-100/72 transition duration-300 group-hover:gap-2 group-hover:text-cyan-100">
+                <h3 className="mt-3 text-lg font-semibold text-[#2c1a14]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#5c3d30]/80">{desc}</p>
+                <div className="mt-5 flex items-center gap-1.5 text-xs font-semibold text-[#b8814a] transition duration-300 group-hover:gap-2 group-hover:text-[#5c3d30]">
                   Explore
                   <ArrowRight size={12} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
                 </div>
@@ -1144,10 +1147,10 @@ export default async function Home() {
       <section id="faq" className="px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               FAQ Preview
             </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#2c1a14] sm:text-5xl">
               Honest answers before checkout.
             </h2>
           </div>
@@ -1156,22 +1159,22 @@ export default async function Home() {
             {faqs.map((faq, index) => (
               <article
                 key={faq.question}
-                className="aev-reveal aev-premium-card rounded-[1.35rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl sm:p-6"
+                className="aev-reveal aev-premium-card rounded-[1.35rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6"
               >
                 <div className="flex items-start gap-4">
-                  <span className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200/70">
+                  <span className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#b8814a]/70">
                     0{index + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-[#2c1a14]">
                       {faq.question}
                     </h3>
-                    <p className="mt-3 text-sm leading-7 text-white/62">
+                    <p className="mt-3 text-sm leading-7 text-[#5c3d30]/80">
                       {faq.answer}
                     </p>
                   </div>
                   <ChevronDown
-                    className="mt-1 hidden shrink-0 text-white/38 sm:block"
+                    className="mt-1 hidden shrink-0 text-[#8a6a5e] sm:block"
                     size={20}
                     strokeWidth={1.7}
                   />
@@ -1184,7 +1187,7 @@ export default async function Home() {
 
       {hms.ctaSectionEnabled && (
       <section className="px-4 pb-16 pt-12 sm:px-6 sm:pb-28 sm:pt-20">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] shadow-2xl">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-[#b8814a]/15 bg-[#2d1829] shadow-2xl">
           {/* background_media_text mode */}
           {(hms.ctaSectionMediaMode === "background_media_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
             <div className="relative min-h-[28rem] overflow-hidden">
@@ -1207,8 +1210,8 @@ export default async function Home() {
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               )}
-              <div className="absolute inset-0 bg-[#050816]/72 backdrop-blur-[1px]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_32%)]" />
+              <div className="absolute inset-0 bg-[#2d1829]/80 backdrop-blur-[1px]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(184,129,74,0.10),transparent_32%)]" />
               <div className="relative flex min-h-[28rem] flex-col items-center justify-center px-5 py-16 text-center sm:px-8 lg:px-12">
                 {hms.ctaSectionEyebrow && (
                   <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
@@ -1225,7 +1228,7 @@ export default async function Home() {
                 <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                   <Link
                     href={hms.ctaSectionPrimaryCtaLink || "/product"}
-                    className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                    className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-7 text-sm font-bold text-[#faf7f4]"
                   >
                     {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                   </Link>
@@ -1267,7 +1270,7 @@ export default async function Home() {
               </div>
               {/* Text side */}
               <div className="relative order-1 px-5 py-12 text-center sm:px-8 sm:py-16 lg:order-2 lg:text-left">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.14),transparent_40%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(184,129,74,0.08),transparent_40%)]" />
                 <div className="relative">
                   {hms.ctaSectionEyebrow && (
                     <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
@@ -1284,7 +1287,7 @@ export default async function Home() {
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
                     <Link
                       href={hms.ctaSectionPrimaryCtaLink || "/product"}
-                      className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                      className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-7 text-sm font-bold text-[#faf7f4]"
                     >
                       {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                     </Link>
@@ -1320,7 +1323,7 @@ export default async function Home() {
                 <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                   <Link
                     href={hms.ctaSectionPrimaryCtaLink || "/product"}
-                    className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617]"
+                    className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#b8814a] to-[#d4a07a] px-7 text-sm font-bold text-[#faf7f4]"
                   >
                     {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                   </Link>

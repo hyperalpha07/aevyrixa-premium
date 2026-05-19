@@ -237,20 +237,20 @@ export default function AccountClient({ view }: { view: AccountView }) {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_52%,#030612_100%)]" />
+    <main className="min-h-screen overflow-x-hidden bg-[#faf7f4] text-[#2c1a14]">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(184,129,74,0.05),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(74,139,126,0.04),transparent_30%),linear-gradient(180deg,#faf7f4_0%,#f5eeea_100%)]" />
       <SiteHeader settings={settings} active="account" />
 
       <section className="mx-auto w-full max-w-7xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14">
         <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/72">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#b8814a]/80">
               Customer Account
             </p>
-            <h1 className="mt-4 break-words text-3xl font-semibold leading-tight [overflow-wrap:anywhere] sm:text-5xl">
+            <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-[#2c1a14] [overflow-wrap:anywhere] sm:text-5xl">
               {customer ? `Welcome, ${customer.fullName}` : "Your Aevyrixa account"}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/64">
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#5c3d30]/80">
               Manage orders, addresses, support, and checkout details from one secure profile.
             </p>
           </div>
@@ -258,7 +258,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
             <button
               type="button"
               onClick={logout}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-5 text-sm font-semibold text-white transition hover:border-fuchsia-200/40"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#b8814a]/22 bg-[#f5eeea] px-5 text-sm font-semibold text-[#5c3d30] transition hover:border-[#b8814a]/40 hover:bg-[#f0e4d6]"
             >
               <LogOut className="h-4 w-4" />
               Logout
@@ -288,12 +288,12 @@ export default function AccountClient({ view }: { view: AccountView }) {
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-4">
               <Panel>
-                <p className="text-sm font-semibold text-white">{customer.fullName}</p>
-                <p className="mt-2 text-sm text-white/58">{customer.phone}</p>
-                {customer.email && <p className="mt-1 text-sm text-white/58">{customer.email}</p>}
+                <p className="text-sm font-semibold text-[#2c1a14]">{customer.fullName}</p>
+                <p className="mt-2 text-sm text-[#5c3d30]/80">{customer.phone}</p>
+                {customer.email && <p className="mt-1 text-sm text-[#8a6a5e]">{customer.email}</p>}
               </Panel>
               <Panel>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a6a5e]/70">
                   Shortcuts
                 </p>
                 <div className="mt-4 grid gap-2">
@@ -370,10 +370,10 @@ function AccountTab({
   return (
     <Link
       href={href}
-      className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 transition ${
+      className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition ${
         active
-          ? "border-cyan-200/40 bg-cyan-200/10 text-white"
-          : "border-white/10 bg-white/[0.045] text-white/70 hover:border-white/25 hover:text-white"
+          ? "border-[#b8814a]/40 bg-[#b8814a] text-[#faf7f4] shadow-sm"
+          : "border-[#b8814a]/14 bg-white text-[#5c3d30] hover:border-[#b8814a]/30 hover:bg-[#f5eeea]"
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -384,7 +384,7 @@ function AccountTab({
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+    <div className="min-w-0 rounded-[1.5rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6">
       {children}
     </div>
   );
@@ -469,12 +469,12 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex min-h-24 min-w-0 flex-col justify-between rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-cyan-100/30 hover:bg-cyan-100/[0.06]"
+      className="group flex min-h-24 min-w-0 flex-col justify-between rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4 transition hover:border-[#b8814a]/30 hover:bg-[#f5eeea] hover:shadow-sm"
     >
-      <Icon className="h-5 w-5 text-cyan-100" />
-      <span className="mt-4 flex items-center justify-between gap-3 text-sm font-semibold text-white">
+      <Icon className="h-5 w-5 text-[#b8814a]" />
+      <span className="mt-4 flex items-center justify-between gap-3 text-sm font-semibold text-[#2c1a14]">
         <span className="min-w-0 break-words [overflow-wrap:anywhere]">{label}</span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-white/40 transition group-hover:text-white" />
+        <ArrowRight className="h-4 w-4 shrink-0 text-[#8a6a5e] transition group-hover:text-[#b8814a]" />
       </span>
     </Link>
   );
@@ -482,10 +482,10 @@ function QuickAction({
 
 function Metric({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <Icon className="h-5 w-5 text-cyan-100" />
-      <p className="mt-3 text-xs uppercase tracking-[0.18em] text-white/42">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
+    <div className="rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4">
+      <Icon className="h-5 w-5 text-[#b8814a]" />
+      <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8a6a5e]/70">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-[#2c1a14]">{value}</p>
     </div>
   );
 }
@@ -493,8 +493,8 @@ function Metric({ icon: Icon, label, value }: { icon: typeof UserRound; label: s
 function SectionTitle({ title, href, label = "View" }: { title: string; href: string; label?: string }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
-      <Link href={href} className="text-sm font-semibold text-cyan-100 hover:text-white">
+      <h2 className="text-xl font-semibold text-[#2c1a14]">{title}</h2>
+      <Link href={href} className="text-sm font-semibold text-[#b8814a] hover:text-[#5c3d30]">
         {label}
       </Link>
     </div>
@@ -505,8 +505,8 @@ function OrdersView({ orders }: { orders: AccountOrder[] }) {
   return (
     <div className="grid gap-5">
       <Panel>
-        <h2 className="text-xl font-semibold text-white">Order History</h2>
-        <p className="mt-2 text-sm leading-7 text-white/56">
+        <h2 className="text-xl font-semibold text-[#2c1a14]">Order History</h2>
+        <p className="mt-2 text-sm leading-7 text-[#5c3d30]/80">
           Open an order for a focused detail view with tracking and support actions.
         </p>
         <div className="mt-5">
@@ -543,27 +543,27 @@ function OrderRows({
       {orders.map((order) => (
         <div
           key={order.orderRef}
-          className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 md:grid-cols-[1fr_auto]"
+          className="grid gap-3 rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4 md:grid-cols-[1fr_auto]"
         >
           <div className="min-w-0">
-            <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{order.orderRef}</p>
-            <p className="mt-1 text-xs text-white/48">{formatDate(order.createdAt)}</p>
-            <p className="mt-2 text-sm text-white/66">
+            <p className="break-words text-sm font-semibold text-[#2c1a14] [overflow-wrap:anywhere]">{order.orderRef}</p>
+            <p className="mt-1 text-xs text-[#8a6a5e]">{formatDate(order.createdAt)}</p>
+            <p className="mt-2 text-sm text-[#5c3d30]/80">
               {order.status} · {readable(order.deliveryStatus)}
             </p>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
-            <p className="text-sm font-semibold text-white">{formatCurrency(order.total)}</p>
+            <p className="text-sm font-semibold text-[#2c1a14]">{formatCurrency(order.total)}</p>
             {onSelect ? (
               <button
                 type="button"
                 onClick={() => onSelect(order.orderRef)}
-                className="rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-100/15"
+                className="rounded-full border border-[#b8814a]/28 bg-[#f5eeea] px-4 py-2 text-sm font-semibold text-[#5c3d30] transition hover:border-[#b8814a]/45 hover:bg-[#f0e4d6]"
               >
                 View details
               </button>
             ) : (
-              <Link className="text-sm font-semibold text-cyan-100 hover:text-white" href={orderDetailHref(order.orderRef)}>
+              <Link className="text-sm font-semibold text-[#b8814a] hover:text-[#5c3d30]" href={orderDetailHref(order.orderRef)}>
                 View details
               </Link>
             )}
@@ -626,32 +626,32 @@ function AddressesView({
               <Input label="City / area" value={draft.cityArea} onChange={(value) => setDraft({ ...draft, cityArea: value })} />
             </div>
             <label className="block">
-              <span className="text-sm font-medium text-white/72">Full address</span>
+              <span className="text-sm font-medium text-[#5c3d30]">Full address</span>
               <textarea
                 value={draft.address}
                 rows={3}
                 onChange={(event) => setDraft({ ...draft, address: event.target.value })}
-                className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none focus:border-cyan-200/45"
+                className="mt-2 w-full resize-none rounded-2xl border border-[#b8814a]/14 bg-[#f5eeea] px-4 py-3 text-sm text-[#2c1a14] outline-none focus:border-[#b8814a]/40"
               />
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="text-sm font-medium text-white/72">Delivery zone</span>
+                <span className="text-sm font-medium text-[#5c3d30]">Delivery zone</span>
                 <select
                   value={draft.deliveryZone}
                   onChange={(event) => setDraft({ ...draft, deliveryZone: event.target.value })}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-cyan-200/45"
+                  className="mt-2 w-full rounded-2xl border border-[#b8814a]/14 bg-[#f5eeea] px-4 py-3 text-sm text-[#2c1a14] outline-none focus:border-[#b8814a]/40"
                 >
                   <option>Inside Dhaka</option>
                   <option>Outside Dhaka</option>
                 </select>
               </label>
-              <label className="mt-8 flex items-center gap-3 text-sm text-white/72">
+              <label className="mt-8 flex items-center gap-3 text-sm text-[#5c3d30]">
                 <input
                   type="checkbox"
                   checked={draft.isDefault}
                   onChange={(event) => setDraft({ ...draft, isDefault: event.target.checked })}
-                  className="h-4 w-4 accent-cyan-200"
+                  className="h-4 w-4 accent-[#b8814a]"
                 />
                 Set as default
               </label>
@@ -669,7 +669,7 @@ function AddressesView({
         ) : (
           <div className="space-y-3">
             {addresses.map((address) => (
-              <div key={address.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div key={address.id} className="rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4">
                 <AddressSummary address={address} />
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button className="mini-action" type="button" onClick={() => onEdit(address)}>Edit</button>
@@ -692,11 +692,11 @@ function AddressesView({
 function Input({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-white/72">{label}</span>
+      <span className="text-sm font-medium text-[#5c3d30]">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none focus:border-cyan-200/45"
+        className="mt-2 w-full rounded-2xl border border-[#b8814a]/14 bg-[#f5eeea] px-4 py-3 text-sm text-[#2c1a14] outline-none placeholder:text-[#8a6a5e]/60 focus:border-[#b8814a]/40"
       />
     </label>
   );
@@ -706,16 +706,16 @@ function AddressSummary({ address }: { address: Address }) {
   return (
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm font-semibold text-white">{address.label}</p>
+        <p className="text-sm font-semibold text-[#2c1a14]">{address.label}</p>
         {address.isDefault && (
-          <span className="rounded-full border border-cyan-100/25 bg-cyan-100/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-50">
+          <span className="rounded-full border border-[#b8814a]/28 bg-[#f5eeea] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#b8814a]">
             Default
           </span>
         )}
       </div>
-      <p className="mt-2 text-sm leading-6 text-white/66">{address.fullName} · {address.phone}</p>
-      <p className="text-sm leading-6 text-white/58">{address.cityArea} · {address.deliveryZone || "Zone not set"}</p>
-      <p className="mt-1 break-words text-sm leading-6 text-white/58 [overflow-wrap:anywhere]">{address.address}</p>
+      <p className="mt-2 text-sm leading-6 text-[#5c3d30]">{address.fullName} · {address.phone}</p>
+      <p className="text-sm leading-6 text-[#8a6a5e]">{address.cityArea} · {address.deliveryZone || "Zone not set"}</p>
+      <p className="mt-1 break-words text-sm leading-6 text-[#8a6a5e] [overflow-wrap:anywhere]">{address.address}</p>
     </div>
   );
 }
@@ -723,8 +723,8 @@ function AddressSummary({ address }: { address: Address }) {
 function SupportView({ message }: { message: string }) {
   return (
     <Panel>
-      <h2 className="text-xl font-semibold text-white">Support History</h2>
-      <p className="mt-3 text-sm leading-7 text-white/62">
+      <h2 className="text-xl font-semibold text-[#2c1a14]">Support History</h2>
+      <p className="mt-3 text-sm leading-7 text-[#5c3d30]/80">
         {message || "Support history is not available yet."}
       </p>
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -736,5 +736,5 @@ function SupportView({ message }: { message: string }) {
 }
 
 function EmptyLine({ text }: { text: string }) {
-  return <p className="text-sm leading-7 text-white/58">{text}</p>;
+  return <p className="text-sm leading-7 text-[#8a6a5e]">{text}</p>;
 }

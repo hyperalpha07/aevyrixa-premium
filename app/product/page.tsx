@@ -53,12 +53,12 @@ export default async function ProductCollectionPage({
     : "/product";
 
   return (
-    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] text-white">
+    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#faf7f4] text-[#2c1a14]">
       <HomeMotionController targetClass=".aev-cinematic-page" />
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-18%] top-[4%] h-[300px] w-[300px] rounded-full bg-cyan-400/14 blur-[120px]" />
-        <div className="absolute right-[-18%] top-[22%] h-[340px] w-[340px] rounded-full bg-fuchsia-400/14 blur-[130px]" />
-        <div className="absolute bottom-[-14%] left-[30%] h-[280px] w-[280px] rounded-full bg-rose-200/10 blur-[120px]" />
+        <div className="absolute left-[-18%] top-[4%] h-[300px] w-[300px] rounded-full bg-[#b8814a]/[0.06] blur-[120px]" />
+        <div className="absolute right-[-18%] top-[22%] h-[340px] w-[340px] rounded-full bg-[#4a8b7e]/[0.05] blur-[130px]" />
+        <div className="absolute bottom-[-14%] left-[30%] h-[280px] w-[280px] rounded-full bg-[#d4a07a]/[0.07] blur-[120px]" />
       </div>
 
       <SiteHeader

@@ -55,9 +55,9 @@ export default function SiteFooter({
   ];
 
   return (
-    <footer className="relative border-t border-white/10 bg-[#02040d] px-4 pb-28 pt-12 text-white sm:px-6 sm:pb-16">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent" />
-      <div className="pointer-events-none absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-cyan-300/[0.04] to-transparent" />
+    <footer className="relative border-t border-[#b8814a]/20 bg-[#2d1829] px-4 pb-28 pt-12 text-white sm:px-6 sm:pb-16">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#b8814a]/30 to-transparent" />
+      <div className="pointer-events-none absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-[#b8814a]/[0.05] to-transparent" />
       <div className="relative mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 md:grid-cols-4">
 
         {/* Column 1: Brand */}
@@ -77,7 +77,7 @@ export default function SiteFooter({
               <p className="truncate text-lg font-bold tracking-[0.22em] text-white">
                 {brandShortName}
               </p>
-              <p className="text-[0.64rem] font-semibold uppercase tracking-[0.3em] text-cyan-200/68">
+              <p className="text-[0.64rem] font-semibold uppercase tracking-[0.3em] text-[#d4a07a]/75">
                 Her Care
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function SiteFooter({
           <ul className="mt-4 space-y-3 text-sm text-white/55">
             {shopLinks.map((link) => (
               <li key={link.label}>
-                <Link href={link.href} className="transition hover:text-cyan-200">
+                <Link href={link.href} className="transition hover:text-[#d4a07a]">
                   {link.label}
                 </Link>
               </li>
@@ -114,7 +114,7 @@ export default function SiteFooter({
           <ul className="mt-4 space-y-3 text-sm text-white/55">
             {supportLinks.map((link) => (
               <li key={link.label}>
-                <Link href={link.href} className="transition hover:text-cyan-200">
+                <Link href={link.href} className="transition hover:text-[#d4a07a]">
                   {link.label}
                 </Link>
               </li>
@@ -149,7 +149,7 @@ export default function SiteFooter({
                 target="_blank"
                 rel="noreferrer"
                 aria-label={link.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/60 transition hover:border-cyan-200/30 hover:bg-white/[0.10] hover:text-cyan-100"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/60 transition hover:border-[#d4a07a]/40 hover:bg-white/[0.10] hover:text-[#d4a07a]"
               >
                 {link.label === "Facebook" && (
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
@@ -179,7 +179,7 @@ export default function SiteFooter({
               <a
                 href={`mailto:${supportEmail}`}
                 aria-label="Email support"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/60 transition hover:border-cyan-200/30 hover:bg-white/[0.10] hover:text-cyan-100"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/60 transition hover:border-[#d4a07a]/40 hover:bg-white/[0.10] hover:text-[#d4a07a]"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -196,11 +196,11 @@ export default function SiteFooter({
 
       {/* Bottom bar */}
       <div className="relative mx-auto mt-10 max-w-7xl border-t border-white/10 pt-6">
-        <div className="flex flex-col gap-3 text-xs text-white/42 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
           <p>Copyright 2026 {brandShortName}. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             {policyLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="transition hover:text-white">
+              <Link key={link.label} href={link.href} className="transition hover:text-[#d4a07a]">
                 {link.label}
               </Link>
             ))}
