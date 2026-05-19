@@ -1,6 +1,6 @@
 import {
   forbiddenAdminResponse,
-  getAdminRequestSession,
+  getFreshAdminRequestSession,
   unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
 import { hasPermission } from "@/app/lib/admin-permissions";
@@ -164,7 +164,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ orderRef: string }> }
 ) {
-  const session = getAdminRequestSession(request);
+  const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
 
   const { orderRef } = await context.params;
@@ -199,6 +199,13 @@ export async function PATCH(
       !needsStatusPermission &&
       !hasPermission(session, "orders.editStatus"))
   ) {
+    await logStaffActivity({
+      actor: session,
+      action: "permission.denied",
+      targetType: "order",
+      targetId: orderRef,
+      metadata: { reason: "missing_permission", fields: Object.keys(updates) },
+    });
     return forbiddenAdminResponse();
   }
 

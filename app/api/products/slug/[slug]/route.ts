@@ -1,6 +1,6 @@
 import {
-  unauthorizedAdminResponse,
-  verifyAdminRequest,
+  forbiddenAdminResponse,
+  verifyFreshAdminRequestPermission,
 } from "@/app/lib/admin-auth";
 import { getProductBySlug } from "@/app/lib/product-store";
 
@@ -23,8 +23,8 @@ export async function GET(
     url.searchParams.get("scope") === "admin" ||
     url.searchParams.get("admin") === "1";
 
-  if (includeDrafts && !verifyAdminRequest(request)) {
-    return unauthorizedAdminResponse();
+  if (includeDrafts && !(await verifyFreshAdminRequestPermission(request, "products.view"))) {
+    return forbiddenAdminResponse();
   }
 
   try {

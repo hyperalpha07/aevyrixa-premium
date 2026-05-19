@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   forbiddenAdminResponse,
-  unauthorizedAdminResponse,
-  verifyAdminRequestPermission,
+  verifyFreshAdminRequestPermission,
 } from "@/app/lib/admin-auth";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 
@@ -60,7 +59,7 @@ function json(payload: unknown, init: ResponseInit = {}) {
 }
 
 export async function POST(request: Request) {
-  const session = verifyAdminRequestPermission(request, "homepage.manage");
+  const session = await verifyFreshAdminRequestPermission(request, "homepage.manage");
   if (!session) return forbiddenAdminResponse();
 
   if (

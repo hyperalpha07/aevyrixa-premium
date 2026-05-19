@@ -1,7 +1,6 @@
 import {
   forbiddenAdminResponse,
-  unauthorizedAdminResponse,
-  verifyAdminRequestPermission,
+  verifyFreshAdminRequestPermission,
 } from "@/app/lib/admin-auth";
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { getCustomerFromRequest } from "@/app/api/account/_utils";
@@ -189,7 +188,7 @@ async function unavailableOrderItems(items: OrderCartItem[]) {
 }
 
 export async function GET(request: Request) {
-  if (!verifyAdminRequestPermission(request, "orders.view")) {
+  if (!(await verifyFreshAdminRequestPermission(request, "orders.view"))) {
     return forbiddenAdminResponse();
   }
 

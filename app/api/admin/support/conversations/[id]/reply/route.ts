@@ -1,4 +1,4 @@
-import { forbiddenAdminResponse, verifyAdminRequestPermission } from "@/app/lib/admin-auth";
+import { forbiddenAdminResponse, verifyFreshAdminRequestPermission } from "@/app/lib/admin-auth";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   addMessage,
@@ -17,7 +17,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = verifyAdminRequestPermission(request, "support.reply");
+  const session = await verifyFreshAdminRequestPermission(request, "support.reply");
   if (!session) return forbiddenAdminResponse();
 
   const { id } = await params;

@@ -77,6 +77,8 @@ import type {
 } from "@/app/lib/product-types";
 import {
   adminPermissionKeys,
+  blockedPermissionMessage,
+  canAccessSection,
   hasPermission,
   permissionGroups,
   permissionLabels,
@@ -1693,7 +1695,7 @@ export default function AdminPanel({
           </div>
 
           <nav className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-            {navItems.filter((item) => hasPermission(session, item.permission) || (item.fallbackPermission && hasPermission(session, item.fallbackPermission))).map((item) => {
+            {navItems.filter((item) => canAccessSection(session, item.view)).map((item) => {
               const Icon = item.icon;
               const isActive = item.view === view;
 
@@ -2604,7 +2606,11 @@ function ProductsSection({
   }, [editingProductId, isEditingExistingProduct]);
 
   const addProduct = () => {
-    if (!canEditProducts) return;
+    if (!canEditProducts) {
+      setSaveError(blockedPermissionMessage);
+      setStatusMessage(blockedPermissionMessage);
+      return;
+    }
     setProductFilter("All");
     setProductSearchTerm("");
     setEditingProduct({
@@ -2629,7 +2635,7 @@ function ProductsSection({
 
   const saveProduct = async (product: AdminProduct) => {
     if (!canEditProducts) {
-      setSaveError("You do not have permission to perform this action.");
+      setSaveError(blockedPermissionMessage);
       return;
     }
     const slug = product.slug || slugify(product.name);
@@ -2662,6 +2668,10 @@ function ProductsSection({
   };
 
   const deleteProduct = async (productId: string) => {
+    if (!canEditProducts) {
+      setStatusMessage(blockedPermissionMessage);
+      return;
+    }
     if (!window.confirm("Delete this product and move it to Deleted/Trash?")) return;
 
     setIsSavingProduct(true);
@@ -2687,6 +2697,10 @@ function ProductsSection({
   };
 
   const restoreProduct = async (productId: string) => {
+    if (!canEditProducts) {
+      setStatusMessage(blockedPermissionMessage);
+      return;
+    }
     setIsSavingProduct(true);
     setStatusMessage("");
 
@@ -2709,6 +2723,10 @@ function ProductsSection({
   };
 
   const permanentlyDeleteProduct = async (product: AdminProduct) => {
+    if (!canEditProducts) {
+      setStatusMessage(blockedPermissionMessage);
+      return;
+    }
     const confirmation = window.prompt(
       `Permanently delete "${product.name}" from Supabase? Type DELETE to confirm.`
     );
@@ -2734,6 +2752,10 @@ function ProductsSection({
   };
 
   const toggleStatus = async (productId: string) => {
+    if (!canEditProducts) {
+      setStatusMessage(blockedPermissionMessage);
+      return;
+    }
     const currentProduct = products.find((product) => product.id === productId);
     if (!currentProduct) return;
 
@@ -3002,7 +3024,7 @@ function ProductEditor({
 
   async function handleMediaUpload(file: File, mediaType: "image" | "video" | "gallery") {
     if (!canUploadMedia) {
-      const msg = "You do not have permission to perform this action.";
+      const msg = blockedPermissionMessage;
       if (mediaType === "image") setImageUploadError(msg);
       else if (mediaType === "gallery") setGalleryUploadError(msg);
       else setVideoUploadError(msg);
@@ -3316,7 +3338,7 @@ function CategoriesSection({
   const saveCategories = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!hasPermission(session, "categories.manage")) {
-      setStatusMessage("You do not have permission to perform this action.");
+      setStatusMessage(blockedPermissionMessage);
       return;
     }
     setIsSaving(true);
@@ -3526,8 +3548,15 @@ function SettingsSection({
 
   const saveSettings = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!hasPermission(session, "settings.editBasic") && !hasPermission(session, "homepage.manage")) {
-      setStatusMessage("You do not have permission to perform this action.");
+    const canSaveAnySettings =
+      hasPermission(session, "settings.editBasic") ||
+      hasPermission(session, "settings.editSensitive") ||
+      hasPermission(session, "settings.editSeoAnalytics") ||
+      hasPermission(session, "homepage.manage") ||
+      hasPermission(session, "categories.manage");
+
+    if (!canSaveAnySettings) {
+      setStatusMessage(blockedPermissionMessage);
       return;
     }
     setIsSaving(true);
@@ -3541,8 +3570,14 @@ function SettingsSection({
   };
 
   const resetSettings = async () => {
-    if (!hasPermission(session, "settings.editSensitive")) {
-      setStatusMessage("You do not have permission to perform this action.");
+    if (
+      !hasPermission(session, "settings.editBasic") ||
+      !hasPermission(session, "settings.editSensitive") ||
+      !hasPermission(session, "settings.editSeoAnalytics") ||
+      !hasPermission(session, "homepage.manage") ||
+      !hasPermission(session, "categories.manage")
+    ) {
+      setStatusMessage(blockedPermissionMessage);
       return;
     }
     setDraft(defaultSettings);
@@ -5304,7 +5339,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
     const body = replyText.trim();
     if (!body || !selectedId || sending) return;
     if (!canReply) {
-      setSendError("You do not have permission to perform this action.");
+      setSendError(blockedPermissionMessage);
       return;
     }
     setSending(true);
@@ -5636,7 +5671,7 @@ function StaffSection({ session }: { session: AdminSessionUser }) {
   const saveStaff = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canManageStaff) {
-      setError("You do not have permission to perform this action.");
+      setError(blockedPermissionMessage);
       return;
     }
 
@@ -6610,8 +6645,10 @@ function OrderDetails({
   const transactionReference = order.paymentDetails.transactionReference;
   const selectedCourierOption = courierChoice;
   const courierIntegrationMode = settings.deliverySettings.courierIntegrationMode;
+  const canEditStatus = hasPermission(session, "orders.editStatus");
   const canEditCourier = hasPermission(session, "orders.editCourier");
   const canArchiveTest = hasPermission(session, "orders.archiveTest");
+  const canSaveOperations = canEditStatus || canEditCourier || canArchiveTest;
   const copiedLabel =
     copiedKey === "summary"
       ? "Order summary copied"
@@ -6657,6 +6694,11 @@ function OrderDetails({
   const handleOperationsSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (!canSaveOperations) {
+      setOperationsMessage(blockedPermissionMessage);
+      return;
+    }
+
     if (
       operationsDraft.deliveryCharge.trim() &&
       !Number.isFinite(Number(operationsDraft.deliveryCharge))
@@ -6681,6 +6723,22 @@ function OrderDetails({
     updates: OrderOperationsUpdate,
     successMessage: string
   ) => {
+    if (
+      (("archivedAt" in updates || "isTestOrder" in updates) && !canArchiveTest) ||
+      ("status" in updates && !canEditStatus) ||
+      (("courierName" in updates ||
+        "trackingId" in updates ||
+        "deliveryStatus" in updates ||
+        "deliveryCharge" in updates ||
+        "deliveryArea" in updates ||
+        "deliveryZone" in updates ||
+        "deliveryNote" in updates) &&
+        !canEditCourier)
+    ) {
+      setOperationsMessage(blockedPermissionMessage);
+      return;
+    }
+
     setIsSavingOperations(true);
     setOperationsMessage("");
     const saved = await onOperationsSave(reference, updates);
@@ -6693,13 +6751,10 @@ function OrderDetails({
   };
 
   const archiveOrder = () =>
-    canArchiveTest &&
     saveQuickOperation({ archivedAt: new Date().toISOString() }, "Order archived.");
   const restoreOrder = () =>
-    canArchiveTest &&
     saveQuickOperation({ archivedAt: "" }, "Order restored to active queue.");
   const markTestOrder = () =>
-    canArchiveTest &&
     saveQuickOperation({ isTestOrder: !order.isTestOrder }, "Test order flag updated.");
 
   return (
@@ -6865,7 +6920,7 @@ function OrderDetails({
           </div>
           <button
             type="submit"
-            disabled={isSavingOperations || !canEditCourier}
+            disabled={isSavingOperations || !canSaveOperations}
             className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-2xl border border-cyan-200/30 bg-cyan-200/[0.12] px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/50 hover:bg-cyan-200/[0.18] disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
           >
             {isSavingOperations ? "Saving..." : "Save Operations"}

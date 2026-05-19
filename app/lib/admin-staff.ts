@@ -175,6 +175,22 @@ export async function listStaff() {
   return ((await response.json()) as StaffRow[]).map(mapStaff);
 }
 
+export async function getStaffById(id: string) {
+  if (!hasSupabaseConfig()) return null;
+
+  const response = await fetch(
+    supabaseEndpoint(
+      `${STAFF_TABLE}?id=eq.${encodeURIComponent(id)}&select=id,name,email,username,role,permissions,is_active,created_by,last_login_at,created_at,updated_at&limit=1`
+    ),
+    { headers: supabaseHeaders(), cache: "no-store" }
+  );
+
+  if (!response.ok) return null;
+  const row = ((await response.json()) as StaffRow[])[0];
+  if (!row || row.is_active === false) return null;
+  return mapStaff(row);
+}
+
 export async function listActivityLogs() {
   if (!hasSupabaseConfig()) {
     throw new AdminStaffStoreError("Supabase is not configured.", "STAFF_BACKEND_NOT_CONFIGURED", 503);

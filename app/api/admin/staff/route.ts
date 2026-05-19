@@ -1,6 +1,6 @@
 import {
   forbiddenAdminResponse,
-  getAdminRequestSession,
+  getFreshAdminRequestSession,
   unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
 import {
@@ -60,9 +60,16 @@ function staffError(error: unknown) {
 }
 
 export async function GET(request: Request) {
-  const session = getAdminRequestSession(request);
+  const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
   if (!hasPermission(session, "staff.manage") && !hasPermission(session, "activity.view")) {
+    await logStaffActivity({
+      actor: session,
+      action: "permission.denied",
+      targetType: "staff",
+      targetId: "list",
+      metadata: { reason: "missing_permission" },
+    });
     return forbiddenAdminResponse();
   }
 
@@ -79,9 +86,18 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = getAdminRequestSession(request);
+  const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
-  if (!hasPermission(session, "staff.manage")) return forbiddenAdminResponse();
+  if (!hasPermission(session, "staff.manage")) {
+    await logStaffActivity({
+      actor: session,
+      action: "permission.denied",
+      targetType: "staff",
+      targetId: "create",
+      metadata: { reason: "missing_permission" },
+    });
+    return forbiddenAdminResponse();
+  }
 
   let payload: unknown;
   try {

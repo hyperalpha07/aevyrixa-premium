@@ -1,7 +1,6 @@
 import {
   forbiddenAdminResponse,
-  unauthorizedAdminResponse,
-  verifyAdminRequestPermission,
+  verifyFreshAdminRequestPermission,
 } from "@/app/lib/admin-auth";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
@@ -31,7 +30,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = verifyAdminRequestPermission(request, "products.edit");
+  const session = await verifyFreshAdminRequestPermission(request, "products.edit");
   if (!session) return forbiddenAdminResponse();
 
   const { id } = await context.params;
@@ -111,7 +110,7 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = verifyAdminRequestPermission(request, "products.edit");
+  const session = await verifyFreshAdminRequestPermission(request, "products.edit");
   if (!session) return forbiddenAdminResponse();
 
   const { id } = await context.params;

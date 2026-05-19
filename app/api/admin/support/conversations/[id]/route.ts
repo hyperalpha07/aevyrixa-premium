@@ -1,4 +1,4 @@
-import { forbiddenAdminResponse, verifyAdminRequestPermission } from "@/app/lib/admin-auth";
+import { forbiddenAdminResponse, verifyFreshAdminRequestPermission } from "@/app/lib/admin-auth";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   getConversationById,
@@ -19,7 +19,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!verifyAdminRequestPermission(request, "support.view")) return forbiddenAdminResponse();
+  if (!(await verifyFreshAdminRequestPermission(request, "support.view"))) return forbiddenAdminResponse();
 
   const { id } = await params;
 
@@ -52,7 +52,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = verifyAdminRequestPermission(request, "support.close");
+  const session = await verifyFreshAdminRequestPermission(request, "support.close");
   if (!session) return forbiddenAdminResponse();
 
   const { id } = await params;

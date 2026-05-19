@@ -40,6 +40,19 @@ export type AdminSessionUser = {
   staffId?: string;
 };
 
+export type AdminSection =
+  | "dashboard"
+  | "orders"
+  | "products"
+  | "categories"
+  | "settings"
+  | "support"
+  | "staff"
+  | "analytics";
+
+export const blockedPermissionMessage =
+  "You do not have permission to perform this action.";
+
 export const roleLabels: Record<AdminRole, string> = {
   owner: "Owner",
   manager: "Manager",
@@ -197,4 +210,48 @@ export function hasPermission(
   if (!session) return false;
   if (session.userType === "owner" || session.role === "owner") return true;
   return Boolean(session.permissions[permission]);
+}
+
+export function requirePermission(
+  session: AdminSessionUser | null | undefined,
+  permission: AdminPermission
+) {
+  if (hasPermission(session, permission)) return session;
+  throw new Error(blockedPermissionMessage);
+}
+
+export function canAccessSection(
+  session: AdminSessionUser | null | undefined,
+  section: AdminSection
+) {
+  if (!session) return false;
+
+  if (section === "dashboard") return hasPermission(session, "dashboard.view");
+  if (section === "orders") return hasPermission(session, "orders.view");
+  if (section === "products") return hasPermission(session, "products.view");
+  if (section === "categories") return hasPermission(session, "categories.manage");
+  if (section === "settings") return hasPermission(session, "settings.view");
+  if (section === "support") return hasPermission(session, "support.view");
+  if (section === "staff") {
+    return hasPermission(session, "staff.manage") || hasPermission(session, "activity.view");
+  }
+  if (section === "analytics") return hasPermission(session, "analytics.view");
+
+  return false;
+}
+
+const sectionPaths: Array<{ section: AdminSection; path: string }> = [
+  { section: "dashboard", path: "/admin" },
+  { section: "orders", path: "/admin/orders" },
+  { section: "products", path: "/admin/products" },
+  { section: "categories", path: "/admin/categories" },
+  { section: "settings", path: "/admin/settings" },
+  { section: "support", path: "/admin/support" },
+  { section: "staff", path: "/admin/staff" },
+];
+
+export function firstAccessibleAdminPath(
+  session: AdminSessionUser | null | undefined
+) {
+  return sectionPaths.find((item) => canAccessSection(session, item.section))?.path;
 }

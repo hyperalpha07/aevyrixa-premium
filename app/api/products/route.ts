@@ -1,8 +1,6 @@
 import {
   forbiddenAdminResponse,
-  unauthorizedAdminResponse,
-  verifyAdminRequest,
-  verifyAdminRequestPermission,
+  verifyFreshAdminRequestPermission,
 } from "@/app/lib/admin-auth";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
@@ -41,7 +39,7 @@ function json(payload: unknown, init: ResponseInit = {}) {
 
 export async function GET(request: Request) {
   const scope = includeDraftsFromRequest(request);
-  if (scope !== "public" && !verifyAdminRequestPermission(request, "products.view")) {
+  if (scope !== "public" && !(await verifyFreshAdminRequestPermission(request, "products.view"))) {
     return forbiddenAdminResponse();
   }
 
@@ -61,7 +59,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = verifyAdminRequestPermission(request, "products.edit");
+  const session = await verifyFreshAdminRequestPermission(request, "products.edit");
   if (!session) return forbiddenAdminResponse();
 
   let payload: unknown;

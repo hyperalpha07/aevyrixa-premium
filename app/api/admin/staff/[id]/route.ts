@@ -1,6 +1,6 @@
 import {
   forbiddenAdminResponse,
-  getAdminRequestSession,
+  getFreshAdminRequestSession,
   unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
 import {
@@ -57,9 +57,18 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = getAdminRequestSession(request);
+  const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
-  if (!hasPermission(session, "staff.manage")) return forbiddenAdminResponse();
+  if (!hasPermission(session, "staff.manage")) {
+    await logStaffActivity({
+      actor: session,
+      action: "permission.denied",
+      targetType: "staff",
+      targetId: "update",
+      metadata: { reason: "missing_permission" },
+    });
+    return forbiddenAdminResponse();
+  }
 
   const { id } = await context.params;
   let payload: unknown;

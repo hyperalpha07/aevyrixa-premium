@@ -1,4 +1,4 @@
-import { forbiddenAdminResponse, verifyAdminRequestPermission } from "@/app/lib/admin-auth";
+import { forbiddenAdminResponse, verifyFreshAdminRequestPermission } from "@/app/lib/admin-auth";
 import { getAllConversations, getMessagesByConversation } from "@/app/lib/support-store";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ function json(payload: unknown, init: ResponseInit = {}) {
 }
 
 export async function GET(request: Request) {
-  if (!verifyAdminRequestPermission(request, "support.view")) return forbiddenAdminResponse();
+  if (!(await verifyFreshAdminRequestPermission(request, "support.view"))) return forbiddenAdminResponse();
 
   try {
     const conversations = await getAllConversations();

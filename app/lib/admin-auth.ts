@@ -6,6 +6,7 @@ import {
   type AdminPermission,
   type AdminSessionUser,
 } from "@/app/lib/admin-permissions";
+import { getStaffById, logStaffActivity } from "@/app/lib/admin-staff";
 
 export const ADMIN_SESSION_COOKIE = "aevyrixa_admin_session";
 
@@ -186,7 +187,9 @@ export async function hasAdminSession() {
 
 export async function getAdminSession() {
   const cookieStore = await cookies();
-  return getAdminSessionFromToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  return refreshStaffSession(
+    getAdminSessionFromToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value)
+  );
 }
 
 export function verifyAdminRequest(request: Request) {
@@ -197,12 +200,36 @@ export function getAdminRequestSession(request: Request) {
   return getAdminSessionFromToken(readCookie(request, ADMIN_SESSION_COOKIE));
 }
 
+export async function getFreshAdminRequestSession(request: Request) {
+  return refreshStaffSession(getAdminRequestSession(request));
+}
+
 export function verifyAdminRequestPermission(
   request: Request,
   permission: AdminPermission
 ) {
   const session = getAdminRequestSession(request);
   return hasPermission(session, permission) ? session : null;
+}
+
+export async function verifyFreshAdminRequestPermission(
+  request: Request,
+  permission: AdminPermission
+) {
+  const session = await getFreshAdminRequestSession(request);
+  if (hasPermission(session, permission)) return session;
+
+  if (session) {
+    await logStaffActivity({
+      actor: session,
+      action: "permission.denied",
+      targetType: "permission",
+      targetId: permission,
+      metadata: { reason: "missing_permission" },
+    });
+  }
+
+  return null;
 }
 
 export function unauthorizedAdminResponse() {
@@ -230,4 +257,20 @@ function readCookie(request: Request, name: string) {
     .find((item) => item.startsWith(prefix));
 
   return cookie ? cookie.slice(prefix.length) : null;
+}
+
+async function refreshStaffSession(session: AdminSessionUser | null) {
+  if (!session || session.userType !== "staff" || !session.staffId) return session;
+
+  const staff = await getStaffById(session.staffId).catch(() => null);
+  if (!staff) return null;
+
+  return {
+    userType: "staff" as const,
+    staffId: staff.id,
+    username: staff.username,
+    displayName: staff.name,
+    role: staff.role,
+    permissions: staff.permissions,
+  };
 }
