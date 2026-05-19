@@ -48,7 +48,7 @@ export default function InfoPageShell({
           </p>
           <Link
             href={ctaHref}
-            className="mt-8 inline-flex w-full min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.22)] transition hover:-translate-y-0.5 sm:w-auto"
+            className="aev-action-primary mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-7 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition hover:-translate-y-0.5 sm:w-auto"
           >
             {ctaLabel}
           </Link>
@@ -70,8 +70,8 @@ export default function InfoPageShell({
               )}
               {section.items && (
                 <ul className="mt-4 space-y-3 text-sm leading-7 text-white/64">
-                  {section.items.map((item) => (
-                    <li key={item} className="flex gap-3">
+                  {section.items.map((item, index) => (
+                    <li key={`${item}-${index}`} className="flex gap-3">
                       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-200" />
                       <span className="min-w-0 break-words [overflow-wrap:anywhere]">
                         {item}

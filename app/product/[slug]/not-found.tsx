@@ -33,7 +33,7 @@ export default function ProductNotFound() {
           </div>
           <Link
             href="/product"
-            className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
+            className="aev-action-primary mt-7 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition hover:scale-[1.01] sm:w-auto"
           >
             View Active Products
           </Link>

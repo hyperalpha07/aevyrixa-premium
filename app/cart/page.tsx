@@ -85,7 +85,7 @@ export default function CartPage() {
 
             <Link
               href="/product"
-              className="inline-flex rounded-full border border-[#FF4DB8]/30 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+              className="inline-flex rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-6 py-3 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white"
             >
               Continue Shopping
             </Link>
@@ -274,7 +274,7 @@ export default function CartPage() {
 
                 <Link
                   href="/product"
-                  className="flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-medium text-white transition hover:bg-white/10"
+                  className="flex w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-6 py-3.5 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white"
                 >
                   Add More Products
                 </Link>

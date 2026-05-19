@@ -492,7 +492,7 @@ export default function ProductDetailClient({
               {displayProduct.absorbency}
             </span>
             {displayProduct.featured && (
-              <span className="rounded-full border border-yellow-200/30 bg-yellow-200/10 px-3 py-1 text-xs font-medium text-yellow-100">
+              <span className="rounded-full border border-[#FFB84D]/30 bg-[#FFB84D]/10 px-3 py-1 text-xs font-medium text-[#FFC36A]">
                 Featured
               </span>
             )}
@@ -537,7 +537,7 @@ export default function ProductDetailClient({
               </span>
             )}
             {hasSavings && (
-              <span className="mb-0.5 rounded-full border border-[#22C55E]/25 bg-[#22C55E]/[0.08] px-2.5 py-1 text-xs font-semibold text-[#4ADE80]">
+              <span className="mb-0.5 rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2.5 py-1 text-xs font-semibold text-[#31E6D4]">
                 Save {savingsPct}%
               </span>
             )}
@@ -830,9 +830,9 @@ export default function ProductDetailClient({
             FAQ
           </p>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {faqs.map((faq) => (
+            {faqs.map((faq, index) => (
               <div
-                key={faq.question}
+                key={`${faq.question}-${index}`}
                 className="rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4"
               >
                 <h3 className="font-semibold text-white">{faq.question}</h3>
@@ -1100,9 +1100,9 @@ function ProductAccordion({
         <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${accentClassName}`} />
       </summary>
       <div className="space-y-2 pb-4">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <p
-            key={item}
+            key={`${item}-${index}`}
             className="rounded-2xl border border-[#FF4DB8]/[0.08] bg-[#1B1230] px-4 py-3 text-sm leading-6 text-[#9C91AA]"
           >
             {item}
@@ -1129,9 +1129,9 @@ function ProductFaqAccordion({
         <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${accentClassName}`} />
       </summary>
       <div className="space-y-3 pb-4">
-        {faqs.map((faq) => (
+        {faqs.map((faq, index) => (
           <div
-            key={faq.question}
+            key={`${faq.question}-${index}`}
             className="rounded-2xl border border-[#FF4DB8]/[0.08] bg-[#1B1230] px-4 py-3"
           >
             <p className="text-sm font-semibold text-white">{faq.question}</p>

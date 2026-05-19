@@ -1272,7 +1272,7 @@ function ConfirmationPanel({
         </Link>
         <Link
           href="/product"
-          className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-6 py-3 text-sm font-medium text-white transition hover:bg-white/[0.09] sm:w-auto"
+          className="inline-flex w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-6 py-3 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white sm:w-auto"
         >
           Continue Shopping
         </Link>

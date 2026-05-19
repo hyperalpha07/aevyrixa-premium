@@ -38,14 +38,14 @@ export default async function ContactPage() {
                 href={settings.whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-7 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
+                className="aev-action-primary inline-flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-7 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition hover:scale-[1.01] sm:w-auto"
               >
                 Chat with {settings.brandShortName} Support
               </a>
             )}
             <Link
               href="/faq"
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white transition hover:border-cyan-200/40 sm:w-auto"
+              className="aev-action-secondary inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white sm:w-auto"
             >
               Read FAQ
             </Link>
@@ -78,7 +78,7 @@ export default async function ContactPage() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 text-sm font-semibold text-white transition hover:border-cyan-200/40 sm:w-auto"
+                  className="aev-action-secondary inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white sm:w-auto"
                 >
                   Visit {link.label}
                 </a>

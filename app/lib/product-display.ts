@@ -64,15 +64,15 @@ export function stockStatusLabel(status: ProductStockStatus) {
 export function stockBadgeClass(status: ProductStockStatus): string {
   switch (status) {
     case "in_stock":
-      return "border-[#4a7a5a]/28 bg-[#e8f2ec] text-[#2d5c3d]";
+      return "border-[#00D4C6]/28 bg-[#00D4C6]/[0.08] text-[#31E6D4]";
     case "low_stock":
-      return "border-[#b8814a]/30 bg-[#f5eeea] text-[#7a4f1e]";
+      return "border-[#FFB84D]/32 bg-[#FFB84D]/[0.09] text-[#FFC36A]";
     case "out_of_stock":
-      return "border-[#c4524a]/25 bg-[#f8ecea] text-[#8a2c28]";
+      return "border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] text-[#FFB3D1]";
     case "preorder":
-      return "border-[#4a8b7e]/28 bg-[#e8f4f1] text-[#2d5850]";
+      return "border-[#A855F7]/28 bg-[#A855F7]/[0.09] text-[#D8CBE8]";
     default:
-      return "border-[#b8814a]/14 bg-[#f5eeea] text-[#8a6a5e]";
+      return "border-[#FF4DB8]/18 bg-[#211633]/80 text-[#D8CBE8]";
   }
 }
 

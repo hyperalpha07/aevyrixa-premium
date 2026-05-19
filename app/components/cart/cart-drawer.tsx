@@ -233,7 +233,7 @@ export default function CartDrawer() {
               <Link
                 href="/cart"
                 onClick={closeCart}
-                className="flex w-full items-center justify-center rounded-full border border-white/15 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                className="flex w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-4 py-3 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white"
               >
                 View Cart
               </Link>
