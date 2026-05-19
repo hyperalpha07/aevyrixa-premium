@@ -204,6 +204,8 @@ export default async function Home() {
       const state = hms[cat.key];
       const imageKey = `${cat.key}ImageUrl` as keyof typeof hms;
       const videoKey = `${cat.key}VideoUrl` as keyof typeof hms;
+      const modeKey = `${cat.key}MediaMode` as keyof typeof hms;
+      const altKey = `${cat.key}AltText` as keyof typeof hms;
       const titleKey = `${cat.key}Title` as keyof typeof hms;
       const descKey = `${cat.key}Description` as keyof typeof hms;
       const linkKey = `${cat.key}LinkUrl` as keyof typeof hms;
@@ -215,6 +217,8 @@ export default async function Home() {
         hidden: state === "hidden",
         categoryImageUrl: (hms[imageKey] as string) || "",
         categoryVideoUrl: (hms[videoKey] as string) || "",
+        categoryMediaMode: (hms[modeKey] as string) || "animation",
+        categoryAltText: (hms[altKey] as string) || "",
         displayName: (hms[titleKey] as string) || cat.name,
         displayTagline: (hms[descKey] as string) || cat.tagline,
         displayLinkUrl: (hms[linkKey] as string) || (state === "active" ? "/product" : ""),
@@ -431,50 +435,81 @@ export default async function Home() {
               everyday routine.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {hereCareCategories.map(({ displayName, displayTagline, displayLinkUrl, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl }) => {
-              const hasMedia = Boolean(categoryImageUrl || categoryVideoUrl);
+          <div className="mt-10 grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 lg:grid-cols-4">
+            {hereCareCategories.map(({ displayName, displayTagline, displayLinkUrl, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl, categoryMediaMode, categoryAltText }) => {
+              const mode = categoryMediaMode as "animation" | "image_text" | "background_media_text" | "video_text" | "media_only";
+              const showImageVisual = mode === "image_text" && Boolean(categoryImageUrl);
+              const showVideoVisual = mode === "video_text" && Boolean(categoryVideoUrl);
+              const showBackgroundMedia = mode === "background_media_text" && Boolean(categoryImageUrl || categoryVideoUrl);
+              const showMediaOnly = mode === "media_only" && Boolean(categoryImageUrl || categoryVideoUrl);
+              const renderMedia = (className: string) =>
+                categoryVideoUrl && (mode === "video_text" || mode === "background_media_text" || mode === "media_only") ? (
+                  <video
+                    className={className}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  >
+                    <source src={categoryVideoUrl} type="video/mp4" />
+                  </video>
+                ) : categoryImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={categoryImageUrl}
+                    alt={categoryAltText || displayName}
+                    className={className}
+                    loading="lazy"
+                  />
+                ) : null;
+
               const inner = (
                 <>
-                  {hasMedia && categoryVideoUrl ? (
-                    <video
-                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-opacity duration-500 group-hover:opacity-100"
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                    >
-                      <source src={categoryVideoUrl} type="video/mp4" />
-                    </video>
-                  ) : hasMedia && categoryImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={categoryImageUrl}
-                      alt={displayName}
-                      className="absolute inset-0 h-full w-full object-cover opacity-85 transition-opacity duration-500 group-hover:opacity-100"
-                      loading="lazy"
-                    />
-                  ) : null}
-                  {hasMedia && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
+                  {(showBackgroundMedia || showMediaOnly) && (
+                    <>
+                      {renderMedia("absolute inset-0 h-full w-full object-cover opacity-88 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100")}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#030612]/56 via-[#030612]/8 to-transparent" />
+                    </>
                   )}
                   <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
                   <div className={`absolute right-4 top-4 h-16 w-16 rounded-full ${glow} blur-2xl transition duration-500 group-hover:scale-[1.7] group-hover:opacity-80`} />
-                  <div className="relative flex items-start justify-between gap-2">
-                    <h3 className="text-base font-semibold text-white drop-shadow-sm">{displayName}</h3>
-                    {comingSoon && (
-                      <span className="mt-0.5 shrink-0 rounded-full border border-amber-200/25 bg-amber-200/[0.08] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-amber-100/70">
-                        Coming Soon
-                      </span>
-                    )}
-                  </div>
-                  <p className="relative mt-2 text-sm leading-6 text-white/68 drop-shadow-sm">{displayTagline}</p>
-                  {!comingSoon && displayLinkUrl && (
-                    <div className="relative mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-200/72 transition duration-300 group-hover:gap-2 group-hover:text-cyan-200">
-                      Explore
-                      <ArrowRight size={12} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                  {(showImageVisual || showVideoVisual) && (
+                    <div className="relative mb-4 aspect-[1.2] overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#07101f]">
+                      {renderMedia("absolute inset-0 h-full w-full object-cover opacity-92 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100")}
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#030612]/28 to-transparent" />
                     </div>
                   )}
+                  {mode === "animation" && (
+                    <div className="relative mb-5 h-24 overflow-hidden rounded-[1.15rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.035] to-transparent">
+                      <div className="absolute left-5 top-5 h-12 w-24 rounded-full bg-cyan-200/12 blur-xl" />
+                      <div className="absolute right-6 top-8 h-12 w-20 rounded-full bg-fuchsia-200/12 blur-xl" />
+                      <div className="absolute inset-x-6 bottom-6 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+                    </div>
+                  )}
+                  <div className={`relative ${showBackgroundMedia || showMediaOnly ? "mt-20 rounded-[1.15rem] border border-white/12 bg-[#030612]/58 p-4 shadow-2xl backdrop-blur-md" : ""}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-base font-semibold leading-snug text-white drop-shadow-sm">{displayName}</h3>
+                      {comingSoon && (
+                        <span className="mt-0.5 shrink-0 rounded-full border border-amber-100/35 bg-amber-200/[0.14] px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-amber-50">
+                          Coming Soon
+                        </span>
+                      )}
+                    </div>
+                    {mode !== "media_only" && (
+                      <p className="mt-2 text-sm leading-6 text-white/76 drop-shadow-sm">{displayTagline}</p>
+                    )}
+                    {mode === "media_only" && !comingSoon && displayLinkUrl && (
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/75">
+                        View collection
+                      </p>
+                    )}
+                    {!comingSoon && displayLinkUrl && mode !== "media_only" && (
+                      <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-100/78 transition duration-300 group-hover:gap-2 group-hover:text-cyan-100">
+                        Explore
+                        <ArrowRight size={12} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                      </div>
+                    )}
+                  </div>
                 </>
               );
 
@@ -484,14 +519,14 @@ export default async function Home() {
                 <a
                   key={displayName}
                   href={displayLinkUrl}
-                  className="aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-cyan-100/30 hover:bg-white/[0.07] hover:shadow-[0_0_36px_rgba(34,211,238,0.14)] sm:p-6"
+                  className="aev-category-card aev-reveal group relative min-h-[15rem] overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1.5 hover:border-cyan-100/30 hover:bg-white/[0.07] hover:shadow-[0_0_36px_rgba(34,211,238,0.14)] sm:p-6"
                 >
                   {inner}
                 </a>
               ) : (
                 <div
                   key={displayName}
-                  className={`aev-category-card aev-reveal group relative overflow-hidden rounded-[1.6rem] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-2xl sm:p-6 ${comingSoon ? "opacity-65" : ""}`}
+                  className={`aev-category-card aev-reveal group relative min-h-[15rem] overflow-hidden rounded-[1.6rem] border bg-white/[0.03] p-5 backdrop-blur-2xl sm:p-6 ${comingSoon ? "border-amber-100/14" : "border-white/8"}`}
                 >
                   {inner}
                 </div>

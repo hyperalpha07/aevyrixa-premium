@@ -3,6 +3,7 @@ import {
   normalizeAdminSettings,
   whatsappHref,
   type AdminSettings,
+  type HomepageCategoryMediaMode,
   type HomepageCategoryState,
 } from "@/app/lib/admin-settings";
 
@@ -21,6 +22,8 @@ export type CategoryCmsEntry = {
   sortOrder: number;
   imageUrl: string;
   videoUrl: string;
+  mediaMode: HomepageCategoryMediaMode;
+  altText: string;
 };
 
 export type StorefrontSettings = AdminSettings & {
@@ -76,6 +79,8 @@ function buildCategories(settings: AdminSettings): CategoryCmsEntry[] {
       const sortKey = `${key}SortOrder` as keyof typeof hms;
       const imgKey = `${key}ImageUrl` as keyof typeof hms;
       const vidKey = `${key}VideoUrl` as keyof typeof hms;
+      const modeKey = `${key}MediaMode` as keyof typeof hms;
+      const altKey = `${key}AltText` as keyof typeof hms;
       return {
         key,
         slug,
@@ -86,6 +91,8 @@ function buildCategories(settings: AdminSettings): CategoryCmsEntry[] {
         sortOrder: Number((hms[sortKey] as string) || "99") || 99,
         imageUrl: (hms[imgKey] as string) || "",
         videoUrl: (hms[vidKey] as string) || "",
+        mediaMode: (hms[modeKey] as HomepageCategoryMediaMode) || "animation",
+        altText: (hms[altKey] as string) || "",
       };
     })
     .sort((a, b) => a.sortOrder - b.sortOrder);

@@ -76,9 +76,10 @@ export default async function ProductCollectionPage({
     ? `/product/${displayProducts[0].slug}`
     : "/product";
 
-  const distinctCategories = [
-    ...new Set(displayProducts.map((p) => p.category).filter(Boolean)),
-  ].sort();
+  const productCategorySet = new Set(displayProducts.map((p) => p.category).filter(Boolean));
+  const visibleCategoryFilters = settings.activeCategories.filter((category) =>
+    productCategorySet.has(category.title)
+  );
 
   const filteredProducts = activeCategory
     ? displayProducts.filter((p) => p.category === activeCategory)
@@ -128,7 +129,7 @@ export default async function ProductCollectionPage({
           ))}
         </div>
 
-        {distinctCategories.length > 0 && (
+        {visibleCategoryFilters.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-2">
             <Link
               href="/product"
@@ -140,17 +141,17 @@ export default async function ProductCollectionPage({
             >
               All
             </Link>
-            {distinctCategories.map((cat) => (
+            {visibleCategoryFilters.map((category) => (
               <Link
-                key={cat}
-                href={`/product?category=${encodeURIComponent(cat)}`}
+                key={category.key}
+                href={`/product?category=${encodeURIComponent(category.title)}`}
                 className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                  activeCategory === cat
+                  activeCategory === category.title
                     ? "border-cyan-200/50 bg-cyan-200/15 text-cyan-100"
                     : "border-white/12 bg-white/[0.05] text-white/58 hover:border-cyan-200/30 hover:text-cyan-100"
                 }`}
               >
-                {cat}
+                {category.title}
               </Link>
             ))}
           </div>

@@ -51,6 +51,7 @@ import {
   type AdminSettings,
   type CourierOption,
   type CtaSectionMediaMode,
+  type HomepageCategoryMediaMode,
   type HomepageMediaSettings,
   type LayerComfortMediaMode,
 } from "@/app/lib/admin-settings";
@@ -3401,13 +3402,13 @@ function CategoriesSection({
     }));
 
   const catDefs = [
-    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", titleKey: "categoryReusablePeriodCareTitle", descKey: "categoryReusablePeriodCareDescription", linkKey: "categoryReusablePeriodCareLinkUrl", sortKey: "categoryReusablePeriodCareSortOrder", slug: "reusable" },
-    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", titleKey: "categoryComfortPantyTitle", descKey: "categoryComfortPantyDescription", linkKey: "categoryComfortPantyLinkUrl", sortKey: "categoryComfortPantySortOrder", slug: "comfort-panty" },
-    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", titleKey: "categorySoftSupportBraTitle", descKey: "categorySoftSupportBraDescription", linkKey: "categorySoftSupportBraLinkUrl", sortKey: "categorySoftSupportBraSortOrder", slug: "soft-bra" },
-    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", titleKey: "categoryNightwearTitle", descKey: "categoryNightwearDescription", linkKey: "categoryNightwearLinkUrl", sortKey: "categoryNightwearSortOrder", slug: "nightwear" },
-    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", titleKey: "categoryHygieneEssentialsTitle", descKey: "categoryHygieneEssentialsDescription", linkKey: "categoryHygieneEssentialsLinkUrl", sortKey: "categoryHygieneEssentialsSortOrder", slug: "hygiene" },
-    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", titleKey: "categoryBundlesTitle", descKey: "categoryBundlesDescription", linkKey: "categoryBundlesLinkUrl", sortKey: "categoryBundlesSortOrder", slug: "bundles" },
-    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", titleKey: "categoryNewArrivalsTitle", descKey: "categoryNewArrivalsDescription", linkKey: "categoryNewArrivalsLinkUrl", sortKey: "categoryNewArrivalsSortOrder", slug: "new-arrivals" },
+    { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", modeKey: "categoryReusablePeriodCareMediaMode", altKey: "categoryReusablePeriodCareAltText", titleKey: "categoryReusablePeriodCareTitle", descKey: "categoryReusablePeriodCareDescription", linkKey: "categoryReusablePeriodCareLinkUrl", sortKey: "categoryReusablePeriodCareSortOrder", slug: "reusable" },
+    { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", modeKey: "categoryComfortPantyMediaMode", altKey: "categoryComfortPantyAltText", titleKey: "categoryComfortPantyTitle", descKey: "categoryComfortPantyDescription", linkKey: "categoryComfortPantyLinkUrl", sortKey: "categoryComfortPantySortOrder", slug: "comfort-panty" },
+    { label: "Soft Support Bra", stateKey: "categorySoftSupportBra", imgKey: "categorySoftSupportBraImageUrl", vidKey: "categorySoftSupportBraVideoUrl", modeKey: "categorySoftSupportBraMediaMode", altKey: "categorySoftSupportBraAltText", titleKey: "categorySoftSupportBraTitle", descKey: "categorySoftSupportBraDescription", linkKey: "categorySoftSupportBraLinkUrl", sortKey: "categorySoftSupportBraSortOrder", slug: "soft-bra" },
+    { label: "Nightwear", stateKey: "categoryNightwear", imgKey: "categoryNightwearImageUrl", vidKey: "categoryNightwearVideoUrl", modeKey: "categoryNightwearMediaMode", altKey: "categoryNightwearAltText", titleKey: "categoryNightwearTitle", descKey: "categoryNightwearDescription", linkKey: "categoryNightwearLinkUrl", sortKey: "categoryNightwearSortOrder", slug: "nightwear" },
+    { label: "Hygiene Essentials", stateKey: "categoryHygieneEssentials", imgKey: "categoryHygieneEssentialsImageUrl", vidKey: "categoryHygieneEssentialsVideoUrl", modeKey: "categoryHygieneEssentialsMediaMode", altKey: "categoryHygieneEssentialsAltText", titleKey: "categoryHygieneEssentialsTitle", descKey: "categoryHygieneEssentialsDescription", linkKey: "categoryHygieneEssentialsLinkUrl", sortKey: "categoryHygieneEssentialsSortOrder", slug: "hygiene" },
+    { label: "Bundles", stateKey: "categoryBundles", imgKey: "categoryBundlesImageUrl", vidKey: "categoryBundlesVideoUrl", modeKey: "categoryBundlesMediaMode", altKey: "categoryBundlesAltText", titleKey: "categoryBundlesTitle", descKey: "categoryBundlesDescription", linkKey: "categoryBundlesLinkUrl", sortKey: "categoryBundlesSortOrder", slug: "bundles" },
+    { label: "New Arrivals", stateKey: "categoryNewArrivals", imgKey: "categoryNewArrivalsImageUrl", vidKey: "categoryNewArrivalsVideoUrl", modeKey: "categoryNewArrivalsMediaMode", altKey: "categoryNewArrivalsAltText", titleKey: "categoryNewArrivalsTitle", descKey: "categoryNewArrivalsDescription", linkKey: "categoryNewArrivalsLinkUrl", sortKey: "categoryNewArrivalsSortOrder", slug: "new-arrivals" },
   ] as const;
 
   return (
@@ -3434,7 +3435,7 @@ function CategoriesSection({
         description="Set each category to active (clickable), coming soon (badge shown, not clickable), or hidden (not shown). Active categories need a Link URL. Sort order controls display sequence on the homepage."
       >
         <div className="space-y-5">
-          {catDefs.map(({ label, stateKey, imgKey, vidKey, titleKey, descKey, linkKey, sortKey, slug }) => {
+          {catDefs.map(({ label, stateKey, imgKey, vidKey, modeKey, altKey, titleKey, descKey, linkKey, sortKey, slug }) => {
             const imgUploadKey = `cat-${slug}-img`;
             const vidUploadKey = `cat-${slug}-vid`;
             const currentState = draft.homepageMediaSettings[stateKey];
@@ -3488,6 +3489,32 @@ function CategoriesSection({
                     value={draft.homepageMediaSettings[sortKey]}
                     onChange={(value) => updateCat({ [sortKey]: value })}
                     placeholder="1"
+                  />
+                  <SelectField
+                    label="Media mode"
+                    value={draft.homepageMediaSettings[modeKey]}
+                    options={["animation", "image_text", "background_media_text", "video_text", "media_only"] as const}
+                    onChange={(value) => updateCat({ [modeKey]: value as HomepageCategoryMediaMode })}
+                  />
+                  <TextField
+                    label="Alt text"
+                    value={draft.homepageMediaSettings[altKey]}
+                    onChange={(value) => updateCat({ [altKey]: value })}
+                    placeholder={`${label} media`}
+                  />
+                  <TextField
+                    label="Image URL fallback"
+                    value={draft.homepageMediaSettings[imgKey]}
+                    onChange={(value) => updateCat({ [imgKey]: value })}
+                    placeholder="https://..."
+                    inputMode="url"
+                  />
+                  <TextField
+                    label="Video URL fallback"
+                    value={draft.homepageMediaSettings[vidKey]}
+                    onChange={(value) => updateCat({ [vidKey]: value })}
+                    placeholder="https://..."
+                    inputMode="url"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">

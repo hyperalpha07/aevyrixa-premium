@@ -1664,7 +1664,6 @@ button {
 }
 
 .aev-category-card > * {
-  position: relative;
   z-index: 1;
 }
 

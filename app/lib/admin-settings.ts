@@ -164,6 +164,7 @@ export type HomepageSectionMedia = {
 };
 
 export type HomepageCategoryState = "active" | "coming_soon" | "hidden";
+export type HomepageCategoryMediaMode = LayerComfortMediaMode;
 export type CtaSectionMediaMode = "no_media" | "image_text" | "video_text" | "background_media_text";
 
 export type HomepageMediaSettings = {
@@ -173,42 +174,56 @@ export type HomepageMediaSettings = {
   categoryReusablePeriodCare: HomepageCategoryState;
   categoryReusablePeriodCareImageUrl: string;
   categoryReusablePeriodCareVideoUrl: string;
+  categoryReusablePeriodCareMediaMode: HomepageCategoryMediaMode;
+  categoryReusablePeriodCareAltText: string;
   categoryReusablePeriodCareTitle: string;
   categoryReusablePeriodCareDescription: string;
   categoryReusablePeriodCareLinkUrl: string;
   categoryComfortPanty: HomepageCategoryState;
   categoryComfortPantyImageUrl: string;
   categoryComfortPantyVideoUrl: string;
+  categoryComfortPantyMediaMode: HomepageCategoryMediaMode;
+  categoryComfortPantyAltText: string;
   categoryComfortPantyTitle: string;
   categoryComfortPantyDescription: string;
   categoryComfortPantyLinkUrl: string;
   categorySoftSupportBra: HomepageCategoryState;
   categorySoftSupportBraImageUrl: string;
   categorySoftSupportBraVideoUrl: string;
+  categorySoftSupportBraMediaMode: HomepageCategoryMediaMode;
+  categorySoftSupportBraAltText: string;
   categorySoftSupportBraTitle: string;
   categorySoftSupportBraDescription: string;
   categorySoftSupportBraLinkUrl: string;
   categoryNightwear: HomepageCategoryState;
   categoryNightwearImageUrl: string;
   categoryNightwearVideoUrl: string;
+  categoryNightwearMediaMode: HomepageCategoryMediaMode;
+  categoryNightwearAltText: string;
   categoryNightwearTitle: string;
   categoryNightwearDescription: string;
   categoryNightwearLinkUrl: string;
   categoryHygieneEssentials: HomepageCategoryState;
   categoryHygieneEssentialsImageUrl: string;
   categoryHygieneEssentialsVideoUrl: string;
+  categoryHygieneEssentialsMediaMode: HomepageCategoryMediaMode;
+  categoryHygieneEssentialsAltText: string;
   categoryHygieneEssentialsTitle: string;
   categoryHygieneEssentialsDescription: string;
   categoryHygieneEssentialsLinkUrl: string;
   categoryBundles: HomepageCategoryState;
   categoryBundlesImageUrl: string;
   categoryBundlesVideoUrl: string;
+  categoryBundlesMediaMode: HomepageCategoryMediaMode;
+  categoryBundlesAltText: string;
   categoryBundlesTitle: string;
   categoryBundlesDescription: string;
   categoryBundlesLinkUrl: string;
   categoryNewArrivals: HomepageCategoryState;
   categoryNewArrivalsImageUrl: string;
   categoryNewArrivalsVideoUrl: string;
+  categoryNewArrivalsMediaMode: HomepageCategoryMediaMode;
+  categoryNewArrivalsAltText: string;
   categoryNewArrivalsTitle: string;
   categoryNewArrivalsDescription: string;
   categoryNewArrivalsLinkUrl: string;
@@ -447,42 +462,56 @@ const defaultGroups: AdminSettingsGroups = {
     categoryReusablePeriodCare: "active",
     categoryReusablePeriodCareImageUrl: "",
     categoryReusablePeriodCareVideoUrl: "",
+    categoryReusablePeriodCareMediaMode: "animation" as HomepageCategoryMediaMode,
+    categoryReusablePeriodCareAltText: "",
     categoryReusablePeriodCareTitle: "Reusable Period Care",
     categoryReusablePeriodCareDescription: "Comfortable reusable protection for light to moderate flow.",
     categoryReusablePeriodCareLinkUrl: "/product",
     categoryComfortPanty: "coming_soon",
     categoryComfortPantyImageUrl: "",
     categoryComfortPantyVideoUrl: "",
+    categoryComfortPantyMediaMode: "animation" as HomepageCategoryMediaMode,
+    categoryComfortPantyAltText: "",
     categoryComfortPantyTitle: "Comfort Panty",
     categoryComfortPantyDescription: "Soft stretch everyday wear designed for all-day comfort.",
     categoryComfortPantyLinkUrl: "",
     categorySoftSupportBra: "coming_soon",
     categorySoftSupportBraImageUrl: "",
     categorySoftSupportBraVideoUrl: "",
+    categorySoftSupportBraMediaMode: "animation" as HomepageCategoryMediaMode,
+    categorySoftSupportBraAltText: "",
     categorySoftSupportBraTitle: "Soft Support Bra",
     categorySoftSupportBraDescription: "Gentle support with smooth fabric for daily wear.",
     categorySoftSupportBraLinkUrl: "",
     categoryNightwear: "coming_soon",
     categoryNightwearImageUrl: "",
     categoryNightwearVideoUrl: "",
+    categoryNightwearMediaMode: "animation" as HomepageCategoryMediaMode,
+    categoryNightwearAltText: "",
     categoryNightwearTitle: "Nightwear",
     categoryNightwearDescription: "Relaxed, breathable comfort for restful evenings.",
     categoryNightwearLinkUrl: "",
     categoryHygieneEssentials: "coming_soon",
     categoryHygieneEssentialsImageUrl: "",
     categoryHygieneEssentialsVideoUrl: "",
+    categoryHygieneEssentialsMediaMode: "animation" as HomepageCategoryMediaMode,
+    categoryHygieneEssentialsAltText: "",
     categoryHygieneEssentialsTitle: "Hygiene Essentials",
     categoryHygieneEssentialsDescription: "Curated essentials for your daily hygiene routine.",
     categoryHygieneEssentialsLinkUrl: "",
     categoryBundles: "coming_soon",
     categoryBundlesImageUrl: "",
     categoryBundlesVideoUrl: "",
+    categoryBundlesMediaMode: "animation" as HomepageCategoryMediaMode,
+    categoryBundlesAltText: "",
     categoryBundlesTitle: "Bundles",
     categoryBundlesDescription: "Thoughtful care sets at a considered price.",
     categoryBundlesLinkUrl: "",
     categoryNewArrivals: "coming_soon",
     categoryNewArrivalsImageUrl: "",
     categoryNewArrivalsVideoUrl: "",
+    categoryNewArrivalsMediaMode: "animation" as HomepageCategoryMediaMode,
+    categoryNewArrivalsAltText: "",
     categoryNewArrivalsTitle: "New Arrivals",
     categoryNewArrivalsDescription: "Fresh additions to the Her Care collection.",
     categoryNewArrivalsLinkUrl: "",
@@ -627,6 +656,12 @@ function layerComfortMediaModeValue(value: unknown): LayerComfortMediaMode {
   return value === "image_text" || value === "video_text" || value === "background_media_text" || value === "media_only"
     ? value
     : "animation";
+}
+
+function categoryMediaModeValue(value: unknown, fallback: HomepageCategoryMediaMode): HomepageCategoryMediaMode {
+  return value === "animation" || value === "image_text" || value === "video_text" || value === "background_media_text" || value === "media_only"
+    ? value
+    : fallback;
 }
 
 function courierOptionValue(value: unknown): CourierOption {
@@ -1104,6 +1139,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryReusablePeriodCareImageUrl: publicUrlValue(homepageMediaRaw.categoryReusablePeriodCareImageUrl),
       categoryReusablePeriodCareVideoUrl: publicUrlValue(homepageMediaRaw.categoryReusablePeriodCareVideoUrl),
+      categoryReusablePeriodCareMediaMode: categoryMediaModeValue(homepageMediaRaw.categoryReusablePeriodCareMediaMode, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareMediaMode),
+      categoryReusablePeriodCareAltText: safeText(homepageMediaRaw.categoryReusablePeriodCareAltText, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareAltText),
       categoryReusablePeriodCareTitle: safeText(homepageMediaRaw.categoryReusablePeriodCareTitle, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareTitle),
       categoryReusablePeriodCareDescription: safeText(homepageMediaRaw.categoryReusablePeriodCareDescription, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareDescription),
       categoryReusablePeriodCareLinkUrl: safeText(homepageMediaRaw.categoryReusablePeriodCareLinkUrl, defaultGroups.homepageMediaSettings.categoryReusablePeriodCareLinkUrl),
@@ -1113,6 +1150,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryComfortPantyImageUrl: publicUrlValue(homepageMediaRaw.categoryComfortPantyImageUrl),
       categoryComfortPantyVideoUrl: publicUrlValue(homepageMediaRaw.categoryComfortPantyVideoUrl),
+      categoryComfortPantyMediaMode: categoryMediaModeValue(homepageMediaRaw.categoryComfortPantyMediaMode, defaultGroups.homepageMediaSettings.categoryComfortPantyMediaMode),
+      categoryComfortPantyAltText: safeText(homepageMediaRaw.categoryComfortPantyAltText, defaultGroups.homepageMediaSettings.categoryComfortPantyAltText),
       categoryComfortPantyTitle: safeText(homepageMediaRaw.categoryComfortPantyTitle, defaultGroups.homepageMediaSettings.categoryComfortPantyTitle),
       categoryComfortPantyDescription: safeText(homepageMediaRaw.categoryComfortPantyDescription, defaultGroups.homepageMediaSettings.categoryComfortPantyDescription),
       categoryComfortPantyLinkUrl: safeText(homepageMediaRaw.categoryComfortPantyLinkUrl, defaultGroups.homepageMediaSettings.categoryComfortPantyLinkUrl),
@@ -1122,6 +1161,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categorySoftSupportBraImageUrl: publicUrlValue(homepageMediaRaw.categorySoftSupportBraImageUrl),
       categorySoftSupportBraVideoUrl: publicUrlValue(homepageMediaRaw.categorySoftSupportBraVideoUrl),
+      categorySoftSupportBraMediaMode: categoryMediaModeValue(homepageMediaRaw.categorySoftSupportBraMediaMode, defaultGroups.homepageMediaSettings.categorySoftSupportBraMediaMode),
+      categorySoftSupportBraAltText: safeText(homepageMediaRaw.categorySoftSupportBraAltText, defaultGroups.homepageMediaSettings.categorySoftSupportBraAltText),
       categorySoftSupportBraTitle: safeText(homepageMediaRaw.categorySoftSupportBraTitle, defaultGroups.homepageMediaSettings.categorySoftSupportBraTitle),
       categorySoftSupportBraDescription: safeText(homepageMediaRaw.categorySoftSupportBraDescription, defaultGroups.homepageMediaSettings.categorySoftSupportBraDescription),
       categorySoftSupportBraLinkUrl: safeText(homepageMediaRaw.categorySoftSupportBraLinkUrl, defaultGroups.homepageMediaSettings.categorySoftSupportBraLinkUrl),
@@ -1131,6 +1172,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryNightwearImageUrl: publicUrlValue(homepageMediaRaw.categoryNightwearImageUrl),
       categoryNightwearVideoUrl: publicUrlValue(homepageMediaRaw.categoryNightwearVideoUrl),
+      categoryNightwearMediaMode: categoryMediaModeValue(homepageMediaRaw.categoryNightwearMediaMode, defaultGroups.homepageMediaSettings.categoryNightwearMediaMode),
+      categoryNightwearAltText: safeText(homepageMediaRaw.categoryNightwearAltText, defaultGroups.homepageMediaSettings.categoryNightwearAltText),
       categoryNightwearTitle: safeText(homepageMediaRaw.categoryNightwearTitle, defaultGroups.homepageMediaSettings.categoryNightwearTitle),
       categoryNightwearDescription: safeText(homepageMediaRaw.categoryNightwearDescription, defaultGroups.homepageMediaSettings.categoryNightwearDescription),
       categoryNightwearLinkUrl: safeText(homepageMediaRaw.categoryNightwearLinkUrl, defaultGroups.homepageMediaSettings.categoryNightwearLinkUrl),
@@ -1140,6 +1183,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryHygieneEssentialsImageUrl: publicUrlValue(homepageMediaRaw.categoryHygieneEssentialsImageUrl),
       categoryHygieneEssentialsVideoUrl: publicUrlValue(homepageMediaRaw.categoryHygieneEssentialsVideoUrl),
+      categoryHygieneEssentialsMediaMode: categoryMediaModeValue(homepageMediaRaw.categoryHygieneEssentialsMediaMode, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsMediaMode),
+      categoryHygieneEssentialsAltText: safeText(homepageMediaRaw.categoryHygieneEssentialsAltText, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsAltText),
       categoryHygieneEssentialsTitle: safeText(homepageMediaRaw.categoryHygieneEssentialsTitle, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsTitle),
       categoryHygieneEssentialsDescription: safeText(homepageMediaRaw.categoryHygieneEssentialsDescription, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsDescription),
       categoryHygieneEssentialsLinkUrl: safeText(homepageMediaRaw.categoryHygieneEssentialsLinkUrl, defaultGroups.homepageMediaSettings.categoryHygieneEssentialsLinkUrl),
@@ -1149,6 +1194,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryBundlesImageUrl: publicUrlValue(homepageMediaRaw.categoryBundlesImageUrl),
       categoryBundlesVideoUrl: publicUrlValue(homepageMediaRaw.categoryBundlesVideoUrl),
+      categoryBundlesMediaMode: categoryMediaModeValue(homepageMediaRaw.categoryBundlesMediaMode, defaultGroups.homepageMediaSettings.categoryBundlesMediaMode),
+      categoryBundlesAltText: safeText(homepageMediaRaw.categoryBundlesAltText, defaultGroups.homepageMediaSettings.categoryBundlesAltText),
       categoryBundlesTitle: safeText(homepageMediaRaw.categoryBundlesTitle, defaultGroups.homepageMediaSettings.categoryBundlesTitle),
       categoryBundlesDescription: safeText(homepageMediaRaw.categoryBundlesDescription, defaultGroups.homepageMediaSettings.categoryBundlesDescription),
       categoryBundlesLinkUrl: safeText(homepageMediaRaw.categoryBundlesLinkUrl, defaultGroups.homepageMediaSettings.categoryBundlesLinkUrl),
@@ -1158,6 +1205,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
       categoryNewArrivalsImageUrl: publicUrlValue(homepageMediaRaw.categoryNewArrivalsImageUrl),
       categoryNewArrivalsVideoUrl: publicUrlValue(homepageMediaRaw.categoryNewArrivalsVideoUrl),
+      categoryNewArrivalsMediaMode: categoryMediaModeValue(homepageMediaRaw.categoryNewArrivalsMediaMode, defaultGroups.homepageMediaSettings.categoryNewArrivalsMediaMode),
+      categoryNewArrivalsAltText: safeText(homepageMediaRaw.categoryNewArrivalsAltText, defaultGroups.homepageMediaSettings.categoryNewArrivalsAltText),
       categoryNewArrivalsTitle: safeText(homepageMediaRaw.categoryNewArrivalsTitle, defaultGroups.homepageMediaSettings.categoryNewArrivalsTitle),
       categoryNewArrivalsDescription: safeText(homepageMediaRaw.categoryNewArrivalsDescription, defaultGroups.homepageMediaSettings.categoryNewArrivalsDescription),
       categoryNewArrivalsLinkUrl: safeText(homepageMediaRaw.categoryNewArrivalsLinkUrl, defaultGroups.homepageMediaSettings.categoryNewArrivalsLinkUrl),
