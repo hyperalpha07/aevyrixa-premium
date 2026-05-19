@@ -5,10 +5,13 @@ import {
   ChevronDown,
   Droplets,
   Leaf,
+  MessageCircle,
+  PackageCheck,
   RotateCcw,
   Ruler,
   ShieldCheck,
   Sparkles,
+  Truck,
   Waves,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -876,13 +879,13 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
           <div className="aev-reveal min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-              {experienceMedia.eyebrow || "Aevyrixa Experience"}
+              {experienceMedia.eyebrow || "Designed for your day"}
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              {experienceMedia.heading || "A cinematic care experience that stays calm, premium, and lightweight."}
+              {experienceMedia.heading || "Every detail, designed for quiet everyday confidence."}
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-white/68">
-              {experienceMedia.subheading || "Moving glass, layered fabric forms, soft glow, and tactile tap feedback create a video-style moment while staying fast and mobile-safe."}
+              {experienceMedia.subheading || "Soft layered protection, gentle stretch, and a refined silhouette support your routine from first wear to wash day — without adjustment or worry."}
             </p>
           </div>
 
@@ -974,6 +977,71 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── Phase 47C: Privacy from order to delivery ── */}
+      <section className="px-4 py-10 sm:px-6 sm:py-14">
+        <div className="mx-auto max-w-7xl">
+          <div className="overflow-hidden rounded-[2rem] border border-white/8 bg-gradient-to-br from-white/[0.04] to-white/[0.02] p-5 backdrop-blur-2xl sm:p-8">
+            <div className="mb-6 text-center sm:mb-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-rose-100/72">
+                Order to Arrival
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                Privacy from order to delivery.
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
+                Your care routine stays private. Every order ships with plain outer packaging — no product names or brand marks visible.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {(
+                [
+                  {
+                    icon: PackageCheck,
+                    label: "Discreet Packaging",
+                    desc: settings.privacyPackagingMessage || "Plain outer packaging — no product names or brand marks outside.",
+                    glow: "bg-rose-300/10",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    label: "Order Confirmation",
+                    desc: "Receive a clear confirmation after we process your order. No unexpected surprises.",
+                    glow: "bg-cyan-300/10",
+                  },
+                  {
+                    icon: Truck,
+                    label: "Bangladesh Delivery",
+                    desc: settings.deliveryCoverageText || "Delivered across Bangladesh with courier tracking and support.",
+                    glow: "bg-violet-300/10",
+                  },
+                  {
+                    icon: MessageCircle,
+                    label: "3-Day Support",
+                    desc: settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible product concerns after delivery.",
+                    glow: "bg-amber-300/10",
+                  },
+                ] as const
+              ).map(({ icon: Icon, label, desc, glow }) => (
+                <div
+                  key={label}
+                  className="aev-reveal aev-delivery-chip relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl"
+                >
+                  <div className={`pointer-events-none absolute right-3 top-3 h-12 w-12 rounded-full ${glow} blur-2xl aev-story-ambient-glow`} />
+                  <div className="relative flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.07] text-cyan-200">
+                      <Icon size={17} strokeWidth={1.8} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{label}</p>
+                      <p className="mt-1 text-xs leading-5 text-white/58">{desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035))] p-5 backdrop-blur-2xl sm:p-8 lg:p-10">
@@ -1002,6 +1070,73 @@ export default async function Home() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Phase 47C: Which one is right for you? ── */}
+      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+              Find Your Care
+            </p>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              Which one is right for you?
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-white/60">
+              A quick guide to help you choose the right Her Care product for your routine.
+            </p>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {(
+              [
+                {
+                  title: "Light to Moderate Flow Days",
+                  desc: "Reusable period underwear supports everyday flow days. Soft, layered, and designed to wear comfortably through your regular schedule.",
+                  href: "/product?category=Reusable+Period+Care",
+                  accent: "from-cyan-200/75 to-cyan-500/15",
+                  tag: "Period Care",
+                  icon: Droplets,
+                },
+                {
+                  title: "All-Day Comfort Wear",
+                  desc: "Comfort panties and soft support bras for daily wear. Choose relaxed fit or gentle stretch based on your preference.",
+                  href: "/product?category=Comfort+Panty",
+                  accent: "from-fuchsia-200/75 to-fuchsia-500/15",
+                  tag: "Comfort Wear",
+                  icon: Sparkles,
+                },
+                {
+                  title: "Not sure? Get help first.",
+                  desc: "Message support before you order. We help with size, coverage, and product selection — no pressure, just honest guidance.",
+                  href: "/support",
+                  accent: "from-rose-200/75 to-amber-200/15",
+                  tag: "Support",
+                  icon: MessageCircle,
+                },
+              ] as const
+            ).map(({ title, desc, href, accent, tag, icon: Icon }) => (
+              <a
+                key={title}
+                href={href}
+                className="aev-reveal aev-routine-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-2xl sm:p-6"
+              >
+                <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105">
+                  <Icon size={20} strokeWidth={1.7} />
+                </div>
+                <span className="inline-block rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-white/70">
+                  {tag}
+                </span>
+                <h3 className="mt-3 text-lg font-semibold text-white">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-white/62">{desc}</p>
+                <div className="mt-5 flex items-center gap-1.5 text-xs font-semibold text-cyan-100/72 transition duration-300 group-hover:gap-2 group-hover:text-cyan-100">
+                  Explore
+                  <ArrowRight size={12} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </section>

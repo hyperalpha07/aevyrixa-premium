@@ -535,6 +535,50 @@ export default function ShopDiscoveryClient({
         </div>
       </section>
 
+      {/* ── Phase 47C: Care type guide strip ── */}
+      <section className="mx-auto max-w-7xl px-4 pb-6 sm:px-6">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={() => setCategory("Reusable Period Care")}
+            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-xl transition"
+          >
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-cyan-200/10 text-cyan-200">
+              <ShieldCheck size={17} strokeWidth={1.8} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white group-hover:text-cyan-50">Period Care</p>
+              <p className="mt-0.5 text-xs leading-5 text-white/55">Reusable protection for light to moderate flow.</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategory("Comfort Panty")}
+            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-xl transition"
+          >
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-fuchsia-200/10 text-fuchsia-200">
+              <Sparkles size={17} strokeWidth={1.8} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white group-hover:text-fuchsia-50">Everyday Comfort</p>
+              <p className="mt-0.5 text-xs leading-5 text-white/55">Soft stretch panties and support bras for daily wear.</p>
+            </div>
+          </button>
+          <Link
+            href="/support"
+            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-xl transition"
+          >
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-rose-200/10 text-rose-200">
+              <CheckCircle2 size={17} strokeWidth={1.8} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white group-hover:text-rose-50">Need help choosing?</p>
+              <p className="mt-0.5 text-xs leading-5 text-white/55">Get size and product guidance from our support team.</p>
+            </div>
+          </Link>
+        </div>
+      </section>
+
       <CollectionSection
         eyebrow="Flagship Collection"
         title="Featured by Aevyrixa"

@@ -1986,3 +1986,77 @@ button {
     animation: none !important;
   }
 }
+
+/* ─── Phase 47C: Cinematic Product Storytelling ─── */
+
+.aev-story-card {
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-story-card:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: rgba(103, 232, 249, 0.24);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22), 0 0 28px rgba(34, 211, 238, 0.07);
+  }
+}
+
+.aev-story-card:active {
+  transform: translate3d(0, 1px, 0) scale(0.99);
+}
+
+.aev-delivery-chip {
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-delivery-chip:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: rgba(34, 211, 238, 0.3);
+  }
+}
+
+.aev-routine-card {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    background 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-routine-card:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: rgba(103, 232, 249, 0.28);
+    background: rgba(255, 255, 255, 0.065);
+  }
+}
+
+.aev-routine-card:active {
+  transform: translate3d(0, 1px, 0) scale(0.99);
+}
+
+@keyframes aev-story-glow-drift {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0.9; transform: scale(1.12); }
+}
+
+.aev-story-ambient-glow {
+  animation: aev-story-glow-drift 10s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-story-card,
+  .aev-delivery-chip,
+  .aev-routine-card {
+    transition: none !important;
+  }
+
+  .aev-story-ambient-glow {
+    animation: none !important;
+  }
+}
