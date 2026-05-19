@@ -8,10 +8,14 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
-  ChevronUp,
+  ChevronRight,
   Info,
+  MessageCircle,
+  Minus,
   PackageCheck,
   Play,
+  Plus,
+  Ruler,
   ShieldCheck,
   ShoppingCart,
   Truck,
@@ -138,6 +142,10 @@ export default function ProductDetailClient({
     displayProduct.absorbencyOptions[0] || displayProduct.absorbency
   );
   const [quantity, setQuantity] = useState(1);
+  const [selectionMessage, setSelectionMessage] = useState("");
+  const [brokenMediaUrls, setBrokenMediaUrls] = useState<Set<string>>(
+    () => new Set()
+  );
 
   const decreaseQuantity = () =>
     setQuantity((q) => Math.max(1, q - 1));
@@ -145,6 +153,19 @@ export default function ProductDetailClient({
 
   const handleAddToCart = (goToCart = false) => {
     if (!canAddToCart) return;
+    if (displayProduct.sizes.length > 0 && !selectedSize) {
+      setSelectionMessage("Please select a size before adding this item.");
+      return;
+    }
+    if (displayProduct.colors.length > 0 && !selectedColor) {
+      setSelectionMessage("Please select a color before adding this item.");
+      return;
+    }
+    if (displayProduct.absorbencyOptions.length > 0 && !selectedAbsorbency) {
+      setSelectionMessage("Please select an absorbency before adding this item.");
+      return;
+    }
+    setSelectionMessage("");
     const variantSummary = [selectedSize, selectedColor, selectedAbsorbency]
       .filter(Boolean)
       .join(" / ");
@@ -203,8 +224,43 @@ export default function ProductDetailClient({
     selectedMediaIndex,
     Math.max(0, mediaItems.length - 1)
   );
-  const selectedMedia = mediaItems.length > 0 ? mediaItems[safeIndex] : null;
+  const selectedMedia =
+    mediaItems.length > 0 && !brokenMediaUrls.has(mediaItems[safeIndex].url)
+      ? mediaItems[safeIndex]
+      : null;
   const showThumbnails = mediaItems.length > 1;
+  const selectedSummary = [selectedSize, selectedColor, selectedAbsorbency]
+    .filter(Boolean)
+    .join(" / ");
+  const supportHref = settings.whatsappUrl || "/support";
+  const supportLabel = settings.whatsappUrl ? "WhatsApp help" : "Live support";
+  const deliveryText =
+    settings.deliveryCoverageText ||
+    "Bangladesh delivery is available with order confirmation before dispatch.";
+  const privacyText =
+    settings.privacyPackagingMessage ||
+    "Orders ship in discreet privacy packaging.";
+  const supportText =
+    settings.supportWindowMessage ||
+    "3-Day Hygiene-Safe Support on eligible concerns.";
+  const detailsItems = [
+    displayProduct.shortDescription,
+    displayProduct.description,
+    ...benefits.slice(0, 3),
+  ].filter(Boolean);
+  const sizeFitItems = [
+    displayProduct.sizes.length > 0
+      ? `Available sizes: ${displayProduct.sizes.join(", ")}`
+      : "Size availability is shown before checkout.",
+    "If you are between sizes, choose the fit that feels more comfortable around the waist and leg opening.",
+    "Check fit over clean clothing before direct wear.",
+  ];
+  const deliverySupportItems = [
+    deliveryText,
+    privacyText,
+    supportText,
+    "Track your order after purchase from the Track Order page.",
+  ];
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -248,7 +304,7 @@ export default function ProductDetailClient({
   const displayRelated = relatedProducts.map(publicProduct);
 
   return (
-    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] pb-24 text-white lg:pb-0">
+    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#050816] pb-40 text-white lg:pb-0">
       {/* Background glows */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-cyan-400/14 blur-[120px]" />
@@ -263,15 +319,15 @@ export default function ProductDetailClient({
       />
 
       {/* ── Main product section ── */}
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
+      <section className="mx-auto grid max-w-7xl gap-7 px-4 py-6 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
 
         {/* LEFT — Media gallery */}
         <div
-          className={`aev-shop-card min-w-0 rounded-[1.85rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl ${style.panel}`}
+          className={`aev-shop-card min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-2.5 backdrop-blur-2xl sm:rounded-[1.85rem] sm:p-3 ${style.panel}`}
         >
           {/* Main media display */}
           <div
-            className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#07111f]"
+            className="relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#10192a] sm:rounded-[1.45rem]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -279,14 +335,18 @@ export default function ProductDetailClient({
             <div
               className={`pointer-events-none absolute inset-0 scale-90 rounded-full opacity-40 blur-[60px] ${style.glow}`}
             />
-            <div className="aspect-square w-full">
+            <div className="aspect-[0.96] w-full sm:aspect-square">
               {selectedMedia?.type === "video" ? (
                 <video
                   src={selectedMedia.url}
                   poster={selectedMedia.poster}
                   controls
                   playsInline
-                  className="h-full w-full object-contain"
+                  preload="metadata"
+                  className="h-full w-full bg-[#10192a] object-contain"
+                  onError={() =>
+                    setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
+                  }
                 />
               ) : selectedMedia?.type === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -294,8 +354,13 @@ export default function ProductDetailClient({
                   key={safeIndex}
                   src={selectedMedia.url}
                   alt={displayProduct.name}
-                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-4"
+                  loading={safeIndex === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-3 sm:p-4"
                   onClick={() => setLightboxOpen(true)}
+                  onError={() =>
+                    setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
+                  }
                 />
               ) : (
                 <ProductVisual
@@ -316,7 +381,7 @@ export default function ProductDetailClient({
 
           {/* Thumbnail strip — shown when multiple images or image + video */}
           {showThumbnails && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
               {mediaItems.map((item, index) => (
                 <button
                   key={index}
@@ -326,10 +391,15 @@ export default function ProductDetailClient({
                       ? "Play video"
                       : `Product image ${index + 1}`
                   }
-                  className={`shrink-0 h-[68px] w-[68px] overflow-hidden rounded-xl border transition ${
+                  disabled={brokenMediaUrls.has(item.url)}
+                  className={`h-[72px] w-[72px] shrink-0 snap-start overflow-hidden rounded-xl border transition sm:h-[78px] sm:w-[78px] ${
                     safeIndex === index
                       ? "aev-media-thumb-active border-white/65 bg-white/12"
-                      : "border-white/10 bg-[#07111f] hover:border-white/28"
+                      : "border-white/10 bg-[#10192a] hover:border-white/28"
+                  } ${
+                    brokenMediaUrls.has(item.url)
+                      ? "cursor-not-allowed opacity-35"
+                      : ""
                   }`}
                 >
                   {item.type === "image" ? (
@@ -337,10 +407,15 @@ export default function ProductDetailClient({
                     <img
                       src={item.url}
                       alt=""
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
+                      onError={() =>
+                        setBrokenMediaUrls((urls) => new Set(urls).add(item.url))
+                      }
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#07111f]">
+                    <div className="flex h-full w-full items-center justify-center bg-[#10192a]">
                       <Play className="h-5 w-5 text-white/70" />
                     </div>
                   )}
@@ -357,8 +432,14 @@ export default function ProductDetailClient({
                 poster={displayProduct.posterUrl ?? displayProduct.imageUrl}
                 controls
                 playsInline
+                preload="metadata"
                 className="w-full"
                 style={{ maxHeight: "260px" }}
+                onError={() =>
+                  setBrokenMediaUrls((urls) =>
+                    new Set(urls).add(displayProduct.videoUrl || "")
+                  )
+                }
               />
             </div>
           )}
@@ -367,15 +448,29 @@ export default function ProductDetailClient({
           <div className="mt-3 space-y-2">
             <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
               <PackageCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
-              <span>{settings.privacyPackagingMessage || "Orders ship in discreet privacy packaging."}</span>
+              <span>{privacyText}</span>
             </div>
             <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
               <ShieldCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
-              <span>{settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible concerns."}</span>
+              <span>{supportText}</span>
             </div>
             <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
               <Truck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
-              <span>COD available. Delivery confirmed before dispatch.</span>
+              <span>{deliveryText}</span>
+            </div>
+            <Link
+              href={supportHref}
+              className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-xs font-semibold text-white/78 transition hover:border-cyan-200/35 hover:bg-white/[0.07]"
+            >
+              <span className="inline-flex items-center gap-3">
+                <MessageCircle className={`h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+                Need help choosing? {supportLabel}
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+            </Link>
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-white/10 bg-[#07111f]/80 px-4 py-3 text-xs leading-5 text-white/65">
+              <Ruler className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+              <span>Size check: try over clean clothing before direct wear.</span>
             </div>
           </div>
         </div>
@@ -457,23 +552,36 @@ export default function ProductDetailClient({
                 label="Size"
                 options={displayProduct.sizes}
                 selected={selectedSize}
-                onSelect={setSelectedSize}
+                onSelect={(value) => {
+                  setSelectedSize(value);
+                  setSelectionMessage("");
+                }}
                 selectedClassName={style.selected}
                 hint="Check size over clean underwear or clothing only. Do not wear directly before confirming fit."
+                disabled={!canAddToCart}
               />
               <VariantSelector
                 label="Color"
                 options={displayProduct.colors}
                 selected={selectedColor}
-                onSelect={setSelectedColor}
+                onSelect={(value) => {
+                  setSelectedColor(value);
+                  setSelectionMessage("");
+                }}
                 selectedClassName={style.selected}
+                type="color"
+                disabled={!canAddToCart}
               />
               <VariantSelector
                 label="Absorbency"
                 options={displayProduct.absorbencyOptions}
                 selected={selectedAbsorbency}
-                onSelect={setSelectedAbsorbency}
+                onSelect={(value) => {
+                  setSelectedAbsorbency(value);
+                  setSelectionMessage("");
+                }}
                 selectedClassName={style.selected}
+                disabled={!canAddToCart}
               />
 
               {/* Quantity */}
@@ -484,23 +592,31 @@ export default function ProductDetailClient({
                 <div className="flex w-fit items-center rounded-full border border-white/10 bg-black/20">
                   <button
                     onClick={decreaseQuantity}
-                    className="px-4 py-3 text-white/70 transition hover:text-white"
+                    disabled={!canAddToCart || quantity <= 1}
+                    className="px-4 py-3 text-white/70 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/25"
                     aria-label="Decrease quantity"
                   >
-                    <ChevronDown className="h-4 w-4" />
+                    <Minus className="h-4 w-4" />
                   </button>
                   <span className="min-w-[48px] text-center text-sm font-semibold">
                     {quantity}
                   </span>
                   <button
                     onClick={increaseQuantity}
-                    className="px-4 py-3 text-white/70 transition hover:text-white"
+                    disabled={!canAddToCart}
+                    className="px-4 py-3 text-white/70 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/25"
                     aria-label="Increase quantity"
                   >
-                    <ChevronUp className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   </button>
                 </div>
               </div>
+
+              {selectionMessage && (
+                <p className="rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm leading-6 text-amber-100">
+                  {selectionMessage}
+                </p>
+              )}
 
               {/* Add to cart buttons */}
               <div className="grid gap-3 sm:grid-cols-2">
@@ -536,12 +652,12 @@ export default function ProductDetailClient({
               {
                 icon: PackageCheck,
                 label: "Discreet Packaging",
-                desc: "All orders ship in plain, unmarked packaging.",
+                desc: privacyText,
               },
               {
                 icon: ShieldCheck,
                 label: "3-Day Hygiene-Safe Support",
-                desc: "Eligible for size, wrong item, or damaged item concerns.",
+                desc: supportText,
               },
               {
                 icon: CheckCircle2,
@@ -555,8 +671,13 @@ export default function ProductDetailClient({
               },
               {
                 icon: Truck,
-                label: "COD Confirmed Before Dispatch",
-                desc: "Cash on delivery confirmed by call before shipping.",
+                label: "Bangladesh Delivery",
+                desc: deliveryText,
+              },
+              {
+                icon: MessageCircle,
+                label: "Support Before You Buy",
+                desc: "Message us for size, care, or order help before checkout.",
               },
             ].map(({ icon: Icon, label, desc }) => (
               <div
@@ -580,8 +701,40 @@ export default function ProductDetailClient({
         </div>
       </section>
 
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:hidden">
+        <div className="rounded-[1.45rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl">
+          <ProductAccordion
+            title="Details"
+            items={detailsItems}
+            defaultOpen
+            accentClassName={style.accent}
+          />
+          <ProductAccordion
+            title="Size & Fit"
+            items={sizeFitItems}
+            accentClassName={style.accent}
+          />
+          <ProductAccordion
+            title="Care Instructions"
+            items={care}
+            accentClassName={style.accent}
+          />
+          <ProductAccordion
+            title="Delivery & Support"
+            items={deliverySupportItems}
+            accentClassName={style.accent}
+          />
+          <ProductAccordion
+            title="Privacy Packaging"
+            items={[privacyText, "Outer packaging stays plain and discreet."]}
+            accentClassName={style.accent}
+          />
+          <ProductFaqAccordion faqs={faqs} accentClassName={style.accent} />
+        </div>
+      </section>
+
       {/* ── Benefits, Care, Policy, FAQ ── */}
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-12 sm:px-6 lg:grid-cols-[1fr_0.9fr]">
+      <section className="mx-auto hidden max-w-7xl gap-5 px-4 pb-12 sm:px-6 lg:grid lg:grid-cols-[1fr_0.9fr]">
 
         {/* Benefits */}
         <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
@@ -644,17 +797,17 @@ export default function ProductDetailClient({
               {
                 icon: ShieldCheck,
                 title: "3-Day Hygiene-Safe Support",
-                body: "3-Day Hygiene-Safe Support is available for eligible order, size, wrong item, or damaged item concerns. Product must remain unused, unwashed, and in original packaging/hygiene seal condition.",
+                body: `${supportText} Product must remain unused, unwashed, and in original packaging/hygiene seal condition.`,
               },
               {
                 icon: PackageCheck,
                 title: "Discreet Packaging",
-                body: "All Aevyrixa Her Care orders are shipped in plain, unmarked packaging with no visible brand or product details on the outside.",
+                body: privacyText,
               },
               {
                 icon: Truck,
-                title: "COD Confirmation",
-                body: "Cash on delivery orders are confirmed by phone call before dispatch. Please keep your number reachable after placing an order.",
+                title: "Delivery Confirmation",
+                body: deliveryText,
               },
             ].map(({ icon: Icon, title, body }) => (
               <div
@@ -792,26 +945,56 @@ export default function ProductDetailClient({
       )}
 
       {/* ── Mobile sticky add-to-cart bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#07111f]/95 px-4 pb-4 pt-3 backdrop-blur-md lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="shrink-0">
-            <p className="text-xs text-white/45">Price</p>
-            <p className="text-xl font-semibold text-white">
-              {formatProductPrice(displayProduct)}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#07111f]/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_50px_rgba(0,0,0,0.35)] backdrop-blur-md lg:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-2">
+              <p className="text-xl font-semibold text-white">
+                {formatProductPrice(displayProduct)}
+              </p>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${stockBadgeClass(displayProduct.stockStatus)}`}>
+                {stockStatusLabel(displayProduct.stockStatus)}
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-[11px] leading-4 text-white/48">
+              {selectedSummary || "Select your preferred options"} · Qty {quantity}
             </p>
           </div>
-          <button
-            onClick={() => handleAddToCart(false)}
-            disabled={!canAddToCart}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-semibold transition ${
-              canAddToCart
-                ? `bg-gradient-to-r hover:scale-[1.01] ${style.primary}`
-                : "cursor-not-allowed bg-white/[0.06] text-white/35"
-            }`}
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {canAddToCart ? "Add to Cart" : "Out of Stock"}
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="hidden items-center rounded-full border border-white/10 bg-black/20 min-[420px]:flex">
+              <button
+                onClick={decreaseQuantity}
+                disabled={!canAddToCart || quantity <= 1}
+                className="p-3 text-white/70 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/25"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="min-w-7 text-center text-sm font-semibold">
+                {quantity}
+              </span>
+              <button
+                onClick={increaseQuantity}
+                disabled={!canAddToCart}
+                className="p-3 text-white/70 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/25"
+                aria-label="Increase quantity"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              onClick={() => handleAddToCart(false)}
+              disabled={!canAddToCart}
+              className={`flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition ${
+                canAddToCart
+                  ? `bg-gradient-to-r hover:scale-[1.01] ${style.primary}`
+                  : "cursor-not-allowed bg-white/[0.06] text-white/35"
+              }`}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {canAddToCart ? "Add" : "Out"}
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -825,6 +1008,8 @@ function VariantSelector({
   onSelect,
   selectedClassName,
   hint,
+  type = "text",
+  disabled = false,
 }: {
   label: string;
   options: string[];
@@ -832,6 +1017,8 @@ function VariantSelector({
   onSelect: (value: string) => void;
   selectedClassName: string;
   hint?: string;
+  type?: "text" | "color";
+  disabled?: boolean;
 }) {
   if (options.length === 0) return null;
 
@@ -845,12 +1032,14 @@ function VariantSelector({
           <button
             key={option}
             onClick={() => onSelect(option)}
-            className={`rounded-full border px-4 py-2.5 text-sm font-medium transition ${
+            disabled={disabled}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-45 ${
               selected === option
                 ? selectedClassName
                 : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
             }`}
           >
+            {type === "color" && <ColorSwatch color={option} />}
             {option}
           </button>
         ))}
@@ -862,5 +1051,94 @@ function VariantSelector({
         </p>
       )}
     </div>
+  );
+}
+
+function ColorSwatch({ color }: { color: string }) {
+  const normalized = color.trim().toLowerCase();
+  const swatchClass =
+    normalized.includes("black")
+      ? "bg-zinc-950"
+      : normalized.includes("nude")
+        ? "bg-[#d7b59b]"
+        : normalized.includes("pink")
+          ? "bg-[#f4a9bf]"
+          : normalized.includes("white")
+            ? "bg-white"
+            : normalized.includes("rose")
+              ? "bg-rose-300"
+              : "bg-gradient-to-br from-fuchsia-200 to-cyan-200";
+
+  return (
+    <span
+      className={`h-4 w-4 rounded-full border border-white/35 ${swatchClass}`}
+      aria-hidden="true"
+    />
+  );
+}
+
+function ProductAccordion({
+  title,
+  items,
+  accentClassName,
+  defaultOpen = false,
+}: {
+  title: string;
+  items: string[];
+  accentClassName: string;
+  defaultOpen?: boolean;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <details
+      open={defaultOpen}
+      className="group border-b border-white/10 last:border-b-0"
+    >
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-semibold text-white marker:hidden">
+        <span>{title}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${accentClassName}`} />
+      </summary>
+      <div className="space-y-2 pb-4">
+        {items.map((item) => (
+          <p
+            key={item}
+            className="rounded-2xl border border-white/10 bg-black/18 px-4 py-3 text-sm leading-6 text-white/62"
+          >
+            {item}
+          </p>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function ProductFaqAccordion({
+  faqs,
+  accentClassName,
+}: {
+  faqs: { question: string; answer: string }[];
+  accentClassName: string;
+}) {
+  if (faqs.length === 0) return null;
+
+  return (
+    <details className="group border-b border-white/10 last:border-b-0">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-semibold text-white marker:hidden">
+        <span>FAQs</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${accentClassName}`} />
+      </summary>
+      <div className="space-y-3 pb-4">
+        {faqs.map((faq) => (
+          <div
+            key={faq.question}
+            className="rounded-2xl border border-white/10 bg-black/18 px-4 py-3"
+          >
+            <p className="text-sm font-semibold text-white/88">{faq.question}</p>
+            <p className="mt-1 text-sm leading-6 text-white/60">{faq.answer}</p>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }

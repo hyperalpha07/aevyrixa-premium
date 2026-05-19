@@ -68,7 +68,12 @@ export default async function ProductPage({
   }
 
   const relatedProducts = products
-    .filter((p) => p.id !== product.id)
+    .filter((p) => p.id !== product.id && p.status === "active" && !p.deletedAt)
+    .sort((a, b) => {
+      const aSameCategory = a.category === product.category ? 0 : 1;
+      const bSameCategory = b.category === product.category ? 0 : 1;
+      return aSameCategory - bSameCategory;
+    })
     .slice(0, 3);
 
   const productUrl = `${SITE_URL}/product/${product.slug}`;
