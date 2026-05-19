@@ -410,6 +410,38 @@ button {
   }
 }
 
+.aev-flagship-card {
+  touch-action: manipulation;
+  transition-property: transform, box-shadow, border-color, background;
+  will-change: transform, box-shadow;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-flagship-card:hover {
+    box-shadow:
+      0 24px 72px rgba(0, 0, 0, 0.28),
+      0 0 44px rgba(34, 211, 238, 0.10);
+  }
+}
+
+.aev-shop-card {
+  touch-action: manipulation;
+  transition-property: transform, box-shadow, border-color, background;
+  will-change: transform, box-shadow;
+}
+
+.aev-shop-card:active {
+  transform: translate3d(0, 1px, 0) scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-shop-card:hover {
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.24),
+      0 0 32px rgba(34, 211, 238, 0.08);
+  }
+}
+
 .aev-layer-halo {
   animation: aev-layer-halo 6.5s ease-in-out infinite alternate;
 }

@@ -180,7 +180,7 @@ function ProductCard({
         className="block overflow-hidden rounded-[1.05rem] border border-white/10 bg-[#07111f] md:rounded-[1.35rem]"
         aria-label={`View ${product.name}`}
       >
-        <div className={`relative w-full ${compact ? "aspect-[1.08]" : "aspect-[0.96] sm:aspect-square"}`}>
+        <div className={`relative w-full ${compact ? "aspect-[1.05]" : "aspect-square"}`}>
           <div className={`pointer-events-none absolute inset-x-8 top-8 h-28 rounded-full blur-3xl ${style.glow}`} />
           {product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -210,31 +210,31 @@ function ProductCard({
         </div>
       </Link>
 
-      <div className="px-1 pb-2 pt-4 md:px-2 md:pb-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${stockBadgeClass(product.stockStatus)}`}>
+      <div className="px-1.5 pb-2.5 pt-3 md:px-2.5 md:pb-3 md:pt-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
             {stockStatusLabel(product.stockStatus)}
           </span>
-          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${style.badge}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
             {product.category}
           </span>
         </div>
 
         <Link href={productHref}>
-          <h3 className="mt-3 line-clamp-2 min-h-[2.7rem] break-words text-base font-semibold leading-snug text-white [overflow-wrap:anywhere] md:text-lg">
+          <h3 className="mt-2.5 line-clamp-2 break-words text-sm font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:text-base md:text-lg">
             {product.name}
           </h3>
         </Link>
-        <p className="mt-2 line-clamp-2 min-h-[2.75rem] text-sm leading-6 text-white/58">
+        <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-white/58 sm:text-sm sm:leading-6">
           {product.shortDescription}
         </p>
 
-        <div className="mt-4 flex flex-wrap items-end gap-2">
-          <span className="text-2xl font-semibold text-white">
+        <div className="mt-3 flex flex-wrap items-end gap-1.5 sm:gap-2">
+          <span className="text-lg font-semibold text-white sm:text-xl md:text-2xl">
             {formatProductPrice(product)}
           </span>
           {typeof product.compareAtPrice === "number" && (
-            <span className="pb-0.5 text-sm text-white/35 line-through">
+            <span className="pb-0.5 text-xs text-white/35 line-through sm:text-sm">
               {formatProductPrice({
                 price: product.compareAtPrice,
                 currency: product.currency,
@@ -243,7 +243,7 @@ function ProductCard({
           )}
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-2 min-[390px]:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Link
             href={productHref}
             className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold text-white transition ${style.button}`}
@@ -297,7 +297,7 @@ function CollectionSection({
           </h2>
         </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {products.slice(0, 4).map((product) => (
           <ProductCard key={product.id} product={product} compact />
         ))}
@@ -442,13 +442,13 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 md:pb-12 md:pt-16">
+      <section className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 md:pb-12 md:pt-14">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div className="max-w-3xl">
             <p className="text-xs uppercase tracking-[0.32em] text-cyan-200/70 sm:text-sm sm:tracking-[0.42em]">
               {settings.brandDisplayName}
             </p>
-            <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
+            <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
               Premium product discovery for every care rhythm
             </h1>
             <p className="mt-5 max-w-2xl break-words text-base leading-8 text-white/65 [overflow-wrap:anywhere] md:text-lg">
@@ -463,7 +463,7 @@ export default function ShopDiscoveryClient({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search products, categories, comfort details"
-                className="min-h-12 w-full rounded-full border border-white/10 bg-black/24 py-3 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-cyan-200/45"
+                className="min-h-13 w-full rounded-full border border-white/10 bg-black/24 py-3.5 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-white/38 focus:border-cyan-200/45"
               />
               {query && (
                 <button
@@ -477,32 +477,33 @@ export default function ShopDiscoveryClient({
               )}
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setFiltersOpen((current) => !current)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2 text-sm font-semibold text-cyan-50 lg:hidden"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/40 hover:bg-cyan-100/15 lg:hidden"
               >
-                <SlidersHorizontal className="h-4 w-4" />
+                <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
-                <ChevronDown className={`h-4 w-4 transition ${filtersOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-3.5 w-3.5 transition ${filtersOpen ? "rotate-180" : ""}`} />
               </button>
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortMode)}
-                className="min-h-11 rounded-full border border-white/10 bg-black/24 px-4 py-2 text-sm font-semibold text-white outline-none transition focus:border-cyan-200/45"
+                className="min-h-11 flex-1 rounded-full border border-white/10 bg-black/24 px-3 py-2 text-sm font-semibold text-white outline-none transition focus:border-cyan-200/45 sm:flex-none sm:px-4"
                 aria-label="Sort products"
               >
-                <option value="featured">Featured first</option>
+                <option value="featured">Featured</option>
                 <option value="newest">Newest</option>
-                <option value="price-asc">Price low to high</option>
-                <option value="price-desc">Price high to low</option>
-                <option value="stock">In stock first</option>
+                <option value="price-asc">Price ↑</option>
+                <option value="price-desc">Price ↓</option>
+                <option value="stock">In stock</option>
               </select>
               <button
                 type="button"
                 onClick={resetFilters}
-                className="min-h-11 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-white/62 transition hover:border-white/25 hover:text-white"
+                className="min-h-11 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white/62 transition hover:border-white/25 hover:text-white sm:px-4"
+                aria-label="Reset filters"
               >
                 Reset
               </button>
@@ -516,7 +517,7 @@ export default function ShopDiscoveryClient({
           </div>
         </div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {[
             [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck],
             ["BDT pricing", CheckCircle2],
@@ -525,7 +526,7 @@ export default function ShopDiscoveryClient({
           ].map(([label, Icon]) => (
             <div
               key={label as string}
-              className="aev-cinematic-chip flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/70 backdrop-blur-xl"
+              className="aev-cinematic-chip flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-xs text-white/70 backdrop-blur-xl sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm"
             >
               <Icon className="h-4 w-4 shrink-0 text-cyan-200" />
               <span>{label as string}</span>
@@ -594,7 +595,7 @@ export default function ShopDiscoveryClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

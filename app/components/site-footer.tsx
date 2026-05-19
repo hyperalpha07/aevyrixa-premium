@@ -55,8 +55,10 @@ export default function SiteFooter({
   ];
 
   return (
-    <footer className="border-t border-white/10 bg-[#02040d] px-4 pb-24 pt-12 text-white sm:px-6 sm:pb-16">
-      <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 md:grid-cols-4">
+    <footer className="relative border-t border-white/10 bg-[#02040d] px-4 pb-28 pt-12 text-white sm:px-6 sm:pb-16">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent" />
+      <div className="pointer-events-none absolute left-0 right-0 top-0 h-32 bg-gradient-to-b from-cyan-300/[0.04] to-transparent" />
+      <div className="relative mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 md:grid-cols-4">
 
         {/* Column 1: Brand */}
         <div>
@@ -94,7 +96,7 @@ export default function SiteFooter({
 
         {/* Column 2: Shop */}
         <div>
-          <h3 className="font-semibold text-white">Shop</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">Shop</h3>
           <ul className="mt-4 space-y-3 text-sm text-white/55">
             {shopLinks.map((link) => (
               <li key={link.label}>
@@ -108,7 +110,7 @@ export default function SiteFooter({
 
         {/* Column 3: Support */}
         <div>
-          <h3 className="font-semibold text-white">Support</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">Support</h3>
           <ul className="mt-4 space-y-3 text-sm text-white/55">
             {supportLinks.map((link) => (
               <li key={link.label}>
@@ -122,7 +124,7 @@ export default function SiteFooter({
 
         {/* Column 4: Connect */}
         <div>
-          <h3 className="font-semibold text-white">Connect</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">Connect</h3>
           <div className="mt-4 flex flex-wrap gap-2.5">
             {/* WhatsApp */}
             {whatsappUrl && (
@@ -193,7 +195,7 @@ export default function SiteFooter({
       </div>
 
       {/* Bottom bar */}
-      <div className="mx-auto mt-10 max-w-7xl border-t border-white/10 pt-6">
+      <div className="relative mx-auto mt-10 max-w-7xl border-t border-white/10 pt-6">
         <div className="flex flex-col gap-3 text-xs text-white/42 sm:flex-row sm:items-center sm:justify-between">
           <p>Copyright 2026 {brandShortName}. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">

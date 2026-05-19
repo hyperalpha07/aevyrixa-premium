@@ -277,7 +277,7 @@ export default async function Home() {
         settings={settings}
       />
 
-      <section className="aev-hero-stage relative isolate overflow-hidden px-4 pb-18 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
+      <section className="aev-hero-stage relative isolate overflow-hidden px-4 pb-14 pt-8 sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
           <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-cyan-300/18 blur-3xl" />
@@ -299,7 +299,7 @@ export default async function Home() {
               {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
             </p>
 
-            <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[768px]:flex-row sm:mt-10">
+            <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[500px]:flex-row sm:mt-10">
               <Link
                 href={heroMedia.ctaLink || "/product"}
                 className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_54px_rgba(168,85,247,0.28)]"
@@ -314,11 +314,11 @@ export default async function Home() {
               </a>
             </div>
 
-            <div className="aev-hero-trust mt-9 grid gap-2.5 min-[430px]:grid-cols-2">
+            <div className="aev-hero-trust mt-8 grid grid-cols-2 gap-2 sm:gap-2.5">
               {heroTrustBadges.map((item) => (
                 <div
                   key={item}
-                  className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-4 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/76 backdrop-blur-xl sm:px-5"
+                  className="aev-trust-badge rounded-full border border-white/10 bg-white/[0.055] px-3 py-2.5 text-center text-[0.67rem] font-semibold uppercase tracking-[0.1em] text-white/76 backdrop-blur-xl sm:px-5 sm:py-3 sm:tracking-[0.12em]"
                 >
                   {item}
                 </div>
@@ -331,7 +331,7 @@ export default async function Home() {
             <div className="aev-product-edge absolute -inset-2 rounded-[2.4rem] border border-cyan-100/10" />
             <div className="aev-product-float relative">
               {heroMedia.mode === "image" && heroMedia.imageUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "26rem" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={heroMedia.imageUrl}
@@ -343,7 +343,7 @@ export default async function Home() {
                   <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_58%)] opacity-40 pointer-events-none" />
                 </div>
               ) : heroMedia.mode === "video" && heroMedia.videoUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "26rem" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
                   <video
                     className="absolute inset-0 h-full w-full object-cover opacity-90"
                     autoPlay
@@ -365,24 +365,24 @@ export default async function Home() {
                   variant="hero"
                 />
               )}
-              <div className="aev-hero-product-chip absolute bottom-5 left-5 right-5 rounded-[1.35rem] border border-white/12 bg-[#050816]/72 p-4 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:p-5">
-                <div className="flex items-start justify-between gap-4">
+              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 rounded-[1.2rem] border border-white/12 bg-[#050816]/75 p-3.5 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[0.66rem] font-semibold uppercase tracking-[0.3em] text-rose-100/70">
+                    <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-rose-100/70 sm:text-[0.66rem] sm:tracking-[0.3em]">
                       {settings.brandDisplayName}
                     </p>
-                    <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
+                    <h2 className="mt-1.5 text-base font-semibold text-white sm:mt-2 sm:text-xl lg:text-2xl">
                       Her Care Collection
                     </h2>
                   </div>
-                  <div className="rounded-full border border-cyan-200/20 bg-cyan-200/10 p-3 text-cyan-100">
-                    <Leaf size={20} strokeWidth={1.7} />
+                  <div className="rounded-full border border-cyan-200/20 bg-cyan-200/10 p-2.5 text-cyan-100 sm:p-3">
+                    <Leaf size={18} strokeWidth={1.7} />
                   </div>
                 </div>
-                <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[0.68rem] text-white/68">
-                  <span className="rounded-full bg-white/[0.07] px-2 py-2">Soft</span>
-                  <span className="rounded-full bg-white/[0.07] px-2 py-2">Layered</span>
-                  <span className="rounded-full bg-white/[0.07] px-2 py-2">Discreet</span>
+                <div className="mt-3 grid grid-cols-3 gap-1.5 text-center text-[0.62rem] text-white/68 sm:mt-5 sm:gap-2 sm:text-[0.68rem]">
+                  <span className="rounded-full bg-white/[0.07] px-2 py-1.5 sm:py-2">Soft</span>
+                  <span className="rounded-full bg-white/[0.07] px-2 py-1.5 sm:py-2">Layered</span>
+                  <span className="rounded-full bg-white/[0.07] px-2 py-1.5 sm:py-2">Discreet</span>
                 </div>
               </div>
             </div>
@@ -390,13 +390,13 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
               Confidence System
             </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
               Three quiet upgrades for the moments that usually feel uncertain.
             </h2>
           </div>
@@ -408,7 +408,7 @@ export default async function Home() {
                 className="aev-border-card aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:p-7"
               >
                 <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
-                <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07] text-cyan-100 transition duration-300 group-hover:scale-105 sm:mb-10">
                   <Icon size={22} strokeWidth={1.7} />
                 </div>
                 <h3 className="text-2xl font-semibold text-white">{title}</h3>
@@ -420,13 +420,13 @@ export default async function Home() {
       </section>
 
       {/* ── Phase 27: Her Care Categories ── */}
-      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
               Her Care Collection
             </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
               Seven categories, one calm care routine.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-white/62">
@@ -435,7 +435,7 @@ export default async function Home() {
               everyday routine.
             </p>
           </div>
-          <div className="mt-10 grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 min-[460px]:grid-cols-2 lg:grid-cols-4">
             {hereCareCategories.map(({ displayName, displayTagline, displayLinkUrl, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl, categoryMediaMode, categoryAltText }) => {
               const mode = categoryMediaMode as "animation" | "image_text" | "background_media_text" | "video_text" | "media_only";
               const showImageVisual = mode === "image_text" && Boolean(categoryImageUrl);
@@ -536,14 +536,100 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="how-it-works" className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+      {/* ── Featured products — early placement for conversion ── */}
+      {activeProducts.length > 0 && (
+        <section className="aev-scroll-section px-4 py-14 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
+                  Her Care Products
+                </p>
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                  Explore our collection.
+                </h2>
+              </div>
+              <Link
+                href="/product"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-100/78 transition hover:text-cyan-100"
+              >
+                View all
+                <ArrowRight size={14} strokeWidth={2.2} />
+              </Link>
+            </div>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 sm:text-base sm:leading-8">
+              Premium reusable care essentials with discreet delivery across Bangladesh.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              {activeProducts.map((product) => (
+                <article
+                  key={product.id}
+                  className="aev-reveal aev-flagship-card group min-w-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/28 hover:shadow-[0_0_36px_rgba(34,211,238,0.13)] sm:rounded-[1.75rem]"
+                >
+                  <Link href={`/product/${product.slug}`} className="block overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#07111f] sm:rounded-[1.35rem]">
+                    <div className="relative aspect-square w-full">
+                      {product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.025]"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <ProductVisual
+                          visualTheme={product.visualTheme}
+                          label={product.absorbency}
+                        />
+                      )}
+                    </div>
+                  </Link>
+                  <div className="px-1.5 pb-2.5 pt-3.5 sm:px-2 sm:pb-3 sm:pt-4">
+                    <h3 className="line-clamp-2 text-base font-semibold leading-snug text-white sm:text-lg">
+                      {product.name}
+                    </h3>
+                    {product.shortDescription && (
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-white/62">
+                        {product.shortDescription}
+                      </p>
+                    )}
+                    <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
+                      <span className="text-xl font-semibold text-white sm:text-2xl">
+                        {formatProductPrice(product)}
+                      </span>
+                      <Link
+                        href={`/product/${product.slug}`}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08] sm:gap-2 sm:px-4 sm:text-sm"
+                      >
+                        View
+                        <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="mt-7 flex justify-center sm:mt-8">
+              <Link
+                href="/product"
+                className="aev-action-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
+              >
+                View All Products
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="how-it-works" className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
                 How It Works
               </p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 A simple reusable rhythm.
               </h2>
             </div>
@@ -578,7 +664,7 @@ export default async function Home() {
 
       {/* ── Layer Explorer — CMS-controlled ── */}
       {lc.layerComfortEnabled !== false && (
-        <section className={`aev-scroll-section px-4 py-16 sm:px-6 sm:py-20 ${lc.layerComfortMediaMode === "background_media_text" ? "relative overflow-hidden" : ""}`}>
+        <section className={`aev-scroll-section px-4 py-12 sm:px-6 sm:py-20 ${lc.layerComfortMediaMode === "background_media_text" ? "relative overflow-hidden" : ""}`}>
           {/* Background media for background_media_text mode */}
           {lc.layerComfortMediaMode === "background_media_text" && lc.layerComfortImageUrl && (
             <>
@@ -608,7 +694,7 @@ export default async function Home() {
           <div className={`mx-auto max-w-7xl ${lc.layerComfortMediaMode === "background_media_text" ? "relative" : ""}`}>
             {lc.layerComfortMediaMode === "media_only" ? (
               /* media_only mode — show just the image or video */
-              <div className="aev-reveal group relative isolate overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "26rem" }}>
+              <div className="aev-reveal group relative isolate overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
                 {lc.layerComfortImageUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -721,7 +807,7 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
           {careMedia.mode === "image" && careMedia.imageUrl ? (
             <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#030714] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
@@ -826,7 +912,7 @@ export default async function Home() {
       </section>
 
       {/* ── Phase 27: Hygiene-Safe Support Timeline ── */}
-      <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
             Care Routine
@@ -888,7 +974,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="px-4 py-16 sm:px-6 sm:py-20">
+      <section className="px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.035))] p-5 backdrop-blur-2xl sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
@@ -920,7 +1006,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="faq" className="px-4 py-16 sm:px-6 sm:py-20">
+      <section id="faq" className="px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
@@ -962,7 +1048,7 @@ export default async function Home() {
       </section>
 
       {hms.ctaSectionEnabled && (
-      <section className="px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-20">
+      <section className="px-4 pb-16 pt-12 sm:px-6 sm:pb-28 sm:pt-20">
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] shadow-2xl">
           {/* background_media_text mode */}
           {(hms.ctaSectionMediaMode === "background_media_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
@@ -1117,83 +1203,6 @@ export default async function Home() {
           )}
         </div>
       </section>
-      )}
-
-      {/* Featured products section */}
-      {activeProducts.length > 0 && (
-        <section className="aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/75">
-                Her Care Products
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                Explore our collection.
-              </h2>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-white/62">
-                Premium reusable care essentials with discreet delivery across Bangladesh.
-              </p>
-            </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {activeProducts.map((product) => (
-                <article
-                  key={product.id}
-                  className="aev-reveal group min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-3 backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-100/25 hover:shadow-[0_0_32px_rgba(34,211,238,0.12)]"
-                >
-                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#07111f]">
-                    <div className="relative aspect-square w-full">
-                      {product.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="absolute inset-0 h-full w-full object-contain p-3"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <ProductVisual
-                          visualTheme={product.visualTheme}
-                          label={product.absorbency}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="px-2 pb-3 pt-4">
-                    <h3 className="break-words text-lg font-semibold leading-tight text-white [overflow-wrap:anywhere]">
-                      {product.name}
-                    </h3>
-                    {product.shortDescription && (
-                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/62">
-                        {product.shortDescription}
-                      </p>
-                    )}
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <span className="text-2xl font-semibold text-white">
-                        {formatProductPrice(product)}
-                      </span>
-                      <Link
-                        href={`/product/${product.slug}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-200/35 hover:bg-white/[0.08]"
-                      >
-                        View
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <div className="mt-8 flex justify-center">
-              <Link
-                href="/product"
-                className="aev-action-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-200 via-sky-300 to-violet-400 px-7 text-sm font-bold text-[#020617] shadow-[0_0_42px_rgba(34,211,238,0.24)] transition duration-300 hover:-translate-y-0.5"
-              >
-                View All Products
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
       )}
 
       {hms.whatsappWidgetEnabled && whatsappUrl &&
