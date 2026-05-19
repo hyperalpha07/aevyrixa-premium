@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -52,31 +52,31 @@ const themeStyles: Record<
   }
 > = {
   "blush-violet": {
-    accent: "text-[#b8814a]",
-    badge: "border-[#b8814a]/22 bg-[#f5eeea] text-[#5c3d30]",
-    selected: "border-[#b8814a]/45 bg-[#f0e4d6] text-[#2c1a14]",
-    primary: "from-[#b8814a] to-[#d4a07a] text-[#faf7f4]",
-    panel: "shadow-[0_8px_32px_rgba(184,129,74,0.10)]",
-    glow: "bg-[#b8814a]/[0.07]",
-    border: "border-[#b8814a]/18 hover:border-[#b8814a]/38",
+    accent: "text-[#FF4DB8]",
+    badge: "border-[#FF4DB8]/22 bg-[#2A183D]/80 text-[#FFB3D1]",
+    selected: "border-[#FF4DB8]/50 bg-[#2A183D] text-white",
+    primary: "from-[#FF4DB8] to-[#FF3FA4] text-white",
+    panel: "shadow-[0_8px_32px_rgba(255,77,184,0.12)]",
+    glow: "bg-[#FF4DB8]/[0.10]",
+    border: "border-[#FF4DB8]/18 hover:border-[#FF4DB8]/40",
   },
   "cyan-night": {
-    accent: "text-[#4a8b7e]",
-    badge: "border-[#4a8b7e]/22 bg-[#e8f4f1] text-[#2d5850]",
-    selected: "border-[#4a8b7e]/45 bg-[#d4ece8] text-[#1a3530]",
-    primary: "from-[#4a8b7e] to-[#72b0a5] text-[#faf7f4]",
-    panel: "shadow-[0_8px_32px_rgba(74,139,126,0.10)]",
-    glow: "bg-[#4a8b7e]/[0.06]",
-    border: "border-[#4a8b7e]/18 hover:border-[#4a8b7e]/38",
+    accent: "text-[#00D4C6]",
+    badge: "border-[#00D4C6]/22 bg-[#0F1E2A]/80 text-[#31E6D4]",
+    selected: "border-[#00D4C6]/50 bg-[#102028] text-white",
+    primary: "from-[#00D4C6] to-[#0FB8AC] text-[#080611]",
+    panel: "shadow-[0_8px_32px_rgba(0,212,198,0.10)]",
+    glow: "bg-[#00D4C6]/[0.08]",
+    border: "border-[#00D4C6]/18 hover:border-[#00D4C6]/40",
   },
   "rose-gold": {
-    accent: "text-[#b8814a]",
-    badge: "border-[#b8814a]/22 bg-[#f5eeea] text-[#5c3d30]",
-    selected: "border-[#b8814a]/45 bg-[#f0e4d6] text-[#2c1a14]",
-    primary: "from-[#b8814a] to-[#d4a07a] text-[#faf7f4]",
-    panel: "shadow-[0_8px_32px_rgba(184,129,74,0.10)]",
-    glow: "bg-[#b8814a]/[0.07]",
-    border: "border-[#b8814a]/18 hover:border-[#b8814a]/38",
+    accent: "text-[#A855F7]",
+    badge: "border-[#A855F7]/22 bg-[#1E1240]/80 text-[#C084FC]",
+    selected: "border-[#A855F7]/50 bg-[#231448] text-white",
+    primary: "from-[#A855F7] to-[#8B5CF6] text-white",
+    panel: "shadow-[0_8px_32px_rgba(168,85,247,0.10)]",
+    glow: "bg-[#A855F7]/[0.09]",
+    border: "border-[#A855F7]/18 hover:border-[#A855F7]/40",
   },
 };
 
@@ -304,12 +304,12 @@ export default function ProductDetailClient({
   const displayRelated = relatedProducts.map(publicProduct);
 
   return (
-    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#faf7f4] pb-40 text-[#2c1a14] lg:pb-0">
+    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#080611] pb-40 text-white lg:pb-0">
       {/* Background glows */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-[#b8814a]/[0.06] blur-[120px]" />
-        <div className="absolute right-[-18%] top-[20%] h-[360px] w-[360px] rounded-full bg-[#4a8b7e]/[0.05] blur-[140px]" />
-        <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-[#d4a07a]/[0.07] blur-[120px]" />
+        <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-[#FF4DB8]/[0.07] blur-[120px]" />
+        <div className="absolute right-[-18%] top-[20%] h-[360px] w-[360px] rounded-full bg-[#A855F7]/[0.06] blur-[140px]" />
+        <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-[#00D4C6]/[0.05] blur-[120px]" />
       </div>
 
       <SiteHeader
@@ -323,11 +323,11 @@ export default function ProductDetailClient({
 
         {/* LEFT — Media gallery */}
         <div
-          className={`aev-shop-card min-w-0 rounded-[1.5rem] border border-[#b8814a]/12 bg-white p-2.5 shadow-sm sm:rounded-[1.85rem] sm:p-3 ${style.panel}`}
+          className={`aev-shop-card min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-2.5 sm:rounded-[1.85rem] sm:p-3 ${style.panel}`}
         >
           {/* Main media display */}
           <div
-            className="relative overflow-hidden rounded-[1.25rem] border border-[#b8814a]/10 bg-[#f5eeea] sm:rounded-[1.45rem]"
+            className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.06] bg-[#0B0F1A] sm:rounded-[1.45rem]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -343,7 +343,7 @@ export default function ProductDetailClient({
                   controls
                   playsInline
                   preload="metadata"
-                  className="h-full w-full bg-[#f5eeea] object-contain"
+                  className="h-full w-full bg-[#0B0F1A] object-contain"
                   onError={() =>
                     setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
                   }
@@ -372,7 +372,7 @@ export default function ProductDetailClient({
             {/* Category label overlay */}
             {displayProduct.category && (
               <div className="pointer-events-none absolute bottom-3 left-3 z-10">
-                <span className="rounded-full border border-[#b8814a]/20 bg-white/80 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-[#8a6a5e] backdrop-blur-sm">
+                <span className="rounded-full border border-[#FF4DB8]/22 bg-[#080611]/75 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-[#FFB3D1] backdrop-blur-sm">
                   {displayProduct.category}
                 </span>
               </div>
@@ -394,8 +394,8 @@ export default function ProductDetailClient({
                   disabled={brokenMediaUrls.has(item.url)}
                   className={`h-[72px] w-[72px] shrink-0 snap-start overflow-hidden rounded-xl border transition sm:h-[78px] sm:w-[78px] ${
                     safeIndex === index
-                      ? "aev-media-thumb-active border-[#b8814a]/55 bg-[#f5eeea]"
-                      : "border-[#b8814a]/12 bg-[#f5eeea] hover:border-[#b8814a]/30"
+                      ? "aev-media-thumb-active border-[#FF4DB8]/55 bg-[#1B1230]"
+                      : "border-white/[0.07] bg-[#1B1230] hover:border-[#FF4DB8]/28"
                   } ${
                     brokenMediaUrls.has(item.url)
                       ? "cursor-not-allowed opacity-35"
@@ -415,8 +415,8 @@ export default function ProductDetailClient({
                       }
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#f5eeea]">
-                      <Play className="h-5 w-5 text-white/70" />
+                    <div className="flex h-full w-full items-center justify-center bg-[#1B1230]">
+                      <Play className="h-5 w-5 text-[#FF4DB8]/70" />
                     </div>
                   )}
                 </button>
@@ -426,7 +426,7 @@ export default function ProductDetailClient({
 
           {/* If single image + video: always show video card below */}
           {!showThumbnails && displayProduct.videoUrl && (
-            <div className="mt-3 overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#f5eeea]">
+            <div className="mt-3 overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#0B0F1A]">
               <video
                 src={displayProduct.videoUrl}
                 poster={displayProduct.posterUrl ?? displayProduct.imageUrl}
@@ -446,29 +446,29 @@ export default function ProductDetailClient({
 
           {/* Product info cards below media */}
           <div className="mt-3 space-y-2">
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#b8814a]/12 bg-[#f5eeea] px-4 py-3 text-xs leading-5 text-[#5c3d30]/80">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <PackageCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
               <span>{privacyText}</span>
             </div>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#b8814a]/12 bg-[#f5eeea] px-4 py-3 text-xs leading-5 text-[#5c3d30]/80">
-              <ShieldCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+              <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#00D4C6]" />
               <span>{supportText}</span>
             </div>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#b8814a]/12 bg-[#f5eeea] px-4 py-3 text-xs leading-5 text-[#5c3d30]/80">
-              <Truck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#A855F7]/10 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+              <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#A855F7]" />
               <span>{deliveryText}</span>
             </div>
             <Link
               href={supportHref}
-              className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-[#b8814a]/14 bg-[#f5eeea] px-4 py-3 text-xs font-semibold text-[#5c3d30] transition hover:border-[#b8814a]/30 hover:bg-[#f0e4d6]"
+              className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-[#FF4DB8]/15 bg-[#1B1230] px-4 py-3 text-xs font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/30 hover:bg-[#211633]"
             >
               <span className="inline-flex items-center gap-3">
                 <MessageCircle className={`h-3.5 w-3.5 shrink-0 ${style.accent}`} />
                 Need help choosing? {supportLabel}
               </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-[#8a6a5e]" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-[#9C91AA]" />
             </Link>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#b8814a]/12 bg-[#f5eeea] px-4 py-3 text-xs leading-5 text-[#5c3d30]/80">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <Ruler className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
               <span>Size check: try over clean clothing before direct wear.</span>
             </div>
@@ -479,7 +479,7 @@ export default function ProductDetailClient({
         <div className="min-w-0">
           <Link
             href="/product"
-            className="text-sm font-medium text-[#8a6a5e] transition hover:text-[#2c1a14]"
+            className="text-sm font-medium text-[#9C91AA] transition hover:text-[#D8CBE8]"
           >
             ← Back to products
           </Link>
@@ -496,7 +496,7 @@ export default function ProductDetailClient({
                 Featured
               </span>
             )}
-            <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-[#8a6a5e]/70 [overflow-wrap:anywhere] min-[420px]:tracking-[0.24em]">
+            <span className="max-w-full break-words text-xs uppercase tracking-[0.16em] text-[#9C91AA]/70 [overflow-wrap:anywhere] min-[420px]:tracking-[0.24em]">
               {displayProduct.category}
             </span>
             <span className={`rounded-full border px-3 py-1 text-xs font-medium ${stockBadgeClass(displayProduct.stockStatus)}`}>
@@ -505,7 +505,7 @@ export default function ProductDetailClient({
           </div>
 
           {/* Product name */}
-          <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-[#2c1a14] [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
+          <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
             {displayProduct.name}
           </h1>
 
@@ -519,17 +519,17 @@ export default function ProductDetailClient({
           )}
 
           {/* Main description */}
-          <p className="mt-4 max-w-2xl break-words text-base leading-8 text-[#5c3d30]/80 [overflow-wrap:anywhere]">
+          <p className="mt-4 max-w-2xl break-words text-base leading-8 text-[#9C91AA] [overflow-wrap:anywhere]">
             {displayProduct.description}
           </p>
 
           {/* Price */}
           <div className="mt-6 flex flex-wrap items-end gap-3">
-            <span className="text-4xl font-semibold text-[#2c1a14]">
+            <span className="text-4xl font-semibold text-[#FFB3D1]">
               {formatProductPrice(displayProduct)}
             </span>
             {typeof displayProduct.compareAtPrice === "number" && (
-              <span className="pb-1 text-lg text-[#8a6a5e]/60 line-through">
+              <span className="pb-1 text-lg text-[#6B5F7A] line-through">
                 {formatProductPrice({
                   price: displayProduct.compareAtPrice,
                   currency: displayProduct.currency,
@@ -537,7 +537,7 @@ export default function ProductDetailClient({
               </span>
             )}
             {hasSavings && (
-              <span className="mb-0.5 rounded-full border border-[#4a7a5a]/25 bg-[#e8f2ec] px-2.5 py-1 text-xs font-semibold text-[#2d5c3d]">
+              <span className="mb-0.5 rounded-full border border-[#22C55E]/25 bg-[#22C55E]/[0.08] px-2.5 py-1 text-xs font-semibold text-[#4ADE80]">
                 Save {savingsPct}%
               </span>
             )}
@@ -545,7 +545,7 @@ export default function ProductDetailClient({
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-product-buy-panel mt-7 rounded-[1.65rem] border border-[#b8814a]/12 bg-white p-4 shadow-sm sm:p-5 ${style.panel}`}
+            className={`aev-product-buy-panel mt-7 rounded-[1.65rem] border border-[#FF4DB8]/12 bg-[#151024] p-4 sm:p-5 ${style.panel}`}
           >
             <div className="space-y-6">
               <VariantSelector
@@ -586,25 +586,25 @@ export default function ProductDetailClient({
 
               {/* Quantity */}
               <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-[#8a6a5e]/70">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-[#9C91AA]/70">
                   Quantity
                 </p>
-                <div className="flex w-fit items-center rounded-full border border-[#b8814a]/18 bg-[#f5eeea]">
+                <div className="flex w-fit items-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230]">
                   <button
                     onClick={decreaseQuantity}
                     disabled={!canAddToCart || quantity <= 1}
-                    className="px-4 py-3 text-[#5c3d30] transition hover:text-[#2c1a14] disabled:cursor-not-allowed disabled:text-[#8a6a5e]/40"
+                    className="px-4 py-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <span className="min-w-[48px] text-center text-sm font-semibold text-[#2c1a14]">
+                  <span className="min-w-[48px] text-center text-sm font-semibold text-white">
                     {quantity}
                   </span>
                   <button
                     onClick={increaseQuantity}
                     disabled={!canAddToCart}
-                    className="px-4 py-3 text-[#5c3d30] transition hover:text-[#2c1a14] disabled:cursor-not-allowed disabled:text-[#8a6a5e]/40"
+                    className="px-4 py-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
                     aria-label="Increase quantity"
                   >
                     <Plus className="h-4 w-4" />
@@ -613,7 +613,7 @@ export default function ProductDetailClient({
               </div>
 
               {selectionMessage && (
-                <p className="rounded-2xl border border-[#b8814a]/25 bg-[#f5eeea] px-4 py-3 text-sm leading-6 text-[#5c3d30]">
+                <p className="rounded-2xl border border-[#FF4DB8]/22 bg-[#1B1230] px-4 py-3 text-sm leading-6 text-[#D8CBE8]">
                   {selectionMessage}
                 </p>
               )}
@@ -625,8 +625,8 @@ export default function ProductDetailClient({
                   disabled={!canAddToCart}
                   className={`aev-action-primary rounded-full px-6 py-3.5 text-sm font-semibold transition ${
                     canAddToCart
-                      ? `bg-gradient-to-r hover:scale-[1.01] ${style.primary}`
-                      : "cursor-not-allowed border border-[#b8814a]/14 bg-[#f5eeea] text-[#8a6a5e]/50"
+                      ? `bg-gradient-to-r shadow-[0_4px_24px_rgba(255,77,184,0.38)] hover:scale-[1.01] hover:shadow-[0_4px_32px_rgba(255,77,184,0.52)] ${style.primary}`
+                      : "cursor-not-allowed border border-white/10 bg-[#1B1230] text-[#6B5F7A]/50"
                   }`}
                 >
                   {canAddToCart ? "Add to Cart" : "Out of Stock"}
@@ -636,8 +636,8 @@ export default function ProductDetailClient({
                   disabled={!canAddToCart}
                   className={`aev-action-secondary rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
                     canAddToCart
-                      ? "border-[#b8814a]/20 bg-[#f5eeea] text-[#5c3d30] hover:border-[#b8814a]/40 hover:bg-[#f0e4d6]"
-                      : "cursor-not-allowed border-[#b8814a]/10 bg-[#f5eeea] text-[#8a6a5e]/50"
+                      ? "border-[#FF4DB8]/22 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white"
+                      : "cursor-not-allowed border-white/8 bg-[#1B1230] text-[#6B5F7A]/50"
                   }`}
                 >
                   {canAddToCart ? "Add and View Cart" : "Unavailable"}
@@ -682,16 +682,16 @@ export default function ProductDetailClient({
             ].map(({ icon: Icon, label, desc }) => (
               <div
                 key={label}
-                className="aev-cinematic-chip flex items-start gap-3 rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] px-4 py-3"
+                className="aev-cinematic-chip flex items-start gap-3 rounded-2xl border border-[#FF4DB8]/10 bg-[#151024] px-4 py-3"
               >
                 <Icon
                   className={`mt-0.5 h-4 w-4 shrink-0 ${style.accent}`}
                 />
                 <div>
-                  <p className="text-sm font-semibold text-[#2c1a14]">
+                  <p className="text-sm font-semibold text-white">
                     {label}
                   </p>
-                  <p className="mt-0.5 text-xs leading-5 text-[#5c3d30]/80">
+                  <p className="mt-0.5 text-xs leading-5 text-[#9C91AA]">
                     {desc}
                   </p>
                 </div>
@@ -702,7 +702,7 @@ export default function ProductDetailClient({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:hidden">
-        <div className="rounded-[1.45rem] border border-[#b8814a]/12 bg-white p-3 shadow-sm">
+        <div className="rounded-[1.45rem] border border-[#FF4DB8]/12 bg-[#151024] p-3">
           <ProductAccordion
             title="Details"
             items={detailsItems}
@@ -737,20 +737,20 @@ export default function ProductDetailClient({
       <section className="mx-auto hidden max-w-7xl gap-5 px-4 pb-12 sm:px-6 lg:grid lg:grid-cols-[1fr_0.9fr]">
 
         {/* Benefits */}
-        <div className="rounded-[1.75rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             Benefits
           </p>
-          <h2 className="mt-3 text-3xl font-semibold">
+          <h2 className="mt-3 text-3xl font-semibold text-white">
             Made for a calmer routine
           </h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {benefits.map((benefit) => (
               <div
                 key={benefit}
-                className="flex gap-3 rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4 text-sm leading-6 text-[#5c3d30]/80"
+                className="flex gap-3 rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4 text-sm leading-6 text-[#9C91AA]"
               >
                 <Check
                   className={`mt-0.5 h-4 w-4 shrink-0 ${style.accent}`}
@@ -762,20 +762,20 @@ export default function ProductDetailClient({
         </div>
 
         {/* Care guide */}
-        <div className="rounded-[1.75rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             Care Guide
           </p>
-          <h2 className="mt-3 text-3xl font-semibold">Simple wash steps</h2>
+          <h2 className="mt-3 text-3xl font-semibold text-white">Simple wash steps</h2>
           <div className="mt-5 space-y-3">
             {care.map((step, index) => (
               <div
                 key={step}
-                className="flex gap-3 text-sm leading-7 text-[#5c3d30]/80"
+                className="flex gap-3 text-sm leading-7 text-[#9C91AA]"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#b8814a]/18 bg-[#f5eeea] text-xs text-[#b8814a]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#FF4DB8]/20 bg-[#1B1230] text-xs text-[#FF4DB8]">
                   {index + 1}
                 </span>
                 <span>{step}</span>
@@ -785,13 +785,13 @@ export default function ProductDetailClient({
         </div>
 
         {/* Hygiene & Support Policy */}
-        <div className="rounded-[1.75rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6 lg:col-span-2">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             Support & Hygiene Policy
           </p>
-          <h2 className="mt-3 text-2xl font-semibold">Her Care support details</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-white">Her Care support details</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
@@ -812,18 +812,18 @@ export default function ProductDetailClient({
             ].map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4"
+                className="rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4"
               >
                 <Icon className={`h-5 w-5 ${style.accent}`} />
-                <h3 className="mt-3 font-semibold text-[#2c1a14]">{title}</h3>
-                <p className="mt-2 text-sm leading-7 text-[#5c3d30]/80">{body}</p>
+                <h3 className="mt-3 font-semibold text-white">{title}</h3>
+                <p className="mt-2 text-sm leading-7 text-[#9C91AA]">{body}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* FAQ */}
-        <div className="rounded-[1.75rem] border border-[#b8814a]/12 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6 lg:col-span-2">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
@@ -833,10 +833,10 @@ export default function ProductDetailClient({
             {faqs.map((faq) => (
               <div
                 key={faq.question}
-                className="rounded-2xl border border-[#b8814a]/12 bg-[#faf7f4] p-4"
+                className="rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4"
               >
-                <h3 className="font-semibold text-[#2c1a14]">{faq.question}</h3>
-                <p className="mt-2 text-sm leading-7 text-[#5c3d30]/80">
+                <h3 className="font-semibold text-white">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-7 text-[#9C91AA]">
                   {faq.answer}
                 </p>
               </div>
@@ -863,9 +863,9 @@ export default function ProductDetailClient({
               return (
                 <article
                   key={rp.id}
-                  className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.75rem] border bg-white p-3 shadow-sm transition duration-300 hover:-translate-y-1 ${rpStyle.border}`}
+                  className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.75rem] border bg-[#151024] p-3 transition duration-300 hover:-translate-y-1 ${rpStyle.border}`}
                 >
-                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#f5eeea]">
+                  <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.06] bg-[#0B0F1A]">
                     <div className="relative aspect-square w-full">
                       {rp.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -888,19 +888,19 @@ export default function ProductDetailClient({
                     >
                       {rp.absorbency}
                     </span>
-                    <h3 className="mt-3 break-words text-lg font-semibold leading-tight text-[#2c1a14] [overflow-wrap:anywhere]">
+                    <h3 className="mt-3 break-words text-lg font-semibold leading-tight text-white [overflow-wrap:anywhere]">
                       {rp.name}
                     </h3>
-                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#5c3d30]/80">
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#9C91AA]">
                       {rp.shortDescription}
                     </p>
                     <div className="mt-4 flex items-center justify-between gap-3">
-                      <span className="text-2xl font-semibold">
+                      <span className="text-2xl font-semibold text-[#FFB3D1]">
                         {formatProductPrice(rp)}
                       </span>
                       <Link
                         href={`/product/${rp.slug}`}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold text-[#5c3d30] transition ${rpStyle.border}`}
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition ${rpStyle.border}`}
                       >
                         View
                         <ArrowRight className="h-4 w-4" />
@@ -928,7 +928,7 @@ export default function ProductDetailClient({
           <button
             onClick={() => setLightboxOpen(false)}
             aria-label="Close image view"
-            className="absolute right-4 top-4 z-10 rounded-full border border-[#b8814a]/20 bg-[#faf7f4]/90 p-2 text-[#5c3d30] backdrop-blur-md transition hover:text-[#2c1a14]"
+            className="absolute right-4 top-4 z-10 rounded-full border border-[#FF4DB8]/22 bg-[#080611]/80 p-2 text-[#D8CBE8] backdrop-blur-md transition hover:text-white"
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -945,38 +945,38 @@ export default function ProductDetailClient({
       )}
 
       {/* ── Mobile sticky add-to-cart bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#b8814a]/15 bg-[#faf7f4]/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_32px_rgba(150,100,70,0.12)] backdrop-blur-md lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/[0.07] bg-[#080611]/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.50)] backdrop-blur-md lg:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
-              <p className="text-xl font-semibold text-[#2c1a14]">
+              <p className="text-xl font-semibold text-[#FFB3D1]">
                 {formatProductPrice(displayProduct)}
               </p>
               <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${stockBadgeClass(displayProduct.stockStatus)}`}>
                 {stockStatusLabel(displayProduct.stockStatus)}
               </span>
             </div>
-            <p className="mt-0.5 truncate text-[11px] leading-4 text-[#8a6a5e]">
+            <p className="mt-0.5 truncate text-[11px] leading-4 text-[#9C91AA]">
               {selectedSummary || "Select your preferred options"} · Qty {quantity}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden items-center rounded-full border border-[#b8814a]/18 bg-[#f5eeea] min-[420px]:flex">
+            <div className="hidden items-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230] min-[420px]:flex">
               <button
                 onClick={decreaseQuantity}
                 disabled={!canAddToCart || quantity <= 1}
-                className="p-3 text-[#5c3d30] transition hover:text-[#2c1a14] disabled:cursor-not-allowed disabled:text-[#8a6a5e]/40"
+                className="p-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
                 aria-label="Decrease quantity"
               >
                 <Minus className="h-4 w-4" />
               </button>
-              <span className="min-w-7 text-center text-sm font-semibold">
+              <span className="min-w-7 text-center text-sm font-semibold text-white">
                 {quantity}
               </span>
               <button
                 onClick={increaseQuantity}
                 disabled={!canAddToCart}
-                className="p-3 text-[#5c3d30] transition hover:text-[#2c1a14] disabled:cursor-not-allowed disabled:text-[#8a6a5e]/40"
+                className="p-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
                 aria-label="Increase quantity"
               >
                 <Plus className="h-4 w-4" />
@@ -987,8 +987,8 @@ export default function ProductDetailClient({
               disabled={!canAddToCart}
               className={`flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition ${
                 canAddToCart
-                  ? `bg-gradient-to-r hover:scale-[1.01] ${style.primary}`
-                  : "cursor-not-allowed bg-[#f5eeea] text-[#8a6a5e]/50"
+                  ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] hover:scale-[1.01] ${style.primary}`
+                  : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"
               }`}
             >
               <ShoppingCart className="h-4 w-4" />
@@ -1024,7 +1024,7 @@ function VariantSelector({
 
   return (
     <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-[#8a6a5e]/70">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-[#9C91AA]/70">
         {label}
       </p>
       <div className="flex flex-wrap gap-2">
@@ -1036,7 +1036,7 @@ function VariantSelector({
             className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-45 ${
               selected === option
                 ? selectedClassName
-                : "border-[#b8814a]/18 bg-[#f5eeea] text-[#5c3d30] hover:border-[#b8814a]/35 hover:bg-[#f0e4d6]"
+                : "border-white/10 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/28 hover:bg-[#211633]"
             }`}
           >
             {type === "color" && <ColorSwatch color={option} />}
@@ -1045,7 +1045,7 @@ function VariantSelector({
         ))}
       </div>
       {hint && (
-        <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#8a6a5e]">
+        <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#9C91AA]">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
           <span>{hint}</span>
         </p>
@@ -1062,16 +1062,16 @@ function ColorSwatch({ color }: { color: string }) {
       : normalized.includes("nude")
         ? "bg-[#d7b59b]"
         : normalized.includes("pink")
-          ? "bg-[#f4a9bf]"
+          ? "bg-[#FF80C8]"
           : normalized.includes("white")
             ? "bg-white"
             : normalized.includes("rose")
-              ? "bg-rose-300"
-              : "bg-gradient-to-br from-[#f5eeea] to-[#d4a07a]";
+              ? "bg-rose-400"
+              : "bg-gradient-to-br from-[#FF4DB8] to-[#A855F7]";
 
   return (
     <span
-      className={`h-4 w-4 rounded-full border border-[#b8814a]/30 ${swatchClass}`}
+      className={`h-4 w-4 rounded-full border border-[#FF4DB8]/30 ${swatchClass}`}
       aria-hidden="true"
     />
   );
@@ -1093,9 +1093,9 @@ function ProductAccordion({
   return (
     <details
       open={defaultOpen}
-      className="group border-b border-[#b8814a]/10 last:border-b-0"
+      className="group border-b border-[#FF4DB8]/[0.08] last:border-b-0"
     >
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-semibold text-[#2c1a14] marker:hidden">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-semibold text-white marker:hidden">
         <span>{title}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${accentClassName}`} />
       </summary>
@@ -1103,7 +1103,7 @@ function ProductAccordion({
         {items.map((item) => (
           <p
             key={item}
-            className="rounded-2xl border border-[#b8814a]/10 bg-[#faf7f4] px-4 py-3 text-sm leading-6 text-[#5c3d30]/80"
+            className="rounded-2xl border border-[#FF4DB8]/[0.08] bg-[#1B1230] px-4 py-3 text-sm leading-6 text-[#9C91AA]"
           >
             {item}
           </p>
@@ -1123,8 +1123,8 @@ function ProductFaqAccordion({
   if (faqs.length === 0) return null;
 
   return (
-    <details className="group border-b border-white/10 last:border-b-0">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-semibold text-[#2c1a14] marker:hidden">
+    <details className="group border-b border-[#FF4DB8]/[0.08] last:border-b-0">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-semibold text-white marker:hidden">
         <span>FAQs</span>
         <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${accentClassName}`} />
       </summary>
@@ -1132,10 +1132,10 @@ function ProductFaqAccordion({
         {faqs.map((faq) => (
           <div
             key={faq.question}
-            className="rounded-2xl border border-[#b8814a]/10 bg-[#faf7f4] px-4 py-3"
+            className="rounded-2xl border border-[#FF4DB8]/[0.08] bg-[#1B1230] px-4 py-3"
           >
-            <p className="text-sm font-semibold text-[#2c1a14]">{faq.question}</p>
-            <p className="mt-1 text-sm leading-6 text-[#5c3d30]/80">{faq.answer}</p>
+            <p className="text-sm font-semibold text-white">{faq.question}</p>
+            <p className="mt-1 text-sm leading-6 text-[#9C91AA]">{faq.answer}</p>
           </div>
         ))}
       </div>

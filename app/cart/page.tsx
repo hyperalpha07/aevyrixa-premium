@@ -49,10 +49,10 @@ export default function CartPage() {
   ];
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-10%] top-[8%] h-[320px] w-[320px] rounded-full bg-cyan-500/20 blur-[120px]" />
-        <div className="absolute right-[-8%] top-[18%] h-[360px] w-[360px] rounded-full bg-fuchsia-500/20 blur-[140px]" />
+        <div className="absolute left-[-10%] top-[8%] h-[320px] w-[320px] rounded-full bg-[#00D4C6]/20 blur-[120px]" />
+        <div className="absolute right-[-8%] top-[18%] h-[360px] w-[360px] rounded-full bg-[#FF4DB8]/20 blur-[140px]" />
         <div className="absolute bottom-[-8%] left-[30%] h-[280px] w-[280px] rounded-full bg-amber-400/10 blur-[120px]" />
       </div>
 
@@ -61,7 +61,7 @@ export default function CartPage() {
       <section className="mx-auto max-w-7xl px-6 py-12 md:py-16">
         <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
+            <p className="text-sm uppercase tracking-[0.35em] text-[#31E6D4]/70">
               {settings.brandShortName} Cart
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
@@ -85,7 +85,7 @@ export default function CartPage() {
 
             <Link
               href="/product"
-              className="inline-flex rounded-full border border-fuchsia-400/30 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+              className="inline-flex rounded-full border border-[#FF4DB8]/30 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
             >
               Continue Shopping
             </Link>
@@ -93,8 +93,8 @@ export default function CartPage() {
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center shadow-[0_0_48px_rgba(34,211,238,0.08)] backdrop-blur-2xl sm:p-8 md:p-12">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-400/20 bg-cyan-400/10 text-2xl text-cyan-300">
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center shadow-[0_0_48px_rgba(255,77,184,0.10)] backdrop-blur-2xl sm:p-8 md:p-12">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#00D4C6]/20 bg-[#00D4C6]/10 text-2xl text-[#31E6D4]">
               <ShoppingBag className="h-7 w-7" />
             </div>
 
@@ -113,7 +113,7 @@ export default function CartPage() {
                   key={label}
                   className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/64"
                 >
-                  <Icon className="h-4 w-4 shrink-0 text-cyan-200" />
+                  <Icon className="h-4 w-4 shrink-0 text-[#31E6D4]" />
                   <span className="break-words">{label}</span>
                 </div>
               ))}
@@ -121,7 +121,7 @@ export default function CartPage() {
 
             <Link
               href="/product"
-              className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-7 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.02] sm:w-auto"
+              className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-7 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.02] sm:w-auto"
             >
               Shop Her Care
             </Link>
@@ -135,7 +135,7 @@ export default function CartPage() {
                   className="rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl md:p-5"
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-center">
-                    <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0b1120]">
+                    <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0B0F1A]">
                       <ProductVisual
                         visualTheme={item.visualTheme}
                         label={item.absorbency || "Her Care"}
@@ -149,7 +149,7 @@ export default function CartPage() {
                           <h2 className="text-xl font-semibold leading-7 text-white">
                             {item.name}
                           </h2>
-                          <p className="mt-2 text-sm text-cyan-300">
+                          <p className="mt-2 text-sm text-[#31E6D4]">
                             {formatCurrency(item.price)}
                           </p>
                           {(item.variant || item.size || item.color || item.absorbency) && (
@@ -209,7 +209,7 @@ export default function CartPage() {
             </div>
 
             <div className="h-fit rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
-              <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/70">
+              <p className="text-sm uppercase tracking-[0.35em] text-[#31E6D4]/70">
                 Order Summary
               </p>
 
@@ -266,7 +266,7 @@ export default function CartPage() {
                 ) : (
                   <Link
                     href="/checkout"
-                    className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01]"
+                    className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.01]"
                   >
                     Proceed to Checkout
                   </Link>

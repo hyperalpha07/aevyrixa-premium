@@ -1,76 +1,158 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── Aevyrixa Her Care · Premium Palette ─── */
-  --aev-pearl:       #faf7f4;
-  --aev-blush:       #f5eeea;
-  --aev-champagne:   #f0e4d6;
-  --aev-plum:        #2d1829;
-  --aev-espresso:    #1e0f0a;
-  --aev-text:        #2c1a14;
-  --aev-text-sec:    #5c3d30;
-  --aev-text-muted:  #8a6a5e;
-  --aev-rose-gold:   #b8814a;
-  --aev-rose-light:  #d4a07a;
-  --aev-teal:        #4a8b7e;
-  --aev-teal-light:  #72b0a5;
-  --aev-success:     #4a7a5a;
-  --aev-danger:      #c4524a;
+  /* ─── Aevyrixa Her Care · Premium Dark Styleboard Palette ─── */
 
-  /* Legacy/compat */
-  --background:    #faf7f4;
-  --foreground:    #2c1a14;
-  --brand-black:   #2c1a14;
-  --brand-cyan:    #4a8b7e;
-  --brand-violet:  #9b4f70;
-  --brand-ivory:   #faf7f4;
-  --brand-rose-gold: #b8814a;
+  /* Base backgrounds */
+  --aev-base:        #080611;
+  --aev-base-2:      #090713;
+  --aev-surface:     #151024;
+  --aev-surface-2:   #1B1230;
+  --aev-card:        #211633;
+  --aev-card-2:      #2A183D;
+  --aev-elevated:    #2E1B42;
+
+  /* Primary – magenta / hot pink */
+  --aev-magenta:     #FF4DB8;
+  --aev-magenta-2:   #FF3FA4;
+  --aev-pink-soft:   #FFB3D1;
+  --aev-pink-mid:    #FF80C8;
+
+  /* Secondary – violet / purple */
+  --aev-violet:      #A855F7;
+  --aev-violet-2:    #8B5CF6;
+  --aev-purple-deep: #4C1D95;
+
+  /* Trust – cyan / teal */
+  --aev-cyan:        #00D4C6;
+  --aev-cyan-2:      #31E6D4;
+  --aev-teal:        #0FB8AC;
+
+  /* Special badge */
+  --aev-amber:       #FFB84D;
+  --aev-amber-2:     #FFC36A;
+
+  /* Text */
+  --aev-text:        #FFFFFF;
+  --aev-text-warm:   #FFF7FB;
+  --aev-text-sec:    #D8CBE8;
+  --aev-text-muted:  #9C91AA;
+  --aev-text-dim:    #6B5F7A;
+
+  /* State */
+  --aev-success:     #22C55E;
+  --aev-danger:      #EF4444;
+
+  /* Footer / deep surface */
+  --aev-footer:      #0D0918;
+  --aev-footer-2:    #120D20;
+
+  /* Legacy compat – keep referenced tokens pointing at new values */
+  --background:    #080611;
+  --foreground:    #FFFFFF;
+  --brand-black:   #080611;
+  --brand-cyan:    #00D4C6;
+  --brand-violet:  #A855F7;
+  --brand-ivory:   #FFF7FB;
+  --brand-magenta: #FF4DB8;
 }
 
-/* ─── Primary CTA ─── */
+/* ─── Primary CTA — magenta/pink gradient ─── */
 .action-primary {
   display: inline-flex;
   min-height: 3rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #b8814a, #d4a07a);
-  padding: 0.75rem 1.5rem;
+  background: linear-gradient(90deg, #FF4DB8, #FF3FA4, #D946EF);
+  padding: 0.75rem 1.75rem;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #faf7f4;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-  box-shadow: 0 4px 20px rgba(184, 129, 74, 0.28);
+  color: #FFFFFF;
+  letter-spacing: 0.02em;
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  box-shadow:
+    0 4px 24px rgba(255, 77, 184, 0.40),
+    0 0 0 1px rgba(255, 77, 184, 0.12) inset;
 }
 
 .action-primary:hover {
-  transform: scale(1.01);
-  box-shadow: 0 6px 28px rgba(184, 129, 74, 0.38);
+  transform: scale(1.02);
+  box-shadow:
+    0 6px 32px rgba(255, 77, 184, 0.55),
+    0 0 0 1px rgba(255, 77, 184, 0.18) inset;
 }
 
-/* ─── Secondary / ghost / utility buttons ─── */
-.action-muted,
-.icon-action,
+.action-primary:active {
+  transform: scale(0.98);
+}
+
+/* ─── Secondary CTA — dark glass + magenta/cyan border ─── */
+.action-secondary {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 77, 184, 0.32);
+  background: rgba(33, 22, 51, 0.72);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #FFB3D1;
+  backdrop-filter: blur(12px);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 2px 12px rgba(255, 77, 184, 0.10);
+}
+
+.action-secondary:hover {
+  border-color: rgba(255, 77, 184, 0.60);
+  background: rgba(42, 24, 61, 0.85);
+  color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(255, 77, 184, 0.20), 0 0 16px rgba(255, 77, 184, 0.10);
+}
+
+/* ─── Legacy action-muted (maps to secondary) ─── */
+.action-muted {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 77, 184, 0.28);
+  background: rgba(33, 22, 51, 0.72);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #D8CBE8;
+  backdrop-filter: blur(12px);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.action-muted:hover {
+  border-color: rgba(255, 77, 184, 0.52);
+  background: rgba(42, 24, 61, 0.85);
+  color: #FFB3D1;
+  box-shadow: 0 4px 18px rgba(255, 77, 184, 0.15);
+}
+
+/* ─── Ghost / utility button ─── */
 .mini-action,
-.shortcut-link {
+.icon-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid rgba(184, 129, 74, 0.22);
-  background: rgba(250, 247, 244, 0.8);
-  color: #2c1a14;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease;
+  border: 1px solid rgba(255, 77, 184, 0.18);
+  background: rgba(21, 16, 36, 0.80);
+  color: #9C91AA;
+  backdrop-filter: blur(8px);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
-.action-muted {
-  min-height: 3rem;
+.mini-action {
   border-radius: 9999px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.875rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
@@ -82,32 +164,38 @@
   font-weight: 700;
 }
 
-.mini-action {
-  border-radius: 9999px;
-  padding: 0.5rem 0.9rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
+.mini-action:hover,
+.icon-action:hover {
+  border-color: rgba(255, 77, 184, 0.40);
+  background: rgba(33, 22, 51, 0.90);
+  color: #FFB3D1;
 }
 
+/* ─── Shortcut link — premium glass card link ─── */
 .shortcut-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 2.75rem;
   border-radius: 1rem;
+  border: 1px solid rgba(255, 77, 184, 0.20);
+  background: rgba(21, 16, 36, 0.80);
   padding: 0.65rem 0.9rem;
   font-size: 0.875rem;
   font-weight: 600;
+  color: #D8CBE8;
+  backdrop-filter: blur(8px);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
-.action-muted:hover,
-.icon-action:hover,
-.mini-action:hover,
 .shortcut-link:hover {
-  border-color: rgba(184, 129, 74, 0.45);
-  background: rgba(240, 228, 214, 0.9);
-  color: #2c1a14;
-  box-shadow: 0 2px 12px rgba(184, 129, 74, 0.12);
+  border-color: rgba(255, 77, 184, 0.45);
+  background: rgba(33, 22, 51, 0.90);
+  color: #FFB3D1;
+  box-shadow: 0 2px 12px rgba(255, 77, 184, 0.12);
 }
 
-/* ─── Base ─── */
+/* ─── Base reset ─── */
 * {
   box-sizing: border-box;
   scroll-behavior: smooth;
@@ -118,9 +206,10 @@ body {
   padding: 0;
   margin: 0;
   background:
-    radial-gradient(circle at 18% 12%, rgba(184, 129, 74, 0.05), transparent 30%),
-    radial-gradient(circle at 82% 10%, rgba(74, 139, 126, 0.04), transparent 28%),
-    linear-gradient(180deg, #faf7f4 0%, #f5eeea 100%);
+    radial-gradient(circle at 18% 12%, rgba(168, 85, 247, 0.08), transparent 32%),
+    radial-gradient(circle at 82% 10%, rgba(0, 212, 198, 0.05), transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(255, 77, 184, 0.06), transparent 35%),
+    linear-gradient(180deg, #080611 0%, #0B0F1A 100%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
@@ -140,11 +229,11 @@ button {
 }
 
 ::selection {
-  background: rgba(184, 129, 74, 0.2);
-  color: #2c1a14;
+  background: rgba(255, 77, 184, 0.25);
+  color: #FFFFFF;
 }
 
-/* ─── Admin animation classes (stay dark-theme compatible) ─── */
+/* ─── Admin animation classes — control-room dark ─── */
 .aev-admin-order-card,
 .aev-admin-detail-panel,
 .aev-admin-metric-card {
@@ -183,30 +272,30 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-admin-order-card:hover {
     transform: translate3d(0, -2px, 0);
-    border-color: rgba(74, 139, 126, 0.28);
+    border-color: rgba(0, 212, 198, 0.22);
     box-shadow:
-      0 18px 48px rgba(0, 0, 0, 0.22),
-      0 0 28px rgba(74, 139, 126, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      0 18px 48px rgba(0, 0, 0, 0.42),
+      0 0 28px rgba(0, 212, 198, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 }
 
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0e4d6;
+  background: #0D0918;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(184, 129, 74, 0.7), rgba(74, 139, 126, 0.7));
+  background: linear-gradient(180deg, rgba(255, 77, 184, 0.55), rgba(168, 85, 247, 0.45));
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(184, 129, 74, 1), rgba(74, 139, 126, 1));
+  background: linear-gradient(180deg, rgba(255, 77, 184, 0.85), rgba(168, 85, 247, 0.75));
 }
 
 /* ─── Homepage motion system ─── */
@@ -217,10 +306,10 @@ button {
 
 .aev-hero-cinema {
   background:
-    radial-gradient(circle at 18% 24%, rgba(212, 160, 122, 0.10), transparent 28%),
-    radial-gradient(circle at 78% 18%, rgba(212, 184, 150, 0.09), transparent 30%),
-    radial-gradient(circle at 50% 62%, rgba(220, 200, 180, 0.07), transparent 34%),
-    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.04) 46%, transparent 60%);
+    radial-gradient(circle at 18% 24%, rgba(255, 77, 184, 0.12), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(168, 85, 247, 0.10), transparent 32%),
+    radial-gradient(circle at 50% 62%, rgba(0, 212, 198, 0.06), transparent 36%),
+    linear-gradient(115deg, transparent 0%, rgba(255, 77, 184, 0.04) 46%, transparent 60%);
   opacity: 0.9;
   animation: aev-cinematic-drift 16s ease-in-out infinite alternate;
 }
@@ -239,8 +328,8 @@ button {
   top: -10rem;
   height: 34rem;
   width: min(58rem, 118vw);
-  background: radial-gradient(circle, rgba(184, 129, 74, 0.14), transparent 62%);
-  filter: blur(28px);
+  background: radial-gradient(circle, rgba(255, 77, 184, 0.18), transparent 62%);
+  filter: blur(32px);
   transform: translateX(-50%);
   animation: aev-hero-dome 9s ease-in-out infinite alternate;
 }
@@ -250,15 +339,15 @@ button {
   left: 12%;
   height: 24rem;
   width: 76%;
-  background: radial-gradient(ellipse, rgba(155, 79, 112, 0.08), transparent 68%);
-  filter: blur(26px);
+  background: radial-gradient(ellipse, rgba(168, 85, 247, 0.10), transparent 68%);
+  filter: blur(30px);
   animation: aev-hero-floor 10s ease-in-out infinite alternate;
 }
 
 .aev-hero-load-wash {
   background:
-    linear-gradient(100deg, transparent 18%, rgba(212, 160, 122, 0.08) 48%, transparent 70%),
-    radial-gradient(circle at 50% 28%, rgba(184, 129, 74, 0.08), transparent 36%);
+    linear-gradient(100deg, transparent 18%, rgba(255, 77, 184, 0.10) 48%, transparent 70%),
+    radial-gradient(circle at 50% 28%, rgba(255, 77, 184, 0.08), transparent 36%);
   background-position: 0% 0%, center;
   background-size: 180% 100%, 100% 100%;
   opacity: 0;
@@ -273,8 +362,8 @@ button {
 
 .aev-hero-shimmer {
   background:
-    linear-gradient(105deg, transparent 18%, rgba(212, 160, 122, 0.05) 42%, transparent 64%),
-    linear-gradient(90deg, rgba(184, 129, 74, 0.02) 1px, transparent 1px);
+    linear-gradient(105deg, transparent 18%, rgba(255, 77, 184, 0.06) 42%, transparent 64%),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
   background-size: 140% 100%, 44px 44px;
   opacity: 0.5;
   animation: aev-hero-shimmer 9s ease-in-out infinite;
@@ -328,7 +417,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 18%, rgba(255, 255, 255, 0.22) 46%, transparent 68%);
+  background: linear-gradient(105deg, transparent 18%, rgba(255, 255, 255, 0.14) 46%, transparent 68%);
   transform: translateX(-120%);
   animation: aev-badge-shine 4.8s ease-in-out infinite;
 }
@@ -354,9 +443,9 @@ button {
 
 .aev-product-edge {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 48px rgba(184, 129, 74, 0.06),
-    0 0 70px rgba(155, 79, 112, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 48px rgba(255, 77, 184, 0.10),
+    0 0 70px rgba(168, 85, 247, 0.08);
   opacity: 0.75;
   animation: aev-product-edge 6.6s ease-in-out infinite alternate;
 }
@@ -401,8 +490,9 @@ button {
 
 @media (hover: hover) and (pointer: fine) {
   .aev-premium-card:hover {
-    box-shadow: 0 30px 90px rgba(150, 100, 70, 0.12),
-      0 0 42px rgba(184, 129, 74, 0.07);
+    box-shadow:
+      0 30px 90px rgba(0, 0, 0, 0.42),
+      0 0 42px rgba(255, 77, 184, 0.10);
   }
 
   .aev-nav-control:hover {
@@ -419,8 +509,8 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-flagship-card:hover {
     box-shadow:
-      0 24px 72px rgba(150, 100, 70, 0.14),
-      0 0 44px rgba(184, 129, 74, 0.08);
+      0 24px 72px rgba(0, 0, 0, 0.44),
+      0 0 44px rgba(255, 77, 184, 0.12);
   }
 }
 
@@ -437,8 +527,8 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-shop-card:hover {
     box-shadow:
-      0 20px 60px rgba(150, 100, 70, 0.12),
-      0 0 32px rgba(184, 129, 74, 0.07);
+      0 20px 60px rgba(0, 0, 0, 0.40),
+      0 0 32px rgba(255, 77, 184, 0.10);
   }
 }
 
@@ -456,9 +546,9 @@ button {
 .aev-layer-chip:active { transform: scale(0.98); }
 
 .aev-layer-reflection {
-  background: linear-gradient(105deg, transparent 6%, rgba(255, 255, 255, 0.14) 48%, transparent 82%);
+  background: linear-gradient(105deg, transparent 6%, rgba(255, 255, 255, 0.12) 48%, transparent 82%);
   filter: blur(1px);
-  opacity: 0.36;
+  opacity: 0.30;
   transform: skewX(-12deg);
   animation: aev-care-reflection 7.2s ease-in-out infinite;
 }
@@ -495,9 +585,9 @@ button {
 .aev-product-visual-plate-front { animation: aev-product-visual-plate-front 7.4s ease-in-out infinite reverse; }
 
 .aev-product-visual-reflection {
-  background: linear-gradient(105deg, transparent 8%, rgba(255, 255, 255, 0.18) 48%, transparent 78%);
+  background: linear-gradient(105deg, transparent 8%, rgba(255, 255, 255, 0.14) 48%, transparent 78%);
   filter: blur(1px);
-  opacity: 0.42;
+  opacity: 0.36;
   transform: skewX(-12deg);
   animation: aev-product-visual-reflection 6.2s ease-in-out infinite;
 }
@@ -515,31 +605,31 @@ button {
 
 .aev-care-ambient {
   background:
-    radial-gradient(circle at 24% 16%, rgba(184, 129, 74, 0.14), transparent 29%),
-    radial-gradient(circle at 78% 66%, rgba(155, 79, 112, 0.10), transparent 31%),
-    radial-gradient(circle at 44% 86%, rgba(212, 160, 122, 0.10), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 44%);
+    radial-gradient(circle at 24% 16%, rgba(255, 77, 184, 0.16), transparent 30%),
+    radial-gradient(circle at 78% 66%, rgba(168, 85, 247, 0.12), transparent 33%),
+    radial-gradient(circle at 44% 86%, rgba(0, 212, 198, 0.08), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 44%);
   animation: aev-care-ambient 9s ease-in-out infinite alternate;
 }
 
 .aev-care-grid {
   background:
-    linear-gradient(90deg, rgba(184, 129, 74, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(184, 129, 74, 0.03) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(255, 77, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
   background-size: 46px 46px;
   opacity: 0.25;
 }
 
 .aev-care-reflection {
-  background: linear-gradient(105deg, transparent 4%, rgba(255, 255, 255, 0.16) 48%, transparent 82%);
+  background: linear-gradient(105deg, transparent 4%, rgba(255, 255, 255, 0.12) 48%, transparent 82%);
   filter: blur(1px);
-  opacity: 0.45;
+  opacity: 0.38;
   transform: skewX(-12deg);
   animation: aev-care-reflection 6.8s ease-in-out infinite;
 }
 
 .aev-care-ribbon {
-  box-shadow: inset 0 1px 28px rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 28px rgba(255, 255, 255, 0.04);
   will-change: transform;
 }
 
@@ -563,7 +653,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.08) 48%, transparent 68%);
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.06) 48%, transparent 68%);
   transform: translateX(-130%);
   animation: aev-card-sheen 6s ease-in-out infinite;
 }
@@ -587,8 +677,8 @@ button {
   pointer-events: none;
   border-radius: inherit;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.14), transparent 34%),
-    radial-gradient(circle at 50% 0%, rgba(212, 160, 122, 0.12), transparent 34%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 0%, rgba(255, 77, 184, 0.10), transparent 34%);
   opacity: 0.82;
 }
 
@@ -599,65 +689,65 @@ button {
   z-index: 1;
   height: 4.5rem;
   border-radius: 999px;
-  background: rgba(184, 129, 74, 0.10);
-  filter: blur(24px);
+  background: rgba(255, 77, 184, 0.12);
+  filter: blur(28px);
   animation: aev-motion-floor-glow 5.8s ease-in-out infinite alternate;
 }
 
 .aev-motion-panel-hero {
   box-shadow:
-    0 34px 120px rgba(0, 0, 0, 0.38),
-    0 0 70px rgba(184, 129, 74, 0.08);
+    0 34px 120px rgba(0, 0, 0, 0.55),
+    0 0 70px rgba(255, 77, 184, 0.10);
 }
 
 .aev-motion-panel-experience {
   box-shadow:
-    0 34px 120px rgba(0, 0, 0, 0.38),
-    0 0 80px rgba(155, 79, 112, 0.08);
+    0 34px 120px rgba(0, 0, 0, 0.55),
+    0 0 80px rgba(168, 85, 247, 0.10);
 }
 
 .aev-motion-ambient {
   background:
-    radial-gradient(circle at 22% 16%, rgba(184, 129, 74, 0.20), transparent 31%),
-    radial-gradient(circle at 78% 66%, rgba(155, 79, 112, 0.14), transparent 33%),
-    radial-gradient(circle at 44% 86%, rgba(212, 160, 122, 0.12), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 44%);
+    radial-gradient(circle at 22% 16%, rgba(255, 77, 184, 0.18), transparent 32%),
+    radial-gradient(circle at 78% 66%, rgba(168, 85, 247, 0.14), transparent 34%),
+    radial-gradient(circle at 44% 86%, rgba(0, 212, 198, 0.08), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 44%);
   animation: aev-motion-ambient 8.4s ease-in-out infinite alternate;
 }
 
 .aev-motion-grid {
   background:
-    linear-gradient(90deg, rgba(184, 129, 74, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(184, 129, 74, 0.03) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(255, 77, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
   background-size: 46px 46px;
-  opacity: 0.24;
+  opacity: 0.22;
 }
 
 .aev-motion-shine {
   z-index: 3;
-  background: linear-gradient(105deg, transparent 4%, rgba(255, 255, 255, 0.15) 48%, transparent 82%);
+  background: linear-gradient(105deg, transparent 4%, rgba(255, 255, 255, 0.12) 48%, transparent 82%);
   filter: blur(1px);
-  opacity: 0.45;
+  opacity: 0.38;
   transform: skewX(-12deg);
   animation: aev-motion-shine 6.8s ease-in-out infinite;
 }
 
 .aev-motion-ribbon {
   box-shadow:
-    inset 0 1px 28px rgba(255, 255, 255, 0.08),
-    0 20px 60px rgba(0, 0, 0, 0.14);
+    inset 0 1px 28px rgba(255, 255, 255, 0.06),
+    0 20px 60px rgba(0, 0, 0, 0.22);
   will-change: transform;
 }
 
 .aev-motion-depth-plate {
   box-shadow:
-    inset 0 1px 34px rgba(255, 255, 255, 0.06),
-    0 28px 82px rgba(0, 0, 0, 0.18);
+    inset 0 1px 34px rgba(255, 255, 255, 0.04),
+    0 28px 82px rgba(0, 0, 0, 0.28);
   animation: aev-motion-depth-plate 9s ease-in-out infinite alternate;
 }
 
 .aev-motion-fabric-line {
-  opacity: 0.46;
+  opacity: 0.40;
   animation: aev-motion-fabric-line 7.2s ease-in-out infinite;
 }
 
@@ -685,7 +775,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 16%, rgba(255, 255, 255, 0.16) 46%, transparent 70%);
+  background: linear-gradient(105deg, transparent 16%, rgba(255, 255, 255, 0.14) 46%, transparent 70%);
   transform: translateX(-120%);
   animation: aev-motion-chip-shine 5.4s ease-in-out infinite;
 }
@@ -703,7 +793,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.08) 48%, transparent 68%);
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.06) 48%, transparent 68%);
   transform: translateX(-130%);
   animation: aev-card-sheen 6s ease-in-out infinite;
 }
@@ -725,11 +815,11 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-motion-panel:hover {
     transform: translate3d(0, -4px, 0);
-    border-color: rgba(184, 129, 74, 0.28);
+    border-color: rgba(255, 77, 184, 0.28);
     box-shadow:
-      0 40px 130px rgba(0, 0, 0, 0.38),
-      0 0 70px rgba(184, 129, 74, 0.10),
-      0 0 86px rgba(155, 79, 112, 0.07);
+      0 40px 130px rgba(0, 0, 0, 0.55),
+      0 0 70px rgba(255, 77, 184, 0.12),
+      0 0 86px rgba(168, 85, 247, 0.08);
   }
 }
 
@@ -754,9 +844,9 @@ button {
   border-radius: inherit;
   background: linear-gradient(
     135deg,
-    rgba(184, 129, 74, 0.28),
-    rgba(155, 79, 112, 0.16),
-    rgba(212, 160, 122, 0.22)
+    rgba(255, 77, 184, 0.30),
+    rgba(168, 85, 247, 0.20),
+    rgba(0, 212, 198, 0.18)
   );
   opacity: 0;
   transition: opacity 300ms ease;
@@ -773,15 +863,15 @@ button {
   inset: 2rem 0 auto;
   height: 1px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(184, 129, 74, 0.16), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 77, 184, 0.18), transparent);
   opacity: 0.7;
 }
 
 .aev-experience-section .aev-motion-panel {
   box-shadow:
-    0 38px 132px rgba(0, 0, 0, 0.38),
-    0 0 88px rgba(184, 129, 74, 0.08),
-    0 0 100px rgba(155, 79, 112, 0.07);
+    0 38px 132px rgba(0, 0, 0, 0.55),
+    0 0 88px rgba(255, 77, 184, 0.10),
+    0 0 100px rgba(168, 85, 247, 0.08);
 }
 
 /* ─── Cinematic page ─── */
@@ -796,8 +886,9 @@ button {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 0%, rgba(184, 129, 74, 0.05), transparent 34%),
-    linear-gradient(115deg, transparent 0%, rgba(212, 160, 122, 0.02) 45%, transparent 62%);
+    radial-gradient(circle at 50% 0%, rgba(255, 77, 184, 0.07), transparent 36%),
+    radial-gradient(circle at 10% 40%, rgba(168, 85, 247, 0.05), transparent 30%),
+    linear-gradient(115deg, transparent 0%, rgba(255, 77, 184, 0.02) 45%, transparent 62%);
   animation: aev-cinematic-page-wash 11s ease-in-out infinite alternate;
 }
 
@@ -808,8 +899,8 @@ button {
   position: relative;
   overflow: hidden;
   box-shadow:
-    0 8px 32px rgba(150, 100, 70, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 8px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .aev-shop-card::before,
@@ -819,8 +910,8 @@ button {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(115deg, transparent 8%, rgba(255, 255, 255, 0.12) 44%, transparent 66%);
-  opacity: 0.34;
+  background: linear-gradient(115deg, transparent 8%, rgba(255, 255, 255, 0.06) 44%, transparent 66%);
+  opacity: 0.28;
   transform: translateX(-120%);
   animation: aev-card-sheen 7.2s ease-in-out infinite;
 }
@@ -986,8 +1077,8 @@ button {
 }
 
 @keyframes aev-video-pulse {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(184, 129, 74, 0.18); }
-  50%       { box-shadow: 0 0 0 10px rgba(184, 129, 74, 0); }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(255, 77, 184, 0.22); }
+  50%       { box-shadow: 0 0 0 10px rgba(255, 77, 184, 0); }
 }
 
 @keyframes aev-care-ambient {
@@ -1012,11 +1103,11 @@ button {
 
 @keyframes aev-care-signal {
   0%, 100% {
-    border-color: rgba(184, 129, 74, 0.14);
+    border-color: rgba(255, 77, 184, 0.16);
     transform: translate3d(0, 0, 0);
   }
   50% {
-    border-color: rgba(74, 139, 126, 0.28);
+    border-color: rgba(0, 212, 198, 0.30);
     transform: translate3d(0, -2px, 0);
   }
 }
@@ -1214,7 +1305,7 @@ button {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(115deg, transparent 12%, rgba(255, 255, 255, 0.09) 48%, transparent 70%);
+  background: linear-gradient(115deg, transparent 12%, rgba(255, 255, 255, 0.07) 48%, transparent 70%);
   opacity: 0.6;
   transform: translateX(-130%);
   animation: aev-card-sheen 9.4s ease-in-out infinite;
@@ -1229,10 +1320,10 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-category-card:hover {
     transform: translate3d(0, -5px, 0);
-    border-color: rgba(184, 129, 74, 0.28);
+    border-color: rgba(255, 77, 184, 0.30);
     box-shadow:
-      0 30px 92px rgba(150, 100, 70, 0.12),
-      0 0 42px rgba(184, 129, 74, 0.08);
+      0 30px 92px rgba(0, 0, 0, 0.42),
+      0 0 42px rgba(255, 77, 184, 0.10);
   }
 }
 
@@ -1262,8 +1353,8 @@ button {
 }
 
 @keyframes aev-timeline-pulse {
-  0%, 100% { box-shadow: 0 0 0 0    rgba(74, 139, 126, 0.28); }
-  50%       { box-shadow: 0 0 0 10px rgba(74, 139, 126, 0); }
+  0%, 100% { box-shadow: 0 0 0 0    rgba(0, 212, 198, 0.30); }
+  50%       { box-shadow: 0 0 0 10px rgba(0, 212, 198, 0); }
 }
 
 @keyframes aev-timeline-flow {
@@ -1348,7 +1439,7 @@ button {
 }
 
 .aev-media-thumb-active {
-  box-shadow: 0 0 0 2px rgba(184, 129, 74, 0.5), 0 0 10px rgba(184, 129, 74, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 77, 184, 0.60), 0 0 12px rgba(255, 77, 184, 0.18);
 }
 
 @keyframes aev-lightbox-in {
@@ -1369,8 +1460,8 @@ button {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(44, 26, 20, 0.85);
-  backdrop-filter: blur(14px);
+  background: rgba(8, 6, 17, 0.90);
+  backdrop-filter: blur(16px);
   animation: aev-lightbox-in 180ms ease both;
 }
 
@@ -1381,10 +1472,10 @@ button {
   height: auto;
   object-fit: contain;
   border-radius: 1.25rem;
-  border: 1px solid rgba(184, 129, 74, 0.2);
+  border: 1px solid rgba(255, 77, 184, 0.22);
   box-shadow:
-    0 40px 120px rgba(0, 0, 0, 0.55),
-    0 0 60px rgba(184, 129, 74, 0.06);
+    0 40px 120px rgba(0, 0, 0, 0.70),
+    0 0 60px rgba(255, 77, 184, 0.08);
   animation: aev-lightbox-img-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -1396,7 +1487,7 @@ button {
   }
 }
 
-/* ─── Phase 47C: Cinematic Product Storytelling ─── */
+/* ─── Phase 47C story cards — updated for dark palette ─── */
 .aev-story-card {
   transition:
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -1407,8 +1498,8 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-story-card:hover {
     transform: translate3d(0, -2px, 0);
-    border-color: rgba(184, 129, 74, 0.28);
-    box-shadow: 0 16px 48px rgba(150, 100, 70, 0.10), 0 0 28px rgba(184, 129, 74, 0.06);
+    border-color: rgba(255, 77, 184, 0.30);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.40), 0 0 28px rgba(255, 77, 184, 0.10);
   }
 }
 
@@ -1425,7 +1516,7 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-delivery-chip:hover {
     transform: translate3d(0, -2px, 0);
-    border-color: rgba(74, 139, 126, 0.38);
+    border-color: rgba(0, 212, 198, 0.40);
   }
 }
 
@@ -1439,8 +1530,8 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .aev-routine-card:hover {
     transform: translate3d(0, -2px, 0);
-    border-color: rgba(184, 129, 74, 0.28);
-    background: rgba(240, 228, 214, 0.6);
+    border-color: rgba(255, 77, 184, 0.30);
+    background: rgba(33, 22, 51, 0.80);
   }
 }
 

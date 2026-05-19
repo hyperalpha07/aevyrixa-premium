@@ -73,7 +73,7 @@ export default function CartDrawer() {
       />
 
       <aside
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md transform border-l border-white/10 bg-[#07111f] shadow-2xl transition duration-300 ease-out ${
+        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md transform border-l border-white/10 bg-[#0D0918] shadow-2xl transition duration-300 ease-out ${
           isOpen
             ? "visible translate-x-0 opacity-100"
             : "invisible translate-x-0 opacity-0 pointer-events-none"
@@ -83,7 +83,7 @@ export default function CartDrawer() {
           <div className="border-b border-white/10 px-4 py-4 sm:px-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.3em] text-cyan-300/70">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-[#31E6D4]/70">
                   {settings.brandShortName} Cart
                 </p>
                 <h2 className="mt-1 text-lg font-semibold text-white">
@@ -107,8 +107,8 @@ export default function CartDrawer() {
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent">
             {items.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-5 rounded-full border border-cyan-400/20 bg-cyan-400/10 p-4">
-                  <ShoppingBag className="text-cyan-300" size={30} />
+                <div className="mb-5 rounded-full border border-[#00D4C6]/20 bg-[#00D4C6]/10 p-4">
+                  <ShoppingBag className="text-[#31E6D4]" size={30} />
                 </div>
 
                 <h3 className="text-xl font-semibold text-white">
@@ -123,7 +123,7 @@ export default function CartDrawer() {
                 <Link
                   href="/product"
                   onClick={closeCart}
-                  className="mt-6 inline-flex rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
+                  className="mt-6 inline-flex rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.02]"
                 >
                   Explore Products
                 </Link>
@@ -136,7 +136,7 @@ export default function CartDrawer() {
                     className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3 sm:p-4"
                   >
                     <div className="flex gap-3">
-                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0b1120]">
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0B0F1A]">
                         <ProductVisual
                           visualTheme={item.visualTheme}
                           label={item.absorbency || "Her Care"}
@@ -150,7 +150,7 @@ export default function CartDrawer() {
                             <h4 className="line-clamp-2 text-sm font-semibold leading-6 text-white">
                               {item.name}
                             </h4>
-                            <p className="mt-1 text-sm text-cyan-300">
+                            <p className="mt-1 text-sm text-[#31E6D4]">
                               {formatCurrency(item.price)}
                             </p>
                             {(item.variant || item.size || item.color || item.absorbency) && (
@@ -215,7 +215,7 @@ export default function CartDrawer() {
             )}
           </div>
 
-          <div className="border-t border-white/10 bg-[#07111f] px-4 py-4 sm:px-5">
+          <div className="border-t border-white/10 bg-[#0D0918] px-4 py-4 sm:px-5">
             <div className="mb-4 rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
               <div className="flex items-center justify-between text-sm text-white/60">
                 <span>Subtotal</span>
@@ -249,7 +249,7 @@ export default function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-400 px-4 py-3 text-sm font-semibold text-black transition hover:scale-[1.01]"
+                  className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-4 py-3 text-sm font-semibold text-white transition hover:scale-[1.01]"
                 >
                   Checkout
                 </Link>

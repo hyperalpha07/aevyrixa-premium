@@ -488,10 +488,10 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-14%] top-[8%] h-[300px] w-[300px] rounded-full bg-cyan-500/16 blur-[120px]" />
-        <div className="absolute right-[-18%] top-[18%] h-[340px] w-[340px] rounded-full bg-fuchsia-500/16 blur-[140px]" />
+        <div className="absolute left-[-14%] top-[8%] h-[300px] w-[300px] rounded-full bg-[#00D4C6]/16 blur-[120px]" />
+        <div className="absolute right-[-18%] top-[18%] h-[340px] w-[340px] rounded-full bg-[#FF4DB8]/16 blur-[140px]" />
         <div className="absolute bottom-[-12%] left-[24%] h-[260px] w-[260px] rounded-full bg-rose-300/10 blur-[120px]" />
       </div>
 
@@ -499,7 +499,7 @@ export default function CheckoutPage() {
 
       <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 pb-24 pt-10 sm:px-6 md:pt-16">
         <div className="mb-8 w-full max-w-3xl min-w-0 md:mb-10">
-          <p className="text-xs uppercase tracking-[0.32em] text-cyan-200/70 sm:text-sm sm:tracking-[0.42em]">
+          <p className="text-xs uppercase tracking-[0.32em] text-[#31E6D4]/70 sm:text-sm sm:tracking-[0.42em]">
             {adminSettings.brandShortName} Checkout
           </p>
           <h1 className="mt-4 max-w-full break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
@@ -527,7 +527,7 @@ export default function CheckoutPage() {
             >
               <div className="flex flex-col gap-2 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-fuchsia-200/70">
+                  <p className="text-xs uppercase tracking-[0.28em] text-[#FFB3D1]/70">
                     Delivery Details
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold text-white">
@@ -539,7 +539,7 @@ export default function CheckoutPage() {
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {isLoggedInCustomer && (
-                  <div className="sm:col-span-2 rounded-2xl border border-cyan-100/20 bg-cyan-100/[0.07] p-4">
+                  <div className="sm:col-span-2 rounded-2xl border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-semibold text-white">
@@ -551,7 +551,7 @@ export default function CheckoutPage() {
                       </div>
                       <Link
                         href="/account/addresses"
-                        className="inline-flex w-full items-center justify-center rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-100/15 sm:w-auto"
+                        className="inline-flex w-full items-center justify-center rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/10 px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:bg-[#00D4C6]/15 sm:w-auto"
                       >
                         Manage addresses
                       </Link>
@@ -569,7 +569,7 @@ export default function CheckoutPage() {
                             );
                             if (address) applySavedAddress(address);
                           }}
-                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/45"
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-white outline-none transition focus:border-[#00D4C6]/45"
                         >
                           {savedAddresses.map((address) => (
                             <option key={address.id} value={address.id}>
@@ -645,7 +645,7 @@ export default function CheckoutPage() {
                         key={zone}
                         className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
                           form.deliveryZone === zone
-                            ? "border-cyan-200/45 bg-cyan-200/10 text-white"
+                            ? "border-[#00D4C6]/45 bg-[#00D4C6]/10 text-white"
                             : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
                         }`}
                       >
@@ -655,7 +655,7 @@ export default function CheckoutPage() {
                           value={zone}
                           checked={form.deliveryZone === zone}
                           onChange={() => updateField("deliveryZone", zone)}
-                          className="h-4 w-4 shrink-0 accent-cyan-200"
+                          className="h-4 w-4 shrink-0 accent-[#00D4C6]"
                         />
                         <div className="min-w-0">
                           <span className="block font-medium">{zone}</span>
@@ -683,7 +683,7 @@ export default function CheckoutPage() {
                       key={method}
                       className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
                         form.paymentMethod === method
-                          ? "border-cyan-200/45 bg-cyan-200/10 text-white"
+                          ? "border-[#00D4C6]/45 bg-[#00D4C6]/10 text-white"
                           : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
                       }`}
                     >
@@ -693,7 +693,7 @@ export default function CheckoutPage() {
                         value={method}
                         checked={form.paymentMethod === method}
                         onChange={() => updatePaymentMethod(method)}
-                        className="h-4 w-4 accent-cyan-200"
+                        className="h-4 w-4 accent-[#00D4C6]"
                       />
                       <span>{method}</span>
                     </label>
@@ -706,7 +706,7 @@ export default function CheckoutPage() {
                   </PremiumNotice>
                 )}
                 {form.paymentMethod === "Mobile Wallet Payment" && (
-                  <div className="mt-4 space-y-4 rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.06] p-4">
+                  <div className="mt-4 space-y-4 rounded-2xl border border-[#00D4C6]/20 bg-[#00D4C6]/[0.06] p-4">
                     <p className="text-sm font-medium text-white/80">
                       Select your mobile wallet
                     </p>
@@ -716,7 +716,7 @@ export default function CheckoutPage() {
                           key={provider}
                           className={`flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
                             form.walletProvider === provider
-                              ? "border-cyan-200/60 bg-cyan-200/14 text-white"
+                              ? "border-[#00D4C6]/60 bg-[#00D4C6]/14 text-white"
                               : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
                           }`}
                         >
@@ -728,7 +728,7 @@ export default function CheckoutPage() {
                             onChange={() =>
                               updateField("walletProvider", provider)
                             }
-                            className="h-4 w-4 accent-cyan-200"
+                            className="h-4 w-4 accent-[#00D4C6]"
                           />
                           <span>{provider}</span>
                         </label>
@@ -745,7 +745,7 @@ export default function CheckoutPage() {
                             key={type}
                             className={`flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-center text-sm transition ${
                               form.paymentType === type
-                                ? "border-fuchsia-200/60 bg-fuchsia-200/14 text-white"
+                                ? "border-[#FF4DB8]/60 bg-[#FF4DB8]/14 text-white"
                                 : "border-white/10 bg-black/20 text-white/65 hover:border-white/25 hover:text-white"
                             }`}
                           >
@@ -755,7 +755,7 @@ export default function CheckoutPage() {
                               value={type}
                               checked={form.paymentType === type}
                               onChange={() => updateField("paymentType", type)}
-                              className="h-4 w-4 shrink-0 accent-fuchsia-200"
+                              className="h-4 w-4 shrink-0 accent-[#FF4DB8]"
                             />
                             <span className="break-words leading-5">{type}</span>
                           </label>
@@ -779,8 +779,8 @@ export default function CheckoutPage() {
 
                     {isWalletSendMoney && (
                       <div className="space-y-4">
-                        <div className="rounded-2xl border border-cyan-100/25 bg-black/25 p-4">
-                          <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/65">
+                        <div className="rounded-2xl border border-[#00D4C6]/25 bg-black/25 p-4">
+                          <p className="text-xs uppercase tracking-[0.2em] text-[#31E6D4]/65">
                             Verified Receiver Number
                           </p>
                           <div className="mt-3 flex flex-col gap-3 min-[390px]:flex-row min-[390px]:items-center">
@@ -790,7 +790,7 @@ export default function CheckoutPage() {
                             <button
                               type="button"
                               onClick={copyReceiverNumber}
-                              className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-cyan-100/15 min-[390px]:w-auto"
+                              className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/10 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-[#00D4C6]/15 min-[390px]:w-auto"
                             >
                               <Copy className="h-4 w-4" />
                               {copiedReceiver ? "Copied" : "Copy"}
@@ -850,15 +850,15 @@ export default function CheckoutPage() {
                     </p>
                     <div className="grid gap-2 sm:grid-cols-3">
                       <div className="flex items-start gap-2 text-xs leading-5 text-white/55">
-                        <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200" />
+                        <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#31E6D4]" />
                         <span>Phone &amp; address confirmed before dispatch</span>
                       </div>
                       <div className="flex items-start gap-2 text-xs leading-5 text-white/55">
-                        <PackageCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200" />
+                        <PackageCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#31E6D4]" />
                         <span>{adminSettings.privacyPackagingMessage || "Discreet privacy packaging"}</span>
                       </div>
                       <div className="flex items-start gap-2 text-xs leading-5 text-white/55">
-                        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fuchsia-200" />
+                        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#FFB3D1]" />
                         <span>{adminSettings.supportWindowMessage || "3-Day Hygiene-Safe Support"}</span>
                       </div>
                     </div>
@@ -882,7 +882,7 @@ export default function CheckoutPage() {
               className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
                   isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
-                    : "bg-gradient-to-r from-cyan-300 to-fuchsia-300 text-black hover:scale-[1.01]"
+                    : "bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] text-white hover:scale-[1.01]"
                 }`}
               >
                 {hasUnavailableItems
@@ -934,7 +934,7 @@ function TextField({
         value={value}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/45 focus:bg-black/30"
+        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition focus:border-[#00D4C6]/45 focus:bg-black/30"
       />
       {error && <span className="mt-2 block text-xs text-rose-200">{error}</span>}
     </label>
@@ -943,10 +943,10 @@ function TextField({
 
 function AccountGate({ isLoading }: { isLoading: boolean }) {
   return (
-    <div className="mt-6 rounded-[1.5rem] border border-cyan-100/20 bg-cyan-100/[0.07] p-5 shadow-[0_0_40px_rgba(34,211,238,0.08)]">
+    <div className="mt-6 rounded-[1.5rem] border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] p-5 shadow-[0_0_40px_rgba(255,77,184,0.10)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-cyan-100">
+          <div className="flex items-center gap-2 text-[#31E6D4]">
             <LockKeyhole className="h-4 w-4" />
             <p className="text-xs font-semibold uppercase tracking-[0.24em]">
               Account required
@@ -996,7 +996,7 @@ function TextAreaField({
         rows={3}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition focus:border-cyan-200/45 focus:bg-black/30"
+        className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition focus:border-[#00D4C6]/45 focus:bg-black/30"
       />
       {error && <span className="mt-2 block text-xs text-rose-200">{error}</span>}
     </label>
@@ -1005,7 +1005,7 @@ function TextAreaField({
 
 function PremiumNotice({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-4 rounded-2xl border border-fuchsia-100/20 bg-fuchsia-100/[0.07] p-4 text-sm leading-6 text-white/72">
+    <div className="mt-4 rounded-2xl border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.07] p-4 text-sm leading-6 text-white/72">
       {children}
     </div>
   );
@@ -1038,7 +1038,7 @@ function OrderSummary({
 
   return (
     <aside className="min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6 lg:sticky lg:top-6">
-      <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
+      <p className="text-xs uppercase tracking-[0.28em] text-[#31E6D4]/70">
         Order Summary
       </p>
       <h2 className="mt-2 break-words text-2xl font-semibold text-white [overflow-wrap:anywhere]">
@@ -1086,15 +1086,15 @@ function OrderSummary({
             <span>{totalItems}</span>
           </div>
           <div className="flex items-start gap-3">
-            <Truck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />
+            <Truck className="mt-0.5 h-4 w-4 shrink-0 text-[#31E6D4]" />
             <span className="leading-6">{deliveryNote}</span>
           </div>
           <div className="flex items-start gap-3">
-            <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />
+            <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#31E6D4]" />
             <span className="leading-6">{privacyPackagingMessage}</span>
           </div>
           <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-200" />
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#FFB3D1]" />
             <span className="leading-6">{guarantee}</span>
           </div>
           <div className="h-px bg-white/10" />
@@ -1137,9 +1137,9 @@ function OrderSummary({
 
 function EmptyCheckoutState() {
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_0_48px_rgba(34,211,238,0.08)] backdrop-blur-2xl sm:p-10">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10">
-        <ShieldCheck className="h-6 w-6 text-cyan-100" />
+    <div className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_0_48px_rgba(255,77,184,0.10)] backdrop-blur-2xl sm:p-10">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/10">
+        <ShieldCheck className="h-6 w-6 text-[#31E6D4]" />
       </div>
       <h2 className="mt-5 break-words text-2xl font-semibold text-white [overflow-wrap:anywhere]">
         Your checkout is ready when your Her Care essentials are selected.
@@ -1151,7 +1151,7 @@ function EmptyCheckoutState() {
       </p>
       <Link
         href="/product"
-        className="mt-7 inline-flex w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3.5 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
+        className="mt-7 inline-flex w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
       >
         Shop Her Care
       </Link>
@@ -1195,11 +1195,11 @@ function ConfirmationPanel({
   };
 
   return (
-    <div className="mx-auto max-w-4xl rounded-[1.75rem] border border-cyan-200/25 bg-cyan-200/[0.08] p-5 text-center shadow-[0_0_48px_rgba(34,211,238,0.12)] backdrop-blur-2xl sm:p-10">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-100/30 bg-cyan-100/12">
-        <CheckCircle2 className="h-8 w-8 text-cyan-100" />
+    <div className="mx-auto max-w-4xl rounded-[1.75rem] border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] p-5 text-center shadow-[0_0_48px_rgba(255,77,184,0.12)] backdrop-blur-2xl sm:p-10">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#00D4C6]/30 bg-[#00D4C6]/12">
+        <CheckCircle2 className="h-8 w-8 text-[#31E6D4]" />
       </div>
-      <p className="mt-6 text-xs uppercase tracking-[0.3em] text-cyan-100/75">
+      <p className="mt-6 text-xs uppercase tracking-[0.3em] text-[#31E6D4]/75">
         Order Received
       </p>
       <h2 className="mt-3 text-3xl font-semibold text-white">
@@ -1213,8 +1213,8 @@ function ConfirmationPanel({
         {settings.orderConfirmationMessage ||
           `Need help? Contact ${settings.brandShortName} support with your order reference.`}
       </p>
-      <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-cyan-100/25 bg-black/25 p-5 text-left">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
+      <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-[#00D4C6]/25 bg-black/25 p-5 text-left">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/70">
           Order Reference
         </p>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1224,7 +1224,7 @@ function ConfirmationPanel({
           <button
             type="button"
             onClick={copyOrderReference}
-            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-100/25 bg-cyan-100/10 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-cyan-100/15 sm:w-auto"
+            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/10 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-[#00D4C6]/15 sm:w-auto"
           >
             <Copy className="h-4 w-4" />
             {copiedOrderRef ? "Copied" : "Copy Order Reference"}
@@ -1241,7 +1241,7 @@ function ConfirmationPanel({
             key={step}
             className="rounded-2xl border border-white/10 bg-black/20 p-4 text-left"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/65">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/65">
               Step {index + 1}
             </p>
             <p className="mt-2 text-sm font-semibold text-white">{step}</p>
@@ -1266,7 +1266,7 @@ function ConfirmationPanel({
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href={trackOrderHref}
-          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300 px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] sm:w-auto"
+          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
         >
           Track Your Order
         </Link>
@@ -1281,7 +1281,7 @@ function ConfirmationPanel({
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-full items-center justify-center rounded-full border border-cyan-100/25 bg-cyan-100/10 px-6 py-3 text-sm font-medium text-cyan-50 transition hover:bg-cyan-100/15 sm:w-auto"
+            className="inline-flex w-full items-center justify-center rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/10 px-6 py-3 text-sm font-medium text-cyan-50 transition hover:bg-[#00D4C6]/15 sm:w-auto"
           >
             Chat on WhatsApp
           </a>
