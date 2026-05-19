@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         try {
           const messages = await getMessagesByConversation(conv.id);
           const last = messages[messages.length - 1];
-          const unread = messages.filter((m) => m.sender_type === "customer").length;
+          const unread = messages.filter((m) => m.sender_type === "customer" && m.is_read !== true).length;
           return {
             id: conv.id,
             status: conv.status,

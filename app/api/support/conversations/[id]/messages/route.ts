@@ -2,6 +2,7 @@ import {
   addMessage,
   getConversationByToken,
 } from "@/app/lib/support-store";
+import { notifySupportChat } from "@/app/lib/support-notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,9 @@ export async function POST(
     }
 
     const message = await addMessage(id, body, "customer");
+    notifySupportChat("customer_message", conversation, message).catch((notifyErr) => {
+      console.error("Failed to send support Telegram notification:", notifyErr);
+    });
 
     return json({
       id: message.id,

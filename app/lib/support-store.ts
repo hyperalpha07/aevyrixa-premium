@@ -18,6 +18,7 @@ export type SupportMessage = {
   body: string;
   sender_type: SenderType;
   created_at: string;
+  is_read?: boolean | null;
 };
 
 function hasConfig() {
@@ -152,6 +153,15 @@ export async function addMessage(
   ).catch(() => null);
 
   return rows[0];
+}
+
+export async function markCustomerMessagesRead(conversationId: string): Promise<void> {
+  if (!hasConfig()) return;
+
+  await dbPatch(
+    `support_messages?conversation_id=eq.${encodeURIComponent(conversationId)}&sender_type=eq.customer`,
+    { is_read: true }
+  );
 }
 
 export async function getAllConversations(): Promise<SupportConversation[]> {

@@ -3,6 +3,7 @@ import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   getConversationById,
   getMessagesByConversation,
+  markCustomerMessagesRead,
   updateConversationStatus,
   type ConversationStatus,
 } from "@/app/lib/support-store";
@@ -22,12 +23,17 @@ export async function GET(
   if (!(await verifyFreshAdminRequestPermission(request, "support.view"))) return forbiddenAdminResponse();
 
   const { id } = await params;
+  const url = new URL(request.url);
+  const shouldMarkRead = url.searchParams.get("markRead") === "1";
 
   try {
     const conversation = await getConversationById(id);
     if (!conversation) return json({ error: "Conversation not found." }, { status: 404 });
 
     const messages = await getMessagesByConversation(id);
+    if (shouldMarkRead) {
+      markCustomerMessagesRead(id).catch(() => null);
+    }
 
     return json({
       id: conversation.id,

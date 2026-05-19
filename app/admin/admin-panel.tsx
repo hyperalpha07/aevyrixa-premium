@@ -1480,6 +1480,7 @@ export default function AdminPanel({
   const [settingsBackendMessage, setSettingsBackendMessage] = useState(
     "Settings backend not connected. Using safe local fallback."
   );
+  const [supportUnreadCount, setSupportUnreadCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
@@ -1494,6 +1495,7 @@ export default function AdminPanel({
         hasPermission(session, "categories.manage");
       const canLoadOrders = hasPermission(session, "orders.view");
       const canLoadProducts = hasPermission(session, "products.view");
+      const canLoadSupport = hasPermission(session, "support.view");
 
       if (canLoadSettings) {
         setSettings(readSettingsFromStorage());
@@ -1545,9 +1547,45 @@ export default function AdminPanel({
           writeProductsToStorage(backendProducts);
         });
       }
+
+      if (canLoadSupport) {
+        void fetch("/api/admin/support/conversations", { cache: "no-store" })
+          .then((response) => (response.ok ? response.json() : null))
+          .then((payload: { conversations?: DashboardSupportConversation[] } | null) => {
+            if (!Array.isArray(payload?.conversations)) return;
+            setSupportUnreadCount(
+              payload.conversations.reduce(
+                (sum, conversation) => sum + (conversation.unread_customer_count ?? 0),
+                0
+              )
+            );
+          })
+          .catch(() => null);
+      }
     }, 0);
 
     return () => window.clearTimeout(timerId);
+  }, [session]);
+
+  useEffect(() => {
+    if (!hasPermission(session, "support.view")) return;
+
+    const interval = window.setInterval(() => {
+      void fetch("/api/admin/support/conversations", { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload: { conversations?: DashboardSupportConversation[] } | null) => {
+          if (!Array.isArray(payload?.conversations)) return;
+          setSupportUnreadCount(
+            payload.conversations.reduce(
+              (sum, conversation) => sum + (conversation.unread_customer_count ?? 0),
+              0
+            )
+          );
+        })
+        .catch(() => null);
+    }, 30000);
+
+    return () => window.clearInterval(interval);
   }, [session]);
 
   const updateOrderStatus = (orderKey: string, status: OrderStatus) => {
@@ -1711,6 +1749,11 @@ export default function AdminPanel({
                 >
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="truncate">{item.label}</span>
+                  {item.view === "support" && supportUnreadCount > 0 && (
+                    <span className="ml-auto rounded-full bg-cyan-300 px-2 py-0.5 text-[10px] font-bold text-black">
+                      {supportUnreadCount > 99 ? "99+" : supportUnreadCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -5253,8 +5296,10 @@ type AdminConvSummary = {
   status: ConvStatus;
   source_page: string;
   created_at: string;
+  updated_at?: string | null;
   last_message: { body: string; sender_type: string; created_at: string } | null;
   message_count: number;
+  unread_customer_count?: number;
 };
 
 type AdminConvMessage = {
@@ -5269,6 +5314,7 @@ type AdminConvDetail = {
   status: ConvStatus;
   source_page: string;
   created_at: string;
+  updated_at?: string | null;
   messages: AdminConvMessage[];
 };
 
@@ -5284,6 +5330,20 @@ const convStatusStyles: Record<ConvStatus, string> = {
   closed: "border-white/20 bg-white/[0.05] text-white/48",
 };
 
+const supportRefreshOptions = [
+  { label: "Off", value: 0 },
+  { label: "10 seconds", value: 10000 },
+  { label: "30 seconds", value: 30000 },
+  { label: "1 minute", value: 60000 },
+];
+
+function supportTimeLabel(value?: string | null) {
+  if (!value) return "No time";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
 function SupportSection({ session }: { session: AdminSessionUser }) {
   const [conversations, setConversations] = useState<AdminConvSummary[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -5293,9 +5353,41 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
   const [sendError, setSendError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [autoRefreshMs, setAutoRefreshMs] = useState(30000);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const detailEndRef = useRef<HTMLDivElement>(null);
+  const replyTextRef = useRef("");
+  const previousUnreadRef = useRef<number | null>(null);
   const canReply = hasPermission(session, "support.reply");
   const canClose = hasPermission(session, "support.close");
+
+  useEffect(() => {
+    replyTextRef.current = replyText;
+  }, [replyText]);
+
+  const playNoticeSound = useCallback(() => {
+    if (!soundEnabled) return;
+    try {
+      const audioWindow = globalThis as typeof globalThis & {
+        AudioContext?: typeof AudioContext;
+        webkitAudioContext?: typeof AudioContext;
+      };
+      const AudioContextCtor = audioWindow.AudioContext || audioWindow.webkitAudioContext;
+      if (!AudioContextCtor) return;
+      const context = new AudioContextCtor();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.frequency.value = 740;
+      gain.gain.value = 0.04;
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.12);
+    } catch {
+      // Audio is optional.
+    }
+  }, [soundEnabled]);
 
   const loadConversations = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -5303,26 +5395,57 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
       const res = await fetch("/api/admin/support/conversations", { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as { conversations: AdminConvSummary[] };
-      if (Array.isArray(data.conversations)) setConversations(data.conversations);
+      if (Array.isArray(data.conversations)) {
+        setConversations(data.conversations);
+        const unreadTotal = data.conversations.reduce(
+          (sum, conversation) => sum + (conversation.unread_customer_count ?? 0),
+          0
+        );
+        if (previousUnreadRef.current !== null && unreadTotal > previousUnreadRef.current) {
+          playNoticeSound();
+        }
+        previousUnreadRef.current = unreadTotal;
+        setLastUpdated(new Date());
+      }
     } catch {
       // ignore
     } finally {
       if (isRefresh) setRefreshing(false);
       setLoading(false);
     }
-  }, []);
+  }, [playNoticeSound]);
 
-  const loadDetail = useCallback(async (id: string) => {
+  const loadDetail = useCallback(async (
+    id: string,
+    options: { markRead?: boolean; scroll?: boolean } = {}
+  ) => {
     try {
-      const res = await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}`, { cache: "no-store" });
+      const query = options.markRead ? "?markRead=1" : "";
+      const res = await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}${query}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as AdminConvDetail;
       setDetail(data);
-      setTimeout(() => detailEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      if (options.markRead) {
+        setConversations((prev) =>
+          prev.map((conversation) =>
+            conversation.id === id ? { ...conversation, unread_customer_count: 0 } : conversation
+          )
+        );
+      }
+      if (options.scroll && !replyTextRef.current.trim()) {
+        setTimeout(() => detailEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      }
     } catch {
       // ignore
     }
   }, []);
+
+  const refreshSupport = useCallback(async (isRefresh = true) => {
+    if (selectedId) {
+      await loadDetail(selectedId, { markRead: true, scroll: false });
+    }
+    await loadConversations(isRefresh);
+  }, [loadConversations, loadDetail, selectedId]);
 
   useEffect(() => {
     void loadConversations();
@@ -5330,10 +5453,21 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
 
   useEffect(() => {
     if (!selectedId) return;
-    void loadDetail(selectedId);
-    const interval = setInterval(() => loadDetail(selectedId), 8000);
-    return () => clearInterval(interval);
-  }, [selectedId, loadDetail]);
+    setDetail(null);
+    void loadDetail(selectedId, { markRead: true, scroll: true }).then(() => {
+      void loadConversations(true);
+    });
+  }, [selectedId, loadDetail, loadConversations]);
+
+  useEffect(() => {
+    if (!autoRefreshMs) return;
+
+    const interval = window.setInterval(() => {
+      void refreshSupport(true);
+    }, autoRefreshMs);
+
+    return () => window.clearInterval(interval);
+  }, [autoRefreshMs, refreshSupport]);
 
   const sendReply = async () => {
     const body = replyText.trim();
@@ -5379,19 +5513,55 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
   return (
     <div className="mt-6">
       {/* Conversations list */}
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm font-semibold text-white/70">
-          {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
-        </p>
-        <button
-          type="button"
-          onClick={() => loadConversations(true)}
-          disabled={refreshing}
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/60 transition hover:text-white disabled:opacity-40"
-        >
-          <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white/70">
+            {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
+          </p>
+          <p className="mt-1 text-xs text-white/36">
+            Last updated: {lastUpdated ? supportTimeLabel(lastUpdated.toISOString()) : "Not yet"}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/58">
+            Auto-refresh
+            <select
+              value={autoRefreshMs}
+              onChange={(event) => setAutoRefreshMs(Number(event.target.value))}
+              className="bg-transparent text-white outline-none"
+            >
+              {supportRefreshOptions.map((option) => (
+                <option key={option.value} value={option.value} className="bg-[#07111f] text-white">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/58">
+            <input
+              type="checkbox"
+              checked={soundEnabled}
+              onChange={(event) => setSoundEnabled(event.target.checked)}
+              className="h-3.5 w-3.5 accent-cyan-300"
+            />
+            Sound
+          </label>
+          {refreshing && (
+            <span className="flex items-center gap-1.5 text-xs text-cyan-200/70">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300" />
+              Syncing
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => void refreshSupport(true)}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/60 transition hover:text-white disabled:opacity-40"
+          >
+            <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {loading && (
@@ -5418,20 +5588,26 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
                 className={`w-full rounded-[1.25rem] border p-4 text-left transition ${
                   selectedId === conv.id
                     ? "border-cyan-200/35 bg-cyan-200/[0.07]"
+                    : (conv.unread_customer_count ?? 0) > 0
+                      ? "border-cyan-200/25 bg-cyan-200/[0.055] hover:border-cyan-200/40"
                     : "border-white/10 bg-white/[0.03] hover:border-white/20"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${convStatusStyles[conv.status]}`}
-                  >
-                    {convStatusLabels[conv.status]}
-                  </span>
-                  <span className="text-[11px] text-white/35">
-                    {new Date(conv.created_at).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                    })}
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${convStatusStyles[conv.status]}`}
+                    >
+                      {convStatusLabels[conv.status]}
+                    </span>
+                    {(conv.unread_customer_count ?? 0) > 0 && (
+                      <span className="rounded-full bg-cyan-300 px-2 py-0.5 text-[10px] font-bold text-black">
+                        {conv.unread_customer_count} new
+                      </span>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-[11px] text-white/35">
+                    {supportTimeLabel(conv.last_message?.created_at || conv.updated_at || conv.created_at)}
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-white/55">
@@ -5439,12 +5615,16 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
                 </p>
                 {conv.last_message && (
                   <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-white/75">
-                    {conv.last_message.sender_type === "admin" ? "You: " : ""}
+                    {conv.last_message.sender_type === "admin" ? "You: " : "Customer: "}
                     {conv.last_message.body}
                   </p>
                 )}
                 <p className="mt-1 text-[11px] text-white/38">
                   {conv.message_count} message{conv.message_count !== 1 ? "s" : ""}
+                  {conv.last_message ? ` · ${new Date(conv.last_message.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                  })}` : ""}
                 </p>
               </button>
             ))}

@@ -1,3 +1,4 @@
+import { notifySupportChat } from "@/app/lib/support-notifications";
 import { addMessage, createConversation } from "@/app/lib/support-store";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +35,17 @@ export async function POST(request: Request) {
           sender_type: msg.sender_type,
           created_at: msg.created_at,
         });
+        notifySupportChat("new_conversation", conversation, msg).catch((notifyErr) => {
+          console.error("Failed to send support Telegram notification:", notifyErr);
+        });
       } catch (msgErr) {
         console.error("Failed to save first support message:", msgErr);
         // Non-fatal — conversation still created; widget falls back to /messages endpoint
       }
+    } else {
+      notifySupportChat("new_conversation", conversation).catch((notifyErr) => {
+        console.error("Failed to send support Telegram notification:", notifyErr);
+      });
     }
 
     return json({

@@ -53,9 +53,16 @@ function buildTelegramMessage(order: OrderRecord) {
   return lines.filter(Boolean).join("\n");
 }
 
-export async function notifyNewOrder(order: OrderRecord) {
-  const botToken = process.env.ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.ORDER_NOTIFICATION_TELEGRAM_CHAT_ID;
+export async function sendTelegramNotification(
+  text: string,
+  options: {
+    botToken?: string;
+    chatId?: string;
+  } = {}
+) {
+  const botToken =
+    options.botToken || process.env.ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN;
+  const chatId = options.chatId || process.env.ORDER_NOTIFICATION_TELEGRAM_CHAT_ID;
 
   if (!botToken || !chatId) {
     return {
@@ -72,7 +79,7 @@ export async function notifyNewOrder(order: OrderRecord) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
-          text: buildTelegramMessage(order),
+          text,
           disable_web_page_preview: true,
         }),
       }
@@ -95,6 +102,10 @@ export async function notifyNewOrder(order: OrderRecord) {
           : "Telegram notification request failed.",
     } satisfies NotificationResult;
   }
+}
+
+export async function notifyNewOrder(order: OrderRecord) {
+  return sendTelegramNotification(buildTelegramMessage(order));
 }
 
 export const notifyOrderReceived = notifyNewOrder;
