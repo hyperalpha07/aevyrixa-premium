@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { PackageSearch, ShoppingBag, UserRound } from "lucide-react";
+import { ChevronDown, PackageSearch, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 import {
   defaultStorefrontSettings,
@@ -23,12 +23,17 @@ export default function SiteHeader({
 }: SiteHeaderProps) {
   const { totalItems, toggleCart } = useCart();
   const [hasAccountSession, setHasAccountSession] = useState(false);
+  const [accountName, setAccountName] = useState("");
 
   useEffect(() => {
     let isActive = true;
     void fetch("/api/account/session", { cache: "no-store" })
-      .then((response) => {
+      .then(async (response) => {
         if (isActive) setHasAccountSession(response.ok);
+        const payload = response.ok
+          ? ((await response.json().catch(() => ({}))) as { customer?: { fullName?: string } })
+          : {};
+        if (isActive) setAccountName(payload.customer?.fullName || "");
       })
       .catch(() => {
         if (isActive) setHasAccountSession(false);
@@ -78,7 +83,7 @@ export default function SiteHeader({
                 ? "border-fuchsia-400/35 bg-white/10 text-white"
                 : "border-white/10 bg-white/5 text-white/82 hover:border-fuchsia-400/35 hover:bg-white/10"
             }`}
-            aria-label={hasAccountSession ? "Account" : "Login"}
+            aria-label={hasAccountSession ? "Account profile" : "Login"}
           >
             <UserRound className="h-4 w-4" />
           </Link>
@@ -142,7 +147,14 @@ export default function SiteHeader({
             href={hasAccountSession ? "/account" : "/account/login"}
             className={`${navBase} ${active === "account" ? navActive : navMuted}`}
           >
-            {hasAccountSession ? "Account" : "Login"}
+            {hasAccountSession ? (
+              <span className="inline-flex items-center gap-2">
+                {accountName ? "Profile" : "Account"}
+                <ChevronDown className="h-3.5 w-3.5" />
+              </span>
+            ) : (
+              "Login"
+            )}
           </Link>
 
           <button

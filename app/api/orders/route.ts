@@ -6,6 +6,7 @@ import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { getCustomerFromRequest } from "@/app/api/account/_utils";
 import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
 import { createOrder, listOrders } from "@/app/lib/order-store";
+import { getStoreSettings } from "@/app/lib/settings-store";
 import { getProductBySlug } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import {
@@ -223,6 +224,28 @@ export async function POST(request: Request) {
     }
 
     const customer = await getCustomerFromRequest(request).catch(() => null);
+    const settings = await getStoreSettings().catch(() => null);
+    const requiresCustomerAccount =
+      settings?.settings.checkoutSettings.requireCustomerAccountForCheckout ?? true;
+
+    if (requiresCustomerAccount && !customer) {
+      return Response.json(
+        { errors: ["Please log in to your account before submitting checkout."] },
+        { status: 401 }
+      );
+    }
+
+    if (
+      requiresCustomerAccount &&
+      customer &&
+      normalizeCustomerPhone(customer.phone) !== normalizeCustomerPhone(input.customer.phone)
+    ) {
+      return Response.json(
+        { errors: ["Checkout phone must match the logged in customer account."] },
+        { status: 403 }
+      );
+    }
+
     const orderInput =
       customer &&
       normalizeCustomerPhone(customer.phone) === normalizeCustomerPhone(input.customer.phone)

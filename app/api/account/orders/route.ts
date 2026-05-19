@@ -31,6 +31,7 @@ function safeOrder(order: OrderRecord) {
     createdAt: order.createdAt,
     status: order.status,
     total: order.totalAmount,
+    customerPhone: order.customer.phone,
     paymentMethod: paymentMethodLabel(order),
     paymentStatus: order.paymentStatus,
     deliveryStatus: order.deliveryStatus,

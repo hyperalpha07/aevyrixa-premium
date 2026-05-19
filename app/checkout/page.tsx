@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Copy, PackageCheck, ShieldCheck, Truck } from "lucide-react";
+import { CheckCircle2, Copy, LockKeyhole, PackageCheck, ShieldCheck, Truck, UserPlus } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
 import { isPurchasableStock } from "@/app/lib/product-display";
@@ -30,6 +30,7 @@ import {
 } from "@/app/lib/order-types";
 
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
+const CHECKOUT_DRAFT_KEY = "aevyrixa-checkout-form-draft";
 
 type DeliveryZone = "Inside Dhaka" | "Outside Dhaka" | "";
 
@@ -156,6 +157,7 @@ export default function CheckoutPage() {
   const [adminSettings, setAdminSettings] =
     useState<StorefrontSettings>(defaultStorefrontSettings);
   const [isLoggedInCustomer, setIsLoggedInCustomer] = useState(false);
+  const [isAccountLoaded, setIsAccountLoaded] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState("");
 
@@ -169,6 +171,25 @@ export default function CheckoutPage() {
 
     return () => window.clearTimeout(timerId);
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CHECKOUT_DRAFT_KEY);
+      if (!stored) return;
+      const draft = JSON.parse(stored) as Partial<CheckoutForm>;
+      setForm((current) => ({ ...current, ...draft }));
+    } catch {
+      localStorage.removeItem(CHECKOUT_DRAFT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(form));
+    } catch {
+      // Draft persistence is best-effort only.
+    }
+  }, [form]);
 
   useEffect(() => {
     let isActive = true;
@@ -204,6 +225,8 @@ export default function CheckoutPage() {
         if (defaultAddress) applySavedAddress(defaultAddress);
       } catch {
         if (isActive) setIsLoggedInCustomer(false);
+      } finally {
+        if (isActive) setIsAccountLoaded(true);
       }
     }
 
@@ -278,6 +301,8 @@ export default function CheckoutPage() {
     enabledPaymentMethods.length === 0 ||
     (form.paymentMethod === "Mobile Wallet Payment" &&
       form.paymentType !== "Send Money");
+  const requiresCustomerAccount =
+    adminSettings.checkoutSettings.requireCustomerAccountForCheckout !== false;
   const hasUnavailableItems = items.some(
     (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
   );
@@ -362,9 +387,13 @@ export default function CheckoutPage() {
       isSubmitting ||
       isSubmitDisabled ||
       hasUnavailableItems ||
+      (requiresCustomerAccount && !isLoggedInCustomer) ||
       !validateForm() ||
       items.length === 0
     ) {
+      if (requiresCustomerAccount && !isLoggedInCustomer) {
+        setSubmitError("Please log in or create an account before submitting checkout.");
+      }
       return;
     }
 
@@ -449,6 +478,7 @@ export default function CheckoutPage() {
         paymentMethod: result.order.paymentDetails.paymentMethod,
       });
       clearCart();
+      localStorage.removeItem(CHECKOUT_DRAFT_KEY);
     } catch (error) {
       console.error("Failed to submit order:", error);
       setSubmitError("Order could not be submitted. Please check your connection.");
@@ -842,17 +872,23 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {requiresCustomerAccount && !isLoggedInCustomer && (
+                <AccountGate isLoading={!isAccountLoaded} />
+              )}
+
               <button
                 type="submit"
-              disabled={isSubmitDisabled || isSubmitting || hasUnavailableItems}
+              disabled={isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)}
               className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
-                  isSubmitDisabled || isSubmitting || hasUnavailableItems
+                  isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
                     : "bg-gradient-to-r from-cyan-300 to-fuchsia-300 text-black hover:scale-[1.01]"
                 }`}
               >
                 {hasUnavailableItems
                   ? "Remove out-of-stock item"
+                  : requiresCustomerAccount && !isLoggedInCustomer
+                    ? "Login Required"
                   : isSubmitting
                     ? "Submitting Order..."
                     : "Submit Order"}
@@ -902,6 +938,40 @@ function TextField({
       />
       {error && <span className="mt-2 block text-xs text-rose-200">{error}</span>}
     </label>
+  );
+}
+
+function AccountGate({ isLoading }: { isLoading: boolean }) {
+  return (
+    <div className="mt-6 rounded-[1.5rem] border border-cyan-100/20 bg-cyan-100/[0.07] p-5 shadow-[0_0_40px_rgba(34,211,238,0.08)]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-cyan-100">
+            <LockKeyhole className="h-4 w-4" />
+            <p className="text-xs font-semibold uppercase tracking-[0.24em]">
+              Account required
+            </p>
+          </div>
+          <h3 className="mt-3 break-words text-xl font-semibold text-white [overflow-wrap:anywhere]">
+            Login before final order submit.
+          </h3>
+          <p className="mt-2 text-sm leading-7 text-white/62">
+            Your cart and checkout details stay on this device while you sign in or create an account.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col gap-2 sm:min-w-44">
+          <Link className="action-primary justify-center" href="/account/login?returnTo=/checkout">
+            <LockKeyhole className="h-4 w-4" />
+            Login
+          </Link>
+          <Link className="action-muted justify-center" href="/account/register?returnTo=/checkout">
+            <UserPlus className="h-4 w-4" />
+            Create account
+          </Link>
+        </div>
+      </div>
+      {isLoading && <p className="mt-3 text-xs text-white/45">Checking account session...</p>}
+    </div>
   );
 }
 
@@ -1097,7 +1167,7 @@ function ConfirmationPanel({
   settings: StorefrontSettings;
 }) {
   const [copiedOrderRef, setCopiedOrderRef] = useState(false);
-  const trackOrderHref = `/track-order?ref=${encodeURIComponent(order.orderId)}`;
+  const trackOrderHref = `/track-order?ref=${encodeURIComponent(order.orderId)}&phone=${encodeURIComponent(order.customerPhone)}`;
   const whatsappUrl = whatsappHref(settings.supportWhatsApp);
   const detailItems = (
     [

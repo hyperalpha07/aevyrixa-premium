@@ -4020,6 +4020,13 @@ function SettingsSection({
               description="Threshold fields are saved for future use and are not enforced yet."
             >
               <div className="grid gap-4 lg:grid-cols-2">
+                <ToggleField
+                  label="Require customer account for checkout"
+                  checked={draft.checkoutSettings.requireCustomerAccountForCheckout}
+                  onChange={(value) =>
+                    updateCheckoutSettings({ requireCustomerAccountForCheckout: value })
+                  }
+                />
                 <TextField
                   label="Checkout header text"
                   value={draft.checkoutSettings.checkoutHeaderText}

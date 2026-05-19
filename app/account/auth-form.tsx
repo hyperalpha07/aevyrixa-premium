@@ -20,6 +20,7 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [returnTo, setReturnTo] = useState("/account");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isRegister = mode === "register";
@@ -32,6 +33,14 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
     return () => {
       isActive = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("returnTo");
+    if (next?.startsWith("/") && !next.startsWith("//")) {
+      setReturnTo(next);
+    }
   }, []);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -50,7 +59,7 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
         setError(payload.errors?.[0] || "Account request failed.");
         return;
       }
-      router.replace("/account");
+      router.replace(returnTo);
     } catch {
       setError("Account service is temporarily unavailable.");
     } finally {
@@ -69,13 +78,13 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
             Customer Account
           </p>
           <h1 className="mt-4 break-words text-3xl font-semibold leading-tight [overflow-wrap:anywhere] sm:text-5xl">
-            {isRegister ? "Create an optional account." : "Login to your account."}
+            {isRegister ? "Create your customer account." : "Login to your account."}
           </h1>
           <p className="mt-5 text-sm leading-7 text-white/64">
-            Guest checkout remains available. Accounts only help you view order history and saved addresses faster.
+            Use your account for saved addresses, order history, and secure checkout submission.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link className="action-muted" href="/checkout">Continue as guest</Link>
+            <Link className="action-muted" href="/checkout">Back to checkout</Link>
             <Link className="action-muted" href="/track-order">Track order</Link>
           </div>
         </div>

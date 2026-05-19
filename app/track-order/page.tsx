@@ -90,8 +90,9 @@ export default function TrackOrderPage() {
 function TrackOrderContent() {
   const searchParams = useSearchParams();
   const initialOrderRef = searchParams.get("ref")?.trim() ?? "";
+  const initialPhone = searchParams.get("phone")?.trim() ?? "";
   const [orderRef, setOrderRef] = useState(initialOrderRef);
-  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerPhone, setCustomerPhone] = useState(initialPhone);
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);

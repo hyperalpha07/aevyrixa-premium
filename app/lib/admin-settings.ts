@@ -55,6 +55,7 @@ export type CheckoutSettings = {
   cartEmptyMessage: string;
   minimumOrderAmount: string;
   freeDeliveryThreshold: string;
+  requireCustomerAccountForCheckout: boolean;
 };
 
 export type DeliverySettings = {
@@ -366,6 +367,7 @@ const defaultGroups: AdminSettingsGroups = {
     cartEmptyMessage: "Your cart is empty.",
     minimumOrderAmount: "",
     freeDeliveryThreshold: "",
+    requireCustomerAccountForCheckout: true,
   },
   deliverySettings: {
     deliveryCoverageText:
@@ -902,6 +904,10 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       freeDeliveryThreshold: safeText(
         checkoutSettings.freeDeliveryThreshold,
         defaultGroups.checkoutSettings.freeDeliveryThreshold
+      ),
+      requireCustomerAccountForCheckout: booleanValue(
+        checkoutSettings.requireCustomerAccountForCheckout,
+        defaultGroups.checkoutSettings.requireCustomerAccountForCheckout
       ),
     },
     deliverySettings: {

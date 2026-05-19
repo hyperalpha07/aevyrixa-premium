@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
   Home,
   LogOut,
   MapPin,
   PackageSearch,
   Plus,
-  ShieldCheck,
+  ShoppingBag,
   UserRound,
   MessageSquare,
 } from "lucide-react";
@@ -44,6 +47,7 @@ type AccountOrder = {
   createdAt: string;
   status: string;
   total: number;
+  customerPhone: string;
   paymentMethod: string;
   paymentStatus?: string;
   deliveryStatus?: string;
@@ -55,6 +59,11 @@ type AccountOrder = {
   courierName?: string;
   trackingId?: string;
   items: { name: string; quantity: number; price: number; variant?: string }[];
+};
+type SupportPayload = {
+  conversations?: unknown[];
+  linked?: boolean;
+  message?: string;
 };
 type AddressForm = {
   id?: string;
@@ -103,17 +112,13 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<AccountOrder[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedOrderRef, setSelectedOrderRef] = useState("");
   const [addressDraft, setAddressDraft] = useState<AddressForm>(emptyAddress);
   const [isAddressOpen, setIsAddressOpen] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
+  const [supportCount, setSupportCount] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  const selectedOrder = useMemo(
-    () => orders.find((order) => order.orderRef === selectedOrderRef) ?? orders[0],
-    [orders, selectedOrderRef]
-  );
   const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
   const recentOrders = orders.slice(0, 3);
 
@@ -139,14 +144,16 @@ export default function AccountClient({ view }: { view: AccountView }) {
         const [orderPayload, addressPayload, supportPayload] = await Promise.all([
           readJson<{ orders: AccountOrder[] }>("/api/account/orders"),
           readJson<{ addresses: Address[] }>("/api/account/addresses"),
-          readJson<{ message?: string }>("/api/account/support").catch((err) => ({
+          readJson<SupportPayload>("/api/account/support").catch((err) => ({
             message: err instanceof Error ? err.message : "Support history is unavailable.",
+            conversations: [],
           })),
         ]);
         if (!isActive) return;
         setOrders(orderPayload.orders);
         setAddresses(addressPayload.addresses);
         setSupportMessage(supportPayload.message ?? "");
+        setSupportCount(supportPayload.conversations?.length ?? 0);
       } catch (err) {
         if (!isActive) return;
         setError(err instanceof Error ? err.message : "Please log in to continue.");
@@ -244,7 +251,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
               {customer ? `Welcome, ${customer.fullName}` : "Your Aevyrixa account"}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/64">
-              Account access is optional. Guest checkout and order tracking remain available.
+              Manage orders, addresses, support, and checkout details from one secure profile.
             </p>
           </div>
           {customer && (
@@ -306,15 +313,16 @@ export default function AccountClient({ view }: { view: AccountView }) {
               {view === "dashboard" && (
                 <Dashboard
                   orders={recentOrders}
+                  allOrders={orders}
                   address={defaultAddress}
+                  addressCount={addresses.length}
                   supportMessage={supportMessage}
+                  supportCount={supportCount}
                 />
               )}
               {view === "orders" && (
                 <OrdersView
                   orders={orders}
-                  selectedOrder={selectedOrder}
-                  onSelect={setSelectedOrderRef}
                 />
               )}
               {view === "addresses" && (
@@ -384,20 +392,42 @@ function Panel({ children }: { children: React.ReactNode }) {
 
 function Dashboard({
   orders,
+  allOrders,
   address,
+  addressCount,
   supportMessage,
+  supportCount,
 }: {
   orders: AccountOrder[];
+  allOrders: AccountOrder[];
   address?: Address;
+  addressCount: number;
   supportMessage: string;
+  supportCount: number;
 }) {
+  const pendingOrders = allOrders.filter((order) => order.status === "Pending").length;
+  const deliveredOrders = allOrders.filter(
+    (order) => order.status === "Delivered" || order.deliveryStatus === "delivered"
+  ).length;
+
   return (
     <div className="grid gap-5">
       <Panel>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Metric icon={PackageSearch} label="Recent orders" value={String(orders.length)} />
-          <Metric icon={Home} label="Saved address" value={address ? "Ready" : "Not added"} />
-          <Metric icon={ShieldCheck} label="Support" value="Available" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} />
+          <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} />
+          <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} />
+          <Metric icon={MessageSquare} label="Support" value={String(supportCount)} />
+        </div>
+      </Panel>
+      <Panel>
+        <SectionTitle title="Quick Actions" href="/product" label="Shop" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <QuickAction href="/track-order" icon={PackageSearch} label="Track order" />
+          <QuickAction href="/account/orders" icon={ShoppingBag} label="View orders" />
+          <QuickAction href="/account/addresses" icon={MapPin} label="Saved addresses" />
+          <QuickAction href="/account/support" icon={MessageSquare} label="Support" />
+          <QuickAction href="/product" icon={Home} label="Continue shopping" />
         </div>
       </Panel>
       <Panel>
@@ -406,7 +436,16 @@ function Dashboard({
       </Panel>
       <Panel>
         <SectionTitle title="Saved Address" href="/account/addresses" />
-        {address ? <AddressSummary address={address} /> : <EmptyLine text="No saved address yet." />}
+        {address ? (
+          <>
+            <AddressSummary address={address} />
+            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/38">
+              {addressCount} saved {addressCount === 1 ? "address" : "addresses"}
+            </p>
+          </>
+        ) : (
+          <EmptyLine text="No saved address yet." />
+        )}
       </Panel>
       <Panel>
         <SectionTitle title="Support History" href="/account/support" />
@@ -415,6 +454,29 @@ function Dashboard({
         </p>
       </Panel>
     </div>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: typeof UserRound;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex min-h-24 min-w-0 flex-col justify-between rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-cyan-100/30 hover:bg-cyan-100/[0.06]"
+    >
+      <Icon className="h-5 w-5 text-cyan-100" />
+      <span className="mt-4 flex items-center justify-between gap-3 text-sm font-semibold text-white">
+        <span className="min-w-0 break-words [overflow-wrap:anywhere]">{label}</span>
+        <ArrowRight className="h-4 w-4 shrink-0 text-white/40 transition group-hover:text-white" />
+      </span>
+    </Link>
   );
 }
 
@@ -428,80 +490,52 @@ function Metric({ icon: Icon, label, value }: { icon: typeof UserRound; label: s
   );
 }
 
-function SectionTitle({ title, href }: { title: string; href: string }) {
+function SectionTitle({ title, href, label = "View" }: { title: string; href: string; label?: string }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
       <h2 className="text-xl font-semibold text-white">{title}</h2>
       <Link href={href} className="text-sm font-semibold text-cyan-100 hover:text-white">
-        View
+        {label}
       </Link>
     </div>
   );
 }
 
-function OrdersView({
-  orders,
-  selectedOrder,
-  onSelect,
-}: {
-  orders: AccountOrder[];
-  selectedOrder?: AccountOrder;
-  onSelect: (orderRef: string) => void;
-}) {
+function OrdersView({ orders }: { orders: AccountOrder[] }) {
   return (
     <div className="grid gap-5">
       <Panel>
         <h2 className="text-xl font-semibold text-white">Order History</h2>
-        <OrderRows orders={orders} onSelect={onSelect} />
+        <p className="mt-2 text-sm leading-7 text-white/56">
+          Open an order for a focused detail view with tracking and support actions.
+        </p>
+        <div className="mt-5">
+          <OrderRows orders={orders} detailed />
+        </div>
       </Panel>
-      {selectedOrder && (
-        <Panel>
-          <h2 className="break-words text-xl font-semibold text-white [overflow-wrap:anywhere]">
-            Order {selectedOrder.orderRef}
-          </h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <Summary label="Date" value={formatDate(selectedOrder.createdAt)} />
-            <Summary label="Total" value={formatCurrency(selectedOrder.total)} />
-            <Summary label="Order status" value={selectedOrder.status} />
-            <Summary label="Delivery status" value={readable(selectedOrder.deliveryStatus)} />
-            <Summary label="Payment" value={selectedOrder.paymentMethod} />
-            <Summary label="Payment status" value={selectedOrder.paymentStatus || "Not available"} />
-            <Summary label="Courier" value={selectedOrder.courierName || "Not assigned"} />
-            <Summary label="Tracking" value={selectedOrder.trackingId || "Not available"} />
-            <Summary label="Delivery zone" value={selectedOrder.deliveryZone || "Not available"} />
-            <Summary label="Delivery area" value={selectedOrder.deliveryArea || selectedOrder.cityArea} />
-          </div>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/42">Delivery Address</p>
-            <p className="mt-2 text-sm leading-7 text-white/72">{selectedOrder.deliveryAddress}</p>
-          </div>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/42">Items</p>
-            <ul className="mt-3 space-y-3">
-              {selectedOrder.items.map((item, index) => (
-                <li key={`${item.name}-${index}`} className="flex justify-between gap-3 text-sm text-white/74">
-                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">
-                    {item.name}
-                    {item.variant && <span className="block text-xs text-white/42">{item.variant}</span>}
-                  </span>
-                  <span className="shrink-0">x{item.quantity}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <Link className="action-primary" href={`/track-order?ref=${encodeURIComponent(selectedOrder.orderRef)}`}>
-              Track order
-            </Link>
-            <Link className="action-muted" href="/support">Get support</Link>
-          </div>
-        </Panel>
-      )}
     </div>
   );
 }
 
-function OrderRows({ orders, onSelect }: { orders: AccountOrder[]; onSelect?: (orderRef: string) => void }) {
+function orderDetailHref(orderRef: string) {
+  return `/account/orders/${encodeURIComponent(orderRef)}`;
+}
+
+function trackOrderHref(order: AccountOrder) {
+  const params = new URLSearchParams({ ref: order.orderRef });
+  if (order.customerPhone) params.set("phone", order.customerPhone);
+  return `/track-order?${params.toString()}`;
+}
+
+function OrderRows({
+  orders,
+  onSelect,
+  detailed = false,
+}: {
+  orders: AccountOrder[];
+  onSelect?: (orderRef: string) => void;
+  detailed?: boolean;
+}) {
   if (orders.length === 0) return <EmptyLine text="No orders found for this account phone yet." />;
 
   return (
@@ -529,9 +563,19 @@ function OrderRows({ orders, onSelect }: { orders: AccountOrder[]; onSelect?: (o
                 View details
               </button>
             ) : (
-              <Link className="text-sm font-semibold text-cyan-100 hover:text-white" href="/account/orders">
+              <Link className="text-sm font-semibold text-cyan-100 hover:text-white" href={orderDetailHref(order.orderRef)}>
                 View details
               </Link>
+            )}
+            {detailed && (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Link className="mini-action text-center" href={trackOrderHref(order)}>
+                  Track order
+                </Link>
+                <Link className="mini-action text-center" href="/account/support">
+                  Get support
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -688,15 +732,6 @@ function SupportView({ message }: { message: string }) {
         <Link className="action-muted" href="/track-order">Track an order</Link>
       </div>
     </Panel>
-  );
-}
-
-function Summary({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/42">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-white/78 [overflow-wrap:anywhere]">{value}</p>
-    </div>
   );
 }
 
