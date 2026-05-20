@@ -369,6 +369,52 @@ export async function listCustomerAddresses(customerId: string) {
   return rows.map(mapAddress);
 }
 
+export type AdminCustomerOverview = CustomerAccount & {
+  orderCount: number;
+  totalSpent: number;
+  latestOrderAt?: string;
+  savedAddressesCount: number;
+};
+
+export async function listAdminCustomerOverviews(): Promise<AdminCustomerOverview[]> {
+  const accounts = await dbGet<AccountRow[]>(
+    `${ACCOUNTS_TABLE}?select=id,full_name,phone,email,is_active,created_at,updated_at,last_login_at&order=created_at.desc&limit=500`
+  );
+  const mapped = accounts.map(mapAccount);
+  const orderRows = await dbGet<Array<{
+    customer_id?: string | null;
+    total?: number | string | null;
+    status?: string | null;
+    created_at?: string | null;
+  }>>(
+    "orders?select=customer_id,total,status,created_at&customer_id=not.is.null&limit=2000"
+  ).catch(() => []);
+  const addressRows = await dbGet<Array<{ customer_id?: string | null }>>(
+    `${ADDRESSES_TABLE}?select=customer_id&limit=2000`
+  ).catch(() => []);
+
+  return mapped.map((customer) => {
+    const customerOrders = orderRows.filter((order) => order.customer_id === customer.id);
+    const activeOrders = customerOrders.filter((order) => order.status !== "Cancelled");
+    const totalSpent = activeOrders.reduce((sum, order) => {
+      const total = typeof order.total === "number" ? order.total : Number(order.total ?? 0);
+      return sum + (Number.isFinite(total) ? total : 0);
+    }, 0);
+    const latestOrderAt = customerOrders
+      .map((order) => order.created_at)
+      .filter((value): value is string => Boolean(value))
+      .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
+
+    return {
+      ...customer,
+      orderCount: customerOrders.length,
+      totalSpent,
+      latestOrderAt,
+      savedAddressesCount: addressRows.filter((address) => address.customer_id === customer.id).length,
+    };
+  });
+}
+
 export async function createCustomerAddress(customerId: string, input: Partial<CustomerAddress>) {
   const payload = addressPayload(customerId, input);
   const rows = await dbPost<AddressRow[]>(`${ADDRESSES_TABLE}?select=*`, payload);

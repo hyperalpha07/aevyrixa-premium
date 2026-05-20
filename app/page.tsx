@@ -260,7 +260,14 @@ export default async function Home() {
     listFeaturedTestimonials(6),
   ]);
   const activeProducts = products
-    .filter((p) => p.status === "active" && !p.deletedAt)
+    .filter(
+      (p) =>
+        p.status === "active" &&
+        !p.deletedAt &&
+        p.showOnHomepage !== false &&
+        (p.showInFeaturedCollection ?? p.featured)
+    )
+    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
     .slice(0, 3)
     .map(publicProduct);
   const featuredProduct = products.find((product) => product.featured) ?? products[0];
@@ -311,6 +318,11 @@ export default async function Home() {
   const whatsappUrl = settings.supportWhatsApp
     ? whatsappHref(settings.supportWhatsApp)
     : "";
+  const liveSupportMode = settings.storeProfile.liveSupportMode;
+  const canShowWhatsappSupport =
+    liveSupportMode === "whatsapp" || liveSupportMode === "both";
+  const canShowLiveChatSupport =
+    liveSupportMode === "live_chat" || liveSupportMode === "both";
   const faqs = [
     {
       question: "How much protection should I expect?",
@@ -347,6 +359,7 @@ export default async function Home() {
         settings={settings}
       />
 
+      {hms.showHero && (
       <section className="aev-hero-stage relative isolate overflow-hidden bg-[#0D0820] px-4 pb-14 pt-8 text-white sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
@@ -459,7 +472,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
+      {hms.showTrustStrip && (
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
@@ -488,8 +503,10 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ── Phase 27: Her Care Categories ── */}
+      {hms.showCategories && (
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
@@ -605,9 +622,10 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ── Featured products — early placement for conversion ── */}
-      {activeProducts.length > 0 && (
+      {hms.showFeaturedProducts && activeProducts.length > 0 && (
         <section className="aev-scroll-section px-4 py-14 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -692,6 +710,8 @@ export default async function Home() {
         </section>
       )}
 
+      {hms.showStorySections && (
+      <>
       <section id="how-it-works" className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
@@ -980,6 +1000,8 @@ export default async function Home() {
           )}
         </div>
       </section>
+      </>
+      )}
 
       {/* ── Phase 27: Hygiene-Safe Support Timeline ── */}
       <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
@@ -1044,8 +1066,10 @@ export default async function Home() {
         </div>
       </section>
 
-      <TestimonialsSection reviews={testimonials} />
+      {hms.showTestimonials && <TestimonialsSection reviews={testimonials} />}
 
+      {hms.showStorySections && (
+      <>
       {/* ── Phase 47C: Privacy from order to delivery ── */}
       <section className="px-4 py-10 sm:px-6 sm:py-14">
         <div className="mx-auto max-w-7xl">
@@ -1212,7 +1236,10 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      </>
+      )}
 
+      {hms.showFAQ && (
       <section id="faq" className="px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
@@ -1253,8 +1280,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
-      {hms.ctaSectionEnabled && (
+      {hms.showBottomCTA && hms.ctaSectionEnabled && (
       <section className="px-4 pb-16 pt-12 sm:px-6 sm:pb-28 sm:pt-20">
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-[#FF4DB8]/15 bg-[#0D0820] shadow-2xl">
           {/* background_media_text mode */}
@@ -1412,7 +1440,7 @@ export default async function Home() {
       </section>
       )}
 
-      {hms.whatsappWidgetEnabled && whatsappUrl &&
+      {canShowWhatsappSupport && hms.whatsappWidgetEnabled && whatsappUrl &&
         (hms.whatsappWidgetPlacement === "homepage" || hms.whatsappWidgetPlacement === "all") && (
         <div className="fixed bottom-6 right-4 z-50 sm:right-6">
           <a
@@ -1437,10 +1465,11 @@ export default async function Home() {
       )}
 
       <LiveChatWidget
-        enabled={hms.liveChatEnabled}
+        enabled={canShowLiveChatSupport && hms.liveChatEnabled}
         label={hms.liveChatLabel}
         placement={hms.liveChatPlacement}
         whatsappAlsoEnabled={
+          canShowWhatsappSupport &&
           hms.whatsappWidgetEnabled &&
           !!whatsappUrl &&
           (hms.whatsappWidgetPlacement === "homepage" || hms.whatsappWidgetPlacement === "all")

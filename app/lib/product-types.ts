@@ -20,6 +20,15 @@ export type ProductCatalogItem = {
   currency: string;
   status: ProductStatus;
   featured: boolean;
+  isTrending?: boolean;
+  isBestSeller?: boolean;
+  isNewArrival?: boolean;
+  badgeText?: string;
+  badgeStyle?: "info" | "promo" | "warning" | "success" | string;
+  sortOrder?: number;
+  lowStockThreshold?: number;
+  showOnHomepage?: boolean;
+  showInFeaturedCollection?: boolean;
   stockStatus: ProductStockStatus;
   stockQuantity?: number;
   sizes: string[];

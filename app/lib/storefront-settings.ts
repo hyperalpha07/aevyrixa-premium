@@ -107,16 +107,18 @@ export function normalizeStorefrontSettings(value: unknown): StorefrontSettings 
     settings.appearanceSettings.homepageHeroSubtitle ||
     defaultAdminSettings.storeProfile.brandSubtitle;
   const supportContact = settings.supportWhatsApp || settings.supportPhone;
-  const socialLinks: StorefrontSocialLink[] = [
-    ["Facebook", settings.facebookPageUrl],
-    ["Instagram", settings.instagramUrl],
-    ["TikTok", settings.tiktokUrl],
-    ["YouTube", settings.youtubeUrl],
-  ]
-    .filter((link): link is [StorefrontSocialLink["label"], string] =>
-      Boolean(link[1])
-    )
-    .map(([label, href]) => ({ label, href }));
+  const socialLinks: StorefrontSocialLink[] = settings.storeProfile.showSocialIcons
+    ? [
+        ["Facebook", settings.facebookPageUrl],
+        ["Instagram", settings.instagramUrl],
+        ["TikTok", settings.tiktokUrl],
+        ["YouTube", settings.youtubeUrl],
+      ]
+        .filter((link): link is [StorefrontSocialLink["label"], string] =>
+          Boolean(link[1])
+        )
+        .map(([label, href]) => ({ label, href }))
+    : [];
 
   const allCategories = buildCategories(settings);
   const activeCategories = allCategories.filter((c) => c.status === "active");
@@ -127,14 +129,16 @@ export function normalizeStorefrontSettings(value: unknown): StorefrontSettings 
     brandDisplayName,
     brandShortName,
     brandTagline,
-    footerDescription: [
-      brandTagline,
-      footerDeliveryText(brandTagline, settings.deliveryCoverageText),
-      settings.privacyPackagingMessage,
-    ]
-      .map(footerSentence)
-      .filter(Boolean)
-      .join(" "),
+    footerDescription:
+      settings.storeProfile.footerShortDescription.trim() ||
+      [
+        brandTagline,
+        footerDeliveryText(brandTagline, settings.deliveryCoverageText),
+        settings.privacyPackagingMessage,
+      ]
+        .map(footerSentence)
+        .filter(Boolean)
+        .join(" "),
     supportContact,
     whatsappUrl: whatsappHref(settings.supportWhatsApp),
     socialLinks,

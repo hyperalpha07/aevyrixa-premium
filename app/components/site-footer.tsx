@@ -47,7 +47,16 @@ export default function SiteFooter({
     };
   }, []);
 
-  const { whatsappUrl, socialLinks, supportEmail, brandShortName, brandTagline, privacyPackagingMessage, shopFooterCategories } = settings;
+  const {
+    whatsappUrl,
+    socialLinks,
+    supportEmail,
+    supportPhone,
+    brandShortName,
+    footerDescription,
+    shopFooterCategories,
+    storeProfile,
+  } = settings;
 
   const shopLinks = [
     ...defaultShopLinks,
@@ -85,14 +94,9 @@ export default function SiteFooter({
               </p>
             </div>
           </div>
-          {brandTagline && (
+          {footerDescription && (
             <p className="mt-4 line-clamp-2 text-sm leading-7 text-white/50">
-              {brandTagline}
-            </p>
-          )}
-          {privacyPackagingMessage && (
-            <p className="mt-3 text-xs leading-6 text-white/35">
-              {privacyPackagingMessage}
+              {footerDescription}
             </p>
           )}
         </div>
@@ -130,7 +134,7 @@ export default function SiteFooter({
           <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D8CBE8]/70">Connect</h3>
           <div className="mt-4 flex flex-wrap gap-2.5">
             {/* WhatsApp */}
-            {whatsappUrl && (
+            {storeProfile.showWhatsAppFooterIcon && whatsappUrl && (
               <a
                 href={whatsappUrl}
                 target="_blank"
@@ -194,6 +198,9 @@ export default function SiteFooter({
           {supportEmail && (
             <p className="mt-3 text-xs text-white/35">{supportEmail}</p>
           )}
+          {supportPhone && (
+            <p className="mt-2 text-xs text-white/35">{supportPhone}</p>
+          )}
         </div>
       </div>
 
@@ -201,13 +208,15 @@ export default function SiteFooter({
       <div className="relative mx-auto mt-10 max-w-7xl border-t border-white/[0.07] pt-6">
         <div className="flex flex-col gap-3 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
           <p>Copyright 2026 {brandShortName}. All rights reserved.</p>
-          <div className="flex flex-wrap gap-4">
-            {policyLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="transition hover:text-[#D8CBE8]">
-                {link.label}
-              </Link>
-            ))}
-          </div>
+          {storeProfile.showFooterLegalLinks && (
+            <div className="flex flex-wrap gap-4">
+              {policyLinks.map((link) => (
+                <Link key={link.label} href={link.href} className="transition hover:text-[#D8CBE8]">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </footer>

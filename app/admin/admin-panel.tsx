@@ -116,7 +116,7 @@ const CMS_CATEGORY_NAMES = [
 
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
-type AdminView = "dashboard" | "orders" | "products" | "reviews" | "settings" | "support" | "categories" | "staff";
+type AdminView = "dashboard" | "orders" | "products" | "reviews" | "settings" | "support" | "categories" | "staff" | "customers";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type PaymentStatusFilter = "All" | PaymentStatus;
 type StatusFilter = "All" | OrderStatus;
@@ -281,6 +281,15 @@ type AdminProduct = {
   seoDescription: string;
   status: ProductStatus;
   featured: boolean;
+  isTrending: boolean;
+  isBestSeller: boolean;
+  isNewArrival: boolean;
+  badgeText: string;
+  badgeStyle: string;
+  sortOrder?: number;
+  lowStockThreshold?: number;
+  showOnHomepage: boolean;
+  showInFeaturedCollection: boolean;
   stockStatus: ProductStockStatus;
   stockQuantity?: number;
   visualTheme: ProductVisualTheme;
@@ -339,6 +348,7 @@ const navItems = [
   { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories", permission: "categories.manage" },
   { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
   { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view" },
+  { label: "Customers", href: "/admin/customers", icon: Users, view: "customers", permission: "customers.view" },
   { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
 ] satisfies Array<{
   label: string;
@@ -367,6 +377,15 @@ const emptyProduct: AdminProduct = {
   seoDescription: "",
   status: "Draft",
   featured: false,
+  isTrending: false,
+  isBestSeller: false,
+  isNewArrival: false,
+  badgeText: "",
+  badgeStyle: "info",
+  sortOrder: undefined,
+  lowStockThreshold: undefined,
+  showOnHomepage: true,
+  showInFeaturedCollection: false,
   stockStatus: "in_stock",
   stockQuantity: undefined,
   visualTheme: "blush-violet",
@@ -573,6 +592,16 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     seoDescription: textValue(value.seoDescription) || "",
     status: value.status === "Active" || value.status === "active" ? "Active" : "Draft",
     featured: Boolean(value.featured),
+    isTrending: Boolean(value.isTrending),
+    isBestSeller: Boolean(value.isBestSeller),
+    isNewArrival: Boolean(value.isNewArrival),
+    badgeText: textValue(value.badgeText) || "",
+    badgeStyle: textValue(value.badgeStyle) || "info",
+    sortOrder: numberValue(value.sortOrder),
+    lowStockThreshold: numberValue(value.lowStockThreshold),
+    showOnHomepage: value.showOnHomepage !== false,
+    showInFeaturedCollection:
+      booleanValue(value.showInFeaturedCollection) ?? Boolean(value.featured),
     stockStatus: stockStatuses.includes(value.stockStatus as ProductStockStatus)
       ? (value.stockStatus as ProductStockStatus)
       : "in_stock",
@@ -609,6 +638,15 @@ function productSeed(): AdminProduct[] {
     seoDescription: product.seoDescription,
     status: "Active",
     featured: true,
+    isTrending: false,
+    isBestSeller: false,
+    isNewArrival: false,
+    badgeText: "",
+    badgeStyle: "info",
+    sortOrder: undefined,
+    lowStockThreshold: undefined,
+    showOnHomepage: true,
+    showInFeaturedCollection: true,
     stockStatus: "in_stock",
     stockQuantity: undefined,
     visualTheme: product.visualTheme,
@@ -760,6 +798,15 @@ function productToApiPayload(product: AdminProduct) {
     currency: SITE_CURRENCY,
     status: storeStatus(product.status),
     featured: product.featured,
+    isTrending: product.isTrending,
+    isBestSeller: product.isBestSeller,
+    isNewArrival: product.isNewArrival,
+    badgeText: product.badgeText,
+    badgeStyle: product.badgeStyle,
+    sortOrder: product.sortOrder,
+    lowStockThreshold: product.lowStockThreshold,
+    showOnHomepage: product.showOnHomepage,
+    showInFeaturedCollection: product.showInFeaturedCollection,
     stockStatus: product.stockStatus,
     stockQuantity: product.stockQuantity,
     sizes: product.sizes,
@@ -799,6 +846,16 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
     seoDescription: product.seoDescription ?? "",
     status: adminStatus(product.status),
     featured: product.featured,
+    isTrending: Boolean(product.isTrending),
+    isBestSeller: Boolean(product.isBestSeller),
+    isNewArrival: Boolean(product.isNewArrival),
+    badgeText: product.badgeText ?? "",
+    badgeStyle: product.badgeStyle ?? "info",
+    sortOrder: product.sortOrder,
+    lowStockThreshold: product.lowStockThreshold,
+    showOnHomepage: product.showOnHomepage !== false,
+    showInFeaturedCollection:
+      product.showInFeaturedCollection ?? Boolean(product.featured),
     stockStatus: product.stockStatus,
     stockQuantity: product.stockQuantity,
     visualTheme: product.visualTheme,
@@ -1379,6 +1436,58 @@ function mainItemSummary(order: StoredOrder) {
   return `${firstItem.name ?? "Unnamed item"} x ${quantity}${more}`;
 }
 
+function csvCell(value: unknown) {
+  const text = String(value ?? "").replace(/\r?\n/g, " ").trim();
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function exportOrdersCsv(orders: StoredOrder[]) {
+  const headers = [
+    "order_reference",
+    "created_date",
+    "customer_name",
+    "phone",
+    "city_area",
+    "delivery_address",
+    "items_summary",
+    "total",
+    "payment_method",
+    "order_status",
+    "delivery_status",
+    "courier_name",
+    "tracking_id",
+  ];
+  const rows = orders.map((order) => [
+    orderReferenceKey(order),
+    order.createdAt ?? "",
+    order.customer.fullName ?? "",
+    order.customer.phone ?? "",
+    order.customer.cityArea ?? "",
+    order.customer.address ?? "",
+    order.items
+      .map((item) => `${item.name ?? "Item"} x ${item.quantity ?? 0}`)
+      .join("; "),
+    orderTotal(order),
+    order.paymentDetails.paymentMethod ?? "",
+    order.status,
+    order.deliveryStatus ?? "",
+    order.courierName ?? "",
+    order.trackingId ?? "",
+  ]);
+  const csv = [headers, ...rows]
+    .map((row) => row.map(csvCell).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `aevyrixa-orders-${dateInputValue(new Date())}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 function orderSearchText(order: StoredOrder) {
   return [
     orderReferenceKey(order),
@@ -1886,6 +1995,8 @@ export default function AdminPanel({
               />
             ) : view === "support" ? (
               <SupportSection session={session} />
+            ) : view === "customers" ? (
+              <CustomersSection session={session} />
             ) : view === "staff" ? (
               <StaffSection session={session} />
             ) : (
@@ -1893,6 +2004,7 @@ export default function AdminPanel({
                 orders={orders}
                 products={adminProducts}
                 settings={settings}
+                reviews={reviews}
                 onStatusChange={updateOrderStatus}
                 session={session}
               />
@@ -1911,6 +2023,7 @@ function viewTitle(view: AdminView) {
   if (view === "settings") return "Settings";
   if (view === "support") return "Support Inbox";
   if (view === "categories") return "Category Management";
+  if (view === "customers") return "Customers";
   if (view === "staff") return "Staff & Permissions";
   return "Dashboard";
 }
@@ -1919,12 +2032,14 @@ function DashboardSection({
   orders,
   products,
   settings,
+  reviews,
   onStatusChange,
   session,
 }: {
   orders: StoredOrder[];
   products: AdminProduct[];
   settings: AdminSettings;
+  reviews: AdminReviewClientRecord[];
   onStatusChange: (orderId: string, status: OrderStatus) => void;
   session: AdminSessionUser;
 }) {
@@ -1933,11 +2048,13 @@ function DashboardSection({
   const [customEnd, setCustomEnd] = useState(dateInputValue(new Date()));
   const [supportConversations, setSupportConversations] = useState<DashboardSupportConversation[]>([]);
   const [activityLogs, setActivityLogs] = useState<AdminActivityClientRecord[]>([]);
+  const [staffRecords, setStaffRecords] = useState<AdminStaffClientRecord[]>([]);
   const canViewOrders = hasPermission(session, "orders.view");
   const canViewProducts = hasPermission(session, "products.view");
   const canViewSupport = hasPermission(session, "support.view");
   const canViewActivity = hasPermission(session, "activity.view");
   const canViewAnalytics = hasPermission(session, "analytics.view");
+  const pendingReviews = reviews.filter((review) => review.status === "pending");
 
   useEffect(() => {
     if (!canViewSupport) return;
@@ -1953,15 +2070,16 @@ function DashboardSection({
   }, [canViewSupport]);
 
   useEffect(() => {
-    if (!canViewActivity) return;
+    if (!canViewActivity && !hasPermission(session, "staff.manage")) return;
 
     void fetch("/api/admin/staff", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
-      .then((payload: { activityLogs?: AdminActivityClientRecord[] } | null) => {
+      .then((payload: { activityLogs?: AdminActivityClientRecord[]; staff?: AdminStaffClientRecord[] } | null) => {
         if (Array.isArray(payload?.activityLogs)) setActivityLogs(payload.activityLogs);
+        if (Array.isArray(payload?.staff)) setStaffRecords(payload.staff);
       })
       .catch(() => null);
-  }, [canViewActivity]);
+  }, [canViewActivity, session]);
 
   const range = useMemo(
     () => buildDashboardRange(rangePreset, customStart, customEnd),
@@ -2138,6 +2256,7 @@ function DashboardSection({
     0
   );
   const activityInRange = activityLogs.filter((log) => isWithinDashboardRange(log.createdAt, range));
+  const activeStaffCount = staffRecords.filter((staff) => staff.isActive).length;
   const activityDistribution = useMemo(() => {
     const groups = ["order", "product", "settings", "support", "staff"];
     return groups.map((group) => ({
@@ -2210,6 +2329,58 @@ function DashboardSection({
           Your account can view permitted operational sections. Full analytics access is limited by staff permissions.
         </div>
       )}
+
+      <section className="rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
+        <SectionHeader title="Control room summary" />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {canViewOrders && (
+            <>
+              <MetricCard label="Total orders" value={String(metrics.totalOrders)} icon={ShoppingBag} compact />
+              <MetricCard label="Pending orders" value={String(metrics.pendingOrders)} icon={Sparkles} compact />
+              <MetricCard label="Confirmed orders" value={String(metrics.confirmedOrders)} icon={ShieldCheck} compact />
+              <MetricCard label="Cancelled / archived / test" value={String(metrics.cancelledOrders + metrics.archivedTestOrders)} icon={ClipboardList} compact />
+              <MetricCard label="Revenue estimate" value={formatCurrency(metrics.totalRevenue)} icon={CreditCard} compact />
+            </>
+          )}
+          {canViewProducts && (
+            <>
+              <MetricCard label="Product count" value={String(activeProducts.length + draftProducts.length)} icon={Boxes} compact />
+              <MetricCard label="Low stock" value={String(lowStockProducts.length)} icon={PackageCheck} compact />
+              <MetricCard label="Out of stock" value={String(outOfStockProducts.length)} icon={BellIcon} compact />
+            </>
+          )}
+          {hasPermission(session, "reviews.view") && (
+            <MetricCard label="Pending reviews" value={String(pendingReviews.length)} icon={Star} compact />
+          )}
+          {canViewSupport && (
+            <MetricCard label="Support unread" value={String(unreadSupport)} icon={MessageSquare} compact />
+          )}
+          {hasPermission(session, "staff.manage") && (
+            <MetricCard label="Active staff" value={String(activeStaffCount)} icon={Users} compact />
+          )}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {[
+            ["Add product", "/admin/products", "products.edit"],
+            ["Manage orders", "/admin/orders", "orders.view"],
+            ["Manage categories", "/admin/categories", "categories.manage"],
+            ["Manage reviews", "/admin/reviews", "reviews.view"],
+            ["Manage support", "/admin/support", "support.view"],
+            ["Edit homepage", "/admin/settings", "homepage.manage"],
+            ["Edit settings", "/admin/settings", "settings.view"],
+          ].map(([label, href, permission]) =>
+            hasPermission(session, permission as AdminPermission) ? (
+              <Link
+                key={label}
+                href={href}
+                className="rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-200/12"
+              >
+                {label}
+              </Link>
+            ) : null
+          )}
+        </div>
+      </section>
 
       {canViewOrders && (
         <>
@@ -2535,6 +2706,7 @@ function OrdersSection({
   );
   const selectedOrder =
     visibleOrders.find((order) => order.orderId === expandedOrderId) ?? null;
+  const canExportOrders = hasPermission(session, "orders.export");
 
   return (
     <div className="mt-6 space-y-5">
@@ -2545,6 +2717,15 @@ function OrdersSection({
             Select an order from the operations queue to manage customer, payment, delivery, item, and support details in the command panel.
           </p>
         </div>
+        {canExportOrders && (
+          <button
+            type="button"
+            onClick={() => exportOrdersCsv(visibleOrders)}
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-cyan-200/25 bg-cyan-200/[0.08] px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-200/12"
+          >
+            Export CSV
+          </button>
+        )}
       </div>
       <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3 sm:p-4">
         <div className="grid gap-3 lg:grid-cols-[minmax(260px,1.3fr)_repeat(3,minmax(150px,0.7fr))] 2xl:grid-cols-[minmax(260px,1.3fr)_repeat(6,minmax(145px,0.65fr))]">
@@ -3331,6 +3512,85 @@ function ProductEditor({
           }
         />
         <SelectField
+          label="Trending"
+          value={draft.isTrending ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, isTrending: value === "Yes" }))
+          }
+        />
+        <SelectField
+          label="Best seller"
+          value={draft.isBestSeller ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, isBestSeller: value === "Yes" }))
+          }
+        />
+        <SelectField
+          label="New arrival"
+          value={draft.isNewArrival ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, isNewArrival: value === "Yes" }))
+          }
+        />
+        <TextField
+          label="Badge text"
+          value={draft.badgeText}
+          onChange={(value) => updateField("badgeText", value)}
+          placeholder="Admin-set label only"
+        />
+        <SelectField
+          label="Badge style"
+          value={draft.badgeStyle}
+          options={["info", "promo", "warning", "success"]}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, badgeStyle: value }))
+          }
+        />
+        <TextField
+          label="Sort order"
+          value={draft.sortOrder?.toString() ?? ""}
+          onChange={(value) =>
+            setDraft((current) => ({
+              ...current,
+              sortOrder: value.trim() ? Number(value) : undefined,
+            }))
+          }
+          placeholder="1"
+        />
+        <TextField
+          label="Low stock threshold"
+          value={draft.lowStockThreshold?.toString() ?? ""}
+          onChange={(value) =>
+            setDraft((current) => ({
+              ...current,
+              lowStockThreshold: value.trim() ? Number(value) : undefined,
+            }))
+          }
+          placeholder="5"
+        />
+        <SelectField
+          label="Show on homepage"
+          value={draft.showOnHomepage ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) =>
+            setDraft((current) => ({ ...current, showOnHomepage: value === "Yes" }))
+          }
+        />
+        <SelectField
+          label="Featured collection"
+          value={draft.showInFeaturedCollection ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) =>
+            setDraft((current) => ({
+              ...current,
+              showInFeaturedCollection: value === "Yes",
+            }))
+          }
+        />
+        <SelectField
           label="Visual theme"
           value={draft.visualTheme}
           options={visualThemes}
@@ -3675,6 +3935,7 @@ function SettingsSection({
 }) {
   const [draft, setDraft] = useState(settings);
   const [activeSection, setActiveSection] = useState("storeProfile");
+  const [settingsSearch, setSettingsSearch] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hmUploading, setHmUploading] = useState<Record<string, boolean>>({});
@@ -3809,6 +4070,10 @@ function SettingsSection({
     homepageMediaSettings: { ...current.homepageMediaSettings, ...updates },
   }));
 
+  const updateFooterControlSettings = (
+    updates: Partial<AdminSettings["storeProfile"]>
+  ) => updateStoreProfile(updates);
+
   const updateHomepageSectionMedia = (
     section: "heroMedia" | "careMedia" | "experienceMedia",
     updates: Partial<AdminSettings["homepageMediaSettings"]["heroMedia"]>
@@ -3830,6 +4095,8 @@ function SettingsSection({
     { id: "notificationSettings", label: "Notifications", icon: BellIcon },
     { id: "seoSettings", label: "SEO", icon: Search },
     { id: "appearanceSettings", label: "Appearance", icon: Sparkles },
+    { id: "announcementSettings", label: "Announcement", icon: BellIcon },
+    { id: "footerSupportSettings", label: "Footer / Support", icon: MessageSquare },
     { id: "homepageMediaSettings", label: "Homepage Media", icon: Globe },
     { id: "advancedSettings", label: "Advanced", icon: Settings },
   ] as const;
@@ -3840,7 +4107,12 @@ function SettingsSection({
     }
     if (tab.id === "seoSettings") return hasPermission(session, "settings.editSeoAnalytics");
     if (tab.id === "homepageMediaSettings") return hasPermission(session, "homepage.manage");
+    if (tab.id === "announcementSettings") return hasPermission(session, "announcement.manage") || hasPermission(session, "settings.editBasic");
+    if (tab.id === "footerSupportSettings") return hasPermission(session, "footer.manage") || hasPermission(session, "settings.editBasic");
     return hasPermission(session, "settings.view");
+  }).filter((tab) => {
+    const query = settingsSearch.trim().toLowerCase();
+    return !query || tab.label.toLowerCase().includes(query) || tab.id.toLowerCase().includes(query);
   });
 
   return (
@@ -3863,6 +4135,18 @@ function SettingsSection({
 
       <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
         <nav className="grid gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3 xl:sticky xl:top-5 xl:self-start">
+          <label className="relative block min-w-0">
+            <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+              Search settings
+            </span>
+            <input
+              value={settingsSearch}
+              onChange={(event) => setSettingsSearch(event.target.value)}
+              placeholder="Label or section"
+              className="w-full rounded-2xl border border-white/10 bg-black/24 py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+            />
+          </label>
           {visibleSettingsTabs.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
@@ -4633,8 +4917,165 @@ function SettingsSection({
             </SettingsCard>
           )}
 
+          {activeSection === "announcementSettings" && (
+            <SettingsCard
+              eyebrow="Announcement"
+              title="Public announcement / campaign banner"
+              description="Use factual campaign or service messages only. Avoid fake discount or guarantee claims."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <ToggleField
+                  label="Enable announcement"
+                  checked={draft.appearanceSettings.enableAnnouncement}
+                  onChange={(value) =>
+                    updateAppearanceSettings({
+                      enableAnnouncement: value,
+                      announcementBarEnabled: value,
+                    })
+                  }
+                />
+                <SelectField
+                  label="Announcement style"
+                  value={draft.appearanceSettings.announcementStyle}
+                  options={["info", "promo", "warning", "success"] as const}
+                  onChange={(value) => updateAppearanceSettings({ announcementStyle: value })}
+                />
+                <TextField
+                  label="Link label"
+                  value={draft.appearanceSettings.announcementLinkLabel}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ announcementLinkLabel: value })
+                  }
+                />
+                <TextField
+                  label="Link URL"
+                  value={draft.appearanceSettings.announcementLinkUrl}
+                  onChange={(value) =>
+                    updateAppearanceSettings({ announcementLinkUrl: value })
+                  }
+                  placeholder="/product"
+                  inputMode="url"
+                />
+                <ToggleField
+                  label="Show on homepage"
+                  checked={draft.appearanceSettings.showOnHomepage}
+                  onChange={(value) => updateAppearanceSettings({ showOnHomepage: value })}
+                />
+                <ToggleField
+                  label="Show on shop"
+                  checked={draft.appearanceSettings.showOnShop}
+                  onChange={(value) => updateAppearanceSettings({ showOnShop: value })}
+                />
+                <ToggleField
+                  label="Show on product pages"
+                  checked={draft.appearanceSettings.showOnProductPages}
+                  onChange={(value) => updateAppearanceSettings({ showOnProductPages: value })}
+                />
+                <ToggleField
+                  label="Show on checkout/cart"
+                  checked={draft.appearanceSettings.showOnCheckout}
+                  onChange={(value) => updateAppearanceSettings({ showOnCheckout: value })}
+                />
+                <div className="lg:col-span-2">
+                  <TextAreaField
+                    label="Announcement text"
+                    value={draft.appearanceSettings.announcementText}
+                    onChange={(value) =>
+                      updateAppearanceSettings({
+                        announcementText: value,
+                        announcementBarText: value,
+                      })
+                    }
+                    tall
+                  />
+                </div>
+              </div>
+            </SettingsCard>
+          )}
+
+          {activeSection === "footerSupportSettings" && (
+            <SettingsCard
+              eyebrow="Footer / Support"
+              title="Footer, social, and support controls"
+              description="Public contact surfaces use these settings. Private admin data is never shown."
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <TextAreaField
+                  label="Footer short description"
+                  value={draft.storeProfile.footerShortDescription}
+                  onChange={(value) =>
+                    updateFooterControlSettings({ footerShortDescription: value })
+                  }
+                  tall
+                />
+                <SelectField
+                  label="Live support mode"
+                  value={draft.storeProfile.liveSupportMode}
+                  options={["off", "live_chat", "whatsapp", "both"] as const}
+                  onChange={(value) => updateFooterControlSettings({ liveSupportMode: value })}
+                />
+                <ToggleField
+                  label="Show footer legal links"
+                  checked={draft.storeProfile.showFooterLegalLinks}
+                  onChange={(value) =>
+                    updateFooterControlSettings({ showFooterLegalLinks: value })
+                  }
+                />
+                <ToggleField
+                  label="Show social icons"
+                  checked={draft.storeProfile.showSocialIcons}
+                  onChange={(value) =>
+                    updateFooterControlSettings({ showSocialIcons: value })
+                  }
+                />
+                <ToggleField
+                  label="Show WhatsApp footer icon"
+                  checked={draft.storeProfile.showWhatsAppFooterIcon}
+                  onChange={(value) =>
+                    updateFooterControlSettings({ showWhatsAppFooterIcon: value })
+                  }
+                />
+                <ToggleField
+                  label="Show live support widget"
+                  checked={draft.homepageMediaSettings.liveChatEnabled}
+                  onChange={(value) =>
+                    updateHomepageMediaSettings({ liveChatEnabled: value })
+                  }
+                />
+              </div>
+            </SettingsCard>
+          )}
+
           {activeSection === "homepageMediaSettings" && (
             <>
+              <SettingsCard
+                eyebrow="Homepage Sections"
+                title="Visibility controls"
+                description="Toggles hide or show major homepage sections. Section ordering is left unchanged for layout safety in this phase."
+              >
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    ["showHero", "Hero"],
+                    ["showTrustStrip", "Trust strip"],
+                    ["showCategories", "Categories"],
+                    ["showFeaturedProducts", "Featured products"],
+                    ["showStorySections", "Story sections"],
+                    ["showTestimonials", "Testimonials"],
+                    ["showFAQ", "FAQ"],
+                    ["showBottomCTA", "Bottom CTA"],
+                  ].map(([key, label]) => (
+                    <ToggleField
+                      key={key}
+                      label={label}
+                      checked={Boolean(draft.homepageMediaSettings[key as keyof HomepageMediaSettings])}
+                      onChange={(value) =>
+                        updateHomepageMediaSettings({ [key]: value } as Partial<HomepageMediaSettings>)
+                      }
+                    />
+                  ))}
+                </div>
+              </SettingsCard>
+
               <SettingsCard
                 eyebrow="Homepage Media — Hero"
                 title="Hero section media"
@@ -5420,6 +5861,20 @@ type AdminConvDetail = {
   messages: AdminConvMessage[];
 };
 
+type AdminCustomerClientRecord = {
+  id: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  isActive: boolean;
+  createdAt?: string;
+  lastLoginAt?: string;
+  orderCount: number;
+  totalSpent: number;
+  latestOrderAt?: string;
+  savedAddressesCount: number;
+};
+
 const convStatusLabels: Record<ConvStatus, string> = {
   open: "Open",
   pending: "Pending",
@@ -5444,6 +5899,100 @@ function supportTimeLabel(value?: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+function CustomersSection({ session }: { session: AdminSessionUser }) {
+  const [customers, setCustomers] = useState<AdminCustomerClientRecord[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!hasPermission(session, "customers.view")) {
+      setError(blockedPermissionMessage);
+      setLoading(false);
+      return;
+    }
+
+    void fetch("/api/admin/customers", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as {
+          customers?: AdminCustomerClientRecord[];
+          errors?: string[];
+        } | null;
+        if (!response.ok || !Array.isArray(payload?.customers)) {
+          throw new Error(payload?.errors?.[0] ?? "Customers could not be loaded.");
+        }
+        setCustomers(payload.customers);
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "Customers could not be loaded."))
+      .finally(() => setLoading(false));
+  }, [session]);
+
+  const visibleCustomers = customers.filter((customer) => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return true;
+    return [customer.fullName, customer.phone, customer.email]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
+  });
+
+  return (
+    <div className="mt-6 space-y-5">
+      <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-end">
+          <label className="relative block min-w-0">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
+              Search customers
+            </span>
+            <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Name, phone, or email"
+              className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+            />
+          </label>
+          <p className="text-sm text-white/45">
+            Showing {visibleCustomers.length} of {customers.length}
+          </p>
+        </div>
+      </section>
+
+      {error && (
+        <div className="rounded-[1.25rem] border border-amber-200/18 bg-amber-200/[0.065] p-4 text-sm leading-6 text-amber-50/78">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <NoDataState label="Loading customers..." />
+      ) : (
+        <div className="grid gap-3">
+          {visibleCustomers.map((customer) => (
+            <article
+              key={customer.id}
+              className="rounded-[1.25rem] border border-white/10 bg-black/24 p-4"
+            >
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <DetailLine label="Customer" value={customer.fullName} />
+                <DetailLine label="Phone" value={customer.phone} />
+                <DetailLine label="Email" value={customer.email} />
+                <DetailLine label="Status" value={customer.isActive ? "Active" : "Inactive"} />
+                <DetailLine label="Orders" value={String(customer.orderCount)} />
+                <DetailLine label="Total spent estimate" value={formatCurrency(customer.totalSpent)} />
+                <DetailLine label="Latest order" value={formatDate(customer.latestOrderAt)} />
+                <DetailLine label="Saved addresses" value={String(customer.savedAddressesCount)} />
+              </div>
+            </article>
+          ))}
+          {visibleCustomers.length === 0 && <NoDataState label="No customers found." />}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function SupportSection({ session }: { session: AdminSessionUser }) {

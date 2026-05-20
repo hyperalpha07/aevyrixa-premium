@@ -55,6 +55,35 @@ function requiredSettingsPermissions(
   if (!sameValue(current.checkoutSettings, next.checkoutSettings)) required.add("settings.editBasic");
   if (!sameValue(current.policySettings, next.policySettings)) required.add("settings.editBasic");
   if (!sameValue(current.appearanceSettings, next.appearanceSettings)) required.add("settings.editBasic");
+  if (
+    !sameValue(current.appearanceSettings, next.appearanceSettings) &&
+    !sameValue(
+      {
+        enableAnnouncement: current.appearanceSettings.enableAnnouncement,
+        announcementText: current.appearanceSettings.announcementText,
+        announcementLinkLabel: current.appearanceSettings.announcementLinkLabel,
+        announcementLinkUrl: current.appearanceSettings.announcementLinkUrl,
+        announcementStyle: current.appearanceSettings.announcementStyle,
+        showOnHomepage: current.appearanceSettings.showOnHomepage,
+        showOnShop: current.appearanceSettings.showOnShop,
+        showOnProductPages: current.appearanceSettings.showOnProductPages,
+        showOnCheckout: current.appearanceSettings.showOnCheckout,
+      },
+      {
+        enableAnnouncement: next.appearanceSettings.enableAnnouncement,
+        announcementText: next.appearanceSettings.announcementText,
+        announcementLinkLabel: next.appearanceSettings.announcementLinkLabel,
+        announcementLinkUrl: next.appearanceSettings.announcementLinkUrl,
+        announcementStyle: next.appearanceSettings.announcementStyle,
+        showOnHomepage: next.appearanceSettings.showOnHomepage,
+        showOnShop: next.appearanceSettings.showOnShop,
+        showOnProductPages: next.appearanceSettings.showOnProductPages,
+        showOnCheckout: next.appearanceSettings.showOnCheckout,
+      }
+    )
+  ) {
+    required.add("announcement.manage");
+  }
 
   if (!sameValue(current.paymentSettings, next.paymentSettings)) required.add("settings.editSensitive");
   if (!sameValue(current.deliverySettings, next.deliverySettings)) required.add("settings.editSensitive");

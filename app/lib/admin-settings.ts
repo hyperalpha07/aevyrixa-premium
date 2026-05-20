@@ -23,6 +23,11 @@ export type StoreProfileSettings = {
   instagramUrl: string;
   tiktokUrl: string;
   youtubeUrl: string;
+  footerShortDescription: string;
+  showFooterLegalLinks: boolean;
+  showSocialIcons: boolean;
+  showWhatsAppFooterIcon: boolean;
+  liveSupportMode: "off" | "live_chat" | "whatsapp" | "both";
   storeStatus: StoreStatus;
 };
 
@@ -147,6 +152,15 @@ export type AppearanceSettings = {
   secondaryCtaText: string;
   announcementBarEnabled: boolean;
   announcementBarText: string;
+  enableAnnouncement: boolean;
+  announcementText: string;
+  announcementLinkLabel: string;
+  announcementLinkUrl: string;
+  announcementStyle: "info" | "promo" | "warning" | "success";
+  showOnHomepage: boolean;
+  showOnShop: boolean;
+  showOnProductPages: boolean;
+  showOnCheckout: boolean;
 };
 
 export type WidgetPlacement = "homepage" | "all" | "product" | "support" | "cart";
@@ -169,6 +183,14 @@ export type HomepageCategoryMediaMode = LayerComfortMediaMode;
 export type CtaSectionMediaMode = "no_media" | "image_text" | "video_text" | "background_media_text";
 
 export type HomepageMediaSettings = {
+  showHero: boolean;
+  showTrustStrip: boolean;
+  showCategories: boolean;
+  showFeaturedProducts: boolean;
+  showStorySections: boolean;
+  showTestimonials: boolean;
+  showFAQ: boolean;
+  showBottomCTA: boolean;
   heroMedia: HomepageSectionMedia;
   careMedia: HomepageSectionMedia;
   experienceMedia: HomepageSectionMedia;
@@ -331,6 +353,11 @@ const defaultGroups: AdminSettingsGroups = {
     instagramUrl: "",
     tiktokUrl: "",
     youtubeUrl: "",
+    footerShortDescription: "",
+    showFooterLegalLinks: true,
+    showSocialIcons: true,
+    showWhatsAppFooterIcon: true,
+    liveSupportMode: "both",
     storeStatus: "live",
   },
   paymentSettings: {
@@ -448,6 +475,15 @@ const defaultGroups: AdminSettingsGroups = {
     secondaryCtaText: "Track Order",
     announcementBarEnabled: false,
     announcementBarText: "",
+    enableAnnouncement: false,
+    announcementText: "",
+    announcementLinkLabel: "",
+    announcementLinkUrl: "",
+    announcementStyle: "info",
+    showOnHomepage: true,
+    showOnShop: true,
+    showOnProductPages: true,
+    showOnCheckout: true,
   },
   advancedSettings: {
     maintenanceMode: false,
@@ -458,6 +494,14 @@ const defaultGroups: AdminSettingsGroups = {
     backupReminderText: "Review Supabase and Vercel backups before major changes.",
   },
   homepageMediaSettings: {
+    showHero: true,
+    showTrustStrip: true,
+    showCategories: true,
+    showFeaturedProducts: true,
+    showStorySections: true,
+    showTestimonials: true,
+    showFAQ: true,
+    showBottomCTA: true,
     heroMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
     careMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
     experienceMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
@@ -594,6 +638,18 @@ function storeStatusValue(value: unknown): StoreStatus {
   return value === "maintenance" || value === "coming_soon" || value === "live"
     ? value
     : defaultGroups.storeProfile.storeStatus;
+}
+
+function announcementStyleValue(value: unknown): AppearanceSettings["announcementStyle"] {
+  return value === "promo" || value === "warning" || value === "success" || value === "info"
+    ? value
+    : "info";
+}
+
+function liveSupportModeValue(value: unknown): StoreProfileSettings["liveSupportMode"] {
+  return value === "off" || value === "live_chat" || value === "whatsapp" || value === "both"
+    ? value
+    : "both";
 }
 
 function orderStatusValue(value: unknown): OrderStatus {
@@ -798,6 +854,23 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         publicUrlValue(storeProfile.instagramUrl) || publicUrlValue(value.instagramUrl),
       tiktokUrl: publicUrlValue(storeProfile.tiktokUrl) || publicUrlValue(value.tiktokUrl),
       youtubeUrl: publicUrlValue(storeProfile.youtubeUrl) || publicUrlValue(value.youtubeUrl),
+      footerShortDescription: safeText(
+        storeProfile.footerShortDescription,
+        defaultGroups.storeProfile.footerShortDescription
+      ),
+      showFooterLegalLinks: booleanValue(
+        storeProfile.showFooterLegalLinks,
+        defaultGroups.storeProfile.showFooterLegalLinks
+      ),
+      showSocialIcons: booleanValue(
+        storeProfile.showSocialIcons,
+        defaultGroups.storeProfile.showSocialIcons
+      ),
+      showWhatsAppFooterIcon: booleanValue(
+        storeProfile.showWhatsAppFooterIcon,
+        defaultGroups.storeProfile.showWhatsAppFooterIcon
+      ),
+      liveSupportMode: liveSupportModeValue(storeProfile.liveSupportMode),
       storeStatus: storeStatusValue(storeProfile.storeStatus),
     },
     paymentSettings: {
@@ -1102,6 +1175,39 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         appearanceSettings.announcementBarText,
         defaultGroups.appearanceSettings.announcementBarText
       ),
+      enableAnnouncement: booleanValue(
+        appearanceSettings.enableAnnouncement ?? appearanceSettings.announcementBarEnabled,
+        defaultGroups.appearanceSettings.enableAnnouncement
+      ),
+      announcementText: safeText(
+        appearanceSettings.announcementText ?? appearanceSettings.announcementBarText,
+        defaultGroups.appearanceSettings.announcementText
+      ),
+      announcementLinkLabel: safeText(
+        appearanceSettings.announcementLinkLabel,
+        defaultGroups.appearanceSettings.announcementLinkLabel
+      ),
+      announcementLinkUrl: safeText(
+        appearanceSettings.announcementLinkUrl,
+        defaultGroups.appearanceSettings.announcementLinkUrl
+      ),
+      announcementStyle: announcementStyleValue(appearanceSettings.announcementStyle),
+      showOnHomepage: booleanValue(
+        appearanceSettings.showOnHomepage,
+        defaultGroups.appearanceSettings.showOnHomepage
+      ),
+      showOnShop: booleanValue(
+        appearanceSettings.showOnShop,
+        defaultGroups.appearanceSettings.showOnShop
+      ),
+      showOnProductPages: booleanValue(
+        appearanceSettings.showOnProductPages,
+        defaultGroups.appearanceSettings.showOnProductPages
+      ),
+      showOnCheckout: booleanValue(
+        appearanceSettings.showOnCheckout,
+        defaultGroups.appearanceSettings.showOnCheckout
+      ),
     },
     advancedSettings: {
       maintenanceMode: booleanValue(
@@ -1130,6 +1236,38 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       ),
     },
     homepageMediaSettings: {
+      showHero: booleanValue(
+        homepageMediaRaw.showHero,
+        defaultGroups.homepageMediaSettings.showHero
+      ),
+      showTrustStrip: booleanValue(
+        homepageMediaRaw.showTrustStrip,
+        defaultGroups.homepageMediaSettings.showTrustStrip
+      ),
+      showCategories: booleanValue(
+        homepageMediaRaw.showCategories,
+        defaultGroups.homepageMediaSettings.showCategories
+      ),
+      showFeaturedProducts: booleanValue(
+        homepageMediaRaw.showFeaturedProducts,
+        defaultGroups.homepageMediaSettings.showFeaturedProducts
+      ),
+      showStorySections: booleanValue(
+        homepageMediaRaw.showStorySections,
+        defaultGroups.homepageMediaSettings.showStorySections
+      ),
+      showTestimonials: booleanValue(
+        homepageMediaRaw.showTestimonials,
+        defaultGroups.homepageMediaSettings.showTestimonials
+      ),
+      showFAQ: booleanValue(
+        homepageMediaRaw.showFAQ,
+        defaultGroups.homepageMediaSettings.showFAQ
+      ),
+      showBottomCTA: booleanValue(
+        homepageMediaRaw.showBottomCTA,
+        defaultGroups.homepageMediaSettings.showBottomCTA
+      ),
       heroMedia: sectionMediaValue(
         isRecord(homepageMediaRaw.heroMedia) ? homepageMediaRaw.heroMedia : {}
       ),

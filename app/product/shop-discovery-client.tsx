@@ -98,11 +98,12 @@ function isNewProduct(product: ProductCatalogItem) {
 }
 
 function isLimitedStock(product: ProductCatalogItem) {
+  const threshold = product.lowStockThreshold ?? 5;
   if (product.stockStatus === "low_stock") return true;
   return (
     typeof product.stockQuantity === "number" &&
     product.stockQuantity > 0 &&
-    product.stockQuantity <= 5
+    product.stockQuantity <= threshold
   );
 }
 
@@ -143,7 +144,11 @@ function ProductCard({
   const productHref = `/product/${product.slug}`;
   const quickAddAvailable = canQuickAdd(product);
   const badges = [
+    product.badgeText || "",
     product.featured ? "Flagship" : "",
+    product.isTrending ? "Trending" : "",
+    product.isBestSeller ? "Best Seller" : "",
+    product.isNewArrival ? "New Arrival" : "",
     isNewProduct(product) ? "New" : "",
     isLimitedStock(product) ? "Limited Stock" : "",
   ].filter(Boolean);
@@ -348,7 +353,11 @@ export default function ShopDiscoveryClient({
   );
 
   const featuredProducts = useMemo(
-    () => products.filter((product) => product.featured).slice(0, 4),
+    () =>
+      products
+        .filter((product) => product.showInFeaturedCollection ?? product.featured)
+        .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
+        .slice(0, 4),
     [products]
   );
   const newArrivals = useMemo(
@@ -378,8 +387,8 @@ export default function ShopDiscoveryClient({
         if (price === "under-1300" && product.price >= 1300) return false;
         if (price === "1300-1600" && (product.price < 1300 || product.price > 1600)) return false;
         if (price === "over-1600" && product.price <= 1600) return false;
-        if (signal === "new" && !isNewProduct(product)) return false;
-        if (signal === "featured" && !product.featured) return false;
+        if (signal === "new" && !(product.isNewArrival || isNewProduct(product))) return false;
+        if (signal === "featured" && !(product.showInFeaturedCollection ?? product.featured)) return false;
         if (signal === "limited_stock" && !isLimitedStock(product)) return false;
         return true;
       })
@@ -388,7 +397,12 @@ export default function ShopDiscoveryClient({
         if (sort === "price-asc") return a.price - b.price;
         if (sort === "price-desc") return b.price - a.price;
         if (sort === "stock") return stockRank[a.stockStatus] - stockRank[b.stockStatus];
-        return Number(b.featured) - Number(a.featured) || dateValue(b) - dateValue(a);
+        return (
+          Number(b.showInFeaturedCollection ?? b.featured) -
+            Number(a.showInFeaturedCollection ?? a.featured) ||
+          (a.sortOrder ?? 999) - (b.sortOrder ?? 999) ||
+          dateValue(b) - dateValue(a)
+        );
       });
   }, [category, price, products, query, signal, sort, stock]);
 

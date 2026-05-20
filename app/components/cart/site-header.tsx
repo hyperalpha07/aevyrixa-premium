@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronDown, PackageSearch, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
+import AnnouncementBanner from "@/app/components/announcement-banner";
 import {
   defaultStorefrontSettings,
   type StorefrontSettings,
@@ -52,6 +53,20 @@ export default function SiteHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#080611]/88 backdrop-blur-xl">
+      <AnnouncementBanner
+        settings={settings}
+        surface={
+          active === "home"
+            ? "homepage"
+            : active === "shop"
+              ? "shop"
+              : active === "product"
+                ? "product"
+                : active === "cart"
+                  ? "checkout"
+                  : "other"
+        }
+      />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#FF4DB8]/20 to-transparent" />
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 sm:py-4 md:flex md:justify-between">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">

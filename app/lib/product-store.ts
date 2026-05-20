@@ -49,6 +49,7 @@ type SupabaseProductRow = {
   deleted_by?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  merchandising?: unknown;
 };
 
 class ProductStoreError extends Error {
@@ -206,6 +207,18 @@ function stringArrayValue(value: unknown) {
     .filter(Boolean);
 }
 
+function recordValue(value: unknown) {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function booleanValue(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return undefined;
+}
+
 function normalizeStatus(value: unknown): ProductStatus {
   if (typeof value !== "string") return "draft";
 
@@ -304,6 +317,15 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
     currency: SITE_CURRENCY,
     status: normalizeStatus(input.status),
     featured: Boolean(input.featured),
+    isTrending: Boolean(input.isTrending),
+    isBestSeller: Boolean(input.isBestSeller),
+    isNewArrival: Boolean(input.isNewArrival),
+    badgeText: optionalText(input.badgeText),
+    badgeStyle: optionalText(input.badgeStyle),
+    sortOrder: numberValue(input.sortOrder),
+    lowStockThreshold: numberValue(input.lowStockThreshold),
+    showOnHomepage: input.showOnHomepage !== false,
+    showInFeaturedCollection: input.showInFeaturedCollection ?? Boolean(input.featured),
     stockStatus: normalizeStockStatus(input.stockStatus),
     stockQuantity: numberValue(input.stockQuantity),
     sizes: stringArrayValue(input.sizes),
@@ -334,6 +356,7 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
 
 function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
   const visualTheme = normalizeVisual(row.visual_theme ?? row.visual);
+  const merchandising = recordValue(row.merchandising);
 
   return {
     id: row.id ?? "",
@@ -347,6 +370,16 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     currency: SITE_CURRENCY,
     status: normalizeStatus(row.status),
     featured: Boolean(row.featured),
+    isTrending: Boolean(merchandising.isTrending),
+    isBestSeller: Boolean(merchandising.isBestSeller),
+    isNewArrival: Boolean(merchandising.isNewArrival),
+    badgeText: optionalText(merchandising.badgeText),
+    badgeStyle: optionalText(merchandising.badgeStyle),
+    sortOrder: numberValue(merchandising.sortOrder),
+    lowStockThreshold: numberValue(merchandising.lowStockThreshold),
+    showOnHomepage: booleanValue(merchandising.showOnHomepage) ?? true,
+    showInFeaturedCollection:
+      booleanValue(merchandising.showInFeaturedCollection) ?? Boolean(row.featured),
     stockStatus: normalizeStockStatus(row.stock_status),
     stockQuantity: numberValue(row.stock_quantity),
     sizes: stringArrayValue(row.sizes),
@@ -407,6 +440,31 @@ function toSupabasePayload(product: ProductMutationInput) {
   }
   if (hasProductField(product, "status")) payload.status = normalizeStatus(product.status);
   if (hasProductField(product, "featured")) payload.featured = Boolean(product.featured);
+  const merchandising = {
+    isTrending: Boolean(product.isTrending),
+    isBestSeller: Boolean(product.isBestSeller),
+    isNewArrival: Boolean(product.isNewArrival),
+    badgeText: optionalText(product.badgeText) ?? "",
+    badgeStyle: optionalText(product.badgeStyle) ?? "info",
+    sortOrder: numberValue(product.sortOrder) ?? null,
+    lowStockThreshold: numberValue(product.lowStockThreshold) ?? null,
+    showOnHomepage: product.showOnHomepage !== false,
+    showInFeaturedCollection:
+      product.showInFeaturedCollection ?? Boolean(product.featured),
+  };
+  if (
+    hasProductField(product, "isTrending") ||
+    hasProductField(product, "isBestSeller") ||
+    hasProductField(product, "isNewArrival") ||
+    hasProductField(product, "badgeText") ||
+    hasProductField(product, "badgeStyle") ||
+    hasProductField(product, "sortOrder") ||
+    hasProductField(product, "lowStockThreshold") ||
+    hasProductField(product, "showOnHomepage") ||
+    hasProductField(product, "showInFeaturedCollection")
+  ) {
+    payload.merchandising = merchandising;
+  }
   if (hasProductField(product, "stockStatus")) {
     payload.stock_status = normalizeStockStatus(product.stockStatus);
   }
@@ -468,6 +526,18 @@ function toSupabaseCreatePayload(product: ProductCatalogItem) {
     currency: SITE_CURRENCY,
     status: normalizeStatus(product.status),
     featured: Boolean(product.featured),
+    merchandising: {
+      isTrending: Boolean(product.isTrending),
+      isBestSeller: Boolean(product.isBestSeller),
+      isNewArrival: Boolean(product.isNewArrival),
+      badgeText: product.badgeText ?? "",
+      badgeStyle: product.badgeStyle ?? "info",
+      sortOrder: product.sortOrder ?? null,
+      lowStockThreshold: product.lowStockThreshold ?? null,
+      showOnHomepage: product.showOnHomepage !== false,
+      showInFeaturedCollection:
+        product.showInFeaturedCollection ?? Boolean(product.featured),
+    },
     stock_status: normalizeStockStatus(product.stockStatus),
     stock_quantity: numberValue(product.stockQuantity) ?? null,
     sizes: stringArrayValue(product.sizes),
@@ -547,7 +617,7 @@ async function getProductByIdFromSupabase(id: string) {
 async function createProductInSupabase(input: ProductCatalogItem) {
   const payload = toSupabaseCreatePayload(input);
 
-  const response = await fetch(
+  let response = await fetch(
     supabaseEndpoint(`${SUPABASE_PRODUCTS_TABLE}?select=*`),
     {
       method: "POST",
@@ -558,6 +628,27 @@ async function createProductInSupabase(input: ProductCatalogItem) {
       body: JSON.stringify(payload),
     }
   );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    if (/merchandising|schema cache|column/i.test(detail)) {
+      const fallbackPayload: Record<string, unknown> = { ...payload };
+      delete fallbackPayload.merchandising;
+      response = await fetch(
+        supabaseEndpoint(`${SUPABASE_PRODUCTS_TABLE}?select=*`),
+        {
+          method: "POST",
+          headers: {
+            ...supabaseHeaders(),
+            prefer: "return=representation",
+          },
+          body: JSON.stringify(fallbackPayload),
+        }
+      );
+    } else {
+      throw await supabaseError(new Response(detail, { status: response.status }), "product insert");
+    }
+  }
 
   if (!response.ok) throw await supabaseError(response, "product insert");
 
@@ -584,7 +675,8 @@ async function updateProductInSupabase(id: string, updates: ProductMutationInput
     });
   }
 
-  const response = await fetch(
+  let payload = toSupabasePayload(updates);
+  let response = await fetch(
     supabaseEndpoint(
       `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&select=*`
     ),
@@ -594,9 +686,32 @@ async function updateProductInSupabase(id: string, updates: ProductMutationInput
         ...supabaseHeaders(),
         prefer: "return=representation",
       },
-      body: JSON.stringify(toSupabasePayload(updates)),
+      body: JSON.stringify(payload),
     }
   );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    if (/merchandising|schema cache|column/i.test(detail) && "merchandising" in payload) {
+      payload = { ...payload };
+      delete payload.merchandising;
+      response = await fetch(
+        supabaseEndpoint(
+          `${SUPABASE_PRODUCTS_TABLE}?id=eq.${encodeURIComponent(id)}&select=*`
+        ),
+        {
+          method: "PATCH",
+          headers: {
+            ...supabaseHeaders(),
+            prefer: "return=representation",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+    } else {
+      throw await supabaseError(new Response(detail, { status: response.status }), "product update");
+    }
+  }
 
   if (!response.ok) throw await supabaseError(response, "product update");
 

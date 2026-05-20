@@ -4,9 +4,11 @@ export const adminPermissionKeys = [
   "orders.editStatus",
   "orders.editCourier",
   "orders.archiveTest",
+  "orders.export",
   "products.view",
   "products.edit",
   "products.media",
+  "products.merchandising",
   "reviews.view",
   "reviews.manage",
   "reviews.moderate",
@@ -16,7 +18,11 @@ export const adminPermissionKeys = [
   "settings.editBasic",
   "settings.editSensitive",
   "settings.editSeoAnalytics",
+  "settings.manage",
+  "announcement.manage",
+  "footer.manage",
   "homepage.manage",
+  "customers.view",
   "support.view",
   "support.reply",
   "support.close",
@@ -52,6 +58,7 @@ export type AdminSection =
   | "categories"
   | "settings"
   | "support"
+  | "customers"
   | "staff"
   | "analytics";
 
@@ -73,9 +80,11 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "orders.editStatus": "Edit order status",
   "orders.editCourier": "Edit courier/tracking",
   "orders.archiveTest": "Mark test/archive orders",
+  "orders.export": "Export orders CSV",
   "products.view": "View products",
   "products.edit": "Create/edit products",
   "products.media": "Upload product media",
+  "products.merchandising": "Edit product merchandising",
   "reviews.view": "View reviews",
   "reviews.manage": "Manage reviews",
   "reviews.moderate": "Approve/reject reviews",
@@ -85,7 +94,11 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "settings.editBasic": "Edit basic settings",
   "settings.editSensitive": "Edit payment/delivery/courier settings",
   "settings.editSeoAnalytics": "Edit SEO/analytics settings",
+  "settings.manage": "Manage all settings",
+  "announcement.manage": "Manage announcement banner",
+  "footer.manage": "Manage footer/support controls",
   "homepage.manage": "Edit homepage CMS",
+  "customers.view": "View customers",
   "support.view": "View live chat",
   "support.reply": "Reply live chat",
   "support.close": "Close conversations",
@@ -102,6 +115,7 @@ export const permissionGroups = [
       "orders.editStatus",
       "orders.editCourier",
       "orders.archiveTest",
+      "orders.export",
     ],
   },
   {
@@ -110,6 +124,7 @@ export const permissionGroups = [
       "products.view",
       "products.edit",
       "products.media",
+      "products.merchandising",
       "reviews.view",
       "reviews.manage",
       "reviews.moderate",
@@ -123,7 +138,7 @@ export const permissionGroups = [
   },
   {
     title: "Storefront CMS",
-    permissions: ["homepage.manage", "settings.editBasic"],
+    permissions: ["homepage.manage", "announcement.manage", "footer.manage", "settings.editBasic"],
   },
   {
     title: "Settings",
@@ -132,11 +147,12 @@ export const permissionGroups = [
       "settings.editBasic",
       "settings.editSensitive",
       "settings.editSeoAnalytics",
+      "settings.manage",
     ],
   },
   {
     title: "Admin",
-    permissions: ["dashboard.view", "staff.manage", "activity.view", "analytics.view"],
+    permissions: ["dashboard.view", "customers.view", "staff.manage", "activity.view", "analytics.view"],
   },
 ] satisfies Array<{ title: string; permissions: AdminPermission[] }>;
 
@@ -148,9 +164,11 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "orders.editStatus",
     "orders.editCourier",
     "orders.archiveTest",
+    "orders.export",
     "products.view",
     "products.edit",
     "products.media",
+    "products.merchandising",
     "reviews.view",
     "reviews.manage",
     "reviews.moderate",
@@ -158,6 +176,9 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "categories.manage",
     "settings.view",
     "settings.editBasic",
+    "settings.manage",
+    "announcement.manage",
+    "footer.manage",
     "homepage.manage",
     "support.view",
     "support.reply",
@@ -170,12 +191,14 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "orders.view",
     "orders.editStatus",
     "orders.editCourier",
+    "orders.export",
   ],
   product_staff: [
     "dashboard.view",
     "products.view",
     "products.edit",
     "products.media",
+    "products.merchandising",
     "reviews.view",
     "reviews.manage",
     "reviews.moderate",
@@ -190,6 +213,7 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "reviews.view",
     "settings.view",
     "support.view",
+    "customers.view",
   ],
 };
 
@@ -255,6 +279,7 @@ export function canAccessSection(
   if (section === "categories") return hasPermission(session, "categories.manage");
   if (section === "settings") return hasPermission(session, "settings.view");
   if (section === "support") return hasPermission(session, "support.view");
+  if (section === "customers") return hasPermission(session, "customers.view");
   if (section === "staff") {
     return hasPermission(session, "staff.manage") || hasPermission(session, "activity.view");
   }
@@ -271,6 +296,7 @@ const sectionPaths: Array<{ section: AdminSection; path: string }> = [
   { section: "categories", path: "/admin/categories" },
   { section: "settings", path: "/admin/settings" },
   { section: "support", path: "/admin/support" },
+  { section: "customers", path: "/admin/customers" },
   { section: "staff", path: "/admin/staff" },
 ];
 
