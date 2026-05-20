@@ -31,7 +31,7 @@ export async function POST(request: Request) {
           "Admin credentials are not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD.",
         ],
       },
-      { status: 500 }
+      { status: 503 }
     );
   }
 

@@ -307,11 +307,13 @@ export default function CheckoutPage() {
     (item) => item.stockStatus && !isPurchasableStock(item.stockStatus)
   );
   const selectedDeliveryCharge =
-    form.deliveryZone === "Inside Dhaka"
-      ? parseInt(adminSettings.deliverySettings.insideDhakaDeliveryCharge) || 80
-      : form.deliveryZone === "Outside Dhaka"
-        ? parseInt(adminSettings.deliverySettings.outsideDhakaDeliveryCharge) || 130
-        : undefined;
+    freeDeliveryApplies(subtotal, adminSettings.checkoutSettings.freeDeliveryThreshold)
+      ? 0
+      : form.deliveryZone === "Inside Dhaka"
+        ? parseInt(adminSettings.deliverySettings.insideDhakaDeliveryCharge) || 80
+        : form.deliveryZone === "Outside Dhaka"
+          ? parseInt(adminSettings.deliverySettings.outsideDhakaDeliveryCharge) || 130
+          : undefined;
 
   useEffect(() => {
     setForm((current) => ({
@@ -903,6 +905,7 @@ export default function CheckoutPage() {
               deliveryZone={form.deliveryZone}
               insideDhakaCharge={adminSettings.deliverySettings.insideDhakaDeliveryCharge}
               outsideDhakaCharge={adminSettings.deliverySettings.outsideDhakaDeliveryCharge}
+              freeDeliveryThreshold={adminSettings.checkoutSettings.freeDeliveryThreshold}
             />
           </div>
         )}
@@ -1019,6 +1022,7 @@ function OrderSummary({
   deliveryZone,
   insideDhakaCharge,
   outsideDhakaCharge,
+  freeDeliveryThreshold,
 }: {
   storeName: string;
   deliveryNote: string;
@@ -1027,14 +1031,17 @@ function OrderSummary({
   deliveryZone: DeliveryZone;
   insideDhakaCharge: string;
   outsideDhakaCharge: string;
+  freeDeliveryThreshold: string;
 }) {
   const { items, totalItems, subtotal } = useCart();
+  const isFreeDelivery = freeDeliveryApplies(subtotal, freeDeliveryThreshold);
 
-  const deliveryChargeAmount = deliveryZone
-    ? deliveryZone === "Inside Dhaka"
-      ? parseInt(insideDhakaCharge) || 80
-      : parseInt(outsideDhakaCharge) || 130
-    : 0;
+  const deliveryChargeAmount =
+    deliveryZone && !isFreeDelivery
+      ? deliveryZone === "Inside Dhaka"
+        ? parseInt(insideDhakaCharge) || 80
+        : parseInt(outsideDhakaCharge) || 130
+      : 0;
 
   return (
     <aside className="min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6 lg:sticky lg:top-6">
@@ -1106,7 +1113,7 @@ function OrderSummary({
             <div className="flex items-center justify-between gap-4">
               <span>Delivery ({deliveryZone})</span>
               <span className="font-medium text-white">
-                {formatCurrency(deliveryChargeAmount)}
+                {deliveryChargeAmount === 0 ? "Free" : formatCurrency(deliveryChargeAmount)}
               </span>
             </div>
           ) : (
@@ -1133,6 +1140,11 @@ function OrderSummary({
       </div>
     </aside>
   );
+}
+
+function freeDeliveryApplies(subtotal: number, threshold: string) {
+  const amount = Number(threshold);
+  return Number.isFinite(amount) && amount > 0 && subtotal >= amount;
 }
 
 function EmptyCheckoutState() {

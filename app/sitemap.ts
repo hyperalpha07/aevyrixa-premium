@@ -3,6 +3,8 @@ import { listProducts } from "@/app/lib/product-store";
 
 const SITE_URL = "https://www.aevyrixa.com";
 
+export const dynamic = "force-dynamic";
+
 const staticRoutes: MetadataRoute.Sitemap = [
   { url: SITE_URL, changeFrequency: "weekly", priority: 1.0 },
   { url: `${SITE_URL}/product`, changeFrequency: "daily", priority: 0.9 },

@@ -11,7 +11,8 @@ export default function AevIntroScreen() {
     if (typeof sessionStorage === "undefined") return;
     if (sessionStorage.getItem("aev:intro")) return;
     sessionStorage.setItem("aev:intro", "1");
-    setVisible(true);
+    const frameId = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   useEffect(() => {

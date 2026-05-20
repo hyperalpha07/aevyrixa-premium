@@ -523,7 +523,7 @@ export default async function Home() {
             </p>
           </div>
           <div className="mt-10 grid grid-cols-1 gap-4 min-[460px]:grid-cols-2 lg:grid-cols-4">
-            {hereCareCategories.map(({ displayName, displayTagline, displayLinkUrl, accent, glow, comingSoon, categoryImageUrl, categoryVideoUrl, categoryMediaMode, categoryAltText }) => {
+            {hereCareCategories.map(({ displayName, displayTagline, displayLinkUrl, glow, comingSoon, categoryImageUrl, categoryVideoUrl, categoryMediaMode, categoryAltText }) => {
               const mode = categoryMediaMode as "animation" | "image_text" | "background_media_text" | "video_text" | "media_only";
               const showImageVisual = mode === "image_text" && Boolean(categoryImageUrl);
               const showVideoVisual = mode === "video_text" && Boolean(categoryVideoUrl);
@@ -1289,7 +1289,6 @@ export default async function Home() {
           {(hms.ctaSectionMediaMode === "background_media_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
             <div className="relative min-h-[28rem] overflow-hidden">
               {hms.ctaSectionVideoUrl ? (
-                // eslint-disable-next-line jsx-a11y/media-has-caption
                 <video
                   src={hms.ctaSectionVideoUrl}
                   autoPlay
@@ -1346,7 +1345,6 @@ export default async function Home() {
               {/* Media side */}
               <div className="relative order-2 overflow-hidden lg:order-1 lg:min-h-[26rem]">
                 {hms.ctaSectionVideoUrl && hms.ctaSectionMediaMode === "video_text" ? (
-                  // eslint-disable-next-line jsx-a11y/media-has-caption
                   <video
                     src={hms.ctaSectionVideoUrl}
                     autoPlay

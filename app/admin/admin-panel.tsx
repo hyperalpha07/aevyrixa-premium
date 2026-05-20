@@ -5902,17 +5902,14 @@ function supportTimeLabel(value?: string | null) {
 }
 
 function CustomersSection({ session }: { session: AdminSessionUser }) {
+  const canViewCustomers = hasPermission(session, "customers.view");
   const [customers, setCustomers] = useState<AdminCustomerClientRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(canViewCustomers);
+  const [error, setError] = useState(canViewCustomers ? "" : blockedPermissionMessage);
 
   useEffect(() => {
-    if (!hasPermission(session, "customers.view")) {
-      setError(blockedPermissionMessage);
-      setLoading(false);
-      return;
-    }
+    if (!canViewCustomers) return;
 
     void fetch("/api/admin/customers", { cache: "no-store" })
       .then(async (response) => {
@@ -5927,7 +5924,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Customers could not be loaded."))
       .finally(() => setLoading(false));
-  }, [session]);
+  }, [canViewCustomers]);
 
   const visibleCustomers = customers.filter((customer) => {
     const query = searchTerm.trim().toLowerCase();
@@ -7385,31 +7382,6 @@ function SectionHeader({
   );
 }
 
-function AdminSummaryCard({
-  title,
-  value,
-  href,
-  icon: Icon,
-}: {
-  title: string;
-  value: string;
-  href: string;
-  icon: typeof Boxes;
-}) {
-  return (
-    <Link
-      href={href}
-      className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-5 transition hover:border-cyan-200/30 hover:bg-cyan-200/[0.06]"
-    >
-      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-violet-200/20 bg-violet-200/10 text-violet-100">
-        <Icon className="h-5 w-5" />
-      </div>
-      <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-white/56">{value}</p>
-    </Link>
-  );
-}
-
 function OrderList({
   orders,
   expandedOrderId,
@@ -7521,7 +7493,10 @@ function OrderCard({
             <select
               value={order.status}
               onChange={(event) => onStatusChange(event.target.value as OrderStatus)}
-              className="min-h-12 w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-3 py-3 pr-9 text-sm font-medium text-white outline-none transition focus:border-cyan-200/40"
+              disabled={!canEditStatus}
+              className={`min-h-12 w-full appearance-none rounded-2xl border border-white/10 bg-[#08111f] px-3 py-3 pr-9 text-sm font-medium text-white outline-none transition focus:border-cyan-200/40 ${
+                canEditStatus ? "" : "cursor-not-allowed opacity-55"
+              }`}
             >
               {orderStatuses.map((status) => (
                 <option key={status} value={status}>

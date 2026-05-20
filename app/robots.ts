@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/", "/checkout/"],
+        disallow: ["/admin/", "/api/", "/account/", "/cart/", "/checkout/"],
       },
     ],
     sitemap: "https://www.aevyrixa.com/sitemap.xml",

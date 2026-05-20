@@ -68,7 +68,7 @@ export function stockBadgeClass(status: ProductStockStatus): string {
     case "low_stock":
       return "border-[#FFB84D]/32 bg-[#FFB84D]/[0.09] text-[#FFC36A]";
     case "out_of_stock":
-      return "border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] text-[#FFB3D1]";
+      return "border-red-300/35 bg-red-500/[0.09] text-red-200";
     case "preorder":
       return "border-[#A855F7]/28 bg-[#A855F7]/[0.09] text-[#D8CBE8]";
     default:
