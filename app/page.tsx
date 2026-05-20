@@ -25,6 +25,8 @@ import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { whatsappHref } from "@/app/lib/admin-settings";
 import { publicProduct } from "@/app/lib/product-display";
 import { formatProductPrice } from "@/app/lib/products";
+import { listFeaturedTestimonials } from "@/app/lib/review-store";
+import type { PublicProductReview } from "@/app/lib/review-types";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -186,11 +188,76 @@ const hereCareBase = [
   },
 ];
 
+function TestimonialsSection({ reviews }: { reviews: PublicProductReview[] }) {
+  return (
+    <section className="px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 text-center sm:mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#00D4C6]/75">
+            Customer Trust
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            Moderated reviews from real orders.
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#D8CBE8]/80">
+            Approved customer feedback appears here after purchase and admin review.
+          </p>
+        </div>
+
+        {reviews.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {reviews.slice(0, 3).map((review) => (
+              <article
+                key={review.id}
+                className="aev-reveal rounded-[1.6rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_20px_70px_rgba(255,77,184,0.07)]"
+              >
+                <div className="flex items-center gap-1 text-[#FFB84D]">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <span key={index} className={index < review.rating ? "" : "opacity-35"}>★</span>
+                  ))}
+                </div>
+                {review.isFeatured && (
+                  <span className="mt-4 inline-flex rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#31E6D4]">
+                    Featured
+                  </span>
+                )}
+                <h3 className="mt-4 break-words text-lg font-semibold text-white [overflow-wrap:anywhere]">
+                  {review.title || "Customer review"}
+                </h3>
+                <p className="mt-3 line-clamp-5 text-sm leading-7 text-[#D8CBE8]/78">
+                  {review.body}
+                </p>
+                <p className="mt-4 text-sm font-semibold text-[#FFB3D1]">
+                  {review.customerName}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ["Moderated Only", "Reviews stay pending until an admin approves them."],
+              ["Order Linked", "Customers can submit feedback from their account order history."],
+              ["Privacy First", "Public reviews use masked customer names and never show phone numbers."],
+            ].map(([title, copy]) => (
+              <div key={title} className="rounded-[1.6rem] border border-[#00D4C6]/14 bg-[#151024] p-5">
+                <h3 className="text-lg font-semibold text-white">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-[#D8CBE8]/78">{copy}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 
 export default async function Home() {
-  const [{ products }, { settings }] = await Promise.all([
+  const [{ products }, { settings }, testimonials] = await Promise.all([
     listProducts(),
     loadStorefrontSettings(),
+    listFeaturedTestimonials(6),
   ]);
   const activeProducts = products
     .filter((p) => p.status === "active" && !p.deletedAt)
@@ -976,6 +1043,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <TestimonialsSection reviews={testimonials} />
 
       {/* ── Phase 47C: Privacy from order to delivery ── */}
       <section className="px-4 py-10 sm:px-6 sm:py-14">

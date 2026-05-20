@@ -11,6 +11,8 @@ function itemSummary(item: OrderCartItem) {
     .join(" / ");
 
   return {
+    productId: item.productId,
+    slug: item.slug,
     name: item.name,
     quantity: item.quantity,
     price: item.price,

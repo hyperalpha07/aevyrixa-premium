@@ -6,6 +6,7 @@ import { publicProduct } from "@/app/lib/product-display";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import ShopDiscoveryClient from "@/app/product/shop-discovery-client";
+import { listReviewSummaries } from "@/app/lib/review-store";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -33,9 +34,10 @@ export default async function ProductCollectionPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const [{ products }, { settings }, resolvedParams] = await Promise.all([
+  const [{ products }, { settings }, reviewSummaries, resolvedParams] = await Promise.all([
     listProducts(),
     loadStorefrontSettings(),
+    listReviewSummaries(),
     searchParams,
   ]);
   const requestedCategory =
@@ -71,6 +73,7 @@ export default async function ProductCollectionPage({
         products={displayProducts}
         activeCategories={settings.activeCategories}
         settings={settings}
+        reviewSummaries={reviewSummaries}
         initialCategory={activeCategory}
       />
 

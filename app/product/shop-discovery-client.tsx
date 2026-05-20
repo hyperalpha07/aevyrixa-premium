@@ -31,11 +31,13 @@ import type {
   CategoryCmsEntry,
   StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import type { ReviewSummary } from "@/app/lib/review-types";
 
 type ShopDiscoveryClientProps = {
   products: ProductCatalogItem[];
   activeCategories: CategoryCmsEntry[];
   settings: StorefrontSettings;
+  reviewSummaries?: ReviewSummary[];
   initialCategory?: string;
 };
 
@@ -129,9 +131,11 @@ function dateValue(product: ProductCatalogItem) {
 
 function ProductCard({
   product,
+  rating,
   compact = false,
 }: {
   product: ProductCatalogItem;
+  rating?: ReviewSummary;
   compact?: boolean;
 }) {
   const { addItem } = useCart();
@@ -228,6 +232,17 @@ function ProductCard({
         <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#9C91AA] sm:text-sm sm:leading-6">
           {product.shortDescription}
         </p>
+        {rating && rating.reviewCount > 0 && (
+          <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-[#FFB84D]">
+            <span>
+              {"★".repeat(Math.round(rating.averageRating))}
+              {"☆".repeat(5 - Math.round(rating.averageRating))}
+            </span>
+            <span className="text-[#D8CBE8]/70">
+              {rating.averageRating.toFixed(1)} ({rating.reviewCount})
+            </span>
+          </div>
+        )}
 
         <div className="mt-3 flex flex-wrap items-end gap-1.5 sm:gap-2">
           <span className="text-lg font-semibold text-[#FFB3D1] sm:text-xl md:text-2xl">
@@ -278,10 +293,12 @@ function CollectionSection({
   eyebrow,
   title,
   products,
+  ratingMap,
 }: {
   eyebrow: string;
   title: string;
   products: ProductCatalogItem[];
+  ratingMap: Map<string, ReviewSummary>;
 }) {
   if (products.length === 0) return null;
 
@@ -299,7 +316,7 @@ function CollectionSection({
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {products.slice(0, 4).map((product) => (
-          <ProductCard key={product.id} product={product} compact />
+          <ProductCard key={product.id} product={product} compact rating={ratingMap.get(product.slug)} />
         ))}
       </div>
     </section>
@@ -310,6 +327,7 @@ export default function ShopDiscoveryClient({
   products,
   activeCategories,
   settings,
+  reviewSummaries = [],
   initialCategory = "",
 }: ShopDiscoveryClientProps) {
   const [query, setQuery] = useState("");
@@ -324,6 +342,10 @@ export default function ShopDiscoveryClient({
     const productCategories = new Set(products.map((product) => product.category));
     return activeCategories.filter((entry) => productCategories.has(entry.title));
   }, [activeCategories, products]);
+  const ratingMap = useMemo(
+    () => new Map(reviewSummaries.map((summary) => [summary.productSlug, summary])),
+    [reviewSummaries]
+  );
 
   const featuredProducts = useMemo(
     () => products.filter((product) => product.featured).slice(0, 4),
@@ -583,16 +605,19 @@ export default function ShopDiscoveryClient({
         eyebrow="Flagship Collection"
         title="Featured by Aevyrixa"
         products={featuredProducts}
+        ratingMap={ratingMap}
       />
       <CollectionSection
         eyebrow="New Arrivals"
         title="Latest active products"
         products={newArrivals}
+        ratingMap={ratingMap}
       />
       <CollectionSection
         eyebrow="Editor's Pick"
         title="Curated premium essentials"
         products={editorPicks}
+        ratingMap={ratingMap}
       />
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-24 sm:px-6 lg:grid-cols-[280px_1fr]">
@@ -641,7 +666,7 @@ export default function ShopDiscoveryClient({
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} rating={ratingMap.get(product.slug)} />
               ))}
             </div>
           )}

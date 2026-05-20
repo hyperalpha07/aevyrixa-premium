@@ -18,6 +18,7 @@ import {
   Ruler,
   ShieldCheck,
   ShoppingCart,
+  Star,
   Truck,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -38,6 +39,7 @@ import {
 import type { ProductCatalogItem } from "@/app/lib/product-types";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
+import type { PublicProductReview } from "@/app/lib/review-types";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -118,10 +120,12 @@ export default function ProductDetailClient({
   product,
   settings,
   relatedProducts = [],
+  reviews = [],
 }: {
   product: ProductCatalogItem;
   settings: StorefrontSettings;
   relatedProducts?: ProductCatalogItem[];
+  reviews?: PublicProductReview[];
 }) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -302,6 +306,13 @@ export default function ProductDetailClient({
     : 0;
 
   const displayRelated = relatedProducts.map(publicProduct);
+  const reviewCount = reviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? Math.round(
+          (reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount) * 10
+        ) / 10
+      : 0;
 
   return (
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#080611] pb-40 text-white lg:pb-0">
@@ -541,6 +552,18 @@ export default function ProductDetailClient({
                 Save {savingsPct}%
               </span>
             )}
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
+            <StarRating rating={averageRating} />
+            <span className="text-sm font-semibold text-white">
+              {reviewCount > 0
+                ? `${averageRating.toFixed(1)} from ${reviewCount} approved ${reviewCount === 1 ? "review" : "reviews"}`
+                : "No reviews yet"}
+            </span>
+            <Link href="#reviews" className="text-sm font-semibold text-[#FFB84D] hover:text-[#FFE1A3]">
+              {reviewCount > 0 ? "Read reviews" : "Be the first after purchase"}
+            </Link>
           </div>
 
           {/* ── Buy panel ── */}
@@ -845,6 +868,12 @@ export default function ProductDetailClient({
         </div>
       </section>
 
+      <ProductReviewsSection
+        reviews={reviews}
+        averageRating={averageRating}
+        reviewCount={reviewCount}
+      />
+
       {/* ── Related products ── */}
       {displayRelated.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
@@ -1075,6 +1104,106 @@ function ColorSwatch({ color }: { color: string }) {
       aria-hidden="true"
     />
   );
+}
+
+function StarRating({ rating }: { rating: number }) {
+  const rounded = Math.round(rating);
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[#FFB84D]" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`h-4 w-4 ${star <= rounded ? "fill-current" : "fill-transparent opacity-45"}`}
+        />
+      ))}
+    </span>
+  );
+}
+
+function ProductReviewsSection({
+  reviews,
+  averageRating,
+  reviewCount,
+}: {
+  reviews: PublicProductReview[];
+  averageRating: number;
+  reviewCount: number;
+}) {
+  return (
+    <section id="reviews" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
+      <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_18px_70px_rgba(255,77,184,0.08)] sm:p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#00D4C6]/75">
+              Customer Reviews
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
+              Real feedback after purchase
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#9C91AA]">
+              Reviews are shown only after admin moderation and approval.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.06] px-4 py-3">
+            <StarRating rating={averageRating} />
+            <p className="mt-2 text-sm font-semibold text-white">
+              {reviewCount > 0 ? `${averageRating.toFixed(1)} average · ${reviewCount} ${reviewCount === 1 ? "review" : "reviews"}` : "No reviews yet"}
+            </p>
+          </div>
+        </div>
+
+        {reviews.length === 0 ? (
+          <div className="mt-6 rounded-[1.35rem] border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-5 text-sm leading-7 text-[#D8CBE8]">
+            No reviews yet. Customers can write a review from their account after a confirmed purchase.
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {reviews.map((review) => (
+              <article key={review.id} className="rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StarRating rating={review.rating} />
+                  {review.isFeatured && (
+                    <span className="rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#31E6D4]">
+                      Featured
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-3 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
+                  {review.title || "Customer review"}
+                </h3>
+                <p className="mt-2 text-xs text-[#9C91AA]">
+                  {review.customerName} · {formatReviewDate(review.approvedAt || review.createdAt)}
+                </p>
+                <p className="mt-3 break-words text-sm leading-7 text-[#D8CBE8]/80 [overflow-wrap:anywhere]">
+                  {review.body}
+                </p>
+                {review.mediaUrls.length > 0 && (
+                  <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                    {review.mediaUrls.slice(0, 3).map((url) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={url}
+                        src={url}
+                        alt=""
+                        loading="lazy"
+                        className="h-16 w-16 shrink-0 rounded-xl border border-white/10 object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function formatReviewDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recently";
+  return new Intl.DateTimeFormat("en-BD", { dateStyle: "medium" }).format(date);
 }
 
 function ProductAccordion({

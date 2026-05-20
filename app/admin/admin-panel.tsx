@@ -32,6 +32,7 @@ import {
   Settings,
   ShieldCheck,
   ShoppingBag,
+  Star,
   Sparkles,
   Trash2,
   Upload,
@@ -115,7 +116,7 @@ const CMS_CATEGORY_NAMES = [
 
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
-type AdminView = "dashboard" | "orders" | "products" | "settings" | "support" | "categories" | "staff";
+type AdminView = "dashboard" | "orders" | "products" | "reviews" | "settings" | "support" | "categories" | "staff";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type PaymentStatusFilter = "All" | PaymentStatus;
 type StatusFilter = "All" | OrderStatus;
@@ -193,6 +194,27 @@ type StoredOrder = {
   deletedAt?: string;
   softDeletedAt?: string;
   cancelledReason?: string;
+};
+
+type AdminReviewClientRecord = {
+  id: string;
+  productId: string;
+  productSlug: string;
+  orderId?: string;
+  orderReference?: string;
+  customerId?: string;
+  customerName: string;
+  customerPhone?: string;
+  rating: number;
+  title?: string;
+  body: string;
+  mediaUrls: string[];
+  status: "pending" | "approved" | "rejected" | "hidden";
+  isFeatured: boolean;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
 };
 
 type DashboardMetrics = {
@@ -313,6 +335,7 @@ const navItems = [
   { label: "Dashboard", href: "/admin", icon: Gauge, view: "dashboard", permission: "dashboard.view" },
   { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders", permission: "orders.view" },
   { label: "Products", href: "/admin/products", icon: Boxes, view: "products", permission: "products.view" },
+  { label: "Reviews", href: "/admin/reviews", icon: Star, view: "reviews", permission: "reviews.view" },
   { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories", permission: "categories.manage" },
   { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
   { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view" },
@@ -828,6 +851,40 @@ async function readProductsFromApi() {
     console.error("Failed to load backend products:", error);
     return null;
   }
+}
+
+async function readReviewsFromApi() {
+  try {
+    const response = await fetch("/api/admin/reviews", { cache: "no-store" });
+    const payload = (await response.json().catch(() => null)) as {
+      reviews?: AdminReviewClientRecord[];
+      errors?: string[];
+    } | null;
+    if (!response.ok || !Array.isArray(payload?.reviews)) return null;
+    return payload.reviews;
+  } catch (error) {
+    console.error("Failed to load backend reviews:", error);
+    return null;
+  }
+}
+
+async function updateReviewInApi(
+  updates: Pick<AdminReviewClientRecord, "id"> &
+    Partial<Pick<AdminReviewClientRecord, "status" | "isFeatured" | "adminNote">>
+) {
+  const response = await fetch("/api/admin/reviews", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  const payload = (await response.json().catch(() => null)) as {
+    review?: AdminReviewClientRecord;
+    errors?: string[];
+  } | null;
+  if (!response.ok || !payload?.review) {
+    throw new Error(payload?.errors?.[0] ?? "Review could not be updated.");
+  }
+  return payload.review;
 }
 
 function apiErrorMessage(payload: unknown, fallback: string) {
@@ -1475,6 +1532,7 @@ export default function AdminPanel({
   const [session] = useState<AdminSessionUser>(initialSession);
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [adminProducts, setAdminProducts] = useState<AdminProduct[]>([]);
+  const [reviews, setReviews] = useState<AdminReviewClientRecord[]>([]);
   const [settings, setSettings] = useState<AdminSettings>(defaultSettings);
   const [settingsStorageMode, setSettingsStorageMode] =
     useState<SettingsStorageMode>("fallback-default");
@@ -1496,6 +1554,7 @@ export default function AdminPanel({
         hasPermission(session, "categories.manage");
       const canLoadOrders = hasPermission(session, "orders.view");
       const canLoadProducts = hasPermission(session, "products.view");
+      const canLoadReviews = hasPermission(session, "reviews.view");
       const canLoadSupport = hasPermission(session, "support.view");
 
       if (canLoadSettings) {
@@ -1546,6 +1605,12 @@ export default function AdminPanel({
           }
           setAdminProducts(backendProducts);
           writeProductsToStorage(backendProducts);
+        });
+      }
+
+      if (canLoadReviews) {
+        void readReviewsFromApi().then((backendReviews) => {
+          if (backendReviews) setReviews(backendReviews);
         });
       }
 
@@ -1801,6 +1866,8 @@ export default function AdminPanel({
               />
             ) : view === "products" ? (
               <ProductsSection products={adminProducts} onSaveProducts={saveProducts} session={session} />
+            ) : view === "reviews" ? (
+              <ReviewsSection reviews={reviews} setReviews={setReviews} session={session} />
             ) : view === "settings" ? (
               <SettingsSection
                 settings={settings}
@@ -1840,6 +1907,7 @@ export default function AdminPanel({
 function viewTitle(view: AdminView) {
   if (view === "orders") return "Orders";
   if (view === "products") return "Products";
+  if (view === "reviews") return "Reviews";
   if (view === "settings") return "Settings";
   if (view === "support") return "Support Inbox";
   if (view === "categories") return "Category Management";
@@ -5817,6 +5885,193 @@ function roleDefaultPermissionsToMap(role: AdminRole) {
     result[key] = roleDefaultPermissions[role].includes(key);
     return result;
   }, {} as Record<AdminPermission, boolean>);
+}
+
+function ReviewsSection({
+  reviews,
+  setReviews,
+  session,
+}: {
+  reviews: AdminReviewClientRecord[];
+  setReviews: (value: AdminReviewClientRecord[] | ((current: AdminReviewClientRecord[]) => AdminReviewClientRecord[])) => void;
+  session: AdminSessionUser;
+}) {
+  const [statusFilter, setStatusFilter] = useState<"all" | AdminReviewClientRecord["status"]>("pending");
+  const [query, setQuery] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("all");
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
+  const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
+
+  const filteredReviews = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    const minRating = ratingFilter === "all" ? 0 : Number(ratingFilter);
+    return reviews.filter((review) => {
+      if (statusFilter !== "all" && review.status !== statusFilter) return false;
+      if (minRating && review.rating !== minRating) return false;
+      if (!term) return true;
+      return [
+        review.productSlug,
+        review.productId,
+        review.customerName,
+        review.orderReference,
+        review.title,
+        review.body,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [query, ratingFilter, reviews, statusFilter]);
+
+  const saveReview = async (
+    review: AdminReviewClientRecord,
+    updates: Partial<Pick<AdminReviewClientRecord, "status" | "isFeatured" | "adminNote">>
+  ) => {
+    setSavingId(review.id);
+    setError("");
+    try {
+      const updated = await updateReviewInApi({ id: review.id, ...updates });
+      setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Review could not be updated.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const statusCounts = reviews.reduce(
+    (counts, review) => {
+      counts[review.status] += 1;
+      return counts;
+    },
+    { pending: 0, approved: 0, rejected: 0, hidden: 0 }
+  );
+
+  return (
+    <div className="mt-6 space-y-5">
+      <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
+        Reviews are private until approved. Customer phone, internal notes, and rejected or hidden reviews never appear on the storefront.
+      </div>
+      {error && (
+        <div className="rounded-[1.25rem] border border-rose-200/22 bg-rose-200/[0.08] p-4 text-sm leading-6 text-rose-50/86">
+          {error}
+        </div>
+      )}
+
+      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+        <SectionHeader title="Review moderation" />
+        <div className="grid gap-3 lg:grid-cols-[1fr_180px_160px]">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search product, customer, order, or review"
+            className="min-h-12 rounded-2xl border border-white/10 bg-black/24 px-4 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-cyan-200/40"
+          />
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+            className="min-h-12 rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40"
+          >
+            <option value="all">All statuses</option>
+            <option value="pending">Pending ({statusCounts.pending})</option>
+            <option value="approved">Approved ({statusCounts.approved})</option>
+            <option value="rejected">Rejected ({statusCounts.rejected})</option>
+            <option value="hidden">Hidden ({statusCounts.hidden})</option>
+          </select>
+          <select
+            value={ratingFilter}
+            onChange={(event) => setRatingFilter(event.target.value)}
+            className="min-h-12 rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40"
+          >
+            <option value="all">All ratings</option>
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <option key={rating} value={rating}>{rating} star</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mt-5 grid gap-3">
+          {filteredReviews.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-white/12 bg-black/18 p-5 text-sm text-white/45">
+              No reviews match this view.
+            </p>
+          ) : (
+            filteredReviews.map((review) => (
+              <article key={review.id} className="rounded-[1.25rem] border border-white/10 bg-black/22 p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-amber-200/25 bg-amber-200/[0.08] px-2.5 py-1 text-xs font-semibold text-amber-100">
+                        {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-xs font-semibold text-white/58">
+                        {review.status}
+                      </span>
+                      {review.isFeatured && (
+                        <span className="rounded-full border border-fuchsia-200/25 bg-fuchsia-200/[0.08] px-2.5 py-1 text-xs font-semibold text-fuchsia-100">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="mt-3 break-words text-base font-semibold text-white">
+                      {review.title || "Untitled review"}
+                    </h3>
+                    <p className="mt-1 text-sm text-white/52">
+                      {review.productSlug} · {review.orderReference || "No order ref"} · {formatDate(review.createdAt)}
+                    </p>
+                    <p className="mt-3 break-words text-sm leading-7 text-white/72 [overflow-wrap:anywhere]">
+                      {review.body}
+                    </p>
+                    <p className="mt-3 text-xs text-white/42">
+                      Customer: {review.customerName} · Phone retained privately
+                    </p>
+                    <label className="mt-4 block">
+                      <span className="text-xs uppercase tracking-[0.18em] text-white/42">Admin note</span>
+                      <textarea
+                        defaultValue={review.adminNote || ""}
+                        rows={2}
+                        disabled={!canModerate}
+                        onBlur={(event) => {
+                          if (event.target.value !== (review.adminNote || "")) {
+                            void saveReview(review, { adminNote: event.target.value });
+                          }
+                        }}
+                        className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-[#08111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid shrink-0 gap-2 sm:grid-cols-2 lg:w-[260px]">
+                    {(["approved", "rejected", "hidden"] as const).map((status) => (
+                      <button
+                        key={status}
+                        type="button"
+                        disabled={!canModerate || savingId === review.id || review.status === status}
+                        onClick={() => saveReview(review, { status })}
+                        className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-semibold text-white/70 transition hover:border-cyan-200/35 hover:text-white disabled:opacity-40"
+                      >
+                        {status}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={!canFeature || savingId === review.id || review.status !== "approved"}
+                      onClick={() => saveReview(review, { isFeatured: !review.isFeatured })}
+                      className="rounded-full border border-fuchsia-200/20 bg-fuchsia-200/[0.07] px-3 py-2 text-xs font-semibold text-fuchsia-50 transition hover:border-fuchsia-100/40 disabled:opacity-40"
+                    >
+                      {review.isFeatured ? "Unfeature" : "Feature"}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }
 
 function StaffSection({ session }: { session: AdminSessionUser }) {

@@ -7,6 +7,10 @@ export const adminPermissionKeys = [
   "products.view",
   "products.edit",
   "products.media",
+  "reviews.view",
+  "reviews.manage",
+  "reviews.moderate",
+  "reviews.feature",
   "categories.manage",
   "settings.view",
   "settings.editBasic",
@@ -44,6 +48,7 @@ export type AdminSection =
   | "dashboard"
   | "orders"
   | "products"
+  | "reviews"
   | "categories"
   | "settings"
   | "support"
@@ -71,6 +76,10 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "products.view": "View products",
   "products.edit": "Create/edit products",
   "products.media": "Upload product media",
+  "reviews.view": "View reviews",
+  "reviews.manage": "Manage reviews",
+  "reviews.moderate": "Approve/reject reviews",
+  "reviews.feature": "Feature reviews",
   "categories.manage": "Manage categories",
   "settings.view": "View settings",
   "settings.editBasic": "Edit basic settings",
@@ -101,6 +110,10 @@ export const permissionGroups = [
       "products.view",
       "products.edit",
       "products.media",
+      "reviews.view",
+      "reviews.manage",
+      "reviews.moderate",
+      "reviews.feature",
       "categories.manage",
     ],
   },
@@ -138,6 +151,10 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "products.view",
     "products.edit",
     "products.media",
+    "reviews.view",
+    "reviews.manage",
+    "reviews.moderate",
+    "reviews.feature",
     "categories.manage",
     "settings.view",
     "settings.editBasic",
@@ -159,6 +176,10 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "products.view",
     "products.edit",
     "products.media",
+    "reviews.view",
+    "reviews.manage",
+    "reviews.moderate",
+    "reviews.feature",
     "categories.manage",
   ],
   support_staff: ["dashboard.view", "support.view", "support.reply", "support.close"],
@@ -166,6 +187,7 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "dashboard.view",
     "orders.view",
     "products.view",
+    "reviews.view",
     "settings.view",
     "support.view",
   ],
@@ -229,6 +251,7 @@ export function canAccessSection(
   if (section === "dashboard") return hasPermission(session, "dashboard.view");
   if (section === "orders") return hasPermission(session, "orders.view");
   if (section === "products") return hasPermission(session, "products.view");
+  if (section === "reviews") return hasPermission(session, "reviews.view");
   if (section === "categories") return hasPermission(session, "categories.manage");
   if (section === "settings") return hasPermission(session, "settings.view");
   if (section === "support") return hasPermission(session, "support.view");
@@ -244,6 +267,7 @@ const sectionPaths: Array<{ section: AdminSection; path: string }> = [
   { section: "dashboard", path: "/admin" },
   { section: "orders", path: "/admin/orders" },
   { section: "products", path: "/admin/products" },
+  { section: "reviews", path: "/admin/reviews" },
   { section: "categories", path: "/admin/categories" },
   { section: "settings", path: "/admin/settings" },
   { section: "support", path: "/admin/support" },
