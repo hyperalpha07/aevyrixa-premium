@@ -267,7 +267,7 @@ export default async function Home() {
         (p.showInFeaturedCollection ?? p.featured)
     )
     .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
-    .slice(0, 3)
+    .slice(0, 4)
     .map(publicProduct);
   const featuredProduct = products.find((product) => product.featured) ?? products[0];
   const featuredProductHref = featuredProduct
@@ -359,25 +359,27 @@ export default async function Home() {
       />
 
       {hms.showHero && (
-      <section className="aev-hero-stage relative isolate overflow-hidden bg-[#0D0820] px-4 pb-14 pt-8 text-white sm:px-6 sm:pb-24 sm:pt-16 lg:pb-28">
+      <section className="aev-hero-stage relative isolate overflow-hidden bg-[#0D0820] px-4 pb-12 pt-6 text-white sm:px-6 sm:pb-24 sm:pt-16 lg:min-h-[calc(100vh-4rem)] lg:pb-24">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
-        <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
-          <div className="aev-glow absolute left-1/2 top-16 h-72 w-[min(42rem,90vw)] -translate-x-1/2 rounded-full bg-[#FF4DB8]/12 blur-3xl" />
-          <div className="aev-float-slow absolute -left-16 top-32 h-72 w-72 rounded-full bg-[#A855F7]/10 blur-3xl" />
-          <div className="aev-float absolute right-0 top-40 h-56 w-56 rounded-full bg-[#00D4C6]/08 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden">
+          <div className="aev-glow absolute left-1/2 top-10 h-96 w-[min(58rem,98vw)] -translate-x-1/2 rounded-full bg-[#FF4DB8]/18 blur-3xl" />
+          <div className="aev-float-slow absolute -left-16 top-24 h-80 w-80 rounded-full bg-[#A855F7]/14 blur-3xl" />
+          <div className="aev-float absolute right-0 top-36 h-64 w-64 rounded-full bg-[#00D4C6]/10 blur-3xl" />
           <div className="aev-hero-shimmer absolute left-0 top-0 h-full w-full" />
         </div>
         <div className="aev-hero-load-wash pointer-events-none absolute inset-0 -z-10" />
 
-        <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#080611] to-transparent" />
+
+        <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
           <div className="min-w-0">
-            <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-[#FF4DB8]/25 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/90 backdrop-blur-xl sm:tracking-[0.36em]">
+            <p className="aev-hero-kicker inline-flex max-w-full rounded-full border border-[#FF4DB8]/30 bg-[#FF4DB8]/[0.08] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/90 shadow-[0_0_26px_rgba(255,77,184,0.12)] backdrop-blur-xl sm:tracking-[0.36em]">
               {heroMedia.eyebrow || settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
             </p>
-            <h1 className="aev-hero-headline mt-7 max-w-4xl text-[1.7rem] font-semibold leading-[1.05] tracking-tight text-white min-[430px]:text-[2.15rem] sm:text-6xl lg:text-7xl">
+            <h1 className="aev-hero-headline mt-6 max-w-4xl text-[2rem] font-semibold leading-[1.03] tracking-tight text-white min-[430px]:text-[2.45rem] sm:text-6xl lg:text-[4.9rem]">
               {heroMedia.heading || settings.appearanceSettings.homepageHeroTitle}
             </h1>
-            <p className="aev-hero-copy mt-6 max-w-2xl text-pretty text-base leading-8 text-white/72 sm:text-lg">
+            <p className="aev-hero-copy mt-5 max-w-2xl text-pretty text-base leading-8 text-white/74 sm:text-lg">
               {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
             </p>
 
@@ -388,19 +390,19 @@ export default async function Home() {
               >
                 {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
               </Link>
-              <a
+              <Link
                 href="#how-it-works"
                 className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-[#FF4DB8]/45 hover:bg-white/[0.09]"
               >
                 Explore How It Works
-              </a>
+              </Link>
             </div>
 
-            <div className="aev-hero-trust mt-8 grid grid-cols-2 gap-2 sm:gap-2.5">
+            <div className="aev-hero-trust mt-7 grid grid-cols-2 gap-2 rounded-[1.35rem] border border-white/[0.08] bg-[#120C22]/70 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:gap-2.5">
               {heroTrustBadges.map((item, index) => (
                 <div
                   key={`${item}-${index}`}
-                  className="aev-trust-badge flex items-center justify-center gap-1.5 rounded-full border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.04] px-3 py-2.5 text-center text-[0.67rem] font-semibold uppercase tracking-[0.1em] text-white/85 backdrop-blur-xl sm:px-4 sm:py-3 sm:tracking-[0.12em]"
+                  className="aev-trust-badge flex items-center justify-center gap-1.5 rounded-full border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.06] px-3 py-2.5 text-center text-[0.63rem] font-semibold uppercase tracking-[0.09em] text-white/86 backdrop-blur-xl sm:px-4 sm:py-3 sm:text-[0.67rem] sm:tracking-[0.12em]"
                 >
                   <span className="h-1 w-1 rounded-full bg-[#FF4DB8]/60 shrink-0" />
                   {item}
@@ -409,12 +411,12 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="aev-hero-visual relative min-w-0 max-w-full">
-            <div className="aev-product-glow absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-[#FF4DB8]/10 via-[#A855F7]/08 to-[#00D4C6]/06 blur-2xl" />
-            <div className="aev-product-edge absolute -inset-2 rounded-[2.4rem] border border-[#FF4DB8]/12" />
+          <div className="aev-hero-visual relative min-w-0 max-w-full lg:pt-4">
+            <div className="aev-product-glow absolute -inset-6 rounded-[2.8rem] bg-gradient-to-br from-[#FF4DB8]/18 via-[#A855F7]/12 to-[#00D4C6]/08 blur-2xl" />
+            <div className="aev-product-edge absolute -inset-2 rounded-[2.6rem] border border-[#FF4DB8]/16" />
             <div className="aev-product-float relative">
               {heroMedia.mode === "image" && heroMedia.imageUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#0D0820] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/14 bg-[#0D0820] shadow-[0_34px_130px_rgba(0,0,0,0.55),0_0_60px_rgba(255,77,184,0.10)]" style={{ minHeight: "clamp(20rem, 56vw, 33rem)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={heroMedia.imageUrl}
@@ -426,7 +428,7 @@ export default async function Home() {
                   <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_58%)] opacity-40 pointer-events-none" />
                 </div>
               ) : heroMedia.mode === "video" && heroMedia.videoUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#0D0820] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "clamp(18rem, 52vw, 26rem)" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/14 bg-[#0D0820] shadow-[0_34px_130px_rgba(0,0,0,0.55),0_0_60px_rgba(255,77,184,0.10)]" style={{ minHeight: "clamp(20rem, 56vw, 33rem)" }}>
                   <video
                     className="absolute inset-0 h-full w-full object-cover opacity-90"
                     autoPlay
@@ -448,7 +450,7 @@ export default async function Home() {
                   variant="hero"
                 />
               )}
-              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 rounded-[1.2rem] border border-[#FF4DB8]/18 bg-[#0D0820]/85 p-3.5 shadow-2xl backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
+              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 rounded-[1.2rem] border border-[#FF4DB8]/22 bg-[#0D0820]/88 p-3.5 shadow-[0_20px_70px_rgba(0,0,0,0.48)] backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-[#FF4DB8]/75 sm:text-[0.66rem] sm:tracking-[0.3em]">
@@ -475,13 +477,14 @@ export default async function Home() {
       )}
 
       {hms.showFeaturedProducts && activeProducts.length > 0 && (
-        <section className="aev-scroll-section px-4 py-10 sm:px-6 sm:py-16">
+        <section className="aev-scroll-section relative px-4 py-10 sm:px-6 sm:py-16">
+          <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_22%_28%,rgba(255,77,184,0.09),transparent_28%),radial-gradient(circle_at_80%_22%,rgba(168,85,247,0.08),transparent_30%)]" />
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="aev-section-label">Best Picks For You</p>
+                <p className="aev-section-label">Shop our best picks</p>
                 <h2 className="aev-heading mt-3 text-2xl sm:text-4xl lg:text-5xl">
-                  Shop our premium Her Care picks.
+                  Best Picks For You
                 </h2>
                 <p className="aev-subtext mt-3 max-w-2xl text-sm sm:text-base">
                   Real active products from the current storefront, shown with live stock status and BDT pricing.
@@ -496,7 +499,7 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+            <div className="aev-products-row mt-7 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
               {activeProducts.map((product, index) => (
                 <StorefrontProductCard
                   key={product.id}

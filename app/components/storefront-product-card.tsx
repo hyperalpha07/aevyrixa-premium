@@ -146,22 +146,23 @@ export default function StorefrontProductCard({
 
   return (
     <article
-      className={`aev-product-card aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.25rem] border bg-[#151024]/92 p-2.5 shadow-[0_18px_60px_rgba(0,0,0,0.34)] md:rounded-[1.65rem] md:p-3 ${style.border}`}
+      className={`aev-product-card aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.2rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] md:rounded-[1.65rem] md:p-3 ${style.border}`}
     >
       <Link
         href={productHref}
-        className="block overflow-hidden rounded-[1rem] border border-white/[0.07] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.12),transparent_34%),linear-gradient(145deg,#1B1230,#080611)] md:rounded-[1.35rem]"
+        className="block overflow-hidden rounded-[1rem] border border-white/[0.08] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.17),transparent_34%),radial-gradient(circle_at_18%_82%,rgba(0,212,198,0.08),transparent_30%),linear-gradient(145deg,#211633,#080611)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] md:rounded-[1.35rem]"
         aria-label={`View ${product.name}`}
       >
-        <div className={`relative w-full ${compact ? "aspect-[1.04]" : "aspect-[0.96]"}`}>
-          <div className={`pointer-events-none absolute inset-x-5 top-8 h-28 rounded-full blur-3xl opacity-80 ${style.glow} transition duration-500 group-hover:scale-110 group-hover:opacity-100`} />
+        <div className={`relative w-full ${compact ? "aspect-[0.94]" : "aspect-[0.9]"}`}>
+          <div className={`pointer-events-none absolute inset-x-4 top-8 h-32 rounded-full blur-3xl opacity-90 ${style.glow} transition duration-500 group-hover:scale-110 group-hover:opacity-100`} />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.08)_44%,transparent_62%)] opacity-45" />
           {product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.imageUrl}
               alt={product.name}
               loading={priority ? "eager" : "lazy"}
-              className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.035]"
+              className="absolute inset-0 h-full w-full object-contain p-2.5 transition duration-500 group-hover:scale-[1.04] sm:p-3"
             />
           ) : (
             <ProductVisual
@@ -174,7 +175,7 @@ export default function StorefrontProductCard({
             {badges.slice(0, 2).map((badge) => (
               <span
                 key={badge}
-                className="rounded-full border border-[#FF4DB8]/28 bg-[#080611]/82 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#FFB3D1] backdrop-blur-md sm:text-[10px]"
+                className="rounded-full border border-[#FF4DB8]/32 bg-[#080611]/86 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#FFB3D1] shadow-[0_0_16px_rgba(255,77,184,0.12)] backdrop-blur-md sm:text-[10px] sm:tracking-[0.12em]"
               >
                 {badge}
               </span>
@@ -185,21 +186,21 @@ export default function StorefrontProductCard({
 
       <div className="px-1 pb-2.5 pt-3 md:px-2 md:pb-3 md:pt-4">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-[0_0_14px_rgba(0,0,0,0.16)] sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
             {stockStatusLabel(product.stockStatus)}
           </span>
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
+          <span className={`hidden rounded-full border px-2 py-0.5 text-[10px] font-medium sm:inline-flex sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
             {product.category}
           </span>
         </div>
 
         <Link href={productHref}>
-          <h3 className="mt-2.5 line-clamp-2 break-words text-sm font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:text-base md:text-lg">
+          <h3 className="mt-2.5 line-clamp-2 break-words text-[0.84rem] font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:text-base md:text-lg">
             {product.name}
           </h3>
         </Link>
         {product.shortDescription && (
-          <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
+          <p className="mt-1.5 line-clamp-2 text-[0.72rem] leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
             {product.shortDescription}
           </p>
         )}
@@ -216,7 +217,7 @@ export default function StorefrontProductCard({
         )}
 
         <div className="mt-3 flex flex-wrap items-baseline gap-2">
-          <span className="text-base font-bold text-white sm:text-lg md:text-xl">
+          <span className="text-base font-extrabold text-[#FFB3D1] sm:text-lg md:text-xl">
             {formatProductPrice(product)}
           </span>
           {typeof product.compareAtPrice === "number" && (
@@ -229,10 +230,10 @@ export default function StorefrontProductCard({
           )}
         </div>
 
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 min-[430px]:grid-cols-2">
           <Link
             href={productHref}
-            className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition sm:min-h-11 sm:px-4 sm:text-sm ${style.button}`}
+            className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition sm:min-h-11 sm:px-4 sm:text-sm ${style.button}`}
           >
             View
             <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -249,7 +250,7 @@ export default function StorefrontProductCard({
           ) : (
             <Link
               href={productHref}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[#1B1230]/80 px-3 py-2 text-xs font-semibold text-[#D8CBE8]/72 transition hover:border-[#FF4DB8]/25 hover:text-white sm:min-h-11 sm:px-4 sm:text-sm"
+              className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[#FF4DB8]/20 bg-[#1B1230]/82 px-3 py-2 text-xs font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/38 hover:text-white sm:min-h-11 sm:px-4 sm:text-sm"
             >
               Options
             </Link>

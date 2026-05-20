@@ -304,9 +304,14 @@
   min-height: 3rem;
   border: 0;
   border-radius: var(--aev-radius-pill);
-  background: linear-gradient(135deg, var(--aev-pink), var(--aev-magenta-2) 58%, #D946EF);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(135deg, var(--aev-pink), var(--aev-magenta-2) 58%, #D946EF);
   color: var(--aev-text);
-  box-shadow: var(--aev-shadow-cta), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow:
+    var(--aev-shadow-cta),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
 }
 
 .aev-button-secondary,
@@ -314,11 +319,14 @@
 .action-muted {
   min-height: 3rem;
   border-radius: var(--aev-radius-pill);
-  border: 1px solid var(--aev-border-pink);
-  background: rgba(30, 19, 48, 0.78);
+  border: 1px solid rgba(255, 77, 184, 0.30);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 46%),
+    rgba(30, 19, 48, 0.82);
   color: var(--aev-pink-soft);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24), 0 0 20px rgba(255, 77, 184, 0.08);
 }
 
 .aev-button-ghost,
@@ -375,11 +383,14 @@
 .aev-input {
   width: 100%;
   border-radius: var(--aev-radius-md);
-  border: 1px solid rgba(255, 64, 184, 0.16);
-  background: rgba(11, 15, 26, 0.92);
+  border: 1px solid rgba(255, 64, 184, 0.22);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 52%),
+    rgba(11, 15, 26, 0.94);
   color: var(--aev-text);
   outline: none;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .aev-input:focus {
@@ -1969,6 +1980,23 @@ button {
   will-change: transform;
 }
 
+.aev-flagship-card-r1::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 42%),
+    radial-gradient(circle at 28% 0%, rgba(255, 77, 184, 0.12), transparent 28%),
+    radial-gradient(circle at 100% 22%, rgba(168, 85, 247, 0.10), transparent 26%);
+  opacity: 0.78;
+}
+
+.aev-flagship-card-r1 > * {
+  position: relative;
+  z-index: 1;
+}
+
 .aev-flagship-card-r1:active {
   transform: translate3d(0, 1px, 0) scale(0.982);
 }
@@ -1981,6 +2009,34 @@ button {
       0 28px 80px rgba(0, 0, 0, 0.48),
       0 0 40px rgba(255, 77, 184, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+@media (max-width: 479px) {
+  .aev-product-card {
+    padding: 0.45rem;
+  }
+
+  .aev-products-row {
+    gap: 0.65rem;
+  }
+
+  .aev-product-card h3 {
+    font-size: 0.82rem;
+    line-height: 1.22;
+  }
+
+  .aev-product-card p {
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+
+  .aev-product-card :where(a, button) {
+    min-height: 2.35rem;
+  }
+
+  .aev-shop-intro {
+    padding-top: 1.25rem;
   }
 }
 

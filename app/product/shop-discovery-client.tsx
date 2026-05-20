@@ -162,6 +162,20 @@ export default function ShopDiscoveryClient({
   );
 
   const bestPicks = featuredProducts.length > 0 ? featuredProducts : newArrivals;
+  const limitedStockProducts = useMemo(
+    () => products.filter((product) => isLimitedStock(product)).slice(0, 4),
+    [products]
+  );
+  const everydayComfortProducts = useMemo(
+    () =>
+      products
+        .filter((product) => {
+          const source = normalized(`${product.category} ${product.name} ${product.shortDescription}`);
+          return source.includes("comfort") || source.includes("everyday");
+        })
+        .slice(0, 4),
+    [products]
+  );
 
   const availableDiscoveryChips = useMemo(
     () =>
@@ -309,31 +323,45 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-7 pt-8 sm:px-6 md:pb-12 md:pt-14">
-        <div className="pointer-events-none absolute inset-x-4 top-8 -z-10 h-[30rem] rounded-[2.5rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.16),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.12),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_58%)]" />
+      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-6 md:pb-14 md:pt-14">
+        <div className="pointer-events-none absolute inset-x-3 top-6 -z-10 h-[34rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
 
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+        <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
           <div className="max-w-3xl">
             <div className="aev-pill">
               <Sparkles className="h-3.5 w-3.5" />
               Aevyrixa Her Care
             </div>
-            <h1 className="aev-heading mt-5 break-words text-3xl [overflow-wrap:anywhere] sm:text-5xl lg:text-6xl">
-              Her Care Collection
+            <h1 className="aev-heading mt-5 break-words text-[2.15rem] [overflow-wrap:anywhere] sm:text-5xl lg:text-7xl">
+              Discover care made for your rhythm.
             </h1>
             <p className="aev-subtext mt-4 max-w-2xl text-base sm:text-lg">
-              Premium reusable care essentials with BDT pricing, privacy packaging, and Bangladesh delivery.
+              Browse premium reusable care essentials by fit, flow, stock, and comfort mood. BDT pricing, privacy packaging, and Bangladesh delivery stay clear at every step.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {[
+                `${products.length} products`,
+                "BDT pricing",
+                settings.privacyPackagingMessage || "Privacy Packaging",
+              ].map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-white/10 bg-[#151024]/72 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div className="aev-panel aev-glow-border p-3 sm:p-4">
+          <div className="aev-panel aev-glow-border p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search products, categories, comfort details..."
-                className="aev-input min-h-12 rounded-full py-3.5 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
+                className="aev-input min-h-[3.25rem] rounded-full py-4 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
               />
               {query && (
                 <button
@@ -351,7 +379,7 @@ export default function ShopDiscoveryClient({
               <button
                 type="button"
                 onClick={() => setFiltersOpen((current) => !current)}
-                className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-semibold lg:hidden"
+                className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-semibold lg:hidden"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
@@ -360,7 +388,7 @@ export default function ShopDiscoveryClient({
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortMode)}
-                className="aev-input min-h-10 rounded-full px-3 py-2 text-sm font-semibold sm:w-auto sm:min-w-40"
+                className="aev-input min-h-11 rounded-full px-3 py-2 text-sm font-semibold sm:w-auto sm:min-w-40"
                 aria-label="Sort products"
               >
                 <option value="featured">Featured</option>
@@ -372,7 +400,7 @@ export default function ShopDiscoveryClient({
               <button
                 type="button"
                 onClick={resetFilters}
-                className="aev-button-ghost min-h-10 rounded-full px-3 py-2 text-sm font-semibold"
+                className="aev-button-ghost min-h-11 rounded-full px-3 py-2 text-sm font-semibold"
                 aria-label="Reset filters"
               >
                 Reset
@@ -397,10 +425,10 @@ export default function ShopDiscoveryClient({
                   key={`${chip.label}-${chip.category ?? chip.signal}`}
                   type="button"
                   onClick={() => selectDiscoveryChip(chip)}
-                  className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                  className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition ${
                     active
                       ? "border-[#FF4DB8]/55 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_18px_rgba(255,77,184,0.32)]"
-                      : "border-white/10 bg-[#151024] text-[#D8CBE8]/78 hover:border-[#FF4DB8]/32 hover:text-white"
+                      : "border-white/10 bg-[#151024]/88 text-[#D8CBE8]/78 backdrop-blur-xl hover:border-[#FF4DB8]/32 hover:text-white"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -420,7 +448,7 @@ export default function ShopDiscoveryClient({
           ].map(([label, Icon, iconClass, chipClass]) => (
             <div
               key={label as string}
-              className={`aev-cinematic-chip flex min-h-16 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs text-white/78 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 ${chipClass as string}`}
+              className={`aev-cinematic-chip flex min-h-16 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs text-white/78 shadow-[0_10px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 ${chipClass as string}`}
             >
               <Icon className={`h-4 w-4 shrink-0 ${iconClass as string}`} />
               <span className="line-clamp-2">{label as string}</span>
@@ -433,6 +461,27 @@ export default function ShopDiscoveryClient({
         eyebrow="Best Picks"
         title="Shop our best picks"
         products={bestPicks}
+        ratingMap={ratingMap}
+      />
+
+      <CollectionSection
+        eyebrow="New Arrivals"
+        title="Fresh from the collection"
+        products={newArrivals.filter((product) => isNewProduct(product))}
+        ratingMap={ratingMap}
+      />
+
+      <CollectionSection
+        eyebrow="Limited Stock"
+        title="Low-stock pieces to consider"
+        products={limitedStockProducts}
+        ratingMap={ratingMap}
+      />
+
+      <CollectionSection
+        eyebrow="Everyday Comfort"
+        title="Soft essentials for daily wear"
+        products={everydayComfortProducts}
         ratingMap={ratingMap}
       />
 
@@ -480,7 +529,7 @@ export default function ShopDiscoveryClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
               {filteredProducts.map((product) => (
                 <StorefrontProductCard
                   key={product.id}
