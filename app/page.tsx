@@ -18,13 +18,12 @@ import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
-import ProductVisual from "@/app/components/product-visual";
+import StorefrontProductCard from "@/app/components/storefront-product-card";
 import LiveChatWidget from "@/app/components/live-chat-widget";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { whatsappHref } from "@/app/lib/admin-settings";
 import { publicProduct } from "@/app/lib/product-display";
-import { formatProductPrice } from "@/app/lib/products";
 import { listFeaturedTestimonials } from "@/app/lib/review-store";
 import type { PublicProductReview } from "@/app/lib/review-types";
 
@@ -475,30 +474,78 @@ export default async function Home() {
       </section>
       )}
 
-      {hms.showTrustStrip && (
-      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/70">
-              Confidence System
-            </p>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Three quiet upgrades for the moments that usually feel uncertain.
-            </h2>
-          </div>
+      {hms.showFeaturedProducts && activeProducts.length > 0 && (
+        <section className="aev-scroll-section px-4 py-10 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="aev-section-label">Best Picks For You</p>
+                <h2 className="aev-heading mt-3 text-2xl sm:text-4xl lg:text-5xl">
+                  Shop our premium Her Care picks.
+                </h2>
+                <p className="aev-subtext mt-3 max-w-2xl text-sm sm:text-base">
+                  Real active products from the current storefront, shown with live stock status and BDT pricing.
+                </p>
+              </div>
+              <Link
+                href="/product"
+                className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold"
+              >
+                View Collection
+                <ArrowRight size={14} strokeWidth={2.2} />
+              </Link>
+            </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3 lg:gap-6">
-            {confidenceCards.map(({ title, copy, icon: Icon }) => (
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              {activeProducts.map((product, index) => (
+                <StorefrontProductCard
+                  key={product.id}
+                  product={product}
+                  compact
+                  priority={index === 0}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {hms.showTrustStrip && (
+      <section className="aev-scroll-section px-4 py-10 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: "Discreet Packaging",
+                copy: settings.privacyPackagingMessage || "Plain outer packaging for private delivery.",
+                icon: PackageCheck,
+              },
+              {
+                title: "Bangladesh Delivery",
+                copy: settings.deliveryCoverageText || "Courier delivery across Bangladesh with support.",
+                icon: Truck,
+              },
+              {
+                title: "3-Day Hygiene-Safe Support",
+                copy: settings.supportWindowMessage || "Support for eligible product concerns after delivery.",
+                icon: ShieldCheck,
+              },
+              {
+                title: "Secure Checkout",
+                copy: "Clear BDT pricing and careful order confirmation.",
+                icon: Sparkles,
+              },
+            ].map(({ title, copy, icon: Icon }) => (
               <article
                 key={title}
-                className="aev-border-card aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 transition duration-300 hover:-translate-y-1 sm:p-7"
+                className="aev-card aev-reveal group relative overflow-hidden rounded-[1.35rem] p-4 sm:p-5"
               >
                 <div className="absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF4DB8]/40 via-[#A855F7]/30 to-transparent" />
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8] transition duration-300 group-hover:scale-105 sm:mb-10">
-                  <Icon size={22} strokeWidth={1.7} />
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8] transition duration-300 group-hover:scale-105">
+                  <Icon size={19} strokeWidth={1.7} />
                 </div>
-                <h3 className="text-2xl font-semibold text-white">{title}</h3>
-                <p className="mt-4 text-sm leading-7 text-[#9C91AA]">{copy}</p>
+                <h3 className="text-base font-semibold text-white">{title}</h3>
+                <p className="mt-2 text-xs leading-6 text-[#D8CBE8]/76">{copy}</p>
               </article>
             ))}
           </div>
@@ -623,93 +670,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      )}
-
-      {/* ── Featured products — early placement for conversion ── */}
-      {hms.showFeaturedProducts && activeProducts.length > 0 && (
-        <section className="aev-scroll-section px-4 py-14 sm:px-6 sm:py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
-                  Her Care Products
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#FFFFFF] sm:text-4xl lg:text-5xl">
-                  Explore our collection.
-                </h2>
-              </div>
-              <Link
-                href="/product"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#FF4DB8] transition hover:text-[#D8CBE8]"
-              >
-                View all
-                <ArrowRight size={14} strokeWidth={2.2} />
-              </Link>
-            </div>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#D8CBE8]/80 sm:text-base sm:leading-8">
-              Premium reusable care essentials with discreet delivery across Bangladesh.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-              {activeProducts.map((product) => (
-                <article
-                  key={product.id}
-                  className="aev-reveal aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-3 sm:rounded-[1.75rem]"
-                >
-                  <Link href={`/product/${product.slug}`} className="block overflow-hidden rounded-[1.15rem] border border-[#FF4DB8]/10 bg-[#1B1230] sm:rounded-[1.35rem]">
-                    <div className="relative aspect-square w-full">
-                      <div className="pointer-events-none absolute inset-x-8 top-8 h-28 rounded-full bg-[#FF4DB8]/[0.08] blur-3xl transition duration-500 group-hover:opacity-150 group-hover:scale-110" />
-                      {product.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <ProductVisual
-                          visualTheme={product.visualTheme}
-                          label={product.absorbency}
-                        />
-                      )}
-                    </div>
-                  </Link>
-                  <div className="px-1.5 pb-2.5 pt-3.5 sm:px-2 sm:pb-3 sm:pt-4">
-                    <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#FFFFFF] sm:text-lg">
-                      {product.name}
-                    </h3>
-                    {product.shortDescription && (
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#D8CBE8]/78">
-                        {product.shortDescription}
-                      </p>
-                    )}
-                    <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-                      <span className="text-lg font-bold text-white sm:text-xl">
-                        {formatProductPrice(product)}
-                      </span>
-                      <Link
-                        href={`/product/${product.slug}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[#FF4DB8]/22 bg-[#1B1230] px-3.5 py-2 text-xs font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/40 hover:bg-[#211633] sm:gap-2 sm:px-4 sm:text-sm"
-                      >
-                        View
-                        <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <div className="mt-7 flex justify-center sm:mt-8">
-              <Link
-                href="/product"
-                className="aev-action-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-7 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition duration-300 hover:-translate-y-0.5"
-              >
-                View All Products
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
       )}
 
       {hms.showStorySections && (
@@ -936,12 +896,13 @@ export default async function Home() {
 
             <div className="mt-8 grid gap-3">
               {[
-                "Soft fabric feel with flexible everyday support.",
-                "Layered protection designed for light to moderate flow.",
-                settings.privacyPackagingMessage,
-              ].map((benefit) => (
+                ["Soft comfort", "Soft fabric feel with flexible everyday support."],
+                ["Absorbent support", "Layered protection designed for light to moderate flow."],
+                ["Discreet protection", settings.privacyPackagingMessage],
+                ["Breathable daily wear", "A smooth, breathable feel for daily routines and repeat wear."],
+              ].map(([label, benefit]) => (
                 <div
-                  key={benefit}
+                  key={label}
                   className="aev-reveal flex gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#151024] p-4 text-sm leading-7 text-[#D8CBE8]/80"
                 >
                   <ShieldCheck
@@ -949,7 +910,10 @@ export default async function Home() {
                     size={18}
                     strokeWidth={1.8}
                   />
-                  <span>{benefit}</span>
+                  <span>
+                    <strong className="block text-white">{label}</strong>
+                    {benefit}
+                  </span>
                 </div>
               ))}
             </div>
