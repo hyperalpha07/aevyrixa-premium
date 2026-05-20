@@ -68,20 +68,20 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_52%,#030612_100%)]" />
+    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(168,85,247,0.07),transparent_32%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader settings={settings} active="account" />
 
       <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[0.9fr_1.1fr] md:py-16">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200/72">
+          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/75">
             Customer Account
           </p>
-          <h1 className="mt-4 break-words text-3xl font-semibold leading-tight [overflow-wrap:anywhere] sm:text-5xl">
-            {isRegister ? "Create your customer account." : "Login to your account."}
+          <h1 className="mt-4 break-words text-3xl font-semibold leading-tight tracking-tight text-white [overflow-wrap:anywhere] sm:text-5xl">
+            {isRegister ? "Create your account." : "Welcome back."}
           </h1>
-          <p className="mt-5 text-sm leading-7 text-white/64">
-            Use your account for saved addresses, order history, and secure checkout submission.
+          <p className="mt-5 text-sm leading-7 text-[#9C91AA]">
+            Use your account for saved addresses, order history, and faster checkout.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link className="action-muted" href="/checkout">Back to checkout</Link>
@@ -91,15 +91,18 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
 
         <form
           onSubmit={submit}
-          className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6"
+          className="min-w-0 rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[#151024] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.28)] sm:p-6"
         >
           <h2 className="text-2xl font-semibold text-white">
-            {isRegister ? "Register" : "Login"}
+            {isRegister ? "Create Account" : "Login"}
           </h2>
+          <p className="mt-1 text-sm text-[#9C91AA]">
+            {isRegister ? "Join the Her Care community." : "Login to your Her Care account."}
+          </p>
           {isRegister && (
             <>
               <Input label="Full name" value={fullName} onChange={setFullName} autoComplete="name" />
-              <Input label="Email optional" type="email" value={email} onChange={setEmail} autoComplete="email" />
+              <Input label="Email (optional)" type="email" value={email} onChange={setEmail} autoComplete="email" />
             </>
           )}
           <Input label="Phone number" value={phone} onChange={setPhone} autoComplete="tel" />
@@ -111,23 +114,23 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
             autoComplete={isRegister ? "new-password" : "current-password"}
           />
           {isRegister && (
-            <p className="mt-2 text-xs leading-5 text-white/48">
+            <p className="mt-2 text-xs leading-5 text-[#9C91AA]">
               Password must be at least 8 characters.
             </p>
           )}
           {error && (
-            <div className="mt-5 rounded-2xl border border-rose-200/20 bg-rose-300/[0.08] p-4 text-sm text-rose-50/82">
+            <div className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/[0.07] p-4 text-sm text-rose-100/80">
               {error}
             </div>
           )}
           <button type="submit" disabled={isSubmitting} className="action-primary mt-6 w-full disabled:opacity-60">
             {isSubmitting ? "Please wait..." : isRegister ? "Create Account" : "Login"}
           </button>
-          <p className="mt-5 text-center text-sm text-white/58">
+          <p className="mt-5 text-center text-sm text-[#9C91AA]">
             {isRegister ? "Already have an account?" : "New customer?"}{" "}
             <Link
               href={isRegister ? "/account/login" : "/account/register"}
-              className="font-semibold text-cyan-100 hover:text-white"
+              className="font-semibold text-[#FFB3D1] transition hover:text-white"
             >
               {isRegister ? "Login" : "Create account"}
             </Link>
@@ -155,14 +158,14 @@ function Input({
 }) {
   return (
     <label className="mt-5 block">
-      <span className="text-sm font-medium text-white/72">{label}</span>
+      <span className="text-sm font-medium text-[#D8CBE8]">{label}</span>
       <input
-        required={label !== "Email optional"}
+        required={label !== "Email (optional)"}
         type={type}
         value={value}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/45"
+        className="mt-2 w-full rounded-2xl border border-[#FF4DB8]/14 bg-[#0B0F1A] px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-[#6B5F7A] focus:border-[#FF4DB8]/40 focus:shadow-[0_0_0_3px_rgba(255,77,184,0.07)]"
       />
     </label>
   );

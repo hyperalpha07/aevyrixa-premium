@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aevyrixa Her Care — Premium Period Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#04040f;--bg2:#07071a;--bg3:#0c0c22;--bg4:#11112e;
+  --glass:rgba(255,255,255,.04);--glass2:rgba(255,255,255,.08);
+  --pink:#ff1493;--pink2:#ff69b4;--pink3:rgba(255,20,147,.15);
+  --purple:#8b5cf6;--purple2:#a78bfa;--purple3:rgba(139,92,246,.15);
+  --teal:#06b6d4;--amber:#f59e0b;--green:#10b981;--red:#ef4444;
+  --txt:#f0eeff;--txt2:#c4bfdf;--muted:#706c94;--muted2:#9895b5;
+  --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.12);--bd3:rgba(255,255,255,.2);
+  --pink-glow:rgba(255,20,147,.4);--purple-glow:rgba(139,92,246,.35);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;overflow-x:hidden;cursor:none}
+::selection{background:rgba(255,20,147,.25)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:linear-gradient(var(--pink),var(--purple));border-radius:2px}
+
+/* ── CUSTOM CURSOR ── */
+#cursor{position:fixed;width:10px;height:10px;background:var(--pink);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:transform .1s,background .2s,width .2s,height .2s;mix-blend-mode:difference}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1.5px solid rgba(255,20,147,.5);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:all .12s ease;mix-blend-mode:normal}
+body:hover #cursor{opacity:1}
+
+/* ── SCROLL PROGRESS ── */
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--pink),var(--purple),var(--teal));z-index:10001;transition:width .1s}
+
+/* ── PRELOADER ── */
+#preloader{position:fixed;inset:0;background:var(--bg);z-index:99997;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;transition:opacity .6s,visibility .6s}
+#preloader.gone{opacity:0;visibility:hidden}
+.pre-logo{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:preScale 1s ease infinite alternate}
+@keyframes preScale{from{transform:scale(.96)}to{transform:scale(1.04)}}
+.pre-bar{width:180px;height:2px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden}
+.pre-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));width:0;animation:preLoad 1.8s ease forwards}
+@keyframes preLoad{to{width:100%}}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(16,20,40,.95);backdrop-filter:blur(20px);border:1px solid rgba(255,20,147,.3);border-radius:100px;padding:12px 24px;font-size:.8rem;font-weight:600;color:var(--txt);z-index:99996;transition:.4s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast .t-ico{font-size:1rem}
+
+/* ── FLOATING NAV ── */
+nav{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(4,4,15,.75);backdrop-filter:blur(30px);border:1px solid var(--bd2);border-radius:100px;padding:0 6px 0 16px;display:flex;align-items:center;gap:0;height:52px;width:min(900px,calc(100vw - 32px));transition:.3s;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+nav.scrolled{background:rgba(4,4,15,.95);box-shadow:0 8px 40px rgba(255,20,147,.12)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer;flex-shrink:0}
+.logo-gem{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pink),var(--purple));border-radius:8px;font-family:'Playfair Display',serif;font-size:.9rem;font-weight:900;color:#fff}
+.logo-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--txt);letter-spacing:.06em}
+.logo-name b{color:var(--pink)}
+.nav-links{display:flex;gap:2px;margin:0 auto}
+.nl{font-size:.74rem;font-weight:500;color:var(--muted2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;white-space:nowrap}
+.nl:hover,.nl.on{color:var(--txt);background:rgba(255,255,255,.07)}
+.nl.on{color:var(--pink)}
+.nav-right{display:flex;align-items:center;gap:2px}
+.ni{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:100px;cursor:pointer;position:relative;transition:.18s}
+.ni:hover{background:rgba(255,255,255,.07)}
+.ni svg{width:16px;height:16px;stroke:var(--muted2);fill:none;stroke-width:1.8;transition:.18s}
+.ni:hover svg{stroke:var(--pink)}
+.nbadge{position:absolute;top:5px;right:5px;background:var(--pink);color:#fff;font-size:.52rem;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--bg)}
+
+/* ── PAGE WRAPPER ── */
+.page{padding-top:88px;animation:pgIn .4s ease both}
+@keyframes pgIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hidden{display:none!important}
+
+/* ── MESH BACKGROUND ── */
+.mesh{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.mesh-dot{position:absolute;border-radius:50%;filter:blur(80px);animation:meshFloat 8s ease-in-out infinite}
+@keyframes meshFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.1)}}
+
+/* ────────────────────────────
+   PAGE: HOME
+───────────────────────────── */
+
+/* HERO */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:0 60px;gap:40px;position:relative;overflow:hidden}
+.hero-mesh-1{width:600px;height:600px;background:radial-gradient(circle,rgba(139,92,246,.35),transparent 65%);top:-100px;right:-100px;animation-delay:0s}
+.hero-mesh-2{width:400px;height:400px;background:radial-gradient(circle,rgba(255,20,147,.25),transparent 65%);bottom:-50px;right:100px;animation-delay:-3s}
+.hero-mesh-3{width:300px;height:300px;background:radial-gradient(circle,rgba(6,182,212,.15),transparent 65%);top:200px;left:-50px;animation-delay:-5s}
+.hero-left{position:relative;z-index:2}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;margin-bottom:28px}
+.eyebrow-line{width:32px;height:1px;background:var(--pink);display:block}
+.eyebrow-text{font-size:.65rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--pink)}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(3.2rem,5.2vw,5.4rem);font-weight:900;line-height:1.03;letter-spacing:-.02em;margin-bottom:22px}
+.grad-text{background:linear-gradient(135deg,var(--pink),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{color:var(--muted2);font-size:.9rem;line-height:1.8;max-width:400px;margin-bottom:38px;font-weight:300}
+.hero-sub b{color:var(--txt);font-weight:500}
+.cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn-main{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--pink),#c4006e);color:#fff;border:none;padding:14px 32px;border-radius:100px;font-size:.83rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.25s;box-shadow:0 6px 30px rgba(255,20,147,.4);letter-spacing:.02em}
+.btn-main::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:0;height:0;background:rgba(255,255,255,.15);border-radius:50%;transition:.5s}
+.btn-main:hover::before{width:300px;height:300px}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(255,20,147,.55)}
+.btn-outline{background:rgba(255,255,255,.05);color:var(--txt);border:1px solid var(--bd2);padding:13px 28px;border-radius:100px;font-size:.83rem;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:.25s}
+.btn-outline:hover{background:rgba(255,20,147,.08);border-color:rgba(255,20,147,.4);color:var(--pink2)}
+.hero-stats{display:flex;gap:28px;margin-top:40px;padding-top:32px;border-top:1px solid var(--bd)}
+.hstat-n{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--pink);display:block;line-height:1}
+.hstat-l{font-size:.7rem;color:var(--muted);margin-top:4px;display:block}
+
+/* HERO RIGHT — visual */
+.hero-right{position:relative;z-index:2;display:flex;align-items:center;justify-content:center}
+.hero-vis{position:relative;width:460px;height:560px}
+.h-ring-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;height:420px;border-radius:50%;border:1px solid rgba(139,92,246,.2);animation:ringPulse 4s ease-in-out infinite}
+.h-ring-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;height:340px;border-radius:50%;border:1px solid rgba(255,20,147,.15);animation:ringPulse 4s ease-in-out infinite reverse}
+@keyframes ringPulse{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.03)}}
+.h-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.45) 0%,rgba(255,20,147,.25) 40%,transparent 70%);filter:blur(8px)}
+.h-model{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:320px;height:520px;border-radius:160px 160px 100px 100px;overflow:hidden;z-index:3}
+.h-model img{width:100%;height:100%;object-fit:cover;object-position:center top;filter:contrast(1.05) brightness(.95)}
+.h-model::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(100,40,200,.5) 100%)}
+.h-bot-glow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:260px;height:70px;background:var(--purple);border-radius:50%;filter:blur(45px);opacity:.6;z-index:1}
+
+/* FLOATING CARDS on hero */
+.float-card{position:absolute;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 16px;z-index:5;animation:floatCard 4s ease-in-out infinite}
+@keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.fc1{top:80px;right:-10px;animation-delay:0s}
+.fc2{bottom:120px;left:-20px;animation-delay:-2s}
+.fc-ico{font-size:1.1rem;margin-bottom:4px}
+.fc-val{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--pink);display:block}
+.fc-lbl{font-size:.62rem;color:var(--muted2);display:block}
+
+/* MARQUEE STRIP */
+.marquee-strip{background:linear-gradient(90deg,var(--pink),var(--purple),var(--teal),var(--pink));padding:12px 0;overflow:hidden;position:relative}
+.marquee-strip::before,.marquee-strip::after{content:'';position:absolute;top:0;bottom:0;width:100px;z-index:2}
+.marquee-strip::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.marquee-strip::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
+.marquee-inner{display:flex;gap:0;white-space:nowrap;animation:marquee 24s linear infinite}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-item{display:inline-flex;align-items:center;gap:10px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.9);padding:0 32px}
+.marquee-item::after{content:'✦';font-size:.6rem;opacity:.7}
+
+/* TRUST BAR */
+.trust-bar{background:var(--bg2);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0 60px}
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.ti{display:flex;align-items:center;gap:14px;padding:20px 18px}
+.ti+.ti{border-left:1px solid var(--bd)}
+.ti-ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.ti-ico::before{content:'';position:absolute;inset:0;border-radius:12px;background:linear-gradient(135deg,var(--pink3),var(--purple3));border:1px solid rgba(139,92,246,.25)}
+.ti-ico svg{width:17px;height:17px;stroke:var(--purple2);fill:none;stroke-width:1.8;position:relative;z-index:1}
+.ti b{display:block;font-size:.8rem;font-weight:600;margin-bottom:2px}
+.ti s{display:block;font-size:.68rem;color:var(--muted);font-style:normal}
+
+/* PRODUCTS SECTION */
+.products-sec{padding:80px 60px}
+.sec-header{text-align:center;margin-bottom:48px}
+.sec-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,20,147,.08);border:1px solid rgba(255,20,147,.2);color:var(--pink2);font-size:.63rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:.3rem .9rem;border-radius:100px;margin-bottom:12px}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,3vw,3rem);font-weight:900;letter-spacing:-.02em}
+.sec-sub{font-size:.85rem;color:var(--muted2);margin-top:8px}
+.pg4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+
+/* PRODUCT CARD — glassmorphism + 3D tilt */
+.pcard{background:rgba(255,255,255,.035);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:20px;overflow:hidden;cursor:pointer;position:relative;transform-style:preserve-3d;transition:.3s}
+.pcard:hover{border-color:rgba(255,20,147,.3);box-shadow:0 20px 60px rgba(255,20,147,.15)}
+.pcard-shine{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 50%,rgba(255,255,255,.02) 100%);pointer-events:none;z-index:10;opacity:0;transition:.3s}
+.pcard:hover .pcard-shine{opacity:1}
+.pbadge{position:absolute;top:10px;left:10px;z-index:5;font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.22rem .65rem;border-radius:100px}
+.bs{background:rgba(245,158,11,.14);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.bn{background:rgba(6,182,212,.1);color:#22d3ee;border:1px solid rgba(6,182,212,.25)}
+.bl{background:rgba(255,20,147,.12);color:var(--pink2);border:1px solid rgba(255,20,147,.28)}
+.bp{background:rgba(139,92,246,.14);color:var(--purple2);border:1px solid rgba(139,92,246,.3)}
+.quick-view{position:absolute;top:10px;right:10px;z-index:5;width:32px;height:32px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border:1px solid var(--bd2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;opacity:0;transition:.2s;cursor:pointer}
+.pcard:hover .quick-view{opacity:1}
+.pimg{height:170px;position:relative;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:cover;transition:.5s}
+.pcard:hover .pimg img{transform:scale(1.1)}
+.ov1::after,.ov2::after,.ov3::after,.ov4::after{content:'';position:absolute;inset:0;pointer-events:none}
+.ov1::after{background:linear-gradient(145deg,rgba(10,5,30,.65),rgba(20,5,50,.45));mix-blend-mode:multiply}
+.ov2::after{background:linear-gradient(145deg,rgba(60,5,35,.55),rgba(140,20,80,.3));mix-blend-mode:multiply}
+.ov3::after{background:linear-gradient(145deg,rgba(5,5,35,.65),rgba(25,8,70,.45));mix-blend-mode:multiply}
+.ov4::after{background:linear-gradient(145deg,rgba(15,15,40,.6),rgba(30,30,60,.4));mix-blend-mode:multiply}
+.pinfo{padding:14px 14px 16px}
+.pname{font-size:.8rem;font-weight:500;line-height:1.42;margin-bottom:8px;min-height:36px;color:var(--txt2)}
+.pstars{display:flex;align-items:center;gap:2px;margin-bottom:10px;font-size:.72rem;color:var(--amber)}
+.pstars .e{color:#1e1c40}
+.pstars em{font-style:normal;font-size:.62rem;color:var(--muted);margin-left:4px}
+.pfoot{display:flex;align-items:center;justify-content:space-between}
+.pprice{font-size:1rem;font-weight:700;color:var(--pink)}
+.padd{width:32px;height:32px;border-radius:9px;background:rgba(255,20,147,.1);border:1px solid rgba(255,20,147,.2);color:var(--pink);font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+.padd::before{content:'';position:absolute;inset:0;background:var(--pink);transform:scale(0);border-radius:50%;transition:.3s}
+.padd:hover::before{transform:scale(2)}
+.padd span{position:relative;z-index:1;transition:.2s}
+.padd:hover span{color:#fff}
+.swatches{display:flex;gap:5px;margin-bottom:8px}
+.sw{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.2s}
+.sw:hover,.sw.on{border-color:rgba(255,255,255,.5);transform:scale(1.15)}
+
+/* VIEW ALL */
+.view-all{display:flex;justify-content:center;margin-top:36px}
+.btn-neutral{background:rgba(255,255,255,.04);border:1px solid var(--bd2);color:var(--txt2);padding:12px 36px;border-radius:100px;font-size:.8rem;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:.22s}
+.btn-neutral:hover{background:rgba(255,20,147,.07);border-color:rgba(255,20,147,.35);color:var(--pink2)}
+
+/* SPLIT FEATURE SECTION */
+.split-sec{padding:80px 60px;background:var(--bg2);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.split-left h2{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,3.5vw,3.4rem);font-weight:900;line-height:1.08;margin-bottom:14px;letter-spacing:-.02em}
+.split-left p{color:var(--muted2);font-size:.87rem;line-height:1.82;margin-bottom:28px;font-weight:300}
+.layers{display:flex;flex-direction:column;gap:10px}
+.lrow{display:flex;align-items:center;gap:14px;padding:15px 20px;border-radius:14px;transition:.25s;cursor:default}
+.lrow:hover{transform:translateX(8px)}
+.lr1{background:rgba(255,20,147,.07);border:1px solid rgba(255,20,147,.18)}
+.lr2{background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.18);margin-right:7%}
+.lr3{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.15);margin-right:14%}
+.lr4{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.14);margin-right:21%}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.lr1 .ldot{background:var(--pink);box-shadow:0 0 10px var(--pink)}
+.lr2 .ldot{background:var(--purple2);box-shadow:0 0 10px var(--purple2)}
+.lr3 .ldot{background:var(--teal);box-shadow:0 0 10px var(--teal)}
+.lr4 .ldot{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.ltxt strong{display:block;font-size:.83rem;font-weight:600}
+.ltxt span{font-size:.71rem;color:var(--muted2)}
+.split-right-img{border-radius:24px;overflow:hidden;height:380px;position:relative}
+.split-right-img img{width:100%;height:100%;object-fit:cover}
+.split-right-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(139,92,246,.28),rgba(255,20,147,.18))}
+.split-right-badge{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(4,4,15,.8);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;z-index:2}
+.srb-title{font-size:.8rem;font-weight:700;margin-bottom:3px}
+.srb-sub{font-size:.7rem;color:var(--muted2)}
+
+/* SOCIAL PROOF */
+.reviews-sec{padding:80px 60px}
+.reviews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rcard{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:18px;padding:24px;position:relative;overflow:hidden;transition:.25s}
+.rcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--pink),var(--purple));opacity:0;transition:.25s}
+.rcard:hover{border-color:rgba(139,92,246,.25);transform:translateY(-4px)}
+.rcard:hover::before{opacity:1}
+.rcard-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.rcard-av{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,20,147,.3)}
+.rcard-av img{width:100%;height:100%;object-fit:cover}
+.rcard-name{font-size:.83rem;font-weight:700}
+.rcard-date{font-size:.68rem;color:var(--muted)}
+.rcard-stars{font-size:.75rem;color:var(--amber);margin-bottom:10px}
+.rcard-text{font-size:.79rem;color:var(--muted2);line-height:1.7;font-weight:300}
+.rcard-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--green);font-size:.63rem;font-weight:600;padding:.22rem .65rem;border-radius:100px;margin-top:12px}
+
+/* PKG BANNER */
+.pkg-sec{padding:0 60px 80px}
+.pkg{background:linear-gradient(130deg,rgba(139,92,246,.14),rgba(255,20,147,.09));border:1px solid rgba(139,92,246,.25);border-radius:24px;padding:48px 56px;display:grid;grid-template-columns:1fr 320px;align-items:center;gap:40px;position:relative;overflow:hidden}
+.pkg::before{content:'';position:absolute;top:-40%;right:-5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.22),transparent 65%);pointer-events:none}
+.pkg::after{content:'';position:absolute;bottom:-40%;left:5%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(255,20,147,.15),transparent 65%);pointer-events:none}
+.pkg h2{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;letter-spacing:-.02em;margin-bottom:10px}
+.pkg p{color:var(--muted2);font-size:.86rem;line-height:1.78;margin-bottom:24px;font-weight:300}
+.pkg-img{border-radius:18px;overflow:hidden;height:210px;position:relative;z-index:1}
+.pkg-img img{width:100%;height:100%;object-fit:cover}
+.pkg-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(139,92,246,.35),rgba(255,20,147,.25));border-radius:18px}
+.pkg-pill-badge{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:.7rem;font-weight:700;padding:.38rem 1.1rem;border-radius:100px;white-space:nowrap;z-index:2;letter-spacing:.05em}
+
+/* INFO CARDS */
+.info-sec{padding:0 60px 80px}
+.ig3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.icard{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:20px;padding:30px 26px;transition:.3s;position:relative;overflow:hidden;cursor:pointer}
+.icard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--pink),var(--purple));transform:scaleX(0);transform-origin:left;transition:.3s}
+.icard:hover{border-color:rgba(139,92,246,.3);transform:translateY(-5px);box-shadow:0 20px 55px rgba(139,92,246,.1)}
+.icard:hover::after{transform:scaleX(1)}
+.iico{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:1.3rem;position:relative}
+.iico::before{content:'';position:absolute;inset:0;border-radius:14px;opacity:.8}
+.ip .iico::before{background:rgba(255,20,147,.12);border:1px solid rgba(255,20,147,.2)}
+.ipu .iico::before{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.2)}
+.it .iico::before{background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.18)}
+.icard h3{font-size:.93rem;font-weight:700;margin-bottom:7px}
+.icard p{font-size:.78rem;color:var(--muted2);line-height:1.68;margin-bottom:18px;font-weight:300}
+.itag{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s}
+.tp{color:var(--pink2)}.tp:hover{color:var(--pink)}
+.tpu{color:var(--purple2)}.tpu:hover{color:var(--purple)}
+.tt{color:var(--teal)}.tt:hover{opacity:.7}
+
+/* NEWSLETTER */
+.newsletter{padding:80px 60px;background:var(--bg2);border-top:1px solid var(--bd)}
+.nl-box{max-width:560px;margin:0 auto;text-align:center}
+.nl-box h2{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;letter-spacing:-.02em;margin-bottom:10px}
+.nl-box p{color:var(--muted2);font-size:.86rem;margin-bottom:28px;font-weight:300}
+.nl-form{display:flex;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:100px;padding:6px 6px 6px 20px}
+.nl-form input{flex:1;background:none;border:none;outline:none;color:var(--txt);font-size:.83rem;font-family:'Inter',sans-serif}
+.nl-form input::placeholder{color:var(--muted)}
+
+/* FOOTER */
+footer{background:var(--bg2);border-top:1px solid var(--bd);padding:56px 60px 28px}
+.ftg{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr 1.5fr;gap:32px;margin-bottom:48px}
+.ft-brand p{color:var(--muted);font-size:.77rem;line-height:1.72;margin:12px 0;font-weight:300}
+.socials{display:flex;gap:8px}
+.sb{width:32px;height:32px;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.7rem;text-decoration:none;transition:.2s}
+.sb:hover{background:rgba(255,20,147,.12);border-color:rgba(255,20,147,.3);color:var(--pink)}
+.ft-col h5{font-size:.67rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px;color:var(--txt)}
+.ft-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.ft-col a{color:var(--muted);font-size:.77rem;text-decoration:none;transition:.18s;cursor:pointer;font-weight:300}
+.ft-col a:hover{color:var(--pink2)}
+.ft-con p{display:flex;align-items:flex-start;gap:7px;color:var(--muted);font-size:.77rem;margin-bottom:9px;line-height:1.5;font-weight:300}
+.ft-bot{border-top:1px solid var(--bd);padding-top:22px;display:flex;align-items:center;justify-content:space-between}
+.ft-bot p{color:var(--muted);font-size:.7rem}
+.pays{display:flex;gap:6px}
+.pay{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:5px;padding:3px 9px;font-size:.62rem;font-weight:700;color:var(--muted2)}
+
+/* ── QUICK VIEW MODAL ── */
+#modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;transition:.3s}
+#modal.hidden{opacity:0;pointer-events:none}
+#modal:not(.hidden){background:rgba(0,0,0,.7);backdrop-filter:blur(12px)}
+.modal-box{background:var(--bg3);border:1px solid var(--bd2);border-radius:24px;width:100%;max-width:720px;overflow:hidden;transform:scale(.95);transition:.3s}
+#modal:not(.hidden) .modal-box{transform:scale(1)}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr}
+.modal-img{height:360px;overflow:hidden}
+.modal-img img{width:100%;height:100%;object-fit:cover}
+.modal-info{padding:28px 28px 28px;display:flex;flex-direction:column;justify-content:center}
+.modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;background:rgba(0,0,0,.6);border:1px solid var(--bd2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;color:var(--muted2);transition:.18s}
+.modal-close:hover{background:rgba(255,20,147,.15);color:var(--pink)}
+.modal-info h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;margin-bottom:8px}
+.modal-price{font-size:1.4rem;font-weight:700;color:var(--pink);margin-bottom:14px}
+.sz-row{display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap}
+.sz{min-width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid var(--bd2);font-size:.78rem;font-weight:600;cursor:pointer;transition:.2s;padding:0 10px}
+.sz:hover,.sz.on{background:rgba(255,20,147,.12);border-color:var(--pink);color:var(--pink)}
+
+/* ── SHARED PAGE STYLES ── */
+.page-header{background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(255,20,147,.07));border-bottom:1px solid var(--bd);padding:44px 60px 38px;position:relative;overflow:hidden}
+.page-header::before{content:'';position:absolute;top:-60%;right:-10%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.2),transparent 65%);pointer-events:none}
+.ph-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,20,147,.1);border:1px solid rgba(255,20,147,.2);color:var(--pink2);font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.25rem .75rem;border-radius:100px;margin-bottom:10px}
+.page-header h1{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;letter-spacing:-.02em;margin-bottom:6px;position:relative;z-index:1}
+.page-header p{color:var(--muted2);font-size:.87rem;font-weight:300;position:relative;z-index:1}
+
+/* SHOP PAGE */
+.shop-wrap{padding:40px 60px}
+.toolbar{display:flex;align-items:center;gap:14px;margin-bottom:32px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:12px;padding:10px 16px;flex:1;max-width:300px;transition:.2s}
+.search-box:focus-within{border-color:rgba(255,20,147,.4);box-shadow:0 0 0 3px rgba(255,20,147,.08)}
+.search-box svg{width:15px;height:15px;stroke:var(--muted);flex-shrink:0;fill:none;stroke-width:1.8}
+.search-box input{background:none;border:none;outline:none;color:var(--txt);font-size:.82rem;font-family:'Inter',sans-serif;width:100%}
+.search-box input::placeholder{color:var(--muted)}
+.filter-row{display:flex;gap:7px;flex-wrap:wrap}
+.ftag{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:100px;padding:.33rem 1rem;font-size:.72rem;font-weight:500;color:var(--muted2);cursor:pointer;transition:.2s}
+.ftag:hover,.ftag.on{background:rgba(255,20,147,.1);border-color:rgba(255,20,147,.3);color:var(--pink2)}
+.sort-sel{background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:10px;padding:9px 14px;color:var(--txt);font-size:.77rem;font-family:'Inter',sans-serif;outline:none;cursor:pointer;margin-left:auto}
+.pg3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+
+/* PRODUCT DETAIL */
+.pd-wrap{padding:40px 60px}
+.back-link{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted2);cursor:pointer;transition:.18s;margin-bottom:28px}
+.back-link:hover{color:var(--pink2)}
+.pd-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.pd-main{border-radius:20px;overflow:hidden;height:460px;margin-bottom:12px}
+.pd-main img{width:100%;height:100%;object-fit:cover;transition:.4s}
+.pd-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pd-thumb{height:82px;border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:.2s}
+.pd-thumb.on,.pd-thumb:hover{border-color:var(--pink)}
+.pd-thumb img{width:100%;height:100%;object-fit:cover}
+.pd-badges{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.pd-h1{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;letter-spacing:-.02em;margin-bottom:10px}
+.pd-price-row{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.pd-price{font-size:2rem;font-weight:700;color:var(--pink)}
+.pd-old{font-size:.9rem;color:var(--muted);text-decoration:line-through}
+.pd-save{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--green);font-size:.7rem;font-weight:700;padding:.22rem .7rem;border-radius:100px}
+.pd-stars{display:flex;align-items:center;gap:5px;font-size:.8rem;color:var(--amber);margin-bottom:18px}
+.pd-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:9px}
+.sizes{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.qty-row{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.qty-ctrl{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:12px;overflow:hidden}
+.qty-ctrl button{width:40px;height:40px;background:none;border:none;color:var(--txt);font-size:1.1rem;cursor:pointer;transition:.18s;font-family:'Inter',sans-serif}
+.qty-ctrl button:hover{background:rgba(255,255,255,.07)}
+.qty-ctrl span{min-width:40px;text-align:center;font-size:.9rem;font-weight:700}
+.add-row{display:flex;gap:10px;margin-bottom:26px}
+.wishlist-btn{width:50px;height:50px;background:rgba(255,20,147,.08);border:1px solid rgba(255,20,147,.2);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;transition:.2s;flex-shrink:0}
+.wishlist-btn:hover{background:rgba(255,20,147,.2)}
+.pd-features{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:16px;padding:20px}
+.pf-item{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:.79rem;color:var(--txt2)}
+.pf-item+.pf-item{border-top:1px solid var(--bd)}
+.pf-item svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2;flex-shrink:0}
+
+/* COLLECTIONS PAGE */
+.col-wrap{padding:40px 60px}
+.col-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.ccard{border-radius:20px;overflow:hidden;cursor:pointer;position:relative;height:280px;transition:.3s}
+.ccard:hover{transform:scale(1.02)}
+.ccard:hover .ccard-img{transform:scale(1.07)}
+.ccard-img{width:100%;height:100%;object-fit:cover;transition:.5s}
+.ccard-ov{position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(4,4,15,.88) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:26px}
+.ccard h3{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;margin-bottom:5px}
+.ccard p{font-size:.76rem;color:rgba(240,238,255,.7);margin-bottom:14px;font-weight:300}
+.ccard-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,20,147,.18);border:1px solid rgba(255,20,147,.35);color:var(--pink2);font-size:.68rem;font-weight:700;padding:.28rem .8rem;border-radius:100px}
+
+/* TRACK ORDER */
+.track-wrap{padding:40px 60px;max-width:640px;margin:0 auto}
+.tf{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:20px;padding:38px}
+.tf h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;letter-spacing:-.02em;margin-bottom:6px}
+.tf p{color:var(--muted2);font-size:.83rem;margin-bottom:28px;font-weight:300}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:7px}
+.field input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:12px;padding:13px 16px;color:var(--txt);font-size:.85rem;font-family:'Inter',sans-serif;outline:none;transition:.2s}
+.field input:focus{border-color:rgba(255,20,147,.45);box-shadow:0 0 0 3px rgba(255,20,147,.1)}
+.track-result{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:20px;padding:32px;margin-top:22px}
+.tr-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.tr-head h3{font-size:1rem;font-weight:700}
+.op-pill{display:inline-flex;padding:.25rem .8rem;border-radius:100px;font-size:.67rem;font-weight:700}
+.op-del{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:var(--green)}
+.op-proc{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+.steps{display:flex;align-items:flex-start;margin:22px 0;position:relative}
+.step{flex:1;text-align:center;position:relative}
+.step-line{position:absolute;top:13px;left:50%;right:-50%;height:2px;z-index:0}
+.sl-done{background:var(--teal)}.sl-pend{background:var(--bd2)}
+.step:last-child .step-line{display:none}
+.sd{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:.7rem;font-weight:700;position:relative;z-index:1}
+.s-done{background:rgba(0,212,198,.14);border:2px solid var(--teal);color:var(--teal)}
+.s-act{background:rgba(255,20,147,.14);border:2px solid var(--pink);color:var(--pink)}
+.s-pend{background:rgba(255,255,255,.04);border:2px solid var(--bd2);color:var(--muted)}
+.step-lbl{font-size:.65rem;color:var(--muted2);line-height:1.3}
+.step-lbl.dt{color:var(--teal)}.step-lbl.at{color:var(--pink2);font-weight:600}
+.oi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.oi{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:11px;padding:13px}
+.oi span{font-size:.66rem;color:var(--muted);display:block;margin-bottom:3px}
+.oi strong{font-size:.82rem;font-weight:600}
+
+/* ACCOUNT */
+.acc-wrap{padding:40px 60px}
+.acc-layout{display:grid;grid-template-columns:230px 1fr;gap:22px;align-items:start}
+.acc-side{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:20px;overflow:hidden}
+.acc-prof{padding:26px;border-bottom:1px solid var(--bd);text-align:center}
+.acc-av{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;margin:0 auto 10px;box-shadow:0 0 30px rgba(255,20,147,.3)}
+.acc-prof h3{font-size:.95rem;font-weight:700;margin-bottom:2px}
+.acc-prof p{font-size:.71rem;color:var(--muted)}
+.acc-nav-items{padding:12px 0}
+.alink{display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:.79rem;color:var(--muted2);cursor:pointer;transition:.18s;font-weight:400}
+.alink svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.alink:hover,.alink.on{color:var(--txt);background:rgba(255,255,255,.04)}
+.alink.on{color:var(--pink2);border-left:2px solid var(--pink);padding-left:18px}
+.alink.danger{color:#ff6060}
+.acc-content{display:flex;flex-direction:column;gap:16px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:14px;padding:18px;text-align:center;transition:.25s}
+.stat:hover{border-color:rgba(139,92,246,.3);transform:translateY(-3px)}
+.stat-ico{font-size:1.4rem;margin-bottom:7px}
+.stat-n{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;display:block;margin-bottom:2px;color:var(--pink)}
+.stat-l{font-size:.68rem;color:var(--muted)}
+.orders-table{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.ot-h{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 80px;padding:13px 20px;border-bottom:1px solid var(--bd);font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ot-r{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 80px;padding:14px 20px;border-bottom:1px solid var(--bd);font-size:.79rem;align-items:center;transition:.18s}
+.ot-r:last-child{border-bottom:none}
+.ot-r:hover{background:rgba(255,255,255,.02)}
+.vbtn{font-size:.72rem;color:var(--pink2);cursor:pointer;font-weight:600}
+
+/* CART */
+.cart-wrap{padding:40px 60px}
+.cart-layout{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start}
+.cart-items{display:flex;flex-direction:column;gap:12px}
+.citem{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:16px;padding:16px;display:grid;grid-template-columns:88px 1fr auto;gap:14px;align-items:center;transition:.2s}
+.citem:hover{border-color:rgba(139,92,246,.2)}
+.ci-img{width:88px;height:88px;border-radius:12px;overflow:hidden;flex-shrink:0}
+.ci-img img{width:100%;height:100%;object-fit:cover}
+.ci-name{font-size:.85rem;font-weight:600;margin-bottom:4px}
+.ci-meta{font-size:.72rem;color:var(--muted);margin-bottom:10px}
+.cqty{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:9px;overflow:hidden;width:fit-content}
+.cqty button{width:32px;height:32px;background:none;border:none;color:var(--txt);font-size:.9rem;cursor:pointer;font-family:'Inter',sans-serif;transition:.18s}
+.cqty button:hover{background:rgba(255,255,255,.07)}
+.cqty span{min-width:32px;text-align:center;font-size:.82rem;font-weight:700}
+.ci-right{text-align:right}
+.ci-price{font-size:1rem;font-weight:700;color:var(--pink);margin-bottom:8px}
+.ci-remove{font-size:.68rem;color:var(--muted);cursor:pointer;transition:.18s}
+.ci-remove:hover{color:var(--red)}
+.order-sum{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:18px;padding:24px;position:sticky;top:88px}
+.os-title{font-size:.95rem;font-weight:700;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd)}
+.os-row{display:flex;justify-content:space-between;font-size:.81rem;margin-bottom:11px;color:var(--muted2)}
+.os-row.tot{color:var(--txt);font-weight:700;font-size:.93rem;padding-top:13px;border-top:1px solid var(--bd);margin-top:4px}
+.os-row.tot span:last-child{color:var(--pink)}
+.promo-row{display:flex;gap:8px;margin:16px 0}
+.promo-row input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--bd2);border-radius:10px;padding:10px 13px;color:var(--txt);font-size:.79rem;font-family:'Inter',sans-serif;outline:none;transition:.2s}
+.promo-row input:focus{border-color:rgba(255,20,147,.4)}
+.promo-row input::placeholder{color:var(--muted)}
+.promo-btn{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);color:var(--purple2);padding:10px 13px;border-radius:10px;font-size:.77rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;transition:.2s}
+.promo-btn:hover{background:rgba(139,92,246,.22)}
+.checkout-btn{width:100%;background:linear-gradient(135deg,var(--pink),#c4006e);color:#fff;border:none;padding:15px;border-radius:14px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:.24s;box-shadow:0 6px 28px rgba(255,20,147,.35);margin-top:14px;letter-spacing:.02em}
+.checkout-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(255,20,147,.5)}
+
+/* SUPPORT */
+.sup-wrap{padding:40px 60px}
+.sup-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+.faq{display:flex;flex-direction:column;gap:9px}
+.faq-item{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:.2s}
+.faq-item.open{border-color:rgba(255,20,147,.25);background:rgba(255,20,147,.04)}
+.faq-q{padding:17px 20px;display:flex;align-items:center;justify-content:space-between;font-size:.84rem;font-weight:600;transition:.18s;gap:12px}
+.faq-item.open .faq-q{color:var(--pink2)}
+.faq-q svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:.35s;flex-shrink:0}
+.faq-item.open .faq-q svg{transform:rotate(180deg);stroke:var(--pink)}
+.faq-a{max-height:0;overflow:hidden;transition:.35s}
+.faq-item.open .faq-a{max-height:160px}
+.faq-a p{padding:0 20px 18px;font-size:.79rem;color:var(--muted2);line-height:1.72;font-weight:300}
+.chat-card{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:18px;padding:28px}
+.chat-card h3{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.chat-card .sub{font-size:.79rem;color:var(--muted2);margin-bottom:22px;font-weight:300}
+.chan{display:flex;align-items:center;gap:13px;background:rgba(255,255,255,.03);border:1px solid var(--bd2);border-radius:13px;padding:14px 16px;cursor:pointer;transition:.2s;margin-bottom:10px}
+.chan:hover{border-color:rgba(255,20,147,.3);background:rgba(255,20,147,.05)}
+.chan-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.chan b{display:block;font-size:.82rem;font-weight:600;margin-bottom:2px}
+.chan span{font-size:.7rem;color:var(--muted);font-weight:300}
+
+/* ABOUT */
+.about-wrap{padding:40px 60px}
+.about-banner{border-radius:24px;overflow:hidden;height:400px;position:relative;margin-bottom:60px}
+.about-banner img{width:100%;height:100%;object-fit:cover}
+.about-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(4,4,15,.82),rgba(139,92,246,.35))}
+.ab-text{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:52px;z-index:1}
+.ab-text h2{font-family:'Playfair Display',serif;font-size:3rem;font-weight:900;letter-spacing:-.03em;margin-bottom:12px}
+.ab-text p{color:rgba(240,238,255,.8);font-size:.9rem;max-width:500px;line-height:1.75;font-weight:300}
+.values{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:60px}
+.val{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:20px;padding:30px;text-align:center;transition:.25s}
+.val:hover{border-color:rgba(139,92,246,.3);transform:translateY(-4px)}
+.val-ico{font-size:2rem;margin-bottom:14px;display:block}
+.val h3{font-size:.93rem;font-weight:700;margin-bottom:7px}
+.val p{font-size:.77rem;color:var(--muted2);line-height:1.65;font-weight:300}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.tcard{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:18px;overflow:hidden;text-align:center;transition:.25s}
+.tcard:hover{border-color:rgba(255,20,147,.25);transform:translateY(-4px)}
+.tcard-img{height:190px;overflow:hidden}
+.tcard-img img{width:100%;height:100%;object-fit:cover;object-position:center top;transition:.4s}
+.tcard:hover .tcard-img img{transform:scale(1.07)}
+.tcard-body{padding:18px}
+.tcard-body h4{font-size:.88rem;font-weight:700;margin-bottom:3px}
+.tcard-body p{font-size:.72rem;color:var(--muted);font-weight:300}
+
+/* FAB */
+.fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:linear-gradient(135deg,var(--pink),var(--purple));border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9990;font-size:1.1rem;box-shadow:0 6px 32px rgba(255,20,147,.5);transition:.22s;animation:fabIn .6s 2s both}
+.fab:hover{transform:scale(1.1) rotate(-10deg)}
+@keyframes fabIn{from{transform:scale(0)}to{transform:scale(1)}}
+
+/* BACK TO TOP */
+#btt{position:fixed;bottom:90px;right:28px;width:42px;height:42px;background:rgba(255,255,255,.06);border:1px solid var(--bd2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9989;font-size:.8rem;color:var(--muted2);transition:.25s;opacity:0;transform:translateY(10px)}
+#btt.show{opacity:1;transform:translateY(0)}
+#btt:hover{background:rgba(255,20,147,.15);border-color:rgba(255,20,147,.3);color:var(--pink)}
+</style>
+</head>
+<body>
+
+<!-- PRELOADER -->
+<div id="preloader">
+  <div class="pre-logo">Aevyrixa</div>
+  <div class="pre-bar"><div class="pre-fill"></div></div>
+</div>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- PROGRESS BAR -->
+<div id="progress"></div>
+
+<!-- TOAST -->
+<div id="toast"><span class="t-ico">🛍️</span><span id="toast-msg">Added to cart!</span></div>
+
+<!-- BACK TO TOP -->
+<div id="btt" onclick="scrollTo({top:0,behavior:'smooth'})">↑</div>
+
+<!-- FLOATING NAV -->
+<nav id="navbar">
+  <div class="logo" onclick="goTo('home')">
+    <div class="logo-gem">A</div>
+    <span class="logo-name">AEV<b>Y</b>RIXA</span>
+  </div>
+  <div class="nav-links">
+    <div class="nl on" id="nl-home" onclick="goTo('home')">Home</div>
+    <div class="nl" id="nl-shop" onclick="goTo('shop')">Shop</div>
+    <div class="nl" id="nl-collections" onclick="goTo('collections')">Collections</div>
+    <div class="nl" id="nl-track" onclick="goTo('track')">Track Order</div>
+    <div class="nl" id="nl-support" onclick="goTo('support')">Support</div>
+    <div class="nl" id="nl-about" onclick="goTo('about')">About</div>
+  </div>
+  <div class="nav-right">
+    <div class="ni" onclick="goTo('shop')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+    <div class="ni" onclick="goTo('account')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+    <div class="ni" onclick="goTo('cart')"><svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><div class="nbadge" id="cartBadge">3</div></div>
+  </div>
+</nav>
+
+<!-- QUICK VIEW MODAL -->
+<div id="modal" class="hidden">
+  <div class="modal-box" style="position:relative">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <div class="modal-grid">
+      <div class="modal-img"><img id="modal-img" src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=500&h=500&fit=crop&q=85" alt=""></div>
+      <div class="modal-info">
+        <div class="pbadge bs" style="position:static;display:inline-flex;margin-bottom:10px">Best Seller</div>
+        <h2 id="modal-name">Aevyrixa Night Comfort Period Panty</h2>
+        <div class="modal-price" id="modal-price">BDT 790</div>
+        <p style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px">Select Size</p>
+        <div class="sz-row"><div class="sz">XS</div><div class="sz">S</div><div class="sz on">M</div><div class="sz">L</div><div class="sz">XL</div></div>
+        <button class="btn-main" style="width:100%;border-radius:14px;padding:14px" onclick="cartAdd();closeModal()">Add to Cart</button>
+        <p style="font-size:.72rem;text-align:center;color:var(--muted);margin-top:10px;cursor:pointer" onclick="closeModal();goTo('product')">View Full Details →</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ HOME ═══════════════════════════ -->
+<div id="page-home" class="page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="mesh">
+      <div class="mesh-dot hero-mesh-1"></div>
+      <div class="mesh-dot hero-mesh-2"></div>
+      <div class="mesh-dot hero-mesh-3"></div>
+    </div>
+    <div style="position:relative;z-index:2">
+      <div class="hero-eyebrow"><span class="eyebrow-line"></span><span class="eyebrow-text">Premium Period Care</span></div>
+      <h1 class="hero-h1">Comfort You<br>Can <span class="grad-text">Feel.</span><br>Confidence<br>You Can See.</h1>
+      <p class="hero-sub">Premium period care essentials for <b>modern women</b>. Discreet. Comfortable. Reliable — designed in Bangladesh, made for you.</p>
+      <div class="cta-row">
+        <button class="btn-main" onclick="goTo('shop')">Shop Now →</button>
+        <button class="btn-outline" onclick="goTo('collections')">Explore Collections</button>
+      </div>
+      <div class="hero-stats">
+        <div><span class="hstat-n">50K+</span><span class="hstat-l">Happy Customers</span></div>
+        <div><span class="hstat-n">4.8★</span><span class="hstat-l">Average Rating</span></div>
+        <div><span class="hstat-n">100%</span><span class="hstat-l">Discreet Delivery</span></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-vis">
+        <div class="h-ring-outer"></div>
+        <div class="h-ring-inner"></div>
+        <div class="h-glow"></div>
+        <div class="h-model"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=700&h=900&fit=crop&crop=faces,top&q=85" alt="model"></div>
+        <div class="h-bot-glow"></div>
+        <div class="float-card fc1"><div class="fc-ico">✦</div><span class="fc-val">50K+</span><span class="fc-lbl">Women trust us</span></div>
+        <div class="float-card fc2"><div class="fc-ico">📦</div><span class="fc-val">100%</span><span class="fc-lbl">Discreet packaging</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-strip">
+    <div class="marquee-inner">
+      <span class="marquee-item">Premium Comfort</span><span class="marquee-item">Discreet Packaging</span><span class="marquee-item">Bangladesh Delivery</span><span class="marquee-item">4-Layer Protection</span><span class="marquee-item">Eco-Friendly</span><span class="marquee-item">50,000+ Women</span><span class="marquee-item">Hygiene-Safe Support</span><span class="marquee-item">Free Returns</span>
+      <span class="marquee-item">Premium Comfort</span><span class="marquee-item">Discreet Packaging</span><span class="marquee-item">Bangladesh Delivery</span><span class="marquee-item">4-Layer Protection</span><span class="marquee-item">Eco-Friendly</span><span class="marquee-item">50,000+ Women</span><span class="marquee-item">Hygiene-Safe Support</span><span class="marquee-item">Free Returns</span>
+    </div>
+  </div>
+
+  <!-- TRUST -->
+  <div class="trust-bar">
+    <div class="trust-grid">
+      <div class="ti"><div class="ti-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><b>Discreet Packaging</b><s>100% privacy protected</s></div></div>
+      <div class="ti"><div class="ti-ico"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div><div><b>Bangladesh Delivery</b><s>Fast &amp; reliable</s></div></div>
+      <div class="ti"><div class="ti-ico"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.18.72.4 1.47.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c1.34.3 2.09.52 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><div><b>3-Day Support</b><s>Always here for you</s></div></div>
+      <div class="ti"><div class="ti-ico"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><b>Secure Checkout</b><s>100% trusted</s></div></div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <section class="products-sec">
+    <div class="sec-header">
+      <div class="sec-pill">✦ Best Sellers</div>
+      <h2 class="sec-title">Shop Our Best Picks</h2>
+      <p class="sec-sub">Loved by 50,000+ women across Bangladesh</p>
+    </div>
+    <div class="pg4">
+      <div class="pcard" onclick="goTo('product')">
+        <div class="pcard-shine"></div>
+        <div class="pbadge bs">Best Seller</div>
+        <div class="quick-view" onclick="event.stopPropagation();openModal('Aevyrixa Night Comfort Period Panty','BDT 790','https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=500&h=500&fit=crop&q=85')">👁</div>
+        <div class="pimg ov1"><img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400&h=260&fit=crop&q=80" alt=""></div>
+        <div class="pinfo">
+          <div class="swatches"><div class="sw on" style="background:#1a0830"></div><div class="sw" style="background:#2d0a50"></div><div class="sw" style="background:#0a1830"></div></div>
+          <p class="pname">Aevyrixa Night Comfort Period Panty</p>
+          <div class="pstars">★★★★<span class="e">★</span><em>(2,159)</em></div>
+          <div class="pfoot"><span class="pprice">BDT 790</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div>
+        </div>
+      </div>
+      <div class="pcard" onclick="goTo('product')">
+        <div class="pcard-shine"></div>
+        <div class="pbadge bn">New</div>
+        <div class="quick-view" onclick="event.stopPropagation();openModal('Aevyrixa Everyday Comfort Panty','BDT 690','https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=500&h=500&fit=crop&q=85')">👁</div>
+        <div class="pimg ov2"><img src="https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=400&h=260&fit=crop&q=80" alt=""></div>
+        <div class="pinfo">
+          <div class="swatches"><div class="sw on" style="background:#c06090"></div><div class="sw" style="background:#e09090"></div></div>
+          <p class="pname">Aevyrixa Everyday Comfort Panty</p>
+          <div class="pstars">★★★★<span class="e">★</span><em>(47)</em></div>
+          <div class="pfoot"><span class="pprice">BDT 690</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div>
+        </div>
+      </div>
+      <div class="pcard" onclick="goTo('product')">
+        <div class="pcard-shine"></div>
+        <div class="pbadge bl">Limited</div>
+        <div class="quick-view" onclick="event.stopPropagation();openModal('Aevyrixa Lace Comfort Period Panty','BDT 890','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=500&fit=crop&q=85')">👁</div>
+        <div class="pimg ov3"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=260&fit=crop&q=80" alt=""></div>
+        <div class="pinfo">
+          <div class="swatches"><div class="sw on" style="background:#0a0820"></div><div class="sw" style="background:#1a1060"></div></div>
+          <p class="pname">Aevyrixa Lace Comfort Period Panty</p>
+          <div class="pstars">★★★★<span class="e">★</span><em>(80)</em></div>
+          <div class="pfoot"><span class="pprice">BDT 890</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div>
+        </div>
+      </div>
+      <div class="pcard" onclick="goTo('product')">
+        <div class="pcard-shine"></div>
+        <div class="pbadge bp">Popular</div>
+        <div class="quick-view" onclick="event.stopPropagation();openModal('Aevyrixa Ultra Soft Period Panty','BDT 720','https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=500&h=500&fit=crop&q=85')">👁</div>
+        <div class="pimg ov4"><img src="https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=400&h=260&fit=crop&q=80" alt=""></div>
+        <div class="pinfo">
+          <div class="swatches"><div class="sw on" style="background:#2a2840"></div><div class="sw" style="background:#3a3060"></div></div>
+          <p class="pname">Aevyrixa Ultra Soft Period Panty</p>
+          <div class="pstars">★★★★<span class="e">★</span><em>(780)</em></div>
+          <div class="pfoot"><span class="pprice">BDT 720</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div>
+        </div>
+      </div>
+    </div>
+    <div class="view-all"><button class="btn-neutral" onclick="goTo('shop')">View All Products →</button></div>
+  </section>
+
+  <!-- SPLIT / LAYERS -->
+  <section class="split-sec">
+    <div class="split-grid">
+      <div>
+        <p style="color:var(--pink);font-size:.63rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px">4-Layer Technology</p>
+        <h2 class="split-left h2" style="font-family:'Playfair Display',serif;font-size:clamp(2.2rem,3.5vw,3.2rem);font-weight:900;line-height:1.08;margin-bottom:14px;letter-spacing:-.02em">Designed for Your <span class="grad-text">Comfort</span> &amp; Protection</h2>
+        <p style="color:var(--muted2);font-size:.87rem;line-height:1.82;margin-bottom:28px;font-weight:300">All-day comfort, leak protection, and breathable fabric. Four precision layers crafted so you can move, sleep, and live with total confidence.</p>
+        <button class="btn-main">Learn More →</button>
+      </div>
+      <div>
+        <div class="split-right-img">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=380&fit=crop&q=80" alt="">
+          <div class="split-right-badge"><div class="srb-title">4-Layer Protection System</div><div class="srb-sub">Tested for all-day use</div></div>
+        </div>
+        <div class="layers" style="margin-top:16px">
+          <div class="lrow lr1"><div class="ldot"></div><div class="ltxt"><strong>Ultra Soft Layer</strong><span>Gentle on skin</span></div></div>
+          <div class="lrow lr2"><div class="ldot"></div><div class="ltxt"><strong>Absorbent Layer</strong><span>Locks moisture</span></div></div>
+          <div class="lrow lr3"><div class="ldot"></div><div class="ltxt"><strong>Leak Guard Layer</strong><span>Extra protection</span></div></div>
+          <div class="lrow lr4"><div class="ldot"></div><div class="ltxt"><strong>Breathable Layer</strong><span>Air flows freely</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="reviews-sec">
+    <div class="sec-header">
+      <div class="sec-pill">💬 Reviews</div>
+      <h2 class="sec-title">What Our Customers Say</h2>
+    </div>
+    <div class="reviews-grid">
+      <div class="rcard"><div class="rcard-head"><div class="rcard-av"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face&q=80" alt=""></div><div><div class="rcard-name">Fatima Akter</div><div class="rcard-date">May 3, 2025</div></div></div><div class="rcard-stars">★★★★★</div><p class="rcard-text">Absolutely love these! So comfortable and the discreet packaging was exactly as promised. No one knew what was inside. Will definitely order again.</p><div class="rcard-badge">✓ Verified Purchase</div></div>
+      <div class="rcard"><div class="rcard-head"><div class="rcard-av"><img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=100&h=100&fit=crop&crop=face&q=80" alt=""></div><div><div class="rcard-name">Nusrat Jahan</div><div class="rcard-date">Apr 28, 2025</div></div></div><div class="rcard-stars">★★★★★</div><p class="rcard-text">The lace comfort panty is incredibly soft. I was skeptical at first but after trying it I'm completely converted. Best period panty I've ever worn!</p><div class="rcard-badge">✓ Verified Purchase</div></div>
+      <div class="rcard"><div class="rcard-head"><div class="rcard-av"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop&crop=face&q=80" alt=""></div><div><div class="rcard-name">Shamima Begum</div><div class="rcard-date">Apr 20, 2025</div></div></div><div class="rcard-stars">★★★★<span style="color:#1e1c40">★</span></div><p class="rcard-text">Great quality product. The night comfort panty is a game changer for overnight use. Delivery was super fast too — came in 2 days!</p><div class="rcard-badge">✓ Verified Purchase</div></div>
+    </div>
+  </section>
+
+  <!-- PKG -->
+  <section class="pkg-sec">
+    <div class="pkg">
+      <div style="position:relative;z-index:1">
+        <h2>Discreet Packaging</h2>
+        <p>100% privacy protected from our warehouse to your doorstep. We never reveal the product name or brand on any parcel — plain, elegant packaging always.</p>
+        <button class="btn-main" onclick="goTo('shop')">Shop Now →</button>
+      </div>
+      <div class="pkg-img" style="position:relative">
+        <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&h=280&fit=crop&q=80" alt="">
+        <div class="pkg-pill-badge">📦 Plain. Private. Protected.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section class="info-sec">
+    <div class="ig3">
+      <div class="icard ip"><div class="iico ip" style="font-size:1.3rem;display:flex;align-items:center;justify-content:center">📏</div><h3>Find Your Perfect Fit</h3><p>Use our size guide to find your best match. Every body is different — XS to 3XL, we've got you.</p><a class="itag tp">Size Guide →</a></div>
+      <div class="icard ipu"><div class="iico ipu" style="font-size:1.3rem;display:flex;align-items:center;justify-content:center">✨</div><h3>How It Works</h3><p>Simple. Effective. Reliable. Comfort that moves with you, day and night, every day of the month.</p><a class="itag tpu">Learn More →</a></div>
+      <div class="icard it" onclick="goTo('support')" style="cursor:pointer"><div class="iico it" style="font-size:1.3rem;display:flex;align-items:center;justify-content:center">💬</div><h3>Need Help?</h3><p>Real humans, real answers — our support team is always just a message away for you.</p><a class="itag tt">Chat With Us →</a></div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="newsletter">
+    <div class="nl-box">
+      <div class="sec-pill" style="margin-bottom:10px">💌 Newsletter</div>
+      <h2>Stay in the Loop</h2>
+      <p>Get exclusive offers, new arrivals, and wellness tips — delivered to your inbox.</p>
+      <div class="nl-form">
+        <input placeholder="Enter your email address...">
+        <button class="btn-main" style="border-radius:100px;padding:11px 22px;font-size:.78rem">Subscribe</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="ftg">
+      <div class="ft-brand">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:4px" onclick="goTo('home')"><div style="width:26px;height:26px;background:linear-gradient(135deg,var(--pink),var(--purple));border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.85rem;font-weight:900;color:#fff">A</div><span style="font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700">AEVYRIXA <span style="color:var(--pink)">Her Care</span></span></div>
+        <p>Premium comfort. Trusted care.<br>Made for you.</p>
+        <div class="socials"><a class="sb">ig</a><a class="sb">f</a><a class="sb">tk</a><a class="sb">yt</a></div>
+      </div>
+      <div class="ft-col"><h5>Shop</h5><ul><li><a onclick="goTo('shop')">All Products</a></li><li><a onclick="goTo('shop')">New Arrivals</a></li><li><a onclick="goTo('shop')">Best Sellers</a></li><li><a onclick="goTo('collections')">Collections</a></li></ul></div>
+      <div class="ft-col"><h5>Support</h5><ul><li><a onclick="goTo('track')">Track Order</a></li><li><a onclick="goTo('support')">FAQ</a></li><li><a onclick="goTo('support')">Contact Us</a></li><li><a>Size Guide</a></li></ul></div>
+      <div class="ft-col"><h5>Company</h5><ul><li><a onclick="goTo('about')">About Us</a></li><li><a>Privacy Policy</a></li><li><a>Shipping Policy</a></li><li><a>Return Policy</a></li></ul></div>
+      <div class="ft-col ft-con"><h5>Connect</h5><p>✉ support@aevyrixa.com</p><p>📞 +880 1234-567890</p><p>📍 Dhaka, Bangladesh</p></div>
+    </div>
+    <div class="ft-bot"><p>© 2025 Aevyrixa Her Care. All rights reserved.</p><div class="pays"><div class="pay">bKash</div><div class="pay">VISA</div><div class="pay">MC</div><div class="pay">Nagad</div></div></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════ SHOP ═══════════════════════════ -->
+<div id="page-shop" class="page hidden">
+  <div class="page-header"><div class="ph-tag">🛍️ All Products</div><h1>Shop All Products</h1><p>Discover our full range of premium period care essentials</p></div>
+  <div class="shop-wrap">
+    <div class="toolbar">
+      <div class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Search products..."></div>
+      <div class="filter-row"><div class="ftag on">All</div><div class="ftag">Period Panties</div><div class="ftag">Night Wear</div><div class="ftag">Lace</div><div class="ftag">Daily Comfort</div></div>
+      <select class="sort-sel"><option>Featured</option><option>Price: Low to High</option><option>Price: High to Low</option><option>Best Selling</option><option>Newest</option></select>
+    </div>
+    <div class="pg3">
+      <div class="pcard" onclick="goTo('product')"><div class="pcard-shine"></div><div class="pbadge bs">Best Seller</div><div class="quick-view" onclick="event.stopPropagation();openModal('Night Comfort Period Panty','BDT 790','https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=500&h=500&fit=crop&q=85')">👁</div><div class="pimg ov1"><img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400&h=270&fit=crop&q=80" alt=""></div><div class="pinfo"><div class="swatches"><div class="sw on" style="background:#1a0830"></div><div class="sw" style="background:#0a1830"></div></div><p class="pname">Aevyrixa Night Comfort Period Panty</p><div class="pstars">★★★★<span class="e">★</span><em>(2,159)</em></div><div class="pfoot"><span class="pprice">BDT 790</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div></div></div>
+      <div class="pcard" onclick="goTo('product')"><div class="pcard-shine"></div><div class="pbadge bn">New</div><div class="quick-view" onclick="event.stopPropagation();openModal('Everyday Comfort Panty','BDT 690','https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=500&h=500&fit=crop&q=85')">👁</div><div class="pimg ov2"><img src="https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=400&h=270&fit=crop&q=80" alt=""></div><div class="pinfo"><div class="swatches"><div class="sw on" style="background:#c06090"></div><div class="sw" style="background:#e09090"></div></div><p class="pname">Aevyrixa Everyday Comfort Panty</p><div class="pstars">★★★★<span class="e">★</span><em>(47)</em></div><div class="pfoot"><span class="pprice">BDT 690</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div></div></div>
+      <div class="pcard" onclick="goTo('product')"><div class="pcard-shine"></div><div class="pbadge bl">Limited</div><div class="quick-view" onclick="event.stopPropagation();openModal('Lace Comfort Period Panty','BDT 890','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=500&fit=crop&q=85')">👁</div><div class="pimg ov3"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=270&fit=crop&q=80" alt=""></div><div class="pinfo"><div class="swatches"><div class="sw on" style="background:#0a0820"></div><div class="sw" style="background:#1a1060"></div></div><p class="pname">Aevyrixa Lace Comfort Period Panty</p><div class="pstars">★★★★<span class="e">★</span><em>(80)</em></div><div class="pfoot"><span class="pprice">BDT 890</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div></div></div>
+      <div class="pcard" onclick="goTo('product')"><div class="pcard-shine"></div><div class="pbadge bp">Popular</div><div class="pimg ov4"><img src="https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=400&h=270&fit=crop&q=80" alt=""></div><div class="pinfo"><p class="pname">Aevyrixa Ultra Soft Period Panty</p><div class="pstars">★★★★<span class="e">★</span><em>(780)</em></div><div class="pfoot"><span class="pprice">BDT 720</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div></div></div>
+      <div class="pcard" onclick="goTo('product')"><div class="pcard-shine"></div><div class="pimg ov1"><img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400&h=270&fit=crop&q=80" alt=""></div><div class="pinfo"><p class="pname">Aevyrixa Seamless Comfort Panty</p><div class="pstars">★★★★★<em>(342)</em></div><div class="pfoot"><span class="pprice">BDT 850</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div></div></div>
+      <div class="pcard" onclick="goTo('product')"><div class="pcard-shine"></div><div class="pimg ov2"><img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&h=270&fit=crop&q=80" alt=""></div><div class="pinfo"><p class="pname">Aevyrixa Sport Active Period Panty</p><div class="pstars">★★★★<span class="e">★</span><em>(195)</em></div><div class="pfoot"><span class="pprice">BDT 950</span><button class="padd" onclick="event.stopPropagation();cartAdd()"><span>+</span></button></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PRODUCT DETAIL ═══════════════════════════ -->
+<div id="page-product" class="page hidden">
+  <div class="pd-wrap">
+    <div class="back-link" onclick="goTo('shop')">← Back to Shop</div>
+    <div class="pd-grid">
+      <div>
+        <div class="pd-main"><img id="pdImg" src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=700&h=600&fit=crop&q=85" alt=""></div>
+        <div class="pd-thumbs">
+          <div class="pd-thumb on" onclick="switchImg(this,'https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=700&h=600&fit=crop&q=85')"><img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=200&h=100&fit=crop&q=70" alt=""></div>
+          <div class="pd-thumb" onclick="switchImg(this,'https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=700&h=600&fit=crop&q=85')"><img src="https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=200&h=100&fit=crop&q=70" alt=""></div>
+          <div class="pd-thumb" onclick="switchImg(this,'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=600&fit=crop&q=85')"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=100&fit=crop&q=70" alt=""></div>
+          <div class="pd-thumb" onclick="switchImg(this,'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&h=600&fit=crop&q=85')"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=100&fit=crop&q=70" alt=""></div>
+        </div>
+      </div>
+      <div>
+        <div class="pd-badges"><span class="pbadge bs" style="position:static;display:inline-flex">Best Seller</span></div>
+        <h1 class="pd-h1">Aevyrixa Night Comfort Period Panty</h1>
+        <div class="pd-stars">★★★★<span style="color:#1e1c40">★</span><span style="font-size:.78rem;color:var(--muted);margin-left:6px">4.2 (2,159 reviews)</span></div>
+        <div class="pd-price-row"><span class="pd-price">BDT 790</span><span class="pd-old">BDT 990</span><span class="pd-save">Save 20%</span></div>
+        <p class="pd-label">Select Size</p>
+        <div class="sizes"><div class="sz">XS</div><div class="sz">S</div><div class="sz on">M</div><div class="sz">L</div><div class="sz">XL</div><div class="sz">2XL</div><div class="sz">3XL</div></div>
+        <div class="qty-row"><span class="pd-label" style="margin:0">Quantity</span><div class="qty-ctrl"><button onclick="qtyChg(-1)">−</button><span id="qtyVal">1</span><button onclick="qtyChg(1)">+</button></div></div>
+        <div class="add-row"><button class="btn-main" style="flex:1;border-radius:14px;padding:14px" onclick="cartAdd();goTo('cart')">Add to Cart →</button><div class="wishlist-btn">♡</div></div>
+        <div class="pd-features">
+          <div class="pf-item"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>4-layer leak protection technology</div>
+          <div class="pf-item"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Ultra soft skin-friendly fabric</div>
+          <div class="pf-item"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Machine washable &amp; reusable</div>
+          <div class="pf-item"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Discreet packaging on delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ COLLECTIONS ═══════════════════════════ -->
+<div id="page-collections" class="page hidden">
+  <div class="page-header"><div class="ph-tag">🗂️ Collections</div><h1>Our Collections</h1><p>Find the perfect style for every need</p></div>
+  <div class="col-wrap">
+    <div class="col-grid">
+      <div class="ccard" onclick="goTo('shop')"><img class="ccard-img" src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=700&h=360&fit=crop&q=80" alt=""><div class="ccard-ov"><h3>Period Panties</h3><p>Our signature collection — all-day protection</p><div class="ccard-tag">12 Products →</div></div></div>
+      <div class="ccard" onclick="goTo('shop')"><img class="ccard-img" src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=700&h=360&fit=crop&q=80" alt=""><div class="ccard-ov"><h3>Night Comfort</h3><p>Sleep soundly with overnight protection</p><div class="ccard-tag">8 Products →</div></div></div>
+      <div class="ccard" onclick="goTo('shop')"><img class="ccard-img" src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&h=360&fit=crop&q=80" alt=""><div class="ccard-ov"><h3>Lace Collection</h3><p>Elegant lace designs with full protection</p><div class="ccard-tag">6 Products →</div></div></div>
+      <div class="ccard" onclick="goTo('shop')"><img class="ccard-img" src="https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=700&h=360&fit=crop&q=80" alt=""><div class="ccard-ov"><h3>Daily Comfort</h3><p>Lightweight everyday protection for every woman</p><div class="ccard-tag">10 Products →</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TRACK ORDER ═══════════════════════════ -->
+<div id="page-track" class="page hidden">
+  <div class="page-header"><div class="ph-tag">📦 Track Order</div><h1>Track Your Order</h1><p>Real-time delivery status at your fingertips</p></div>
+  <div class="track-wrap">
+    <div class="tf">
+      <h2>Track Your Package</h2>
+      <p>Enter your order number and phone number to see the latest status.</p>
+      <div class="field"><label>Order Number</label><input value="AEVY-2505012" placeholder="AEVY-XXXXXXX"></div>
+      <div class="field"><label>Phone Number</label><input value="01XXX-XXXXXX" placeholder="01XXX-XXXXXX"></div>
+      <button class="btn-main" style="width:100%;border-radius:14px;padding:14px;font-size:.88rem">Track Order →</button>
+    </div>
+    <div class="track-result">
+      <div class="tr-head"><h3>Order #AEVY-2505012</h3><span class="op-pill op-del">✓ Delivered</span></div>
+      <div style="font-size:.77rem;color:var(--muted2);margin-bottom:4px">May 01, 2025 · <span style="color:var(--green)">Delivered on time ✓</span></div>
+      <div class="steps">
+        <div class="step"><div style="position:absolute;top:13px;left:50%;right:-50%;height:2px;background:var(--teal);z-index:0"></div><div class="sd s-done">✓</div><div class="step-lbl dt">Ordered</div></div>
+        <div class="step"><div style="position:absolute;top:13px;left:50%;right:-50%;height:2px;background:var(--teal);z-index:0"></div><div class="sd s-done">✓</div><div class="step-lbl dt">Packed</div></div>
+        <div class="step"><div style="position:absolute;top:13px;left:50%;right:-50%;height:2px;background:var(--teal);z-index:0"></div><div class="sd s-done">✓</div><div class="step-lbl dt">Shipped</div></div>
+        <div class="step"><div style="position:absolute;top:13px;left:50%;right:-50%;height:2px;background:var(--teal);z-index:0"></div><div class="sd s-done">✓</div><div class="step-lbl dt">Out for Delivery</div></div>
+        <div class="step"><div class="sd s-done">✓</div><div class="step-lbl dt">Delivered</div></div>
+      </div>
+      <div class="oi-grid">
+        <div class="oi"><span>Product</span><strong>Night Comfort Panty</strong></div>
+        <div class="oi"><span>Size</span><strong>Medium (M)</strong></div>
+        <div class="oi"><span>Amount Paid</span><strong style="color:var(--pink)">BDT 790</strong></div>
+        <div class="oi"><span>Delivered To</span><strong>Dhaka, Bangladesh</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ACCOUNT ═══════════════════════════ -->
+<div id="page-account" class="page hidden">
+  <div class="page-header"><div class="ph-tag">👤 My Account</div><h1>Hi, Ayesha 👋</h1><p>Welcome back! Manage your orders, addresses and more.</p></div>
+  <div class="acc-wrap">
+    <div class="acc-layout">
+      <div class="acc-side">
+        <div class="acc-prof"><div class="acc-av">A</div><h3>Ayesha Rahman</h3><p>ayesha@email.com</p></div>
+        <div class="acc-nav-items">
+          <div class="alink on"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Dashboard</div>
+          <div class="alink"><svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>My Orders</div>
+          <div class="alink"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Addresses</div>
+          <div class="alink"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Wishlist (5)</div>
+          <div class="alink" onclick="goTo('support')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Support</div>
+          <div class="alink danger"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Log Out</div>
+        </div>
+      </div>
+      <div class="acc-content">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-ico">📦</div><span class="stat-n">12</span><span class="stat-l">Total Orders</span></div>
+          <div class="stat"><div class="stat-ico">📍</div><span class="stat-n">3</span><span class="stat-l">Addresses</span></div>
+          <div class="stat"><div class="stat-ico">🎫</div><span class="stat-n">2</span><span class="stat-l">Support Tickets</span></div>
+          <div class="stat"><div class="stat-ico">♡</div><span class="stat-n">5</span><span class="stat-l">Wishlist</span></div>
+        </div>
+        <div class="orders-table">
+          <div class="ot-h"><div>Order</div><div>Date</div><div>Amount</div><div>Status</div><div></div></div>
+          <div class="ot-r"><div><span style="font-size:.82rem;font-weight:600">#AEVY-2505012</span><br><span style="font-size:.69rem;color:var(--muted)">Night Comfort Panty</span></div><div style="color:var(--muted2)">May 01, 2025</div><div style="font-weight:600;color:var(--pink)">BDT 790</div><div><span class="op-pill op-del">Delivered</span></div><div><span class="vbtn" onclick="goTo('track')">View →</span></div></div>
+          <div class="ot-r"><div><span style="font-size:.82rem;font-weight:600">#AEVY-2504288</span><br><span style="font-size:.69rem;color:var(--muted)">Everyday Comfort Panty</span></div><div style="color:var(--muted2)">Apr 28, 2025</div><div style="font-weight:600;color:var(--pink)">BDT 690</div><div><span class="op-pill op-proc">Processing</span></div><div><span class="vbtn" onclick="goTo('track')">View →</span></div></div>
+          <div class="ot-r"><div><span style="font-size:.82rem;font-weight:600">#AEVY-2503177</span><br><span style="font-size:.69rem;color:var(--muted)">Lace Comfort Panty</span></div><div style="color:var(--muted2)">Mar 17, 2025</div><div style="font-weight:600;color:var(--pink)">BDT 890</div><div><span class="op-pill op-del">Delivered</span></div><div><span class="vbtn" onclick="goTo('track')">View →</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ CART ═══════════════════════════ -->
+<div id="page-cart" class="page hidden">
+  <div class="page-header"><div class="ph-tag">🛒 Cart</div><h1>Your Cart</h1><p>3 items ready for checkout</p></div>
+  <div class="cart-wrap">
+    <div class="cart-layout">
+      <div class="cart-items">
+        <div class="citem"><div class="ci-img"><img src="https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=200&h=200&fit=crop&q=80" alt=""></div><div><p class="ci-name">Aevyrixa Night Comfort Period Panty</p><p class="ci-meta">Size: M · Color: Black</p><div class="cqty"><button onclick="cqtyChg(this,-1)">−</button><span>1</span><button onclick="cqtyChg(this,1)">+</button></div></div><div class="ci-right"><div class="ci-price">BDT 790</div><div class="ci-remove" onclick="this.closest('.citem').remove()">Remove</div></div></div>
+        <div class="citem"><div class="ci-img"><img src="https://images.unsplash.com/photo-1594938298603-c8148c4b4357?w=200&h=200&fit=crop&q=80" alt=""></div><div><p class="ci-name">Aevyrixa Everyday Comfort Panty</p><p class="ci-meta">Size: L · Color: Pink</p><div class="cqty"><button onclick="cqtyChg(this,-1)">−</button><span>1</span><button onclick="cqtyChg(this,1)">+</button></div></div><div class="ci-right"><div class="ci-price">BDT 690</div><div class="ci-remove" onclick="this.closest('.citem').remove()">Remove</div></div></div>
+        <div class="citem"><div class="ci-img"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=200&fit=crop&q=80" alt=""></div><div><p class="ci-name">Aevyrixa Lace Comfort Period Panty</p><p class="ci-meta">Size: M · Color: Dark Navy</p><div class="cqty"><button onclick="cqtyChg(this,-1)">−</button><span>1</span><button onclick="cqtyChg(this,1)">+</button></div></div><div class="ci-right"><div class="ci-price">BDT 890</div><div class="ci-remove" onclick="this.closest('.citem').remove()">Remove</div></div></div>
+      </div>
+      <div class="order-sum">
+        <div class="os-title">Order Summary</div>
+        <div class="os-row"><span>Subtotal (3 items)</span><span>BDT 2,370</span></div>
+        <div class="os-row"><span>Delivery</span><span style="color:var(--green)">Free</span></div>
+        <div class="os-row"><span>Discount</span><span style="color:var(--green)">− BDT 200</span></div>
+        <div class="os-row tot"><span>Total</span><span>BDT 2,170</span></div>
+        <div class="promo-row"><input placeholder="Promo code"><button class="promo-btn">Apply</button></div>
+        <button class="checkout-btn">Proceed to Checkout →</button>
+        <p style="font-size:.69rem;color:var(--muted);text-align:center;margin-top:10px">🔒 Secure checkout · Free returns</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SUPPORT ═══════════════════════════ -->
+<div id="page-support" class="page hidden">
+  <div class="page-header"><div class="ph-tag">💬 Support</div><h1>How Can We Help?</h1><p>Find answers or reach our team instantly</p></div>
+  <div class="sup-wrap">
+    <div class="sup-grid">
+      <div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:18px">Frequently Asked Questions</h3>
+        <div class="faq">
+          <div class="faq-item open"><div class="faq-q" onclick="faqToggle(this)">How do I choose the right size? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Check our size guide based on your waist measurement. If between sizes, size up for more comfort. We stock XS to 3XL for all body types.</p></div></div>
+          <div class="faq-item"><div class="faq-q" onclick="faqToggle(this)">How long does delivery take? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Within Dhaka: 1–2 business days. Outside Dhaka: 3–5 business days. Express options available at checkout.</p></div></div>
+          <div class="faq-item"><div class="faq-q" onclick="faqToggle(this)">Is my packaging really discreet? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Yes, 100%. Plain unmarked package — no brand name or product description visible outside. Complete privacy, guaranteed.</p></div></div>
+          <div class="faq-item"><div class="faq-q" onclick="faqToggle(this)">Can I return or exchange my order? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Unopened products can be returned within 7 days. Exchanges available for sizing issues. Used products cannot be returned for hygiene reasons.</p></div></div>
+          <div class="faq-item"><div class="faq-q" onclick="faqToggle(this)">How do I wash my period panty? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Rinse cold immediately after use. Machine wash cold on gentle cycle. No bleach or fabric softener. Air dry or tumble dry on low heat.</p></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="chat-card">
+          <h3>Contact Our Team</h3>
+          <p class="sub">Choose your preferred way — we respond within hours.</p>
+          <div class="chan"><div class="chan-ico" style="background:rgba(6,182,212,.1)">💬</div><div><b>Live Chat</b><span>Online now · Avg 2 min response</span></div></div>
+          <div class="chan"><div class="chan-ico" style="background:rgba(255,20,147,.1)">📧</div><div><b>Email Support</b><span>support@aevyrixa.com</span></div></div>
+          <div class="chan"><div class="chan-ico" style="background:rgba(139,92,246,.1)">📞</div><div><b>Phone</b><span>+880 1234-567890 · 9am–6pm</span></div></div>
+          <button class="btn-main" style="width:100%;border-radius:12px;padding:13px;margin-top:4px">Start Live Chat →</button>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:16px;padding:22px;margin-top:16px">
+          <h3 style="font-size:.88rem;font-weight:700;margin-bottom:10px">Track Your Order</h3>
+          <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px;font-weight:300">Already ordered? Check your delivery status.</p>
+          <button class="btn-outline" style="width:100%;border-radius:10px;padding:12px;font-size:.82rem" onclick="goTo('track')">Track Order →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ABOUT ═══════════════════════════ -->
+<div id="page-about" class="page hidden">
+  <div class="page-header"><div class="ph-tag">ℹ️ About Us</div><h1>Our Story</h1><p>Built with love, made for modern women</p></div>
+  <div class="about-wrap">
+    <div class="about-banner">
+      <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=1200&h=500&fit=crop&q=85" alt="">
+      <div class="ab-text"><h2>Comfort You <span class="grad-text">Deserve</span></h2><p>Aevyrixa was founded with one mission — to give every woman the comfort, confidence, and dignity she deserves. Premium care, discreet delivery, made for Bangladesh.</p></div>
+    </div>
+    <div class="values">
+      <div class="val"><span class="val-ico">💜</span><h3>Our Mission</h3><p>To make premium period care accessible and affordable for every woman in Bangladesh — with dignity and discretion always.</p></div>
+      <div class="val"><span class="val-ico">🌿</span><h3>Sustainability</h3><p>Our products are designed to be reusable, reducing waste significantly. Every purchase contributes to a more sustainable future.</p></div>
+      <div class="val"><span class="val-ico">🤝</span><h3>Community</h3><p>We donate 1% of every sale to menstrual hygiene programs for underprivileged women across Bangladesh.</p></div>
+    </div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;text-align:center;margin-bottom:28px;letter-spacing:-.02em">Meet Our Team</h2>
+    <div class="team-grid">
+      <div class="tcard"><div class="tcard-img"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=300&fit=crop&crop=faces,top&q=80" alt=""></div><div class="tcard-body"><h4>Fatima Akter</h4><p>Founder & CEO</p></div></div>
+      <div class="tcard"><div class="tcard-img"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=300&fit=crop&crop=faces,top&q=80" alt=""></div><div class="tcard-body"><h4>Nusrat Jahan</h4><p>Head of Design</p></div></div>
+      <div class="tcard"><div class="tcard-img"><img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=300&fit=crop&crop=faces,top&q=80" alt=""></div><div class="tcard-body"><h4>Shamima Begum</h4><p>Product Manager</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<div class="fab" onclick="goTo('support')">💬</div>
+
+<script>
+// ── PRELOADER ──
+setTimeout(function(){document.getElementById('preloader').classList.add('gone')},2000);
+
+// ── CURSOR ──
+var cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+var cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',function(e){cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px'});
+(function animRing(){rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)})();
+document.querySelectorAll('button,a,.pcard,.nl,.ni,.alink,.chan,.ccard,.ftag,.sz,.sw,.fab,.logo').forEach(function(el){
+  el.addEventListener('mouseenter',function(){cur.style.width='18px';cur.style.height='18px';ring.style.width='50px';ring.style.height='50px';ring.style.borderColor='rgba(255,20,147,.8)'});
+  el.addEventListener('mouseleave',function(){cur.style.width='10px';cur.style.height='10px';ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(255,20,147,.5)'});
+});
+
+// ── SCROLL PROGRESS + BACK TO TOP ──
+window.addEventListener('scroll',function(){
+  var p=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;
+  document.getElementById('progress').style.width=p+'%';
+  var n=document.getElementById('navbar');
+  if(window.scrollY>30)n.classList.add('scrolled');else n.classList.remove('scrolled');
+  var btt=document.getElementById('btt');
+  if(window.scrollY>400)btt.classList.add('show');else btt.classList.remove('show');
+});
+
+// ── ROUTING ──
+var cur_page='home';
+var all_pages=['home','shop','product','collections','track','account','cart','support','about'];
+function goTo(p){
+  if(!all_pages.includes(p))return;
+  document.getElementById('page-'+cur_page).classList.add('hidden');
+  document.getElementById('page-'+p).classList.remove('hidden');
+  var old=document.getElementById('nl-'+cur_page);if(old)old.classList.remove('on');
+  var nw=document.getElementById('nl-'+p);if(nw)nw.classList.add('on');
+  cur_page=p;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── TOAST ──
+var toastT;
+function showToast(msg){
+  var t=document.getElementById('toast'),m=document.getElementById('toast-msg');
+  m.textContent=msg||'Added to cart!';
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT=setTimeout(function(){t.classList.remove('show')},2500);
+}
+
+// ── CART ──
+var cartCount=3;
+function cartAdd(){
+  cartCount++;
+  document.getElementById('cartBadge').textContent=cartCount;
+  showToast('🛍️ Added to cart!');
+}
+
+// ── MODAL ──
+function openModal(name,price,img){
+  document.getElementById('modal-name').textContent=name;
+  document.getElementById('modal-price').textContent=price;
+  document.getElementById('modal-img').src=img;
+  document.getElementById('modal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal').classList.add('hidden');
+  document.body.style.overflow='';
+}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+// ── SIZE SELECT ──
+document.querySelectorAll('.sz').forEach(function(s){
+  s.addEventListener('click',function(){
+    var parent=this.closest('.sizes,.sz-row');
+    if(parent)parent.querySelectorAll('.sz').forEach(function(x){x.classList.remove('on')});
+    this.classList.add('on');
+  });
+});
+
+// ── SWATCHES ──
+document.querySelectorAll('.sw').forEach(function(s){
+  s.addEventListener('click',function(e){
+    e.stopPropagation();
+    this.closest('.swatches').querySelectorAll('.sw').forEach(function(x){x.classList.remove('on')});
+    this.classList.add('on');
+  });
+});
+
+// ── PRODUCT THUMBS ──
+function switchImg(el,src){
+  document.getElementById('pdImg').src=src;
+  document.querySelectorAll('.pd-thumb').forEach(function(t){t.classList.remove('on')});
+  el.classList.add('on');
+}
+
+// ── QTY ──
+var qv=1;
+function qtyChg(d){qv=Math.max(1,qv+d);document.getElementById('qtyVal').textContent=qv}
+function cqtyChg(btn,d){var sp=btn.parentElement.querySelector('span');sp.textContent=Math.max(1,parseInt(sp.textContent)+d)}
+
+// ── FAQ ──
+function faqToggle(el){
+  var item=el.closest('.faq-item'),isOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open')});
+  if(!isOpen)item.classList.add('open');
+}
+
+// ── FILTER TAGS ──
+document.querySelectorAll('.ftag').forEach(function(f){
+  f.addEventListener('click',function(){
+    this.closest('.filter-row').querySelectorAll('.ftag').forEach(function(x){x.classList.remove('on')});
+    this.classList.add('on');
+  });
+});
+
+// ── 3D CARD TILT ──
+document.querySelectorAll('.pcard').forEach(function(card){
+  card.addEventListener('mousemove',function(e){
+    var r=this.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width-.5;
+    var y=(e.clientY-r.top)/r.height-.5;
+    this.style.transform='perspective(600px) rotateY('+x*10+'deg) rotateX('+(-y*8)+'deg) translateY(-5px)';
+  });
+  card.addEventListener('mouseleave',function(){this.style.transform=''});
+});
+
+// ── SCROLL REVEAL ──
+var io=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}
+  });
+},{threshold:.08});
+function revealAll(){
+  document.querySelectorAll('.pcard,.icard,.lrow,.ccard,.val,.tcard,.rcard,.float-card,.stat').forEach(function(el){
+    if(!el.style.opacity){el.style.opacity='0';el.style.transform='translateY(22px)';el.style.transition='opacity .5s ease, transform .5s ease';io.observe(el)}
+  });
+}
+revealAll();
+var origGoTo=goTo;
+goTo=function(p){origGoTo(p);setTimeout(revealAll,50)};
+
+// Re-run at start
+setTimeout(revealAll,100);
+</script>
+</body>
+</html>

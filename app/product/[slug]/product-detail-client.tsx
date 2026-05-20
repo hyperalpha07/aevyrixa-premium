@@ -334,7 +334,7 @@ export default function ProductDetailClient({
 
         {/* LEFT — Media gallery */}
         <div
-          className={`aev-shop-card min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-2.5 sm:rounded-[1.85rem] sm:p-3 ${style.panel}`}
+          className={`aev-panel aev-shop-card min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-2.5 sm:rounded-[1.85rem] sm:p-3 ${style.panel}`}
         >
           {/* Main media display */}
           <div
@@ -568,7 +568,7 @@ export default function ProductDetailClient({
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-product-buy-panel mt-7 rounded-[1.65rem] border border-[#FF4DB8]/12 bg-[#151024] p-4 sm:p-5 ${style.panel}`}
+            className={`aev-panel aev-product-buy-panel mt-7 rounded-[1.65rem] border border-[#FF4DB8]/12 bg-[#151024] p-4 sm:p-5 ${style.panel}`}
           >
             <div className="space-y-6">
               <VariantSelector
@@ -646,7 +646,7 @@ export default function ProductDetailClient({
                 <button
                   onClick={() => handleAddToCart(false)}
                   disabled={!canAddToCart}
-                  className={`aev-action-primary rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+                  className={`aev-button-primary aev-action-primary rounded-full px-6 py-3.5 text-sm font-semibold transition ${
                     canAddToCart
                       ? `bg-gradient-to-r shadow-[0_4px_24px_rgba(255,77,184,0.38)] hover:scale-[1.01] hover:shadow-[0_4px_32px_rgba(255,77,184,0.52)] ${style.primary}`
                       : "cursor-not-allowed border border-white/10 bg-[#1B1230] text-[#6B5F7A]/50"
@@ -657,7 +657,7 @@ export default function ProductDetailClient({
                 <button
                   onClick={() => handleAddToCart(true)}
                   disabled={!canAddToCart}
-                  className={`aev-action-secondary rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
+                  className={`aev-button-secondary aev-action-secondary rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
                     canAddToCart
                       ? "border-[#FF4DB8]/22 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white"
                       : "cursor-not-allowed border-white/8 bg-[#1B1230] text-[#6B5F7A]/50"
@@ -877,22 +877,25 @@ export default function ProductDetailClient({
       {/* ── Related products ── */}
       {displayRelated.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
-          <p
-            className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
-          >
-            More From Our Collection
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">
-            You May Also Like
-          </h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-6 flex items-center gap-4">
+            <div>
+              <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
+                More From Our Collection
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                You May Also Like
+              </h2>
+            </div>
+            <div className="h-px flex-1 bg-gradient-to-r from-[#FF4DB8]/12 to-transparent" />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {displayRelated.map((rp) => {
               const rpStyle =
                 themeStyles[rp.visualTheme] ?? themeStyles["blush-violet"];
               return (
                 <article
                   key={rp.id}
-                  className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.75rem] border bg-[#151024] p-3 transition duration-300 hover:-translate-y-1 ${rpStyle.border}`}
+                  className={`aev-product-card aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.75rem] border bg-[#151024] p-3 ${rpStyle.border}`}
                 >
                   <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.06] bg-[#0B0F1A]">
                     <div className="relative aspect-square w-full">
@@ -973,8 +976,8 @@ export default function ProductDetailClient({
         </div>
       )}
 
-      {/* ── Mobile sticky add-to-cart bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/[0.07] bg-[#080611]/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.50)] backdrop-blur-md lg:hidden">
+      {/* ── Mobile sticky add-to-cart bar — sits above bottom nav ── */}
+      <div className="fixed bottom-14 left-0 right-0 z-30 border-t border-[#FF4DB8]/12 bg-[#080611]/96 px-4 py-3 shadow-[0_-8px_32px_rgba(0,0,0,0.50)] backdrop-blur-md md:bottom-0 md:pb-[calc(1rem+env(safe-area-inset-bottom))] md:pt-3 lg:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">

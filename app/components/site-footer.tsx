@@ -64,18 +64,33 @@ export default function SiteFooter({
   ];
 
   return (
-    <footer className="relative border-t border-white/[0.06] bg-[#0D0918] px-4 pb-28 pt-12 text-white sm:px-6 sm:pb-16">
+    <footer className="relative border-t border-[#FF4DB8]/10 bg-[#0D0918] px-4 pb-28 pt-12 text-white sm:px-6 sm:pb-16">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF4DB8]/25 to-transparent" />
       <div className="pointer-events-none absolute left-0 right-0 top-0 h-48 bg-gradient-to-b from-[#FF4DB8]/[0.04] to-transparent" />
       <div className="pointer-events-none absolute left-[-10%] top-[20%] h-[200px] w-[200px] rounded-full bg-[#A855F7]/[0.06] blur-[80px]" />
       <div className="pointer-events-none absolute right-[-10%] top-[30%] h-[160px] w-[160px] rounded-full bg-[#00D4C6]/[0.05] blur-[80px]" />
+
+      {/* Premium brand statement */}
+      <div className="aev-footer-brand aev-glass relative mx-auto mb-8 max-w-7xl overflow-hidden p-5 pb-8 sm:p-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.38em] text-[#FF4DB8]/55">Her Care by Aevyrixa</p>
+        <p className="mt-3 max-w-2xl text-2xl font-semibold leading-snug tracking-tight text-white/80 sm:text-3xl">
+          Premium women&apos;s care, delivered discreetly across Bangladesh.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          {["Reusable Care", "Soft Support", "Discreet Delivery", "3-Day Hygiene-Safe Support"].map((tag) => (
+            <span key={tag} className="aev-pill px-3 py-1.5 text-xs font-semibold text-[#FFB3D1]/80">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <div className="relative mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 md:grid-cols-4">
 
         {/* Column 1: Brand */}
         <div>
           <div className="flex items-center gap-3">
-            <div className="shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/15 bg-[#1B1230] p-1">
+            <div className="shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)]">
               <Image
                 src="/logo.jpg"
                 alt="Aevyrixa Logo"

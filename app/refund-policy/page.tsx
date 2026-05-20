@@ -21,7 +21,7 @@ export default async function RefundPolicyPage() {
       intro={`${settings.brandDisplayName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
       sections={[
         {
-          title: "3-Day Support Window",
+          title: "3-Day Hygiene-Safe Support Window",
           copy: settings.supportWindowMessage,
         },
         {

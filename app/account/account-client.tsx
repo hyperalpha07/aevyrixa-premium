@@ -10,11 +10,11 @@ import {
   Home,
   LogOut,
   MapPin,
+  MessageSquare,
   PackageSearch,
   Plus,
   ShoppingBag,
   UserRound,
-  MessageSquare,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
@@ -241,37 +241,47 @@ export default function AccountClient({ view }: { view: AccountView }) {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(255,77,184,0.07),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(168,85,247,0.05),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader settings={settings} active="account" />
 
-      <section className="mx-auto w-full max-w-7xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14">
-        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      {/* Premium welcome banner */}
+      <div className="aev-welcome-banner border-b border-[#FF4DB8]/10 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#FF4DB8]/30 to-transparent" />
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/70">
-              Customer Account
-            </p>
-            <h1 className="mt-4 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-5xl">
-              {customer ? `Welcome, ${customer.fullName}` : "Your Aevyrixa account"}
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#FF4DB8]/25 bg-[#FF4DB8]/12 text-[#FF4DB8]">
+                <UserRound className="h-4 w-4" />
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/75">
+                Her Care Account
+              </p>
+            </div>
+            <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-3xl md:text-4xl">
+              {customer ? `Welcome back, ${customer.fullName.split(" ")[0]}` : "Your Aevyrixa account"}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#9C91AA]">
-              Manage orders, addresses, support, and checkout details from one secure profile.
-            </p>
+            {customer && (
+              <p className="mt-2 text-sm text-[#9C91AA]">
+                {customer.phone}{customer.email ? ` · ${customer.email}` : ""}
+              </p>
+            )}
           </div>
           {customer && (
             <button
               type="button"
               onClick={logout}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/10 bg-[#151024] px-5 text-sm font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:bg-[#211633] hover:text-[#D8CBE8]"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#1B1230]/80 px-4 py-2.5 text-sm font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:bg-[#211633] hover:text-[#D8CBE8]"
             >
-              <LogOut className="h-4 w-4" />
-              Logout
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Logout</span>
             </button>
           )}
         </div>
+      </div>
 
-        <nav className="mb-6 flex gap-2 overflow-x-auto pb-2 text-sm">
+      <section className="mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 md:pb-20 md:pt-8">
+        <nav className="mb-6 flex gap-2 overflow-x-auto pb-1 text-sm">
           <AccountTab href="/account" active={view === "dashboard"} icon={UserRound} label="Account" />
           <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
           <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
           <AccountTab href="/account/support" active={view === "support"} icon={MessageSquare} label="Support" />
-
         </nav>
 
         {isLoading ? (
@@ -289,18 +299,38 @@ export default function AccountClient({ view }: { view: AccountView }) {
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-4">
               <Panel>
-                <p className="text-sm font-semibold text-white">{customer.fullName}</p>
-                <p className="mt-2 text-sm text-[#D8CBE8]">{customer.phone}</p>
-                {customer.email && <p className="mt-1 text-sm text-[#9C91AA]">{customer.email}</p>}
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/22 bg-gradient-to-br from-[#FF4DB8]/15 to-[#A855F7]/10 text-[#FF4DB8]">
+                    <UserRound className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold leading-snug text-white">{customer.fullName}</p>
+                    <p className="mt-1 text-sm text-[#D8CBE8]">{customer.phone}</p>
+                    {customer.email && <p className="mt-0.5 truncate text-xs text-[#9C91AA]">{customer.email}</p>}
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
+                  <span className="text-xs font-medium text-[#9C91AA]">Active member</span>
+                </div>
               </Panel>
               <Panel>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">
-                  Shortcuts
+                  Quick Links
                 </p>
                 <div className="mt-4 grid gap-2">
-                  <Link className="shortcut-link" href="/track-order">Track an order</Link>
-                  <Link className="shortcut-link" href="/support">Support & policies</Link>
-                  <Link className="shortcut-link" href="/checkout">Checkout</Link>
+                  <Link className="shortcut-link" href="/track-order">
+                    <PackageSearch className="h-3.5 w-3.5 shrink-0 text-[#FF4DB8]" />
+                    Track an order
+                  </Link>
+                  <Link className="shortcut-link" href="/support">
+                    <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#A855F7]" />
+                    Support & policies
+                  </Link>
+                  <Link className="shortcut-link" href="/product">
+                    <ShoppingBag className="h-3.5 w-3.5 shrink-0 text-[#00D4C6]" />
+                    Continue shopping
+                  </Link>
                 </div>
               </Panel>
             </aside>
@@ -383,9 +413,9 @@ function AccountTab({
   );
 }
 
-function Panel({ children }: { children: React.ReactNode }) {
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
+    <div className={`aev-panel min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.22)] sm:p-6 ${className}`}>
       {children}
     </div>
   );
@@ -470,12 +500,15 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex min-h-24 min-w-0 flex-col justify-between rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4 transition hover:border-[#FF4DB8]/30 hover:bg-[#211633]"
+      className="group relative flex min-h-24 min-w-0 flex-col justify-between overflow-hidden rounded-[1.15rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 transition duration-200 hover:border-[#FF4DB8]/30 hover:bg-[#211633] hover:shadow-[0_12px_36px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.07)]"
     >
-      <Icon className="h-5 w-5 text-[#FF4DB8]" />
-      <span className="mt-4 flex items-center justify-between gap-3 text-sm font-semibold text-white">
+      <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.04] blur-xl transition duration-300 group-hover:bg-[#FF4DB8]/[0.08]" />
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.07] text-[#FF4DB8] transition duration-200 group-hover:border-[#FF4DB8]/35 group-hover:bg-[#FF4DB8]/12">
+        <Icon className="h-4 w-4" />
+      </div>
+      <span className="relative mt-4 flex items-center justify-between gap-3 text-sm font-semibold text-white">
         <span className="min-w-0 break-words [overflow-wrap:anywhere]">{label}</span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-[#9C91AA] transition group-hover:text-[#FF4DB8]" />
+        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#9C91AA] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[#FF4DB8]" />
       </span>
     </Link>
   );
@@ -483,10 +516,13 @@ function QuickAction({
 
 function Metric({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
-      <Icon className="h-5 w-5 text-[#FF4DB8]" />
-      <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#9C91AA]/70">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
+    <div className="aev-card aev-metric-card relative rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
+      <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.06] blur-xl" />
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]">
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">{label}</p>
+      <p className="mt-1.5 text-2xl font-semibold text-white">{value}</p>
     </div>
   );
 }
@@ -723,16 +759,41 @@ function AddressSummary({ address }: { address: Address }) {
 
 function SupportView({ message }: { message: string }) {
   return (
-    <Panel>
-      <h2 className="text-xl font-semibold text-white">Support History</h2>
-      <p className="mt-3 text-sm leading-7 text-[#9C91AA]">
-        {message || "Support history is not available yet."}
-      </p>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-        <Link className="action-primary" href="/support">Open support page</Link>
-        <Link className="action-muted" href="/track-order">Track an order</Link>
-      </div>
-    </Panel>
+    <div className="grid gap-5">
+      <Panel>
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/22 bg-[#A855F7]/[0.08] text-[#A855F7]">
+            <MessageSquare className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold text-white">Support History</h2>
+            <p className="mt-2 text-sm leading-7 text-[#9C91AA]">
+              {message || "No support conversations yet. Start one anytime from the support page."}
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <Link className="action-primary" href="/support">Open support page</Link>
+          <Link className="action-muted" href="/track-order">Track an order</Link>
+        </div>
+      </Panel>
+      <Panel>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">Support policies</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            { label: "3-Day Hygiene-Safe Support", desc: "Eligible concerns within 3 days of delivery." },
+            { label: "Order Linked Only", desc: "Support is linked to your verified order history." },
+            { label: "Privacy Safe", desc: "We never share your order details externally." },
+            { label: "Bangladesh Only", desc: "Support covers orders delivered within Bangladesh." },
+          ].map(({ label, desc }) => (
+            <div key={label} className="rounded-xl border border-[#FF4DB8]/10 bg-[#1B1230] p-3">
+              <p className="text-sm font-semibold text-white">{label}</p>
+              <p className="mt-1 text-xs leading-5 text-[#9C91AA]">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </div>
   );
 }
 

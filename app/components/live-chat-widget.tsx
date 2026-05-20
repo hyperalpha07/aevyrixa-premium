@@ -268,8 +268,8 @@ export default function LiveChatWidget({
   if (!enabled || (placement !== "homepage" && placement !== "all")) return null;
 
   const bottomClass = whatsappAlsoEnabled
-    ? "bottom-[4.75rem] sm:bottom-[5.5rem]"
-    : "bottom-6 sm:bottom-8";
+    ? "bottom-[8.5rem] sm:bottom-[5.5rem]"
+    : "bottom-20 md:bottom-6 sm:bottom-8";
 
   return (
     <>

@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { PackageSearch } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
@@ -69,14 +70,14 @@ function readableStatus(value?: string) {
 
 function stepClasses(state: TimelineState) {
   if (state === "complete") {
-    return "border-cyan-200/70 bg-cyan-200 text-[#03101a]";
+    return "border-[#00D4C6]/60 bg-[#00D4C6] text-[#080611] shadow-[0_0_16px_rgba(0,212,198,0.35)]";
   }
 
   if (state === "active") {
-    return "border-fuchsia-200 bg-fuchsia-200 text-[#150316] shadow-[0_0_24px_rgba(217,70,239,0.25)]";
+    return "border-[#FF4DB8]/60 bg-[#FF4DB8] text-white shadow-[0_0_20px_rgba(255,77,184,0.40)]";
   }
 
-  return "border-white/18 bg-white/[0.06] text-white/45";
+  return "border-[#FF4DB8]/12 bg-[#1B1230] text-[#6B5F7A]";
 }
 
 export default function TrackOrderPage() {
@@ -158,25 +159,42 @@ function TrackOrderContent() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_48%,#030612_100%)]" />
+    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.07),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader active="track" settings={settings} />
 
-      <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-8 px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.88fr_1.12fr]">
+      <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-10 px-4 pb-28 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-cyan-200/72">
+          <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#FF4DB8]/72">
             Track Order
           </p>
-          <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
+          <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight tracking-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
             Check your {settings.brandShortName} order status.
           </h1>
-          <p className="mt-5 break-words text-base leading-8 text-white/66 [overflow-wrap:anywhere]">
+          <p className="mt-5 break-words text-base leading-8 text-[#D8CBE8]/70 [overflow-wrap:anywhere]">
             Enter your order reference and the phone number used at checkout.
             We only show customer-safe order details after both match.
           </p>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {[
+              { icon: "🔍", label: "Instant lookup", desc: "Results appear without page reload" },
+              { icon: "🔒", label: "Privacy safe", desc: "Only matched details are revealed" },
+              { icon: "📦", label: "Full timeline", desc: "See every step from order to delivery" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#151024] px-4 py-3">
+                <span className="mt-0.5 text-base">{item.icon}</span>
+                <div>
+                  <p className="text-sm font-semibold text-white">{item.label}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-[#9C91AA]">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <Link
             href="/product"
-            className="aev-action-secondary mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white sm:w-auto"
+            className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-[#151024] px-7 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white sm:w-auto"
           >
             Continue Shopping
           </Link>
@@ -185,33 +203,42 @@ function TrackOrderContent() {
         <div className="min-w-0 space-y-5">
           <form
             onSubmit={handleSubmit}
-            className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6"
+            className="aev-track-card min-w-0 rounded-[1.75rem] p-5 sm:p-6"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-100/72">
-              Order Lookup
-            </p>
-            <label className="mt-5 block">
-              <span className="text-sm font-medium text-white/75">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]">
+                <PackageSearch className="h-5 w-5" strokeWidth={1.8} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FF4DB8]/80">
+                  Order Lookup
+                </p>
+                <p className="mt-0.5 text-xs text-[#9C91AA]">Reference + phone required</p>
+              </div>
+            </div>
+
+            <label className="block">
+              <span className="text-sm font-medium text-[#D8CBE8]">
                 Order Reference
               </span>
               <input
                 required
                 value={orderRef}
                 onChange={(event) => setOrderRef(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm uppercase text-white outline-none transition placeholder:normal-case placeholder:text-white/30 focus:border-cyan-200/50"
+                className="mt-2 w-full rounded-2xl border border-[#FF4DB8]/14 bg-[#0B0F1A] px-4 py-3.5 text-sm uppercase text-white outline-none transition placeholder:normal-case placeholder:text-[#6B5F7A] focus:border-[#FF4DB8]/40 focus:shadow-[0_0_0_3px_rgba(255,77,184,0.08)]"
                 placeholder="AEV-..."
                 autoComplete="off"
               />
             </label>
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-white/75">
+              <span className="text-sm font-medium text-[#D8CBE8]">
                 Phone Number
               </span>
               <input
                 required
                 value={customerPhone}
                 onChange={(event) => setCustomerPhone(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-cyan-200/50"
+                className="mt-2 w-full rounded-2xl border border-[#FF4DB8]/14 bg-[#0B0F1A] px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-[#6B5F7A] focus:border-[#FF4DB8]/40 focus:shadow-[0_0_0_3px_rgba(255,77,184,0.08)]"
                 placeholder="01XXXXXXXXX"
                 inputMode="tel"
                 autoComplete="tel"
@@ -220,33 +247,40 @@ function TrackOrderContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="aev-action-primary mt-6 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_36px_rgba(255,77,184,0.52)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
-              {isLoading ? "Checking..." : "Track Order"}
+              {isLoading ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Checking...
+                </>
+              ) : (
+                "Track Order"
+              )}
             </button>
             {error && (
-              <div className="mt-5 rounded-2xl border border-rose-200/20 bg-rose-300/[0.08] p-4 text-sm leading-7 text-rose-50/82">
+              <div className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/[0.07] p-4 text-sm leading-7 text-rose-100/80">
                 {error}
               </div>
             )}
           </form>
 
           {order && (
-            <section className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+            <section className="aev-track-card min-w-0 rounded-[1.75rem] p-5 sm:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/70">
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#FF4DB8]/70">
                     {order.orderRef}
                   </p>
-                  <h2 className="mt-2 break-words text-2xl font-semibold [overflow-wrap:anywhere]">
+                  <h2 className="mt-2 break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
                     {statusLabel(order.status)}
                   </h2>
                 </div>
                 <span
                   className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold ${
                     isCancelled
-                      ? "border-rose-200/40 bg-rose-300/10 text-rose-100"
-                      : "border-cyan-200/30 bg-cyan-200/10 text-cyan-100"
+                      ? "border-rose-300/35 bg-rose-300/[0.08] text-rose-100"
+                      : "border-[#00D4C6]/30 bg-[#00D4C6]/[0.08] text-[#31E6D4]"
                   }`}
                 >
                   {order.status}
@@ -254,16 +288,16 @@ function TrackOrderContent() {
               </div>
 
               {isCancelled ? (
-                <div className="mt-5 rounded-2xl border border-rose-200/20 bg-rose-300/[0.08] p-4 text-sm leading-7 text-rose-50/82">
+                <div className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/[0.07] p-4 text-sm leading-7 text-rose-100/80">
                   This order has been cancelled. Contact support with your order
                   reference if you need help.
                 </div>
               ) : (
-                <ol className="mt-6 grid gap-3 sm:grid-cols-4">
+                <ol className="mt-6 grid gap-2.5 sm:grid-cols-4">
                   {order.timeline.map((step, index) => (
                     <li
                       key={step.label}
-                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-3 sm:flex-col sm:items-start"
+                      className="flex min-w-0 items-center gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] p-3 sm:flex-col sm:items-start"
                     >
                       <span
                         className={`flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${stepClasses(
@@ -272,7 +306,7 @@ function TrackOrderContent() {
                       >
                         {step.state === "complete" ? index + 1 : ""}
                       </span>
-                      <span className="min-w-0 break-words text-sm font-medium text-white/78 [overflow-wrap:anywhere]">
+                      <span className="min-w-0 break-words text-sm font-medium text-white/82 [overflow-wrap:anywhere]">
                         {step.label}
                       </span>
                     </li>
@@ -280,7 +314,7 @@ function TrackOrderContent() {
                 </ol>
               )}
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
                 <SummaryItem label="Created" value={formatDate(order.createdAt)} />
                 <SummaryItem label="Total" value={formatCurrency(order.total)} />
                 <SummaryItem label="Payment" value={order.paymentMethod} />
@@ -314,42 +348,42 @@ function TrackOrderContent() {
                 )}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">
+              <div className="mt-5 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#FF4DB8]/60">
                   Items
                 </p>
                 <ul className="mt-3 space-y-3">
                   {order.items.map((item, index) => (
                     <li
                       key={`${item.name}-${index}`}
-                      className="flex min-w-0 items-start justify-between gap-3 text-sm text-white/76"
+                      className="flex min-w-0 items-start justify-between gap-3 text-sm text-[#D8CBE8]/80"
                     >
                       <span className="min-w-0 break-words [overflow-wrap:anywhere]">
                         {item.name}
                         {item.variant ? (
-                          <span className="block text-xs text-white/45">
+                          <span className="block text-xs text-[#9C91AA]">
                             {item.variant}
                           </span>
                         ) : null}
                       </span>
-                      <span className="shrink-0 text-white/58">
-                        x{item.quantity}
+                      <span className="shrink-0 text-[#9C91AA]">
+                        ×{item.quantity}
                       </span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/62">
+              <div className="mt-5 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#0F1E2A]/60 p-4 text-sm leading-7 text-[#D8CBE8]/70">
                 <p>{supportNote}</p>
                 {settings.whatsappUrl && (
                   <a
                     href={settings.whatsappUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex font-semibold text-cyan-100 transition hover:text-white"
+                    className="mt-2 inline-flex font-semibold text-[#31E6D4] transition hover:text-white"
                   >
-                    Chat with {settings.brandShortName} Support
+                    Chat with {settings.brandShortName} Support →
                   </a>
                 )}
               </div>
@@ -365,10 +399,10 @@ function TrackOrderContent() {
 
 function TrackOrderFallback() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
       <SiteHeader active="track" />
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
-        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-6 text-white/65 backdrop-blur-2xl">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-6 text-[#9C91AA]">
           Loading order tracking...
         </div>
       </section>
@@ -379,11 +413,11 @@ function TrackOrderFallback() {
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/42">
+    <div className="min-w-0 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9C91AA]/70">
         {label}
       </p>
-      <p className="mt-2 break-words text-sm font-semibold text-white/82 [overflow-wrap:anywhere]">
+      <p className="mt-2 break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
         {value || "Not available"}
       </p>
     </div>

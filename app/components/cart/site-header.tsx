@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronDown, PackageSearch, ShoppingBag, UserRound } from "lucide-react";
+import { ChevronDown, Home, LayoutGrid, PackageSearch, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 import AnnouncementBanner from "@/app/components/announcement-banner";
 import {
@@ -52,7 +52,8 @@ export default function SiteHeader({
     "border-[#FF4DB8]/35 bg-[#211633]/90 text-white font-semibold shadow-[0_0_16px_rgba(255,77,184,0.15)]";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#080611]/88 backdrop-blur-xl">
+    <>
+    <header className="aev-glass-panel sticky top-0 z-50 border-b border-[#FF4DB8]/10 bg-[#080611]/88 backdrop-blur-xl">
       <AnnouncementBanner
         settings={settings}
         surface={
@@ -69,8 +70,8 @@ export default function SiteHeader({
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#FF4DB8]/20 to-transparent" />
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 sm:py-4 md:flex md:justify-between">
-        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/20 bg-[#1B1230] p-1">
+        <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)] transition group-hover:border-[#FF4DB8]/40">
             <Image
               src="/logo.jpg"
               alt="Aevyrixa Logo"
@@ -91,38 +92,15 @@ export default function SiteHeader({
           </div>
         </Link>
 
-        {/* Mobile icon row */}
-        <div className="flex shrink-0 items-center gap-1.5 md:hidden">
-          <Link
-            href={hasAccountSession ? "/account" : "/account/login"}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
-              active === "account"
-                ? "border-[#FF4DB8]/45 bg-[#211633] text-[#FF4DB8] shadow-[0_0_12px_rgba(255,77,184,0.20)]"
-                : "border-white/10 bg-[#151024] text-[#9C91AA] hover:border-[#FF4DB8]/30 hover:bg-[#211633] hover:text-[#FFB3D1]"
-            }`}
-            aria-label={hasAccountSession ? "Account profile" : "Login"}
-          >
-            <UserRound className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/track-order"
-            className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
-              active === "track"
-                ? "border-[#00D4C6]/40 bg-[#211633] text-[#00D4C6] shadow-[0_0_12px_rgba(0,212,198,0.15)]"
-                : "border-white/10 bg-[#151024] text-[#9C91AA] hover:border-[#00D4C6]/30 hover:bg-[#211633] hover:text-[#31E6D4]"
-            }`}
-            aria-label="Track Order"
-          >
-            <PackageSearch className="h-4 w-4" />
-            <span className="hidden min-[390px]:inline">Track</span>
-          </Link>
+        {/* Mobile: cart button only — primary nav lives in bottom bar */}
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
           <button
             type="button"
             onClick={toggleCart}
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#151024] text-[#9C91AA] transition hover:border-[#FF4DB8]/30 hover:bg-[#211633] hover:text-[#FFB3D1]"
-            aria-label={`Open cart with ${totalItems} item${totalItems === 1 ? "" : "s"}`}
+            className="aev-button-ghost relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[#D8CBE8]"
+            aria-label={`Open cart — ${totalItems} item${totalItems === 1 ? "" : "s"}`}
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag className="h-[18px] w-[18px]" />
             {totalItems > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-1 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(255,77,184,0.50)]">
                 {totalItems}
@@ -168,5 +146,56 @@ export default function SiteHeader({
         </div>
       </div>
     </header>
+
+    {/* ── Mobile Bottom Navigation ── */}
+    {active !== "cart" && (
+      <nav className="aev-bottom-nav md:hidden" aria-label="Mobile navigation">
+        <div className="flex items-center justify-around px-1 py-2 pb-3">
+          <MobileNavItem href="/" active={active === "home"} icon={Home} label="Home" />
+          <MobileNavItem href="/product" active={active === "shop" || active === "product"} icon={LayoutGrid} label="Shop" />
+          <MobileNavItem href="/track-order" active={active === "track"} icon={PackageSearch} label="Track" />
+          <MobileNavItem
+            href={hasAccountSession ? "/account" : "/account/login"}
+            active={active === "account"}
+            icon={UserRound}
+            label={hasAccountSession ? "Account" : "Login"}
+          />
+        </div>
+      </nav>
+    )}
+    </>
+  );
+}
+
+function MobileNavItem({
+  href,
+  active,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  active: boolean;
+  icon: typeof Home;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`aev-bottom-nav-item ${active ? "text-[#FF4DB8]" : "text-[#6B5F7A]"}`}
+    >
+      <div
+        className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+          active ? "bg-[#FF4DB8]/14" : ""
+        }`}
+      >
+        <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.2 : 1.8} />
+        {active && (
+          <span className="pointer-events-none absolute inset-0 rounded-xl bg-[#FF4DB8]/10 blur-sm" />
+        )}
+      </div>
+      <span className={`text-[9.5px] font-semibold tracking-wider ${active ? "text-[#FF4DB8]" : "text-[#6B5F7A]"}`}>
+        {label}
+      </span>
+    </Link>
   );
 }

@@ -182,7 +182,7 @@ function ProductCard({
 
   return (
     <article
-      className={`aev-shop-card group min-w-0 overflow-hidden rounded-[1.35rem] border bg-[#151024] p-2.5 transition duration-300 md:rounded-[1.75rem] md:p-3 md:hover:-translate-y-1 ${style.border}`}
+      className={`aev-product-card aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.35rem] border bg-[#151024] p-2.5 md:rounded-[1.75rem] md:p-3 ${style.border}`}
     >
       <Link
         href={productHref}
@@ -190,14 +190,14 @@ function ProductCard({
         aria-label={`View ${product.name}`}
       >
         <div className={`relative w-full ${compact ? "aspect-[1.05]" : "aspect-square"}`}>
-          <div className={`pointer-events-none absolute inset-x-8 top-8 h-28 rounded-full blur-3xl ${style.glow}`} />
+          <div className={`pointer-events-none absolute inset-x-6 top-6 h-28 rounded-full blur-3xl opacity-70 ${style.glow} transition duration-500 group-hover:opacity-100 group-hover:scale-110`} />
           {product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.imageUrl}
               alt={product.name}
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.025]"
+              className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
             />
           ) : (
             <ProductVisual
@@ -249,12 +249,12 @@ function ProductCard({
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap items-end gap-1.5 sm:gap-2">
-          <span className="text-lg font-semibold text-[#FFB3D1] sm:text-xl md:text-2xl">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-base font-bold text-white sm:text-lg md:text-xl">
             {formatProductPrice(product)}
           </span>
           {typeof product.compareAtPrice === "number" && (
-            <span className="pb-0.5 text-xs text-[#6B5F7A] line-through sm:text-sm">
+            <span className="text-xs text-[#6B5F7A] line-through sm:text-sm">
               {formatProductPrice({
                 price: product.compareAtPrice,
                 currency: product.currency,
@@ -266,24 +266,24 @@ function ProductCard({
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <Link
             href={productHref}
-            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${style.button}`}
+            className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold transition sm:min-h-11 sm:px-4 sm:text-sm ${style.button}`}
           >
             View
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Link>
           {quickAddAvailable ? (
             <button
               type="button"
               onClick={handleQuickAdd}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_18px_rgba(255,77,184,0.35)] transition hover:shadow-[0_4px_24px_rgba(255,77,184,0.50)]"
+                className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Add
             </button>
           ) : (
             <Link
               href={productHref}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-[#1B1230]/80 px-4 py-2.5 text-sm font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:text-[#D8CBE8]"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[#1B1230]/80 px-3 py-2 text-xs font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:text-[#D8CBE8] sm:min-h-11 sm:px-4 sm:text-sm"
             >
               Options
             </Link>
@@ -308,16 +308,17 @@ function CollectionSection({
   if (products.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
+    <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FF4DB8]/70">
             {eyebrow}
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-3xl">
             {title}
           </h2>
         </div>
+        <div className="h-px flex-1 bg-gradient-to-r from-[#FF4DB8]/12 to-transparent" />
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {products.slice(0, 4).map((product) => (
@@ -478,94 +479,128 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 md:pb-12 md:pt-14">
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
-          <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-[#FF4DB8]/70 sm:text-sm sm:tracking-[0.42em]">
-              {settings.brandDisplayName}
-            </p>
-            <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
-              Premium product discovery for every care rhythm
-            </h1>
-            <p className="mt-5 max-w-2xl break-words text-base leading-8 text-[#9C91AA] [overflow-wrap:anywhere] md:text-lg">
-              Search, filter, and compare Aevyrixa Her Care essentials with clear BDT pricing, privacy packaging, and Bangladesh delivery.
-            </p>
+      {/* ── Shop Intro — Premium Header ── */}
+      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 md:pb-10 md:pt-14">
+        {/* Eyebrow + Headline */}
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.06] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-[#FF4DB8]/80">
+            <Sparkles className="h-3 w-3" />
+            {settings.brandDisplayName}
           </div>
-
-          <div className="rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[#151024] p-4">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/50" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search products, categories, comfort details"
-                className="min-h-13 w-full rounded-full border border-white/10 bg-[#0B0F1A] py-3.5 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-[#6B5F7A] focus:border-[#FF4DB8]/35"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#9C91AA] transition hover:bg-[#211633] hover:text-white"
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((current) => !current)}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-[#FF4DB8]/20 bg-[#1B1230] px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/38 hover:bg-[#211633] lg:hidden"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filters
-                <ChevronDown className={`h-3.5 w-3.5 transition ${filtersOpen ? "rotate-180" : ""}`} />
-              </button>
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortMode)}
-                className="min-h-11 flex-1 rounded-full border border-white/10 bg-[#1B1230] px-3 py-2 text-sm font-semibold text-[#D8CBE8] outline-none transition focus:border-[#FF4DB8]/30 sm:flex-none sm:px-4"
-                aria-label="Sort products"
-              >
-                <option value="featured">Featured</option>
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price ↑</option>
-                <option value="price-desc">Price ↓</option>
-                <option value="stock">In stock</option>
-              </select>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="min-h-11 rounded-full border border-white/10 bg-[#1B1230] px-3 py-2 text-sm font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:text-[#D8CBE8] sm:px-4"
-                aria-label="Reset filters"
-              >
-                Reset
-              </button>
-            </div>
-
-            {filtersOpen && (
-              <div className="mt-5 rounded-[1.25rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 lg:hidden">
-                {filterPanel}
-              </div>
-            )}
-          </div>
+          <h1 className="mt-4 break-words text-2xl font-semibold leading-tight tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
+            Her Care Collection
+          </h1>
+          <p className="mt-4 max-w-2xl break-words text-base leading-8 text-[#9C91AA] [overflow-wrap:anywhere]">
+            Premium reusable care essentials with clear BDT pricing, privacy packaging, and Bangladesh delivery.
+          </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        {/* Category quick-filter pills */}
+        {categoriesWithProducts.length > 0 && (
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setCategory("")}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
+                !category
+                  ? "border-[#FF4DB8]/50 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_14px_rgba(255,77,184,0.30)]"
+                  : "border-white/10 bg-[#1B1230] text-[#9C91AA] hover:border-[#FF4DB8]/28 hover:text-[#D8CBE8]"
+              }`}
+            >
+              All
+            </button>
+            {categoriesWithProducts.slice(0, 6).map((entry) => (
+              <button
+                key={entry.key}
+                type="button"
+                onClick={() => setCategory(category === entry.title ? "" : entry.title)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
+                  category === entry.title
+                    ? "border-[#FF4DB8]/50 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_14px_rgba(255,77,184,0.30)]"
+                    : "border-white/10 bg-[#1B1230] text-[#9C91AA] hover:border-[#FF4DB8]/28 hover:text-[#D8CBE8]"
+                }`}
+              >
+                {entry.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Search + Sort bar */}
+        <div className="mt-5 rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[#151024] p-4 shadow-[0_8px_32px_rgba(0,0,0,0.22)]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/50" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search products, categories, comfort details..."
+              className="min-h-12 w-full rounded-full border border-[#FF4DB8]/12 bg-[#0B0F1A] py-3.5 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-[#6B5F7A] focus:border-[#FF4DB8]/38 focus:shadow-[0_0_0_3px_rgba(255,77,184,0.07)]"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#9C91AA] transition hover:bg-[#211633] hover:text-white"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((current) => !current)}
+              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full border border-[#FF4DB8]/18 bg-[#1B1230] px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/35 hover:bg-[#211633] lg:hidden"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
+              <ChevronDown className={`h-3.5 w-3.5 transition ${filtersOpen ? "rotate-180" : ""}`} />
+            </button>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as SortMode)}
+              className="min-h-10 flex-1 rounded-full border border-[#FF4DB8]/12 bg-[#1B1230] px-3 py-2 text-sm font-semibold text-[#D8CBE8] outline-none transition focus:border-[#FF4DB8]/30 sm:flex-none sm:px-4"
+              aria-label="Sort products"
+            >
+              <option value="featured">Featured</option>
+              <option value="newest">Newest</option>
+              <option value="price-asc">Price ↑</option>
+              <option value="price-desc">Price ↓</option>
+              <option value="stock">In stock</option>
+            </select>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="min-h-10 rounded-full border border-white/10 bg-[#1B1230] px-3 py-2 text-sm font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:text-[#D8CBE8] sm:px-4"
+              aria-label="Reset filters"
+            >
+              Reset
+            </button>
+          </div>
+
+          {filtersOpen && (
+            <div className="mt-5 rounded-[1.25rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 lg:hidden">
+              {filterPanel}
+            </div>
+          )}
+        </div>
+
+        {/* Trust strip */}
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck],
-            ["BDT pricing", CheckCircle2],
-            [settings.supportWindowMessage || "3-Day Hygiene-Safe Support", ShieldCheck],
-            ["Bangladesh delivery", Truck],
-          ].map(([label, Icon]) => (
+            [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck, "text-[#FF4DB8]", "border-[#FF4DB8]/15 bg-[#FF4DB8]/[0.05]"],
+            ["BDT Pricing", CheckCircle2, "text-[#A855F7]", "border-[#A855F7]/15 bg-[#A855F7]/[0.05]"],
+            [settings.supportWindowMessage || "3-Day Hygiene-Safe Support", ShieldCheck, "text-[#00D4C6]", "border-[#00D4C6]/15 bg-[#00D4C6]/[0.05]"],
+            ["Bangladesh Delivery", Truck, "text-[#FFB84D]", "border-[#FFB84D]/15 bg-[#FFB84D]/[0.05]"],
+          ].map(([label, Icon, iconClass, chipClass]) => (
             <div
               key={label as string}
-              className="aev-cinematic-chip flex items-center gap-2 rounded-xl border border-[#00D4C6]/15 bg-[#151024] px-3 py-2.5 text-xs text-[#31E6D4] sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm"
+              className={`aev-cinematic-chip flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs text-white/75 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 ${chipClass as string}`}
             >
-              <Icon className="h-4 w-4 shrink-0 text-[#00D4C6]" />
-              <span>{label as string}</span>
+              <Icon className={`h-4 w-4 shrink-0 ${iconClass as string}`} />
+              <span className="line-clamp-1">{label as string}</span>
             </div>
           ))}
         </div>
@@ -576,11 +611,19 @@ export default function ShopDiscoveryClient({
         <div className="grid gap-3 sm:grid-cols-3">
           <button
             type="button"
-            onClick={() => setCategory("Reusable Period Care")}
-            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-[#00D4C6]/15 bg-[#151024] p-4 text-left transition"
+            onClick={() => setCategory(category === "Reusable Period Care" ? "" : "Reusable Period Care")}
+          className={`aev-routine-card group flex items-start gap-3 rounded-[1.35rem] border p-4 text-left transition ${
+              category === "Reusable Period Care"
+                ? "border-[#00D4C6]/40 bg-[#00D4C6]/[0.06] shadow-[0_0_20px_rgba(0,212,198,0.08)]"
+                : "border-[#00D4C6]/15 bg-[#151024]"
+            }`}
           >
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#00D4C6]/20 bg-[#00D4C6]/[0.08] text-[#31E6D4]">
-              <ShieldCheck size={17} strokeWidth={1.8} />
+            <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition ${
+              category === "Reusable Period Care"
+                ? "border-[#00D4C6]/45 bg-[#00D4C6]/15 text-[#31E6D4]"
+                : "border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] text-[#31E6D4]"
+            }`}>
+              <ShieldCheck size={18} strokeWidth={1.8} />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">Period Care</p>
@@ -589,11 +632,19 @@ export default function ShopDiscoveryClient({
           </button>
           <button
             type="button"
-            onClick={() => setCategory("Comfort Panty")}
-            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-[#FF4DB8]/15 bg-[#151024] p-4 text-left transition"
+            onClick={() => setCategory(category === "Comfort Panty" ? "" : "Comfort Panty")}
+          className={`aev-routine-card group flex items-start gap-3 rounded-[1.35rem] border p-4 text-left transition ${
+              category === "Comfort Panty"
+                ? "border-[#FF4DB8]/40 bg-[#FF4DB8]/[0.06] shadow-[0_0_20px_rgba(255,77,184,0.08)]"
+                : "border-[#FF4DB8]/15 bg-[#151024]"
+            }`}
           >
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] text-[#FFB3D1]">
-              <Sparkles size={17} strokeWidth={1.8} />
+            <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition ${
+              category === "Comfort Panty"
+                ? "border-[#FF4DB8]/45 bg-[#FF4DB8]/12 text-[#FFB3D1]"
+                : "border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.07] text-[#FFB3D1]"
+            }`}>
+              <Sparkles size={18} strokeWidth={1.8} />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">Everyday Comfort</p>
@@ -602,10 +653,10 @@ export default function ShopDiscoveryClient({
           </button>
           <Link
             href="/support"
-            className="aev-routine-card group flex items-start gap-3 rounded-2xl border border-[#A855F7]/15 bg-[#151024] p-4 text-left transition"
+            className="aev-routine-card group flex items-start gap-3 rounded-[1.35rem] border border-[#A855F7]/15 bg-[#151024] p-4 text-left transition"
           >
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/20 bg-[#A855F7]/[0.08] text-[#C084FC]">
-              <CheckCircle2 size={17} strokeWidth={1.8} />
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/20 bg-[#A855F7]/[0.07] text-[#C084FC]">
+              <CheckCircle2 size={18} strokeWidth={1.8} />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">Need help choosing?</p>
@@ -651,13 +702,15 @@ export default function ShopDiscoveryClient({
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FF4DB8]/70">
                 All Products
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">
-                {filteredProducts.length} result{filteredProducts.length === 1 ? "" : "s"}
+              <h2 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-3xl">
+                {filteredProducts.length === 0 ? "No matches" : `${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`}
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-6 text-[#9C91AA]">
-              Active products only. Coming soon and hidden CMS categories are not shown as shop filters.
-            </p>
+            {filteredProducts.length > 0 && (
+              <p className="text-xs text-[#9C91AA]">
+                {category ? `Filtered: ${category}` : "All active products"}
+              </p>
+            )}
           </div>
 
           {filteredProducts.length === 0 ? (

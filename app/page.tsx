@@ -131,7 +131,7 @@ const careCards = [
 
 const heroTrustBadges = [
   "Discreet Packaging",
-  "3-Day Support",
+  "3-Day Hygiene-Safe Support",
   "Comfort Fit",
   "Reusable Protection",
 ];
@@ -401,8 +401,9 @@ export default async function Home() {
               {heroTrustBadges.map((item, index) => (
                 <div
                   key={`${item}-${index}`}
-                  className="aev-trust-badge rounded-full border border-[#FF4DB8]/18 bg-white/[0.05] px-3 py-2.5 text-center text-[0.67rem] font-semibold uppercase tracking-[0.1em] text-white/82 backdrop-blur-xl sm:px-5 sm:py-3 sm:tracking-[0.12em]"
+                  className="aev-trust-badge flex items-center justify-center gap-1.5 rounded-full border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.04] px-3 py-2.5 text-center text-[0.67rem] font-semibold uppercase tracking-[0.1em] text-white/85 backdrop-blur-xl sm:px-4 sm:py-3 sm:tracking-[0.12em]"
                 >
+                  <span className="h-1 w-1 rounded-full bg-[#FF4DB8]/60 shrink-0" />
                   {item}
                 </div>
               ))}
@@ -652,16 +653,17 @@ export default async function Home() {
               {activeProducts.map((product) => (
                 <article
                   key={product.id}
-                  className="aev-reveal aev-flagship-card group min-w-0 overflow-hidden rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-3 transition duration-300 hover:-translate-y-1 hover:border-[#FF4DB8]/28 sm:rounded-[1.75rem]"
+                  className="aev-reveal aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-3 sm:rounded-[1.75rem]"
                 >
                   <Link href={`/product/${product.slug}`} className="block overflow-hidden rounded-[1.15rem] border border-[#FF4DB8]/10 bg-[#1B1230] sm:rounded-[1.35rem]">
                     <div className="relative aspect-square w-full">
+                      <div className="pointer-events-none absolute inset-x-8 top-8 h-28 rounded-full bg-[#FF4DB8]/[0.08] blur-3xl transition duration-500 group-hover:opacity-150 group-hover:scale-110" />
                       {product.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={product.imageUrl}
                           alt={product.name}
-                          className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.025]"
+                          className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
                           loading="lazy"
                         />
                       ) : (
@@ -677,12 +679,12 @@ export default async function Home() {
                       {product.name}
                     </h3>
                     {product.shortDescription && (
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#D8CBE8]/80">
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#D8CBE8]/78">
                         {product.shortDescription}
                       </p>
                     )}
                     <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4">
-                      <span className="text-xl font-semibold text-[#FFFFFF] sm:text-2xl">
+                      <span className="text-lg font-bold text-white sm:text-xl">
                         {formatProductPrice(product)}
                       </span>
                       <Link
@@ -1108,7 +1110,7 @@ export default async function Home() {
                   },
                   {
                     icon: MessageCircle,
-                    label: "3-Day Support",
+                    label: "3-Day Hygiene-Safe Support",
                     desc: settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible product concerns after delivery.",
                     glow: "bg-[#FF4DB8]/[0.05]",
                   },
@@ -1440,7 +1442,7 @@ export default async function Home() {
 
       {canShowWhatsappSupport && hms.whatsappWidgetEnabled && whatsappUrl &&
         (hms.whatsappWidgetPlacement === "homepage" || hms.whatsappWidgetPlacement === "all") && (
-        <div className="fixed bottom-6 right-4 z-50 sm:right-6">
+        <div className="fixed bottom-20 right-4 z-50 md:bottom-6 sm:right-6">
           <a
             href={whatsappUrl}
             target="_blank"
