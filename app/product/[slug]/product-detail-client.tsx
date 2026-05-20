@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -23,6 +22,7 @@ import {
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
+import StorefrontProductCard from "@/app/components/storefront-product-card";
 import { useCart } from "@/app/components/cart/cart-context";
 import {
   displayBenefits,
@@ -330,15 +330,15 @@ export default function ProductDetailClient({
       />
 
       {/* ── Main product section ── */}
-      <section className="mx-auto grid max-w-7xl gap-7 px-4 py-6 sm:px-6 md:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 md:py-12 lg:grid-cols-[minmax(0,0.98fr)_minmax(24rem,0.92fr)] lg:items-start lg:gap-9 xl:gap-12">
 
         {/* LEFT — Media gallery */}
         <div
-          className={`aev-panel aev-shop-card min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-2.5 sm:rounded-[1.85rem] sm:p-3 ${style.panel}`}
+          className={`aev-panel aev-shop-card min-w-0 rounded-[1.35rem] border border-[#FF4DB8]/16 bg-[#151024]/92 p-2.5 shadow-[0_24px_90px_rgba(0,0,0,0.38),0_0_44px_rgba(255,77,184,0.08)] sm:rounded-[1.85rem] sm:p-3 lg:sticky lg:top-24 ${style.panel}`}
         >
           {/* Main media display */}
           <div
-            className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.06] bg-[#0B0F1A] sm:rounded-[1.45rem]"
+            className="relative overflow-hidden rounded-[1.1rem] border border-[#FF4DB8]/16 bg-[radial-gradient(circle_at_50%_14%,rgba(255,77,184,0.16),transparent_32%),radial-gradient(circle_at_12%_78%,rgba(0,212,198,0.07),transparent_30%),linear-gradient(145deg,#1B1230,#080611)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:rounded-[1.45rem]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -346,7 +346,7 @@ export default function ProductDetailClient({
             <div
               className={`pointer-events-none absolute inset-0 scale-90 rounded-full opacity-40 blur-[60px] ${style.glow}`}
             />
-            <div className="aspect-[0.96] w-full sm:aspect-square">
+            <div className="aspect-[1.02] w-full min-[420px]:aspect-square lg:aspect-[0.98]">
               {selectedMedia?.type === "video" ? (
                 <video
                   src={selectedMedia.url}
@@ -367,7 +367,7 @@ export default function ProductDetailClient({
                   alt={displayProduct.name}
                   loading={safeIndex === 0 ? "eager" : "lazy"}
                   decoding="async"
-                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-3 sm:p-4"
+                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-3 transition duration-500 hover:scale-[1.015] sm:p-5"
                   onClick={() => setLightboxOpen(true)}
                   onError={() =>
                     setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
@@ -392,10 +392,10 @@ export default function ProductDetailClient({
 
           {/* Thumbnail strip — shown when multiple images or image + video */}
           {showThumbnails && (
-            <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
+            <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1 sm:gap-2.5">
               {mediaItems.map((item, index) => (
                 <button
-                  key={index}
+                  key={`${item.type}-${item.url}-${index}`}
                   onClick={() => setSelectedMediaIndex(index)}
                   aria-label={
                     item.type === "video"
@@ -403,10 +403,10 @@ export default function ProductDetailClient({
                       : `Product image ${index + 1}`
                   }
                   disabled={brokenMediaUrls.has(item.url)}
-                  className={`h-[72px] w-[72px] shrink-0 snap-start overflow-hidden rounded-xl border transition sm:h-[78px] sm:w-[78px] ${
+                  className={`relative h-[68px] w-[68px] shrink-0 snap-start overflow-hidden rounded-xl border transition sm:h-[78px] sm:w-[78px] ${
                     safeIndex === index
-                      ? "aev-media-thumb-active border-[#FF4DB8]/55 bg-[#1B1230]"
-                      : "border-white/[0.07] bg-[#1B1230] hover:border-[#FF4DB8]/28"
+                      ? "aev-media-thumb-active border-[#FF4DB8]/65 bg-[#211633]"
+                      : "border-white/[0.08] bg-[#1B1230] hover:border-[#FF4DB8]/32"
                   } ${
                     brokenMediaUrls.has(item.url)
                       ? "cursor-not-allowed opacity-35"
@@ -426,8 +426,10 @@ export default function ProductDetailClient({
                       }
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#1B1230]">
-                      <Play className="h-5 w-5 text-[#FF4DB8]/70" />
+                    <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle,rgba(255,77,184,0.18),transparent_58%),#1B1230]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#FF4DB8]/28 bg-[#080611]/72">
+                        <Play className="h-4 w-4 fill-[#FF4DB8]/70 text-[#FF4DB8]/80" />
+                      </span>
                     </div>
                   )}
                 </button>
@@ -456,22 +458,22 @@ export default function ProductDetailClient({
           )}
 
           {/* Product info cards below media */}
-          <div className="mt-3 space-y-2">
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+          <div className="mt-3 grid gap-2 min-[520px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <PackageCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
               <span>{privacyText}</span>
             </div>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#00D4C6]" />
               <span>{supportText}</span>
             </div>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#A855F7]/10 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#A855F7]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#A855F7]" />
               <span>{deliveryText}</span>
             </div>
             <Link
               href={supportHref}
-              className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-[#FF4DB8]/15 bg-[#1B1230] px-4 py-3 text-xs font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/30 hover:bg-[#211633]"
+              className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-[#FF4DB8]/15 bg-[#1B1230]/86 px-4 py-3 text-xs font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/30 hover:bg-[#211633]"
             >
               <span className="inline-flex items-center gap-3">
                 <MessageCircle className={`h-3.5 w-3.5 shrink-0 ${style.accent}`} />
@@ -479,9 +481,9 @@ export default function ProductDetailClient({
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-[#9C91AA]" />
             </Link>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230] px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <Ruler className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
-              <span>Size check: try over clean clothing before direct wear.</span>
+              <span>Check size over clean underwear or clothing only. Do not wear directly before confirming fit.</span>
             </div>
           </div>
         </div>
@@ -496,7 +498,7 @@ export default function ProductDetailClient({
           </Link>
 
           {/* Badges */}
-          <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
+          <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2.5">
             <span
               className={`rounded-full border px-3 py-1 text-xs font-medium ${style.badge}`}
             >
@@ -516,7 +518,7 @@ export default function ProductDetailClient({
           </div>
 
           {/* Product name */}
-          <h1 className="mt-5 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl md:text-6xl">
+          <h1 className="mt-4 break-words text-[2rem] font-semibold leading-[1.08] text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl lg:text-[3.35rem]">
             {displayProduct.name}
           </h1>
 
@@ -530,13 +532,13 @@ export default function ProductDetailClient({
           )}
 
           {/* Main description */}
-          <p className="mt-4 max-w-2xl break-words text-base leading-8 text-[#9C91AA] [overflow-wrap:anywhere]">
+          <p className="mt-4 max-w-2xl break-words text-[0.95rem] leading-8 text-[#D8CBE8]/72 [overflow-wrap:anywhere]">
             {displayProduct.description}
           </p>
 
           {/* Price */}
-          <div className="mt-6 flex flex-wrap items-end gap-3">
-            <span className="text-4xl font-semibold text-[#FFB3D1]">
+          <div className="mt-6 flex flex-wrap items-end gap-3 rounded-[1.3rem] border border-[#FF4DB8]/12 bg-[#151024]/76 px-4 py-3">
+            <span className="text-3xl font-semibold text-[#FFB3D1] sm:text-4xl">
               {formatProductPrice(displayProduct)}
             </span>
             {typeof displayProduct.compareAtPrice === "number" && (
@@ -554,7 +556,7 @@ export default function ProductDetailClient({
             )}
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
             <StarRating rating={averageRating} />
             <span className="text-sm font-semibold text-white">
               {reviewCount > 0
@@ -568,8 +570,19 @@ export default function ProductDetailClient({
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-panel aev-product-buy-panel mt-7 rounded-[1.65rem] border border-[#FF4DB8]/12 bg-[#151024] p-4 sm:p-5 ${style.panel}`}
+            className={`aev-panel aev-product-buy-panel mt-5 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 ${style.panel}`}
           >
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#FF4DB8]/10 pb-4">
+              <div>
+                <p className={`text-xs font-semibold uppercase tracking-[0.28em] ${style.accent}`}>
+                  Choose Your Fit
+                </p>
+                <p className="mt-1 text-sm leading-6 text-[#9C91AA]">
+                  Select options before adding to cart.
+                </p>
+              </div>
+              <ShoppingCart className="mt-1 h-5 w-5 shrink-0 text-[#FFB3D1]" />
+            </div>
             <div className="space-y-6">
               <VariantSelector
                 label="Size"
@@ -646,7 +659,7 @@ export default function ProductDetailClient({
                 <button
                   onClick={() => handleAddToCart(false)}
                   disabled={!canAddToCart}
-                  className={`aev-button-primary aev-action-primary rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+                  className={`aev-button-primary aev-action-primary min-h-[3.25rem] rounded-full px-6 py-3.5 text-sm font-semibold transition ${
                     canAddToCart
                       ? `bg-gradient-to-r shadow-[0_4px_24px_rgba(255,77,184,0.38)] hover:scale-[1.01] hover:shadow-[0_4px_32px_rgba(255,77,184,0.52)] ${style.primary}`
                       : "cursor-not-allowed border border-white/10 bg-[#1B1230] text-[#6B5F7A]/50"
@@ -657,7 +670,7 @@ export default function ProductDetailClient({
                 <button
                   onClick={() => handleAddToCart(true)}
                   disabled={!canAddToCart}
-                  className={`aev-button-secondary aev-action-secondary rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
+                  className={`aev-button-secondary aev-action-secondary min-h-[3.25rem] rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
                     canAddToCart
                       ? "border-[#FF4DB8]/22 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white"
                       : "cursor-not-allowed border-white/8 bg-[#1B1230] text-[#6B5F7A]/50"
@@ -690,7 +703,7 @@ export default function ProductDetailClient({
               {
                 icon: Info,
                 label: "Size Check Over Clothing",
-                desc: "Check fit over clean clothing before direct wear.",
+                desc: "Check size over clean underwear or clothing only. Do not wear directly before confirming fit.",
               },
               {
                 icon: Truck,
@@ -759,20 +772,23 @@ export default function ProductDetailClient({
       {/* ── Benefits, Care, Policy, FAQ ── */}
       <section className="mx-auto hidden max-w-7xl gap-5 px-4 pb-12 sm:px-6 lg:grid lg:grid-cols-[1fr_0.9fr]">
 
-        {/* Benefits */}
+        {/* Product details and benefits */}
         <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
-            Benefits
+            Product Details
           </p>
           <h2 className="mt-3 text-3xl font-semibold text-white">
-            Made for a calmer routine
+            How it helps your routine
           </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#9C91AA]">
+            {displayProduct.shortDescription}
+          </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {benefits.map((benefit) => (
+            {benefits.map((benefit, index) => (
               <div
-                key={benefit}
+                key={`${benefit}-${index}`}
                 className="flex gap-3 rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4 text-sm leading-6 text-[#9C91AA]"
               >
                 <Check
@@ -795,7 +811,7 @@ export default function ProductDetailClient({
           <div className="mt-5 space-y-3">
             {care.map((step, index) => (
               <div
-                key={step}
+                key={`${step}-${index}`}
                 className="flex gap-3 text-sm leading-7 text-[#9C91AA]"
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#FF4DB8]/20 bg-[#1B1230] text-xs text-[#FF4DB8]">
@@ -888,60 +904,10 @@ export default function ProductDetailClient({
             </div>
             <div className="h-px flex-1 bg-gradient-to-r from-[#FF4DB8]/12 to-transparent" />
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {displayRelated.map((rp) => {
-              const rpStyle =
-                themeStyles[rp.visualTheme] ?? themeStyles["blush-violet"];
-              return (
-                <article
-                  key={rp.id}
-                  className={`aev-product-card aev-flagship-card-r1 group min-w-0 overflow-hidden rounded-[1.75rem] border bg-[#151024] p-3 ${rpStyle.border}`}
-                >
-                  <div className="overflow-hidden rounded-[1.35rem] border border-white/[0.06] bg-[#0B0F1A]">
-                    <div className="relative aspect-square w-full">
-                      {rp.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={rp.imageUrl}
-                          alt={rp.name}
-                          className="absolute inset-0 h-full w-full object-contain p-3"
-                        />
-                      ) : (
-                        <ProductVisual
-                          visualTheme={rp.visualTheme}
-                          label={rp.absorbency}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className="px-2 pb-3 pt-4">
-                    <span
-                      className={`rounded-full border px-3 py-1 text-xs font-medium ${rpStyle.badge}`}
-                    >
-                      {rp.absorbency}
-                    </span>
-                    <h3 className="mt-3 break-words text-lg font-semibold leading-tight text-white [overflow-wrap:anywhere]">
-                      {rp.name}
-                    </h3>
-                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#9C91AA]">
-                      {rp.shortDescription}
-                    </p>
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <span className="text-2xl font-semibold text-[#FFB3D1]">
-                        {formatProductPrice(rp)}
-                      </span>
-                      <Link
-                        href={`/product/${rp.slug}`}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition ${rpStyle.border}`}
-                      >
-                        View
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {displayRelated.map((rp) => (
+              <StorefrontProductCard key={rp.id} product={rp} compact />
+            ))}
           </div>
         </section>
       )}
@@ -989,7 +955,7 @@ export default function ProductDetailClient({
               </span>
             </div>
             <p className="mt-0.5 truncate text-[11px] leading-4 text-[#9C91AA]">
-              {selectedSummary || "Select your preferred options"} · Qty {quantity}
+              {selectedSummary || "Select your preferred options"} / Qty {quantity}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1060,21 +1026,28 @@ function VariantSelector({
         {label}
       </p>
       <div className="flex flex-wrap gap-2">
-        {options.map((option) => (
+        {options.map((option, index) => {
+          const isSelected = selected === option;
+          return (
           <button
-            key={option}
+            key={`${label}-${option}-${index}`}
             onClick={() => onSelect(option)}
             disabled={disabled}
+            aria-pressed={isSelected}
             className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-45 ${
-              selected === option
+              isSelected
                 ? selectedClassName
                 : "border-white/10 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/28 hover:bg-[#211633]"
             }`}
           >
             {type === "color" && <ColorSwatch color={option} />}
             {option}
+            {isSelected && (
+              <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            )}
           </button>
-        ))}
+          );
+        })}
       </div>
       {hint && (
         <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#9C91AA]">
@@ -1182,10 +1155,10 @@ function ProductReviewsSection({
                 </p>
                 {review.mediaUrls.length > 0 && (
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                    {review.mediaUrls.slice(0, 3).map((url) => (
+                    {review.mediaUrls.slice(0, 3).map((url, index) => (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        key={url}
+                        key={`${review.id}-${url}-${index}`}
                         src={url}
                         alt=""
                         loading="lazy"
