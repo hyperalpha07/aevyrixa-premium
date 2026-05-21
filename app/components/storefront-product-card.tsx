@@ -191,7 +191,7 @@ export default function StorefrontProductCard({
     <button
       type="button"
       onClick={handleQuickAdd}
-      className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
+      className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
       <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       Add to Cart
@@ -199,7 +199,7 @@ export default function StorefrontProductCard({
   ) : (
     <Link
       href={productHref}
-      className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
+      className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
       Choose Options
     </Link>
@@ -227,7 +227,7 @@ export default function StorefrontProductCard({
   return (
     <>
       <article
-        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.2rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] md:rounded-[1.65rem] md:p-3 ${style.border}`}
+        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.15rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] sm:rounded-[1.35rem] md:rounded-[1.65rem] md:p-3 ${style.border}`}
       >
         <div className="relative">
           <Link
@@ -235,7 +235,7 @@ export default function StorefrontProductCard({
             className="aev-product-image-frame block overflow-hidden rounded-[1rem] border border-white/[0.08] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.17),transparent_34%),radial-gradient(circle_at_18%_82%,rgba(0,212,198,0.08),transparent_30%),linear-gradient(145deg,#211633,#080611)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] md:rounded-[1.35rem]"
             aria-label={`View ${product.name}`}
           >
-            <div className={`relative w-full ${compact ? "aspect-[1/1.04] sm:aspect-[0.94]" : "aspect-[1/1.05] sm:aspect-[0.9]"}`}>
+            <div className={`relative w-full ${compact ? "aspect-[0.98/1.04] sm:aspect-[0.94]" : "aspect-[0.98/1.08] sm:aspect-[0.9]"}`}>
               <div className={`pointer-events-none absolute inset-x-4 top-8 h-32 rounded-full blur-3xl opacity-90 ${style.glow} transition duration-500 group-hover:scale-110 group-hover:opacity-100`} />
               <div className="aev-product-shine pointer-events-none absolute inset-0 opacity-55" />
               {imageUrl ? (
@@ -244,7 +244,7 @@ export default function StorefrontProductCard({
                   src={imageUrl}
                   alt={product.name}
                   loading={priority ? "eager" : "lazy"}
-                  className="absolute inset-0 h-full w-full object-contain p-2.5 transition duration-700 group-hover:scale-[1.07] sm:p-3"
+                  className="absolute inset-0 h-full w-full object-contain p-2 transition duration-700 group-hover:scale-[1.07] sm:p-3"
                 />
               ) : (
                 <ProductVisual
@@ -255,7 +255,7 @@ export default function StorefrontProductCard({
               )}
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_54%,rgba(8,6,17,0.64))] opacity-70" />
               {mobileOverlayBadge && (
-                <div className="absolute left-2 top-2 flex max-w-[calc(100%-3.4rem)] sm:hidden">
+                <div className="absolute left-2 top-2 flex max-w-[calc(100%-3rem)] sm:hidden">
                   <span
                     className="line-clamp-1 rounded-full border border-[#FF4DB8]/32 bg-[#080611]/86 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] text-[#FFB3D1] shadow-[0_0_16px_rgba(255,77,184,0.12)] backdrop-blur-md"
                   >
@@ -279,19 +279,19 @@ export default function StorefrontProductCard({
           <button
             type="button"
             onClick={() => setQuickViewOpen(true)}
-            className="aev-quick-view-trigger absolute right-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-full border border-[#FF4DB8]/24 bg-[#080611]/76 text-[#FFB3D1] shadow-[0_10px_30px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.12)] backdrop-blur-xl transition hover:border-[#FF4DB8]/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] sm:h-10 sm:w-10"
+            className="aev-quick-view-trigger absolute right-2 top-2 z-20 grid h-8 w-8 place-items-center rounded-full border border-[#FF4DB8]/24 bg-[#080611]/76 text-[#FFB3D1] shadow-[0_10px_30px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.12)] backdrop-blur-xl transition hover:border-[#FF4DB8]/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] sm:h-10 sm:w-10"
             aria-label={`Quick view ${product.name}`}
           >
             <Eye className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col px-1 pb-2.5 pt-2.5 md:px-2 md:pb-3 md:pt-4">
+        <div className="flex flex-1 flex-col px-1 pb-2.5 pt-2 md:px-2 md:pb-3 md:pt-4">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-[0_0_14px_rgba(0,0,0,0.16)] sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
               {stockStatusLabel(product.stockStatus)}
             </span>
-            <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
+            <span className={`inline-flex max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
               {product.category}
             </span>
           </div>
@@ -340,7 +340,7 @@ export default function StorefrontProductCard({
             )}
           </div>
 
-          <div className="mt-auto grid pt-3">
+          <div className="mt-auto grid pt-2.5 sm:pt-3">
             {primaryAction}
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function StorefrontProductCard({
           onClick={() => setQuickViewOpen(false)}
         >
           <div
-            className="aev-quick-view-panel"
+            className="aev-quick-view-panel overflow-x-hidden"
             onClick={(event) => event.stopPropagation()}
           >
             <button

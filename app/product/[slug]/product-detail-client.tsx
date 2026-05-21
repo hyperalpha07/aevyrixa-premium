@@ -943,8 +943,8 @@ export default function ProductDetailClient({
       )}
 
       {/* ── Mobile sticky add-to-cart bar — sits above bottom nav ── */}
-      <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-4 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md md:bottom-0 md:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] md:pt-3 lg:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-3 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md min-[390px]:px-4 md:bottom-0 md:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] md:pt-3 lg:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-2 min-[420px]:gap-3">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
               <p className="text-xl font-semibold text-[#FFB3D1]">
@@ -983,7 +983,7 @@ export default function ProductDetailClient({
             <button
               onClick={() => handleAddToCart(false)}
               disabled={!canAddToCart}
-              className={`flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition ${
+              className={`flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition min-[390px]:px-5 ${
                 canAddToCart
                   ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] hover:scale-[1.01] ${style.primary}`
                   : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"

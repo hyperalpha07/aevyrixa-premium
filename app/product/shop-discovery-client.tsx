@@ -340,7 +340,7 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-5 pt-6 sm:px-6 md:pb-7 md:pt-9">
+      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-5 pt-5 sm:px-6 sm:pt-7 md:pb-6 md:pt-9">
         <div className="pointer-events-none absolute inset-x-3 top-4 -z-10 h-[22rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
 
         <div className="relative mx-auto max-w-6xl">
@@ -357,26 +357,26 @@ export default function ShopDiscoveryClient({
             </p>
           </div>
 
-          <div className="aev-panel aev-glow-border mx-auto mt-4 max-w-5xl p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
-            <div className="grid gap-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
-              <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search products, categories, comfort details..."
-                className="aev-input min-h-[3.25rem] rounded-full py-4 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#9C91AA] transition hover:bg-[#211633] hover:text-white"
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+          <div className="aev-panel aev-glow-border mx-auto mt-5 max-w-5xl p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
+            <div className="grid gap-2.5 min-[520px]:grid-cols-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
+              <div className="relative min-[520px]:col-span-2 md:col-span-1">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search products, categories, comfort details..."
+                  className="aev-input min-h-[3.25rem] rounded-full py-4 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#9C91AA] transition hover:bg-[#211633] hover:text-white"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               <select
                 value={sort}
@@ -450,7 +450,7 @@ export default function ShopDiscoveryClient({
           )}
         </div>
 
-        <div className="mx-auto mt-3 grid max-w-6xl grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mx-auto mt-3 grid max-w-6xl grid-cols-2 gap-2 sm:mt-4 sm:grid-cols-4 sm:gap-3">
           {[
             [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck, "text-[#FF4DB8]", "border-[#FF4DB8]/15 bg-[#FF4DB8]/[0.05]"],
             ["BDT Pricing", CheckCircle2, "text-[#A855F7]", "border-[#A855F7]/15 bg-[#A855F7]/[0.05]"],
@@ -459,7 +459,7 @@ export default function ShopDiscoveryClient({
           ].map(([label, Icon, iconClass, chipClass]) => (
             <div
               key={label as string}
-              className={`aev-cinematic-chip flex min-h-16 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs text-white/78 shadow-[0_10px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 ${chipClass as string}`}
+              className={`aev-cinematic-chip flex min-h-[3.75rem] items-center gap-2 rounded-xl border px-3 py-2.5 text-xs leading-4 text-white/78 shadow-[0_10px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:min-h-16 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 ${chipClass as string}`}
             >
               <Icon className={`h-4 w-4 shrink-0 ${iconClass as string}`} />
               <span className="line-clamp-2">{label as string}</span>
@@ -468,7 +468,7 @@ export default function ShopDiscoveryClient({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 sm:pb-18">
+      <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 sm:pb-18 md:pt-4">
         <div className="min-w-0">
           <div className="mb-4 flex flex-col gap-2 border-b border-white/[0.08] pb-3 sm:mb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div className="flex flex-wrap items-end gap-x-3 gap-y-1.5">
@@ -504,7 +504,7 @@ export default function ShopDiscoveryClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map((product) => (
                 <StorefrontProductCard
                   key={product.id}

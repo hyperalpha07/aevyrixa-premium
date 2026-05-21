@@ -2119,6 +2119,10 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+.aev-quick-view-trigger:active {
+  transform: translate3d(0, 1px, 0) scale(0.96);
+}
+
 .aev-quick-view-overlay {
   position: fixed;
   inset: 0;
@@ -2328,6 +2332,10 @@ button {
 
   .aev-product-card :where(a, button) {
     min-height: 2.35rem;
+  }
+
+  .aev-product-card .aev-card-cta {
+    min-height: 2.75rem;
   }
 
   .aev-shop-intro {
