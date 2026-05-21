@@ -45,15 +45,15 @@ export default function SiteHeader({
   }, []);
 
   const navBase =
-    "aev-nav-control rounded-full border px-5 py-2.5 text-[#D8CBE8] transition duration-300 text-sm font-medium";
+    "aev-nav-control aev-site-nav-link rounded-full border px-4 py-2 text-[#D8CBE8] transition duration-300 text-sm font-medium";
   const navMuted =
     "border-transparent hover:border-[#FF4DB8]/25 hover:bg-[#211633]/80 hover:text-white";
   const navActive =
-    "border-[#FF4DB8]/35 bg-[#211633]/90 text-white font-semibold shadow-[0_0_16px_rgba(255,77,184,0.15)]";
+    "aev-site-nav-active border-[#FF4DB8]/35 bg-[#211633]/90 text-white font-semibold shadow-[0_0_16px_rgba(255,77,184,0.15)]";
 
   return (
     <>
-    <header className="aev-glass-panel sticky top-0 z-50 border-b border-[#FF4DB8]/10 bg-[#080611]/88 backdrop-blur-xl">
+    <header className="aev-site-header sticky top-0 z-50">
       <AnnouncementBanner
         settings={settings}
         surface={
@@ -68,10 +68,10 @@ export default function SiteHeader({
                   : "other"
         }
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#FF4DB8]/20 to-transparent" />
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 sm:py-4 md:flex md:justify-between">
+      <div className="aev-site-header-frame px-3 py-2.5 sm:px-5 sm:py-3 md:px-6 md:py-3.5">
+        <div className="aev-site-header-shell mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-2 sm:px-3 md:flex md:min-h-[4.25rem] md:justify-between md:gap-4 md:px-4">
         <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)] transition group-hover:border-[#FF4DB8]/40">
+          <div className="aev-site-logo-mark flex-shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)] transition group-hover:border-[#FF4DB8]/40">
             <Image
               src="/logo.jpg"
               alt="Aevyrixa Logo"
@@ -82,8 +82,8 @@ export default function SiteHeader({
             />
           </div>
 
-          <div className="min-w-0 max-w-[130px] min-[390px]:max-w-[160px] min-[430px]:max-w-[200px] sm:max-w-none">
-            <p className="truncate text-xs font-bold tracking-[0.1em] text-white min-[390px]:tracking-[0.14em] min-[430px]:text-sm min-[430px]:tracking-[0.18em] sm:text-lg sm:tracking-[0.25em]">
+          <div className="min-w-0 max-w-[130px] min-[390px]:max-w-[160px] min-[430px]:max-w-[200px] sm:max-w-none md:max-w-[180px] lg:max-w-none">
+            <p className="truncate text-xs font-bold tracking-[0.1em] text-white min-[390px]:tracking-[0.14em] min-[430px]:text-sm min-[430px]:tracking-[0.18em] sm:text-base sm:tracking-[0.22em] lg:text-lg">
               {settings.brandDisplayName}
             </p>
             <p className="hidden text-[8.5px] uppercase tracking-[0.3em] text-[#FF4DB8]/70 min-[430px]:block sm:text-[9px] sm:tracking-[0.35em]">
@@ -97,12 +97,12 @@ export default function SiteHeader({
           <button
             type="button"
             onClick={toggleCart}
-            className="aev-button-ghost relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[#D8CBE8]"
+            className="aev-button-ghost aev-site-icon-button relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[#D8CBE8]"
             aria-label={`Open cart — ${totalItems} item${totalItems === 1 ? "" : "s"}`}
           >
             <ShoppingBag className="h-[18px] w-[18px]" />
             {totalItems > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-1 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(255,77,184,0.50)]">
+              <span className="aev-cart-badge absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-1 text-[9px] font-bold text-white shadow-[0_0_8px_rgba(255,77,184,0.50)]">
                 {totalItems}
               </span>
             )}
@@ -110,7 +110,7 @@ export default function SiteHeader({
         </div>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-1.5 text-sm md:flex">
+        <div className="aev-desktop-nav hidden items-center gap-1 text-sm md:flex">
           <Link href="/"         className={`${navBase} ${active === "home"    ? navActive : navMuted}`}>Home</Link>
           <Link href="/product"  className={`${navBase} ${active === "shop"    ? navActive : navMuted}`}>Shop</Link>
           <Link href={productHref} className={`${navBase} ${active === "product" ? navActive : navMuted}`}>Product</Link>
@@ -132,17 +132,19 @@ export default function SiteHeader({
 
           <button
             onClick={toggleCart}
-            className={`${navBase} relative border-white/10 bg-[#151024]/80 hover:border-[#FF4DB8]/30 hover:bg-[#211633] ${
+            className={`${navBase} aev-site-cart-control relative inline-flex items-center gap-2 border-white/10 bg-[#151024]/80 hover:border-[#FF4DB8]/30 hover:bg-[#211633] ${
               active === "cart" ? "border-[#FF4DB8]/30 bg-[#211633]" : ""
             }`}
           >
+            <ShoppingBag className="h-4 w-4" />
             Cart
             {totalItems > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-1 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(255,77,184,0.50)]">
+              <span className="aev-cart-badge absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-1 text-[9px] font-bold text-white shadow-[0_0_8px_rgba(255,77,184,0.50)]">
                 {totalItems}
               </span>
             )}
           </button>
+        </div>
         </div>
       </div>
     </header>
@@ -181,10 +183,11 @@ function MobileNavItem({
   return (
     <Link
       href={href}
-      className={`aev-bottom-nav-item ${active ? "text-[#FF4DB8]" : "text-[#6B5F7A]"}`}
+      className={`aev-bottom-nav-item ${active ? "aev-bottom-nav-item-active text-[#FF4DB8]" : "text-[#6B5F7A]"}`}
+      aria-current={active ? "page" : undefined}
     >
       <div
-        className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+        className={`aev-bottom-nav-icon relative flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
           active ? "bg-[#FF4DB8]/14" : ""
         }`}
       >
