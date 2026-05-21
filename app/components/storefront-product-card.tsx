@@ -134,6 +134,8 @@ export default function StorefrontProductCard({
   const productHref = `/product/${product.slug}`;
   const quickAddAvailable = canQuickAdd(product);
   const badges = productBadges(product);
+  const mobileOverlayBadge = badges[0];
+  const mobileBodyBadges = badges.slice(1);
   const imageUrl = productImageUrl(product);
   const optionPreviews = [
     optionPreview("Size", product.sizes),
@@ -233,7 +235,7 @@ export default function StorefrontProductCard({
             className="aev-product-image-frame block overflow-hidden rounded-[1rem] border border-white/[0.08] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.17),transparent_34%),radial-gradient(circle_at_18%_82%,rgba(0,212,198,0.08),transparent_30%),linear-gradient(145deg,#211633,#080611)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] md:rounded-[1.35rem]"
             aria-label={`View ${product.name}`}
           >
-            <div className={`relative w-full ${compact ? "aspect-[0.94]" : "aspect-[0.9]"}`}>
+            <div className={`relative w-full ${compact ? "aspect-[1/1.04] sm:aspect-[0.94]" : "aspect-[1/1.05] sm:aspect-[0.9]"}`}>
               <div className={`pointer-events-none absolute inset-x-4 top-8 h-32 rounded-full blur-3xl opacity-90 ${style.glow} transition duration-500 group-hover:scale-110 group-hover:opacity-100`} />
               <div className="aev-product-shine pointer-events-none absolute inset-0 opacity-55" />
               {imageUrl ? (
@@ -252,11 +254,20 @@ export default function StorefrontProductCard({
                 />
               )}
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_54%,rgba(8,6,17,0.64))] opacity-70" />
-              <div className="absolute left-2 top-2 flex max-w-[calc(100%-4.1rem)] flex-wrap gap-1.5">
+              {mobileOverlayBadge && (
+                <div className="absolute left-2 top-2 flex max-w-[calc(100%-3.4rem)] sm:hidden">
+                  <span
+                    className="line-clamp-1 rounded-full border border-[#FF4DB8]/32 bg-[#080611]/86 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.1em] text-[#FFB3D1] shadow-[0_0_16px_rgba(255,77,184,0.12)] backdrop-blur-md"
+                  >
+                    {mobileOverlayBadge}
+                  </span>
+                </div>
+              )}
+              <div className="absolute left-2 top-2 hidden max-w-[calc(100%-4.1rem)] flex-wrap gap-1.5 sm:flex">
                 {badges.slice(0, 2).map((badge) => (
                   <span
                     key={badge}
-                    className="rounded-full border border-[#FF4DB8]/32 bg-[#080611]/86 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#FFB3D1] shadow-[0_0_16px_rgba(255,77,184,0.12)] backdrop-blur-md sm:text-[10px] sm:tracking-[0.12em]"
+                    className="rounded-full border border-[#FF4DB8]/32 bg-[#080611]/86 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#FFB3D1] shadow-[0_0_16px_rgba(255,77,184,0.12)] backdrop-blur-md"
                   >
                     {badge}
                   </span>
@@ -268,30 +279,42 @@ export default function StorefrontProductCard({
           <button
             type="button"
             onClick={() => setQuickViewOpen(true)}
-            className="aev-quick-view-trigger absolute right-2 top-2 z-20 grid h-10 w-10 place-items-center rounded-full border border-[#FF4DB8]/24 bg-[#080611]/76 text-[#FFB3D1] shadow-[0_10px_30px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.12)] backdrop-blur-xl transition hover:border-[#FF4DB8]/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8]"
+            className="aev-quick-view-trigger absolute right-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-full border border-[#FF4DB8]/24 bg-[#080611]/76 text-[#FFB3D1] shadow-[0_10px_30px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.12)] backdrop-blur-xl transition hover:border-[#FF4DB8]/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] sm:h-10 sm:w-10"
             aria-label={`Quick view ${product.name}`}
           >
-            <Eye className="h-4.5 w-4.5" />
+            <Eye className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col px-1 pb-2.5 pt-3 md:px-2 md:pb-3 md:pt-4">
+        <div className="flex flex-1 flex-col px-1 pb-2.5 pt-2.5 md:px-2 md:pb-3 md:pt-4">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-[0_0_14px_rgba(0,0,0,0.16)] sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
               {stockStatusLabel(product.stockStatus)}
             </span>
-            <span className={`hidden rounded-full border px-2 py-0.5 text-[10px] font-medium sm:inline-flex sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
+            <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-1 sm:text-[11px] ${style.badge}`}>
               {product.category}
             </span>
           </div>
+          {mobileBodyBadges.length > 0 && (
+            <div className="mt-1.5 flex min-w-0 flex-wrap gap-1 sm:hidden">
+              {mobileBodyBadges.slice(0, 2).map((badge) => (
+                <span
+                  key={badge}
+                  className="max-w-full rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-[#D8CBE8]/76"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          )}
 
           <Link href={productHref}>
-            <h3 className="mt-2.5 line-clamp-2 break-words text-[0.84rem] font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:text-base md:text-lg">
+            <h3 className="mt-2 line-clamp-2 break-words text-[0.82rem] font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:mt-2.5 sm:text-base md:text-lg">
               {product.name}
             </h3>
           </Link>
           {product.shortDescription && (
-            <p className="mt-1.5 line-clamp-2 text-[0.72rem] leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
+            <p className="mt-1 line-clamp-1 text-[0.7rem] leading-4 text-[#D8CBE8]/68 sm:mt-1.5 sm:line-clamp-2 sm:text-sm sm:leading-6">
               {product.shortDescription}
             </p>
           )}
@@ -303,8 +326,8 @@ export default function StorefrontProductCard({
             </div>
           )}
 
-          <div className="mt-3 flex flex-wrap items-baseline gap-2">
-            <span className="text-base font-extrabold text-[#FFB3D1] sm:text-lg md:text-xl">
+          <div className="mt-2.5 flex flex-wrap items-baseline gap-2 sm:mt-3">
+            <span className="text-[0.98rem] font-extrabold text-[#FFB3D1] sm:text-lg md:text-xl">
               {formatProductPrice(product)}
             </span>
             {typeof product.compareAtPrice === "number" && (

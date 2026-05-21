@@ -315,7 +315,7 @@ export default function ProductDetailClient({
       : 0;
 
   return (
-    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#080611] pb-40 text-white lg:pb-0">
+    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+7rem+env(safe-area-inset-bottom,0px))] text-white md:pb-40 lg:pb-0">
       {/* Background glows */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-[#FF4DB8]/[0.07] blur-[120px]" />
@@ -943,7 +943,7 @@ export default function ProductDetailClient({
       )}
 
       {/* ── Mobile sticky add-to-cart bar — sits above bottom nav ── */}
-      <div className="fixed bottom-14 left-0 right-0 z-30 border-t border-[#FF4DB8]/12 bg-[#080611]/96 px-4 py-3 shadow-[0_-8px_32px_rgba(0,0,0,0.50)] backdrop-blur-md md:bottom-0 md:pb-[calc(1rem+env(safe-area-inset-bottom))] md:pt-3 lg:hidden">
+      <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-4 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md md:bottom-0 md:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] md:pt-3 lg:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">

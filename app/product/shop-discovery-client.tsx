@@ -340,24 +340,24 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-7 pt-7 sm:px-6 md:pb-10 md:pt-11">
-        <div className="pointer-events-none absolute inset-x-3 top-5 -z-10 h-[25rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
+      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-5 pt-6 sm:px-6 md:pb-7 md:pt-9">
+        <div className="pointer-events-none absolute inset-x-3 top-4 -z-10 h-[22rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
 
-        <div className="relative">
-          <div className="max-w-4xl">
-            <div className="aev-pill">
+        <div className="relative mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="aev-pill justify-center">
               <Sparkles className="h-3.5 w-3.5" />
               Aevyrixa Her Care
             </div>
-            <h1 className="aev-heading mt-4 break-words text-[2rem] [overflow-wrap:anywhere] sm:text-[2.8rem] lg:text-[3.7rem]">
+            <h1 className="aev-heading mt-3 break-words text-[2rem] [overflow-wrap:anywhere] sm:text-[2.8rem] lg:text-[3.55rem]">
               Discover care made for your rhythm.
             </h1>
-            <p className="aev-subtext mt-3 max-w-2xl text-sm sm:text-base">
+            <p className="aev-subtext mx-auto mt-3 max-w-2xl text-sm sm:text-base">
               Browse premium reusable care essentials by fit, flow, stock, and comfort mood. BDT pricing, privacy packaging, and Bangladesh delivery stay clear at every step.
             </p>
           </div>
 
-          <div className="aev-panel aev-glow-border mt-5 p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
+          <div className="aev-panel aev-glow-border mx-auto mt-4 max-w-5xl p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
             <div className="grid gap-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
               <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
@@ -410,7 +410,7 @@ export default function ShopDiscoveryClient({
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-2">
             {[
               `${products.length} products`,
               "BDT pricing",
@@ -426,7 +426,7 @@ export default function ShopDiscoveryClient({
           </div>
 
           {availableDiscoveryChips.length > 0 && (
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+            <div className="mx-auto mt-3 flex max-w-5xl gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:justify-center">
               {availableDiscoveryChips.map((chip) => {
                 const Icon = chip.icon;
                 const active = (chip.category && category === chip.category) || (chip.signal && signal === chip.signal);
@@ -450,7 +450,7 @@ export default function ShopDiscoveryClient({
           )}
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mx-auto mt-3 grid max-w-6xl grid-cols-2 gap-2 sm:grid-cols-4">
           {[
             [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck, "text-[#FF4DB8]", "border-[#FF4DB8]/15 bg-[#FF4DB8]/[0.05]"],
             ["BDT Pricing", CheckCircle2, "text-[#A855F7]", "border-[#A855F7]/15 bg-[#A855F7]/[0.05]"],
@@ -468,12 +468,12 @@ export default function ShopDiscoveryClient({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 sm:pb-18">
         <div className="min-w-0">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
+          <div className="mb-4 flex flex-col gap-2 border-b border-white/[0.08] pb-3 sm:mb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <div className="flex flex-wrap items-end gap-x-3 gap-y-1.5">
               <p className="aev-section-label">All Products</p>
-              <h2 className="aev-heading mt-2 text-xl sm:text-2xl md:text-3xl">
+              <h2 className="aev-heading text-xl sm:text-2xl md:text-3xl">
                 {filteredProducts.length === 0
                   ? "No matches"
                   : `${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`}
@@ -504,7 +504,7 @@ export default function ShopDiscoveryClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map((product) => (
                 <StorefrontProductCard
                   key={product.id}
