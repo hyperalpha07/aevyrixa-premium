@@ -1983,8 +1983,7 @@ button {
   transition: opacity 260ms ease;
 }
 
-.aev-quick-view-trigger,
-.aev-product-action-layer {
+.aev-quick-view-trigger {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1992,12 +1991,14 @@ button {
 .aev-quick-view-overlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 90;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  background: rgba(8, 6, 17, 0.78);
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 77, 184, 0.10), transparent 34%),
+    rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   animation: aev-quick-view-fade 180ms ease both;
@@ -2018,6 +2019,7 @@ button {
     0 34px 110px rgba(0, 0, 0, 0.68),
     0 0 50px rgba(255, 77, 184, 0.10),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  overscroll-behavior: contain;
   animation: aev-quick-view-panel 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -2060,13 +2062,14 @@ button {
 @media (max-width: 639px) {
   .aev-quick-view-overlay {
     align-items: flex-end;
-    padding: 0.75rem 0.75rem calc(5.25rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.75rem 0.75rem calc(5.75rem + env(safe-area-inset-bottom, 0px));
   }
 
   .aev-quick-view-panel {
     width: 100%;
-    max-height: calc(100vh - 6.5rem - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 6.75rem - env(safe-area-inset-bottom, 0px));
     border-radius: 1.35rem 1.35rem 1rem 1rem;
+    animation-name: aev-quick-view-sheet;
   }
 }
 
@@ -2083,6 +2086,11 @@ button {
 @keyframes aev-quick-view-panel {
   from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.985); }
   to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes aev-quick-view-sheet {
+  from { opacity: 0; transform: translate3d(0, 100%, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

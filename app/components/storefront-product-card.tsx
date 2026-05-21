@@ -105,6 +105,16 @@ function productBadges(product: ProductCatalogItem) {
   return Array.from(new Set(labels));
 }
 
+function optionPreview(label: string, values: string[]) {
+  const cleaned = values.filter(Boolean);
+  if (cleaned.length === 0) return null;
+
+  return {
+    label,
+    text: cleaned.slice(0, 4).join(", ") + (cleaned.length > 4 ? ` +${cleaned.length - 4}` : ""),
+  };
+}
+
 export default function StorefrontProductCard({
   product,
   rating,
@@ -125,6 +135,11 @@ export default function StorefrontProductCard({
   const quickAddAvailable = canQuickAdd(product);
   const badges = productBadges(product);
   const imageUrl = productImageUrl(product);
+  const optionPreviews = [
+    optionPreview("Size", product.sizes),
+    optionPreview("Color", product.colors),
+    optionPreview("Absorbency", product.absorbencyOptions),
+  ].filter(Boolean) as { label: string; text: string }[];
 
   const handleQuickAdd = () => {
     if (!quickAddAvailable) return;
@@ -210,7 +225,7 @@ export default function StorefrontProductCard({
   return (
     <>
       <article
-        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group min-w-0 overflow-hidden rounded-[1.2rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] md:rounded-[1.65rem] md:p-3 ${style.border}`}
+        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.2rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] md:rounded-[1.65rem] md:p-3 ${style.border}`}
       >
         <div className="relative">
           <Link
@@ -258,36 +273,9 @@ export default function StorefrontProductCard({
           >
             <Eye className="h-4.5 w-4.5" />
           </button>
-
-          <div className="aev-product-action-layer pointer-events-none absolute inset-x-2 bottom-2 z-20 hidden translate-y-2 items-center gap-2 rounded-full border border-white/10 bg-[#080611]/74 p-1.5 opacity-0 shadow-[0_16px_42px_rgba(0,0,0,0.38)] backdrop-blur-xl transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 md:flex">
-            <Link
-              href={productHref}
-              className="pointer-events-auto inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold text-[#D8CBE8] transition hover:bg-white/[0.07] hover:text-white"
-            >
-              View
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-            {quickAddAvailable ? (
-              <button
-                type="button"
-                onClick={handleQuickAdd}
-                className="aev-button-primary pointer-events-auto inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold text-white"
-              >
-                <ShoppingCart className="h-3.5 w-3.5" />
-                Add
-              </button>
-            ) : (
-              <Link
-                href={productHref}
-                className="aev-button-primary pointer-events-auto inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold text-white"
-              >
-                Options
-              </Link>
-            )}
-          </div>
         </div>
 
-        <div className="px-1 pb-2.5 pt-3 md:px-2 md:pb-3 md:pt-4">
+        <div className="flex flex-1 flex-col px-1 pb-2.5 pt-3 md:px-2 md:pb-3 md:pt-4">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-[0_0_14px_rgba(0,0,0,0.16)] sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
               {stockStatusLabel(product.stockStatus)}
@@ -329,23 +317,8 @@ export default function StorefrontProductCard({
             )}
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setQuickViewOpen(true)}
-              className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold sm:min-h-11 sm:px-4 sm:text-sm"
-            >
-              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Quick
-            </button>
-            <Link
-              href={productHref}
-              className={`inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-2 text-xs font-semibold shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition sm:min-h-11 sm:px-4 sm:text-sm ${style.button}`}
-            >
-              View
-              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Link>
-            <div className="col-span-2 grid">{primaryAction}</div>
+          <div className="mt-auto grid pt-3">
+            {primaryAction}
           </div>
         </div>
       </article>
@@ -451,13 +424,27 @@ export default function StorefrontProductCard({
                   </div>
                 </div>
 
+                {optionPreviews.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {optionPreviews.map((option) => (
+                      <span
+                        key={option.label}
+                        className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-[#D8CBE8]/78"
+                      >
+                        <span className="text-[#9C91AA]">{option.label}:</span>{" "}
+                        <span className="text-white">{option.text}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-5 grid gap-2 sm:mt-auto">
                   {modalPrimaryAction}
                   <Link
                     href={productHref}
                     className="aev-button-secondary inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold"
                   >
-                    View Details
+                    View Full Details
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
