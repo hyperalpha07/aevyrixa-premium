@@ -7,6 +7,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock3,
+  Headphones,
   Home,
   LogOut,
   MapPin,
@@ -259,11 +260,12 @@ export default function AccountClient({ view }: { view: AccountView }) {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(255,77,184,0.07),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(168,85,247,0.05),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader settings={settings} active="account" />
 
-      {/* Premium welcome banner */}
-      <div className="aev-welcome-banner border-b border-[#FF4DB8]/10 px-4 py-8 sm:px-6 sm:py-10">
+      <div className="aev-welcome-banner relative overflow-hidden border-b border-[#FF4DB8]/10 px-4 py-6 sm:px-6 sm:py-9">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#FF4DB8]/30 to-transparent" />
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6">
-          <div className="min-w-0">
+        <div className="pointer-events-none absolute -left-24 top-4 h-52 w-52 rounded-full bg-[#FF4DB8]/[0.08] blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[#A855F7]/[0.08] blur-3xl" />
+        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-center lg:gap-8">
+          <div className="aev-glass-panel min-w-0 overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/16 p-5 shadow-[0_18px_72px_rgba(0,0,0,0.34)] sm:p-7">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#FF4DB8]/25 bg-[#FF4DB8]/12 text-[#FF4DB8]">
                 <UserRound className="h-4 w-4" />
@@ -275,8 +277,14 @@ export default function AccountClient({ view }: { view: AccountView }) {
             <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-3xl md:text-4xl">
               {customer ? `Welcome back, ${customer.fullName.split(" ")[0]}` : "Your Aevyrixa account"}
             </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#D8CBE8]/80 sm:text-base">
+              Manage orders, delivery details, saved addresses, and support from your Her Care dashboard.
+            </p>
             {customer && (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-[#D8CBE8]">
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-[#D8CBE8]">
+                <span className="rounded-full border border-[#00D4C6]/18 bg-[#00D4C6]/[0.07] px-3 py-1.5 text-[#31E6D4]">
+                  Verified account
+                </span>
                 <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
                   {customer.phone}
                 </span>
@@ -288,21 +296,33 @@ export default function AccountClient({ view }: { view: AccountView }) {
               </div>
             )}
           </div>
-          {customer && (
-            <button
-              type="button"
-              onClick={logout}
-              className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#1B1230]/80 px-4 py-2.5 text-sm font-semibold text-[#9C91AA] transition hover:border-[#FF4DB8]/25 hover:bg-[#211633] hover:text-[#D8CBE8]"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-          )}
+          <div className="aev-panel min-w-0 overflow-hidden rounded-[1.75rem] border border-[#A855F7]/16 bg-[#151024]/80 p-4 shadow-[0_18px_72px_rgba(0,0,0,0.28)] sm:p-5">
+            <div className="grid gap-2 min-[390px]:grid-cols-2 lg:grid-cols-1">
+              {["Discreet Packaging", "Bangladesh Delivery", "Premium Comfort", "Secure Checkout"].map((item) => (
+                <span
+                  key={item}
+                  className="rounded-2xl border border-white/[0.09] bg-white/[0.035] px-3 py-2.5 text-xs font-semibold text-[#D8CBE8]"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            {customer && (
+              <button
+                type="button"
+                onClick={logout}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#211633]/85 px-4 py-2.5 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/32 hover:bg-[#2A183D] hover:text-white"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <section className="mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 md:pb-20 md:pt-8">
-        <nav className="mb-6 flex gap-2 overflow-x-auto pb-1 text-sm">
+      <section className="mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2rem+env(safe-area-inset-bottom,0px))] pt-5 sm:px-6 sm:pt-7 md:pb-20">
+        <nav className="mb-5 flex scroll-px-4 gap-2 overflow-x-auto pb-1 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mb-7">
           <AccountTab href="/account" active={view === "dashboard"} icon={UserRound} label="Account" />
           <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
           <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
@@ -321,28 +341,47 @@ export default function AccountClient({ view }: { view: AccountView }) {
             </div>
           </Panel>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[0.32fr_0.68fr]">
-            <aside className="space-y-4">
-              <Panel>
-                <div className="flex items-start gap-3">
+          <div className="grid gap-5 lg:grid-cols-[minmax(17rem,0.31fr)_minmax(0,0.69fr)] lg:gap-6">
+            <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+              <Panel className="overflow-hidden p-0 sm:p-0">
+                <div className="border-b border-white/8 bg-[linear-gradient(135deg,rgba(255,77,184,0.13),rgba(168,85,247,0.08),rgba(0,212,198,0.04))] p-5 sm:p-6">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/22 bg-[#080611]/45 text-lg font-semibold text-[#FFB3D1] shadow-[0_0_28px_rgba(255,77,184,0.14)]">
+                    {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
+                  </div>
+                  <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#FF4DB8]/72">
+                    Account profile
+                  </p>
+                  <p className="mt-2 break-words text-xl font-semibold leading-snug text-white [overflow-wrap:anywhere]">
+                    {customer.fullName}
+                  </p>
+                </div>
+                <div className="space-y-3 p-5 sm:p-6">
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.035] p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/72">Phone</p>
+                    <p className="mt-1 break-words text-sm text-[#D8CBE8] [overflow-wrap:anywhere]">{customer.phone}</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.035] p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/72">Email</p>
+                    <p className="mt-1 break-words text-sm text-[#D8CBE8] [overflow-wrap:anywhere]">
+                      {customer.email || "Not available"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-2xl border border-emerald-300/12 bg-emerald-300/[0.055] p-3">
+                    <span className="h-2 w-2 rounded-full bg-[#22C55E]" />
+                    <span className="text-xs font-semibold text-emerald-100">Active member</span>
+                  </div>
+                </div>
+              </Panel>
+              <Panel className="p-4 sm:p-5">
+                <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/22 bg-gradient-to-br from-[#FF4DB8]/15 to-[#A855F7]/10 text-[#FF4DB8]">
                     <UserRound className="h-5 w-5" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold leading-snug text-white">{customer.fullName}</p>
-                    <p className="mt-1 text-sm text-[#D8CBE8]">{customer.phone}</p>
-                    {customer.email && <p className="mt-0.5 truncate text-xs text-[#9C91AA]">{customer.email}</p>}
+                  <div>
+                    <p className="text-sm font-semibold text-white">Customer controls</p>
+                    <p className="mt-1 text-xs leading-5 text-[#9C91AA]">Track, shop, and reach support without leaving the account area.</p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
-                  <span className="text-xs font-medium text-[#9C91AA]">Active member</span>
-                </div>
-              </Panel>
-              <Panel>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">
-                  Quick Links
-                </p>
                 <div className="mt-4 grid gap-2">
                   <Link className="shortcut-link" href="/track-order">
                     <PackageSearch className="h-3.5 w-3.5 shrink-0 text-[#FF4DB8]" />
@@ -426,7 +465,7 @@ function AccountTab({
   return (
     <Link
       href={href}
-      className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition ${
+      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition ${
         active
           ? "border-[#FF4DB8]/45 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_16px_rgba(255,77,184,0.30)]"
           : "border-white/10 bg-[#151024] text-[#9C91AA] hover:border-[#FF4DB8]/25 hover:bg-[#211633] hover:text-[#D8CBE8]"
@@ -440,7 +479,7 @@ function AccountTab({
 
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`aev-panel min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.22)] sm:p-6 ${className}`}>
+    <div className={`aev-panel min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_16px_56px_rgba(0,0,0,0.28)] sm:p-6 ${className}`}>
       {children}
     </div>
   );
@@ -467,9 +506,18 @@ function Dashboard({
   ).length;
 
   return (
-    <div className="grid gap-5">
-      <Panel>
-        <div className="grid gap-3 grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-4 sm:gap-5">
+      <Panel className="overflow-hidden">
+        <div className="mb-4 flex flex-col justify-between gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#FF4DB8]/72">Account pulse</p>
+            <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">Your Her Care overview</h2>
+          </div>
+          <p className="max-w-sm text-sm leading-6 text-[#9C91AA]">
+            Counts below come from your account orders, saved addresses, and available support payloads.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
           <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} accent="pink" />
           <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
           <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
@@ -477,9 +525,9 @@ function Dashboard({
           <Metric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
         </div>
       </Panel>
-      <Panel>
+      <Panel className="overflow-hidden">
         <SectionTitle title="Quick Actions" href="/product" label="Shop" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 min-[430px]:grid-cols-2 xl:grid-cols-5">
           <QuickAction href="/track-order" icon={PackageSearch} label="Track order" />
           <QuickAction href="/account/orders" icon={ShoppingBag} label="View orders" />
           <QuickAction href="/account/addresses" icon={MapPin} label="Saved addresses" />
@@ -487,29 +535,33 @@ function Dashboard({
           <QuickAction href="/product" icon={Home} label="Continue shopping" />
         </div>
       </Panel>
-      <Panel>
-        <SectionTitle title="Recent Orders" href="/account/orders" />
-        <OrderRows orders={orders} />
-      </Panel>
-      <Panel>
-        <SectionTitle title="Saved Address" href="/account/addresses" />
-        {address ? (
-          <>
-            <AddressSummary address={address} />
-            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/38">
-              {addressCount} saved {addressCount === 1 ? "address" : "addresses"}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.8fr)] xl:gap-5">
+        <Panel className="overflow-hidden">
+          <SectionTitle title="Recent Orders" href="/account/orders" />
+          <OrderRows orders={orders} />
+        </Panel>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <Panel className="overflow-hidden">
+            <SectionTitle title="Saved Address" href="/account/addresses" />
+            {address ? (
+              <>
+                <AddressSummary address={address} />
+                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/38">
+                  {addressCount} saved {addressCount === 1 ? "address" : "addresses"}
+                </p>
+              </>
+            ) : (
+              <EmptyLine text="No saved address yet." />
+            )}
+          </Panel>
+          <Panel className="overflow-hidden">
+            <SectionTitle title="Support History" href="/account/support" />
+            <p className="text-sm leading-7 text-white/62">
+              {supportMessage || "Need help? Start a support chat."}
             </p>
-          </>
-        ) : (
-          <EmptyLine text="No saved address yet." />
-        )}
-      </Panel>
-      <Panel>
-        <SectionTitle title="Support History" href="/account/support" />
-        <p className="text-sm leading-7 text-white/62">
-          {supportMessage || "Use support shortcuts when you need help with an order."}
-        </p>
-      </Panel>
+          </Panel>
+        </div>
+      </div>
     </div>
   );
 }
@@ -526,7 +578,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group relative flex min-h-24 min-w-0 flex-col justify-between overflow-hidden rounded-[1.15rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 transition duration-200 hover:border-[#FF4DB8]/30 hover:bg-[#211633] hover:shadow-[0_12px_36px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.07)]"
+      className="group relative flex min-h-[6.5rem] min-w-0 flex-col justify-between overflow-hidden rounded-[1.15rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[#FF4DB8]/30 hover:bg-[#211633] hover:shadow-[0_12px_36px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.07)] active:translate-y-0"
     >
       <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.04] blur-xl transition duration-300 group-hover:bg-[#FF4DB8]/[0.08]" />
       <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.07] text-[#FF4DB8] transition duration-200 group-hover:border-[#FF4DB8]/35 group-hover:bg-[#FF4DB8]/12">
@@ -560,7 +612,7 @@ function Metric({
   };
 
   return (
-    <div className="aev-card aev-metric-card relative rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
+    <div className="aev-card aev-metric-card relative min-h-[8.25rem] rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
       <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.06] blur-xl" />
       <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${accents[accent]}`}>
         <Icon className="h-4 w-4" />
@@ -574,7 +626,7 @@ function Metric({
 function SectionTitle({ title, href, label = "View" }: { title: string; href: string; label?: string }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
+      <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
       <Link href={href} className="text-sm font-semibold text-[#FF4DB8] hover:text-[#FFB3D1]">
         {label}
       </Link>
@@ -624,7 +676,7 @@ function OrderRows({
       {orders.map((order) => (
         <div
           key={order.orderRef}
-          className="group relative grid gap-4 overflow-hidden rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230]/95 p-4 transition hover:border-[#FF4DB8]/28 hover:bg-[#211633]/90 md:grid-cols-[1fr_auto]"
+          className="group relative grid gap-4 overflow-hidden rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230]/95 p-4 transition hover:border-[#FF4DB8]/28 hover:bg-[#211633]/90 sm:p-5 md:grid-cols-[1fr_auto]"
         >
           <div className="pointer-events-none absolute right-4 top-4 h-14 w-14 rounded-full bg-[#FF4DB8]/[0.05] blur-xl transition group-hover:bg-[#FF4DB8]/[0.10]" />
           <div className="min-w-0">
@@ -648,8 +700,11 @@ function OrderRows({
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-2 md:items-end">
-            <p className="text-sm font-semibold text-[#FFB3D1]">{formatCurrency(order.total)}</p>
+          <div className="flex flex-col gap-2 md:min-w-36 md:items-end">
+            <div className="rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2 md:text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9C91AA]/70">Total</p>
+              <p className="mt-1 text-sm font-semibold text-[#FFB3D1]">{formatCurrency(order.total)}</p>
+            </div>
             {onSelect ? (
               <button
                 type="button"
@@ -663,18 +718,18 @@ function OrderRows({
                 View details
               </Link>
             )}
-            {detailed && (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                {order.customerPhone && (
-                  <Link className="mini-action text-center" href={trackOrderHref(order)}>
-                    Track order
-                  </Link>
-                )}
+            <div className="flex flex-col gap-2 min-[390px]:flex-row md:justify-end">
+              {order.customerPhone && (
+                <Link className="mini-action min-h-10 text-center" href={trackOrderHref(order)}>
+                  Track order
+                </Link>
+              )}
+              {detailed && (
                 <Link className="mini-action text-center" href="/account/support">
                   Get support
                 </Link>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       ))}
@@ -829,7 +884,7 @@ function SupportView({ message }: { message: string }) {
           <div className="min-w-0">
             <h2 className="text-xl font-semibold text-white">Support History</h2>
             <p className="mt-2 text-sm leading-7 text-[#9C91AA]">
-              {message || "No support conversations yet. Start one anytime from the support page."}
+              {message || "Live chat conversations are currently token-based and not safely linked to customer accounts yet."}
             </p>
           </div>
         </div>
@@ -843,12 +898,15 @@ function SupportView({ message }: { message: string }) {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {[
             { label: "3-Day Hygiene-Safe Support", desc: "Eligible concerns within 3 days of delivery." },
-            { label: "Order Linked Only", desc: "Support is linked to your verified order history." },
-            { label: "Privacy Safe", desc: "We never share your order details externally." },
-            { label: "Bangladesh Only", desc: "Support covers orders delivered within Bangladesh." },
+            { label: "Start Support Chat", desc: "Need help? Start a support chat." },
+            { label: "Track Order", desc: "Use your order reference and phone to check delivery progress." },
+            { label: "Support Access", desc: "Live chat history is not safely linked to customer accounts yet." },
           ].map(({ label, desc }) => (
             <div key={label} className="rounded-xl border border-[#FF4DB8]/10 bg-[#1B1230] p-3">
-              <p className="text-sm font-semibold text-white">{label}</p>
+              <div className="flex items-center gap-2">
+                <Headphones className="h-3.5 w-3.5 text-[#FF4DB8]" />
+                <p className="text-sm font-semibold text-white">{label}</p>
+              </div>
               <p className="mt-1 text-xs leading-5 text-[#9C91AA]">{desc}</p>
             </div>
           ))}
