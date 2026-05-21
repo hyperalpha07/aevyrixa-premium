@@ -2,7 +2,7 @@
 
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { PackageSearch } from "lucide-react";
+import { ListChecks, LockKeyhole, PackageSearch, SearchCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
@@ -22,6 +22,7 @@ type TrackedOrder = {
   cityArea: string;
   total: number;
   paymentMethod: string;
+  paymentStatus?: string;
   courierName?: string;
   trackingId?: string;
   deliveryStatus?:
@@ -36,6 +37,7 @@ type TrackedOrder = {
   deliveryCharge?: number;
   deliveryArea?: string;
   deliveryZone?: string;
+  deliveryAddress?: string;
   deliveryNote?: string;
   items: {
     name: string;
@@ -166,10 +168,10 @@ function TrackOrderContent() {
       <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-10 px-4 pb-28 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#FF4DB8]/72">
-            Track Order
+            Privacy-safe tracking
           </p>
           <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight tracking-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
-            Check your {settings.brandShortName} order status.
+            Track your Aevyrixa order
           </h1>
           <p className="mt-5 break-words text-base leading-8 text-[#D8CBE8]/70 [overflow-wrap:anywhere]">
             Enter your order reference and the phone number used at checkout.
@@ -178,15 +180,17 @@ function TrackOrderContent() {
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             {[
-              { icon: "🔍", label: "Instant lookup", desc: "Results appear without page reload" },
-              { icon: "🔒", label: "Privacy safe", desc: "Only matched details are revealed" },
-              { icon: "📦", label: "Full timeline", desc: "See every step from order to delivery" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#151024] px-4 py-3">
-                <span className="mt-0.5 text-base">{item.icon}</span>
+              { icon: SearchCheck, label: "Instant lookup", desc: "Results appear without page reload" },
+              { icon: LockKeyhole, label: "Privacy safe", desc: "Only matched details are revealed" },
+              { icon: ListChecks, label: "Full timeline", desc: "See every step from order to delivery" },
+            ].map(({ icon: Icon, label, desc }) => (
+              <div key={label} className="flex items-start gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#151024] px-4 py-3">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.07] text-[#FF4DB8]">
+                  <Icon className="h-4 w-4" />
+                </span>
                 <div>
-                  <p className="text-sm font-semibold text-white">{item.label}</p>
-                  <p className="mt-0.5 text-xs leading-5 text-[#9C91AA]">{item.desc}</p>
+                  <p className="text-sm font-semibold text-white">{label}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-[#9C91AA]">{desc}</p>
                 </div>
               </div>
             ))}
@@ -318,6 +322,9 @@ function TrackOrderContent() {
                 <SummaryItem label="Created" value={formatDate(order.createdAt)} />
                 <SummaryItem label="Total" value={formatCurrency(order.total)} />
                 <SummaryItem label="Payment" value={order.paymentMethod} />
+                {order.paymentStatus && (
+                  <SummaryItem label="Payment status" value={readableStatus(order.paymentStatus)} />
+                )}
                 <SummaryItem label="City/Area" value={order.cityArea} />
                 {order.deliveryStatus && (
                   <SummaryItem
@@ -336,6 +343,9 @@ function TrackOrderContent() {
                 )}
                 {order.trackingId && (
                   <SummaryItem label="Tracking ID" value={order.trackingId} />
+                )}
+                {order.deliveryAddress && (
+                  <SummaryItem label="Delivery address" value={order.deliveryAddress} />
                 )}
                 {typeof order.deliveryCharge === "number" && (
                   <SummaryItem
@@ -367,7 +377,7 @@ function TrackOrderContent() {
                         ) : null}
                       </span>
                       <span className="shrink-0 text-[#9C91AA]">
-                        ×{item.quantity}
+                        x{item.quantity}
                       </span>
                     </li>
                   ))}
@@ -383,7 +393,7 @@ function TrackOrderContent() {
                     rel="noreferrer"
                     className="mt-2 inline-flex font-semibold text-[#31E6D4] transition hover:text-white"
                   >
-                    Chat with {settings.brandShortName} Support →
+                    Chat with {settings.brandShortName} Support
                   </a>
                 )}
               </div>

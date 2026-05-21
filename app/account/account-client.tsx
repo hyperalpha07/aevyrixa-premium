@@ -97,6 +97,24 @@ function readable(value?: string) {
   return value ? value.replace(/_/g, " ") : "Not available";
 }
 
+function normalizeStatus(value?: string) {
+  return (value || "").toLowerCase().replace(/\s+/g, "_");
+}
+
+function statusChipClass(value?: string) {
+  const status = normalizeStatus(value);
+  if (status.includes("cancel") || status.includes("failed") || status.includes("return")) {
+    return "border-rose-300/35 bg-rose-300/[0.08] text-rose-100";
+  }
+  if (status.includes("deliver")) {
+    return "border-emerald-300/35 bg-emerald-300/[0.08] text-emerald-100";
+  }
+  if (status.includes("confirm") || status.includes("paid") || status.includes("dispatch") || status.includes("transit")) {
+    return "border-[#00D4C6]/35 bg-[#00D4C6]/[0.08] text-[#31E6D4]";
+  }
+  return "border-[#FFB84D]/35 bg-[#FFB84D]/[0.08] text-[#FFD18A]";
+}
+
 async function readJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   const payload = (await response.json().catch(() => ({}))) as T & { errors?: string[] };
@@ -258,9 +276,16 @@ export default function AccountClient({ view }: { view: AccountView }) {
               {customer ? `Welcome back, ${customer.fullName.split(" ")[0]}` : "Your Aevyrixa account"}
             </h1>
             {customer && (
-              <p className="mt-2 text-sm text-[#9C91AA]">
-                {customer.phone}{customer.email ? ` · ${customer.email}` : ""}
-              </p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-[#D8CBE8]">
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                  {customer.phone}
+                </span>
+                {customer.email && (
+                  <span className="max-w-full break-words rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 [overflow-wrap:anywhere]">
+                    {customer.email}
+                  </span>
+                )}
+              </div>
             )}
           </div>
           {customer && (
@@ -296,7 +321,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
             </div>
           </Panel>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
+          <div className="grid gap-6 lg:grid-cols-[0.32fr_0.68fr]">
             <aside className="space-y-4">
               <Panel>
                 <div className="flex items-start gap-3">
@@ -436,19 +461,20 @@ function Dashboard({
   supportMessage: string;
   supportCount: number;
 }) {
-  const pendingOrders = allOrders.filter((order) => order.status === "Pending").length;
+  const pendingOrders = allOrders.filter((order) => normalizeStatus(order.status).includes("pending")).length;
   const deliveredOrders = allOrders.filter(
-    (order) => order.status === "Delivered" || order.deliveryStatus === "delivered"
+    (order) => normalizeStatus(order.status).includes("deliver") || normalizeStatus(order.deliveryStatus).includes("deliver")
   ).length;
 
   return (
     <div className="grid gap-5">
       <Panel>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} />
-          <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} />
-          <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} />
-          <Metric icon={MessageSquare} label="Support" value={String(supportCount)} />
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-5">
+          <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} accent="pink" />
+          <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
+          <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
+          <Metric icon={MessageSquare} label="Support" value={String(supportCount)} accent="violet" />
+          <Metric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
         </div>
       </Panel>
       <Panel>
@@ -514,11 +540,29 @@ function QuickAction({
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value: string }) {
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  accent = "pink",
+}: {
+  icon: typeof UserRound;
+  label: string;
+  value: string;
+  accent?: "pink" | "amber" | "green" | "violet" | "cyan";
+}) {
+  const accents = {
+    pink: "border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]",
+    amber: "border-[#FFB84D]/20 bg-[#FFB84D]/[0.08] text-[#FFD18A]",
+    green: "border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-100",
+    violet: "border-[#A855F7]/20 bg-[#A855F7]/[0.08] text-[#C9A7FF]",
+    cyan: "border-[#00D4C6]/20 bg-[#00D4C6]/[0.08] text-[#31E6D4]",
+  };
+
   return (
     <div className="aev-card aev-metric-card relative rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
       <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.06] blur-xl" />
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]">
+      <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${accents[accent]}`}>
         <Icon className="h-4 w-4" />
       </div>
       <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">{label}</p>
@@ -580,14 +624,29 @@ function OrderRows({
       {orders.map((order) => (
         <div
           key={order.orderRef}
-          className="grid gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4 md:grid-cols-[1fr_auto]"
+          className="group relative grid gap-4 overflow-hidden rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230]/95 p-4 transition hover:border-[#FF4DB8]/28 hover:bg-[#211633]/90 md:grid-cols-[1fr_auto]"
         >
+          <div className="pointer-events-none absolute right-4 top-4 h-14 w-14 rounded-full bg-[#FF4DB8]/[0.05] blur-xl transition group-hover:bg-[#FF4DB8]/[0.10]" />
           <div className="min-w-0">
-            <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{order.orderRef}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{order.orderRef}</p>
+              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.status)}`}>
+                {readable(order.status)}
+              </span>
+            </div>
             <p className="mt-1 text-xs text-[#9C91AA]">{formatDate(order.createdAt)}</p>
-            <p className="mt-2 text-sm text-[#D8CBE8]">
-              {order.status} · {readable(order.deliveryStatus)}
-            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {order.paymentStatus && (
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.paymentStatus)}`}>
+                  Payment: {readable(order.paymentStatus)}
+                </span>
+              )}
+              {order.deliveryStatus && (
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.deliveryStatus)}`}>
+                  Delivery: {readable(order.deliveryStatus)}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <p className="text-sm font-semibold text-[#FFB3D1]">{formatCurrency(order.total)}</p>
@@ -600,15 +659,17 @@ function OrderRows({
                 View details
               </button>
             ) : (
-              <Link className="text-sm font-semibold text-[#FF4DB8] hover:text-[#FFB3D1]" href={orderDetailHref(order.orderRef)}>
+              <Link className="mini-action text-center" href={orderDetailHref(order.orderRef)}>
                 View details
               </Link>
             )}
             {detailed && (
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Link className="mini-action text-center" href={trackOrderHref(order)}>
-                  Track order
-                </Link>
+                {order.customerPhone && (
+                  <Link className="mini-action text-center" href={trackOrderHref(order)}>
+                    Track order
+                  </Link>
+                )}
                 <Link className="mini-action text-center" href="/account/support">
                   Get support
                 </Link>
@@ -750,8 +811,8 @@ function AddressSummary({ address }: { address: Address }) {
           </span>
         )}
       </div>
-      <p className="mt-2 text-sm leading-6 text-[#D8CBE8]">{address.fullName} · {address.phone}</p>
-      <p className="text-sm leading-6 text-[#9C91AA]">{address.cityArea} · {address.deliveryZone || "Zone not set"}</p>
+      <p className="mt-2 text-sm leading-6 text-[#D8CBE8]">{address.fullName} / {address.phone}</p>
+      <p className="text-sm leading-6 text-[#9C91AA]">{address.cityArea} / {address.deliveryZone || "Zone not set"}</p>
       <p className="mt-1 break-words text-sm leading-6 text-[#9C91AA] [overflow-wrap:anywhere]">{address.address}</p>
     </div>
   );

@@ -50,6 +50,24 @@ function readable(value?: string) {
   return value ? value.replace(/_/g, " ") : "Not available";
 }
 
+function normalizeStatus(value?: string) {
+  return (value || "").toLowerCase().replace(/\s+/g, "_");
+}
+
+function statusChipClass(value?: string) {
+  const status = normalizeStatus(value);
+  if (status.includes("cancel") || status.includes("failed") || status.includes("return")) {
+    return "border-rose-300/35 bg-rose-300/[0.08] text-rose-100";
+  }
+  if (status.includes("deliver")) {
+    return "border-emerald-300/35 bg-emerald-300/[0.08] text-emerald-100";
+  }
+  if (status.includes("confirm") || status.includes("paid") || status.includes("dispatch") || status.includes("transit")) {
+    return "border-[#00D4C6]/35 bg-[#00D4C6]/[0.08] text-[#31E6D4]";
+  }
+  return "border-[#FFB84D]/35 bg-[#FFB84D]/[0.08] text-[#FFD18A]";
+}
+
 function trackOrderHref(order: AccountOrder) {
   const params = new URLSearchParams({ ref: order.orderRef });
   if (order.customerPhone) params.set("phone", order.customerPhone);
@@ -140,11 +158,11 @@ export default function AccountOrderDetailClient({ reference }: { reference: str
   }, []);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_52%,#030612_100%)]" />
+    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.07),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader settings={settings} active="account" />
       <section className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14">
-        <Link href="/account/orders" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-100 hover:text-white">
+        <Link href="/account/orders" className="inline-flex items-center gap-2 text-sm font-semibold text-[#FFB3D1] hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           Back to orders
         </Link>
@@ -169,8 +187,16 @@ export default function AccountOrderDetailClient({ reference }: { reference: str
         ) : (
           <div className="mt-6 grid gap-5">
             <Panel>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-100/70">Order detail</p>
-              <h1 className="mt-3 break-words text-3xl font-semibold [overflow-wrap:anywhere]">{order.orderRef}</h1>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FF4DB8]/70">Order detail</p>
+                  <h1 className="mt-3 break-words text-3xl font-semibold [overflow-wrap:anywhere]">{order.orderRef}</h1>
+                  <p className="mt-2 text-sm text-[#9C91AA]">{formatDate(order.createdAt)}</p>
+                </div>
+                <span className={`inline-flex w-fit rounded-full border px-3 py-1.5 text-xs font-semibold capitalize ${statusChipClass(order.status)}`}>
+                  {readable(order.status)}
+                </span>
+              </div>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <Link className="action-primary" href={trackOrderHref(order)}>
                   <PackageSearch className="h-4 w-4" />
@@ -199,9 +225,9 @@ export default function AccountOrderDetailClient({ reference }: { reference: str
                     <Summary label="Delivery charge" value={formatCurrency(order.deliveryCharge)} />
                   )}
                 </div>
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/42">Delivery Address</p>
-                  <p className="mt-2 break-words text-sm leading-7 text-white/72 [overflow-wrap:anywhere]">
+                <div className="mt-5 rounded-2xl border border-[#00D4C6]/12 bg-[#0F1E2A]/60 p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#31E6D4]/70">Delivery Address</p>
+                  <p className="mt-2 break-words text-sm leading-7 text-[#D8CBE8] [overflow-wrap:anywhere]">
                     {order.deliveryAddress}
                   </p>
                 </div>
@@ -215,7 +241,7 @@ export default function AccountOrderDetailClient({ reference }: { reference: str
                     const productId = item.productId || productSlug || item.name;
                     const canReviewItem = canReviewOrder && Boolean(productSlug || productId);
                     return (
-                    <li key={`${item.name}-${index}`} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <li key={`${item.name}-${index}`} className="rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4">
                       <div className="flex items-start justify-between gap-3 text-sm text-white/74">
                         <span className="min-w-0 break-words [overflow-wrap:anywhere]">
                           {item.name}
@@ -310,7 +336,7 @@ export default function AccountOrderDetailClient({ reference }: { reference: str
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-6 min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+    <div className="aev-panel mt-6 min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024]/90 p-5 shadow-[0_18px_58px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-6">
       {children}
     </div>
   );
@@ -318,9 +344,9 @@ function Panel({ children }: { children: React.ReactNode }) {
 
 function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-white/42">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-white/78 [overflow-wrap:anywhere]">{value}</p>
+    <div className="rounded-2xl border border-[#FF4DB8]/10 bg-[#1B1230] p-4">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#9C91AA]/70">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{value}</p>
     </div>
   );
 }

@@ -1937,6 +1937,162 @@ button {
   opacity: 1.5;
 }
 
+/* ─── R2A: Product card premium action layer + quick view ─── */
+.aev-product-card-r2a {
+  isolation: isolate;
+}
+
+.aev-product-card-r2a::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 42%),
+    radial-gradient(circle at 28% 0%, rgba(255, 77, 184, 0.13), transparent 28%),
+    radial-gradient(circle at 100% 22%, rgba(168, 85, 247, 0.11), transparent 28%);
+  opacity: 0.72;
+  transition: opacity 260ms ease;
+}
+
+.aev-product-card-r2a > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-product-image-frame {
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(255, 77, 184, 0.08),
+    0 18px 44px rgba(0, 0, 0, 0.28);
+  transition:
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    transform 260ms ease;
+}
+
+.aev-product-shine {
+  background:
+    linear-gradient(116deg, transparent 14%, rgba(255, 255, 255, 0.11) 46%, transparent 68%),
+    linear-gradient(145deg, rgba(255, 77, 184, 0.10), transparent 42%, rgba(168, 85, 247, 0.08));
+  background-size: 180% 100%, 100% 100%;
+  background-position: -135% 0, center;
+  transition: opacity 260ms ease;
+}
+
+.aev-quick-view-trigger,
+.aev-product-action-layer {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aev-quick-view-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(8, 6, 17, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: aev-quick-view-fade 180ms ease both;
+}
+
+.aev-quick-view-panel {
+  position: relative;
+  width: min(58rem, 100%);
+  max-height: min(86vh, 44rem);
+  overflow: auto;
+  border-radius: 1.6rem;
+  border: 1px solid rgba(255, 77, 184, 0.20);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 77, 184, 0.13), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(168, 85, 247, 0.13), transparent 32%),
+    rgba(18, 13, 32, 0.96);
+  box-shadow:
+    0 34px 110px rgba(0, 0, 0, 0.68),
+    0 0 50px rgba(255, 77, 184, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  animation: aev-quick-view-panel 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.aev-button-primary:active,
+.aev-button-secondary:active,
+.aev-button-ghost:active {
+  transform: translate3d(0, 1px, 0) scale(0.985);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-product-card-r2a:hover::after {
+    opacity: 1;
+  }
+
+  .aev-product-card-r2a:hover .aev-product-image-frame {
+    border-color: rgba(255, 77, 184, 0.26);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px rgba(255, 77, 184, 0.12),
+      0 24px 62px rgba(0, 0, 0, 0.36),
+      0 0 34px rgba(255, 77, 184, 0.10);
+  }
+
+  .aev-product-card-r2a:hover .aev-product-shine {
+    animation: aev-product-card-shine 1300ms ease both;
+  }
+
+  .aev-product-card-r2a .aev-quick-view-trigger {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0) scale(0.96);
+  }
+
+  .aev-product-card-r2a:hover .aev-quick-view-trigger,
+  .aev-product-card-r2a:focus-within .aev-quick-view-trigger {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (max-width: 639px) {
+  .aev-quick-view-overlay {
+    align-items: flex-end;
+    padding: 0.75rem 0.75rem calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .aev-quick-view-panel {
+    width: 100%;
+    max-height: calc(100vh - 6.5rem - env(safe-area-inset-bottom, 0px));
+    border-radius: 1.35rem 1.35rem 1rem 1rem;
+  }
+}
+
+@keyframes aev-product-card-shine {
+  from { background-position: -135% 0, center; }
+  to   { background-position: 145% 0, center; }
+}
+
+@keyframes aev-quick-view-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes aev-quick-view-panel {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.985); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-product-shine,
+  .aev-quick-view-overlay,
+  .aev-quick-view-panel {
+    animation: none !important;
+  }
+}
+
 /* ─── R1: Track order card ─── */
 .aev-track-card {
   position: relative;
