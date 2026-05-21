@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -254,6 +254,23 @@ export default function ShopDiscoveryClient({
     }
   };
 
+  useEffect(() => {
+    if (!filtersOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFiltersOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [filtersOpen]);
+
   const filterPanel = (
     <div className="space-y-5">
       <FilterGroup label="Category">
@@ -323,39 +340,26 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-6 md:pb-14 md:pt-14">
-        <div className="pointer-events-none absolute inset-x-3 top-6 -z-10 h-[34rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
+      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-7 pt-7 sm:px-6 md:pb-10 md:pt-11">
+        <div className="pointer-events-none absolute inset-x-3 top-5 -z-10 h-[25rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
 
-        <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
-          <div className="max-w-3xl">
+        <div className="relative">
+          <div className="max-w-4xl">
             <div className="aev-pill">
               <Sparkles className="h-3.5 w-3.5" />
               Aevyrixa Her Care
             </div>
-            <h1 className="aev-heading mt-5 break-words text-[2.15rem] [overflow-wrap:anywhere] sm:text-5xl lg:text-7xl">
+            <h1 className="aev-heading mt-4 break-words text-[2rem] [overflow-wrap:anywhere] sm:text-[2.8rem] lg:text-[3.7rem]">
               Discover care made for your rhythm.
             </h1>
-            <p className="aev-subtext mt-4 max-w-2xl text-base sm:text-lg">
+            <p className="aev-subtext mt-3 max-w-2xl text-sm sm:text-base">
               Browse premium reusable care essentials by fit, flow, stock, and comfort mood. BDT pricing, privacy packaging, and Bangladesh delivery stay clear at every step.
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {[
-                `${products.length} products`,
-                "BDT pricing",
-                settings.privacyPackagingMessage || "Privacy Packaging",
-              ].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-white/10 bg-[#151024]/72 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
           </div>
 
-          <div className="aev-panel aev-glow-border p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
-            <div className="relative">
+          <div className="aev-panel aev-glow-border mt-5 p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
+            <div className="grid gap-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
+              <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
               <input
                 value={query}
@@ -373,22 +377,11 @@ export default function ShopDiscoveryClient({
                   <X className="h-4 w-4" />
                 </button>
               )}
-            </div>
-
-            <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2 sm:flex sm:items-center">
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((current) => !current)}
-                className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-semibold lg:hidden"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filters
-                <ChevronDown className={`h-3.5 w-3.5 transition ${filtersOpen ? "rotate-180" : ""}`} />
-              </button>
+              </div>
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortMode)}
-                className="aev-input min-h-11 rounded-full px-3 py-2 text-sm font-semibold sm:w-auto sm:min-w-40"
+                className="aev-input min-h-11 rounded-full px-3 py-2 text-sm font-semibold md:w-40"
                 aria-label="Sort products"
               >
                 <option value="featured">Featured</option>
@@ -399,47 +392,65 @@ export default function ShopDiscoveryClient({
               </select>
               <button
                 type="button"
+                onClick={() => setFiltersOpen(true)}
+                className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filters
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={resetFilters}
-                className="aev-button-ghost min-h-11 rounded-full px-3 py-2 text-sm font-semibold"
+                className="aev-button-ghost min-h-11 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold"
                 aria-label="Reset filters"
               >
                 Reset
               </button>
             </div>
-
-            {filtersOpen && (
-              <div className="mt-5 rounded-[1.25rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 lg:hidden">
-                {filterPanel}
-              </div>
-            )}
           </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              `${products.length} products`,
+              "BDT pricing",
+              settings.privacyPackagingMessage || "Privacy Packaging",
+            ].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-white/10 bg-[#151024]/72 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+
+          {availableDiscoveryChips.length > 0 && (
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+              {availableDiscoveryChips.map((chip) => {
+                const Icon = chip.icon;
+                const active = (chip.category && category === chip.category) || (chip.signal && signal === chip.signal);
+                return (
+                  <button
+                    key={`${chip.label}-${chip.category ?? chip.signal}`}
+                    type="button"
+                    onClick={() => selectDiscoveryChip(chip)}
+                    className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition ${
+                      active
+                        ? "border-[#FF4DB8]/55 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_18px_rgba(255,77,184,0.32)]"
+                        : "border-white/10 bg-[#151024]/88 text-[#D8CBE8]/78 backdrop-blur-xl hover:border-[#FF4DB8]/32 hover:text-white"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {availableDiscoveryChips.length > 0 && (
-          <div className="mt-6 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
-            {availableDiscoveryChips.map((chip) => {
-              const Icon = chip.icon;
-              const active = (chip.category && category === chip.category) || (chip.signal && signal === chip.signal);
-              return (
-                <button
-                  key={`${chip.label}-${chip.category ?? chip.signal}`}
-                  type="button"
-                  onClick={() => selectDiscoveryChip(chip)}
-                  className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition ${
-                    active
-                      ? "border-[#FF4DB8]/55 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_18px_rgba(255,77,184,0.32)]"
-                      : "border-white/10 bg-[#151024]/88 text-[#D8CBE8]/78 backdrop-blur-xl hover:border-[#FF4DB8]/32 hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
             [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck, "text-[#FF4DB8]", "border-[#FF4DB8]/15 bg-[#FF4DB8]/[0.05]"],
             ["BDT Pricing", CheckCircle2, "text-[#A855F7]", "border-[#A855F7]/15 bg-[#A855F7]/[0.05]"],
@@ -457,43 +468,7 @@ export default function ShopDiscoveryClient({
         </div>
       </section>
 
-      <CollectionSection
-        eyebrow="Best Picks"
-        title="Shop our best picks"
-        products={bestPicks}
-        ratingMap={ratingMap}
-      />
-
-      <CollectionSection
-        eyebrow="New Arrivals"
-        title="Fresh from the collection"
-        products={newArrivals.filter((product) => isNewProduct(product))}
-        ratingMap={ratingMap}
-      />
-
-      <CollectionSection
-        eyebrow="Limited Stock"
-        title="Low-stock pieces to consider"
-        products={limitedStockProducts}
-        ratingMap={ratingMap}
-      />
-
-      <CollectionSection
-        eyebrow="Everyday Comfort"
-        title="Soft essentials for daily wear"
-        products={everydayComfortProducts}
-        ratingMap={ratingMap}
-      />
-
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-24 sm:px-6 lg:grid-cols-[280px_1fr]">
-        <aside className="aev-panel hidden h-fit p-5 lg:block">
-          <div className="mb-5 flex items-center justify-between">
-            <p className="aev-section-label">Filters</p>
-            <SlidersHorizontal className="h-4 w-4 text-[#FF4DB8]/55" />
-          </div>
-          {filterPanel}
-        </aside>
-
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
         <div className="min-w-0">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -529,7 +504,7 @@ export default function ShopDiscoveryClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map((product) => (
                 <StorefrontProductCard
                   key={product.id}
@@ -541,6 +516,84 @@ export default function ShopDiscoveryClient({
           )}
         </div>
       </section>
+
+      <CollectionSection
+        eyebrow="Best Picks"
+        title="Shop our best picks"
+        products={bestPicks}
+        ratingMap={ratingMap}
+      />
+
+      <CollectionSection
+        eyebrow="New Arrivals"
+        title="Fresh from the collection"
+        products={newArrivals.filter((product) => isNewProduct(product))}
+        ratingMap={ratingMap}
+      />
+
+      <CollectionSection
+        eyebrow="Limited Stock"
+        title="Low-stock pieces to consider"
+        products={limitedStockProducts}
+        ratingMap={ratingMap}
+      />
+
+      <CollectionSection
+        eyebrow="Everyday Comfort"
+        title="Soft essentials for daily wear"
+        products={everydayComfortProducts}
+        ratingMap={ratingMap}
+      />
+
+      {filtersOpen && (
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-[#080611]/78 p-0 backdrop-blur-sm md:items-center md:p-5 lg:items-stretch lg:justify-end lg:p-4"
+          role="presentation"
+          onMouseDown={() => setFiltersOpen(false)}
+        >
+          <section
+            aria-label="Shop filters"
+            aria-modal="true"
+            className="aev-panel flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-b-none rounded-t-[1.8rem] border-[#FF4DB8]/20 bg-[#120C22]/95 shadow-[0_-18px_80px_rgba(0,0,0,0.52)] md:max-w-xl md:rounded-[1.8rem] lg:h-full lg:max-h-none lg:max-w-[27rem]"
+            role="dialog"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+              <div>
+                <p className="aev-section-label">Filters</p>
+                <h2 className="mt-2 text-xl font-semibold text-white">Refine products</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="aev-button-ghost grid h-10 w-10 shrink-0 place-items-center rounded-full"
+                aria-label="Close filters"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+              {filterPanel}
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-2 border-t border-white/10 bg-[#0D0820]/92 px-5 py-4 sm:px-6">
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="aev-button-ghost min-h-11 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="aev-button-primary min-h-11 rounded-full px-5 py-2 text-sm font-bold text-white"
+              >
+                Show {filteredProducts.length} product{filteredProducts.length === 1 ? "" : "s"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <section className="px-4 pb-14 sm:px-6 sm:pb-20">
         <div className="aev-panel aev-glow-border mx-auto max-w-7xl overflow-hidden p-6 text-center sm:p-10">

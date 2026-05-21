@@ -388,7 +388,7 @@ export default async function Home() {
 
       {hms.showHero && (
       <>
-      <section className="aev-hero-stage relative isolate overflow-hidden bg-[#0D0820] px-4 pb-12 pt-6 text-white sm:px-6 sm:pb-24 sm:pt-16 lg:min-h-[calc(100vh-4rem)] lg:pb-24">
+      <section className="aev-hero-stage relative isolate overflow-hidden bg-[#0D0820] px-4 pb-8 pt-6 text-white sm:px-6 sm:pb-12 sm:pt-14 lg:pb-14">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden">
           <div className="aev-glow absolute left-1/2 top-10 h-96 w-[min(58rem,98vw)] -translate-x-1/2 rounded-full bg-[#FF4DB8]/18 blur-3xl" />
