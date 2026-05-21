@@ -135,6 +135,34 @@ const heroTrustBadges = [
   "Reusable Protection",
 ];
 
+const heroTrustStats = [
+  {
+    value: "5K+",
+    label: "Her Care Visitors",
+  },
+  {
+    value: "4.8★",
+    label: "Customer Rating",
+  },
+  {
+    value: "100%",
+    label: "Discreet Packaging",
+  },
+];
+
+const heroMarqueeItems = [
+  "Bangladesh Delivery",
+  "4-Layer Protection",
+  "Eco-Friendly",
+  "5,000+ Visitors",
+  "Hygiene-Safe Support",
+  "Premium Comfort",
+  "Discreet Packaging",
+  "Secure Checkout",
+  "BDT Pricing",
+  "Reusable Care",
+];
+
 const hereCareBase = [
   {
     name: "Reusable Period Care",
@@ -359,6 +387,7 @@ export default async function Home() {
       />
 
       {hms.showHero && (
+      <>
       <section className="aev-hero-stage relative isolate overflow-hidden bg-[#0D0820] px-4 pb-12 pt-6 text-white sm:px-6 sm:pb-24 sm:pt-16 lg:min-h-[calc(100vh-4rem)] lg:pb-24">
         <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
         <div className="absolute inset-x-0 top-0 -z-10 h-[52rem] overflow-hidden">
@@ -396,6 +425,19 @@ export default async function Home() {
               >
                 Explore How It Works
               </Link>
+            </div>
+
+            <div className="aev-hero-stat-shelf mt-7 grid grid-cols-3 overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-[#120C22]/72 shadow-[0_22px_70px_rgba(0,0,0,0.34),0_0_34px_rgba(255,77,184,0.08)] backdrop-blur-xl">
+              {heroTrustStats.map((stat) => (
+                <div key={stat.label} className="aev-hero-stat min-w-0 px-2.5 py-4 text-center sm:px-5 sm:py-5">
+                  <p className="aev-hero-stat-value text-[1.45rem] font-semibold leading-none text-[#FF4DB8] min-[430px]:text-[1.65rem] sm:text-[1.9rem]">
+                    {stat.value}
+                  </p>
+                  <p className="mt-2 text-[0.62rem] font-medium leading-4 text-[#9C91AA] sm:text-[0.7rem]">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div className="aev-hero-trust mt-7 grid grid-cols-2 gap-2 rounded-[1.35rem] border border-white/[0.08] bg-[#120C22]/70 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:gap-2.5">
@@ -474,6 +516,24 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      <div className="aev-home-marquee" aria-label="Storefront highlights">
+        <div className="aev-home-marquee-track">
+          {[false, true].map((isDuplicate) => (
+            <div
+              key={isDuplicate ? "duplicate" : "primary"}
+              className="aev-home-marquee-group"
+              aria-hidden={isDuplicate || undefined}
+            >
+              {heroMarqueeItems.map((item) => (
+                <span key={`${isDuplicate ? "duplicate" : "primary"}-${item}`} className="aev-home-marquee-item">
+                  {item}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      </>
       )}
 
       {hms.showFeaturedProducts && activeProducts.length > 0 && (
