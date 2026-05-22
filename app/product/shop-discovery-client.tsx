@@ -90,7 +90,7 @@ function CollectionSection({
   if (products.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+    <section className="aev-shop-merch-section mx-auto max-w-7xl px-4 pb-10 sm:px-6">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <p className="aev-section-label">{eyebrow}</p>
@@ -392,10 +392,10 @@ export default function ShopDiscoveryClient({
               "BDT Pricing",
               "Discreet Packaging",
               "Bangladesh Delivery",
-            ].map((item) => (
+            ].map((item, index) => (
               <span
                 key={item}
-                className="shrink-0 rounded-full border border-white/10 bg-[#151024]/72 px-2.5 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl sm:px-3 sm:py-1.5 sm:text-[0.68rem]"
+                className={`aev-shop-meta-chip ${index > 1 ? "aev-shop-meta-chip-secondary" : ""} shrink-0 rounded-full border border-white/10 bg-[#151024]/72 px-2.5 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl sm:px-3 sm:py-1.5 sm:text-[0.68rem]`}
               >
                 {item}
               </span>
@@ -403,7 +403,7 @@ export default function ShopDiscoveryClient({
           </div>
 
           {availableDiscoveryChips.length > 0 && (
-            <div className="mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
+            <div className="aev-shop-discovery-chips mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
               {availableDiscoveryChips.map((chip) => {
                 const Icon = chip.icon;
                 const active = category === chip.category;
@@ -555,7 +555,7 @@ export default function ShopDiscoveryClient({
         </div>
       )}
 
-      <section className="px-4 pb-14 sm:px-6 sm:pb-20">
+      <section className="aev-shop-support-cta px-4 pb-14 sm:px-6 sm:pb-20">
         <div className="aev-panel aev-glow-border mx-auto max-w-7xl overflow-hidden p-6 text-center sm:p-10">
           <p className="aev-section-label">Need help choosing?</p>
           <h2 className="aev-heading mx-auto mt-3 max-w-3xl text-2xl sm:text-4xl">

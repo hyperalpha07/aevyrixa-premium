@@ -408,7 +408,7 @@ export default async function Home() {
             <h1 className="aev-hero-headline mt-6 max-w-4xl text-[2rem] font-semibold leading-[1.03] tracking-tight text-white min-[430px]:text-[2.45rem] sm:text-6xl lg:text-[4.9rem]">
               {heroMedia.heading || settings.appearanceSettings.homepageHeroTitle}
             </h1>
-            <p className="aev-hero-copy mt-5 max-w-2xl text-pretty text-base leading-8 text-white/74 sm:text-lg">
+            <p className="aev-hero-copy aev-mobile-secondary-copy mt-5 max-w-2xl text-pretty text-base leading-8 text-white/74 sm:text-lg">
               {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
             </p>
 
@@ -546,7 +546,7 @@ export default async function Home() {
                 <h2 className="aev-heading mt-3 text-2xl sm:text-4xl lg:text-5xl">
                   Best Picks For You
                 </h2>
-                <p className="aev-subtext mt-3 max-w-2xl text-sm sm:text-base">
+                <p className="aev-subtext aev-mobile-secondary-copy mt-3 max-w-2xl text-sm sm:text-base">
                   Real active products from the current storefront, shown with live stock status and BDT pricing.
                 </p>
               </div>
@@ -582,26 +582,30 @@ export default async function Home() {
                 title: "Discreet Packaging",
                 copy: settings.privacyPackagingMessage || "Plain outer packaging for private delivery.",
                 icon: PackageCheck,
+                art: "aev-intent-promise",
               },
               {
                 title: "Bangladesh Delivery",
                 copy: settings.deliveryCoverageText || "Courier delivery across Bangladesh with support.",
                 icon: Truck,
+                art: "aev-intent-delivery",
               },
               {
                 title: "3-Day Hygiene-Safe Support",
                 copy: settings.supportWindowMessage || "Support for eligible product concerns after delivery.",
                 icon: ShieldCheck,
+                art: "aev-intent-support",
               },
               {
                 title: "Secure Checkout",
                 copy: "Clear BDT pricing and careful order confirmation.",
                 icon: Sparkles,
+                art: "aev-intent-secure",
               },
-            ].map(({ title, copy, icon: Icon }) => (
+            ].map(({ title, copy, art, icon: Icon }) => (
               <article
                 key={title}
-                className="aev-card aev-reveal group relative overflow-hidden rounded-[1.35rem] p-4 sm:p-5"
+                className={`aev-card aev-reveal aev-intent-card ${art} group relative overflow-hidden rounded-[1.35rem] p-4 sm:p-5`}
               >
                 <div className="absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF4DB8]/40 via-[#A855F7]/30 to-transparent" />
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8] transition duration-300 group-hover:scale-105">
@@ -627,7 +631,7 @@ export default async function Home() {
             <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
               Seven categories, one calm care routine.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-[#9C91AA]">
+            <p className="aev-mobile-secondary-copy mt-4 max-w-2xl text-base leading-8 text-[#9C91AA]">
               Explore the full range of reusable period care, soft comfort
               wear, and hygiene essentials thoughtfully curated for your
               everyday routine.
@@ -694,7 +698,7 @@ export default async function Home() {
                       )}
                     </div>
                     {mode !== "media_only" && (
-                      <p className={`mt-2 text-sm leading-6 drop-shadow-sm ${showBackgroundMedia || showMediaOnly ? "text-white/75" : "text-[#9C91AA]"}`}>{displayTagline}</p>
+                      <p className={`aev-mobile-secondary-copy mt-2 text-sm leading-6 drop-shadow-sm ${showBackgroundMedia || showMediaOnly ? "text-white/75" : "text-[#9C91AA]"}`}>{displayTagline}</p>
                     )}
                     {mode === "media_only" && !comingSoon && displayLinkUrl && (
                       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#FF4DB8]/75">
@@ -748,7 +752,7 @@ export default async function Home() {
                 A simple reusable rhythm.
               </h2>
             </div>
-            <p className="max-w-3xl text-base leading-8 text-[#D8CBE8]/80 lg:justify-self-end">
+            <p className="aev-mobile-secondary-copy max-w-3xl text-base leading-8 text-[#D8CBE8]/80 lg:justify-self-end">
               {settings.brandDisplayName} is designed to feel intuitive from
               first wear to wash day: choose thoughtfully, wear comfortably,
               and care for it gently.
@@ -1469,7 +1473,7 @@ export default async function Home() {
 
       {canShowWhatsappSupport && hms.whatsappWidgetEnabled && whatsappUrl &&
         (hms.whatsappWidgetPlacement === "homepage" || hms.whatsappWidgetPlacement === "all") && (
-        <div className="fixed bottom-20 right-4 z-50 md:bottom-6 sm:right-6">
+        <div className="aev-home-whatsapp-widget fixed bottom-20 right-4 z-50 md:bottom-6 sm:right-6">
           <a
             href={whatsappUrl}
             target="_blank"

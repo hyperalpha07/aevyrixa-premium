@@ -165,20 +165,20 @@ function TrackOrderContent() {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.07),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader active="track" settings={settings} />
 
-      <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-10 px-4 pb-28 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
-        <div className="min-w-0">
+      <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-5 px-4 pb-28 pt-6 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
+        <div className="min-w-0 lg:order-first">
           <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#FF4DB8]/72">
             Privacy-safe tracking
           </p>
           <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight tracking-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
             Track your Aevyrixa order
           </h1>
-          <p className="mt-5 break-words text-base leading-8 text-[#D8CBE8]/70 [overflow-wrap:anywhere]">
+          <p className="aev-mobile-secondary-copy mt-5 break-words text-base leading-8 text-[#D8CBE8]/70 [overflow-wrap:anywhere]">
             Enter your order reference and the phone number used at checkout.
             We only show customer-safe order details after both match.
           </p>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <div className="aev-track-signals mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             {[
               { icon: SearchCheck, label: "Instant lookup", desc: "Results appear without page reload" },
               { icon: LockKeyhole, label: "Privacy safe", desc: "Only matched details are revealed" },
@@ -198,16 +198,16 @@ function TrackOrderContent() {
 
           <Link
             href="/product"
-            className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-[#151024] px-7 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white sm:w-auto"
+            className="mt-8 hidden min-h-12 w-full items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-[#151024] px-7 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white sm:w-auto lg:inline-flex"
           >
             Continue Shopping
           </Link>
         </div>
 
-        <div className="min-w-0 space-y-5">
+        <div className="order-first min-w-0 space-y-5 lg:order-none">
           <form
             onSubmit={handleSubmit}
-            className="aev-track-card min-w-0 rounded-[1.75rem] p-5 sm:p-6"
+            className="aev-track-card aev-intent-card aev-intent-orders min-w-0 rounded-[1.75rem] p-5 sm:p-6"
           >
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]">
@@ -270,7 +270,7 @@ function TrackOrderContent() {
           </form>
 
           {order && (
-            <section className="aev-track-card min-w-0 rounded-[1.75rem] p-5 sm:p-6">
+            <section className="aev-track-card aev-intent-card aev-intent-delivery min-w-0 rounded-[1.75rem] p-5 sm:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#FF4DB8]/70">

@@ -17,6 +17,7 @@ export default function InfoPageShell({
   title,
   intro,
   sections,
+  topContent,
   ctaLabel = "Shop Her Care",
   ctaHref = "/product",
   settings = defaultStorefrontSettings,
@@ -25,6 +26,7 @@ export default function InfoPageShell({
   title: string;
   intro: string;
   sections: InfoSection[];
+  topContent?: React.ReactNode;
   ctaLabel?: string;
   ctaHref?: string;
   settings?: StorefrontSettings;
@@ -52,9 +54,10 @@ export default function InfoPageShell({
           >
             {ctaLabel}
           </Link>
+          {topContent}
         </div>
 
-        <div className="mt-10 grid min-w-0 gap-4 md:grid-cols-2">
+        <div className="aev-info-sections mt-10 grid min-w-0 gap-4 md:grid-cols-2">
           {sections.map((section) => (
             <article
               key={section.title}

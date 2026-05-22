@@ -458,22 +458,22 @@ export default function ProductDetailClient({
           )}
 
           {/* Product info cards below media */}
-          <div className="mt-3 grid gap-2 min-[520px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+          <div className="aev-product-prebuy-trust mt-3 hidden gap-2 min-[520px]:grid-cols-2 lg:grid lg:grid-cols-1 xl:grid-cols-2">
+            <div className="aev-intent-card aev-intent-promise flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <PackageCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
               <span>{privacyText}</span>
             </div>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+            <div className="aev-intent-card aev-intent-support flex items-start gap-3 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#00D4C6]" />
               <span>{supportText}</span>
             </div>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#A855F7]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+            <div className="aev-intent-card aev-intent-delivery flex items-start gap-3 rounded-[1.1rem] border border-[#A855F7]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#A855F7]" />
               <span>{deliveryText}</span>
             </div>
             <Link
               href={supportHref}
-              className="flex items-center justify-between gap-3 rounded-[1.1rem] border border-[#FF4DB8]/15 bg-[#1B1230]/86 px-4 py-3 text-xs font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/30 hover:bg-[#211633]"
+              className="aev-intent-card aev-intent-support flex items-center justify-between gap-3 rounded-[1.1rem] border border-[#FF4DB8]/15 bg-[#1B1230]/86 px-4 py-3 text-xs font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/30 hover:bg-[#211633]"
             >
               <span className="inline-flex items-center gap-3">
                 <MessageCircle className={`h-3.5 w-3.5 shrink-0 ${style.accent}`} />
@@ -481,7 +481,7 @@ export default function ProductDetailClient({
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-[#9C91AA]" />
             </Link>
-            <div className="flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
+            <div className="aev-intent-card aev-intent-comfort flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <Ruler className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
               <span>Check size over clean underwear or clothing only. Do not wear directly before confirming fit.</span>
             </div>
@@ -525,14 +525,14 @@ export default function ProductDetailClient({
           {/* Short description — accent tagline */}
           {displayProduct.shortDescription && (
             <p
-              className={`mt-3 text-base font-medium leading-7 ${style.accent}`}
+              className={`aev-mobile-secondary-copy mt-3 text-base font-medium leading-7 ${style.accent}`}
             >
               {displayProduct.shortDescription}
             </p>
           )}
 
           {/* Main description */}
-          <p className="mt-4 max-w-2xl break-words text-[0.95rem] leading-8 text-[#D8CBE8]/72 [overflow-wrap:anywhere]">
+          <p className="aev-product-main-description mt-4 max-w-2xl break-words text-[0.95rem] leading-8 text-[#D8CBE8]/72 [overflow-wrap:anywhere]">
             {displayProduct.description}
           </p>
 
@@ -556,7 +556,7 @@ export default function ProductDetailClient({
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
+          <div className="aev-product-review-summary mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
             <StarRating rating={averageRating} />
             <span className="text-sm font-semibold text-white">
               {reviewCount > 0
@@ -570,7 +570,7 @@ export default function ProductDetailClient({
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-panel aev-product-buy-panel mt-5 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 ${style.panel}`}
+            className={`aev-panel aev-product-buy-panel aev-intent-card aev-intent-comfort mt-5 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 ${style.panel}`}
           >
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#FF4DB8]/10 pb-4">
               <div>

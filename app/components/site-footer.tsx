@@ -70,6 +70,7 @@ export default function SiteFooter({
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/support") ||
     pathname.startsWith("/track-order") ||
+    pathname === "/product" ||
     pathname.startsWith("/product/");
 
   return (
@@ -80,7 +81,7 @@ export default function SiteFooter({
       <div className="pointer-events-none absolute right-[-10%] top-[30%] h-[160px] w-[160px] rounded-full bg-[#00D4C6]/[0.05] blur-[80px]" />
 
       {/* Premium brand statement */}
-      <div className="aev-footer-brand aev-glass relative mx-auto mb-7 max-w-7xl overflow-hidden p-5 pb-7 sm:mb-9 sm:p-7">
+      <div className="aev-footer-brand aev-glass aev-intent-card aev-intent-delivery relative mx-auto mb-7 max-w-7xl overflow-hidden p-5 pb-7 sm:mb-9 sm:p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.38em] text-[#FF4DB8]/55">Her Care by Aevyrixa</p>
         <p className="mt-3 max-w-2xl text-2xl font-semibold leading-snug tracking-tight text-white/80 sm:text-3xl">
           Premium women&apos;s care, delivered discreetly across Bangladesh.

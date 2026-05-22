@@ -3109,3 +3109,141 @@ button {
     opacity: 0.46;
   }
 }
+
+/* R2I mobile density, floating action, and storefront intent refinements */
+.aev-action-primary:active,
+.aev-button-primary:active,
+.aev-card-cta:active {
+  transform: translate3d(0, 1px, 0) scale(0.985);
+}
+
+@media (max-width: 767px) {
+  .aev-mobile-secondary-copy {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .aev-home .aev-hero-stage {
+    padding-bottom: 1.35rem;
+    padding-top: 1rem;
+  }
+
+  .aev-home .aev-hero-headline {
+    margin-top: 1rem;
+    line-height: 1.08;
+  }
+
+  .aev-home .aev-hero-stat-shelf,
+  .aev-home .aev-home-marquee {
+    display: none;
+  }
+
+  .aev-home .aev-motion-panel-hero > .relative {
+    min-height: min(18rem, 73vw);
+  }
+
+  .aev-home .aev-hero-trust {
+    margin-top: 0.85rem;
+  }
+
+  .aev-home .aev-trust-badge {
+    min-height: 2.25rem;
+    padding-block: 0.45rem;
+  }
+
+  .aev-home .aev-scroll-section,
+  .aev-home section {
+    scroll-margin-top: 4.5rem;
+  }
+
+  .aev-home #how-it-works article > div.mb-12 {
+    margin-bottom: 1.15rem;
+  }
+
+  .aev-shop-meta-chip-secondary,
+  .aev-shop-merch-section {
+    display: none;
+  }
+
+  .aev-shop-discovery-chips > :nth-child(n + 3) {
+    display: none;
+  }
+
+  .aev-shop-support-cta {
+    padding-bottom: calc(var(--aev-mobile-bottom-nav-height) + 1.5rem);
+  }
+
+  .aev-shop-support-cta .aev-panel {
+    padding: 1.15rem;
+  }
+
+  .aev-shop-support-cta .aev-subtext {
+    display: none;
+  }
+
+  .aev-product-main-description {
+    display: none;
+  }
+
+  .aev-product-review-summary {
+    gap: 0.55rem;
+    margin-top: 0.7rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .aev-product-review-summary > a {
+    width: 100%;
+  }
+
+  .aev-product-buy-panel {
+    margin-top: 0.9rem;
+  }
+
+  .aev-track-signals {
+    display: none;
+  }
+
+  .aev-info-sections {
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .aev-info-sections article {
+    padding: 1rem;
+  }
+
+  .aev-info-sections ul {
+    gap: 0.45rem;
+  }
+
+  .aev-live-chat-launcher button,
+  .aev-whatsapp-widget {
+    height: 2.9rem;
+    width: 2.9rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .aev-live-chat-label,
+  .aev-whatsapp-widget-label {
+    display: none;
+  }
+
+  .aev-home-whatsapp-widget {
+    display: none;
+  }
+
+  .aev-footer-brand.aev-intent-delivery::before {
+    opacity: 0.58;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-action-primary:active,
+  .aev-button-primary:active,
+  .aev-card-cta:active {
+    transform: none;
+  }
+}

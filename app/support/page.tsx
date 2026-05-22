@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
+import LiveChatWidget from "@/app/components/live-chat-widget";
+import SupportActionPanel from "@/app/components/support-action-panel";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +18,15 @@ export default async function SupportPage() {
   const contactCopy = settings.supportPhone
     ? `Reach us at ${settings.supportPhone} via call or WhatsApp. You can also visit the Contact page for all support details.`
     : "WhatsApp support details will be available soon. Visit the Contact page for current support options.";
+  const supportMode = settings.storeProfile.liveSupportMode;
+  const canShowLiveChat =
+    supportMode === "live_chat" || supportMode === "both";
+  const canShowWhatsapp =
+    supportMode === "whatsapp" || supportMode === "both";
+  const homeMedia = settings.homepageMediaSettings;
 
   return (
+    <>
     <InfoPageShell
       settings={settings}
       eyebrow="Support"
@@ -25,6 +34,7 @@ export default async function SupportPage() {
       intro={`${settings.supportWindowMessage} Our team reviews each request individually and will guide you through the next steps.`}
       ctaLabel="View Contact Details"
       ctaHref="/contact"
+      topContent={<SupportActionPanel whatsappUrl={canShowWhatsapp ? settings.whatsappUrl : ""} />}
       sections={[
         {
           title: "How to Request Support",
@@ -72,5 +82,15 @@ export default async function SupportPage() {
         },
       ]}
     />
+    <LiveChatWidget
+      enabled={canShowLiveChat && homeMedia.liveChatEnabled}
+      label={homeMedia.liveChatLabel}
+      placement={homeMedia.liveChatPlacement}
+      whatsappAlsoEnabled={canShowWhatsapp && !!settings.whatsappUrl}
+      whatsappUrl={settings.whatsappUrl}
+      supportPhone={settings.supportPhone}
+      hideLauncherOnMobile
+    />
+    </>
   );
 }
