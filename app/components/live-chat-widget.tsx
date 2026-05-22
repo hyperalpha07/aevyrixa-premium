@@ -25,6 +25,7 @@ type Props = {
   whatsappAlsoEnabled: boolean;
   whatsappUrl: string;
   supportPhone: string;
+  hideLauncherOnMobile?: boolean;
 };
 
 function loadSession(): StoredSession | null {
@@ -71,6 +72,7 @@ export default function LiveChatWidget({
   whatsappAlsoEnabled,
   whatsappUrl,
   supportPhone,
+  hideLauncherOnMobile = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<StoredSession | null>(null);
@@ -287,7 +289,7 @@ export default function LiveChatWidget({
 
   return (
     <>
-      <div className={`fixed ${bottomClass} right-4 z-[70] sm:right-6`}>
+      <div className={`fixed ${bottomClass} right-4 z-[70] sm:right-6 ${hideLauncherOnMobile ? "hidden md:block" : ""}`}>
         <button
           onClick={() => setOpen(true)}
           className="flex items-center gap-2.5 rounded-full border border-white/20 bg-[#1a1a2e]/90 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(0,0,0,0.36)] backdrop-blur-xl transition hover:border-cyan-200/40 hover:bg-[#1e2240]"

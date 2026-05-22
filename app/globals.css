@@ -2878,6 +2878,79 @@ button {
   opacity: 0.65;
 }
 
+.aev-account-profile {
+  background:
+    linear-gradient(135deg, rgba(28, 16, 45, 0.96), rgba(13, 9, 24, 0.94)),
+    radial-gradient(circle at 82% 24%, rgba(255, 77, 184, 0.13), transparent 26%);
+  border-color: rgba(255, 77, 184, 0.19);
+  overflow: visible;
+}
+
+.aev-account-profile::after {
+  right: clamp(1rem, 5vw, 5rem);
+  top: -2.4rem;
+  width: clamp(8rem, 20vw, 14rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 18deg, transparent 0 10%, rgba(255, 179, 209, 0.15) 10% 16%, transparent 16% 28%, rgba(49, 230, 212, 0.12) 28% 33%, transparent 33% 52%, rgba(168, 85, 247, 0.18) 52% 59%, transparent 59% 100%),
+    repeating-radial-gradient(circle, rgba(255, 255, 255, 0.09) 0 1px, transparent 1px 20px);
+  mask-image: radial-gradient(circle, black 0 63%, transparent 74%);
+  opacity: 0.8;
+}
+
+.aev-account-profile-aura {
+  border: 1px solid rgba(255, 179, 209, 0.13);
+  border-radius: 52% 48% 50% 50%;
+  filter: drop-shadow(0 0 36px rgba(255, 77, 184, 0.16));
+  height: clamp(7rem, 19vw, 12rem);
+  pointer-events: none;
+  position: absolute;
+  right: clamp(-1rem, 3vw, 2.5rem);
+  top: clamp(0.5rem, 2vw, 1.25rem);
+  transform: rotate(16deg);
+  width: clamp(5.4rem, 15vw, 9rem);
+}
+
+.aev-account-profile-aura::before,
+.aev-account-profile-aura::after {
+  border: 1px solid rgba(49, 230, 212, 0.11);
+  border-radius: 50% 50% 48% 52%;
+  content: "";
+  inset: 13%;
+  pointer-events: none;
+  position: absolute;
+}
+
+.aev-account-profile-aura::after {
+  border-color: rgba(255, 179, 209, 0.14);
+  inset: 30% 7%;
+  transform: rotate(-34deg);
+}
+
+.aev-account-summary {
+  background:
+    linear-gradient(145deg, rgba(21, 16, 36, 0.93), rgba(11, 15, 26, 0.94)),
+    radial-gradient(circle at 10% 80%, rgba(49, 230, 212, 0.05), transparent 24%);
+}
+
+.aev-account-orders {
+  background:
+    linear-gradient(150deg, rgba(21, 16, 36, 0.95), rgba(11, 15, 26, 0.93)),
+    radial-gradient(circle at 88% 86%, rgba(255, 184, 77, 0.05), transparent 28%);
+}
+
+.aev-account-support .aev-support-agent-art {
+  opacity: 0.8;
+  width: min(62%, 18rem);
+}
+
+.aev-account-support .aev-support-agent-art::before {
+  background:
+    linear-gradient(90deg, #151024 0%, rgba(21, 16, 36, 0.48) 34%, rgba(8, 6, 17, 0.68) 100%),
+    linear-gradient(180deg, rgba(21, 16, 36, 0.14), rgba(8, 6, 17, 0.9));
+}
+
 .aev-intent-delivery::before {
   inset: auto -4rem -4rem auto;
   width: 17rem;
@@ -3011,6 +3084,22 @@ button {
     opacity: 0.58;
     right: -18%;
     width: min(76%, 19rem);
+  }
+
+  .aev-account-profile::after {
+    right: -2.3rem;
+    top: -1.4rem;
+    width: 10rem;
+  }
+
+  .aev-account-profile-aura {
+    opacity: 0.62;
+    right: -0.9rem;
+  }
+
+  .aev-account-support .aev-support-agent-art {
+    right: -22%;
+    width: min(86%, 16rem);
   }
 
   .aev-intent-support::after,

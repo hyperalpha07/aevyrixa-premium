@@ -15,12 +15,14 @@ type SiteHeaderProps = {
   active?: "home" | "shop" | "product" | "track" | "cart" | "account";
   productHref?: string;
   settings?: StorefrontSettings;
+  compactMobile?: boolean;
 };
 
 export default function SiteHeader({
   active = "shop",
   productHref = "/product",
   settings = defaultStorefrontSettings,
+  compactMobile = false,
 }: SiteHeaderProps) {
   const { totalItems, toggleCart } = useCart();
   const [hasAccountSession, setHasAccountSession] = useState(false);
@@ -54,21 +56,23 @@ export default function SiteHeader({
   return (
     <>
     <header className="aev-site-header sticky top-0 z-50">
-      <AnnouncementBanner
-        settings={settings}
-        surface={
-          active === "home"
-            ? "homepage"
-            : active === "shop"
-              ? "shop"
-              : active === "product"
-                ? "product"
-                : active === "cart"
-                  ? "checkout"
-                  : "other"
-        }
-      />
-      <div className="aev-site-header-frame px-3 py-2.5 sm:px-5 sm:py-3 md:px-6 md:py-3.5">
+      <div className={compactMobile ? "hidden md:block" : ""}>
+        <AnnouncementBanner
+          settings={settings}
+          surface={
+            active === "home"
+              ? "homepage"
+              : active === "shop"
+                ? "shop"
+                : active === "product"
+                  ? "product"
+                  : active === "cart"
+                    ? "checkout"
+                    : "other"
+          }
+        />
+      </div>
+      <div className={`aev-site-header-frame px-3 sm:px-5 sm:py-3 md:px-6 md:py-3.5 ${compactMobile ? "py-1.5 md:py-3.5" : "py-2.5"}`}>
         <div className="aev-site-header-shell mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-2 sm:px-3 md:flex md:min-h-[4.25rem] md:justify-between md:gap-4 md:px-4">
         <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="aev-site-logo-mark flex-shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)] transition group-hover:border-[#FF4DB8]/40">

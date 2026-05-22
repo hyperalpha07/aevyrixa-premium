@@ -11,6 +11,7 @@ import {
   Headphones,
   LogOut,
   MapPin,
+  Menu,
   MessageSquare,
   PackageSearch,
   Plus,
@@ -276,77 +277,10 @@ export default function AccountClient({ view }: { view: AccountView }) {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(255,77,184,0.07),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(168,85,247,0.05),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
-      <SiteHeader settings={settings} active="account" />
+      <SiteHeader settings={settings} active="account" compactMobile />
 
-      <div className="aev-welcome-banner relative overflow-hidden border-b border-[#FF4DB8]/10 px-4 py-6 sm:px-6 sm:py-9">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#FF4DB8]/30 to-transparent" />
-        <div className="pointer-events-none absolute -left-24 top-4 h-52 w-52 rounded-full bg-[#FF4DB8]/[0.08] blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[#A855F7]/[0.08] blur-3xl" />
-        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-center lg:gap-8">
-          <div className="aev-glass-panel min-w-0 overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/16 p-5 shadow-[0_18px_72px_rgba(0,0,0,0.34)] sm:p-7">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#FF4DB8]/25 bg-[#FF4DB8]/12 text-[#FF4DB8]">
-                <UserRound className="h-4 w-4" />
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/75">
-                Her Care Account
-              </p>
-            </div>
-            <h1 className="mt-3 break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-3xl md:text-4xl">
-              {customer ? `Welcome back, ${customer.fullName.split(" ")[0]}` : "Your Aevyrixa account"}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#D8CBE8]/80 sm:text-base">
-              Track your next delivery, reach support, and keep saved details ready from one Her Care dashboard.
-            </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Link className="action-primary justify-center" href="/track-order">
-                Track order
-              </Link>
-              <button className="action-muted justify-center" type="button" onClick={openLiveChat}>
-                Start live chat
-              </button>
-            </div>
-            {customer && (
-              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-[#D8CBE8]">
-                <span className="rounded-full border border-[#00D4C6]/18 bg-[#00D4C6]/[0.07] px-3 py-1.5 text-[#31E6D4]">
-                  Member dashboard
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
-                  Support ready
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="aev-panel aev-intent-art aev-intent-promise min-w-0 overflow-hidden rounded-[1.75rem] border border-[#A855F7]/16 bg-[#151024]/80 p-4 shadow-[0_18px_72px_rgba(0,0,0,0.28)] sm:p-5">
-            <p className="relative mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-[#FFB3D1]/72">
-              Her Care promise
-            </p>
-            <div className="grid gap-2 min-[390px]:grid-cols-2 lg:grid-cols-1">
-              {["Discreet Packaging", "Bangladesh Delivery", "Premium Comfort", "Secure Checkout"].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-2xl border border-white/[0.09] bg-white/[0.035] px-3 py-2.5 text-xs font-semibold text-[#D8CBE8]"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-            {customer && (
-              <button
-                type="button"
-                onClick={logout}
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#211633]/85 px-4 py-2.5 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/32 hover:bg-[#2A183D] hover:text-white"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <section className="mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2rem+env(safe-area-inset-bottom,0px))] pt-5 sm:px-6 sm:pt-7 md:pb-20">
-        <AccountMobileMenu view={view} />
+      <section className="mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6 md:pb-20 md:pt-8">
+        {view !== "dashboard" && <AccountMobileMenu view={view} />}
         <nav className="mb-5 hidden scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
           <AccountTab href="/account" active={view === "dashboard"} icon={UserRound} label="Account" />
           <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
@@ -366,8 +300,8 @@ export default function AccountClient({ view }: { view: AccountView }) {
             </div>
           </Panel>
         ) : (
-          <div className={`grid gap-5 ${view === "dashboard" ? "lg:grid-cols-[minmax(0,0.71fr)_minmax(18rem,0.29fr)]" : ""} lg:gap-6`}>
-            <section className="min-w-0 lg:order-1">
+          <div className="grid gap-5 lg:gap-6">
+            <section className="min-w-0">
               {error && (
                 <div className="mb-5 rounded-2xl border border-rose-200/20 bg-rose-300/[0.08] p-4 text-sm text-rose-50/82">
                   {error}
@@ -379,6 +313,10 @@ export default function AccountClient({ view }: { view: AccountView }) {
                   allOrders={orders}
                   address={defaultAddress}
                   addressCount={addresses.length}
+                  customer={customer}
+                  settings={settings}
+                  onLogout={logout}
+                  onOpenLiveChat={openLiveChat}
                 />
               )}
               {view === "orders" && (
@@ -409,43 +347,6 @@ export default function AccountClient({ view }: { view: AccountView }) {
               {view === "support" && <SupportView message={supportMessage} settings={settings} onOpenLiveChat={openLiveChat} />}
             </section>
 
-            {view === "dashboard" && (
-            <aside className="space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-              <Panel className="aev-intent-art aev-intent-account overflow-hidden p-0 sm:p-0">
-                <div className="border-b border-white/8 bg-[linear-gradient(135deg,rgba(255,77,184,0.13),rgba(168,85,247,0.08),rgba(0,212,198,0.04))] p-5 sm:p-6">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/22 bg-[#080611]/45 text-base font-semibold text-[#FFB3D1] shadow-[0_0_28px_rgba(255,77,184,0.14)]">
-                    {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
-                  </div>
-                  <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#FF4DB8]/72">
-                    Profile details
-                  </p>
-                  <p className="mt-2 break-words text-lg font-semibold leading-snug text-white [overflow-wrap:anywhere]">
-                    {customer.fullName}
-                  </p>
-                  <p className="mt-2 text-xs leading-5 text-[#D8CBE8]/72">
-                    Contact details stay here while orders and support stay first in the dashboard.
-                  </p>
-                </div>
-                <div className="space-y-3 p-5 sm:p-6">
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.035] p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/72">Phone</p>
-                    <p className="mt-1 break-words text-sm text-[#D8CBE8] [overflow-wrap:anywhere]">{customer.phone}</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.035] p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/72">Email</p>
-                    <p className="mt-1 break-words text-sm text-[#D8CBE8] [overflow-wrap:anywhere]">
-                      {customer.email || "Not available"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-2xl border border-emerald-300/12 bg-emerald-300/[0.055] p-3">
-                    <span className="h-2 w-2 rounded-full bg-[#22C55E]" />
-                    <span className="text-xs font-semibold text-emerald-100">Account session active</span>
-                  </div>
-                </div>
-              </Panel>
-            </aside>
-            )}
-
           </div>
         )}
       </section>
@@ -465,6 +366,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
         }
         whatsappUrl={settings.whatsappUrl}
         supportPhone={settings.supportPhone}
+        hideLauncherOnMobile
       />
     </main>
   );
@@ -477,13 +379,22 @@ const accountDestinations = [
   { view: "support", href: "/account/support", label: "Support", icon: MessageSquare },
 ] as const;
 
-function AccountMobileMenu({ view }: { view: AccountView }) {
+function AccountMobileMenu({ view, hero = false }: { view: AccountView; hero?: boolean }) {
   const current = accountDestinations.find((destination) => destination.view === view) ?? accountDestinations[0];
   const CurrentIcon = current.icon;
 
   return (
-    <details className="group relative z-30 mb-5 md:hidden">
-      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-[1.2rem] border border-white/[0.10] bg-[#080611]/94 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl [&::-webkit-details-marker]:hidden">
+    <details className={`group relative z-30 md:hidden ${hero ? "" : "mb-5"}`}>
+      <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 border border-white/[0.10] bg-[#080611]/94 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl [&::-webkit-details-marker]:hidden ${
+        hero ? "h-10 w-10 rounded-full p-0" : "min-h-12 rounded-[1.2rem] px-4 py-3"
+      }`}>
+        {hero ? (
+          <>
+            <span className="sr-only">Open account menu</span>
+            <Menu className="mx-auto h-4 w-4 text-[#FFB3D1]" />
+          </>
+        ) : (
+          <>
         <span className="flex min-w-0 items-center gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.09] text-[#FFB3D1]">
             <CurrentIcon className="h-4 w-4" />
@@ -494,8 +405,12 @@ function AccountMobileMenu({ view }: { view: AccountView }) {
           </span>
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-[#FFB3D1] transition group-open:rotate-180" />
+          </>
+        )}
       </summary>
-      <nav className="absolute inset-x-0 top-[calc(100%+0.55rem)] grid gap-1.5 rounded-[1.3rem] border border-[#FF4DB8]/18 bg-[#100B1C]/[0.98] p-2 shadow-[0_22px_68px_rgba(0,0,0,0.58)] backdrop-blur-2xl">
+      <nav className={`absolute top-[calc(100%+0.55rem)] grid gap-1.5 rounded-[1.3rem] border border-[#FF4DB8]/18 bg-[#100B1C]/[0.98] p-2 shadow-[0_22px_68px_rgba(0,0,0,0.58)] backdrop-blur-2xl ${
+        hero ? "right-0 w-52" : "inset-x-0"
+      }`}>
         {accountDestinations.map(({ href, icon: Icon, label, view: destinationView }) => (
           <Link
             key={href}
@@ -555,11 +470,19 @@ function Dashboard({
   allOrders,
   address,
   addressCount,
+  customer,
+  settings,
+  onLogout,
+  onOpenLiveChat,
 }: {
   orders: AccountOrder[];
   allOrders: AccountOrder[];
   address?: Address;
   addressCount: number;
+  customer: Customer;
+  settings: StorefrontSettings;
+  onLogout: () => void;
+  onOpenLiveChat: () => void;
 }) {
   const pendingOrders = allOrders.filter((order) => normalizeStatus(order.status).includes("pending")).length;
   const deliveredOrders = allOrders.filter(
@@ -567,17 +490,9 @@ function Dashboard({
   ).length;
 
   return (
-    <div className="grid gap-4 sm:gap-5">
-      <Panel className="aev-intent-art aev-intent-pulse overflow-hidden">
-        <div className="mb-4 flex flex-col justify-between gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#FF4DB8]/72">Account pulse</p>
-            <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">Your Her Care overview</h2>
-          </div>
-          <p className="max-w-sm text-sm leading-6 text-[#9C91AA]">
-            Real order and address activity from this customer account.
-          </p>
-        </div>
+    <div className="grid gap-4 sm:gap-5 lg:gap-6">
+      <ProfileHero customer={customer} onLogout={onLogout} />
+      <Panel className="aev-account-summary aev-intent-art aev-intent-pulse overflow-hidden p-4 sm:p-5">
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} accent="pink" />
           <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
@@ -585,12 +500,12 @@ function Dashboard({
           <Metric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
         </div>
       </Panel>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.8fr)] xl:gap-5">
-        <Panel className="aev-intent-art aev-intent-orders overflow-hidden">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(19rem,0.78fr)] lg:gap-5">
+        <Panel className="aev-account-orders aev-intent-art aev-intent-orders overflow-hidden">
           <SectionTitle title="Recent Orders" href="/account/orders" />
           <OrderRows orders={orders} />
         </Panel>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
           <Panel className="aev-intent-art aev-intent-address overflow-hidden">
             <SectionTitle title="Saved Address" href="/account/addresses" />
             {address ? (
@@ -601,19 +516,74 @@ function Dashboard({
                 </p>
               </>
             ) : (
-              <EmptyLine text="No saved address yet." />
+              <div>
+                <EmptyLine text="No saved address yet." />
+                <Link className="mini-action mt-3 inline-flex" href="/account/addresses">
+                  Add address
+                </Link>
+              </div>
             )}
           </Panel>
-          <Panel className="aev-intent-art aev-intent-promise hidden overflow-hidden sm:block">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/72">Her Care promise</p>
-            <h2 className="mt-3 text-lg font-semibold text-white">Support stays purposeful.</h2>
-            <p className="mt-2 text-sm leading-7 text-white/62">
-              Use the Support tab for live help, WhatsApp, support policy details, and order tracking when a concern needs attention.
-            </p>
-          </Panel>
+          <DashboardSupport settings={settings} onOpenLiveChat={onOpenLiveChat} />
         </div>
       </div>
     </div>
+  );
+}
+
+function ProfileHero({ customer, onLogout }: { customer: Customer; onLogout: () => void }) {
+  return (
+    <Panel className="aev-account-profile aev-intent-art aev-intent-profile z-20 overflow-visible p-0 sm:p-0">
+      <div className="relative grid min-w-0 gap-5 rounded-[inherit] p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:p-7">
+        <div className="aev-account-profile-aura" aria-hidden="true" />
+        <div className="relative min-w-0 pr-14 sm:pr-24 lg:pr-0">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/25 bg-[#080611]/55 text-lg font-semibold text-[#FFB3D1] shadow-[0_0_30px_rgba(255,77,184,0.16)] sm:h-14 sm:w-14">
+              {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#FF4DB8]/72">
+                Her Care account
+              </p>
+              <h1 className="mt-1 break-words text-xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-3xl">
+                {customer.fullName}
+              </h1>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-[#D8CBE8]/82">
+            <span className="break-all rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5">
+              {customer.phone}
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/18 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-semibold text-emerald-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
+              Account active
+            </span>
+          </div>
+          {customer.email && (
+            <p className="mt-3 break-all text-xs text-[#9C91AA]">{customer.email}</p>
+          )}
+        </div>
+        <div className="relative grid gap-2 min-[390px]:grid-cols-2 lg:min-w-[19rem]">
+          <Link className="action-primary min-h-11 justify-center" href="/track-order">
+            Track Order
+          </Link>
+          <Link className="action-muted min-h-11 justify-center" href="/account/orders">
+            View Orders
+          </Link>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/28 hover:text-white min-[390px]:col-span-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
+        </div>
+        <div className="absolute right-5 top-5 sm:right-6 lg:hidden">
+          <AccountMobileMenu view="dashboard" hero />
+        </div>
+      </div>
+    </Panel>
   );
 }
 
@@ -637,7 +607,7 @@ function Metric({
   };
 
   return (
-    <div className="aev-card aev-metric-card relative min-h-[8.25rem] rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
+    <div className="aev-card aev-metric-card relative min-h-[6.8rem] rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230]/88 p-3.5 sm:min-h-[7.5rem] sm:p-4">
       <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.06] blur-xl" />
       <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${accents[accent]}`}>
         <Icon className="h-4 w-4" />
@@ -645,6 +615,76 @@ function Metric({
       <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">{label}</p>
       <p className="mt-1.5 text-2xl font-semibold text-white">{value}</p>
     </div>
+  );
+}
+
+function DashboardSupport({ settings, onOpenLiveChat }: { settings: StorefrontSettings; onOpenLiveChat: () => void }) {
+  return (
+    <Panel className="aev-account-support aev-intent-art aev-intent-support relative overflow-hidden border-[#00D4C6]/14">
+      <SupportAgentVisual imageUrl={settings.storeProfile.supportAgentImageUrl} />
+      <SectionTitle title="Support" href="/account/support" />
+      <div className="relative grid grid-cols-3 gap-2">
+        <CompactSupportAction icon={MessageSquare} label="Live Chat" accent="pink" onClick={onOpenLiveChat} />
+        {settings.whatsappUrl ? (
+          <CompactSupportAction icon={Headphones} label="WhatsApp Support" accent="cyan" href={settings.whatsappUrl} external />
+        ) : (
+          <CompactSupportAction icon={Headphones} label="WhatsApp Support" accent="cyan" href="/support" />
+        )}
+        <CompactSupportAction icon={ShieldCheck} label="Support Page" accent="amber" href="/support" />
+      </div>
+    </Panel>
+  );
+}
+
+function CompactSupportAction({
+  href,
+  icon: Icon,
+  label,
+  accent,
+  external = false,
+  onClick,
+}: {
+  href?: string;
+  icon: typeof UserRound;
+  label: string;
+  accent: "pink" | "cyan" | "amber";
+  external?: boolean;
+  onClick?: () => void;
+}) {
+  const accents = {
+    pink: "border-[#FF4DB8]/25 bg-[#FF4DB8]/[0.10] text-[#FFB3D1]",
+    cyan: "border-[#00D4C6]/25 bg-[#00D4C6]/[0.09] text-[#31E6D4]",
+    amber: "border-[#FFB84D]/25 bg-[#FFB84D]/[0.09] text-[#FFD18A]",
+  };
+  const className =
+    "group relative flex min-h-[5.75rem] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-[#0B0F1A]/72 px-2 py-3 text-center text-[11px] font-semibold leading-4 text-[#D8CBE8] transition hover:border-white/[0.16] hover:text-white sm:min-h-[6.5rem] sm:text-xs";
+  const content = (
+    <>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-xl border ${accents[accent]}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="break-words [overflow-wrap:anywhere]">{label}</span>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button type="button" className={className} onClick={onClick}>
+        {content}
+      </button>
+    );
+  }
+
+  if (!href) return null;
+
+  return external ? (
+    <a className={className} href={href} target="_blank" rel="noreferrer">
+      {content}
+    </a>
+  ) : (
+    <Link className={className} href={href}>
+      {content}
+    </Link>
   );
 }
 
@@ -842,6 +882,45 @@ function OrderRows({
   detailed?: boolean;
 }) {
   if (orders.length === 0) return <EmptyLine text="No orders found for this account phone yet." />;
+
+  if (!detailed) {
+    return (
+      <div className="space-y-2.5">
+        {orders.map((order) => (
+          <div
+            key={order.orderRef}
+            className="group relative grid min-w-0 gap-3 overflow-hidden rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230]/88 p-3.5 transition hover:border-[#FF4DB8]/28 hover:bg-[#211633]/90 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-4"
+          >
+            <div className="pointer-events-none absolute -right-5 -top-6 h-20 w-20 rounded-full bg-[#FF4DB8]/[0.06] blur-2xl" />
+            <div className="relative min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
+                  {order.items[0]?.name || order.orderRef}
+                </p>
+                <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${statusChipClass(order.status)}`}>
+                  {readable(order.status)}
+                </span>
+              </div>
+              <p className="mt-1 break-words text-xs text-[#9C91AA] [overflow-wrap:anywhere]">
+                {order.orderRef} / {formatDate(order.createdAt)}
+              </p>
+              <p className="mt-2 text-sm font-semibold text-[#FFB3D1]">{formatCurrency(order.total)}</p>
+            </div>
+            <div className="relative flex flex-wrap gap-2 sm:justify-end">
+              <Link className="mini-action min-h-9 flex-1 justify-center text-center sm:flex-none" href={orderDetailHref(order.orderRef)}>
+                View details
+              </Link>
+              {order.customerPhone && (
+                <Link className="mini-action min-h-9 flex-1 justify-center text-center sm:flex-none" href={trackOrderHref(order)}>
+                  Track order
+                </Link>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
