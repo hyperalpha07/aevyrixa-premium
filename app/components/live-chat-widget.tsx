@@ -95,6 +95,20 @@ export default function LiveChatWidget({
     if (stored) setSession(stored);
   }, []);
 
+  useEffect(() => {
+    if (!enabled || (placement !== "homepage" && placement !== "all")) return;
+
+    const handleOpenRequest = (event: Event) => {
+      if (event.cancelable) event.preventDefault();
+      setOpen(true);
+    };
+
+    window.addEventListener("aevyrixa:open-live-chat", handleOpenRequest);
+    return () => {
+      window.removeEventListener("aevyrixa:open-live-chat", handleOpenRequest);
+    };
+  }, [enabled, placement]);
+
   // Load history when session is set and panel opens
   const loadHistory = useCallback(
     async (sess: StoredSession) => {
@@ -273,7 +287,7 @@ export default function LiveChatWidget({
 
   return (
     <>
-      <div className={`fixed ${bottomClass} right-4 z-50 sm:right-6`}>
+      <div className={`fixed ${bottomClass} right-4 z-[70] sm:right-6`}>
         <button
           onClick={() => setOpen(true)}
           className="flex items-center gap-2.5 rounded-full border border-white/20 bg-[#1a1a2e]/90 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(0,0,0,0.36)] backdrop-blur-xl transition hover:border-cyan-200/40 hover:bg-[#1e2240]"
@@ -285,7 +299,7 @@ export default function LiveChatWidget({
 
       {open && (
         <div
-          className="fixed inset-0 z-[60] flex items-end justify-end p-4 sm:p-6"
+          className="fixed inset-0 z-[80] flex items-end justify-end p-4 sm:p-6"
           onClick={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
           }}

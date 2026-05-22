@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   Clock3,
   Headphones,
   LogOut,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
+import LiveChatWidget from "@/app/components/live-chat-widget";
 import { formatCurrency } from "@/app/lib/currency";
 import {
   defaultStorefrontSettings,
@@ -252,6 +254,25 @@ export default function AccountClient({ view }: { view: AccountView }) {
     }
   };
 
+  const openLiveChat = () => {
+    if (typeof window === "undefined") {
+      router.push("/support");
+      return;
+    }
+
+    const openEvent = new CustomEvent("aevyrixa:open-live-chat", { cancelable: true });
+    const needsFallback = window.dispatchEvent(openEvent);
+    if (needsFallback) router.push("/support");
+  };
+
+  const canShowWhatsappSupport =
+    settings.storeProfile.liveSupportMode === "whatsapp" ||
+    settings.storeProfile.liveSupportMode === "both";
+  const canShowLiveChatSupport =
+    settings.storeProfile.liveSupportMode === "live_chat" ||
+    settings.storeProfile.liveSupportMode === "both";
+  const homeMedia = settings.homepageMediaSettings;
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(255,77,184,0.07),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(168,85,247,0.05),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
@@ -281,9 +302,9 @@ export default function AccountClient({ view }: { view: AccountView }) {
               <Link className="action-primary justify-center" href="/track-order">
                 Track order
               </Link>
-              <Link className="action-muted justify-center" href="/account/orders">
-                View orders
-              </Link>
+              <button className="action-muted justify-center" type="button" onClick={openLiveChat}>
+                Start live chat
+              </button>
             </div>
             {customer && (
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-[#D8CBE8]">
@@ -325,7 +346,8 @@ export default function AccountClient({ view }: { view: AccountView }) {
       </div>
 
       <section className="mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2rem+env(safe-area-inset-bottom,0px))] pt-5 sm:px-6 sm:pt-7 md:pb-20">
-        <nav className="mb-5 flex scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <AccountMobileMenu view={view} />
+        <nav className="mb-5 hidden scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
           <AccountTab href="/account" active={view === "dashboard"} icon={UserRound} label="Account" />
           <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
           <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
@@ -384,12 +406,12 @@ export default function AccountClient({ view }: { view: AccountView }) {
                   onSetDefault={setDefaultAddress}
                 />
               )}
-              {view === "support" && <SupportView message={supportMessage} settings={settings} />}
+              {view === "support" && <SupportView message={supportMessage} settings={settings} onOpenLiveChat={openLiveChat} />}
             </section>
 
             {view === "dashboard" && (
             <aside className="space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-              <Panel className="aev-intent-art aev-intent-profile overflow-hidden p-0 sm:p-0">
+              <Panel className="aev-intent-art aev-intent-account overflow-hidden p-0 sm:p-0">
                 <div className="border-b border-white/8 bg-[linear-gradient(135deg,rgba(255,77,184,0.13),rgba(168,85,247,0.08),rgba(0,212,198,0.04))] p-5 sm:p-6">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/22 bg-[#080611]/45 text-base font-semibold text-[#FFB3D1] shadow-[0_0_28px_rgba(255,77,184,0.14)]">
                     {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
@@ -431,7 +453,66 @@ export default function AccountClient({ view }: { view: AccountView }) {
       <div className="aev-account-footer">
         <SiteFooter settings={settings} />
       </div>
+      <LiveChatWidget
+        enabled={canShowLiveChatSupport && homeMedia.liveChatEnabled}
+        label={homeMedia.liveChatLabel}
+        placement={homeMedia.liveChatPlacement}
+        whatsappAlsoEnabled={
+          canShowWhatsappSupport &&
+          homeMedia.whatsappWidgetEnabled &&
+          !!settings.whatsappUrl &&
+          (homeMedia.whatsappWidgetPlacement === "homepage" || homeMedia.whatsappWidgetPlacement === "all")
+        }
+        whatsappUrl={settings.whatsappUrl}
+        supportPhone={settings.supportPhone}
+      />
     </main>
+  );
+}
+
+const accountDestinations = [
+  { view: "dashboard", href: "/account", label: "Account", icon: UserRound },
+  { view: "orders", href: "/account/orders", label: "Orders", icon: PackageSearch },
+  { view: "addresses", href: "/account/addresses", label: "Addresses", icon: MapPin },
+  { view: "support", href: "/account/support", label: "Support", icon: MessageSquare },
+] as const;
+
+function AccountMobileMenu({ view }: { view: AccountView }) {
+  const current = accountDestinations.find((destination) => destination.view === view) ?? accountDestinations[0];
+  const CurrentIcon = current.icon;
+
+  return (
+    <details className="group relative z-30 mb-5 md:hidden">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-[1.2rem] border border-white/[0.10] bg-[#080611]/94 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.09] text-[#FFB3D1]">
+            <CurrentIcon className="h-4 w-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.24em] text-[#9C91AA]">Account menu</span>
+            <span className="block truncate">{current.label}</span>
+          </span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-[#FFB3D1] transition group-open:rotate-180" />
+      </summary>
+      <nav className="absolute inset-x-0 top-[calc(100%+0.55rem)] grid gap-1.5 rounded-[1.3rem] border border-[#FF4DB8]/18 bg-[#100B1C]/[0.98] p-2 shadow-[0_22px_68px_rgba(0,0,0,0.58)] backdrop-blur-2xl">
+        {accountDestinations.map(({ href, icon: Icon, label, view: destinationView }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={destinationView === view ? "page" : undefined}
+            className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition ${
+              destinationView === view
+                ? "border-[#FF4DB8]/35 bg-[#FF4DB8]/[0.13] text-white"
+                : "border-transparent text-[#D8CBE8] hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+            }`}
+          >
+            <Icon className="h-4 w-4 shrink-0 text-[#FFB3D1]" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </details>
   );
 }
 
@@ -523,7 +604,7 @@ function Dashboard({
               <EmptyLine text="No saved address yet." />
             )}
           </Panel>
-          <Panel className="aev-intent-art aev-intent-promise overflow-hidden">
+          <Panel className="aev-intent-art aev-intent-promise hidden overflow-hidden sm:block">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/72">Her Care promise</p>
             <h2 className="mt-3 text-lg font-semibold text-white">Support stays purposeful.</h2>
             <p className="mt-2 text-sm leading-7 text-white/62">
@@ -567,10 +648,11 @@ function Metric({
   );
 }
 
-function SupportHub({ settings }: { settings: StorefrontSettings }) {
+function SupportHub({ settings, onOpenLiveChat }: { settings: StorefrontSettings; onOpenLiveChat: () => void }) {
   return (
     <Panel className="aev-intent-art aev-intent-support relative overflow-hidden border-[#00D4C6]/14">
       <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#00D4C6]/[0.07] blur-3xl" />
+      <SupportAgentVisual imageUrl={settings.storeProfile.supportAgentImageUrl} />
       <div className="relative grid gap-5 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:items-start">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
@@ -589,15 +671,14 @@ function SupportHub({ settings }: { settings: StorefrontSettings }) {
               <span>3-Day Hygiene-Safe Support is available for eligible concerns after delivery.</span>
             </p>
           </div>
-          <SupportAgentVisual imageUrl={settings.storeProfile.supportAgentImageUrl} />
         </div>
         <div className="grid gap-3 min-[430px]:grid-cols-2">
           <SupportAction
-            href="/support"
             icon={MessageSquare}
             label="Start live chat"
-            helper="Open the existing support flow."
+            helper="Open Aevyrixa Support here."
             accent="pink"
+            onClick={onOpenLiveChat}
           />
           {settings.whatsappUrl ? (
             <SupportAction
@@ -618,18 +699,18 @@ function SupportHub({ settings }: { settings: StorefrontSettings }) {
             />
           )}
           <SupportAction
-            href="/track-order"
-            icon={PackageSearch}
-            label="Track order"
-            helper="Use your order reference and phone."
-            accent="violet"
-          />
-          <SupportAction
             href="/support"
             icon={ShieldCheck}
             label="Support page"
             helper="Review support policy details."
             accent="amber"
+          />
+          <SupportAction
+            href="/track-order"
+            icon={PackageSearch}
+            label="Track order"
+            helper="Use your order reference and phone."
+            accent="violet"
           />
         </div>
       </div>
@@ -639,16 +720,15 @@ function SupportHub({ settings }: { settings: StorefrontSettings }) {
 
 function SupportAgentVisual({ imageUrl }: { imageUrl: string }) {
   return (
-    <div className="aev-support-agent-frame mt-4 hidden overflow-hidden rounded-[1.2rem] border border-white/[0.09] bg-[#0B0F1A]/72 p-2 sm:block">
+    <div className="aev-support-agent-art" aria-hidden="true">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageUrl}
-          alt="Aevyrixa support agent"
-          className="h-36 w-full rounded-[0.95rem] object-cover object-center"
+          alt=""
         />
       ) : (
-        <div className="aev-support-agent-fallback h-36 rounded-[0.95rem]" aria-hidden="true" />
+        <div className="aev-support-agent-fallback" />
       )}
     </div>
   );
@@ -661,13 +741,15 @@ function SupportAction({
   helper,
   accent,
   external = false,
+  onClick,
 }: {
-  href: string;
+  href?: string;
   icon: typeof UserRound;
   label: string;
   helper: string;
   accent: "pink" | "cyan" | "violet" | "amber";
   external?: boolean;
+  onClick?: () => void;
 }) {
   const accents = {
     pink: "border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]",
@@ -691,6 +773,16 @@ function SupportAction({
   );
   const className =
     "group flex min-h-[6.5rem] min-w-0 items-start gap-3 rounded-[1.15rem] border border-white/[0.08] bg-[#1B1230]/92 p-4 transition hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-[#211633]";
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${className} text-left`}>
+        {content}
+      </button>
+    );
+  }
+
+  if (!href) return null;
 
   return external ? (
     <a href={href} target="_blank" rel="noreferrer" className={className}>
@@ -953,10 +1045,10 @@ function AddressSummary({ address }: { address: Address }) {
   );
 }
 
-function SupportView({ message, settings }: { message: string; settings: StorefrontSettings }) {
+function SupportView({ message, settings, onOpenLiveChat }: { message: string; settings: StorefrontSettings; onOpenLiveChat: () => void }) {
   return (
     <div className="grid gap-5">
-      <SupportHub settings={settings} />
+      <SupportHub settings={settings} onOpenLiveChat={onOpenLiveChat} />
       <Panel>
         <div className="flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/22 bg-[#A855F7]/[0.08] text-[#A855F7]">
