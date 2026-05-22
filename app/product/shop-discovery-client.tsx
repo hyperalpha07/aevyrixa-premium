@@ -3,16 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  CheckCircle2,
   ChevronDown,
   Moon,
-  PackageCheck,
   Search,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  Truck,
-  Waves,
   X,
 } from "lucide-react";
 import StorefrontProductCard, {
@@ -57,10 +53,6 @@ const discoveryChips = [
   { label: "Period Care", category: "Reusable Period Care", icon: ShieldCheck },
   { label: "Everyday Comfort", category: "Comfort Panty", icon: Sparkles },
   { label: "Night Comfort", category: "Nightwear", icon: Moon },
-  { label: "Heavy Flow", signal: "heavy_flow" as SignalFilter, icon: Waves },
-  { label: "New Arrivals", signal: "new" as SignalFilter, icon: Sparkles },
-  { label: "Limited Stock", signal: "limited_stock" as SignalFilter, icon: CheckCircle2 },
-  { label: "Best Sellers", signal: "best_seller" as SignalFilter, icon: ShieldCheck },
 ];
 
 function normalized(value: string | undefined) {
@@ -125,7 +117,6 @@ function CollectionSection({
 export default function ShopDiscoveryClient({
   products,
   activeCategories,
-  settings,
   reviewSummaries = [],
   initialCategory = "",
 }: ShopDiscoveryClientProps) {
@@ -179,14 +170,9 @@ export default function ShopDiscoveryClient({
 
   const availableDiscoveryChips = useMemo(
     () =>
-      discoveryChips.filter((chip) => {
-        if (chip.category) return productMatchesCategory(products, chip.category);
-        if (chip.signal === "new") return products.some((product) => isNewProduct(product));
-        if (chip.signal === "limited_stock") return products.some((product) => isLimitedStock(product));
-        if (chip.signal === "best_seller") return products.some((product) => product.isBestSeller);
-        if (chip.signal === "heavy_flow") return products.some((product) => isHeavyFlowProduct(product));
-        return true;
-      }),
+      discoveryChips.filter((chip) =>
+        productMatchesCategory(products, chip.category)
+      ),
     [products]
   );
 
@@ -242,16 +228,8 @@ export default function ShopDiscoveryClient({
   };
 
   const selectDiscoveryChip = (chip: (typeof discoveryChips)[number]) => {
-    if (chip.category) {
-      setCategory(category === chip.category ? "" : chip.category);
-      setSignal("all");
-      return;
-    }
-
-    if (chip.signal) {
-      setSignal(signal === chip.signal ? "all" : chip.signal);
-      setCategory("");
-    }
+    setCategory(category === chip.category ? "" : chip.category);
+    setSignal("all");
   };
 
   useEffect(() => {
@@ -341,31 +319,27 @@ export default function ShopDiscoveryClient({
   return (
     <>
       <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-5 pt-5 sm:px-6 sm:pt-7 md:pb-6 md:pt-9">
-        <div className="pointer-events-none absolute inset-x-3 top-4 -z-10 h-[22rem] rounded-[2.4rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.22),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.17),transparent_28%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.05),transparent_58%)] shadow-[0_34px_120px_rgba(0,0,0,0.28)]" />
+        <div className="pointer-events-none absolute inset-x-3 top-4 -z-10 h-[13rem] rounded-[2rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.18),transparent_32%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.13),transparent_30%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.06),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent_58%)] shadow-[0_24px_90px_rgba(0,0,0,0.24)] sm:h-[15rem]" />
 
         <div className="relative mx-auto max-w-6xl">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="aev-pill justify-center">
-              <Sparkles className="h-3.5 w-3.5" />
-              Aevyrixa Her Care
-            </div>
-            <h1 className="aev-heading mt-3 break-words text-[2rem] [overflow-wrap:anywhere] sm:text-[2.8rem] lg:text-[3.55rem]">
-              Discover care made for your rhythm.
+          <div className="mx-auto max-w-5xl">
+            <h1 className="aev-heading break-words text-[1.65rem] [overflow-wrap:anywhere] sm:text-[2.2rem] lg:text-[2.65rem]">
+              Her Care Collection
             </h1>
-            <p className="aev-subtext mx-auto mt-3 max-w-2xl text-sm sm:text-base">
-              Browse premium reusable care essentials by fit, flow, stock, and comfort mood. BDT pricing, privacy packaging, and Bangladesh delivery stay clear at every step.
+            <p className="aev-subtext mt-1.5 hidden max-w-2xl text-sm sm:block sm:text-base">
+              Premium reusable care essentials with clear BDT pricing and discreet Bangladesh delivery.
             </p>
           </div>
 
-          <div className="aev-panel aev-glow-border mx-auto mt-5 max-w-5xl p-3 shadow-[0_24px_90px_rgba(0,0,0,0.42),0_0_44px_rgba(255,77,184,0.10)] sm:p-4">
-            <div className="grid gap-2.5 min-[520px]:grid-cols-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
-              <div className="relative min-[520px]:col-span-2 md:col-span-1">
+          <div className="aev-panel aev-glow-border mx-auto mt-3 max-w-5xl p-2.5 shadow-[0_20px_72px_rgba(0,0,0,0.38),0_0_36px_rgba(255,77,184,0.08)] sm:mt-4 sm:p-3">
+            <div className="grid gap-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
+              <div className="relative">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search products, categories, comfort details..."
-                  className="aev-input min-h-[3.25rem] rounded-full py-4 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
+                  placeholder="Search products or categories..."
+                  className="aev-input min-h-11 rounded-full py-2.5 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
                 />
                 {query && (
                   <button
@@ -378,47 +352,50 @@ export default function ShopDiscoveryClient({
                   </button>
                 )}
               </div>
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortMode)}
-                className="aev-input min-h-11 rounded-full px-3 py-2 text-sm font-semibold md:w-40"
-                aria-label="Sort products"
-              >
-                <option value="featured">Featured</option>
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price low</option>
-                <option value="price-desc">Price high</option>
-                <option value="stock">In stock</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => setFiltersOpen(true)}
-                className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filters
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="aev-button-ghost min-h-11 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold"
-                aria-label="Reset filters"
-              >
-                Reset
-              </button>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 md:contents">
+                <select
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value as SortMode)}
+                  className="aev-input min-h-11 min-w-0 rounded-full px-3 py-2 text-sm font-semibold md:w-40"
+                  aria-label="Sort products"
+                >
+                  <option value="featured">Featured</option>
+                  <option value="newest">Newest</option>
+                  <option value="price-asc">Price low</option>
+                  <option value="price-desc">Price high</option>
+                  <option value="stock">In stock</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(true)}
+                  className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold sm:px-4"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  Filters
+                  <ChevronDown className="hidden h-3.5 w-3.5 sm:block" />
+                </button>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="aev-button-ghost min-h-11 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold sm:px-4 sm:text-sm"
+                  aria-label="Reset filters"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-2">
+          <div className="mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
             {[
-              `${products.length} products`,
-              "BDT pricing",
-              settings.privacyPackagingMessage || "Privacy Packaging",
+              `${products.length} Products`,
+              "BDT Pricing",
+              "Discreet Packaging",
+              "Bangladesh Delivery",
             ].map((item) => (
               <span
                 key={item}
-                className="rounded-full border border-white/10 bg-[#151024]/72 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl"
+                className="shrink-0 rounded-full border border-white/10 bg-[#151024]/72 px-2.5 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl sm:px-3 sm:py-1.5 sm:text-[0.68rem]"
               >
                 {item}
               </span>
@@ -426,16 +403,16 @@ export default function ShopDiscoveryClient({
           </div>
 
           {availableDiscoveryChips.length > 0 && (
-            <div className="mx-auto mt-3 flex max-w-5xl gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:justify-center">
+            <div className="mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
               {availableDiscoveryChips.map((chip) => {
                 const Icon = chip.icon;
-                const active = (chip.category && category === chip.category) || (chip.signal && signal === chip.signal);
+                const active = category === chip.category;
                 return (
                   <button
-                    key={`${chip.label}-${chip.category ?? chip.signal}`}
+                    key={`${chip.label}-${chip.category}`}
                     type="button"
                     onClick={() => selectDiscoveryChip(chip)}
-                    className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition ${
+                    className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition ${
                       active
                         ? "border-[#FF4DB8]/55 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_18px_rgba(255,77,184,0.32)]"
                         : "border-white/10 bg-[#151024]/88 text-[#D8CBE8]/78 backdrop-blur-xl hover:border-[#FF4DB8]/32 hover:text-white"
@@ -449,41 +426,24 @@ export default function ShopDiscoveryClient({
             </div>
           )}
         </div>
-
-        <div className="mx-auto mt-3 grid max-w-6xl grid-cols-2 gap-2 sm:mt-4 sm:grid-cols-4 sm:gap-3">
-          {[
-            [settings.privacyPackagingMessage || "Privacy Packaging", PackageCheck, "text-[#FF4DB8]", "border-[#FF4DB8]/15 bg-[#FF4DB8]/[0.05]"],
-            ["BDT Pricing", CheckCircle2, "text-[#A855F7]", "border-[#A855F7]/15 bg-[#A855F7]/[0.05]"],
-            [settings.supportWindowMessage || "3-Day Hygiene-Safe Support", ShieldCheck, "text-[#00D4C6]", "border-[#00D4C6]/15 bg-[#00D4C6]/[0.05]"],
-            ["Bangladesh Delivery", Truck, "text-[#FFB84D]", "border-[#FFB84D]/15 bg-[#FFB84D]/[0.05]"],
-          ].map(([label, Icon, iconClass, chipClass]) => (
-            <div
-              key={label as string}
-              className={`aev-cinematic-chip flex min-h-[3.75rem] items-center gap-2 rounded-xl border px-3 py-2.5 text-xs leading-4 text-white/78 shadow-[0_10px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:min-h-16 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3 ${chipClass as string}`}
-            >
-              <Icon className={`h-4 w-4 shrink-0 ${iconClass as string}`} />
-              <span className="line-clamp-2">{label as string}</span>
-            </div>
-          ))}
-        </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 sm:pb-18 md:pt-4">
+      <section className="mx-auto max-w-7xl px-4 pb-14 pt-0 sm:px-6 sm:pb-18 md:pt-1">
         <div className="min-w-0">
-          <div className="mb-4 flex flex-col gap-2 border-b border-white/[0.08] pb-3 sm:mb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-            <div className="flex flex-wrap items-end gap-x-3 gap-y-1.5">
-              <p className="aev-section-label">All Products</p>
-              <h2 className="aev-heading text-xl sm:text-2xl md:text-3xl">
-                {filteredProducts.length === 0
-                  ? "No matches"
-                  : `${filteredProducts.length} product${filteredProducts.length === 1 ? "" : "s"}`}
-              </h2>
+          <div className="mb-3 flex flex-col gap-1 border-b border-white/[0.08] pb-2.5 sm:mb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-3">
+            <h2 className="aev-heading text-xl sm:text-2xl md:text-3xl">
+              All Products
+            </h2>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#9C91AA]">
+              <span>
+                {filteredProducts.length} product{filteredProducts.length === 1 ? "" : "s"}
+              </span>
+              {filteredProducts.length > 0 && (
+                <span className="text-[#D8CBE8]/72">
+                  {category ? `Filtered: ${category}` : "All active products"}
+                </span>
+              )}
             </div>
-            {filteredProducts.length > 0 && (
-              <p className="text-xs text-[#9C91AA]">
-                {category ? `Filtered: ${category}` : "All active products"}
-              </p>
-            )}
           </div>
 
           {filteredProducts.length === 0 ? (
