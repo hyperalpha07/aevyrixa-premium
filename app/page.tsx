@@ -20,6 +20,7 @@ import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import StorefrontProductCard from "@/app/components/storefront-product-card";
 import LiveChatWidget from "@/app/components/live-chat-widget";
+import SupportActionPanel from "@/app/components/support-action-panel";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { whatsappHref } from "@/app/lib/admin-settings";
@@ -135,26 +136,10 @@ const heroTrustBadges = [
   "Reusable Protection",
 ];
 
-const heroTrustStats = [
-  {
-    value: "5K+",
-    label: "Her Care Visitors",
-  },
-  {
-    value: "4.8★",
-    label: "Customer Rating",
-  },
-  {
-    value: "100%",
-    label: "Discreet Packaging",
-  },
-];
-
 const heroMarqueeItems = [
   "Bangladesh Delivery",
   "4-Layer Protection",
   "Eco-Friendly",
-  "5,000+ Visitors",
   "Hygiene-Safe Support",
   "Premium Comfort",
   "Discreet Packaging",
@@ -217,7 +202,7 @@ const hereCareBase = [
 
 function TestimonialsSection({ reviews }: { reviews: PublicProductReview[] }) {
   return (
-    <section className="px-4 py-10 sm:px-6 sm:py-14">
+    <section className="hidden px-4 py-10 md:block sm:px-6 sm:py-14">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 text-center sm:mb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#00D4C6]/75">
@@ -406,10 +391,18 @@ export default async function Home() {
               {heroMedia.eyebrow || settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
             </p>
             <h1 className="aev-hero-headline mt-6 max-w-4xl text-[2rem] font-semibold leading-[1.03] tracking-tight text-white min-[430px]:text-[2.45rem] sm:text-6xl lg:text-[4.9rem]">
-              {heroMedia.heading || settings.appearanceSettings.homepageHeroTitle}
+              <span className="md:hidden">Comfort You Can Feel.</span>
+              <span className="hidden md:inline">
+                {heroMedia.heading || settings.appearanceSettings.homepageHeroTitle}
+              </span>
             </h1>
             <p className="aev-hero-copy aev-mobile-secondary-copy mt-5 max-w-2xl text-pretty text-base leading-8 text-white/74 sm:text-lg">
-              {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
+              <span className="md:hidden">
+                Discreet period care, delivered across Bangladesh.
+              </span>
+              <span className="hidden md:inline">
+                {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
+              </span>
             </p>
 
             <div className="aev-hero-actions mt-8 flex flex-col gap-3 min-[500px]:flex-row sm:mt-10">
@@ -417,30 +410,20 @@ export default async function Home() {
                 href={heroMedia.ctaLink || "/product"}
                 className="aev-action-primary inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-7 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.42)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_36px_rgba(255,77,184,0.55)]"
               >
-                {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
+                <span className="md:hidden">Shop Now</span>
+                <span className="hidden md:inline">
+                  {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
+                </span>
               </Link>
               <Link
                 href="#how-it-works"
-                className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-[#FF4DB8]/45 hover:bg-white/[0.09]"
+                className="aev-action-secondary hidden min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-[#FF4DB8]/45 hover:bg-white/[0.09] md:inline-flex"
               >
                 Explore How It Works
               </Link>
             </div>
 
-            <div className="aev-hero-stat-shelf mt-7 grid grid-cols-3 overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-[#120C22]/72 shadow-[0_22px_70px_rgba(0,0,0,0.34),0_0_34px_rgba(255,77,184,0.08)] backdrop-blur-xl">
-              {heroTrustStats.map((stat) => (
-                <div key={stat.label} className="aev-hero-stat min-w-0 px-2.5 py-4 text-center sm:px-5 sm:py-5">
-                  <p className="aev-hero-stat-value text-[1.45rem] font-semibold leading-none text-[#FF4DB8] min-[430px]:text-[1.65rem] sm:text-[1.9rem]">
-                    {stat.value}
-                  </p>
-                  <p className="mt-2 text-[0.62rem] font-medium leading-4 text-[#9C91AA] sm:text-[0.7rem]">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="aev-hero-trust mt-7 grid grid-cols-2 gap-2 rounded-[1.35rem] border border-white/[0.08] bg-[#120C22]/70 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:gap-2.5">
+            <div className="aev-hero-trust mt-7 hidden grid-cols-2 gap-2 rounded-[1.35rem] border border-white/[0.08] bg-[#120C22]/70 p-2 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl md:grid sm:gap-2.5">
               {heroTrustBadges.map((item, index) => (
                 <div
                   key={`${item}-${index}`}
@@ -492,7 +475,7 @@ export default async function Home() {
                   variant="hero"
                 />
               )}
-              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 rounded-[1.2rem] border border-[#FF4DB8]/22 bg-[#0D0820]/88 p-3.5 shadow-[0_20px_70px_rgba(0,0,0,0.48)] backdrop-blur-xl sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
+              <div className="aev-hero-product-chip absolute bottom-4 left-4 right-4 hidden rounded-[1.2rem] border border-[#FF4DB8]/22 bg-[#0D0820]/88 p-3.5 shadow-[0_20px_70px_rgba(0,0,0,0.48)] backdrop-blur-xl md:block sm:bottom-7 sm:left-7 sm:right-7 sm:rounded-[1.35rem] sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[0.6rem] font-semibold uppercase tracking-[0.26em] text-[#FF4DB8]/75 sm:text-[0.66rem] sm:tracking-[0.3em]">
@@ -514,6 +497,23 @@ export default async function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+      <section className="aev-mobile-home-trust relative px-4 pb-3 pt-1 md:hidden" aria-label="Store trust points">
+        <div className="mx-auto grid max-w-xl grid-cols-3 gap-2">
+          {[
+            { label: "Discreet Packaging", icon: PackageCheck },
+            { label: "Bangladesh Delivery", icon: Truck },
+            { label: "3-Day Support", icon: ShieldCheck },
+          ].map(({ label, icon: Icon }) => (
+            <div
+              key={label}
+              className="aev-mobile-trust-point relative flex min-w-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[1rem] border border-[#FF4DB8]/14 bg-[#151024]/88 px-1.5 py-2.5 text-center text-[0.62rem] font-semibold leading-4 text-white/88"
+            >
+              <Icon className="relative h-3.5 w-3.5 shrink-0 text-[#FFB3D1]" strokeWidth={1.9} />
+              <span className="relative">{label}</span>
+            </div>
+          ))}
         </div>
       </section>
       <div className="aev-home-marquee" aria-label="Storefront highlights">
@@ -542,11 +542,12 @@ export default async function Home() {
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="aev-section-label">Shop our best picks</p>
+                <p className="aev-section-label hidden sm:block">Shop our best picks</p>
                 <h2 className="aev-heading mt-3 text-2xl sm:text-4xl lg:text-5xl">
-                  Best Picks For You
+                  <span className="sm:hidden">Best Picks</span>
+                  <span className="hidden sm:inline">Best Picks For You</span>
                 </h2>
-                <p className="aev-subtext aev-mobile-secondary-copy mt-3 max-w-2xl text-sm sm:text-base">
+                <p className="aev-subtext mt-3 hidden max-w-2xl text-sm sm:block sm:text-base">
                   Real active products from the current storefront, shown with live stock status and BDT pricing.
                 </p>
               </div>
@@ -573,8 +574,43 @@ export default async function Home() {
         </section>
       )}
 
+      <section className="aev-mobile-home-benefit px-4 pb-4 pt-1 md:hidden">
+        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.65rem] border border-[#FF4DB8]/16 bg-[#120C22] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
+          <div className="relative grid grid-cols-[1fr_auto] items-center gap-3">
+            <div className="min-w-0">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                Premium Comfort
+              </p>
+              <h2 className="mt-2 text-xl font-semibold leading-tight text-white">
+                Soft care for flow days.
+              </h2>
+              <p className="mt-2 max-w-[24ch] text-sm leading-6 text-[#D8CBE8]/78">
+                Reusable essentials made for comfort and discreet daily routines.
+              </p>
+            </div>
+            <div className="aev-mobile-benefit-art flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[#1B1230]/85 text-[#FF4DB8]">
+              <ShieldCheck className="h-8 w-8" strokeWidth={1.55} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="aev-mobile-home-support px-4 pb-7 pt-2 md:hidden">
+        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.65rem] border border-[#00D4C6]/14 bg-[#0D0820] p-4">
+          <div className="relative">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
+              Need Help
+            </p>
+            <h2 className="mt-2 text-lg font-semibold text-white">
+              Support before checkout.
+            </h2>
+            <SupportActionPanel whatsappUrl={whatsappUrl} />
+          </div>
+        </div>
+      </section>
+
       {hms.showTrustStrip && (
-      <section className="aev-scroll-section px-4 py-10 sm:px-6 sm:py-16">
+      <section className="aev-scroll-section hidden px-4 py-10 md:block sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -622,7 +658,7 @@ export default async function Home() {
 
       {/* ── Phase 27: Her Care Categories ── */}
       {hms.showCategories && (
-      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/70">
@@ -741,7 +777,7 @@ export default async function Home() {
 
       {hms.showStorySections && (
       <>
-      <section id="how-it-works" className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
+      <section id="how-it-works" className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
@@ -783,7 +819,7 @@ export default async function Home() {
 
       {/* ── Layer Explorer — CMS-controlled ── */}
       {lc.layerComfortEnabled !== false && (
-        <section className={`aev-scroll-section px-4 py-12 sm:px-6 sm:py-20 ${lc.layerComfortMediaMode === "background_media_text" ? "relative overflow-hidden" : ""}`}>
+        <section className={`aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20 ${lc.layerComfortMediaMode === "background_media_text" ? "relative overflow-hidden" : ""}`}>
           {/* Background media for background_media_text mode */}
           {lc.layerComfortMediaMode === "background_media_text" && lc.layerComfortImageUrl && (
             <>
@@ -926,7 +962,7 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-14">
           {careMedia.mode === "image" && careMedia.imageUrl ? (
             <div className="aev-reveal group relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/12 bg-[#0D0820] shadow-[0_34px_120px_rgba(0,0,0,0.42)]" style={{ minHeight: "28rem" }}>
@@ -995,7 +1031,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="aev-experience-section aev-scroll-section px-4 py-16 sm:px-6 sm:py-20">
+      <section className="aev-experience-section aev-scroll-section hidden px-4 py-16 md:block sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-14">
           <div className="aev-reveal min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
@@ -1037,7 +1073,7 @@ export default async function Home() {
       )}
 
       {/* ── Phase 27: Hygiene-Safe Support Timeline ── */}
-      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-20">
+      <section className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
             Care Routine
@@ -1104,7 +1140,7 @@ export default async function Home() {
       {hms.showStorySections && (
       <>
       {/* ── Phase 47C: Privacy from order to delivery ── */}
-      <section className="px-4 py-10 sm:px-6 sm:py-14">
+      <section className="hidden px-4 py-10 md:block sm:px-6 sm:py-14">
         <div className="mx-auto max-w-7xl">
           <div className="overflow-hidden rounded-[2rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-8">
             <div className="mb-6 text-center sm:mb-8">
@@ -1168,7 +1204,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="px-4 py-12 sm:px-6 sm:py-20">
+      <section className="hidden px-4 py-12 md:block sm:px-6 sm:py-20">
         <div className="mx-auto max-w-7xl">
           <div className="rounded-[2rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
@@ -1201,7 +1237,7 @@ export default async function Home() {
       </section>
 
       {/* ── Phase 47C: Which one is right for you? ── */}
-      <section className="aev-scroll-section px-4 py-12 sm:px-6 sm:py-16">
+      <section className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
@@ -1273,7 +1309,7 @@ export default async function Home() {
       )}
 
       {hms.showFAQ && (
-      <section id="faq" className="px-4 py-12 sm:px-6 sm:py-20">
+      <section id="faq" className="hidden px-4 py-12 md:block sm:px-6 sm:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
@@ -1316,7 +1352,7 @@ export default async function Home() {
       )}
 
       {hms.showBottomCTA && hms.ctaSectionEnabled && (
-      <section className="px-4 pb-16 pt-12 sm:px-6 sm:pb-28 sm:pt-20">
+      <section className="hidden px-4 pb-16 pt-12 md:block sm:px-6 sm:pb-28 sm:pt-20">
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-[#FF4DB8]/15 bg-[#0D0820] shadow-2xl">
           {/* background_media_text mode */}
           {(hms.ctaSectionMediaMode === "background_media_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
@@ -1507,6 +1543,7 @@ export default async function Home() {
         }
         whatsappUrl={whatsappUrl}
         supportPhone={settings.supportPhone}
+        hideLauncherOnMobile
       />
 
       <SiteFooter settings={settings} />
