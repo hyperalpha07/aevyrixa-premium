@@ -3163,10 +3163,6 @@ button {
     scroll-margin-top: 4.5rem;
   }
 
-  .aev-home #how-it-works article > div.mb-12 {
-    margin-bottom: 1.15rem;
-  }
-
   .aev-home .aev-home-featured-products {
     padding-bottom: 1.5rem;
     padding-top: 1.75rem;
@@ -3180,34 +3176,23 @@ button {
     margin-top: 0.8rem;
   }
 
-  .aev-mobile-category-rail,
-  .aev-mobile-step-rail {
-    max-width: 100%;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
+  .aev-mobile-category-grid {
+    align-items: stretch;
   }
 
-  .aev-mobile-category-rail::-webkit-scrollbar,
-  .aev-mobile-step-rail::-webkit-scrollbar {
-    display: none;
+  .aev-mobile-category-grid .aev-mobile-category-card {
+    height: 100%;
   }
 
-  .aev-mobile-category-card,
-  .aev-mobile-step-rail > * {
-    scroll-snap-align: start;
+  .aev-mobile-step-grid > * {
+    min-height: 7.35rem;
   }
 
-  .aev-mobile-home-support {
-    padding-bottom: 0.7rem;
-  }
-
-  .aev-mobile-home-support .grid {
-    grid-template-columns: minmax(0, 1fr);
-    margin-top: 0.85rem;
-  }
-
-  .aev-mobile-home-support .grid > * {
-    min-width: 0;
+  .aev-mobile-step-grid p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .aev-shop-meta-chip-secondary,
@@ -3321,8 +3306,7 @@ button {
 }
 
 .aev-mobile-home-trust,
-.aev-mobile-home-benefit > div,
-.aev-mobile-home-support > div {
+.aev-mobile-home-benefit > div {
   isolation: isolate;
 }
 
@@ -3347,8 +3331,7 @@ button {
   position: absolute;
 }
 
-.aev-mobile-home-benefit > div::before,
-.aev-mobile-home-support > div::before {
+.aev-mobile-home-benefit > div::before {
   content: "";
   pointer-events: none;
   position: absolute;
@@ -3403,13 +3386,6 @@ button {
   inset: 0.5rem;
   pointer-events: none;
   position: absolute;
-}
-
-.aev-mobile-home-support > div::before {
-  background:
-    radial-gradient(circle at 92% 12%, rgba(0, 212, 198, 0.2), transparent 25%),
-    radial-gradient(circle at 6% 100%, rgba(168, 85, 247, 0.16), transparent 34%);
-  inset: 0;
 }
 
 .aev-home-art-block,

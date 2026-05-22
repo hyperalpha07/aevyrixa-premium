@@ -5,10 +5,7 @@ import {
   ChevronDown,
   Droplets,
   Leaf,
-  MessageCircle,
   PackageCheck,
-  RotateCcw,
-  Ruler,
   ShieldCheck,
   Sparkles,
   Truck,
@@ -20,13 +17,10 @@ import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import StorefrontProductCard from "@/app/components/storefront-product-card";
 import LiveChatWidget from "@/app/components/live-chat-widget";
-import SupportActionPanel from "@/app/components/support-action-panel";
 import { listProducts } from "@/app/lib/product-store";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { whatsappHref } from "@/app/lib/admin-settings";
 import { publicProduct } from "@/app/lib/product-display";
-import { listFeaturedTestimonials } from "@/app/lib/review-store";
-import type { PublicProductReview } from "@/app/lib/review-types";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -96,39 +90,6 @@ const confidenceCards = [
   },
 ];
 
-const howItWorks = [
-  {
-    title: "Choose Your Fit",
-    copy: "Select the size and coverage that matches your usual underwear feel and cycle needs.",
-  },
-  {
-    title: "Wear With Confidence",
-    copy: "Use as part of your period routine for comfortable, discreet daily protection.",
-  },
-  {
-    title: "Rinse & Reuse",
-    copy: "Rinse after wear, wash gently, air dry, and keep your piece ready for next time.",
-  },
-];
-
-const careCards = [
-  {
-    title: "Size Guide",
-    copy: "Choose your normal underwear size. If you are between sizes, consider the fit style you prefer: closer support or a softer relaxed feel.",
-    icon: Ruler,
-  },
-  {
-    title: "Care Tips",
-    copy: "Rinse with cool water after wear, wash with mild detergent, and air dry. Avoid bleach, fabric softener, and high heat.",
-    icon: Droplets,
-  },
-  {
-    title: "Made to Last",
-    copy: "Reusable construction and thoughtful care help each piece stay comfortable over repeated cycles.",
-    icon: RotateCcw,
-  },
-];
-
 const heroTrustBadges = [
   "Discreet Packaging",
   "3-Day Hygiene-Safe Support",
@@ -138,8 +99,8 @@ const heroTrustBadges = [
 
 const heroMarqueeItems = [
   "Bangladesh Delivery",
-  "4-Layer Protection",
-  "Eco-Friendly",
+  "Layered Care",
+  "Reusable Care",
   "Hygiene-Safe Support",
   "Premium Comfort",
   "Discreet Packaging",
@@ -200,76 +161,10 @@ const hereCareBase = [
   },
 ];
 
-function TestimonialsSection({ reviews }: { reviews: PublicProductReview[] }) {
-  return (
-    <section className="hidden px-4 py-10 md:block sm:px-6 sm:py-14">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 text-center sm:mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#00D4C6]/75">
-            Customer Trust
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            Moderated reviews from real orders.
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#D8CBE8]/80">
-            Approved customer feedback appears here after purchase and admin review.
-          </p>
-        </div>
-
-        {reviews.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {reviews.slice(0, 3).map((review) => (
-              <article
-                key={review.id}
-                className="aev-reveal rounded-[1.6rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_20px_70px_rgba(255,77,184,0.07)]"
-              >
-                <div className="flex items-center gap-1 text-[#FFB84D]">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <span key={index} className={index < review.rating ? "" : "opacity-35"}>★</span>
-                  ))}
-                </div>
-                {review.isFeatured && (
-                  <span className="mt-4 inline-flex rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#31E6D4]">
-                    Featured
-                  </span>
-                )}
-                <h3 className="mt-4 break-words text-lg font-semibold text-white [overflow-wrap:anywhere]">
-                  {review.title || "Customer review"}
-                </h3>
-                <p className="mt-3 line-clamp-5 text-sm leading-7 text-[#D8CBE8]/78">
-                  {review.body}
-                </p>
-                <p className="mt-4 text-sm font-semibold text-[#FFB3D1]">
-                  {review.customerName}
-                </p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              ["Moderated Only", "Reviews stay pending until an admin approves them."],
-              ["Order Linked", "Customers can submit feedback from their account order history."],
-              ["Privacy First", "Public reviews use masked customer names and never show phone numbers."],
-            ].map(([title, copy]) => (
-              <div key={title} className="rounded-[1.6rem] border border-[#00D4C6]/14 bg-[#151024] p-5">
-                <h3 className="text-lg font-semibold text-white">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#D8CBE8]/78">{copy}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-
 export default async function Home() {
-  const [{ products }, { settings }, testimonials] = await Promise.all([
+  const [{ products }, { settings }] = await Promise.all([
     listProducts(),
     loadStorefrontSettings(),
-    listFeaturedTestimonials(6),
   ]);
   const activeProducts = products
     .filter(
@@ -350,10 +245,6 @@ export default async function Home() {
       answer:
         "Rinse with cool water, machine wash or hand wash with mild detergent, then air dry before storing.",
     },
-    {
-      question: "What support is available?",
-      answer: settings.supportWindowMessage,
-    },
   ];
 
   return (
@@ -416,10 +307,10 @@ export default async function Home() {
                 </span>
               </Link>
               <Link
-                href="#how-it-works"
+                href="/product"
                 className="aev-action-secondary hidden min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-white/[0.06] px-7 text-sm font-semibold text-white backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-[#FF4DB8]/45 hover:bg-white/[0.09] md:inline-flex"
               >
-                Explore How It Works
+                View Collection
               </Link>
             </div>
 
@@ -594,7 +485,7 @@ export default async function Home() {
                 <ArrowRight size={12} strokeWidth={2.2} />
               </Link>
             </div>
-            <div className="aev-mobile-category-rail mt-3 flex gap-2.5 overflow-x-auto pb-1">
+            <div className="aev-mobile-category-grid mt-3 grid grid-cols-2 gap-2.5">
               {hereCareCategories.map((category) => {
                 const {
                   displayName,
@@ -656,14 +547,14 @@ export default async function Home() {
                   <a
                     key={displayName}
                     href={displayLinkUrl}
-                    className="aev-mobile-category-card block w-[8.8rem] shrink-0 overflow-hidden rounded-[1.2rem] border border-[#FF4DB8]/14 bg-[#151024]/92 p-2.5"
+                    className="aev-mobile-category-card block min-w-0 overflow-hidden rounded-[1.2rem] border border-[#FF4DB8]/14 bg-[#151024]/92 p-2.5"
                   >
                     {card}
                   </a>
                 ) : (
                   <div
                     key={displayName}
-                    className="aev-mobile-category-card w-[8.8rem] shrink-0 overflow-hidden rounded-[1.2rem] border border-[#FF4DB8]/10 bg-[#151024]/72 p-2.5"
+                    className="aev-mobile-category-card min-w-0 overflow-hidden rounded-[1.2rem] border border-[#FF4DB8]/10 bg-[#151024]/72 p-2.5"
                   >
                     {card}
                   </div>
@@ -785,9 +676,9 @@ export default async function Home() {
             Care Routine
           </p>
           <h2 id="mobile-care-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
-            3-Day Hygiene-Safe Support.
+            Reusable care rhythm.
           </h2>
-          <div className="aev-mobile-step-rail mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="aev-mobile-step-grid mt-3 grid grid-cols-3 gap-2">
             {[
               ["Wear", "Choose your comfort."],
               ["Rinse", "Cool rinse after wear."],
@@ -795,7 +686,7 @@ export default async function Home() {
             ].map(([label, copy], index) => (
               <article
                 key={label}
-                className="aev-mobile-mini-card min-w-[7.8rem] flex-1 rounded-[1.15rem] border border-[#FF4DB8]/13 bg-[#151024]/90 p-3"
+                className="aev-mobile-mini-card min-w-0 rounded-[1.15rem] border border-[#FF4DB8]/13 bg-[#151024]/90 p-3"
               >
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#FF4DB8]/24 bg-[#1B1230] text-[0.62rem] font-bold text-[#FFB3D1]">
                   0{index + 1}
@@ -821,9 +712,9 @@ export default async function Home() {
                 </h2>
                 <div className="mt-3 grid gap-2">
                   {[
-                    { label: "Plain packaging", copy: "Private outer delivery.", icon: PackageCheck },
-                    { label: "Order confirmation", copy: "Clear order updates.", icon: ShieldCheck },
-                    { label: "Bangladesh delivery", copy: "Courier support available.", icon: Truck },
+                    { label: "Choose product", copy: "Pick care for your day.", icon: Sparkles },
+                    { label: "Confirm order", copy: "Review options and order.", icon: ShieldCheck },
+                    { label: "Discreet delivery", copy: "Private outer packaging.", icon: Truck },
                   ].map(({ label, copy, icon: Icon }) => (
                     <article
                       key={label}
@@ -865,10 +756,10 @@ export default async function Home() {
                     icon: Sparkles,
                   },
                   {
-                    title: "Need help?",
-                    copy: "Ask support before checkout.",
-                    href: "/support",
-                    icon: MessageCircle,
+                    title: "Soft Support",
+                    copy: "Bra picks for gentle daily wear.",
+                    href: "/product?category=Soft+Support+Bra",
+                    icon: ShieldCheck,
                   },
                 ].map(({ title, copy, href, icon: Icon }) => (
                   <Link
@@ -891,65 +782,6 @@ export default async function Home() {
           </section>
         </>
       )}
-
-      {hms.showTestimonials && (
-        <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-customer-trust-title">
-          <div className="mx-auto max-w-xl">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
-              Customer Trust
-            </p>
-            <h2 id="mobile-customer-trust-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
-              Real review checks.
-            </h2>
-            <div className="mt-3 grid gap-2">
-              {[
-                {
-                  title: "Moderated Only",
-                  copy: "Feedback appears after admin review.",
-                  icon: Sparkles,
-                },
-                {
-                  title: "Order Linked",
-                  copy: "Customers submit from order history.",
-                  icon: PackageCheck,
-                },
-                {
-                  title: "Privacy First",
-                  copy: "Public reviews keep private details out.",
-                  icon: ShieldCheck,
-                },
-              ].map(({ title, copy, icon: Icon }) => (
-                <article
-                  key={title}
-                  className="aev-mobile-mini-card flex items-center gap-2.5 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#151024]/88 p-3"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] border border-[#FF4DB8]/16 bg-[#1B1230] text-[#FFB3D1]">
-                    <Icon className="h-4 w-4" strokeWidth={1.8} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-white">{title}</h3>
-                    <p className="mt-0.5 text-[0.69rem] leading-4 text-[#D8CBE8]/76">{copy}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="aev-mobile-home-support aev-mobile-home-section px-4 pb-7 md:hidden">
-        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.65rem] border border-[#00D4C6]/14 bg-[#0D0820] p-4">
-          <div className="relative">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
-              Need Help
-            </p>
-            <h2 className="mt-2 text-lg font-semibold text-white">
-              Support before checkout.
-            </h2>
-            <SupportActionPanel whatsappUrl={whatsappUrl} />
-          </div>
-        </div>
-      </section>
 
       {hms.showFAQ && (
         <section id="mobile-faq" className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-faq-title">
@@ -1001,14 +833,12 @@ export default async function Home() {
                 >
                   {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                 </Link>
-                {hms.ctaSectionSecondaryCtaText && (
-                  <a
-                    href={hms.ctaSectionSecondaryCtaLink || "#mobile-faq"}
-                    className="aev-action-secondary inline-flex min-h-11 items-center justify-center rounded-full border border-[#FF4DB8]/24 bg-white/[0.05] px-5 text-sm font-semibold text-[#FFB3D1]"
-                  >
-                    {hms.ctaSectionSecondaryCtaText}
-                  </a>
-                )}
+                <Link
+                  href="/product"
+                  className="aev-action-secondary inline-flex min-h-11 items-center justify-center rounded-full border border-[#FF4DB8]/24 bg-white/[0.05] px-5 text-sm font-semibold text-[#FFB3D1]"
+                >
+                  View Collection
+                </Link>
               </div>
             </div>
           </div>
@@ -1016,45 +846,34 @@ export default async function Home() {
       )}
 
       {hms.showTrustStrip && (
-      <section className="aev-scroll-section hidden px-4 py-10 md:block sm:px-6 sm:py-16">
+      <section className="aev-scroll-section hidden px-4 py-7 md:block sm:px-6 sm:py-10">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="aev-home-art-block grid gap-3 overflow-hidden rounded-[1.6rem] border border-[#FF4DB8]/12 bg-[#120C22]/72 p-3 sm:grid-cols-3 sm:p-4">
             {[
               {
                 title: "Discreet Packaging",
-                copy: settings.privacyPackagingMessage || "Plain outer packaging for private delivery.",
                 icon: PackageCheck,
                 art: "aev-intent-promise",
               },
               {
                 title: "Bangladesh Delivery",
-                copy: settings.deliveryCoverageText || "Courier delivery across Bangladesh with support.",
                 icon: Truck,
                 art: "aev-intent-delivery",
               },
               {
                 title: "3-Day Hygiene-Safe Support",
-                copy: settings.supportWindowMessage || "Support for eligible product concerns after delivery.",
                 icon: ShieldCheck,
                 art: "aev-intent-support",
               },
-              {
-                title: "Secure Checkout",
-                copy: "Clear BDT pricing and careful order confirmation.",
-                icon: Sparkles,
-                art: "aev-intent-secure",
-              },
-            ].map(({ title, copy, art, icon: Icon }) => (
+            ].map(({ title, art, icon: Icon }) => (
               <article
                 key={title}
-                className={`aev-card aev-reveal aev-intent-card ${art} group relative overflow-hidden rounded-[1.35rem] p-4 sm:p-5`}
+                className={`aev-card aev-reveal aev-intent-card ${art} group relative flex items-center gap-3 overflow-hidden rounded-[1.2rem] p-3.5 sm:p-4`}
               >
-                <div className="absolute inset-x-0 top-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF4DB8]/40 via-[#A855F7]/30 to-transparent" />
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8] transition duration-300 group-hover:scale-105">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-[#FF4DB8] transition duration-300 group-hover:scale-105">
                   <Icon size={19} strokeWidth={1.7} />
                 </div>
                 <h3 className="text-base font-semibold text-white">{title}</h3>
-                <p className="mt-2 text-xs leading-6 text-[#D8CBE8]/76">{copy}</p>
               </article>
             ))}
           </div>
@@ -1183,46 +1002,6 @@ export default async function Home() {
 
       {hms.showStorySections && (
       <>
-      <section id="how-it-works" className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
-                How It Works
-              </p>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[#FFFFFF] sm:text-4xl lg:text-5xl">
-                A simple reusable rhythm.
-              </h2>
-            </div>
-            <p className="aev-mobile-secondary-copy max-w-3xl text-base leading-8 text-[#D8CBE8]/80 lg:justify-self-end">
-              {settings.brandDisplayName} is designed to feel intuitive from
-              first wear to wash day: choose thoughtfully, wear comfortably,
-              and care for it gently.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3 lg:gap-6">
-            {howItWorks.map((step, index) => (
-              <article
-                key={step.title}
-                className="aev-reveal aev-premium-card group relative overflow-hidden rounded-[1.6rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#FF4DB8]/25 sm:p-7"
-              >
-                <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-[#FF4DB8]/[0.05] blur-2xl transition duration-300 group-hover:bg-[#00D4C6]/[0.07]" />
-                <div className="relative mb-12 flex h-14 w-14 items-center justify-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230] text-lg font-semibold text-[#FF4DB8]">
-                  0{index + 1}
-                </div>
-                <h3 className="relative text-xl font-semibold text-[#FFFFFF]">
-                  {step.title}
-                </h3>
-                <p className="relative mt-4 text-sm leading-7 text-[#D8CBE8]/80">
-                  {step.copy}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── Layer Explorer — CMS-controlled ── */}
       {lc.layerComfortEnabled !== false && (
         <section className={`aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20 ${lc.layerComfortMediaMode === "background_media_text" ? "relative overflow-hidden" : ""}`}>
@@ -1289,7 +1068,7 @@ export default async function Home() {
               </div>
             ) : (
               /* grid layout: text left, media right */
-              <div className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+              <div className="aev-home-art-block aev-home-art-block-layer grid gap-10 overflow-hidden rounded-[2rem] border border-[#FF4DB8]/12 bg-[#100A1E]/45 p-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:p-10">
                 <div className="aev-reveal min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
                     {lc.layerComfortEyebrow}
@@ -1478,114 +1257,43 @@ export default async function Home() {
       </>
       )}
 
-      {/* ── Phase 27: Hygiene-Safe Support Timeline ── */}
-      <section className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
-            Care Routine
-          </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#FFFFFF] sm:text-4xl">
-            3-Day Hygiene-Safe Support
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[#D8CBE8]/80">
-            A simple, repeatable care routine that keeps your reusable pieces
-            feeling fresh, soft, and ready for next use.
-          </p>
-
-          <div className="relative mt-12">
-            <div
-              className="aev-timeline-line absolute left-[20%] right-[20%] top-7 hidden h-px bg-gradient-to-r from-transparent via-[#FF4DB8]/30 to-transparent sm:block"
-              aria-hidden="true"
-            />
-            <div className="grid gap-8 sm:grid-cols-3">
-              {(
-                [
-                  {
-                    step: "01",
-                    label: "Wear",
-                    desc: "Choose comfort, wear with quiet confidence during your day.",
-                    delay: "0s",
-                  },
-                  {
-                    step: "02",
-                    label: "Rinse",
-                    desc: "Cool water rinse after wear, gently clearing residue.",
-                    delay: "1.2s",
-                  },
-                  {
-                    step: "03",
-                    label: "Air Dry",
-                    desc: "Wash gently, air dry, then fold and store ready for next use.",
-                    delay: "2.4s",
-                  },
-                ] as const
-              ).map(({ step, label, desc, delay }) => (
-                <div
-                  key={step}
-                  className="aev-reveal flex flex-col items-center gap-3 text-center"
-                >
-                  <div
-                    className="aev-timeline-dot flex h-14 w-14 items-center justify-center rounded-full border border-[#FF4DB8]/28 bg-[#1B1230] text-sm font-semibold text-[#FF4DB8]"
-                    style={{ animationDelay: delay }}
-                  >
-                    {step}
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#FFFFFF]">{label}</h3>
-                  <p className="max-w-[20ch] text-sm leading-7 text-[#D8CBE8]/80">
-                    {desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {hms.showTestimonials && <TestimonialsSection reviews={testimonials} />}
-
       {hms.showStorySections && (
       <>
       {/* ── Phase 47C: Privacy from order to delivery ── */}
       <section className="hidden px-4 py-10 md:block sm:px-6 sm:py-14">
         <div className="mx-auto max-w-7xl">
-          <div className="overflow-hidden rounded-[2rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-8">
+          <div className="aev-home-art-block aev-home-art-block-arrival overflow-hidden rounded-[2rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-8">
             <div className="mb-6 text-center sm:mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
                 Order to Arrival
               </p>
               <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[#FFFFFF] sm:text-3xl">
-                Privacy from order to delivery.
+                A calm path from pick to delivery.
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#D8CBE8]/80">
-                Your care routine stays private. Every order ships with plain outer packaging — no product names or brand marks visible.
+                Choose the care that fits your routine, confirm your order, and receive it with discreet Bangladesh delivery.
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-3">
               {(
                 [
                   {
-                    icon: PackageCheck,
-                    label: "Discreet Packaging",
-                    desc: settings.privacyPackagingMessage || "Plain outer packaging — no product names or brand marks outside.",
+                    icon: Sparkles,
+                    label: "Choose Product",
+                    desc: "Browse reusable care, comfort wear, or the collection that matches your day.",
                     glow: "bg-[#FF4DB8]/[0.06]",
                   },
                   {
                     icon: ShieldCheck,
-                    label: "Order Confirmation",
-                    desc: "Receive a clear confirmation after we process your order. No unexpected surprises.",
+                    label: "Confirm Order",
+                    desc: "Review your options and place the order with clear BDT checkout details.",
                     glow: "bg-[#00D4C6]/[0.05]",
                   },
                   {
                     icon: Truck,
-                    label: "Bangladesh Delivery",
-                    desc: settings.deliveryCoverageText || "Delivered across Bangladesh with courier tracking and support.",
+                    label: "Discreet Delivery",
+                    desc: settings.privacyPackagingMessage || "Plain outer packaging for private Bangladesh delivery.",
                     glow: "bg-[#A855F7]/[0.05]",
-                  },
-                  {
-                    icon: MessageCircle,
-                    label: "3-Day Hygiene-Safe Support",
-                    desc: settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible product concerns after delivery.",
-                    glow: "bg-[#FF4DB8]/[0.05]",
                   },
                 ] as const
               ).map(({ icon: Icon, label, desc, glow }) => (
@@ -1610,38 +1318,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="hidden px-4 py-12 md:block sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-[2rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/80">
-                  Size & Care
-                </p>
-                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#FFFFFF] sm:text-5xl">
-                  Clear care for a better fit and longer wear.
-                </h2>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                {careCards.map(({ title, copy, icon: Icon }) => (
-                  <article
-                    key={title}
-                    className="aev-reveal aev-premium-card rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#080611] p-5"
-                  >
-                    <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1B1230] text-[#FF4DB8]">
-                      <Icon size={20} strokeWidth={1.7} />
-                    </div>
-                    <h3 className="text-lg font-semibold text-[#FFFFFF]">{title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-[#D8CBE8]/80">{copy}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── Phase 47C: Which one is right for you? ── */}
       <section className="aev-scroll-section hidden px-4 py-12 md:block sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
@@ -1656,7 +1332,7 @@ export default async function Home() {
               A quick guide to help you choose the right Her Care product for your routine.
             </p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="aev-home-art-block aev-home-art-block-petal mt-8 grid gap-4 overflow-hidden rounded-[2rem] border border-[#FF4DB8]/10 bg-[#100A1E]/44 p-4 sm:grid-cols-3 sm:p-5">
             {(
               [
                 {
@@ -1678,13 +1354,13 @@ export default async function Home() {
                   icon: Sparkles,
                 },
                 {
-                  title: "Not sure? Get help first.",
-                  desc: "Message support before you order. We help with size, coverage, and product selection — no pressure, just honest guidance.",
-                  href: "/support",
+                  title: "Gentle Daily Support",
+                  desc: "Soft support bra picks add smooth comfort for everyday movement and layering.",
+                  href: "/product?category=Soft+Support+Bra",
                   iconColor: "text-[#A855F7]",
                   iconBg: "bg-[#A855F7]/[0.08] border-[#A855F7]/18",
-                  tag: "Support",
-                  icon: MessageCircle,
+                  tag: "Soft Support",
+                  icon: ShieldCheck,
                 },
               ] as const
             ).map(({ title, desc, href, iconColor, iconBg, tag, icon: Icon }) => (
@@ -1722,7 +1398,7 @@ export default async function Home() {
               FAQ Preview
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#FFFFFF] sm:text-5xl">
-              Honest answers before checkout.
+              A few quick answers.
             </h2>
           </div>
 
@@ -1753,13 +1429,18 @@ export default async function Home() {
               </article>
             ))}
           </div>
+          <div className="mt-6 text-center">
+            <Link href="/faq" className="text-sm font-semibold text-[#FFB3D1] transition hover:text-white">
+              View full FAQ
+            </Link>
+          </div>
         </div>
       </section>
       )}
 
       {hms.showBottomCTA && hms.ctaSectionEnabled && (
       <section className="hidden px-4 pb-16 pt-12 md:block sm:px-6 sm:pb-28 sm:pt-20">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-[#FF4DB8]/15 bg-[#0D0820] shadow-2xl">
+        <div className="aev-home-art-block aev-home-art-block-cta mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-[#FF4DB8]/15 bg-[#0D0820] shadow-2xl">
           {/* background_media_text mode */}
           {(hms.ctaSectionMediaMode === "background_media_text") && (hms.ctaSectionImageUrl || hms.ctaSectionVideoUrl) ? (
             <div className="relative min-h-[28rem] overflow-hidden">
@@ -1794,7 +1475,6 @@ export default async function Home() {
                 </h2>
                 <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
                   {hms.ctaSectionDescription}
-                  {` ${settings.supportWindowMessage}`}
                 </p>
                 <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                   <Link
@@ -1803,14 +1483,12 @@ export default async function Home() {
                   >
                     {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                   </Link>
-                  {hms.ctaSectionSecondaryCtaText && (
-                    <a
-                      href={hms.ctaSectionSecondaryCtaLink || "#faq"}
-                      className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] backdrop-blur-xl"
-                    >
-                      {hms.ctaSectionSecondaryCtaText}
-                    </a>
-                  )}
+                  <Link
+                    href="/product"
+                    className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] backdrop-blur-xl"
+                  >
+                    View Collection
+                  </Link>
                 </div>
               </div>
             </div>
@@ -1852,7 +1530,6 @@ export default async function Home() {
                   </h2>
                   <p className="mt-5 text-base leading-8 text-white/66">
                     {hms.ctaSectionDescription}
-                    {` ${settings.supportWindowMessage}`}
                   </p>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
                     <Link
@@ -1861,14 +1538,12 @@ export default async function Home() {
                     >
                       {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                     </Link>
-                    {hms.ctaSectionSecondaryCtaText && (
-                      <a
-                        href={hms.ctaSectionSecondaryCtaLink || "#faq"}
-                        className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] backdrop-blur-xl"
-                      >
-                        {hms.ctaSectionSecondaryCtaText}
-                      </a>
-                    )}
+                    <Link
+                      href="/product"
+                      className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] backdrop-blur-xl"
+                    >
+                      View Collection
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -1888,7 +1563,6 @@ export default async function Home() {
                 </h2>
                 <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/66">
                   {hms.ctaSectionDescription}
-                  {` ${settings.supportWindowMessage}`}
                 </p>
                 <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row">
                   <Link
@@ -1897,14 +1571,12 @@ export default async function Home() {
                   >
                     {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
                   </Link>
-                  {hms.ctaSectionSecondaryCtaText && (
-                    <a
-                      href={hms.ctaSectionSecondaryCtaLink || "#faq"}
-                      className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] backdrop-blur-xl"
-                    >
-                      {hms.ctaSectionSecondaryCtaText}
-                    </a>
-                  )}
+                  <Link
+                    href="/product"
+                    className="aev-action-secondary inline-flex min-h-12 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-7 text-sm font-semibold text-[#FFB3D1] backdrop-blur-xl"
+                  >
+                    View Collection
+                  </Link>
                 </div>
               </div>
             </div>
