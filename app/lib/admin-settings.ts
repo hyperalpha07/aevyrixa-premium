@@ -186,6 +186,8 @@ export type CtaSectionMediaMode = "no_media" | "image_text" | "video_text" | "ba
 export type HomepageMediaSettings = {
   showHero: boolean;
   showTrustStrip: boolean;
+  showStatStrip: boolean;
+  showMarquee: boolean;
   showCategories: boolean;
   showFeaturedProducts: boolean;
   showStorySections: boolean;
@@ -529,6 +531,8 @@ const defaultGroups: AdminSettingsGroups = {
   homepageMediaSettings: {
     showHero: true,
     showTrustStrip: true,
+    showStatStrip: true,
+    showMarquee: true,
     showCategories: true,
     showFeaturedProducts: true,
     showStorySections: true,
@@ -1310,6 +1314,14 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       showTrustStrip: booleanValue(
         homepageMediaRaw.showTrustStrip,
         defaultGroups.homepageMediaSettings.showTrustStrip
+      ),
+      showStatStrip: booleanValue(
+        homepageMediaRaw.showStatStrip,
+        defaultGroups.homepageMediaSettings.showStatStrip
+      ),
+      showMarquee: booleanValue(
+        homepageMediaRaw.showMarquee,
+        defaultGroups.homepageMediaSettings.showMarquee
       ),
       showCategories: booleanValue(
         homepageMediaRaw.showCategories,

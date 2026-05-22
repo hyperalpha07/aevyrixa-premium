@@ -3654,9 +3654,16 @@ button {
   }
 }
 
-@media (max-width: 430px) {
+/* R2N: mobile 2-col product grid — compact image on very small screens */
+@media (max-width: 479px) {
+  .aev-featured-products-grid .aev-product-image-frame > div {
+    aspect-ratio: 0.98 / 0.82;
+  }
+}
+
+@media (max-width: 359px) {
   .aev-featured-products-grid {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
   }
 }
 

@@ -69,6 +69,22 @@ const trustItems = [
   { label: "3-Day Hygiene-Safe Support", icon: ShieldCheck },
 ] as const;
 
+const statItems = [
+  { value: "500+", label: "Visitors" },
+  { value: "4.8★", label: "Customer Rating" },
+  { value: "100%", label: "Discreet Packaging" },
+] as const;
+
+const marqueeItems = [
+  "Bangladesh Delivery",
+  "Discreet Packaging",
+  "3-Day Hygiene-Safe Support",
+  "Premium Comfort",
+  "BDT Pricing",
+  "Reusable Care",
+  "Secure Checkout",
+] as const;
+
 type LooseSettings = Record<string, string | boolean | object>;
 type SectionMedia = {
   mode: "animation" | "image" | "video";
@@ -328,6 +344,38 @@ export default async function Home() {
             />
           </div>
         </section>
+      ) : null}
+
+      {hms.showStatStrip ? (
+        <section className="px-4 pb-3 sm:px-6 sm:pb-5" aria-label="Brand trust statistics">
+          <div className="aev-hero-stat-shelf mx-auto max-w-7xl overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/14">
+            <div className="grid grid-cols-3">
+              {statItems.map(({ value, label }) => (
+                <div key={label} className="aev-hero-stat flex flex-col items-center justify-center gap-0.5 px-2 py-3 text-center sm:py-4">
+                  <span className="aev-hero-stat-value block text-base font-extrabold text-[#FFB3D1] sm:text-xl">{value}</span>
+                  <span className="block text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/70 sm:text-[0.65rem]">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {hms.showMarquee ? (
+        <div className="aev-home-marquee mb-2 sm:mb-4" aria-hidden="true">
+          <div className="aev-home-marquee-track">
+            <div className="aev-home-marquee-group">
+              {marqueeItems.map((item) => (
+                <span key={item} className="aev-home-marquee-item">{item}</span>
+              ))}
+            </div>
+            <div className="aev-home-marquee-group" aria-hidden="true">
+              {marqueeItems.map((item) => (
+                <span key={`dup-${item}`} className="aev-home-marquee-item">{item}</span>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {hms.showTrustStrip ? (
