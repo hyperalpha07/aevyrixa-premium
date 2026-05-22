@@ -192,6 +192,12 @@ export type HomepageMediaSettings = {
   showTestimonials: boolean;
   showFAQ: boolean;
   showBottomCTA: boolean;
+  featuredProductsEyebrow: string;
+  featuredProductsHeading: string;
+  featuredProductsDescription: string;
+  collectionsEyebrow: string;
+  collectionsHeading: string;
+  collectionsDescription: string;
   heroMedia: HomepageSectionMedia;
   careMedia: HomepageSectionMedia;
   experienceMedia: HomepageSectionMedia;
@@ -288,10 +294,35 @@ export type HomepageMediaSettings = {
   layerComfortLayer2Description: string;
   layerComfortLayer3Title: string;
   layerComfortLayer3Description: string;
+  layerComfortCtaText: string;
+  layerComfortCtaLink: string;
   layerComfortMediaMode: LayerComfortMediaMode;
   layerComfortImageUrl: string;
   layerComfortVideoUrl: string;
   layerComfortAltText: string;
+  findCareEnabled: boolean;
+  findCareEyebrow: string;
+  findCareHeading: string;
+  findCareDescription: string;
+  findCareCtaText: string;
+  findCareCtaLink: string;
+  findCareCard1Title: string;
+  findCareCard1Description: string;
+  findCareCard1LinkUrl: string;
+  findCareCard2Title: string;
+  findCareCard2Description: string;
+  findCareCard2LinkUrl: string;
+  findCareCard3Title: string;
+  findCareCard3Description: string;
+  findCareCard3LinkUrl: string;
+  faqPreviewEyebrow: string;
+  faqPreviewHeading: string;
+  faqPreviewItem1Question: string;
+  faqPreviewItem1Answer: string;
+  faqPreviewItem2Question: string;
+  faqPreviewItem2Answer: string;
+  faqPreviewItem3Question: string;
+  faqPreviewItem3Answer: string;
 };
 
 export type AdvancedSettings = {
@@ -504,6 +535,12 @@ const defaultGroups: AdminSettingsGroups = {
     showTestimonials: true,
     showFAQ: true,
     showBottomCTA: true,
+    featuredProductsEyebrow: "Best Picks",
+    featuredProductsHeading: "Best picks for your care routine.",
+    featuredProductsDescription: "Browse active Her Care picks with live BDT pricing and the same product options available in the shop.",
+    collectionsEyebrow: "Collections",
+    collectionsHeading: "Shop by care.",
+    collectionsDescription: "Move from reusable period care to comfort-led essentials through compact collection picks.",
     heroMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
     careMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
     experienceMedia: { mode: "animation", imageUrl: "", videoUrl: "", altText: "", eyebrow: "", heading: "", subheading: "", ctaText: "", ctaLink: "" },
@@ -600,10 +637,35 @@ const defaultGroups: AdminSettingsGroups = {
     layerComfortLayer2Description: "A slim internal layer for quiet, discreet support during light to moderate flow.",
     layerComfortLayer3Title: "Protective Shell",
     layerComfortLayer3Description: "A smooth outer layer with a refined silhouette and clean, everyday finish.",
+    layerComfortCtaText: "Explore Care",
+    layerComfortCtaLink: "/product",
     layerComfortMediaMode: "animation" as LayerComfortMediaMode,
     layerComfortImageUrl: "",
     layerComfortVideoUrl: "",
     layerComfortAltText: "",
+    findCareEnabled: true,
+    findCareEyebrow: "Find Your Care",
+    findCareHeading: "Choose the care that matches your day.",
+    findCareDescription: "Use a quick visual guide to move from flow-day support to daily comfort and gentle support picks.",
+    findCareCtaText: "View Collection",
+    findCareCtaLink: "/product",
+    findCareCard1Title: "Flow Days",
+    findCareCard1Description: "Reusable care for light to moderate flow routines.",
+    findCareCard1LinkUrl: "/product?category=Reusable+Period+Care",
+    findCareCard2Title: "Daily Comfort",
+    findCareCard2Description: "Soft comfort wear for repeat everyday movement.",
+    findCareCard2LinkUrl: "/product?category=Comfort+Panty",
+    findCareCard3Title: "Gentle Support",
+    findCareCard3Description: "Smooth support picks for easy daily layering.",
+    findCareCard3LinkUrl: "/product?category=Soft+Support+Bra",
+    faqPreviewEyebrow: "FAQ Preview",
+    faqPreviewHeading: "A few quick answers.",
+    faqPreviewItem1Question: "How much protection should I expect?",
+    faqPreviewItem1Answer: "Her Care pieces are designed for light to moderate flow support without overpromising protection levels.",
+    faqPreviewItem2Question: "Can I wear it by itself?",
+    faqPreviewItem2Answer: "For lighter days, reusable period care may fit your routine. Choose backup protection for heavier flow if you need it.",
+    faqPreviewItem3Question: "How do I wash it?",
+    faqPreviewItem3Answer: "Rinse with cool water, wash gently, and air dry before storing.",
   },
 };
 
@@ -1273,6 +1335,30 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         homepageMediaRaw.showBottomCTA,
         defaultGroups.homepageMediaSettings.showBottomCTA
       ),
+      featuredProductsEyebrow: safeText(
+        homepageMediaRaw.featuredProductsEyebrow,
+        defaultGroups.homepageMediaSettings.featuredProductsEyebrow
+      ),
+      featuredProductsHeading: safeText(
+        homepageMediaRaw.featuredProductsHeading,
+        defaultGroups.homepageMediaSettings.featuredProductsHeading
+      ),
+      featuredProductsDescription: safeText(
+        homepageMediaRaw.featuredProductsDescription,
+        defaultGroups.homepageMediaSettings.featuredProductsDescription
+      ),
+      collectionsEyebrow: safeText(
+        homepageMediaRaw.collectionsEyebrow,
+        defaultGroups.homepageMediaSettings.collectionsEyebrow
+      ),
+      collectionsHeading: safeText(
+        homepageMediaRaw.collectionsHeading,
+        defaultGroups.homepageMediaSettings.collectionsHeading
+      ),
+      collectionsDescription: safeText(
+        homepageMediaRaw.collectionsDescription,
+        defaultGroups.homepageMediaSettings.collectionsDescription
+      ),
       heroMedia: sectionMediaValue(
         isRecord(homepageMediaRaw.heroMedia) ? homepageMediaRaw.heroMedia : {}
       ),
@@ -1474,10 +1560,110 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         homepageMediaRaw.layerComfortLayer3Description,
         defaultGroups.homepageMediaSettings.layerComfortLayer3Description
       ),
+      layerComfortCtaText: safeText(
+        homepageMediaRaw.layerComfortCtaText,
+        defaultGroups.homepageMediaSettings.layerComfortCtaText
+      ),
+      layerComfortCtaLink: safeText(
+        homepageMediaRaw.layerComfortCtaLink,
+        defaultGroups.homepageMediaSettings.layerComfortCtaLink
+      ),
       layerComfortMediaMode: layerComfortMediaModeValue(homepageMediaRaw.layerComfortMediaMode),
       layerComfortImageUrl: publicUrlValue(homepageMediaRaw.layerComfortImageUrl),
       layerComfortVideoUrl: publicUrlValue(homepageMediaRaw.layerComfortVideoUrl),
       layerComfortAltText: safeText(homepageMediaRaw.layerComfortAltText, ""),
+      findCareEnabled: booleanValue(
+        homepageMediaRaw.findCareEnabled,
+        defaultGroups.homepageMediaSettings.findCareEnabled
+      ),
+      findCareEyebrow: safeText(
+        homepageMediaRaw.findCareEyebrow,
+        defaultGroups.homepageMediaSettings.findCareEyebrow
+      ),
+      findCareHeading: safeText(
+        homepageMediaRaw.findCareHeading,
+        defaultGroups.homepageMediaSettings.findCareHeading
+      ),
+      findCareDescription: safeText(
+        homepageMediaRaw.findCareDescription,
+        defaultGroups.homepageMediaSettings.findCareDescription
+      ),
+      findCareCtaText: safeText(
+        homepageMediaRaw.findCareCtaText,
+        defaultGroups.homepageMediaSettings.findCareCtaText
+      ),
+      findCareCtaLink: safeText(
+        homepageMediaRaw.findCareCtaLink,
+        defaultGroups.homepageMediaSettings.findCareCtaLink
+      ),
+      findCareCard1Title: safeText(
+        homepageMediaRaw.findCareCard1Title,
+        defaultGroups.homepageMediaSettings.findCareCard1Title
+      ),
+      findCareCard1Description: safeText(
+        homepageMediaRaw.findCareCard1Description,
+        defaultGroups.homepageMediaSettings.findCareCard1Description
+      ),
+      findCareCard1LinkUrl: safeText(
+        homepageMediaRaw.findCareCard1LinkUrl,
+        defaultGroups.homepageMediaSettings.findCareCard1LinkUrl
+      ),
+      findCareCard2Title: safeText(
+        homepageMediaRaw.findCareCard2Title,
+        defaultGroups.homepageMediaSettings.findCareCard2Title
+      ),
+      findCareCard2Description: safeText(
+        homepageMediaRaw.findCareCard2Description,
+        defaultGroups.homepageMediaSettings.findCareCard2Description
+      ),
+      findCareCard2LinkUrl: safeText(
+        homepageMediaRaw.findCareCard2LinkUrl,
+        defaultGroups.homepageMediaSettings.findCareCard2LinkUrl
+      ),
+      findCareCard3Title: safeText(
+        homepageMediaRaw.findCareCard3Title,
+        defaultGroups.homepageMediaSettings.findCareCard3Title
+      ),
+      findCareCard3Description: safeText(
+        homepageMediaRaw.findCareCard3Description,
+        defaultGroups.homepageMediaSettings.findCareCard3Description
+      ),
+      findCareCard3LinkUrl: safeText(
+        homepageMediaRaw.findCareCard3LinkUrl,
+        defaultGroups.homepageMediaSettings.findCareCard3LinkUrl
+      ),
+      faqPreviewEyebrow: safeText(
+        homepageMediaRaw.faqPreviewEyebrow,
+        defaultGroups.homepageMediaSettings.faqPreviewEyebrow
+      ),
+      faqPreviewHeading: safeText(
+        homepageMediaRaw.faqPreviewHeading,
+        defaultGroups.homepageMediaSettings.faqPreviewHeading
+      ),
+      faqPreviewItem1Question: safeText(
+        homepageMediaRaw.faqPreviewItem1Question,
+        defaultGroups.homepageMediaSettings.faqPreviewItem1Question
+      ),
+      faqPreviewItem1Answer: safeText(
+        homepageMediaRaw.faqPreviewItem1Answer,
+        defaultGroups.homepageMediaSettings.faqPreviewItem1Answer
+      ),
+      faqPreviewItem2Question: safeText(
+        homepageMediaRaw.faqPreviewItem2Question,
+        defaultGroups.homepageMediaSettings.faqPreviewItem2Question
+      ),
+      faqPreviewItem2Answer: safeText(
+        homepageMediaRaw.faqPreviewItem2Answer,
+        defaultGroups.homepageMediaSettings.faqPreviewItem2Answer
+      ),
+      faqPreviewItem3Question: safeText(
+        homepageMediaRaw.faqPreviewItem3Question,
+        defaultGroups.homepageMediaSettings.faqPreviewItem3Question
+      ),
+      faqPreviewItem3Answer: safeText(
+        homepageMediaRaw.faqPreviewItem3Answer,
+        defaultGroups.homepageMediaSettings.faqPreviewItem3Answer
+      ),
     },
   };
 

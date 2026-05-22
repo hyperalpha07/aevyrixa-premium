@@ -5098,6 +5098,7 @@ function SettingsSection({
                     ["showCategories", "Categories"],
                     ["showFeaturedProducts", "Featured products"],
                     ["showStorySections", "Story sections"],
+                    ["findCareEnabled", "Find Your Care"],
                     ["showTestimonials", "Testimonials"],
                     ["showFAQ", "FAQ"],
                     ["showBottomCTA", "Bottom CTA"],
@@ -5111,6 +5112,45 @@ function SettingsSection({
                       }
                     />
                   ))}
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Content"
+                title="Product discovery headings"
+                description="Short copy used above the live featured products and category grid."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <TextField
+                    label="Best picks eyebrow"
+                    value={draft.homepageMediaSettings.featuredProductsEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ featuredProductsEyebrow: value })}
+                  />
+                  <TextField
+                    label="Best picks heading"
+                    value={draft.homepageMediaSettings.featuredProductsHeading}
+                    onChange={(value) => updateHomepageMediaSettings({ featuredProductsHeading: value })}
+                  />
+                  <TextAreaField
+                    label="Best picks description"
+                    value={draft.homepageMediaSettings.featuredProductsDescription}
+                    onChange={(value) => updateHomepageMediaSettings({ featuredProductsDescription: value })}
+                  />
+                  <TextField
+                    label="Collections eyebrow"
+                    value={draft.homepageMediaSettings.collectionsEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ collectionsEyebrow: value })}
+                  />
+                  <TextField
+                    label="Collections heading"
+                    value={draft.homepageMediaSettings.collectionsHeading}
+                    onChange={(value) => updateHomepageMediaSettings({ collectionsHeading: value })}
+                  />
+                  <TextAreaField
+                    label="Collections description"
+                    value={draft.homepageMediaSettings.collectionsDescription}
+                    onChange={(value) => updateHomepageMediaSettings({ collectionsDescription: value })}
+                  />
                 </div>
               </SettingsCard>
 
@@ -5285,6 +5325,19 @@ function SettingsSection({
                     label="Layer 3 description"
                     value={draft.homepageMediaSettings.layerComfortLayer3Description}
                     onChange={(value) => updateHomepageMediaSettings({ layerComfortLayer3Description: value })}
+                  />
+                  <TextField
+                    label="Layer CTA text"
+                    value={draft.homepageMediaSettings.layerComfortCtaText}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortCtaText: value })}
+                    placeholder="Explore Care"
+                  />
+                  <TextField
+                    label="Layer CTA link"
+                    value={draft.homepageMediaSettings.layerComfortCtaLink}
+                    onChange={(value) => updateHomepageMediaSettings({ layerComfortCtaLink: value })}
+                    placeholder="/product"
+                    inputMode="url"
                   />
                   <SelectField
                     label="Media mode"
@@ -5567,6 +5620,110 @@ function SettingsSection({
                     onChange={(value) => updateHomepageSectionMedia("experienceMedia", { ctaLink: value })}
                     inputMode="url"
                   />
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Content - Find Your Care"
+                title="Visual care guide"
+                description="Guide cards reuse collection media where available and fall back to coded visual art."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ToggleField
+                    label="Show Find Your Care"
+                    checked={draft.homepageMediaSettings.findCareEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ findCareEnabled: value })}
+                  />
+                  <TextField
+                    label="Eyebrow"
+                    value={draft.homepageMediaSettings.findCareEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ findCareEyebrow: value })}
+                  />
+                  <TextField
+                    label="Heading"
+                    value={draft.homepageMediaSettings.findCareHeading}
+                    onChange={(value) => updateHomepageMediaSettings({ findCareHeading: value })}
+                  />
+                  <TextAreaField
+                    label="Description"
+                    value={draft.homepageMediaSettings.findCareDescription}
+                    onChange={(value) => updateHomepageMediaSettings({ findCareDescription: value })}
+                  />
+                  <TextField
+                    label="Section CTA text"
+                    value={draft.homepageMediaSettings.findCareCtaText}
+                    onChange={(value) => updateHomepageMediaSettings({ findCareCtaText: value })}
+                  />
+                  <TextField
+                    label="Section CTA link"
+                    value={draft.homepageMediaSettings.findCareCtaLink}
+                    onChange={(value) => updateHomepageMediaSettings({ findCareCtaLink: value })}
+                    placeholder="/product"
+                  />
+                  {([1, 2, 3] as const).map((index) => {
+                    const titleKey = `findCareCard${index}Title` as const;
+                    const descriptionKey = `findCareCard${index}Description` as const;
+                    const linkKey = `findCareCard${index}LinkUrl` as const;
+
+                    return (
+                      <div key={index} className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-4 lg:col-span-2 lg:grid-cols-3">
+                        <TextField
+                          label={`Guide card ${index} title`}
+                          value={draft.homepageMediaSettings[titleKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [titleKey]: value } as Partial<HomepageMediaSettings>)}
+                        />
+                        <TextField
+                          label={`Guide card ${index} copy`}
+                          value={draft.homepageMediaSettings[descriptionKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [descriptionKey]: value } as Partial<HomepageMediaSettings>)}
+                        />
+                        <TextField
+                          label={`Guide card ${index} link`}
+                          value={draft.homepageMediaSettings[linkKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [linkKey]: value } as Partial<HomepageMediaSettings>)}
+                          placeholder="/product"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
+                eyebrow="Homepage Content - FAQ Preview"
+                title="Compact FAQ preview"
+                description="Only three short preview answers are shown on the homepage; the full FAQ stays on its own route."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <TextField
+                    label="FAQ eyebrow"
+                    value={draft.homepageMediaSettings.faqPreviewEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ faqPreviewEyebrow: value })}
+                  />
+                  <TextField
+                    label="FAQ heading"
+                    value={draft.homepageMediaSettings.faqPreviewHeading}
+                    onChange={(value) => updateHomepageMediaSettings({ faqPreviewHeading: value })}
+                  />
+                  {([1, 2, 3] as const).map((index) => {
+                    const questionKey = `faqPreviewItem${index}Question` as const;
+                    const answerKey = `faqPreviewItem${index}Answer` as const;
+
+                    return (
+                      <div key={index} className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-4 lg:col-span-2 lg:grid-cols-2">
+                        <TextField
+                          label={`Preview item ${index} question`}
+                          value={draft.homepageMediaSettings[questionKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [questionKey]: value } as Partial<HomepageMediaSettings>)}
+                        />
+                        <TextAreaField
+                          label={`Preview item ${index} answer`}
+                          value={draft.homepageMediaSettings[answerKey]}
+                          onChange={(value) => updateHomepageMediaSettings({ [answerKey]: value } as Partial<HomepageMediaSettings>)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </SettingsCard>
 

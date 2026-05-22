@@ -3485,6 +3485,181 @@ button {
   transition: transform 180ms ease;
 }
 
+/* R2M admin-controlled visual homepage story */
+.aev-story-eyebrow {
+  color: rgba(255, 179, 209, 0.78);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.aev-story-title {
+  color: #fff;
+  font-size: 1.38rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.12;
+  margin-top: 0.65rem;
+  text-wrap: balance;
+}
+
+.aev-story-copy {
+  color: rgba(216, 203, 232, 0.79);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  text-wrap: pretty;
+}
+
+.aev-story-media {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 38%),
+    #0d0820;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 1.35rem;
+  min-height: 15rem;
+}
+
+.aev-story-media .aev-motion-panel > .relative {
+  min-height: 15rem;
+}
+
+.aev-collection-art {
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.09), transparent 46%),
+    repeating-radial-gradient(ellipse at 70% 20%, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 16px);
+}
+
+.aev-collection-art-cyan {
+  background-color: rgba(0, 212, 198, 0.14);
+}
+
+.aev-collection-art-rose {
+  background-color: rgba(255, 77, 184, 0.15);
+}
+
+.aev-collection-art-violet {
+  background-color: rgba(168, 85, 247, 0.16);
+}
+
+.aev-layer-visual-fallback {
+  background:
+    linear-gradient(135deg, rgba(255, 77, 184, 0.16), transparent 38%),
+    radial-gradient(ellipse at 72% 28%, rgba(0, 212, 198, 0.13), transparent 35%),
+    #0d0820;
+}
+
+.aev-find-card,
+.aev-collection-card,
+.aev-final-cta {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1.4rem 4rem rgba(0, 0, 0, 0.22);
+}
+
+.aev-home-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.aev-home-faq summary svg {
+  transition: transform 180ms ease;
+}
+
+.aev-home-faq[open] summary svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 767px) {
+  .aev-home-hero .aev-story-media {
+    min-height: min(18.5rem, 74vw);
+  }
+
+  .aev-story-media .aev-motion-panel .aev-motion-copy-card p:last-child,
+  .aev-story-media .aev-motion-panel > .relative > .grid {
+    display: none;
+  }
+
+  .aev-story-media .aev-motion-panel > .relative {
+    min-height: min(18.5rem, 74vw);
+    padding: 0.85rem;
+  }
+
+  .aev-story-title {
+    max-width: 19ch;
+  }
+
+  .aev-story-copy {
+    line-height: 1.55;
+  }
+
+  .aev-collection-grid {
+    align-items: stretch;
+  }
+
+  .aev-home .aev-site-footer {
+    padding-top: 1rem;
+  }
+
+  .aev-home .aev-footer-brand > p:nth-child(2) {
+    font-size: 1rem;
+  }
+
+  .aev-home .aev-footer-brand .mt-5 {
+    gap: 0.45rem;
+    margin-top: 0.7rem;
+  }
+
+  .aev-home .aev-footer-column:nth-child(3) li:nth-child(n + 4) {
+    display: none;
+  }
+
+  .aev-home .aev-footer-contact {
+    margin-top: 0.55rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .aev-story-title {
+    font-size: 2.1rem;
+  }
+
+  .aev-story-copy {
+    font-size: 1rem;
+  }
+
+  .aev-story-media,
+  .aev-story-media .aev-motion-panel > .relative {
+    border-radius: 2rem;
+    min-height: 28rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .aev-story-title {
+    font-size: 3rem;
+  }
+
+  .aev-story-media,
+  .aev-story-media .aev-motion-panel > .relative {
+    min-height: 33rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .aev-collection-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 430px) {
+  .aev-featured-products-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aev-action-primary:active,
   .aev-button-primary:active,
