@@ -3198,7 +3198,7 @@ button {
   }
 
   .aev-mobile-home-support {
-    padding-bottom: calc(var(--aev-mobile-bottom-nav-height) + 1rem);
+    padding-bottom: 0.7rem;
   }
 
   .aev-mobile-home-support .grid {
@@ -3283,12 +3283,40 @@ button {
     display: none;
   }
 
+  .aev-footer-brand.aev-intent-delivery::before {
+    opacity: 0.58;
+  }
+
   .aev-home .aev-site-footer {
+    margin-top: 0.2rem;
+    padding-bottom: calc(var(--aev-mobile-bottom-nav-height) + 1.2rem);
+    padding-top: 1.4rem;
+  }
+
+  .aev-home .aev-footer-brand {
+    margin-bottom: 0.85rem;
+    padding: 1rem;
+  }
+
+  .aev-home .aev-footer-brand > p:nth-child(2) {
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+
+  .aev-home .aev-footer-brand .aev-footer-proof:nth-child(n + 4) {
     display: none;
   }
 
-  .aev-footer-brand.aev-intent-delivery::before {
-    opacity: 0.58;
+  .aev-home .aev-footer-columns {
+    gap: 0.65rem;
+  }
+
+  .aev-home .aev-footer-column {
+    padding: 0.9rem;
+  }
+
+  .aev-home .aev-footer-column ul {
+    margin-top: 0.65rem;
   }
 }
 
@@ -3382,6 +3410,103 @@ button {
     radial-gradient(circle at 92% 12%, rgba(0, 212, 198, 0.2), transparent 25%),
     radial-gradient(circle at 6% 100%, rgba(168, 85, 247, 0.16), transparent 34%);
   inset: 0;
+}
+
+.aev-home-art-block,
+.aev-home-art-link {
+  isolation: isolate;
+  position: relative;
+}
+
+.aev-home-art-block::before,
+.aev-home-art-block::after,
+.aev-home-art-link::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.aev-home-art-block::before {
+  background:
+    linear-gradient(135deg, rgba(255, 179, 209, 0.13), transparent 36%),
+    radial-gradient(ellipse at 86% 10%, rgba(0, 212, 198, 0.13), transparent 31%),
+    radial-gradient(ellipse at 10% 100%, rgba(168, 85, 247, 0.14), transparent 35%);
+  inset: 0;
+}
+
+.aev-home-art-block::after {
+  border: 1px solid rgba(255, 179, 209, 0.13);
+  border-radius: 46% 54% 44% 56%;
+  height: 8.25rem;
+  opacity: 0.68;
+  right: -2.6rem;
+  top: -3.6rem;
+  transform: rotate(29deg);
+  width: 6.4rem;
+}
+
+.aev-home-art-block-rail::after {
+  border-color: rgba(0, 212, 198, 0.13);
+  height: 6.9rem;
+  right: -2rem;
+  top: -3rem;
+}
+
+.aev-home-art-block-layer::after {
+  background:
+    linear-gradient(145deg, rgba(255, 77, 184, 0.1), transparent 58%),
+    repeating-radial-gradient(ellipse at center, rgba(255, 179, 209, 0.11) 0 1px, transparent 1px 12px);
+  height: 9.8rem;
+  opacity: 0.56;
+  width: 7rem;
+}
+
+.aev-home-art-block-petal::after {
+  border-color: rgba(0, 212, 198, 0.16);
+  border-radius: 58% 42% 55% 45%;
+  left: -2.9rem;
+  right: auto;
+  top: auto;
+  bottom: -4.4rem;
+  transform: rotate(-24deg);
+}
+
+.aev-home-art-block-arrival::after {
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 0.85rem rgba(255, 77, 184, 0.025),
+    0 0 2.5rem rgba(255, 77, 184, 0.06);
+}
+
+.aev-home-art-block-cta::before {
+  background:
+    linear-gradient(128deg, rgba(255, 77, 184, 0.18), transparent 42%),
+    radial-gradient(ellipse at 88% 20%, rgba(0, 212, 198, 0.2), transparent 33%),
+    radial-gradient(ellipse at 54% 120%, rgba(168, 85, 247, 0.2), transparent 42%);
+}
+
+.aev-home-art-link {
+  overflow: hidden;
+}
+
+.aev-home-art-link::before {
+  background:
+    linear-gradient(130deg, rgba(255, 179, 209, 0.11), transparent 34%),
+    linear-gradient(90deg, transparent, rgba(0, 212, 198, 0.06));
+  inset: 0;
+}
+
+.aev-mobile-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.aev-mobile-faq[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.aev-mobile-faq summary svg {
+  transition: transform 180ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -441,19 +441,19 @@ export default async function Home() {
             <div className="aev-product-edge absolute -inset-2 rounded-[2.6rem] border border-[#FF4DB8]/16" />
             <div className="aev-product-float relative">
               {heroMedia.mode === "image" && heroMedia.imageUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/14 bg-[#0D0820] shadow-[0_34px_130px_rgba(0,0,0,0.55),0_0_60px_rgba(255,77,184,0.10)]" style={{ minHeight: "clamp(20rem, 56vw, 33rem)" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/14 bg-[#0D0820] shadow-[0_34px_130px_rgba(0,0,0,0.55),0_0_60px_rgba(255,77,184,0.10)]" style={{ minHeight: "clamp(15rem, 64vw, 33rem)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={heroMedia.imageUrl}
                     alt={heroMedia.altText || "Her Care hero"}
                     className="absolute inset-0 h-full w-full object-cover opacity-90"
-                    loading="lazy"
+                    loading="eager"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#030714]/70 via-[#030714]/20 to-transparent" />
                   <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_58%)] opacity-40 pointer-events-none" />
                 </div>
               ) : heroMedia.mode === "video" && heroMedia.videoUrl ? (
-                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/14 bg-[#0D0820] shadow-[0_34px_130px_rgba(0,0,0,0.55),0_0_60px_rgba(255,77,184,0.10)]" style={{ minHeight: "clamp(20rem, 56vw, 33rem)" }}>
+                <div className="aev-motion-panel aev-motion-panel-hero relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/14 bg-[#0D0820] shadow-[0_34px_130px_rgba(0,0,0,0.55),0_0_60px_rgba(255,77,184,0.10)]" style={{ minHeight: "clamp(15rem, 64vw, 33rem)" }}>
                   <video
                     className="absolute inset-0 h-full w-full object-cover opacity-90"
                     autoPlay
@@ -576,7 +576,7 @@ export default async function Home() {
 
       {hms.showCategories && (
         <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-categories-title">
-          <div className="mx-auto max-w-xl">
+          <div className="aev-home-art-block aev-home-art-block-rail mx-auto max-w-xl overflow-hidden rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#100A1E]/72 p-4">
             <div className="flex items-end justify-between gap-3">
               <div>
                 <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
@@ -675,12 +675,44 @@ export default async function Home() {
       )}
 
       {hms.showStorySections && (
+        <>
+        {lc.layerComfortEnabled !== false && (
+          <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-layer-title">
+            <div className="aev-home-art-block aev-home-art-block-layer relative mx-auto max-w-xl overflow-hidden rounded-[1.55rem] border border-[#FF4DB8]/15 bg-[#120C22] p-4">
+              <div className="relative">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                  {lc.layerComfortEyebrow || "Her Care Layer System"}
+                </p>
+                <h2 id="mobile-layer-title" className="mt-1.5 max-w-[15ch] text-xl font-semibold leading-tight text-white">
+                  Her Care Layer System.
+                </h2>
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#D8CBE8]/76">
+                  Layered comfort designed for reusable care and discreet everyday routines.
+                </p>
+                <div className="mt-3 grid gap-2">
+                  {lcLayerItems.map(({ label, desc, dotBg }) => (
+                    <article
+                      key={label}
+                      className="aev-mobile-mini-card flex min-w-0 items-start gap-2.5 rounded-[1rem] border border-white/[0.08] bg-[#080611]/58 p-3"
+                    >
+                      <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotBg} ring-4 ring-[#FF4DB8]/10`} />
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold leading-5 text-white">{label}</h3>
+                        <p className="mt-0.5 line-clamp-1 text-[0.69rem] leading-4 text-[#D8CBE8]/74">{desc}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
         <section className="aev-mobile-home-benefit aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-comfort-title">
           <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#120C22] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
             <div className="relative grid grid-cols-[1fr_5.4rem] items-center gap-3">
               <div className="min-w-0">
                 <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
-                  Comfort System
+                  {careMedia.eyebrow || "Aevyrixa Care Motion"}
                 </p>
                 <h2 id="mobile-comfort-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
                   Soft protection, daily comfort.
@@ -721,6 +753,30 @@ export default async function Home() {
             </Link>
           </div>
         </section>
+        <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-designed-title">
+          <div className="aev-home-art-block aev-home-art-block-petal relative mx-auto max-w-xl overflow-hidden rounded-[1.5rem] border border-[#00D4C6]/12 bg-[#0D0A1C] p-4">
+            <div className="relative">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
+                {experienceMedia.eyebrow || "Designed for your day"}
+              </p>
+              <h2 id="mobile-designed-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+                Designed for your day.
+              </h2>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {confidenceCards.map(({ title, icon: Icon }) => (
+                  <article
+                    key={title}
+                    className="aev-mobile-mini-card flex min-h-[5.35rem] min-w-0 flex-col justify-between rounded-[1rem] border border-white/[0.08] bg-[#151024]/82 p-2.5"
+                  >
+                    <Icon className="h-4 w-4 text-[#FFB3D1]" strokeWidth={1.8} />
+                    <h3 className="text-[0.68rem] font-semibold leading-4 text-white">{title}</h3>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+        </>
       )}
 
       <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-care-title">
@@ -751,6 +807,90 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {hms.showStorySections && (
+        <>
+          <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-arrival-title">
+            <div className="aev-home-art-block aev-home-art-block-arrival relative mx-auto max-w-xl overflow-hidden rounded-[1.55rem] border border-[#FF4DB8]/14 bg-[#120C22] p-4">
+              <div className="relative">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                  Order to Arrival
+                </p>
+                <h2 id="mobile-arrival-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+                  Private from order to delivery.
+                </h2>
+                <div className="mt-3 grid gap-2">
+                  {[
+                    { label: "Plain packaging", copy: "Private outer delivery.", icon: PackageCheck },
+                    { label: "Order confirmation", copy: "Clear order updates.", icon: ShieldCheck },
+                    { label: "Bangladesh delivery", copy: "Courier support available.", icon: Truck },
+                  ].map(({ label, copy, icon: Icon }) => (
+                    <article
+                      key={label}
+                      className="aev-mobile-mini-card flex items-center gap-2.5 rounded-[1rem] border border-white/[0.08] bg-[#080611]/58 p-3"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] border border-[#FF4DB8]/18 bg-[#1B1230] text-[#FFB3D1]">
+                        <Icon className="h-4 w-4" strokeWidth={1.8} />
+                      </span>
+                      <span className="min-w-0">
+                        <strong className="block text-sm font-semibold leading-5 text-white">{label}</strong>
+                        <span className="block text-[0.69rem] leading-4 text-[#D8CBE8]/74">{copy}</span>
+                      </span>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+          <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-find-title">
+            <div className="mx-auto max-w-xl">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                Find Your Care
+              </p>
+              <h2 id="mobile-find-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+                Choose by routine.
+              </h2>
+              <div className="mt-3 grid gap-2">
+                {[
+                  {
+                    title: "Reusable Period Care",
+                    copy: "For light to moderate flow days.",
+                    href: "/product?category=Reusable+Period+Care",
+                    icon: Droplets,
+                  },
+                  {
+                    title: "Comfort Wear",
+                    copy: "Soft daily panty and support picks.",
+                    href: "/product?category=Comfort+Panty",
+                    icon: Sparkles,
+                  },
+                  {
+                    title: "Need help?",
+                    copy: "Ask support before checkout.",
+                    href: "/support",
+                    icon: MessageCircle,
+                  },
+                ].map(({ title, copy, href, icon: Icon }) => (
+                  <Link
+                    key={title}
+                    href={href}
+                    className="aev-home-art-link aev-mobile-mini-card flex items-center gap-3 rounded-[1.1rem] border border-[#FF4DB8]/13 bg-[#151024]/90 p-3"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] border border-[#00D4C6]/16 bg-[#0E1828] text-[#31E6D4]">
+                      <Icon className="h-4 w-4" strokeWidth={1.8} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm font-semibold leading-5 text-white">{title}</strong>
+                      <span className="block text-[0.69rem] leading-4 text-[#D8CBE8]/74">{copy}</span>
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#FFB3D1]" strokeWidth={2.1} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       {hms.showTestimonials && (
         <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-customer-trust-title">
@@ -810,6 +950,70 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {hms.showFAQ && (
+        <section id="mobile-faq" className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-faq-title">
+          <div className="aev-home-art-block relative mx-auto max-w-xl overflow-hidden rounded-[1.55rem] border border-[#FF4DB8]/13 bg-[#100A1E]/82 p-4">
+            <div className="relative">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                FAQ Preview
+              </p>
+              <h2 id="mobile-faq-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+                Answers before checkout.
+              </h2>
+              <div className="mt-3 grid gap-2">
+                {faqs.slice(0, 3).map((faq, index) => (
+                  <details
+                    key={faq.question}
+                    className="aev-mobile-faq rounded-[1rem] border border-white/[0.08] bg-[#080611]/58 px-3 py-2.5"
+                    open={index === 0}
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold leading-5 text-white">
+                      {faq.question}
+                      <ChevronDown className="h-4 w-4 shrink-0 text-[#FFB3D1]" strokeWidth={1.8} />
+                    </summary>
+                    <p className="mt-2 text-[0.7rem] leading-5 text-[#D8CBE8]/76">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {hms.showBottomCTA && hms.ctaSectionEnabled && (
+        <section className="aev-mobile-home-cta aev-mobile-home-section px-4 pb-8 md:hidden" aria-labelledby="mobile-cta-title">
+          <div className="aev-home-art-block aev-home-art-block-cta relative mx-auto max-w-xl overflow-hidden rounded-[1.65rem] border border-[#FF4DB8]/18 bg-[#0D0820] p-4">
+            <div className="relative">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
+                {hms.ctaSectionEyebrow || "Aevyrixa Her Care"}
+              </p>
+              <h2 id="mobile-cta-title" className="mt-2 text-[1.35rem] font-semibold leading-tight text-white">
+                {hms.ctaSectionHeading || "Ready for reusable confidence?"}
+              </h2>
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#D8CBE8]/76">
+                {hms.ctaSectionDescription || "Shop premium reusable care with discreet delivery."}
+              </p>
+              <div className="mt-4 grid gap-2 min-[390px]:grid-cols-2">
+                <Link
+                  href={hms.ctaSectionPrimaryCtaLink || "/product"}
+                  className="aev-action-primary inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-5 text-sm font-bold text-white"
+                >
+                  {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
+                </Link>
+                {hms.ctaSectionSecondaryCtaText && (
+                  <a
+                    href={hms.ctaSectionSecondaryCtaLink || "#mobile-faq"}
+                    className="aev-action-secondary inline-flex min-h-11 items-center justify-center rounded-full border border-[#FF4DB8]/24 bg-white/[0.05] px-5 text-sm font-semibold text-[#FFB3D1]"
+                  >
+                    {hms.ctaSectionSecondaryCtaText}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {hms.showTrustStrip && (
       <section className="aev-scroll-section hidden px-4 py-10 md:block sm:px-6 sm:py-16">
