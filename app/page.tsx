@@ -537,7 +537,7 @@ export default async function Home() {
       )}
 
       {hms.showFeaturedProducts && activeProducts.length > 0 && (
-        <section className="aev-scroll-section relative px-4 py-10 sm:px-6 sm:py-16">
+        <section className="aev-home-featured-products aev-scroll-section relative px-4 py-10 sm:px-6 sm:py-16">
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_22%_28%,rgba(255,77,184,0.09),transparent_28%),radial-gradient(circle_at_80%_22%,rgba(168,85,247,0.08),transparent_30%)]" />
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -574,28 +574,230 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="aev-mobile-home-benefit px-4 pb-4 pt-1 md:hidden">
-        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.65rem] border border-[#FF4DB8]/16 bg-[#120C22] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
-          <div className="relative grid grid-cols-[1fr_auto] items-center gap-3">
-            <div className="min-w-0">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
-                Premium Comfort
-              </p>
-              <h2 className="mt-2 text-xl font-semibold leading-tight text-white">
-                Soft care for flow days.
-              </h2>
-              <p className="mt-2 max-w-[24ch] text-sm leading-6 text-[#D8CBE8]/78">
-                Reusable essentials made for comfort and discreet daily routines.
-              </p>
+      {hms.showCategories && (
+        <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-categories-title">
+          <div className="mx-auto max-w-xl">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                  Collections
+                </p>
+                <h2 id="mobile-categories-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+                  Shop by care.
+                </h2>
+              </div>
+              <Link
+                href="/product"
+                className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-[#FF4DB8]/18 bg-white/[0.04] px-3 text-xs font-semibold text-[#FFB3D1]"
+              >
+                All
+                <ArrowRight size={12} strokeWidth={2.2} />
+              </Link>
             </div>
-            <div className="aev-mobile-benefit-art flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[#1B1230]/85 text-[#FF4DB8]">
-              <ShieldCheck className="h-8 w-8" strokeWidth={1.55} />
+            <div className="aev-mobile-category-rail mt-3 flex gap-2.5 overflow-x-auto pb-1">
+              {hereCareCategories.map((category) => {
+                const {
+                  displayName,
+                  displayLinkUrl,
+                  comingSoon,
+                  categoryImageUrl,
+                  categoryVideoUrl,
+                  categoryMediaMode,
+                  categoryAltText,
+                  glow,
+                } = category;
+                const showsVideo =
+                  categoryVideoUrl &&
+                  (categoryMediaMode === "video_text" ||
+                    categoryMediaMode === "background_media_text" ||
+                    categoryMediaMode === "media_only");
+                const thumbnail = showsVideo ? (
+                  <video
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  >
+                    <source src={categoryVideoUrl} type="video/mp4" />
+                  </video>
+                ) : categoryImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={categoryImageUrl}
+                    alt={categoryAltText || displayName}
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                    loading="lazy"
+                  />
+                ) : (
+                  <>
+                    <div className={`absolute inset-4 rounded-full ${glow} blur-xl`} />
+                    <div className="absolute inset-x-4 bottom-3 top-3 rounded-[1rem] border border-white/10 bg-[linear-gradient(145deg,rgba(255,77,184,0.18),rgba(168,85,247,0.08),rgba(0,212,198,0.12))]" />
+                  </>
+                );
+                const card = (
+                  <>
+                    <div className="relative aspect-[1.24] overflow-hidden rounded-[1rem] border border-white/[0.08] bg-[#0D0820]">
+                      {thumbnail}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#080611]/48 via-transparent to-white/[0.04]" />
+                    </div>
+                    <div className="mt-2 flex min-w-0 items-start justify-between gap-1">
+                      <h3 className="line-clamp-2 text-[0.78rem] font-semibold leading-4 text-white">
+                        {displayName}
+                      </h3>
+                      <span className={`mt-0.5 shrink-0 rounded-full border px-1.5 py-0.5 text-[0.5rem] font-semibold uppercase tracking-[0.08em] ${comingSoon ? "border-[#FFB84D]/24 bg-[#FFB84D]/[0.08] text-[#FFB84D]" : "border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] text-[#31E6D4]"}`}>
+                        {comingSoon ? "Soon" : "Open"}
+                      </span>
+                    </div>
+                  </>
+                );
+
+                return !comingSoon && displayLinkUrl ? (
+                  <a
+                    key={displayName}
+                    href={displayLinkUrl}
+                    className="aev-mobile-category-card block w-[8.8rem] shrink-0 overflow-hidden rounded-[1.2rem] border border-[#FF4DB8]/14 bg-[#151024]/92 p-2.5"
+                  >
+                    {card}
+                  </a>
+                ) : (
+                  <div
+                    key={displayName}
+                    className="aev-mobile-category-card w-[8.8rem] shrink-0 overflow-hidden rounded-[1.2rem] border border-[#FF4DB8]/10 bg-[#151024]/72 p-2.5"
+                  >
+                    {card}
+                  </div>
+                );
+              })}
             </div>
+          </div>
+        </section>
+      )}
+
+      {hms.showStorySections && (
+        <section className="aev-mobile-home-benefit aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-comfort-title">
+          <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#120C22] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
+            <div className="relative grid grid-cols-[1fr_5.4rem] items-center gap-3">
+              <div className="min-w-0">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+                  Comfort System
+                </p>
+                <h2 id="mobile-comfort-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+                  Soft protection, daily comfort.
+                </h2>
+              </div>
+              {careMedia.mode === "image" && careMedia.imageUrl ? (
+                <div className="aev-mobile-comfort-thumb relative h-[5.4rem] overflow-hidden rounded-[1.1rem] border border-white/10 bg-[#1B1230]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={careMedia.imageUrl}
+                    alt={careMedia.altText || "Care system"}
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className="aev-mobile-benefit-art flex h-[5.4rem] w-[5.4rem] items-center justify-center rounded-[1.1rem] border border-white/10 bg-[#1B1230]/85 text-[#FF4DB8]">
+                  <ShieldCheck className="h-7 w-7" strokeWidth={1.55} />
+                </div>
+              )}
+            </div>
+            <div className="relative mt-3 grid grid-cols-2 gap-2">
+              {["Soft comfort", "Absorbent support", "Discreet protection", "Breathable daily wear"].map((item) => (
+                <div
+                  key={item}
+                  className="flex min-h-9 items-center gap-1.5 rounded-[0.9rem] border border-[#FF4DB8]/12 bg-[#080611]/58 px-2.5 text-[0.69rem] font-semibold leading-4 text-[#F1E7FA]"
+                >
+                  <ShieldCheck className="h-3 w-3 shrink-0 text-[#31E6D4]" strokeWidth={2} />
+                  <span className="line-clamp-1">{item}</span>
+                </div>
+              ))}
+            </div>
+            <Link
+              href={careMedia.ctaLink || featuredProductHref}
+              className="aev-action-primary relative mt-3 inline-flex min-h-10 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-4 text-xs font-bold text-white"
+            >
+              {careMedia.ctaText || "View Product"}
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-care-title">
+        <div className="mx-auto max-w-xl">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/75">
+            Care Routine
+          </p>
+          <h2 id="mobile-care-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+            3-Day Hygiene-Safe Support.
+          </h2>
+          <div className="aev-mobile-step-rail mt-3 flex gap-2 overflow-x-auto pb-1">
+            {[
+              ["Wear", "Choose your comfort."],
+              ["Rinse", "Cool rinse after wear."],
+              ["Air Dry", "Dry before storing."],
+            ].map(([label, copy], index) => (
+              <article
+                key={label}
+                className="aev-mobile-mini-card min-w-[7.8rem] flex-1 rounded-[1.15rem] border border-[#FF4DB8]/13 bg-[#151024]/90 p-3"
+              >
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#FF4DB8]/24 bg-[#1B1230] text-[0.62rem] font-bold text-[#FFB3D1]">
+                  0{index + 1}
+                </span>
+                <h3 className="mt-2 text-sm font-semibold text-white">{label}</h3>
+                <p className="mt-1 text-[0.68rem] leading-4 text-[#D8CBE8]/76">{copy}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="aev-mobile-home-support px-4 pb-7 pt-2 md:hidden">
+      {hms.showTestimonials && (
+        <section className="aev-mobile-home-section px-4 md:hidden" aria-labelledby="mobile-customer-trust-title">
+          <div className="mx-auto max-w-xl">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
+              Customer Trust
+            </p>
+            <h2 id="mobile-customer-trust-title" className="mt-1.5 text-xl font-semibold leading-tight text-white">
+              Real review checks.
+            </h2>
+            <div className="mt-3 grid gap-2">
+              {[
+                {
+                  title: "Moderated Only",
+                  copy: "Feedback appears after admin review.",
+                  icon: Sparkles,
+                },
+                {
+                  title: "Order Linked",
+                  copy: "Customers submit from order history.",
+                  icon: PackageCheck,
+                },
+                {
+                  title: "Privacy First",
+                  copy: "Public reviews keep private details out.",
+                  icon: ShieldCheck,
+                },
+              ].map(({ title, copy, icon: Icon }) => (
+                <article
+                  key={title}
+                  className="aev-mobile-mini-card flex items-center gap-2.5 rounded-[1.1rem] border border-[#00D4C6]/12 bg-[#151024]/88 p-3"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] border border-[#FF4DB8]/16 bg-[#1B1230] text-[#FFB3D1]">
+                    <Icon className="h-4 w-4" strokeWidth={1.8} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-white">{title}</h3>
+                    <p className="mt-0.5 text-[0.69rem] leading-4 text-[#D8CBE8]/76">{copy}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="aev-mobile-home-support aev-mobile-home-section px-4 pb-7 md:hidden">
         <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.65rem] border border-[#00D4C6]/14 bg-[#0D0820] p-4">
           <div className="relative">
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/72">
