@@ -19,6 +19,7 @@ export type StoreProfileSettings = {
   supportPhone: string;
   supportWhatsApp: string;
   supportEmail: string;
+  supportAgentImageUrl: string;
   facebookPageUrl: string;
   instagramUrl: string;
   tiktokUrl: string;
@@ -349,6 +350,7 @@ const defaultGroups: AdminSettingsGroups = {
     supportPhone: "01644037384",
     supportWhatsApp: "01644037384",
     supportEmail: "support@aevyrixa.com",
+    supportAgentImageUrl: "",
     facebookPageUrl: "",
     instagramUrl: "",
     tiktokUrl: "",
@@ -847,6 +849,9 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         textValue(storeProfile.supportEmail) ||
         textValue(value.supportEmail) ||
         defaultGroups.storeProfile.supportEmail,
+      supportAgentImageUrl:
+        publicUrlValue(storeProfile.supportAgentImageUrl) ||
+        publicUrlValue(value.supportAgentImageUrl),
       facebookPageUrl:
         publicUrlValue(storeProfile.facebookPageUrl) ||
         publicUrlValue(value.facebookPageUrl),

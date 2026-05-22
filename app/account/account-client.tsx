@@ -8,14 +8,12 @@ import {
   CheckCircle2,
   Clock3,
   Headphones,
-  Home,
   LogOut,
   MapPin,
   MessageSquare,
   PackageSearch,
   Plus,
   ShieldCheck,
-  ShoppingBag,
   UserRound,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -283,8 +281,8 @@ export default function AccountClient({ view }: { view: AccountView }) {
               <Link className="action-primary justify-center" href="/track-order">
                 Track order
               </Link>
-              <Link className="action-muted justify-center" href="/support">
-                Start live chat
+              <Link className="action-muted justify-center" href="/account/orders">
+                View orders
               </Link>
             </div>
             {customer && (
@@ -298,7 +296,10 @@ export default function AccountClient({ view }: { view: AccountView }) {
               </div>
             )}
           </div>
-          <div className="aev-panel min-w-0 overflow-hidden rounded-[1.75rem] border border-[#A855F7]/16 bg-[#151024]/80 p-4 shadow-[0_18px_72px_rgba(0,0,0,0.28)] sm:p-5">
+          <div className="aev-panel aev-intent-art aev-intent-promise min-w-0 overflow-hidden rounded-[1.75rem] border border-[#A855F7]/16 bg-[#151024]/80 p-4 shadow-[0_18px_72px_rgba(0,0,0,0.28)] sm:p-5">
+            <p className="relative mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-[#FFB3D1]/72">
+              Her Care promise
+            </p>
             <div className="grid gap-2 min-[390px]:grid-cols-2 lg:grid-cols-1">
               {["Discreet Packaging", "Bangladesh Delivery", "Premium Comfort", "Secure Checkout"].map((item) => (
                 <span
@@ -343,7 +344,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
             </div>
           </Panel>
         ) : (
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,0.71fr)_minmax(18rem,0.29fr)] lg:gap-6">
+          <div className={`grid gap-5 ${view === "dashboard" ? "lg:grid-cols-[minmax(0,0.71fr)_minmax(18rem,0.29fr)]" : ""} lg:gap-6`}>
             <section className="min-w-0 lg:order-1">
               {error && (
                 <div className="mb-5 rounded-2xl border border-rose-200/20 bg-rose-300/[0.08] p-4 text-sm text-rose-50/82">
@@ -356,8 +357,6 @@ export default function AccountClient({ view }: { view: AccountView }) {
                   allOrders={orders}
                   address={defaultAddress}
                   addressCount={addresses.length}
-                  settings={settings}
-                  supportMessage={supportMessage}
                 />
               )}
               {view === "orders" && (
@@ -388,8 +387,9 @@ export default function AccountClient({ view }: { view: AccountView }) {
               {view === "support" && <SupportView message={supportMessage} settings={settings} />}
             </section>
 
+            {view === "dashboard" && (
             <aside className="space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-              <Panel className="overflow-hidden p-0 sm:p-0">
+              <Panel className="aev-intent-art aev-intent-profile overflow-hidden p-0 sm:p-0">
                 <div className="border-b border-white/8 bg-[linear-gradient(135deg,rgba(255,77,184,0.13),rgba(168,85,247,0.08),rgba(0,212,198,0.04))] p-5 sm:p-6">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/22 bg-[#080611]/45 text-base font-semibold text-[#FFB3D1] shadow-[0_0_28px_rgba(255,77,184,0.14)]">
                     {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
@@ -421,38 +421,16 @@ export default function AccountClient({ view }: { view: AccountView }) {
                   </div>
                 </div>
               </Panel>
-              <Panel className="p-4 sm:p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/22 bg-gradient-to-br from-[#FF4DB8]/15 to-[#A855F7]/10 text-[#FF4DB8]">
-                    <UserRound className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">Customer controls</p>
-                    <p className="mt-1 text-xs leading-5 text-[#9C91AA]">Track, shop, and reach support without leaving the account area.</p>
-                  </div>
-                </div>
-                <div className="mt-4 grid gap-2">
-                  <Link className="shortcut-link" href="/track-order">
-                    <PackageSearch className="h-3.5 w-3.5 shrink-0 text-[#FF4DB8]" />
-                    Track an order
-                  </Link>
-                  <Link className="shortcut-link" href="/support">
-                    <MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#A855F7]" />
-                    Support & policies
-                  </Link>
-                  <Link className="shortcut-link" href="/product">
-                    <ShoppingBag className="h-3.5 w-3.5 shrink-0 text-[#00D4C6]" />
-                    Continue shopping
-                  </Link>
-                </div>
-              </Panel>
             </aside>
+            )}
 
           </div>
         )}
       </section>
 
-      <SiteFooter settings={settings} />
+      <div className="aev-account-footer">
+        <SiteFooter settings={settings} />
+      </div>
     </main>
   );
 }
@@ -496,15 +474,11 @@ function Dashboard({
   allOrders,
   address,
   addressCount,
-  settings,
-  supportMessage,
 }: {
   orders: AccountOrder[];
   allOrders: AccountOrder[];
   address?: Address;
   addressCount: number;
-  settings: StorefrontSettings;
-  supportMessage: string;
 }) {
   const pendingOrders = allOrders.filter((order) => normalizeStatus(order.status).includes("pending")).length;
   const deliveredOrders = allOrders.filter(
@@ -513,8 +487,7 @@ function Dashboard({
 
   return (
     <div className="grid gap-4 sm:gap-5">
-      <SupportHub settings={settings} />
-      <Panel className="overflow-hidden">
+      <Panel className="aev-intent-art aev-intent-pulse overflow-hidden">
         <div className="mb-4 flex flex-col justify-between gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#FF4DB8]/72">Account pulse</p>
@@ -531,32 +504,13 @@ function Dashboard({
           <Metric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
         </div>
       </Panel>
-      <Panel className="overflow-hidden">
-        <SectionTitle title="Quick Actions" href="/account/orders" label="Orders" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <QuickAction href="/track-order" icon={PackageSearch} label="Track order" helper="Check delivery progress." />
-          <QuickAction href="/support" icon={MessageSquare} label="Start live chat" helper="Open the support flow." />
-          {settings.whatsappUrl && (
-            <QuickAction
-              href={settings.whatsappUrl}
-              icon={Headphones}
-              label="WhatsApp support"
-              helper="Use the current support chat link."
-              external
-            />
-          )}
-          <QuickAction href="/account/orders" icon={ShoppingBag} label="View orders" helper="Open account order history." />
-          <QuickAction href="/account/addresses" icon={MapPin} label="Saved addresses" helper="Review delivery details." />
-          <QuickAction href="/product" icon={Home} label="Continue shopping" helper="Browse Her Care products." />
-        </div>
-      </Panel>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.8fr)] xl:gap-5">
-        <Panel className="overflow-hidden">
+        <Panel className="aev-intent-art aev-intent-orders overflow-hidden">
           <SectionTitle title="Recent Orders" href="/account/orders" />
           <OrderRows orders={orders} />
         </Panel>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-          <Panel className="overflow-hidden">
+          <Panel className="aev-intent-art aev-intent-address overflow-hidden">
             <SectionTitle title="Saved Address" href="/account/addresses" />
             {address ? (
               <>
@@ -569,65 +523,16 @@ function Dashboard({
               <EmptyLine text="No saved address yet." />
             )}
           </Panel>
-          <Panel className="overflow-hidden">
-            <SectionTitle title="Support History" href="/account/support" />
-            <p className="text-sm leading-7 text-white/62">
-              {supportMessage || "Live chat conversations are currently token-based and are not safely linked to customer accounts yet."}
+          <Panel className="aev-intent-art aev-intent-promise overflow-hidden">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#FFB3D1]/72">Her Care promise</p>
+            <h2 className="mt-3 text-lg font-semibold text-white">Support stays purposeful.</h2>
+            <p className="mt-2 text-sm leading-7 text-white/62">
+              Use the Support tab for live help, WhatsApp, support policy details, and order tracking when a concern needs attention.
             </p>
-            <div className="mt-4 flex flex-col gap-2 min-[390px]:flex-row">
-              <Link className="mini-action justify-center text-center" href="/support">
-                Start support
-              </Link>
-              <Link className="mini-action justify-center text-center" href="/track-order">
-                Track order
-              </Link>
-            </div>
           </Panel>
         </div>
       </div>
     </div>
-  );
-}
-
-function QuickAction({
-  href,
-  icon: Icon,
-  label,
-  helper,
-  external = false,
-}: {
-  href: string;
-  icon: typeof UserRound;
-  label: string;
-  helper: string;
-  external?: boolean;
-}) {
-  const content = (
-    <>
-      <div className="pointer-events-none absolute right-3 top-3 h-10 w-10 rounded-full bg-[#FF4DB8]/[0.04] blur-xl transition duration-300 group-hover:bg-[#FF4DB8]/[0.08]" />
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.07] text-[#FF4DB8] transition duration-200 group-hover:border-[#FF4DB8]/35 group-hover:bg-[#FF4DB8]/12">
-        <Icon className="h-4 w-4" />
-      </div>
-      <span className="relative mt-4 flex items-start justify-between gap-3">
-        <span className="min-w-0">
-          <span className="block break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{label}</span>
-          <span className="mt-1 block text-xs leading-5 text-[#9C91AA]">{helper}</span>
-        </span>
-        <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-[#9C91AA] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[#FF4DB8]" />
-      </span>
-    </>
-  );
-  const className =
-    "group relative flex min-h-[7.25rem] min-w-0 flex-col justify-between overflow-hidden rounded-[1.15rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[#FF4DB8]/30 hover:bg-[#211633] hover:shadow-[0_12px_36px_rgba(0,0,0,0.36),0_0_18px_rgba(255,77,184,0.07)] active:translate-y-0";
-
-  return external ? (
-    <a href={href} target="_blank" rel="noreferrer" className={className}>
-      {content}
-    </a>
-  ) : (
-    <Link href={href} className={className}>
-      {content}
-    </Link>
   );
 }
 
@@ -664,7 +569,7 @@ function Metric({
 
 function SupportHub({ settings }: { settings: StorefrontSettings }) {
   return (
-    <Panel className="relative overflow-hidden border-[#00D4C6]/14">
+    <Panel className="aev-intent-art aev-intent-support relative overflow-hidden border-[#00D4C6]/14">
       <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#00D4C6]/[0.07] blur-3xl" />
       <div className="relative grid gap-5 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:items-start">
         <div className="min-w-0">
@@ -684,6 +589,7 @@ function SupportHub({ settings }: { settings: StorefrontSettings }) {
               <span>3-Day Hygiene-Safe Support is available for eligible concerns after delivery.</span>
             </p>
           </div>
+          <SupportAgentVisual imageUrl={settings.storeProfile.supportAgentImageUrl} />
         </div>
         <div className="grid gap-3 min-[430px]:grid-cols-2">
           <SupportAction
@@ -728,6 +634,23 @@ function SupportHub({ settings }: { settings: StorefrontSettings }) {
         </div>
       </div>
     </Panel>
+  );
+}
+
+function SupportAgentVisual({ imageUrl }: { imageUrl: string }) {
+  return (
+    <div className="aev-support-agent-frame mt-4 hidden overflow-hidden rounded-[1.2rem] border border-white/[0.09] bg-[#0B0F1A]/72 p-2 sm:block">
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt="Aevyrixa support agent"
+          className="h-36 w-full rounded-[0.95rem] object-cover object-center"
+        />
+      ) : (
+        <div className="aev-support-agent-fallback h-36 rounded-[0.95rem]" aria-hidden="true" />
+      )}
+    </div>
   );
 }
 
@@ -794,7 +717,7 @@ function SectionTitle({ title, href, label = "View" }: { title: string; href: st
 function OrdersView({ orders }: { orders: AccountOrder[] }) {
   return (
     <div className="grid gap-5">
-      <Panel>
+      <Panel className="aev-intent-art aev-intent-orders">
         <h2 className="text-xl font-semibold text-white">Order History</h2>
         <p className="mt-2 text-sm leading-7 text-[#9C91AA]">
           Open an order for a focused detail view with tracking and support actions.
@@ -1045,29 +968,6 @@ function SupportView({ message, settings }: { message: string; settings: Storefr
               {message || "Live chat conversations are currently token-based and not safely linked to customer accounts yet."}
             </p>
           </div>
-        </div>
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <Link className="action-primary" href="/support">Open support page</Link>
-          <Link className="action-muted" href="/track-order">Track an order</Link>
-        </div>
-      </Panel>
-      <Panel>
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">Support policies</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {[
-            { label: "3-Day Hygiene-Safe Support", desc: "Eligible concerns within 3 days of delivery." },
-            { label: "Start Support Chat", desc: "Need help? Start a support chat." },
-            { label: "Track Order", desc: "Use your order reference and phone to check delivery progress." },
-            { label: "Support Access", desc: "Live chat history is not safely linked to customer accounts yet." },
-          ].map(({ label, desc }) => (
-            <div key={label} className="rounded-xl border border-[#FF4DB8]/10 bg-[#1B1230] p-3">
-              <div className="flex items-center gap-2">
-                <Headphones className="h-3.5 w-3.5 text-[#FF4DB8]" />
-                <p className="text-sm font-semibold text-white">{label}</p>
-              </div>
-              <p className="mt-1 text-xs leading-5 text-[#9C91AA]">{desc}</p>
-            </div>
-          ))}
         </div>
       </Panel>
     </div>

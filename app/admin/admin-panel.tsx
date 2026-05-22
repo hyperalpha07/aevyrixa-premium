@@ -5042,6 +5042,44 @@ function SettingsSection({
                     updateHomepageMediaSettings({ liveChatEnabled: value })
                   }
                 />
+                <MediaUploadField
+                  label="Account support agent image"
+                  accept="image/jpeg,image/png,image/webp"
+                  mediaType="image"
+                  currentUrl={draft.storeProfile.supportAgentImageUrl}
+                  uploading={!!hmUploading["accountSupportImage"]}
+                  error={hmUploadError["accountSupportImage"] ?? null}
+                  onUpload={async (file) => {
+                    setHmUploading((prev) => ({ ...prev, accountSupportImage: true }));
+                    setHmUploadError((prev) => ({ ...prev, accountSupportImage: null }));
+                    try {
+                      const form = new FormData();
+                      form.append("file", file);
+                      form.append("section", "account-support");
+                      const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                      const pl = (await res.json()) as Record<string, unknown>;
+                      if (!res.ok || typeof pl.url !== "string") {
+                        setHmUploadError((prev) => ({ ...prev, accountSupportImage: "Upload failed." }));
+                      } else {
+                        updateFooterControlSettings({ supportAgentImageUrl: pl.url as string });
+                      }
+                    } catch {
+                      setHmUploadError((prev) => ({ ...prev, accountSupportImage: "Upload failed." }));
+                    } finally {
+                      setHmUploading((prev) => ({ ...prev, accountSupportImage: false }));
+                    }
+                  }}
+                  onClear={() => updateFooterControlSettings({ supportAgentImageUrl: "" })}
+                />
+                <TextField
+                  label="Account support agent image URL"
+                  value={draft.storeProfile.supportAgentImageUrl}
+                  inputMode="url"
+                  onChange={(value) =>
+                    updateFooterControlSettings({ supportAgentImageUrl: value })
+                  }
+                  helper="Optional public image URL for account support cards. Upload above or leave empty to use the coded fallback art."
+                />
               </div>
             </SettingsCard>
           )}
