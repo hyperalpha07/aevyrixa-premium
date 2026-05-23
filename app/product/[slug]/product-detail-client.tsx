@@ -330,11 +330,11 @@ export default function ProductDetailClient({
       />
 
       {/* ── Main product section ── */}
-      <section className="mx-auto grid max-w-[92rem] gap-6 px-4 py-5 sm:px-6 md:py-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(25rem,0.72fr)] lg:items-start lg:gap-10 xl:gap-14">
+      <section className="mx-auto grid max-w-[94rem] gap-6 px-4 py-5 sm:px-6 md:py-12 lg:grid-cols-[minmax(0,56fr)_minmax(26rem,44fr)] lg:items-start lg:gap-8 lg:px-8 xl:gap-10 2xl:px-6">
 
         {/* LEFT — Media gallery */}
         <div
-          className={`aev-panel aev-shop-card min-w-0 rounded-[1.35rem] border border-[#FF4DB8]/16 bg-[#151024]/92 p-2.5 shadow-[0_24px_90px_rgba(0,0,0,0.38),0_0_44px_rgba(255,77,184,0.08)] sm:rounded-[1.85rem] sm:p-3 lg:sticky lg:top-24 ${style.panel}`}
+          className={`aev-panel aev-shop-card min-w-0 rounded-[1.35rem] border border-[#FF4DB8]/16 bg-[#151024]/92 p-2.5 shadow-[0_24px_90px_rgba(0,0,0,0.38),0_0_44px_rgba(255,77,184,0.08)] sm:rounded-[1.85rem] sm:p-3 lg:sticky lg:top-24 lg:p-4 ${style.panel}`}
         >
           {/* Main media display */}
           <div
@@ -346,7 +346,7 @@ export default function ProductDetailClient({
             <div
               className={`pointer-events-none absolute inset-0 scale-90 rounded-full opacity-40 blur-[60px] ${style.glow}`}
             />
-            <div className="aspect-[1.02] w-full min-[420px]:aspect-square lg:aspect-[1.06] xl:aspect-[1.12]">
+            <div className="aspect-[1.02] w-full min-[420px]:aspect-square lg:aspect-[1.04] xl:aspect-[1.08]">
               {selectedMedia?.type === "video" ? (
                 <video
                   src={selectedMedia.url}
@@ -367,7 +367,7 @@ export default function ProductDetailClient({
                   alt={displayProduct.name}
                   loading={safeIndex === 0 ? "eager" : "lazy"}
                   decoding="async"
-                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-3 transition duration-500 hover:scale-[1.015] sm:p-5"
+                  className="aev-media-img-reveal h-full w-full cursor-zoom-in object-contain p-3 transition duration-500 hover:scale-[1.015] sm:p-5 lg:p-7"
                   onClick={() => setLightboxOpen(true)}
                   onError={() =>
                     setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
@@ -392,7 +392,7 @@ export default function ProductDetailClient({
 
           {/* Thumbnail strip — shown when multiple images or image + video */}
           {showThumbnails && (
-            <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1 sm:gap-2.5">
+            <div className="mt-4 flex snap-x gap-2.5 overflow-x-auto pb-1 sm:gap-3">
               {mediaItems.map((item, index) => (
                 <button
                   key={`${item.type}-${item.url}-${index}`}
@@ -403,7 +403,7 @@ export default function ProductDetailClient({
                       : `Product image ${index + 1}`
                   }
                   disabled={brokenMediaUrls.has(item.url)}
-                  className={`relative h-[68px] w-[68px] shrink-0 snap-start overflow-hidden rounded-xl border transition sm:h-[78px] sm:w-[78px] ${
+                  className={`relative h-[68px] w-[68px] shrink-0 snap-start overflow-hidden rounded-xl border transition sm:h-[82px] sm:w-[82px] lg:h-[88px] lg:w-[88px] ${
                     safeIndex === index
                       ? "aev-media-thumb-active border-[#FF4DB8]/65 bg-[#211633]"
                       : "border-white/[0.08] bg-[#1B1230] hover:border-[#FF4DB8]/32"
@@ -458,7 +458,7 @@ export default function ProductDetailClient({
           )}
 
           {/* Product info cards below media */}
-          <div className="aev-product-prebuy-trust mt-3 hidden gap-2 min-[520px]:grid-cols-2 lg:grid lg:grid-cols-1 xl:grid-cols-2">
+          <div className="aev-product-prebuy-trust mt-4 hidden gap-3 min-[520px]:grid-cols-2 lg:grid lg:grid-cols-2">
             <div className="aev-intent-card aev-intent-promise flex items-start gap-3 rounded-[1.1rem] border border-[#FF4DB8]/10 bg-[#1B1230]/86 px-4 py-3 text-xs leading-5 text-[#9C91AA]">
               <PackageCheck className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${style.accent}`} />
               <span>{privacyText}</span>
@@ -497,8 +497,10 @@ export default function ProductDetailClient({
             ← Back to products
           </Link>
 
+          <div className="mt-4 rounded-[1.65rem] border border-[#FF4DB8]/12 bg-[#151024]/72 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.28)] sm:p-5">
+
           {/* Badges */}
-          <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
             <span
               className={`rounded-full border px-3 py-1 text-xs font-medium ${style.badge}`}
             >
@@ -518,7 +520,7 @@ export default function ProductDetailClient({
           </div>
 
           {/* Product name */}
-          <h1 className="mt-4 break-words text-[2rem] font-semibold leading-[1.08] text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl lg:text-[3.35rem]">
+          <h1 className="mt-4 break-words text-[2rem] font-semibold leading-[1.08] text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl lg:text-[3rem] xl:text-[3.25rem]">
             {displayProduct.name}
           </h1>
 
@@ -532,12 +534,12 @@ export default function ProductDetailClient({
           )}
 
           {/* Main description */}
-          <p className="aev-product-main-description mt-4 max-w-2xl break-words text-[0.95rem] leading-8 text-[#D8CBE8]/72 [overflow-wrap:anywhere]">
+          <p className="aev-product-main-description mt-4 max-w-2xl break-words text-[0.95rem] leading-7 text-[#D8CBE8]/72 [overflow-wrap:anywhere]">
             {displayProduct.description}
           </p>
 
           {/* Price */}
-          <div className="mt-6 flex flex-wrap items-end gap-3 rounded-[1.3rem] border border-[#FF4DB8]/12 bg-[#151024]/76 px-4 py-3">
+          <div className="mt-5 flex flex-wrap items-end gap-3 rounded-[1.3rem] border border-[#FF4DB8]/12 bg-[#080611]/42 px-4 py-3">
             <span className="text-3xl font-semibold text-[#FFB3D1] sm:text-4xl">
               {formatProductPrice(displayProduct)}
             </span>
@@ -556,7 +558,7 @@ export default function ProductDetailClient({
             )}
           </div>
 
-          <div className="aev-product-review-summary mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
+          <div className="aev-product-review-summary mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
             <StarRating rating={averageRating} />
             <span className="text-sm font-semibold text-white">
               {reviewCount > 0
@@ -567,10 +569,11 @@ export default function ProductDetailClient({
               {reviewCount > 0 ? "Read reviews" : "Be the first after purchase"}
             </Link>
           </div>
+          </div>
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-panel aev-product-buy-panel aev-intent-card aev-intent-comfort mt-5 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto ${style.panel}`}
+            className={`aev-panel aev-product-buy-panel aev-intent-card aev-intent-comfort mt-4 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto ${style.panel}`}
           >
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#FF4DB8]/10 pb-4">
               <div>
@@ -583,7 +586,7 @@ export default function ProductDetailClient({
               </div>
               <ShoppingCart className="mt-1 h-5 w-5 shrink-0 text-[#FFB3D1]" />
             </div>
-            <div className="space-y-6">
+            <div className="space-y-5">
               <VariantSelector
                 label="Size"
                 options={displayProduct.sizes}
@@ -770,10 +773,10 @@ export default function ProductDetailClient({
       </section>
 
       {/* ── Benefits, Story, Care, Policy, FAQ ── */}
-      <section className="mx-auto hidden max-w-[92rem] gap-5 px-4 pb-12 sm:px-6 lg:grid lg:grid-cols-[1fr_0.9fr]">
+      <section className="mx-auto hidden max-w-[94rem] gap-5 px-4 pb-14 sm:px-6 lg:grid lg:grid-cols-12 lg:px-8 2xl:px-6">
 
         {/* Product details and benefits */}
-        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.24)] sm:p-6 lg:col-span-7 xl:p-7">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
@@ -785,7 +788,7 @@ export default function ProductDetailClient({
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[#9C91AA]">
             {displayProduct.shortDescription}
           </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {benefits.map((benefit, index) => (
               <div
                 key={`${benefit}-${index}`}
@@ -801,7 +804,7 @@ export default function ProductDetailClient({
         </div>
 
         {/* Product story */}
-        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.24)] sm:p-6 lg:col-span-5 xl:p-7">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
@@ -826,14 +829,14 @@ export default function ProductDetailClient({
         </div>
 
         {/* Fit and care */}
-        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6 lg:col-span-2">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.24)] sm:p-6 lg:col-span-12 xl:p-7">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
             Fit, Care & Support
           </p>
           <h2 className="mt-3 text-2xl font-semibold text-white">Clear guidance before and after purchase</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {[
               {
                 icon: Ruler,
@@ -874,7 +877,7 @@ export default function ProductDetailClient({
         </div>
 
         {/* FAQ */}
-        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6 lg:col-span-2">
+        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.24)] sm:p-6 lg:col-span-12 xl:p-7">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
@@ -904,7 +907,7 @@ export default function ProductDetailClient({
 
       {/* ── Related products ── */}
       {displayRelated.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
+        <section className="mx-auto max-w-[94rem] px-4 pb-14 sm:px-6 lg:px-8 2xl:px-6">
           <div className="mb-6 flex items-center gap-4">
             <div>
               <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
@@ -916,7 +919,7 @@ export default function ProductDetailClient({
             </div>
             <div className="h-px flex-1 bg-gradient-to-r from-[#FF4DB8]/12 to-transparent" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {displayRelated.map((rp) => (
               <StorefrontProductCard key={rp.id} product={rp} compact />
             ))}
@@ -1118,10 +1121,10 @@ function ProductReviewsSection({
   reviewCount: number;
 }) {
   return (
-    <section id="reviews" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
-      <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_18px_70px_rgba(255,77,184,0.08)] sm:p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
+    <section id="reviews" className="mx-auto max-w-[94rem] px-4 pb-14 sm:px-6 lg:px-8 2xl:px-6">
+      <div className="rounded-[1.85rem] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,rgba(21,16,36,0.98),rgba(12,9,24,0.98))] p-5 shadow-[0_22px_90px_rgba(255,77,184,0.08)] sm:p-6 xl:p-7">
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.34fr)] md:items-stretch">
+          <div className="rounded-[1.35rem] border border-[#FF4DB8]/10 bg-[#1B1230]/64 p-4 sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#00D4C6]/75">
               Customer Reviews
             </p>
@@ -1132,22 +1135,29 @@ function ProductReviewsSection({
               Approved reviews are shown here. Verified purchase appears only when a review is linked to a real customer order.
             </p>
           </div>
-          <div className="rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.06] px-4 py-3">
-            <StarRating rating={averageRating} />
-            <p className="mt-2 text-sm font-semibold text-white">
+          <div className="flex flex-col justify-between rounded-[1.35rem] border border-[#FFB84D]/18 bg-[#FFB84D]/[0.06] p-4 sm:p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#FFB84D]/80">
+                Rating Summary
+              </p>
+              <div className="mt-3">
+                <StarRating rating={averageRating} />
+              </div>
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-6 text-white">
               {reviewCount > 0 ? `${averageRating.toFixed(1)} average · ${reviewCount} ${reviewCount === 1 ? "review" : "reviews"}` : "No reviews yet"}
             </p>
           </div>
         </div>
 
         {reviews.length === 0 ? (
-          <div className="mt-6 rounded-[1.35rem] border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-5 text-sm leading-7 text-[#D8CBE8]">
-            No reviews yet. Be the first after purchase.
+          <div className="mt-5 rounded-[1.35rem] border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-5 text-sm leading-7 text-[#D8CBE8] sm:p-6">
+            No approved reviews yet. The section will populate after eligible customer feedback is reviewed.
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {reviews.map((review) => (
-              <article key={review.id} className="rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
+              <article key={review.id} className="rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 shadow-[0_14px_50px_rgba(0,0,0,0.22)] sm:p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <StarRating rating={review.rating} />
                   {review.isFeatured && (
