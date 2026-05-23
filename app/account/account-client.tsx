@@ -405,7 +405,7 @@ function AccountMobileMenu({
       open={isOpen}
       onToggle={(event) => setIsOpen(event.currentTarget.open)}
     >
-      <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 border border-white/[0.10] bg-[#080611]/94 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl [&::-webkit-details-marker]:hidden ${
+      <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 border border-white/[0.10] bg-[#080611]/94 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] [&::-webkit-details-marker]:hidden ${
         hero ? "h-10 w-10 rounded-full p-0" : "min-h-12 rounded-[1.2rem] px-4 py-3"
       }`}>
         {hero ? (
@@ -441,7 +441,7 @@ function AccountMobileMenu({
               href={action.href}
               aria-current={destinationView === view ? "page" : undefined}
               onClick={() => setIsOpen(false)}
-              className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition ${
+              className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8] ${
                 destinationView === view
                   ? "border-[#FF4DB8]/35 bg-[#FF4DB8]/[0.13] text-white"
                   : "border-transparent text-[#D8CBE8] hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
@@ -459,7 +459,7 @@ function AccountMobileMenu({
               setIsOpen(false);
               onLogout();
             }}
-            className="flex min-h-11 items-center gap-3 rounded-2xl border border-rose-200/12 bg-rose-300/[0.045] px-3 py-2.5 text-left text-sm font-semibold text-rose-100/86 transition hover:border-rose-200/24 hover:bg-rose-300/[0.08] hover:text-white"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border border-rose-200/12 bg-rose-300/[0.045] px-3 py-2.5 text-left text-sm font-semibold text-rose-100/86 transition hover:border-rose-200/24 hover:bg-rose-300/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200/70"
           >
             <LogOut className="h-4 w-4 shrink-0 text-rose-200/80" />
             Logout

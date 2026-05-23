@@ -2034,6 +2034,40 @@ button {
     0 0 22px rgba(255, 77, 184, 0.16);
 }
 
+.aev-profile-menu summary {
+  outline: none;
+}
+
+.aev-profile-menu[open] summary,
+.aev-profile-menu summary:focus-visible {
+  border-color: rgba(255, 77, 184, 0.35);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 2px rgba(255, 77, 184, 0.14),
+    0 0 22px rgba(255, 77, 184, 0.16);
+}
+
+.aev-profile-menu[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.aev-profile-menu-panel {
+  transform-origin: top right;
+  animation: aev-profile-menu-in 160ms ease-out;
+}
+
+@keyframes aev-profile-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .aev-cart-badge {
   border: 1px solid rgba(8, 6, 17, 0.88);
   line-height: 1;
@@ -2071,6 +2105,33 @@ button {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .aev-home-art-link:hover {
+    border-color: rgba(255, 77, 184, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 1.55rem 4.25rem rgba(0, 0, 0, 0.28),
+      0 0 26px rgba(255, 77, 184, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .aev-home-art-link:hover::before {
+    opacity: 1;
+  }
+
+  .aev-home-art-link:hover .aev-explore-cta {
+    color: #fff;
+    text-shadow: 0 0 20px rgba(255, 77, 184, 0.38);
+  }
+
+  .aev-home-art-link:hover .aev-explore-cta::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .aev-home-art-link:hover .aev-explore-cta-arrow {
+    transform: translateX(0.25rem);
+  }
+
   .aev-bottom-nav-item:hover::before {
     border-color: rgba(255, 77, 184, 0.14);
     background: rgba(33, 22, 51, 0.52);
@@ -3512,6 +3573,10 @@ button {
 
 .aev-home-art-link {
   overflow: hidden;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .aev-home-art-link::before {
@@ -3519,6 +3584,74 @@ button {
     linear-gradient(130deg, rgba(255, 179, 209, 0.11), transparent 34%),
     linear-gradient(90deg, transparent, rgba(0, 212, 198, 0.06));
   inset: 0;
+  opacity: 0.74;
+  transition: opacity 180ms ease;
+}
+
+.aev-explore-cta {
+  align-items: center;
+  color: #ffb3d1;
+  display: inline-flex;
+  font-weight: 700;
+  gap: 0.28rem;
+  letter-spacing: 0;
+  line-height: 1.25;
+  max-width: max-content;
+  position: relative;
+  text-shadow: 0 0 14px rgba(255, 77, 184, 0.18);
+  transition:
+    color 180ms ease,
+    transform 180ms ease,
+    text-shadow 180ms ease;
+}
+
+.aev-explore-cta::after {
+  background: linear-gradient(90deg, rgba(255, 77, 184, 0.95), rgba(49, 230, 212, 0.82), transparent);
+  border-radius: 999px;
+  bottom: -0.22rem;
+  content: "";
+  height: 1px;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  transform: scaleX(0.32);
+  transform-origin: left;
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease;
+  width: 100%;
+}
+
+.aev-explore-cta-arrow {
+  filter: drop-shadow(0 0 8px rgba(255, 77, 184, 0.26));
+  transition: transform 180ms ease;
+}
+
+.aev-home-art-link:focus-visible {
+  border-color: rgba(255, 77, 184, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 2px rgba(255, 77, 184, 0.28),
+    0 1.4rem 4rem rgba(0, 0, 0, 0.24);
+  outline: none;
+}
+
+.aev-home-art-link:focus-visible .aev-explore-cta {
+  color: #fff;
+  text-shadow: 0 0 18px rgba(255, 77, 184, 0.34);
+}
+
+.aev-home-art-link:focus-visible .aev-explore-cta::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.aev-home-art-link:focus-visible .aev-explore-cta-arrow {
+  transform: translateX(0.25rem);
+}
+
+.aev-home-art-link:active .aev-explore-cta {
+  transform: scale(0.97);
 }
 
 .aev-mobile-faq summary::-webkit-details-marker {

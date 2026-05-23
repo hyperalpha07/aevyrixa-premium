@@ -157,6 +157,17 @@ function UploadedMedia({
   return null;
 }
 
+function HomeExploreCta({ label = homeCardCtaLabel(), className = "" }: { label?: string; className?: string }) {
+  const text = label.replace(/\s*(?:\u2192|->)\s*$/, "").trim() || "Explore";
+
+  return (
+    <span className={`aev-explore-cta ${className}`}>
+      <span>{text}</span>
+      <ArrowRight className="aev-explore-cta-arrow h-3.5 w-3.5" strokeWidth={2} />
+    </span>
+  );
+}
+
 function LayerFallback() {
   return (
     <div className="aev-layer-visual-fallback relative h-full min-h-[16rem] overflow-hidden rounded-[1.7rem]">
@@ -478,9 +489,7 @@ export default async function Home() {
                 return !item.comingSoon ? (
                   <a key={item.key} href={item.fallbackHref} className="aev-home-art-link aev-collection-card flex min-w-0 flex-col overflow-hidden rounded-[1.25rem] border border-[#FF4DB8]/12 bg-[#151024]/92 p-2.5 sm:rounded-[1.6rem] sm:p-4">
                     {body}
-                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-[#FFB3D1] sm:text-sm">
-                      {homeCardCtaLabel()} 
-                    </span>
+                    <HomeExploreCta className="mt-auto pt-3 text-xs sm:text-sm" />
                   </a>
                 ) : (
                   <article key={item.key} className="aev-collection-card min-w-0 overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#151024]/68 p-2.5 opacity-80 sm:rounded-[1.6rem] sm:p-4">
@@ -625,9 +634,7 @@ export default async function Home() {
                       <div className="min-w-0 md:mt-4">
                         <h3 className="text-base font-semibold leading-5 text-white">{title}</h3>
                         <p className="mt-1.5 text-xs leading-5 text-[#D8CBE8]/76 sm:text-sm">{description}</p>
-                        <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#FFB3D1]">
-                          {homeCardCtaLabel()}
-                        </span>
+                        <HomeExploreCta className="mt-2 text-xs" />
                       </div>
                     </Link>
                   ))}

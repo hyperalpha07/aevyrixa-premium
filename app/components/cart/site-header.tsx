@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, Home, LayoutGrid, PackageSearch, ShoppingBag, UserRound } from "lucide-react";
+import { ChevronDown, Home, LayoutGrid, LogOut, MapPin, MessageSquare, PackageSearch, ShoppingBag, UserRound } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 import AnnouncementBanner from "@/app/components/announcement-banner";
 import {
@@ -25,8 +26,10 @@ export default function SiteHeader({
   compactMobile = false,
 }: SiteHeaderProps) {
   const { totalItems, toggleCart } = useCart();
+  const router = useRouter();
   const [hasAccountSession, setHasAccountSession] = useState(false);
   const [accountName, setAccountName] = useState("");
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -52,6 +55,20 @@ export default function SiteHeader({
     "border-transparent hover:border-[#FF4DB8]/25 hover:bg-[#211633]/80 hover:text-white";
   const navActive =
     "aev-site-nav-active border-[#FF4DB8]/35 bg-[#211633]/90 text-white font-semibold shadow-[0_0_16px_rgba(255,77,184,0.15)]";
+  const accountMenuItems = [
+    { href: "/account", label: "Account", icon: UserRound },
+    { href: "/account/orders", label: "Orders", icon: PackageSearch },
+    { href: "/account/addresses", label: "Addresses", icon: MapPin },
+    { href: "/account/support", label: "Support", icon: MessageSquare },
+  ] as const;
+
+  const logout = async () => {
+    await fetch("/api/account/logout", { method: "POST" }).catch(() => null);
+    setHasAccountSession(false);
+    setAccountName("");
+    setIsAccountMenuOpen(false);
+    router.replace("/account/login");
+  };
 
   return (
     <>
@@ -120,19 +137,49 @@ export default function SiteHeader({
           <Link href={productHref} className={`${navBase} ${active === "product" ? navActive : navMuted}`}>Product</Link>
           <Link href="/track-order" className={`${navBase} ${active === "track"   ? navActive : navMuted}`}>Track Order</Link>
 
-          <Link
-            href={hasAccountSession ? "/account" : "/account/login"}
-            className={`${navBase} ${active === "account" ? navActive : navMuted}`}
-          >
-            {hasAccountSession ? (
-              <span className="inline-flex items-center gap-2">
+          {hasAccountSession ? (
+            <details
+              className="aev-profile-menu group relative"
+              open={isAccountMenuOpen}
+              onToggle={(event) => setIsAccountMenuOpen(event.currentTarget.open)}
+            >
+              <summary className={`${navBase} ${active === "account" ? navActive : navMuted} flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden`}>
                 {accountName ? "Profile" : "Account"}
-                <ChevronDown className="h-3.5 w-3.5" />
-              </span>
-            ) : (
-              "Login"
-            )}
-          </Link>
+                <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
+              </summary>
+              <nav className="aev-profile-menu-panel absolute right-0 top-[calc(100%+0.65rem)] z-50 grid w-56 gap-1.5 rounded-[1.35rem] border border-[#FF4DB8]/18 bg-[#100B1C]/[0.98] p-2 shadow-[0_22px_68px_rgba(0,0,0,0.58)] backdrop-blur-2xl">
+                {accountMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsAccountMenuOpen(false)}
+                      className="aev-profile-menu-item flex min-h-11 items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-sm font-semibold text-[#D8CBE8] transition hover:border-white/10 hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8]"
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-[#FFB3D1]" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="aev-profile-menu-item flex min-h-11 items-center gap-3 rounded-2xl border border-rose-200/12 bg-rose-300/[0.045] px-3 py-2.5 text-left text-sm font-semibold text-rose-100/86 transition hover:border-rose-200/24 hover:bg-rose-300/[0.08] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200/70"
+                >
+                  <LogOut className="h-4 w-4 shrink-0 text-rose-200/80" />
+                  Logout
+                </button>
+              </nav>
+            </details>
+          ) : (
+            <Link
+              href="/account/login"
+              className={`${navBase} ${active === "account" ? navActive : navMuted}`}
+            >
+              Login
+            </Link>
+          )}
 
           <button
             onClick={toggleCart}
