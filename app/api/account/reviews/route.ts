@@ -109,6 +109,8 @@ export async function POST(request: Request) {
       title: sanitizeReviewText(payload.title, 120),
       body: sanitizeReviewText(payload.body, 1200),
       mediaUrls: [],
+      sourceType: "order-linked",
+      verifiedPurchase: true,
     });
 
     return Response.json(

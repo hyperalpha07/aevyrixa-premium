@@ -330,7 +330,7 @@ export default function ProductDetailClient({
       />
 
       {/* ── Main product section ── */}
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 md:py-12 lg:grid-cols-[minmax(0,0.98fr)_minmax(24rem,0.92fr)] lg:items-start lg:gap-9 xl:gap-12">
+      <section className="mx-auto grid max-w-[92rem] gap-6 px-4 py-5 sm:px-6 md:py-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(25rem,0.72fr)] lg:items-start lg:gap-10 xl:gap-14">
 
         {/* LEFT — Media gallery */}
         <div
@@ -346,7 +346,7 @@ export default function ProductDetailClient({
             <div
               className={`pointer-events-none absolute inset-0 scale-90 rounded-full opacity-40 blur-[60px] ${style.glow}`}
             />
-            <div className="aspect-[1.02] w-full min-[420px]:aspect-square lg:aspect-[0.98]">
+            <div className="aspect-[1.02] w-full min-[420px]:aspect-square lg:aspect-[1.06] xl:aspect-[1.12]">
               {selectedMedia?.type === "video" ? (
                 <video
                   src={selectedMedia.url}
@@ -489,7 +489,7 @@ export default function ProductDetailClient({
         </div>
 
         {/* RIGHT — Product information */}
-        <div className="min-w-0">
+        <div className="min-w-0 lg:sticky lg:top-24">
           <Link
             href="/product"
             className="text-sm font-medium text-[#9C91AA] transition hover:text-[#D8CBE8]"
@@ -570,7 +570,7 @@ export default function ProductDetailClient({
 
           {/* ── Buy panel ── */}
           <div
-            className={`aev-panel aev-product-buy-panel aev-intent-card aev-intent-comfort mt-5 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 ${style.panel}`}
+            className={`aev-panel aev-product-buy-panel aev-intent-card aev-intent-comfort mt-5 rounded-[1.45rem] border border-[#FF4DB8]/16 bg-[#151024]/94 p-4 shadow-[0_22px_80px_rgba(0,0,0,0.42),0_0_34px_rgba(255,77,184,0.08)] sm:rounded-[1.65rem] sm:p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto ${style.panel}`}
           >
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#FF4DB8]/10 pb-4">
               <div>
@@ -769,18 +769,18 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      {/* ── Benefits, Care, Policy, FAQ ── */}
-      <section className="mx-auto hidden max-w-7xl gap-5 px-4 pb-12 sm:px-6 lg:grid lg:grid-cols-[1fr_0.9fr]">
+      {/* ── Benefits, Story, Care, Policy, FAQ ── */}
+      <section className="mx-auto hidden max-w-[92rem] gap-5 px-4 pb-12 sm:px-6 lg:grid lg:grid-cols-[1fr_0.9fr]">
 
         {/* Product details and benefits */}
         <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
-            Product Details
+            Product Promise
           </p>
           <h2 className="mt-3 text-3xl font-semibold text-white">
-            How it helps your routine
+            Compact support for daily confidence
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[#9C91AA]">
             {displayProduct.shortDescription}
@@ -800,39 +800,51 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        {/* Care guide */}
+        {/* Product story */}
         <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
-            Care Guide
+            Product Story
           </p>
-          <h2 className="mt-3 text-3xl font-semibold text-white">Simple wash steps</h2>
-          <div className="mt-5 space-y-3">
-            {care.map((step, index) => (
-              <div
-                key={`${step}-${index}`}
-                className="flex gap-3 text-sm leading-7 text-[#9C91AA]"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#FF4DB8]/20 bg-[#1B1230] text-xs text-[#FF4DB8]">
-                  {index + 1}
-                </span>
-                <span>{step}</span>
-              </div>
-            ))}
+          <div className="mt-4 overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#080611]">
+            <div className="aspect-[16/10]">
+              {selectedMedia?.type === "image" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={selectedMedia.url} alt="" className="h-full w-full object-contain p-4" />
+              ) : selectedMedia?.type === "video" ? (
+                <video src={selectedMedia.url} poster={selectedMedia.poster} controls playsInline className="h-full w-full object-contain" />
+              ) : (
+                <ProductVisual visualTheme={displayProduct.visualTheme} label={displayProduct.absorbency} />
+              )}
+            </div>
           </div>
+          <h2 className="mt-5 text-3xl font-semibold text-white">Made for careful routines</h2>
+          <p className="mt-3 text-sm leading-7 text-[#9C91AA]">
+            {displayProduct.description}
+          </p>
         </div>
 
-        {/* Hygiene & Support Policy */}
+        {/* Fit and care */}
         <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 sm:p-6 lg:col-span-2">
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}
           >
-            Support & Hygiene Policy
+            Fit, Care & Support
           </p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">Her Care support details</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-white">Clear guidance before and after purchase</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              {
+                icon: Ruler,
+                title: "Fit Guidance",
+                body: sizeFitItems.join(" "),
+              },
+              {
+                icon: CheckCircle2,
+                title: "Care Guide",
+                body: care.slice(0, 3).join(" "),
+              },
               {
                 icon: ShieldCheck,
                 title: "3-Day Hygiene-Safe Support",
@@ -1114,10 +1126,10 @@ function ProductReviewsSection({
               Customer Reviews
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
-              Real feedback after purchase
+              Real and admin-approved feedback
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#9C91AA]">
-              Reviews are shown only after admin moderation and approval.
+              Approved reviews are shown here. Verified purchase appears only when a review is linked to a real customer order.
             </p>
           </div>
           <div className="rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.06] px-4 py-3">
@@ -1130,7 +1142,7 @@ function ProductReviewsSection({
 
         {reviews.length === 0 ? (
           <div className="mt-6 rounded-[1.35rem] border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-5 text-sm leading-7 text-[#D8CBE8]">
-            No reviews yet. Customers can write a review from their account after a confirmed purchase.
+            No reviews yet. Be the first after purchase.
           </div>
         ) : (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -1149,6 +1161,15 @@ function ProductReviewsSection({
                 </h3>
                 <p className="mt-2 text-xs text-[#9C91AA]">
                   {review.customerName} · {formatReviewDate(review.approvedAt || review.createdAt)}
+                </p>
+                <p className="mt-2">
+                  <span className="rounded-full border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] px-2.5 py-1 text-[11px] font-semibold text-[#31E6D4]">
+                    {review.verifiedPurchase
+                      ? "Verified purchase"
+                      : review.sourceType === "imported"
+                        ? "Curated customer feedback"
+                        : "Customer review"}
+                  </span>
                 </p>
                 <p className="mt-3 break-words text-sm leading-7 text-[#D8CBE8]/80 [overflow-wrap:anywhere]">
                   {review.body}

@@ -70,11 +70,17 @@ export default async function ProductPage({
 
   const relatedProducts = products
     .filter((p) => p.id !== product.id && p.status === "active" && !p.deletedAt)
-    .sort((a, b) => {
-      const aSameCategory = a.category === product.category ? 0 : 1;
-      const bSameCategory = b.category === product.category ? 0 : 1;
-      return aSameCategory - bSameCategory;
+    .map((candidate) => {
+      const sameCategory = candidate.category === product.category ? 4 : 0;
+      const sameAbsorbency = candidate.absorbency === product.absorbency ? 2 : 0;
+      const merchandisingSignal =
+        Number(Boolean(candidate.isBestSeller)) +
+        Number(Boolean(candidate.isTrending)) +
+        Number(Boolean(candidate.featured || candidate.showInFeaturedCollection));
+      return { candidate, score: sameCategory + sameAbsorbency + merchandisingSignal };
     })
+    .sort((a, b) => b.score - a.score)
+    .map(({ candidate }) => candidate)
     .slice(0, 3);
   const reviews = await listApprovedReviewsForProduct(product.slug);
 

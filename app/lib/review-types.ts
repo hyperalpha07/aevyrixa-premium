@@ -1,6 +1,8 @@
 export const reviewStatuses = ["pending", "approved", "rejected", "hidden"] as const;
+export const reviewSourceTypes = ["order-linked", "admin-added", "imported"] as const;
 
 export type ReviewStatus = (typeof reviewStatuses)[number];
+export type ReviewSourceType = (typeof reviewSourceTypes)[number];
 
 export type ProductReview = {
   id: string;
@@ -16,6 +18,8 @@ export type ProductReview = {
   body: string;
   mediaUrls: string[];
   status: ReviewStatus;
+  sourceType: ReviewSourceType;
+  verifiedPurchase: boolean;
   isFeatured: boolean;
   adminNote?: string;
   createdAt: string;
@@ -32,6 +36,8 @@ export type PublicProductReview = Pick<
   | "title"
   | "body"
   | "mediaUrls"
+  | "sourceType"
+  | "verifiedPurchase"
   | "isFeatured"
   | "createdAt"
   | "approvedAt"
@@ -58,4 +64,10 @@ export type ReviewSubmissionInput = {
   title?: string;
   body: string;
   mediaUrls?: string[];
+  sourceType?: ReviewSourceType;
+  verifiedPurchase?: boolean;
+  status?: ReviewStatus;
+  isFeatured?: boolean;
+  adminNote?: string;
+  createdAt?: string;
 };

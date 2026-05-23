@@ -210,6 +210,8 @@ type AdminReviewClientRecord = {
   body: string;
   mediaUrls: string[];
   status: "pending" | "approved" | "rejected" | "hidden";
+  sourceType: "order-linked" | "admin-added" | "imported";
+  verifiedPurchase: boolean;
   isFeatured: boolean;
   adminNote?: string;
   createdAt: string;
@@ -928,7 +930,23 @@ async function readReviewsFromApi() {
 
 async function updateReviewInApi(
   updates: Pick<AdminReviewClientRecord, "id"> &
-    Partial<Pick<AdminReviewClientRecord, "status" | "isFeatured" | "adminNote">>
+    Partial<
+      Pick<
+        AdminReviewClientRecord,
+        | "productId"
+        | "productSlug"
+        | "customerName"
+        | "rating"
+        | "title"
+        | "body"
+        | "mediaUrls"
+        | "status"
+        | "sourceType"
+        | "isFeatured"
+        | "adminNote"
+        | "createdAt"
+      >
+    >
 ) {
   const response = await fetch("/api/admin/reviews", {
     method: "PATCH",
@@ -943,6 +961,53 @@ async function updateReviewInApi(
     throw new Error(payload?.errors?.[0] ?? "Review could not be updated.");
   }
   return payload.review;
+}
+
+async function createReviewInApi(
+  review: Pick<
+    AdminReviewClientRecord,
+    | "productId"
+    | "productSlug"
+    | "customerName"
+    | "rating"
+    | "title"
+    | "body"
+    | "mediaUrls"
+    | "status"
+    | "sourceType"
+    | "isFeatured"
+    | "adminNote"
+    | "createdAt"
+  >
+) {
+  const response = await fetch("/api/admin/reviews", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(review),
+  });
+  const payload = (await response.json().catch(() => null)) as {
+    review?: AdminReviewClientRecord;
+    errors?: string[];
+  } | null;
+  if (!response.ok || !payload?.review) {
+    throw new Error(payload?.errors?.[0] ?? "Review could not be created.");
+  }
+  return payload.review;
+}
+
+async function deleteReviewInApi(id: string) {
+  const response = await fetch("/api/admin/reviews", {
+    method: "DELETE",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  const payload = (await response.json().catch(() => null)) as {
+    errors?: string[];
+  } | null;
+  if (!response.ok) {
+    throw new Error(payload?.errors?.[0] ?? "Review could not be deleted.");
+  }
+  return true;
 }
 
 function apiErrorMessage(payload: unknown, fallback: string) {
@@ -1977,7 +2042,12 @@ export default function AdminPanel({
             ) : view === "products" ? (
               <ProductsSection products={adminProducts} onSaveProducts={saveProducts} session={session} />
             ) : view === "reviews" ? (
-              <ReviewsSection reviews={reviews} setReviews={setReviews} session={session} />
+              <ReviewsSection
+                reviews={reviews}
+                setReviews={setReviews}
+                products={adminProducts}
+                session={session}
+              />
             ) : view === "settings" ? (
               <SettingsSection
                 settings={settings}
@@ -6688,22 +6758,79 @@ function roleDefaultPermissionsToMap(role: AdminRole) {
   }, {} as Record<AdminPermission, boolean>);
 }
 
+function emptyReviewDraft(products: AdminProduct[]) {
+  const product = products.find((item) => !item.deletedAt) ?? products[0];
+  return {
+    productId: product?.id ?? "",
+    productSlug: product?.slug ?? "",
+    customerName: "",
+    rating: 5,
+    title: "",
+    body: "",
+    mediaUrls: [""],
+    status: "pending" as AdminReviewClientRecord["status"],
+    sourceType: "admin-added" as AdminReviewClientRecord["sourceType"],
+    isFeatured: false,
+    adminNote: "",
+    createdAt: new Date().toISOString().slice(0, 10),
+  };
+}
+
+function AdminTextInput({
+  label,
+  value,
+  onChange,
+  disabled,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  type?: "text" | "date";
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/42">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-h-12 w-full rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+      />
+    </label>
+  );
+}
+
 function ReviewsSection({
   reviews,
   setReviews,
+  products,
   session,
 }: {
   reviews: AdminReviewClientRecord[];
   setReviews: (value: AdminReviewClientRecord[] | ((current: AdminReviewClientRecord[]) => AdminReviewClientRecord[])) => void;
+  products: AdminProduct[];
   session: AdminSessionUser;
 }) {
   const [statusFilter, setStatusFilter] = useState<"all" | AdminReviewClientRecord["status"]>("pending");
   const [query, setQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState(() => emptyReviewDraft(products));
   const [error, setError] = useState("");
   const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
+  const canManage = hasPermission(session, "reviews.manage");
+
+  useEffect(() => {
+    if (draft.productId || products.length === 0) return;
+    setDraft(emptyReviewDraft(products));
+  }, [draft.productId, products]);
 
   const filteredReviews = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -6729,7 +6856,7 @@ function ReviewsSection({
 
   const saveReview = async (
     review: AdminReviewClientRecord,
-    updates: Partial<Pick<AdminReviewClientRecord, "status" | "isFeatured" | "adminNote">>
+    updates: Omit<Parameters<typeof updateReviewInApi>[0], "id">
   ) => {
     setSavingId(review.id);
     setError("");
@@ -6738,6 +6865,71 @@ function ReviewsSection({
       setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review could not be updated.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const saveDraft = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canManage) return;
+    setSavingId(editingId || "new");
+    setError("");
+    try {
+      const selectedProduct = products.find((product) => product.id === draft.productId);
+      const payload = {
+        ...draft,
+        productSlug: selectedProduct?.slug || draft.productSlug,
+        mediaUrls: draft.mediaUrls.filter(Boolean),
+        isFeatured: draft.status === "approved" && draft.isFeatured,
+      };
+      if (editingId) {
+        const updated = await updateReviewInApi({ id: editingId, ...payload });
+        setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      } else {
+        const created = await createReviewInApi(payload);
+        setReviews((current) => [created, ...current]);
+      }
+      setEditingId(null);
+      setDraft(emptyReviewDraft(products));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Review could not be saved.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const editReview = (review: AdminReviewClientRecord) => {
+    setEditingId(review.id);
+    setDraft({
+      productId: review.productId,
+      productSlug: review.productSlug,
+      customerName: review.customerName,
+      rating: review.rating,
+      title: review.title || "",
+      body: review.body,
+      mediaUrls: review.mediaUrls.length > 0 ? review.mediaUrls : [""],
+      status: review.status,
+      sourceType: review.sourceType,
+      isFeatured: review.isFeatured,
+      adminNote: review.adminNote || "",
+      createdAt: review.createdAt.slice(0, 10),
+    });
+  };
+
+  const deleteReview = async (review: AdminReviewClientRecord) => {
+    if (!canManage) return;
+    setSavingId(review.id);
+    setError("");
+    try {
+      await deleteReviewInApi(review.id);
+      setReviews((current) => current.filter((item) => item.id !== review.id));
+      if (editingId === review.id) {
+        setEditingId(null);
+        setDraft(emptyReviewDraft(products));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Review could not be deleted.");
     } finally {
       setSavingId(null);
     }
@@ -6754,13 +6946,161 @@ function ReviewsSection({
   return (
     <div className="mt-6 space-y-5">
       <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
-        Reviews are private until approved. Customer phone, internal notes, and rejected or hidden reviews never appear on the storefront.
+        Reviews are private until approved. Admin-added or imported reviews are labeled as customer feedback only; verified purchase is reserved for order-linked account reviews.
       </div>
       {error && (
         <div className="rounded-[1.25rem] border border-rose-200/22 bg-rose-200/[0.08] p-4 text-sm leading-6 text-rose-50/86">
           {error}
         </div>
       )}
+
+      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+        <SectionHeader title={editingId ? "Edit review" : "Add customer feedback"} />
+        <form onSubmit={saveDraft} className="grid gap-3 lg:grid-cols-2">
+          <label className="block">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/42">Product</span>
+            <select
+              value={draft.productId}
+              disabled={!canManage}
+              onChange={(event) => {
+                const selected = products.find((product) => product.id === event.target.value);
+                setDraft((current) => ({
+                  ...current,
+                  productId: selected?.id || "",
+                  productSlug: selected?.slug || "",
+                }));
+              }}
+              className="min-h-12 w-full rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+            >
+              <option value="">Select product</option>
+              {products
+                .filter((product) => !product.deletedAt)
+                .map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <AdminTextInput
+            label="Customer display name"
+            value={draft.customerName}
+            disabled={!canManage}
+            onChange={(value) => setDraft((current) => ({ ...current, customerName: value }))}
+          />
+          <label className="block">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/42">Rating</span>
+            <select
+              value={draft.rating}
+              disabled={!canManage}
+              onChange={(event) => setDraft((current) => ({ ...current, rating: Number(event.target.value) }))}
+              className="min-h-12 w-full rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+            >
+              {[5, 4, 3, 2, 1].map((rating) => (
+                <option key={rating} value={rating}>{rating} star</option>
+              ))}
+            </select>
+          </label>
+          <AdminTextInput
+            label="Review title"
+            value={draft.title}
+            disabled={!canManage}
+            onChange={(value) => setDraft((current) => ({ ...current, title: value }))}
+          />
+          <label className="block lg:col-span-2">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/42">Review text</span>
+            <textarea
+              value={draft.body}
+              rows={4}
+              disabled={!canManage}
+              onChange={(event) => setDraft((current) => ({ ...current, body: event.target.value }))}
+              className="w-full resize-none rounded-2xl border border-white/10 bg-[#08111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+            />
+          </label>
+          <AdminTextInput
+            label="Media URL (optional)"
+            value={draft.mediaUrls[0] || ""}
+            disabled={!canManage}
+            onChange={(value) => setDraft((current) => ({ ...current, mediaUrls: value ? [value] : [""] }))}
+          />
+          <AdminTextInput
+            label="Review date"
+            type="date"
+            value={draft.createdAt}
+            disabled={!canManage}
+            onChange={(value) => setDraft((current) => ({ ...current, createdAt: value }))}
+          />
+          <label className="block">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/42">Source label</span>
+            <select
+              value={draft.sourceType}
+              disabled={!canManage}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  sourceType: event.target.value as AdminReviewClientRecord["sourceType"],
+                }))
+              }
+              className="min-h-12 w-full rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+            >
+              {editingId && draft.sourceType === "order-linked" && (
+                <option value="order-linked">Order-linked review</option>
+              )}
+              <option value="admin-added">Admin-approved review</option>
+              <option value="imported">Curated customer feedback</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/42">Status</span>
+            <select
+              value={draft.status}
+              disabled={!canManage}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  status: event.target.value as AdminReviewClientRecord["status"],
+                }))
+              }
+              className="min-h-12 w-full rounded-2xl border border-white/10 bg-[#08111f] px-4 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
+            >
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="hidden">Hidden</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-white/10 bg-black/18 px-4 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={draft.isFeatured}
+              disabled={!canManage || draft.status !== "approved"}
+              onChange={(event) => setDraft((current) => ({ ...current, isFeatured: event.target.checked }))}
+            />
+            Feature after approval
+          </label>
+          <div className="flex flex-wrap gap-2 lg:col-span-2">
+            <button
+              type="submit"
+              disabled={!canManage || savingId === "new" || savingId === editingId}
+              className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.10] px-5 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45 disabled:opacity-45"
+            >
+              {editingId ? "Save review" : "Add review"}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null);
+                  setDraft(emptyReviewDraft(products));
+                }}
+                className="rounded-full border border-white/10 bg-white/[0.05] px-5 py-3 text-sm font-semibold text-white/70 transition hover:text-white"
+              >
+                Cancel edit
+              </button>
+            )}
+          </div>
+        </form>
+      </section>
 
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
         <SectionHeader title="Review moderation" />
@@ -6806,10 +7146,17 @@ function ReviewsSection({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full border border-amber-200/25 bg-amber-200/[0.08] px-2.5 py-1 text-xs font-semibold text-amber-100">
-                        {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                        {review.rating}/5
                       </span>
                       <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-xs font-semibold text-white/58">
                         {review.status}
+                      </span>
+                      <span className="rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-2.5 py-1 text-xs font-semibold text-cyan-50/80">
+                        {review.verifiedPurchase
+                          ? "Verified purchase"
+                          : review.sourceType === "imported"
+                            ? "Curated customer feedback"
+                            : "Admin-approved review"}
                       </span>
                       {review.isFeatured && (
                         <span className="rounded-full border border-fuchsia-200/25 bg-fuchsia-200/[0.08] px-2.5 py-1 text-xs font-semibold text-fuchsia-100">
@@ -6863,6 +7210,22 @@ function ReviewsSection({
                       className="rounded-full border border-fuchsia-200/20 bg-fuchsia-200/[0.07] px-3 py-2 text-xs font-semibold text-fuchsia-50 transition hover:border-fuchsia-100/40 disabled:opacity-40"
                     >
                       {review.isFeatured ? "Unfeature" : "Feature"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canManage || savingId === review.id}
+                      onClick={() => editReview(review)}
+                      className="rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-3 py-2 text-xs font-semibold text-cyan-50 transition hover:border-cyan-100/40 disabled:opacity-40"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canManage || savingId === review.id}
+                      onClick={() => deleteReview(review)}
+                      className="rounded-full border border-rose-200/20 bg-rose-200/[0.07] px-3 py-2 text-xs font-semibold text-rose-50 transition hover:border-rose-100/40 disabled:opacity-40"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>

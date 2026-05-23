@@ -15,12 +15,39 @@ create table if not exists public.product_reviews (
   body text not null,
   media_urls jsonb not null default '[]'::jsonb,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'hidden')),
+  source_type text not null default 'order-linked' check (source_type in ('order-linked', 'admin-added', 'imported')),
+  verified_purchase boolean not null default false,
   is_featured boolean not null default false,
   admin_note text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   approved_at timestamptz null
 );
+
+alter table public.product_reviews
+  add column if not exists source_type text not null default 'order-linked';
+
+alter table public.product_reviews
+  add column if not exists verified_purchase boolean not null default false;
+
+alter table public.product_reviews
+  drop constraint if exists product_reviews_source_type_check;
+
+alter table public.product_reviews
+  add constraint product_reviews_source_type_check
+  check (source_type in ('order-linked', 'admin-added', 'imported'));
+
+alter table public.product_reviews
+  drop constraint if exists product_reviews_verified_purchase_safe_check;
+
+alter table public.product_reviews
+  add constraint product_reviews_verified_purchase_safe_check
+  check (verified_purchase = false or (source_type = 'order-linked' and order_reference is not null));
+
+update public.product_reviews
+set verified_purchase = true
+where order_reference is not null
+  and source_type = 'order-linked';
 
 create index if not exists product_reviews_product_slug_idx
   on public.product_reviews (product_slug);

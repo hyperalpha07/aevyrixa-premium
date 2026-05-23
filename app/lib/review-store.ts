@@ -1,7 +1,9 @@
 import {
   reviewStatuses,
+  reviewSourceTypes,
   type ProductReview,
   type PublicProductReview,
+  type ReviewSourceType,
   type ReviewStatus,
   type ReviewSubmissionInput,
   type ReviewSummary,
@@ -24,6 +26,8 @@ type SupabaseReviewRow = {
   body?: string | null;
   media_urls?: unknown;
   status?: string | null;
+  source_type?: string | null;
+  verified_purchase?: boolean | string | null;
   is_featured?: boolean | string | null;
   admin_note?: string | null;
   created_at?: string | null;
@@ -119,6 +123,12 @@ function normalizeStatus(value: unknown): ReviewStatus {
   return reviewStatuses.includes(value as never) ? (value as ReviewStatus) : "pending";
 }
 
+function normalizeSourceType(value: unknown): ReviewSourceType {
+  return reviewSourceTypes.includes(value as never)
+    ? (value as ReviewSourceType)
+    : "order-linked";
+}
+
 function stringArray(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string" && item.trim().startsWith("http"));
@@ -152,6 +162,8 @@ function mapRow(row: SupabaseReviewRow): ProductReview {
     body: textValue(row.body),
     mediaUrls: stringArray(row.media_urls),
     status: normalizeStatus(row.status),
+    sourceType: normalizeSourceType(row.source_type),
+    verifiedPurchase: boolValue(row.verified_purchase),
     isFeatured: boolValue(row.is_featured),
     adminNote: optionalText(row.admin_note),
     createdAt,
@@ -170,6 +182,8 @@ function toPublicReview(review: ProductReview): PublicProductReview {
     title: review.title,
     body: review.body,
     mediaUrls: review.mediaUrls,
+    sourceType: review.sourceType,
+    verifiedPurchase: review.verifiedPurchase,
     isFeatured: review.isFeatured,
     createdAt: review.createdAt,
     approvedAt: review.approvedAt,
@@ -200,6 +214,10 @@ export function validateReviewSubmission(input: ReviewSubmissionInput) {
 }
 
 function toInsertPayload(input: ReviewSubmissionInput) {
+  const sourceType = input.sourceType ?? "order-linked";
+  const verifiedPurchase =
+    sourceType === "order-linked" && Boolean(input.verifiedPurchase && input.orderReference);
+  const status = input.status && reviewStatuses.includes(input.status) ? input.status : "pending";
   return {
     product_id: sanitizeReviewText(input.productId, 120),
     product_slug: sanitizeReviewText(input.productSlug, 160),
@@ -212,8 +230,13 @@ function toInsertPayload(input: ReviewSubmissionInput) {
     title: sanitizeReviewText(input.title, 120) || null,
     body: sanitizeReviewText(input.body, 1200),
     media_urls: stringArray(input.mediaUrls).slice(0, 3),
-    status: "pending",
-    is_featured: false,
+    status,
+    source_type: sourceType,
+    verified_purchase: verifiedPurchase,
+    is_featured: Boolean(input.isFeatured) && status === "approved",
+    admin_note: sanitizeReviewText(input.adminNote, 500) || null,
+    created_at: input.createdAt ? new Date(input.createdAt).toISOString() : undefined,
+    approved_at: status === "approved" ? new Date().toISOString() : null,
   };
 }
 
@@ -221,6 +244,18 @@ function toUpdatePayload(updates: {
   status?: ReviewStatus;
   isFeatured?: boolean;
   adminNote?: string;
+  productId?: string;
+  productSlug?: string;
+  customerName?: string;
+  rating?: number;
+  title?: string;
+  body?: string;
+  mediaUrls?: string[];
+  sourceType?: ReviewSourceType;
+  verifiedPurchase?: boolean;
+  orderId?: string;
+  orderReference?: string;
+  createdAt?: string;
 }) {
   const payload: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -234,6 +269,21 @@ function toUpdatePayload(updates: {
   if (updates.adminNote !== undefined) {
     payload.admin_note = sanitizeReviewText(updates.adminNote, 500) || null;
   }
+  if (updates.productId !== undefined) payload.product_id = sanitizeReviewText(updates.productId, 120);
+  if (updates.productSlug !== undefined) payload.product_slug = sanitizeReviewText(updates.productSlug, 160);
+  if (updates.customerName !== undefined) payload.customer_name = sanitizeReviewText(updates.customerName, 120);
+  if (updates.rating !== undefined) payload.rating = clampRating(updates.rating);
+  if (updates.title !== undefined) payload.title = sanitizeReviewText(updates.title, 120) || null;
+  if (updates.body !== undefined) payload.body = sanitizeReviewText(updates.body, 1200);
+  if (updates.mediaUrls !== undefined) payload.media_urls = stringArray(updates.mediaUrls).slice(0, 3);
+  if (updates.sourceType !== undefined) payload.source_type = updates.sourceType;
+  if (updates.verifiedPurchase !== undefined) {
+    payload.verified_purchase =
+      updates.sourceType === "order-linked" && Boolean(updates.verifiedPurchase);
+  }
+  if (updates.orderId !== undefined) payload.order_id = uuidOrNull(updates.orderId);
+  if (updates.orderReference !== undefined) payload.order_reference = sanitizeReviewText(updates.orderReference, 120) || null;
+  if (updates.createdAt !== undefined) payload.created_at = new Date(updates.createdAt).toISOString();
   return payload;
 }
 
@@ -264,7 +314,7 @@ async function createReviewInSupabase(input: ReviewSubmissionInput) {
 
 async function updateReviewInSupabase(
   id: string,
-  updates: { status?: ReviewStatus; isFeatured?: boolean; adminNote?: string }
+  updates: ReviewUpdateInput
 ) {
   const response = await fetch(
     supabaseEndpoint(`${SUPABASE_REVIEWS_TABLE}?id=eq.${encodeURIComponent(id)}&select=*`),
@@ -278,6 +328,19 @@ async function updateReviewInSupabase(
   if (!response.ok) throw await supabaseError(response, "update");
   const rows = (await response.json()) as SupabaseReviewRow[];
   return rows[0] ? mapRow(rows[0]) : null;
+}
+
+async function deleteReviewInSupabase(id: string) {
+  const response = await fetch(
+    supabaseEndpoint(`${SUPABASE_REVIEWS_TABLE}?id=eq.${encodeURIComponent(id)}`),
+    {
+      method: "DELETE",
+      headers: supabaseHeaders(),
+      cache: "no-store",
+    }
+  );
+  if (!response.ok) throw await supabaseError(response, "delete");
+  return true;
 }
 
 export async function listApprovedReviewsForProduct(productSlug: string, limit = 20) {
@@ -371,6 +434,8 @@ export async function createReview(input: ReviewSubmissionInput) {
 
   if (!hasSupabaseConfig()) {
     const now = new Date().toISOString();
+    const sourceType = input.sourceType ?? "order-linked";
+    const status = input.status ?? "pending";
     const review: ProductReview = {
       ...toInsertPayload(input),
       id: `demo-${Date.now()}`,
@@ -385,10 +450,16 @@ export async function createReview(input: ReviewSubmissionInput) {
       title: sanitizeReviewText(input.title, 120) || undefined,
       body: sanitizeReviewText(input.body, 1200),
       mediaUrls: stringArray(input.mediaUrls).slice(0, 3),
-      status: "pending",
-      isFeatured: false,
-      createdAt: now,
+      status,
+      sourceType,
+      verifiedPurchase:
+        sourceType === "order-linked" &&
+        Boolean(input.verifiedPurchase && input.orderReference),
+      isFeatured: Boolean(input.isFeatured) && status === "approved",
+      adminNote: sanitizeReviewText(input.adminNote, 500) || undefined,
+      createdAt: input.createdAt ? new Date(input.createdAt).toISOString() : now,
       updatedAt: now,
+      approvedAt: status === "approved" ? now : undefined,
     };
     demoReviews.unshift(review);
     return review;
@@ -405,7 +476,7 @@ export async function createReview(input: ReviewSubmissionInput) {
 
 export async function updateReview(
   id: string,
-  updates: { status?: ReviewStatus; isFeatured?: boolean; adminNote?: string }
+  updates: ReviewUpdateInput
 ) {
   if (updates.status && !reviewStatuses.includes(updates.status)) {
     throw new ReviewStoreError("Invalid review status.", {
@@ -421,6 +492,24 @@ export async function updateReview(
     demoReviews[index] = {
       ...demoReviews[index],
       ...(updates.status ? { status: updates.status } : {}),
+      ...(updates.productId !== undefined ? { productId: sanitizeReviewText(updates.productId, 120) } : {}),
+      ...(updates.productSlug !== undefined ? { productSlug: sanitizeReviewText(updates.productSlug, 160) } : {}),
+      ...(updates.customerName !== undefined ? { customerName: sanitizeReviewText(updates.customerName, 120) } : {}),
+      ...(updates.rating !== undefined ? { rating: clampRating(updates.rating) } : {}),
+      ...(updates.title !== undefined ? { title: sanitizeReviewText(updates.title, 120) || undefined } : {}),
+      ...(updates.body !== undefined ? { body: sanitizeReviewText(updates.body, 1200) } : {}),
+      ...(updates.mediaUrls !== undefined ? { mediaUrls: stringArray(updates.mediaUrls).slice(0, 3) } : {}),
+      ...(updates.sourceType !== undefined ? { sourceType: updates.sourceType } : {}),
+      ...(updates.verifiedPurchase !== undefined
+        ? {
+            verifiedPurchase:
+              updates.sourceType === "order-linked" && Boolean(updates.verifiedPurchase),
+          }
+        : {}),
+      ...(updates.orderReference !== undefined
+        ? { orderReference: sanitizeReviewText(updates.orderReference, 120) || undefined }
+        : {}),
+      ...(updates.createdAt !== undefined ? { createdAt: new Date(updates.createdAt).toISOString() } : {}),
       ...(typeof updates.isFeatured === "boolean" ? { isFeatured: updates.isFeatured } : {}),
       ...(updates.adminNote !== undefined ? { adminNote: sanitizeReviewText(updates.adminNote, 500) } : {}),
       approvedAt: updates.status === "approved" ? new Date().toISOString() : demoReviews[index].approvedAt,
@@ -430,6 +519,43 @@ export async function updateReview(
   }
 
   return updateReviewInSupabase(id, updates);
+}
+
+type ReviewUpdateInput = {
+  status?: ReviewStatus;
+  isFeatured?: boolean;
+  adminNote?: string;
+  productId?: string;
+  productSlug?: string;
+  customerName?: string;
+  rating?: number;
+  title?: string;
+  body?: string;
+  mediaUrls?: string[];
+  sourceType?: ReviewSourceType;
+  verifiedPurchase?: boolean;
+  orderId?: string;
+  orderReference?: string;
+  createdAt?: string;
+};
+
+export async function deleteReview(id: string) {
+  const safeId = sanitizeReviewText(id, 120);
+  if (!safeId) {
+    throw new ReviewStoreError("Review id is required.", {
+      status: 400,
+      publicMessage: "Review id is required.",
+      code: "INVALID_REVIEW_ID",
+    });
+  }
+
+  if (!hasSupabaseConfig()) {
+    const index = demoReviews.findIndex((review) => review.id === safeId);
+    if (index >= 0) demoReviews.splice(index, 1);
+    return true;
+  }
+
+  return deleteReviewInSupabase(safeId);
 }
 
 export function reviewErrorResponse(error: unknown) {
