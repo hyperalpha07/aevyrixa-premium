@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
@@ -22,23 +23,29 @@ import type {
   StorefrontSettings,
 } from "@/app/lib/storefront-settings";
 import type { ReviewSummary } from "@/app/lib/review-types";
+import {
+  emptyShopQueryFilters,
+  parseShopSignal,
+  parseShopStock,
+  productMatchesCategoryQuery,
+  normalizeShopValue,
+  shopContextCopy,
+  shopSignalLabel,
+  type ShopQueryFilters,
+  type ShopSignalFilter,
+  type ShopStockFilter,
+} from "@/app/lib/shop-routing";
 
 type ShopDiscoveryClientProps = {
   products: ProductCatalogItem[];
   activeCategories: CategoryCmsEntry[];
   settings: StorefrontSettings;
   reviewSummaries?: ReviewSummary[];
-  initialCategory?: string;
+  initialFilters?: ShopQueryFilters;
 };
 
-type StockFilter = "all" | "in_stock" | "out_of_stock";
-type SignalFilter =
-  | "all"
-  | "new"
-  | "featured"
-  | "limited_stock"
-  | "best_seller"
-  | "heavy_flow";
+type StockFilter = ShopStockFilter;
+type SignalFilter = ShopSignalFilter;
 type PriceFilter = "all" | "under-1300" | "1300-1600" | "over-1600";
 type SortMode = "featured" | "newest" | "price-asc" | "price-desc" | "stock";
 
@@ -60,7 +67,7 @@ function normalized(value: string | undefined) {
 }
 
 function productMatchesCategory(products: ProductCatalogItem[], category: string) {
-  return products.some((product) => product.category === category);
+  return products.some((product) => productMatchesCategoryQuery(product, category));
 }
 
 function isHeavyFlowProduct(product: ProductCatalogItem) {
@@ -118,19 +125,23 @@ export default function ShopDiscoveryClient({
   products,
   activeCategories,
   reviewSummaries = [],
-  initialCategory = "",
+  initialFilters = emptyShopQueryFilters,
 }: ShopDiscoveryClientProps) {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState(initialCategory);
-  const [stock, setStock] = useState<StockFilter>("all");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(initialFilters.query);
+  const [category, setCategory] = useState(initialFilters.category);
+  const [stock, setStock] = useState<StockFilter>(initialFilters.stock);
   const [price, setPrice] = useState<PriceFilter>("all");
-  const [signal, setSignal] = useState<SignalFilter>("all");
+  const [signal, setSignal] = useState<SignalFilter>(initialFilters.signal);
   const [sort, setSort] = useState<SortMode>("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [collection, setCollection] = useState(initialFilters.collection);
 
   const categoriesWithProducts = useMemo(() => {
-    const productCategories = new Set(products.map((product) => product.category));
-    return activeCategories.filter((entry) => productCategories.has(entry.title));
+    return activeCategories.filter((entry) =>
+      products.some((product) => productMatchesCategoryQuery(product, entry.title))
+    );
   }, [activeCategories, products]);
 
   const ratingMap = useMemo(
@@ -191,7 +202,7 @@ export default function ShopDiscoveryClient({
           .join(" ");
 
         if (term && !searchable.includes(term)) return false;
-        if (category && product.category !== category) return false;
+        if (category && !productMatchesCategoryQuery(product, category)) return false;
         if (stock === "in_stock" && product.stockStatus === "out_of_stock") return false;
         if (stock === "out_of_stock" && product.stockStatus !== "out_of_stock") return false;
         if (price === "under-1300" && product.price >= 1300) return false;
@@ -218,6 +229,20 @@ export default function ShopDiscoveryClient({
       });
   }, [category, price, products, query, signal, sort, stock]);
 
+  const hasActiveFilters =
+    Boolean(query || category || collection) ||
+    stock !== "all" ||
+    price !== "all" ||
+    signal !== "all";
+  const context = shopContextCopy({ category, signal, stock, query, collection });
+  const activeFilterLabels = [
+    category,
+    signal !== "all" ? shopSignalLabel(signal) : "",
+    stock === "in_stock" ? "In stock" : stock === "out_of_stock" ? "Out of stock" : "",
+    query ? `Search: ${query}` : "",
+    collection && !category && signal === "all" ? collection : "",
+  ].filter(Boolean);
+
   const resetFilters = () => {
     setQuery("");
     setCategory("");
@@ -225,12 +250,27 @@ export default function ShopDiscoveryClient({
     setPrice("all");
     setSignal("all");
     setSort("featured");
+    setCollection("");
+    router.replace("/product", { scroll: false });
   };
 
   const selectDiscoveryChip = (chip: (typeof discoveryChips)[number]) => {
     setCategory(category === chip.category ? "" : chip.category);
     setSignal("all");
   };
+
+  useEffect(() => {
+    const nextCategory = searchParams.get("category")?.trim() ?? "";
+    const nextQuery =
+      searchParams.get("q")?.trim() ?? searchParams.get("search")?.trim() ?? "";
+    const nextCollection = searchParams.get("collection")?.trim() ?? "";
+
+    setCategory(nextCategory);
+    setQuery(nextQuery);
+    setCollection(nextCollection);
+    setStock(parseShopStock(searchParams.get("stock") ?? undefined));
+    setSignal(parseShopSignal(searchParams.get("signal") ?? undefined));
+  }, [searchParams]);
 
   useEffect(() => {
     if (!filtersOpen) return;
@@ -323,11 +363,14 @@ export default function ShopDiscoveryClient({
 
         <div className="relative mx-auto max-w-6xl">
           <div className="mx-auto max-w-5xl">
+            {context.eyebrow && (
+              <p className="aev-section-label mb-2">{context.eyebrow}</p>
+            )}
             <h1 className="aev-heading break-words text-[1.65rem] [overflow-wrap:anywhere] sm:text-[2.2rem] lg:text-[2.65rem]">
-              Her Care Collection
+              {context.heading}
             </h1>
             <p className="aev-subtext mt-1.5 hidden max-w-2xl text-sm sm:block sm:text-base">
-              Premium reusable care essentials with clear BDT pricing and discreet Bangladesh delivery.
+              {context.copy}
             </p>
           </div>
 
@@ -402,11 +445,25 @@ export default function ShopDiscoveryClient({
             ))}
           </div>
 
+          {activeFilterLabels.length > 0 && (
+            <div className="mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
+              {activeFilterLabels.map((label) => (
+                <span
+                  key={label}
+                  className="shrink-0 rounded-full border border-[#FF4DB8]/28 bg-[#FF4DB8]/[0.09] px-3 py-1.5 text-xs font-semibold text-[#FFB3D1]"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
+
           {availableDiscoveryChips.length > 0 && (
             <div className="aev-shop-discovery-chips mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
               {availableDiscoveryChips.map((chip) => {
                 const Icon = chip.icon;
-                const active = category === chip.category;
+                const active =
+                  normalizeShopValue(category) === normalizeShopValue(chip.category);
                 return (
                   <button
                     key={`${chip.label}-${chip.category}`}
@@ -432,7 +489,7 @@ export default function ShopDiscoveryClient({
         <div className="min-w-0">
           <div className="mb-3 flex flex-col gap-1 border-b border-white/[0.08] pb-2.5 sm:mb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-3">
             <h2 className="aev-heading text-xl sm:text-2xl md:text-3xl">
-              All Products
+              {hasActiveFilters ? context.heading : "All Products"}
             </h2>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#9C91AA]">
               <span>
@@ -440,7 +497,9 @@ export default function ShopDiscoveryClient({
               </span>
               {filteredProducts.length > 0 && (
                 <span className="text-[#D8CBE8]/72">
-                  {category ? `Filtered: ${category}` : "All active products"}
+                  {activeFilterLabels.length > 0
+                    ? `Filtered: ${activeFilterLabels.join(", ")}`
+                    : "All active products"}
                 </span>
               )}
             </div>
@@ -453,14 +512,14 @@ export default function ShopDiscoveryClient({
                 No matching products
               </h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-[#D8CBE8]/72">
-                Adjust your search, category, price, stock, or signal filters to reveal more of the current Aevyrixa collection.
+                No exact match is available for this filter right now. Clear filters to view the full Aevyrixa collection.
               </p>
               <button
                 type="button"
                 onClick={resetFilters}
                 className="aev-button-secondary mt-6 rounded-full px-5 py-3 text-sm font-semibold"
               >
-                Clear filters
+                View all products
               </button>
             </div>
           ) : (

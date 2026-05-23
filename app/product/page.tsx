@@ -4,6 +4,10 @@ import HomeMotionController from "@/app/components/home-motion-controller";
 import SiteFooter from "@/app/components/site-footer";
 import { publicProduct } from "@/app/lib/product-display";
 import { listProducts } from "@/app/lib/product-store";
+import {
+  parseShopQueryFilters,
+  resolveCategoryFromProducts,
+} from "@/app/lib/shop-routing";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import ShopDiscoveryClient from "@/app/product/shop-discovery-client";
 import { listReviewSummaries } from "@/app/lib/review-store";
@@ -40,16 +44,12 @@ export default async function ProductCollectionPage({
     listReviewSummaries(),
     searchParams,
   ]);
-  const requestedCategory =
-    typeof resolvedParams.category === "string" ? resolvedParams.category : "";
-
   const displayProducts = products.map(publicProduct);
-  const activeCategoryTitles = new Set(
-    settings.activeCategories.map((category) => category.title)
+  const initialFilters = parseShopQueryFilters(resolvedParams);
+  const activeCategory = resolveCategoryFromProducts(
+    displayProducts,
+    initialFilters.category
   );
-  const activeCategory = activeCategoryTitles.has(requestedCategory)
-    ? requestedCategory
-    : "";
   const primaryProductHref = displayProducts[0]
     ? `/product/${displayProducts[0].slug}`
     : "/product";
@@ -74,7 +74,7 @@ export default async function ProductCollectionPage({
         activeCategories={settings.activeCategories}
         settings={settings}
         reviewSummaries={reviewSummaries}
-        initialCategory={activeCategory}
+        initialFilters={{ ...initialFilters, category: activeCategory }}
       />
 
       <SiteFooter settings={settings} />

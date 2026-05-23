@@ -22,6 +22,7 @@ import StorefrontProductCard from "@/app/components/storefront-product-card";
 import { whatsappHref } from "@/app/lib/admin-settings";
 import { publicProduct } from "@/app/lib/product-display";
 import { listProducts } from "@/app/lib/product-store";
+import { homeCardCtaLabel, smartHomeCtaHref } from "@/app/lib/shop-routing";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 
 export const dynamic = "force-dynamic";
@@ -98,10 +99,6 @@ type SectionMedia = {
   ctaText: string;
   ctaLink: string;
 };
-
-function urlOrProduct(value: string) {
-  return value || "/product";
-}
 
 function HomeSectionHeading({
   eyebrow,
@@ -256,7 +253,7 @@ export default async function Home() {
         comingSoon: state === "coming_soon",
         title: value("Title"),
         description: value("Description"),
-        href: value("LinkUrl"),
+        fallbackHref: smartHomeCtaHref(value("LinkUrl"), key),
         imageUrl: value("ImageUrl"),
         videoUrl: value("VideoUrl"),
         altText: value("AltText"),
@@ -281,21 +278,21 @@ export default async function Home() {
     {
       title: hms.findCareCard1Title,
       description: hms.findCareCard1Description,
-      href: hms.findCareCard1LinkUrl,
+      fallbackHref: smartHomeCtaHref(hms.findCareCard1LinkUrl, "findCareFlowDays"),
       icon: Droplets,
       collection: collections[0],
     },
     {
       title: hms.findCareCard2Title,
       description: hms.findCareCard2Description,
-      href: hms.findCareCard2LinkUrl,
+      fallbackHref: smartHomeCtaHref(hms.findCareCard2LinkUrl, "findCareDailyComfort"),
       icon: Sparkles,
       collection: collections[1],
     },
     {
       title: hms.findCareCard3Title,
       description: hms.findCareCard3Description,
-      href: hms.findCareCard3LinkUrl,
+      fallbackHref: smartHomeCtaHref(hms.findCareCard3LinkUrl, "findCareGentleSupport"),
       icon: ShieldCheck,
       collection: collections[2],
     },
@@ -336,7 +333,7 @@ export default async function Home() {
                 {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
               </p>
               <div className="mt-5 flex flex-wrap gap-3 sm:mt-8">
-                <Link href={urlOrProduct(heroMedia.ctaLink)} className="aev-action-primary inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-6 text-sm font-bold text-white">
+                <Link href={smartHomeCtaHref(heroMedia.ctaLink, "finalPrimary", { broad: true })} className="aev-action-primary inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-6 text-sm font-bold text-white">
                   {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
                 </Link>
                 <Link href="/product" className="aev-action-secondary inline-flex min-h-11 items-center justify-center rounded-full border border-[#FF4DB8]/22 bg-white/[0.05] px-6 text-sm font-semibold text-[#FFB3D1]">
@@ -478,9 +475,12 @@ export default async function Home() {
                   </>
                 );
 
-                return !item.comingSoon && item.href ? (
-                  <a key={item.key} href={item.href} className="aev-home-art-link aev-collection-card min-w-0 overflow-hidden rounded-[1.25rem] border border-[#FF4DB8]/12 bg-[#151024]/92 p-2.5 sm:rounded-[1.6rem] sm:p-4">
+                return !item.comingSoon ? (
+                  <a key={item.key} href={item.fallbackHref} className="aev-home-art-link aev-collection-card flex min-w-0 flex-col overflow-hidden rounded-[1.25rem] border border-[#FF4DB8]/12 bg-[#151024]/92 p-2.5 sm:rounded-[1.6rem] sm:p-4">
                     {body}
+                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-[#FFB3D1] sm:text-sm">
+                      {homeCardCtaLabel()} 
+                    </span>
                   </a>
                 ) : (
                   <article key={item.key} className="aev-collection-card min-w-0 overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#151024]/68 p-2.5 opacity-80 sm:rounded-[1.6rem] sm:p-4">
@@ -515,8 +515,8 @@ export default async function Home() {
                       </article>
                     ))}
                   </div>
-                  <Link href={urlOrProduct(hms.layerComfortCtaLink)} className="aev-action-primary mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-5 text-sm font-bold text-white sm:mt-7">
-                    {hms.layerComfortCtaText}
+                  <Link href={smartHomeCtaHref(hms.layerComfortCtaLink, "layerComfort")} className="aev-action-primary mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-5 text-sm font-bold text-white sm:mt-7">
+                    {homeCardCtaLabel(hms.layerComfortCtaText)}
                   </Link>
                 </div>
                 <div className="aev-layer-story-media order-1 relative min-h-[16rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0D0820] sm:min-h-[25rem] lg:order-2">
@@ -563,8 +563,8 @@ export default async function Home() {
                     </article>
                   ))}
                 </div>
-                <Link href={careMedia.ctaLink || featuredProductHref} className="aev-action-primary mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-5 text-sm font-bold text-white sm:mt-7">
-                  {careMedia.ctaText || "View Product"}
+                <Link href={smartHomeCtaHref(careMedia.ctaLink, "careMotion")} className="aev-action-primary mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-5 text-sm font-bold text-white sm:mt-7">
+                  {homeCardCtaLabel(careMedia.ctaText)}
                 </Link>
               </div>
             </div>
@@ -578,8 +578,8 @@ export default async function Home() {
                   heading={experienceMedia.heading || "Everyday comfort, shown through the routine around it."}
                   body={experienceMedia.subheading || "Use the visual story to explore soft care for moving, resting, and returning to your day with a calmer fit."}
                 />
-                <Link href={urlOrProduct(experienceMedia.ctaLink)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#FF4DB8]/22 bg-white/[0.055] px-5 text-sm font-semibold text-[#FFB3D1]">
-                  {experienceMedia.ctaText || "Explore Care"} <ArrowRight className="h-4 w-4" />
+                <Link href={smartHomeCtaHref(experienceMedia.ctaLink, "designedDay")} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#FF4DB8]/22 bg-white/[0.055] px-5 text-sm font-semibold text-[#FFB3D1]">
+                  {homeCardCtaLabel(experienceMedia.ctaText)}
                 </Link>
               </div>
               <StoryVisual
@@ -604,13 +604,13 @@ export default async function Home() {
               <div className="mx-auto max-w-7xl">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <HomeSectionHeading eyebrow={hms.findCareEyebrow} heading={hms.findCareHeading} body={hms.findCareDescription} />
-                  <Link href={urlOrProduct(hms.findCareCtaLink)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#00D4C6]/22 bg-[#00D4C6]/[0.08] px-4 text-sm font-semibold text-[#9FF6EE]">
-                    {hms.findCareCtaText} <ArrowRight className="h-4 w-4" />
+                  <Link href={smartHomeCtaHref(hms.findCareCtaLink, "findCare", { broad: true })} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#00D4C6]/22 bg-[#00D4C6]/[0.08] px-4 text-sm font-semibold text-[#9FF6EE]">
+                    {homeCardCtaLabel(hms.findCareCtaText)}
                   </Link>
                 </div>
                 <div className="mt-6 grid gap-3 md:grid-cols-3">
-                  {findCards.map(({ title, description, href, icon: Icon, collection }) => (
-                    <Link key={title} href={urlOrProduct(href)} className="aev-home-art-link aev-find-card grid min-w-0 grid-cols-[5.4rem_1fr] gap-3 overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#151024]/92 p-2.5 md:block md:p-4">
+                  {findCards.map(({ title, description, fallbackHref, icon: Icon, collection }) => (
+                    <Link key={title} href={fallbackHref} className="aev-home-art-link aev-find-card grid min-w-0 grid-cols-[5.4rem_1fr] gap-3 overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#151024]/92 p-2.5 md:block md:p-4">
                       <div className="relative min-h-[5.4rem] overflow-hidden rounded-[1rem] border border-white/[0.08] bg-[#0D0820] md:aspect-[1.22]">
                         {collection ? (
                           <UploadedMedia imageUrl={collection.imageUrl} videoUrl={collection.videoUrl} mode={collection.mode} alt={collection.altText || title} className="absolute inset-0 h-full w-full object-cover opacity-90" />
@@ -626,7 +626,7 @@ export default async function Home() {
                         <h3 className="text-base font-semibold leading-5 text-white">{title}</h3>
                         <p className="mt-1.5 text-xs leading-5 text-[#D8CBE8]/76 sm:text-sm">{description}</p>
                         <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#FFB3D1]">
-                          Find care <ArrowRight className="h-3 w-3" />
+                          {homeCardCtaLabel()}
                         </span>
                       </div>
                     </Link>
@@ -668,10 +668,10 @@ export default async function Home() {
             <div className="relative p-5 sm:p-9 lg:p-12">
               <HomeSectionHeading eyebrow={hms.ctaSectionEyebrow} heading={hms.ctaSectionHeading} body={hms.ctaSectionDescription} />
               <div className="mt-5 flex flex-wrap gap-2.5 sm:mt-7">
-                <Link href={urlOrProduct(hms.ctaSectionPrimaryCtaLink)} className="aev-action-primary inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-6 text-sm font-bold text-white">
-                  {hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText}
+                <Link href={smartHomeCtaHref(hms.ctaSectionPrimaryCtaLink, "finalPrimary", { broad: true })} className="aev-action-primary inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-6 text-sm font-bold text-white">
+                  {homeCardCtaLabel(hms.ctaSectionPrimaryCtaText || settings.appearanceSettings.primaryCtaText)}
                 </Link>
-                <Link href={urlOrProduct(hms.ctaSectionSecondaryCtaLink)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.055] px-6 text-sm font-semibold text-white/88">
+                <Link href={smartHomeCtaHref(hms.ctaSectionSecondaryCtaLink, "finalSecondary", { broad: true })} className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.055] px-6 text-sm font-semibold text-white/88">
                   {hms.ctaSectionSecondaryCtaText || "View Collection"}
                 </Link>
               </div>
