@@ -13,6 +13,7 @@ import {
   MapPin,
   Menu,
   MessageSquare,
+  MoreHorizontal,
   PackageSearch,
   Plus,
   ShieldCheck,
@@ -379,19 +380,38 @@ const accountDestinations = [
   { view: "support", href: "/account/support", label: "Support", icon: MessageSquare },
 ] as const;
 
-function AccountMobileMenu({ view, hero = false }: { view: AccountView; hero?: boolean }) {
+function AccountMobileMenu({
+  view,
+  hero = false,
+  onLogout,
+}: {
+  view: AccountView;
+  hero?: boolean;
+  onLogout?: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
   const current = accountDestinations.find((destination) => destination.view === view) ?? accountDestinations[0];
   const CurrentIcon = current.icon;
+  const heroActions = [
+    { href: "/track-order", label: "Track Order", icon: PackageSearch },
+    { href: "/account/orders", label: "View Orders", icon: PackageSearch },
+    { href: "/account/addresses", label: "Saved Addresses", icon: MapPin },
+    { href: "/account/support", label: "Support", icon: MessageSquare },
+  ] as const;
 
   return (
-    <details className={`group relative z-30 md:hidden ${hero ? "" : "mb-5"}`}>
+    <details
+      className={`group relative z-30 md:hidden ${hero ? "" : "mb-5"}`}
+      open={isOpen}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
       <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 border border-white/[0.10] bg-[#080611]/94 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.28)] backdrop-blur-xl [&::-webkit-details-marker]:hidden ${
         hero ? "h-10 w-10 rounded-full p-0" : "min-h-12 rounded-[1.2rem] px-4 py-3"
       }`}>
         {hero ? (
           <>
             <span className="sr-only">Open account menu</span>
-            <Menu className="mx-auto h-4 w-4 text-[#FFB3D1]" />
+            <MoreHorizontal className="mx-auto h-4 w-4 text-[#FFB3D1]" />
           </>
         ) : (
           <>
@@ -409,23 +429,42 @@ function AccountMobileMenu({ view, hero = false }: { view: AccountView; hero?: b
         )}
       </summary>
       <nav className={`absolute top-[calc(100%+0.55rem)] grid gap-1.5 rounded-[1.3rem] border border-[#FF4DB8]/18 bg-[#100B1C]/[0.98] p-2 shadow-[0_22px_68px_rgba(0,0,0,0.58)] backdrop-blur-2xl ${
-        hero ? "right-0 w-52" : "inset-x-0"
+        hero ? "right-0 w-56" : "inset-x-0"
       }`}>
-        {accountDestinations.map(({ href, icon: Icon, label, view: destinationView }) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={destinationView === view ? "page" : undefined}
-            className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition ${
-              destinationView === view
-                ? "border-[#FF4DB8]/35 bg-[#FF4DB8]/[0.13] text-white"
-                : "border-transparent text-[#D8CBE8] hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
-            }`}
+        {(hero ? heroActions : accountDestinations).map((action) => {
+          const Icon = action.icon;
+          const destinationView = "view" in action ? action.view : undefined;
+
+          return (
+            <Link
+              key={action.href}
+              href={action.href}
+              aria-current={destinationView === view ? "page" : undefined}
+              onClick={() => setIsOpen(false)}
+              className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition ${
+                destinationView === view
+                  ? "border-[#FF4DB8]/35 bg-[#FF4DB8]/[0.13] text-white"
+                  : "border-transparent text-[#D8CBE8] hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0 text-[#FFB3D1]" />
+              {action.label}
+            </Link>
+          );
+        })}
+        {hero && onLogout && (
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              onLogout();
+            }}
+            className="flex min-h-11 items-center gap-3 rounded-2xl border border-rose-200/12 bg-rose-300/[0.045] px-3 py-2.5 text-left text-sm font-semibold text-rose-100/86 transition hover:border-rose-200/24 hover:bg-rose-300/[0.08] hover:text-white"
           >
-            <Icon className="h-4 w-4 shrink-0 text-[#FFB3D1]" />
-            {label}
-          </Link>
-        ))}
+            <LogOut className="h-4 w-4 shrink-0 text-rose-200/80" />
+            Logout
+          </button>
+        )}
       </nav>
     </details>
   );
@@ -491,8 +530,15 @@ function Dashboard({
 
   return (
     <div className="grid gap-4 sm:gap-5 lg:gap-6">
-      <ProfileHero customer={customer} onLogout={onLogout} />
-      <Panel className="aev-account-summary aev-intent-art aev-intent-pulse overflow-hidden p-4 sm:p-5">
+      <ProfileHero
+        customer={customer}
+        totalOrders={allOrders.length}
+        pendingOrders={pendingOrders}
+        deliveredOrders={deliveredOrders}
+        addressCount={addressCount}
+        onLogout={onLogout}
+      />
+      <Panel className="aev-account-summary aev-intent-art aev-intent-pulse hidden overflow-hidden p-4 sm:p-5 md:block">
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} accent="pink" />
           <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
@@ -531,12 +577,26 @@ function Dashboard({
   );
 }
 
-function ProfileHero({ customer, onLogout }: { customer: Customer; onLogout: () => void }) {
+function ProfileHero({
+  customer,
+  totalOrders,
+  pendingOrders,
+  deliveredOrders,
+  addressCount,
+  onLogout,
+}: {
+  customer: Customer;
+  totalOrders: number;
+  pendingOrders: number;
+  deliveredOrders: number;
+  addressCount: number;
+  onLogout: () => void;
+}) {
   return (
     <Panel className="aev-account-profile aev-intent-art aev-intent-profile z-20 overflow-visible p-0 sm:p-0">
-      <div className="relative grid min-w-0 gap-5 rounded-[inherit] p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:p-7">
+      <div className="relative grid min-w-0 gap-4 rounded-[inherit] p-4 sm:p-6 lg:p-7">
         <div className="aev-account-profile-aura" aria-hidden="true" />
-        <div className="relative min-w-0 pr-14 sm:pr-24 lg:pr-0">
+        <div className="relative min-w-0 pr-12 sm:pr-16 lg:pr-0">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/25 bg-[#080611]/55 text-lg font-semibold text-[#FFB3D1] shadow-[0_0_30px_rgba(255,77,184,0.16)] sm:h-14 sm:w-14">
               {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
@@ -563,27 +623,50 @@ function ProfileHero({ customer, onLogout }: { customer: Customer; onLogout: () 
             <p className="mt-3 break-all text-xs text-[#9C91AA]">{customer.email}</p>
           )}
         </div>
-        <div className="relative grid gap-2 min-[390px]:grid-cols-2 lg:min-w-[19rem]">
-          <Link className="action-primary min-h-11 justify-center" href="/track-order">
-            Track Order
-          </Link>
-          <Link className="action-muted min-h-11 justify-center" href="/account/orders">
-            View Orders
-          </Link>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/28 hover:text-white min-[390px]:col-span-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+        <div className="relative grid grid-cols-2 gap-2.5 md:hidden">
+          <HeroSummaryMetric icon={PackageSearch} label="Total Orders" value={String(totalOrders)} accent="pink" />
+          <HeroSummaryMetric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
+          <HeroSummaryMetric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
+          <HeroSummaryMetric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
         </div>
         <div className="absolute right-5 top-5 sm:right-6 lg:hidden">
-          <AccountMobileMenu view="dashboard" hero />
+          <AccountMobileMenu view="dashboard" hero onLogout={onLogout} />
         </div>
       </div>
     </Panel>
+  );
+}
+
+function HeroSummaryMetric({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: typeof UserRound;
+  label: string;
+  value: string;
+  accent: "pink" | "amber" | "green" | "cyan";
+}) {
+  const accents = {
+    pink: "border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] text-[#FFB3D1]",
+    amber: "border-[#FFB84D]/20 bg-[#FFB84D]/[0.08] text-[#FFD18A]",
+    green: "border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-100",
+    cyan: "border-[#00D4C6]/20 bg-[#00D4C6]/[0.08] text-[#31E6D4]",
+  };
+
+  return (
+    <div className="min-w-0 rounded-[1.05rem] border border-white/[0.08] bg-[#0B0F1A]/62 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9C91AA]/78">
+          {label}
+        </p>
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${accents[accent]}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+      </div>
+      <p className="mt-2 text-xl font-semibold leading-none text-white">{value}</p>
+    </div>
   );
 }
 
