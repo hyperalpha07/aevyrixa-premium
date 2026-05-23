@@ -341,8 +341,8 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
     primaryImageUrl: optionalText(input.primaryImageUrl ?? input.imageUrl),
     primaryImagePath: optionalText(input.primaryImagePath),
     videoPath: optionalText(input.videoPath),
-    images: Array.isArray(input.images) ? input.images : undefined,
-    media: Array.isArray(input.media) ? input.media : undefined,
+    images: Array.isArray(input.images) ? input.images : [],
+    media: Array.isArray(input.media) ? input.media : [],
     benefits: stringArrayValue(input.benefits),
     care: stringArrayValue(input.care),
     seoTitle: optionalText(input.seoTitle),
@@ -397,8 +397,8 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     videoPath: row.video_path ?? undefined,
     images: Array.isArray(row.images)
       ? (row.images as string[]).filter((u): u is string => typeof u === "string")
-      : undefined,
-    media: Array.isArray(row.media) ? (row.media as unknown[]) : undefined,
+      : [],
+    media: Array.isArray(row.media) ? (row.media as unknown[]) : [],
     benefits: stringArrayValue(row.benefits),
     care: stringArrayValue(row.care),
     seoTitle: row.seo_title ?? undefined,
@@ -488,18 +488,18 @@ function toSupabasePayload(product: ProductMutationInput) {
     payload.absorbency_options = product.absorbencyOptions ?? [];
   }
   if (hasProductField(product, "primaryImageUrl") || hasProductField(product, "imageUrl")) {
-    const imgUrl = product.primaryImageUrl ?? product.imageUrl ?? null;
+    const imgUrl = optionalText(product.primaryImageUrl ?? product.imageUrl) ?? null;
     payload.primary_image_url = imgUrl;
     payload.image_url = imgUrl;
   }
   if (hasProductField(product, "primaryImagePath")) {
     payload.primary_image_path = product.primaryImagePath ?? null;
   }
-  if (hasProductField(product, "videoUrl")) payload.video_url = product.videoUrl ?? null;
+  if (hasProductField(product, "videoUrl")) payload.video_url = optionalText(product.videoUrl) ?? null;
   if (hasProductField(product, "videoPath")) payload.video_path = product.videoPath ?? null;
-  if (hasProductField(product, "posterUrl")) payload.poster_url = product.posterUrl ?? null;
-  if (hasProductField(product, "images")) payload.images = product.images ?? null;
-  if (hasProductField(product, "media")) payload.media = product.media ?? null;
+  if (hasProductField(product, "posterUrl")) payload.poster_url = optionalText(product.posterUrl) ?? null;
+  if (hasProductField(product, "images")) payload.images = product.images ?? [];
+  if (hasProductField(product, "media")) payload.media = Array.isArray(product.media) ? product.media : [];
   if (hasProductField(product, "benefits")) payload.benefits = product.benefits ?? [];
   if (hasProductField(product, "care")) payload.care = product.care ?? [];
   if (hasProductField(product, "seoTitle")) payload.seo_title = product.seoTitle ?? null;
@@ -557,8 +557,8 @@ function toSupabaseCreatePayload(product: ProductCatalogItem) {
     primary_image_url: optionalText(product.primaryImageUrl ?? product.imageUrl) ?? null,
     primary_image_path: optionalText(product.primaryImagePath) ?? null,
     video_path: optionalText(product.videoPath) ?? null,
-    images: Array.isArray(product.images) ? product.images : null,
-    media: Array.isArray(product.media) ? product.media : null,
+    images: Array.isArray(product.images) ? product.images : [],
+    media: Array.isArray(product.media) ? product.media : [],
   };
 }
 

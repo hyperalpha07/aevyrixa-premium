@@ -3074,6 +3074,59 @@ button {
 }
 
 @media (max-width: 767px) {
+  .aev-home .aev-hero-stat-shelf {
+    border-radius: 1rem;
+    background:
+      linear-gradient(90deg, rgba(255, 77, 184, 0.11), rgba(49, 230, 212, 0.07)),
+      rgba(18, 12, 34, 0.66);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      0 0 22px rgba(255, 77, 184, 0.08);
+  }
+
+  .aev-home .aev-hero-stat {
+    min-width: 0;
+    padding: 0.62rem 0.2rem;
+  }
+
+  .aev-home .aev-hero-stat + .aev-hero-stat::before {
+    bottom: 0.55rem;
+    top: 0.55rem;
+    background: linear-gradient(180deg, transparent, rgba(255, 179, 209, 0.20), rgba(49, 230, 212, 0.16), transparent);
+  }
+
+  .aev-home .aev-hero-stat-value {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .aev-home .aev-hero-stat span:last-child {
+    font-size: 0.52rem;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    max-width: 8.2rem;
+  }
+
+  .aev-home .aev-home-marquee {
+    display: block;
+    max-width: 100vw;
+    border-block-color: rgba(255, 77, 184, 0.11);
+    background:
+      linear-gradient(90deg, rgba(255, 77, 184, 0.50), rgba(168, 85, 247, 0.42), rgba(0, 212, 198, 0.36)),
+      #120c22;
+  }
+
+  .aev-home .aev-home-marquee-group {
+    padding-block: 0.55rem;
+  }
+
+  .aev-home .aev-home-marquee-item {
+    gap: 0.55rem;
+    padding-inline: 0.95rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.075em;
+  }
+
   .aev-mobile-action-footer,
   .aev-account-footer {
     display: none;
@@ -3133,11 +3186,6 @@ button {
   .aev-home .aev-hero-headline {
     margin-top: 1rem;
     line-height: 1.08;
-  }
-
-  .aev-home .aev-hero-stat-shelf,
-  .aev-home .aev-home-marquee {
-    display: none;
   }
 
   .aev-home .aev-motion-panel-hero > .relative {
@@ -3668,6 +3716,11 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .aev-home-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
   .aev-action-primary:active,
   .aev-button-primary:active,
   .aev-card-cta:active {

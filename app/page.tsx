@@ -13,6 +13,7 @@ import {
   Waves,
 } from "lucide-react";
 import AevyrixaMotionPanel from "@/app/components/aevyrixa-motion-panel";
+import AevIntroScreen from "@/app/components/animations/intro-screen";
 import HomeMotionController from "@/app/components/home-motion-controller";
 import LiveChatWidget from "@/app/components/live-chat-widget";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -70,7 +71,7 @@ const trustItems = [
 ] as const;
 
 const statItems = [
-  { value: "500+", label: "Visitors" },
+  { value: "5000+", label: "Happy Customers" },
   { value: "4.8★", label: "Customer Rating" },
   { value: "100%", label: "Discreet Packaging" },
 ] as const;
@@ -232,6 +233,16 @@ export default async function Home() {
   const experienceMedia = hms.experienceMedia as SectionMedia;
   const liveSupportMode = settings.storeProfile.liveSupportMode;
   const whatsappUrl = settings.supportWhatsApp ? whatsappHref(settings.supportWhatsApp) : "";
+  const homepageStatItems = [
+    { value: hms.statItem1Value, label: hms.statItem1Label },
+    { value: hms.statItem2Value, label: hms.statItem2Label },
+    { value: hms.statItem3Value, label: hms.statItem3Label },
+  ].filter((item) => item.value && item.label);
+  const homepageMarqueeItems = hms.marqueeItems
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 12);
 
   const collections = collectionDefs
     .map(({ key, icon, tone }) => {
@@ -304,6 +315,11 @@ export default async function Home() {
       <HomeMotionController />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(255,77,184,0.08),transparent_29%),radial-gradient(circle_at_84%_20%,rgba(0,212,198,0.06),transparent_25%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
       <SiteHeader active="home" productHref={featuredProductHref} settings={settings} />
+      <AevIntroScreen
+        enabled={hms.splashEnabled}
+        brand={hms.splashTitle || settings.brandShortName}
+        logoSrc={hms.splashLogoUrl || "/logo.jpg"}
+      />
 
       {hms.showHero ? (
         <section className="aev-home-hero relative isolate overflow-hidden px-4 pb-7 pt-5 sm:px-6 sm:pb-14 sm:pt-12">
@@ -350,7 +366,7 @@ export default async function Home() {
         <section className="px-4 pb-3 sm:px-6 sm:pb-5" aria-label="Brand trust statistics">
           <div className="aev-hero-stat-shelf mx-auto max-w-7xl overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/14">
             <div className="grid grid-cols-3">
-              {statItems.map(({ value, label }) => (
+              {(homepageStatItems.length ? homepageStatItems : statItems).map(({ value, label }) => (
                 <div key={label} className="aev-hero-stat flex flex-col items-center justify-center gap-0.5 px-2 py-3 text-center sm:py-4">
                   <span className="aev-hero-stat-value block text-base font-extrabold text-[#FFB3D1] sm:text-xl">{value}</span>
                   <span className="block text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/70 sm:text-[0.65rem]">{label}</span>
@@ -365,12 +381,12 @@ export default async function Home() {
         <div className="aev-home-marquee mb-2 sm:mb-4" aria-hidden="true">
           <div className="aev-home-marquee-track">
             <div className="aev-home-marquee-group">
-              {marqueeItems.map((item) => (
+              {(homepageMarqueeItems.length ? homepageMarqueeItems : marqueeItems).map((item) => (
                 <span key={item} className="aev-home-marquee-item">{item}</span>
               ))}
             </div>
             <div className="aev-home-marquee-group" aria-hidden="true">
-              {marqueeItems.map((item) => (
+              {(homepageMarqueeItems.length ? homepageMarqueeItems : marqueeItems).map((item) => (
                 <span key={`dup-${item}`} className="aev-home-marquee-item">{item}</span>
               ))}
             </div>
@@ -485,7 +501,7 @@ export default async function Home() {
           {hms.layerComfortEnabled ? (
             <section className="aev-scroll-section px-4 py-8 sm:px-6 sm:py-16">
               <div className="aev-home-art-block aev-home-art-block-layer mx-auto grid max-w-7xl gap-5 overflow-hidden rounded-[1.8rem] border border-[#FF4DB8]/12 bg-[#100A1E]/72 p-4 sm:p-7 lg:grid-cols-[0.96fr_1.04fr] lg:items-center lg:gap-10 lg:p-10">
-                <div className="min-w-0">
+                <div className="order-2 min-w-0 lg:order-1">
                   <HomeSectionHeading
                     eyebrow={hms.layerComfortEyebrow}
                     heading={hms.layerComfortHeading}
@@ -506,7 +522,7 @@ export default async function Home() {
                     {hms.layerComfortCtaText}
                   </Link>
                 </div>
-                <div className="aev-layer-story-media relative min-h-[16rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0D0820] sm:min-h-[25rem]">
+                <div className="aev-layer-story-media order-1 relative min-h-[16rem] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0D0820] sm:min-h-[25rem] lg:order-2">
                   <UploadedMedia
                     imageUrl={hms.layerComfortImageUrl}
                     videoUrl={hms.layerComfortVideoUrl}

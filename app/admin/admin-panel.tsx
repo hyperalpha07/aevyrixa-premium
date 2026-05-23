@@ -820,10 +820,11 @@ function productToApiPayload(product: AdminProduct) {
     care: product.care,
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
-    imageUrl: product.imageUrl || undefined,
-    videoUrl: product.videoUrl || undefined,
-    posterUrl: product.posterUrl || undefined,
-    images: product.images.length > 0 ? product.images : undefined,
+    imageUrl: product.imageUrl,
+    videoUrl: product.videoUrl,
+    posterUrl: product.posterUrl,
+    images: product.images,
+    media: [],
   };
 }
 
@@ -3621,7 +3622,7 @@ function ProductEditor({
               />
               <MediaUploadField
                 label="Product Video"
-                accept="video/mp4,video/webm,video/quicktime"
+                accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                 mediaType="video"
                 currentUrl={draft.videoUrl}
                 uploading={videoUploading}
@@ -3871,7 +3872,7 @@ function CategoriesSection({
                   />
                   <MediaUploadField
                     label="Card video"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                     mediaType="video"
                     currentUrl={draft.homepageMediaSettings[vidKey]}
                     uploading={!!catUploading[vidUploadKey]}
@@ -5095,6 +5096,8 @@ function SettingsSection({
                   {[
                     ["showHero", "Hero"],
                     ["showTrustStrip", "Trust strip"],
+                    ["showStatStrip", "Stat strip"],
+                    ["showMarquee", "Moving banner"],
                     ["showCategories", "Categories"],
                     ["showFeaturedProducts", "Featured products"],
                     ["showStorySections", "Story sections"],
@@ -5113,14 +5116,71 @@ function SettingsSection({
                     />
                   ))}
                 </div>
+                <div className="mt-4 grid gap-4 border-t border-white/10 pt-4 lg:grid-cols-3">
+                  <ToggleField
+                    label="Splash intro"
+                    checked={draft.homepageMediaSettings.splashEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ splashEnabled: value })}
+                  />
+                  <TextField
+                    label="Splash title"
+                    value={draft.homepageMediaSettings.splashTitle}
+                    onChange={(value) => updateHomepageMediaSettings({ splashTitle: value })}
+                    placeholder="AEVYRIXA"
+                  />
+                  <TextField
+                    label="Splash logo URL"
+                    value={draft.homepageMediaSettings.splashLogoUrl}
+                    onChange={(value) => updateHomepageMediaSettings({ splashLogoUrl: value })}
+                    placeholder="https://..."
+                    inputMode="url"
+                  />
+                </div>
               </SettingsCard>
 
               <SettingsCard
                 eyebrow="Homepage Content"
-                title="Product discovery headings"
-                description="Short copy used above the live featured products and category grid."
+                title="Stats, banner, and discovery headings"
+                description="Compact homepage proof points, moving banner text, and short copy used above the live featured products and category grid."
               >
                 <div className="grid gap-4 lg:grid-cols-2">
+                  <TextField
+                    label="Stat 1 value"
+                    value={draft.homepageMediaSettings.statItem1Value}
+                    onChange={(value) => updateHomepageMediaSettings({ statItem1Value: value })}
+                  />
+                  <TextField
+                    label="Stat 1 label"
+                    value={draft.homepageMediaSettings.statItem1Label}
+                    onChange={(value) => updateHomepageMediaSettings({ statItem1Label: value })}
+                  />
+                  <TextField
+                    label="Stat 2 value"
+                    value={draft.homepageMediaSettings.statItem2Value}
+                    onChange={(value) => updateHomepageMediaSettings({ statItem2Value: value })}
+                  />
+                  <TextField
+                    label="Stat 2 label"
+                    value={draft.homepageMediaSettings.statItem2Label}
+                    onChange={(value) => updateHomepageMediaSettings({ statItem2Label: value })}
+                  />
+                  <TextField
+                    label="Stat 3 value"
+                    value={draft.homepageMediaSettings.statItem3Value}
+                    onChange={(value) => updateHomepageMediaSettings({ statItem3Value: value })}
+                  />
+                  <TextField
+                    label="Stat 3 label"
+                    value={draft.homepageMediaSettings.statItem3Label}
+                    onChange={(value) => updateHomepageMediaSettings({ statItem3Label: value })}
+                  />
+                  <div className="lg:col-span-2">
+                    <TextAreaField
+                      label="Moving banner items (comma separated)"
+                      value={draft.homepageMediaSettings.marqueeItems}
+                      onChange={(value) => updateHomepageMediaSettings({ marqueeItems: value })}
+                    />
+                  </div>
                   <TextField
                     label="Best picks eyebrow"
                     value={draft.homepageMediaSettings.featuredProductsEyebrow}
@@ -5197,7 +5257,7 @@ function SettingsSection({
                   />
                   <MediaUploadField
                     label="Hero video (upload or URL)"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                     mediaType="video"
                     currentUrl={draft.homepageMediaSettings.heroMedia.videoUrl}
                     uploading={!!hmUploading["heroVideo"]}
@@ -5381,7 +5441,7 @@ function SettingsSection({
                   />
                   <MediaUploadField
                     label="Video (upload or URL)"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                     mediaType="video"
                     currentUrl={draft.homepageMediaSettings.layerComfortVideoUrl}
                     uploading={!!hmUploading["layerComfortVideo"]}
@@ -5454,7 +5514,7 @@ function SettingsSection({
                   />
                   <MediaUploadField
                     label="Care video (upload or URL)"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                     mediaType="video"
                     currentUrl={draft.homepageMediaSettings.careMedia.videoUrl}
                     uploading={!!hmUploading["careVideo"]}
@@ -5561,7 +5621,7 @@ function SettingsSection({
                   />
                   <MediaUploadField
                     label="Experience video (upload or URL)"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                     mediaType="video"
                     currentUrl={draft.homepageMediaSettings.experienceMedia.videoUrl}
                     uploading={!!hmUploading["expVideo"]}
@@ -5847,7 +5907,7 @@ function SettingsSection({
                       <div className="lg:col-span-2">
                         <MediaUploadField
                           label="CTA video"
-                          accept="video/mp4,video/webm"
+                          accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
                           mediaType="video"
                           currentUrl={draft.homepageMediaSettings.ctaSectionVideoUrl}
                           uploading={!!hmUploading["ctaSectionVideo"]}
@@ -7286,6 +7346,11 @@ function MediaUploadField({
       />
       {error && (
         <p className="mt-1.5 text-xs text-rose-300/90">{error}</p>
+      )}
+      {!error && (
+        <p className="mt-1.5 text-[11px] leading-4 text-white/35">
+          {isImage ? "JPG, PNG, WEBP, or GIF up to 10MB." : "MP4, MOV, WEBM, or M4V up to 180MB."}
+        </p>
       )}
     </div>
   );

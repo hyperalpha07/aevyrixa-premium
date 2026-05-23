@@ -6,6 +6,7 @@ import {
 import { logStaffActivity } from "@/app/lib/admin-staff";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const BUCKET = "product-media";
 
@@ -19,10 +20,11 @@ const ALLOWED_VIDEO_TYPES = new Set([
   "video/mp4",
   "video/webm",
   "video/quicktime",
+  "video/x-m4v",
 ]);
 
 const IMAGE_MAX_BYTES = 10 * 1024 * 1024;
-const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+const VIDEO_MAX_BYTES = 180 * 1024 * 1024;
 
 const EXT_MAP: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -32,7 +34,22 @@ const EXT_MAP: Record<string, string> = {
   "video/mp4": "mp4",
   "video/webm": "webm",
   "video/quicktime": "mov",
+  "video/x-m4v": "m4v",
 };
+
+function contentTypeFor(file: File) {
+  if (file.type) return file.type;
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".mp4")) return "video/mp4";
+  if (name.endsWith(".webm")) return "video/webm";
+  if (name.endsWith(".mov")) return "video/quicktime";
+  if (name.endsWith(".m4v")) return "video/x-m4v";
+  if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+  if (name.endsWith(".png")) return "image/png";
+  if (name.endsWith(".webp")) return "image/webp";
+  if (name.endsWith(".gif")) return "image/gif";
+  return "";
+}
 
 function supabaseStorageBase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -86,7 +103,7 @@ export async function POST(request: Request) {
 
   const productSlug =
     ((formData.get("productSlug") as string | null) ?? "").trim() || "draft";
-  const contentType = file.type;
+  const contentType = contentTypeFor(file);
 
   const isImage = ALLOWED_IMAGE_TYPES.has(contentType);
   const isVideo = ALLOWED_VIDEO_TYPES.has(contentType);
@@ -95,7 +112,7 @@ export async function POST(request: Request) {
     return json(
       {
         errors: [
-          "Unsupported file type. Images: jpg, png, webp, gif. Videos: mp4, webm, mov.",
+          "Unsupported file type. Images: jpg, png, webp, gif. Videos: mp4, mov, webm, m4v.",
         ],
       },
       { status: 400 }
@@ -144,7 +161,11 @@ export async function POST(request: Request) {
       detail.slice(0, 240)
     );
     return json(
-      { errors: ["Upload to storage failed. Check bucket permissions."] },
+      {
+        errors: [
+          `Upload to storage failed (${uploadResponse.status}). Check bucket permissions, file size, and network stability.`,
+        ],
+      },
       { status: 502 }
     );
   }

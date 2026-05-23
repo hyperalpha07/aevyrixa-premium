@@ -194,6 +194,16 @@ export type HomepageMediaSettings = {
   showTestimonials: boolean;
   showFAQ: boolean;
   showBottomCTA: boolean;
+  splashEnabled: boolean;
+  splashTitle: string;
+  splashLogoUrl: string;
+  statItem1Value: string;
+  statItem1Label: string;
+  statItem2Value: string;
+  statItem2Label: string;
+  statItem3Value: string;
+  statItem3Label: string;
+  marqueeItems: string;
   featuredProductsEyebrow: string;
   featuredProductsHeading: string;
   featuredProductsDescription: string;
@@ -539,6 +549,17 @@ const defaultGroups: AdminSettingsGroups = {
     showTestimonials: true,
     showFAQ: true,
     showBottomCTA: true,
+    splashEnabled: true,
+    splashTitle: "AEVYRIXA",
+    splashLogoUrl: "/logo.jpg",
+    statItem1Value: "5000+",
+    statItem1Label: "Happy Customers",
+    statItem2Value: "4.8★",
+    statItem2Label: "Customer Rating",
+    statItem3Value: "100%",
+    statItem3Label: "Discreet Packaging",
+    marqueeItems:
+      "Bangladesh Delivery, Discreet Packaging, 3-Day Hygiene-Safe Support, Premium Comfort, BDT Pricing, Reusable Care, Secure Checkout",
     featuredProductsEyebrow: "Best Picks",
     featuredProductsHeading: "Best picks for your care routine.",
     featuredProductsDescription: "Browse active Her Care picks with live BDT pricing and the same product options available in the shop.",
@@ -1346,6 +1367,44 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       showBottomCTA: booleanValue(
         homepageMediaRaw.showBottomCTA,
         defaultGroups.homepageMediaSettings.showBottomCTA
+      ),
+      splashEnabled: booleanValue(
+        homepageMediaRaw.splashEnabled,
+        defaultGroups.homepageMediaSettings.splashEnabled
+      ),
+      splashTitle: safeText(
+        homepageMediaRaw.splashTitle,
+        defaultGroups.homepageMediaSettings.splashTitle
+      ),
+      splashLogoUrl: publicUrlValue(homepageMediaRaw.splashLogoUrl) ||
+        defaultGroups.homepageMediaSettings.splashLogoUrl,
+      statItem1Value: safeText(
+        homepageMediaRaw.statItem1Value,
+        defaultGroups.homepageMediaSettings.statItem1Value
+      ),
+      statItem1Label: safeText(
+        homepageMediaRaw.statItem1Label,
+        defaultGroups.homepageMediaSettings.statItem1Label
+      ),
+      statItem2Value: safeText(
+        homepageMediaRaw.statItem2Value,
+        defaultGroups.homepageMediaSettings.statItem2Value
+      ),
+      statItem2Label: safeText(
+        homepageMediaRaw.statItem2Label,
+        defaultGroups.homepageMediaSettings.statItem2Label
+      ),
+      statItem3Value: safeText(
+        homepageMediaRaw.statItem3Value,
+        defaultGroups.homepageMediaSettings.statItem3Value
+      ),
+      statItem3Label: safeText(
+        homepageMediaRaw.statItem3Label,
+        defaultGroups.homepageMediaSettings.statItem3Label
+      ),
+      marqueeItems: safeText(
+        homepageMediaRaw.marqueeItems,
+        defaultGroups.homepageMediaSettings.marqueeItems
       ),
       featuredProductsEyebrow: safeText(
         homepageMediaRaw.featuredProductsEyebrow,

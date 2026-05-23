@@ -3,17 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 
-export default function AevIntroScreen() {
+export default function AevIntroScreen({
+  enabled = true,
+  brand = "AEVYRIXA",
+  logoSrc = "/logo.jpg",
+}: {
+  enabled?: boolean;
+  brand?: string;
+  logoSrc?: string;
+}) {
   const [visible, setVisible] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     if (typeof sessionStorage === "undefined") return;
     if (sessionStorage.getItem("aev:intro")) return;
     sessionStorage.setItem("aev:intro", "1");
     const frameId = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(frameId);
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     if (!visible || !overlayRef.current) return;
@@ -55,8 +64,8 @@ export default function AevIntroScreen() {
         { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
         "-=0.3"
       )
-      .to({}, { duration: 0.9 })
-      .to(overlay, { opacity: 0, duration: 0.55, ease: "power2.in" });
+      .to({}, { duration: 0.35 })
+      .to(overlay, { opacity: 0, duration: 0.42, ease: "power2.in" });
 
     return () => {
       tl.kill();
@@ -66,52 +75,48 @@ export default function AevIntroScreen() {
 
   if (!visible) return null;
 
-  const brand = "AEVYRIXA";
+  const title = brand.trim() || "AEVYRIXA";
 
   return (
     <div
       ref={overlayRef}
       className="fixed inset-0 flex flex-col items-center justify-center"
       style={{
-        background: "#050816",
+        background:
+          "radial-gradient(circle at 50% 35%, rgba(255,77,184,0.14), transparent 34%), linear-gradient(180deg, #080611 0%, #050711 100%)",
         zIndex: 99999,
         overflow: "hidden",
       }}
       aria-hidden="true"
     >
-      {/* Ambient orbs */}
       <div
-        className="pointer-events-none absolute"
+        className="pointer-events-none absolute inset-x-[12%] top-1/2 h-px"
         style={{
-          top: "-10%",
-          left: "-10%",
-          width: "55vw",
-          height: "55vw",
-          background:
-            "radial-gradient(circle, rgba(34,211,238,0.22) 0%, transparent 65%)",
-          filter: "blur(48px)",
+          background: "linear-gradient(90deg, transparent, rgba(255,179,209,0.38), rgba(49,230,212,0.32), transparent)",
+          transform: "translateY(-50%)",
         }}
       />
       <div
-        className="pointer-events-none absolute"
+        className="pointer-events-none absolute h-48 w-48 rounded-full border border-white/10"
         style={{
-          bottom: "-12%",
-          right: "-8%",
-          width: "52vw",
-          height: "52vw",
-          background:
-            "radial-gradient(circle, rgba(168,85,247,0.22) 0%, transparent 65%)",
-          filter: "blur(48px)",
+          boxShadow: "0 0 72px rgba(255,77,184,0.16), inset 0 0 36px rgba(49,230,212,0.08)",
         }}
       />
 
-      {/* Brand letters */}
+      {logoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logoSrc}
+          alt=""
+          className="relative mb-6 h-16 w-16 rounded-full border border-white/12 object-cover shadow-[0_0_38px_rgba(255,77,184,0.28)]"
+        />
+      ) : null}
       <div
         className="relative flex overflow-hidden"
         style={{ gap: "clamp(0.12rem, 0.6vw, 0.5rem)" }}
-        aria-label="AEVYRIXA"
+        aria-label={title}
       >
-        {brand.split("").map((ch, i) => (
+        {title.split("").map((ch, i) => (
           <span
             key={i}
             className="aev-intro-letter inline-block font-semibold text-white"
@@ -127,7 +132,6 @@ export default function AevIntroScreen() {
         ))}
       </div>
 
-      {/* Accent line */}
       <div
         className="aev-intro-line mt-5"
         style={{
@@ -140,7 +144,6 @@ export default function AevIntroScreen() {
         }}
       />
 
-      {/* Tagline */}
       <p
         className="aev-intro-tagline mt-5 uppercase tracking-widest text-white/60"
         style={{
