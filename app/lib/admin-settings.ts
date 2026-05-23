@@ -550,7 +550,7 @@ const defaultGroups: AdminSettingsGroups = {
     showFAQ: true,
     showBottomCTA: true,
     splashEnabled: true,
-    splashTitle: "AEVYRIXA",
+    splashTitle: "Aevyrixa Her Care",
     splashLogoUrl: "/logo.jpg",
     statItem1Value: "5000+",
     statItem1Label: "Happy Customers",

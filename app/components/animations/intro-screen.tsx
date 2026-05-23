@@ -5,7 +5,7 @@ import { gsap } from "gsap";
 
 export default function AevIntroScreen({
   enabled = true,
-  brand = "AEVYRIXA",
+  brand = "Aevyrixa Her Care",
   logoSrc = "/logo.jpg",
 }: {
   enabled?: boolean;
@@ -29,9 +29,9 @@ export default function AevIntroScreen({
 
     document.body.style.overflow = "hidden";
     const overlay = overlayRef.current;
-    const letters = overlay.querySelectorAll<HTMLElement>(".aev-intro-letter");
-    const line = overlay.querySelector<HTMLElement>(".aev-intro-line");
-    const tagline = overlay.querySelector<HTMLElement>(".aev-intro-tagline");
+    const mark = overlay.querySelector<HTMLElement>(".aev-intro-mark");
+    const ring = overlay.querySelector<HTMLElement>(".aev-intro-ring");
+    const title = overlay.querySelector<HTMLElement>(".aev-intro-title");
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -41,31 +41,29 @@ export default function AevIntroScreen({
     });
 
     tl.fromTo(
-      letters,
-      { yPercent: 110, opacity: 0 },
+      ring,
+      { opacity: 0, scale: 0.76 },
       {
-        yPercent: 0,
         opacity: 1,
-        duration: 0.9,
-        stagger: 0.06,
-        ease: "power4.out",
-        delay: 0.15,
+        scale: 1,
+        duration: 0.36,
+        ease: "power3.out",
       }
     )
       .fromTo(
-        line,
-        { scaleX: 0 },
-        { scaleX: 1, duration: 0.7, ease: "power3.out" },
-        "-=0.4"
+        mark,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" },
+        "-=0.24"
       )
       .fromTo(
-        tagline,
-        { opacity: 0, y: 14 },
-        { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
-        "-=0.3"
+        title,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.24, ease: "power2.out" },
+        "-=0.16"
       )
-      .to({}, { duration: 0.35 })
-      .to(overlay, { opacity: 0, duration: 0.42, ease: "power2.in" });
+      .to(ring, { scale: 1.08, opacity: 0.62, duration: 0.22, ease: "sine.inOut" })
+      .to(overlay, { opacity: 0, duration: 0.28, ease: "power2.in" });
 
     return () => {
       tl.kill();
@@ -75,7 +73,7 @@ export default function AevIntroScreen({
 
   if (!visible) return null;
 
-  const title = brand.trim() || "AEVYRIXA";
+  const title = brand.trim() || "Aevyrixa Her Care";
 
   return (
     <div
@@ -83,23 +81,17 @@ export default function AevIntroScreen({
       className="fixed inset-0 flex flex-col items-center justify-center"
       style={{
         background:
-          "radial-gradient(circle at 50% 35%, rgba(255,77,184,0.14), transparent 34%), linear-gradient(180deg, #080611 0%, #050711 100%)",
+          "radial-gradient(circle at 50% 42%, rgba(255,77,184,0.15), transparent 28%), radial-gradient(circle at 50% 50%, rgba(49,230,212,0.08), transparent 38%), linear-gradient(180deg, #080611 0%, #04050D 100%)",
         zIndex: 99999,
         overflow: "hidden",
       }}
       aria-hidden="true"
     >
       <div
-        className="pointer-events-none absolute inset-x-[12%] top-1/2 h-px"
+        className="aev-intro-ring pointer-events-none absolute h-36 w-36 rounded-full border border-white/10 sm:h-44 sm:w-44"
         style={{
-          background: "linear-gradient(90deg, transparent, rgba(255,179,209,0.38), rgba(49,230,212,0.32), transparent)",
-          transform: "translateY(-50%)",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute h-48 w-48 rounded-full border border-white/10"
-        style={{
-          boxShadow: "0 0 72px rgba(255,77,184,0.16), inset 0 0 36px rgba(49,230,212,0.08)",
+          boxShadow: "0 0 48px rgba(255,77,184,0.18), 0 0 92px rgba(49,230,212,0.08), inset 0 0 28px rgba(255,179,209,0.08)",
+          willChange: "transform, opacity",
         }}
       />
 
@@ -108,51 +100,18 @@ export default function AevIntroScreen({
         <img
           src={logoSrc}
           alt=""
-          className="relative mb-6 h-16 w-16 rounded-full border border-white/12 object-cover shadow-[0_0_38px_rgba(255,77,184,0.28)]"
+          className="aev-intro-mark relative h-14 w-14 rounded-full border border-white/12 object-cover shadow-[0_0_34px_rgba(255,77,184,0.24)] sm:h-16 sm:w-16"
+          style={{ willChange: "transform, opacity" }}
         />
       ) : null}
-      <div
-        className="relative flex overflow-hidden"
-        style={{ gap: "clamp(0.12rem, 0.6vw, 0.5rem)" }}
-        aria-label={title}
-      >
-        {title.split("").map((ch, i) => (
-          <span
-            key={i}
-            className="aev-intro-letter inline-block font-semibold text-white"
-            style={{
-              fontSize: "clamp(2.8rem, 9vw, 8rem)",
-              letterSpacing: "0.18em",
-              lineHeight: 1,
-              willChange: "transform, opacity",
-            }}
-          >
-            {ch}
-          </span>
-        ))}
-      </div>
-
-      <div
-        className="aev-intro-line mt-5"
-        style={{
-          width: "clamp(14rem, 40vw, 36rem)",
-          height: "1px",
-          background:
-            "linear-gradient(90deg, transparent, #22d3ee 30%, #a855f7 70%, transparent)",
-          transformOrigin: "left center",
-          willChange: "transform",
-        }}
-      />
-
       <p
-        className="aev-intro-tagline mt-5 uppercase tracking-widest text-white/60"
+        className="aev-intro-title relative mt-4 text-sm font-semibold text-[#FFE4F1] sm:text-base"
         style={{
-          fontSize: "clamp(0.62rem, 1.4vw, 0.85rem)",
-          letterSpacing: "0.38em",
+          letterSpacing: "0.12em",
           willChange: "transform, opacity",
         }}
       >
-        Her Care
+        {title}
       </p>
     </div>
   );

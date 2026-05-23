@@ -703,9 +703,11 @@ button {
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(circle at 14% 0%, rgba(255, 77, 184, 0.16), transparent 38%),
-    radial-gradient(circle at 92% 100%, rgba(0, 212, 198, 0.08), transparent 34%),
-    rgba(18, 12, 34, 0.72);
+    linear-gradient(90deg, rgba(255, 77, 184, 0.08), rgba(255, 255, 255, 0.035), rgba(0, 212, 198, 0.05)),
+    rgba(12, 8, 24, 0.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 -1px 0 rgba(255, 77, 184, 0.06);
 }
 
 .aev-hero-stat-shelf::before {
@@ -714,8 +716,7 @@ button {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 28%),
-    linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.12), transparent);
+    linear-gradient(90deg, rgba(255, 179, 209, 0.10), transparent 28%, transparent 72%, rgba(49, 230, 212, 0.08));
   pointer-events: none;
 }
 
@@ -726,18 +727,18 @@ button {
 .aev-hero-stat + .aev-hero-stat::before {
   content: "";
   position: absolute;
-  bottom: 0.75rem;
+  bottom: 0.55rem;
   left: 0;
-  top: 0.75rem;
+  top: 0.55rem;
   width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(255, 77, 184, 0.24), transparent);
+  background: linear-gradient(180deg, transparent, rgba(255, 179, 209, 0.26), rgba(49, 230, 212, 0.16), transparent);
 }
 
 .aev-hero-stat-value {
   font-family: var(--aev-font-serif);
   text-shadow:
-    0 0 18px rgba(255, 77, 184, 0.24),
-    0 0 42px rgba(168, 85, 247, 0.12);
+    0 0 14px rgba(255, 77, 184, 0.22),
+    0 0 28px rgba(168, 85, 247, 0.10);
 }
 
 .aev-trust-badge {
@@ -808,7 +809,7 @@ button {
   flex: none;
   align-items: center;
   min-width: max-content;
-  padding-block: 0.8rem;
+  padding-block: 0.62rem;
   white-space: nowrap;
 }
 
@@ -3075,18 +3076,17 @@ button {
 
 @media (max-width: 767px) {
   .aev-home .aev-hero-stat-shelf {
-    border-radius: 1rem;
     background:
-      linear-gradient(90deg, rgba(255, 77, 184, 0.11), rgba(49, 230, 212, 0.07)),
-      rgba(18, 12, 34, 0.66);
+      linear-gradient(90deg, rgba(255, 77, 184, 0.09), rgba(49, 230, 212, 0.06)),
+      rgba(18, 12, 34, 0.44);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.055),
-      0 0 22px rgba(255, 77, 184, 0.08);
+      inset 0 1px 0 rgba(255, 255, 255, 0.045),
+      inset 0 -1px 0 rgba(255, 77, 184, 0.06);
   }
 
   .aev-home .aev-hero-stat {
     min-width: 0;
-    padding: 0.62rem 0.2rem;
+    padding: 0.55rem 0.18rem;
   }
 
   .aev-home .aev-hero-stat + .aev-hero-stat::before {
@@ -3117,7 +3117,7 @@ button {
   }
 
   .aev-home .aev-home-marquee-group {
-    padding-block: 0.55rem;
+    padding-block: 0.48rem;
   }
 
   .aev-home .aev-home-marquee-item {

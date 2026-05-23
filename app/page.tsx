@@ -317,7 +317,7 @@ export default async function Home() {
       <SiteHeader active="home" productHref={featuredProductHref} settings={settings} />
       <AevIntroScreen
         enabled={hms.splashEnabled}
-        brand={hms.splashTitle || settings.brandShortName}
+        brand={hms.splashTitle || settings.brandDisplayName || "Aevyrixa Her Care"}
         logoSrc={hms.splashLogoUrl || "/logo.jpg"}
       />
 
@@ -343,6 +343,18 @@ export default async function Home() {
                   View Collection
                 </Link>
               </div>
+              {hms.showStatStrip ? (
+                <div className="aev-hero-stat-shelf mt-5 w-full max-w-xl overflow-hidden border-y border-[#FF4DB8]/16 sm:mt-7" aria-label="Brand trust statistics">
+                  <div className="grid grid-cols-3">
+                    {(homepageStatItems.length ? homepageStatItems : statItems).map(({ value, label }) => (
+                      <div key={label} className="aev-hero-stat flex flex-col items-center justify-center gap-0.5 px-1.5 py-2.5 text-center sm:px-3 sm:py-3">
+                        <span className="aev-hero-stat-value block text-base font-extrabold text-[#FFB3D1] sm:text-lg">{value}</span>
+                        <span className="block text-[0.53rem] font-semibold uppercase leading-tight tracking-[0.075em] text-[#D8CBE8]/70 sm:text-[0.62rem]">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
             <StoryVisual
               media={heroMedia}
@@ -358,21 +370,6 @@ export default async function Home() {
                 />
               }
             />
-          </div>
-        </section>
-      ) : null}
-
-      {hms.showStatStrip ? (
-        <section className="px-4 pb-3 sm:px-6 sm:pb-5" aria-label="Brand trust statistics">
-          <div className="aev-hero-stat-shelf mx-auto max-w-7xl overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/14">
-            <div className="grid grid-cols-3">
-              {(homepageStatItems.length ? homepageStatItems : statItems).map(({ value, label }) => (
-                <div key={label} className="aev-hero-stat flex flex-col items-center justify-center gap-0.5 px-2 py-3 text-center sm:py-4">
-                  <span className="aev-hero-stat-value block text-base font-extrabold text-[#FFB3D1] sm:text-xl">{value}</span>
-                  <span className="block text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/70 sm:text-[0.65rem]">{label}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
       ) : null}
