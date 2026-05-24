@@ -881,6 +881,12 @@ button {
   will-change: transform;
 }
 
+.aev-product-ticker-track-reverse {
+  animation-name: aev-home-marquee-shift-reverse;
+  animation-duration: 34s;
+  transform: translate3d(-50%, 0, 0);
+}
+
 .aev-product-ticker-group {
   display: flex;
   flex: none;
@@ -953,6 +959,192 @@ button {
 .aev-clean-hover-line:focus-within::before {
   opacity: 1;
   transform: translateX(290%);
+}
+
+.aev-bloom-product {
+  --bloom-bg: #080611;
+  --bloom-surface: #0d0918;
+  --bloom-line: rgba(255, 255, 255, 0.08);
+  --bloom-rose: #ff4db8;
+  --bloom-rose-soft: #ffb3d1;
+  --bloom-cyan: #31e6d4;
+  --bloom-violet: #c084fc;
+}
+
+.aev-bloom-hero {
+  min-height: auto;
+}
+
+.aev-bloom-media-frame {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 1.6rem 5rem rgba(0, 0, 0, 0.34),
+    0 0 3rem rgba(255, 77, 184, 0.08);
+}
+
+.aev-bloom-media-frame::before,
+.aev-bloom-media-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.aev-bloom-media-frame::before {
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 77, 184, 0.18), transparent 35%),
+    linear-gradient(125deg, rgba(255, 255, 255, 0.055), transparent 36%);
+  opacity: 0.78;
+}
+
+.aev-bloom-media-frame::after {
+  bottom: 9%;
+  left: 22%;
+  right: 22%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 77, 184, 0.18), transparent 70%);
+  filter: blur(10px);
+  animation: aev-bloom-media-shadow 6.8s ease-in-out infinite;
+}
+
+.aev-bloom-media-glow {
+  animation: aev-bloom-media-glow 5.8s ease-in-out infinite alternate;
+}
+
+.aev-bloom-media-ring {
+  animation: aev-bloom-media-ring 7.4s ease-in-out infinite;
+}
+
+.aev-bloom-media-ring-delay {
+  animation-delay: -2.4s;
+  animation-duration: 8.6s;
+}
+
+.aev-bloom-product-media {
+  z-index: 2;
+  animation: aev-bloom-product-float 7.2s ease-in-out infinite;
+  filter: drop-shadow(0 1.6rem 2.4rem rgba(0, 0, 0, 0.28));
+  will-change: transform;
+}
+
+.aev-bloom-layer-diag {
+  position: relative;
+}
+
+.aev-bloom-layer-card {
+  background: rgba(8, 6, 17, 0.22);
+}
+
+.aev-bloom-layer-card:nth-child(2) {
+  padding-top: 3.75rem;
+}
+
+.aev-bloom-layer-card:nth-child(3) {
+  padding-top: 5.25rem;
+}
+
+.aev-find-care-card {
+  border-top: 1px solid var(--bloom-line);
+  isolation: isolate;
+}
+
+.aev-find-care-card::before,
+.aev-find-care-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  transition:
+    opacity 220ms ease,
+    transform 420ms ease;
+}
+
+.aev-find-care-card::before {
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.04), transparent 38%),
+    radial-gradient(circle at 82% 18%, rgba(255, 77, 184, 0.15), transparent 32%);
+  opacity: 0.62;
+}
+
+.aev-find-care-card::after {
+  right: -2.5rem;
+  top: -2.8rem;
+  width: 8.5rem;
+  height: 8.5rem;
+  border: 1px solid rgba(255, 179, 209, 0.13);
+  border-radius: 46% 54% 44% 56%;
+  opacity: 0.62;
+  transform: rotate(24deg);
+}
+
+.aev-find-care-card-cyan::before {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.04), transparent 38%),
+    radial-gradient(circle at 82% 18%, rgba(49, 230, 212, 0.15), transparent 32%);
+}
+
+.aev-find-care-card-violet::before {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.04), transparent 38%),
+    radial-gradient(circle at 82% 18%, rgba(192, 132, 252, 0.16), transparent 32%);
+}
+
+.aev-find-care-card:hover::before,
+.aev-find-care-card:focus-visible::before {
+  opacity: 1;
+  transform: scale(1.025);
+}
+
+.aev-find-care-card:hover::after,
+.aev-find-care-card:focus-visible::after {
+  opacity: 0.9;
+  transform: translate3d(-0.6rem, 0.4rem, 0) rotate(18deg);
+}
+
+@media (min-width: 1024px) {
+  .aev-bloom-layer-diag::before,
+  .aev-bloom-layer-diag::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    width: 1px;
+    background: var(--bloom-line);
+    pointer-events: none;
+  }
+
+  .aev-bloom-layer-diag::before {
+    left: 33.333%;
+  }
+
+  .aev-bloom-layer-diag::after {
+    left: 66.666%;
+  }
+}
+
+@media (max-width: 1023px) {
+  .aev-bloom-layer-card:nth-child(2),
+  .aev-bloom-layer-card:nth-child(3) {
+    padding-top: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .aev-bloom-hero {
+    padding-bottom: 2rem;
+    padding-top: 4.75rem;
+  }
+
+  .aev-bloom-media-frame {
+    max-height: min(31rem, 118vw);
+  }
+
+  .aev-find-care-card {
+    min-height: 10.75rem;
+  }
 }
 
 .aev-product-float {
@@ -1513,6 +1705,11 @@ button {
   to   { transform: translate3d(-50%, 0, 0); }
 }
 
+@keyframes aev-home-marquee-shift-reverse {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
 @keyframes aev-float {
   0%, 100% { transform: translate3d(0, 0, 0); }
   50%       { transform: translate3d(0, 18px, 0); }
@@ -1591,6 +1788,26 @@ button {
 @keyframes aev-product-visual-reflection {
   0%, 100% { opacity: 0.16; transform: translateX(-18%) skewX(-12deg); }
   50%       { opacity: 0.52; transform: translateX(245%) skewX(-12deg); }
+}
+
+@keyframes aev-bloom-product-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(0, -9px, 0) scale(1.012); }
+}
+
+@keyframes aev-bloom-media-glow {
+  from { opacity: 0.48; transform: scale(0.96); }
+  to   { opacity: 0.9;  transform: scale(1.05); }
+}
+
+@keyframes aev-bloom-media-ring {
+  0%, 100% { opacity: 0.35; transform: translate3d(-50%, -50%, 0) scale(0.98); }
+  50%      { opacity: 0.76; transform: translate3d(-50%, -52%, 0) scale(1.04); }
+}
+
+@keyframes aev-bloom-media-shadow {
+  0%, 100% { opacity: 0.5; transform: scale(0.92); }
+  50%      { opacity: 0.86; transform: scale(1.08); }
 }
 
 @keyframes aev-video-orbit {
@@ -3977,8 +4194,18 @@ button {
     transform: none;
   }
 
+  .aev-bloom-product-media,
+  .aev-bloom-media-glow,
+  .aev-bloom-media-ring,
+  .aev-bloom-media-frame::after {
+    animation: none;
+  }
+
   .aev-clean-hover-line,
-  .aev-clean-hover-line::before {
+  .aev-clean-hover-line::before,
+  .aev-find-care-card,
+  .aev-find-care-card::before,
+  .aev-find-care-card::after {
     transition: none;
   }
 

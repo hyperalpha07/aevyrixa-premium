@@ -37,6 +37,7 @@ import type { ProductCatalogItem } from "@/app/lib/product-types";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
 import type { PublicProductReview } from "@/app/lib/review-types";
+import { smartHomeCtaHref } from "@/app/lib/shop-routing";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -352,6 +353,32 @@ export default function ProductDetailClient({
       tone: "text-[#C084FC]",
     },
   ];
+  const findCareCards = [
+    {
+      title: hms.findCareCard1Title || "Flow Days",
+      description:
+        hms.findCareCard1Description ||
+        "Reusable care for light to moderate flow routines.",
+      href: smartHomeCtaHref(hms.findCareCard1LinkUrl, "findCareFlowDays"),
+      tone: "rose",
+    },
+    {
+      title: hms.findCareCard2Title || "Daily Comfort",
+      description:
+        hms.findCareCard2Description ||
+        "Soft comfort wear for repeat everyday movement.",
+      href: smartHomeCtaHref(hms.findCareCard2LinkUrl, "findCareDailyComfort"),
+      tone: "cyan",
+    },
+    {
+      title: hms.findCareCard3Title || "Gentle Support",
+      description:
+        hms.findCareCard3Description ||
+        "Smooth support picks for easy daily layering.",
+      href: smartHomeCtaHref(hms.findCareCard3LinkUrl, "findCareGentleSupport"),
+      tone: "violet",
+    },
+  ];
 
   return (
     <main className="aev-bloom-product min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+6rem+env(safe-area-inset-bottom,0px))] text-white lg:pb-0">
@@ -363,12 +390,12 @@ export default function ProductDetailClient({
         settings={settings}
       />
 
-      <section className="relative z-[2] grid min-h-[calc(100vh-3.5rem)] items-center gap-8 px-4 pb-10 pt-20 sm:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(25rem,32.5rem)] lg:gap-10 lg:px-12 lg:py-24">
+      <section className="aev-bloom-hero relative z-[2] mx-auto grid w-full max-w-[75rem] items-center gap-8 px-4 pb-10 pt-20 sm:px-7 lg:grid-cols-[minmax(0,1fr)_32.5rem] lg:gap-10 lg:px-12 lg:pb-16 lg:pt-24">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
           Aevyrixa
         </div>
 
-        <div className="relative z-[1] min-w-0">
+        <div className="relative z-[1] order-2 min-w-0 lg:order-1">
           <div className="mb-7 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6B5F7A]">
             <Link href="/" className="transition hover:text-[#FF4DB8]">Home</Link>
             <span>/</span>
@@ -432,7 +459,7 @@ export default function ProductDetailClient({
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-x-6 gap-y-3 sm:grid-cols-2">
             <VariantSelector
               label="Size"
               options={displayProduct.sizes}
@@ -494,9 +521,9 @@ export default function ProductDetailClient({
             </div>
             <Link
               href={supportHref}
-              className="inline-flex h-8 flex-1 items-center justify-center gap-2 rounded border border-[#00D4C6]/20 bg-[#00D4C6]/[0.06] px-3 text-[11px] font-semibold text-[#31E6D4] transition hover:bg-[#00D4C6]/[0.10] sm:flex-none"
+              className="inline-flex h-8 flex-1 items-center justify-center gap-2 rounded border border-[#25D366]/20 bg-[#25D366]/[0.055] px-3 text-[11px] font-semibold text-[#25D366] shadow-[0_0_18px_rgba(37,211,102,0.06)] transition hover:border-[#25D366]/35 hover:bg-[#25D366]/[0.10] sm:flex-none"
             >
-              <MessageCircle className="h-3.5 w-3.5" />
+              {settings.whatsappUrl ? <WhatsAppIcon className="h-3.5 w-3.5" /> : <MessageCircle className="h-3.5 w-3.5" />}
               {supportLabel}
             </Link>
           </div>
@@ -538,13 +565,15 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        <div className="relative z-[1] lg:pr-1">
+        <div className="relative z-[1] order-1 lg:order-2 lg:pr-1">
           <div
-            className="relative aspect-[0.85/1] overflow-hidden rounded-[2px_60px_2px_60px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)]"
+            className="aev-bloom-media-frame relative aspect-[0.85/1] overflow-hidden rounded-[2px_60px_2px_60px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <div className={`pointer-events-none absolute inset-10 rounded-full blur-[76px] ${style.glow}`} />
+            <div className={`aev-bloom-media-glow pointer-events-none absolute inset-10 rounded-full blur-[76px] ${style.glow}`} />
+            <div className="aev-bloom-media-ring pointer-events-none absolute left-1/2 top-1/2 h-[54%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#FF4DB8]/10" />
+            <div className="aev-bloom-media-ring aev-bloom-media-ring-delay pointer-events-none absolute left-1/2 top-1/2 h-[68%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#31E6D4]/[0.07]" />
             {selectedMedia?.type === "video" ? (
               <video
                 src={selectedMedia.url}
@@ -552,7 +581,7 @@ export default function ProductDetailClient({
                 controls
                 playsInline
                 preload="metadata"
-                className="relative h-full w-full bg-[#080611] object-contain"
+                className="aev-bloom-product-media relative h-full w-full bg-[#080611] object-contain"
                 onError={() =>
                   setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
                 }
@@ -565,7 +594,7 @@ export default function ProductDetailClient({
                 alt={displayProduct.name}
                 loading={safeIndex === 0 ? "eager" : "lazy"}
                 decoding="async"
-                className="relative h-full w-full cursor-zoom-in object-contain p-4 transition duration-500 hover:scale-[1.015] sm:p-8"
+                className="aev-bloom-product-media relative h-full w-full cursor-zoom-in object-contain p-4 transition duration-500 hover:scale-[1.015] sm:p-8"
                 onClick={() => setLightboxOpen(true)}
                 onError={() =>
                   setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
@@ -575,11 +604,12 @@ export default function ProductDetailClient({
               <ProductVisual
                 visualTheme={displayProduct.visualTheme}
                 label={displayProduct.absorbency}
+                className="aev-bloom-product-media"
               />
             )}
-            <div className="pointer-events-none absolute left-0 top-0 h-16 w-16 border-l border-t border-[#FF4DB8]/35" />
-            <div className="pointer-events-none absolute bottom-0 right-0 h-16 w-16 border-b border-r border-[#FF4DB8]/35" />
-            <div className="absolute bottom-5 left-0 right-0 flex justify-between gap-3 px-5">
+            <div className="pointer-events-none absolute left-0 top-0 z-[3] h-16 w-16 border-l border-t border-[#FF4DB8]/35" />
+            <div className="pointer-events-none absolute bottom-0 right-0 z-[3] h-16 w-16 border-b border-r border-[#FF4DB8]/35" />
+            <div className="absolute bottom-5 left-0 right-0 z-[3] flex justify-between gap-3 px-5">
               <span className="rounded-sm border border-[#FF4DB8]/14 bg-[#080611]/75 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#FF4DB8]/70 backdrop-blur">
                 {displayProduct.category || "Aevyrixa Her Care"}
               </span>
@@ -599,7 +629,7 @@ export default function ProductDetailClient({
                   disabled={brokenMediaUrls.has(item.url)}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[4px_20px_4px_20px] border bg-white/[0.035] transition ${
                     safeIndex === index
-                      ? "border-[#FF4DB8]/55 bg-[#FF4DB8]/[0.08]"
+                      ? "border-[#FF4DB8]/60 bg-[#FF4DB8]/[0.08] shadow-[0_0_22px_rgba(255,77,184,0.16)]"
                       : "border-white/[0.08] hover:border-[#FF4DB8]/35"
                   } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : ""}`}
                 >
@@ -644,11 +674,11 @@ export default function ProductDetailClient({
                 ""
               }
             />
-            <div className="mt-10 grid gap-0 lg:grid-cols-3">
+            <div className="aev-bloom-layer-diag mt-10 grid gap-0 lg:grid-cols-3">
               {displayLayerCards.slice(0, 3).map((card, index) => (
                 <article
                   key={`${card.title}-${index}`}
-                  className="aev-clean-hover-line border-t border-white/[0.08] px-5 py-8 lg:px-8"
+                  className="aev-clean-hover-line aev-bloom-layer-card border-t border-white/[0.08] px-5 py-8 lg:px-8"
                 >
                   <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#6B5F7A]">
                     Layer {String(index + 1).padStart(2, "0")}
@@ -692,9 +722,9 @@ export default function ProductDetailClient({
         <section className="relative z-[2] py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
             <SectionHeading
-              eyebrow={hms.findCareEyebrow || "Promise"}
-              title={hms.findCareHeading || "Four reasons to trust it"}
-              description={hms.findCareDescription || ""}
+              eyebrow="Promise"
+              title="Four reasons to trust it"
+              description=""
             />
             <div className="mt-9">
               {promiseCards.map((card, index) => (
@@ -713,6 +743,46 @@ export default function ProductDetailClient({
                   </div>
                   <p className="text-sm leading-7 text-[#9C91AA]">{card.body}</p>
                 </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {hms.findCareEnabled && (
+        <section className="relative z-[2] border-y border-white/[0.08] bg-[#0D0918] py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+            <div className="grid gap-8 lg:grid-cols-[1fr_1.8fr] lg:items-end">
+              <SectionHeading
+                eyebrow={hms.findCareEyebrow || "Find Your Care"}
+                title={hms.findCareHeading || "Choose the care that matches your day."}
+                description=""
+              />
+              <p className="max-w-3xl text-sm leading-7 text-[#9C91AA]">
+                {hms.findCareDescription ||
+                  "Use a quick visual guide to move from flow-day support to daily comfort and gentle support picks."}
+              </p>
+            </div>
+            <div className="mt-9 grid gap-[2px] lg:grid-cols-3">
+              {findCareCards.map((card, index) => (
+                <Link
+                  key={`${card.title}-${index}`}
+                  href={card.href}
+                  className={`aev-find-care-card aev-find-care-card-${card.tone} group relative min-h-[12rem] overflow-hidden bg-[#080611] p-6 transition hover:bg-white/[0.018]`}
+                >
+                  <span className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#6B5F7A]">
+                    Care {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="mt-5 font-serif text-2xl font-light leading-tight text-white">
+                    {card.title}
+                  </h3>
+                  <p className="mt-3 max-w-xs text-sm leading-7 text-[#9C91AA]">
+                    {card.description}
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#FFB3D1] transition group-hover:translate-x-1 group-hover:text-white">
+                    Explore <span aria-hidden="true">{"\u2192"}</span>
+                  </span>
+                </Link>
               ))}
             </div>
           </div>
@@ -849,6 +919,14 @@ export default function ProductDetailClient({
   );
 }
 
+function WhatsAppIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.49 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.86 11.86 0 0 0 5.69 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.49-8.42Zm-8.4 18.3h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.38a9.83 9.83 0 0 1-1.51-5.26c0-5.45 4.44-9.89 9.89-9.89 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.46-4.44 9.9-9.89 9.9Zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.42.25-.69.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35Z" />
+    </svg>
+  );
+}
+
 function SectionHeading({
   eyebrow,
   title,
@@ -959,18 +1037,32 @@ function ColorSwatch({ color }: { color: string }) {
 
 function ProductTicker({ items }: { items: string[] }) {
   const loop = [...items, ...items];
+  const reversedLoop = [...items].reverse().concat([...items].reverse());
 
   return (
-    <div className="relative z-[2] overflow-hidden border-y border-white/[0.08] bg-[#0D0918] py-2.5">
+    <div className="relative z-[2] overflow-hidden border-y border-white/[0.08] bg-[#0D0918] py-2">
       <div className="aev-product-ticker-track">
         <div className="flex w-max items-center">
           {loop.map((item, index) => (
-            <span key={`${item}-${index}`} className="flex items-center gap-4 px-5">
+            <span key={`${item}-${index}`} className="flex items-center gap-4 px-5 py-1">
               <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#6B5F7A]">
                 Her Care
               </span>
               <span className="font-serif text-sm italic text-[#FF4DB8]">{item}</span>
               <span className="text-[#FF4DB8]/25">.</span>
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="aev-product-ticker-track aev-product-ticker-track-reverse">
+        <div className="flex w-max items-center">
+          {reversedLoop.map((item, index) => (
+            <span key={`reverse-${item}-${index}`} className="flex items-center gap-4 px-5 py-1">
+              <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#6B5F7A]">
+                Aevyrixa
+              </span>
+              <span className="font-serif text-sm italic text-[#31E6D4]">{item}</span>
+              <span className="text-[#31E6D4]/20">.</span>
             </span>
           ))}
         </div>
