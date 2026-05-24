@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aevyrixa Her Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0807;--w1:#120e0c;--w2:#181210;
+  --ro:#d4886a;--ro2:rgba(212,136,106,.1);--ro3:rgba(212,136,106,.05);
+  --bl:#f0b8b0;--bl2:rgba(240,184,176,.08);
+  --cr:#f0e2d4;--cr2:rgba(240,226,212,.06);
+  --pu:#7b3f6e;--pu2:rgba(123,63,110,.15);
+  --tx:#f0e2d4;--dm:#9a8880;--dd:#5a4a44;
+  --br:rgba(240,226,212,.07);--br2:rgba(240,226,212,.04);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* NOISE */
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:180px;}
+
+/* CURSOR */
+#cr{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--ro);pointer-events:none;z-index:9000;transform:translate(-50%,-50%);mix-blend-mode:normal;}
+#cr2{position:fixed;width:32px;height:32px;border:1px solid rgba(212,136,106,.4);border-radius:50%;pointer-events:none;z-index:8999;transform:translate(-50%,-50%);transition:width.3s,height.3s,border-color.3s;}
+body:has(button:hover) #cr{background:var(--bl);width:14px;height:14px;}
+body:has(button:hover) #cr2{border-color:rgba(240,184,176,.5);width:48px;height:48px;}
+
+/* LOADER */
+#ldr{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity.8s,visibility.8s;}
+#ldr.out{opacity:0;visibility:hidden;}
+.ll-wrap{text-align:center;}
+.ll-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.35em;color:var(--dd);text-transform:uppercase;margin-bottom:16px;}
+.ll-name{font-family:'Cormorant Garamond',serif;font-size:clamp(48px,8vw,80px);font-weight:300;letter-spacing:.05em;line-height:1;color:var(--cr);}
+.ll-name em{font-style:italic;color:var(--ro);}
+.ll-line{width:80px;height:1px;background:var(--br);margin:20px auto 0;position:relative;overflow:hidden;}
+.ll-line::after{content:'';position:absolute;inset:0;background:var(--ro);transform:translateX(-100%);animation:ll 1.4s ease .3s forwards;}
+@keyframes ll{to{transform:translateX(0)}}
+
+/* AMBIENT */
+.amb{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 20% 30%,rgba(212,136,106,.04) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 80% 70%,rgba(123,63,110,.05) 0%,transparent 60%);transition:background 1.5s ease;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:600;height:56px;display:flex;align-items:center;padding:0 44px;gap:0;transition:background.4s,border-color.4s;border-bottom:1px solid transparent;}
+nav.sc{background:rgba(12,8,7,.9);backdrop-filter:blur(20px);border-color:var(--br);}
+.nb{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nm{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;letter-spacing:.08em;color:var(--cr);}
+.nm em{font-style:italic;color:var(--ro);}
+.ndiv{width:1px;height:16px;background:var(--br);margin:0 20px;}
+.nls{display:flex;gap:0;}
+.nls a{padding:4px 12px;font-size:11px;color:var(--dm);text-decoration:none;border-radius:4px;transition:color.2s,background.2s;letter-spacing:.02em;}
+.nls a:hover,.nls a.on{color:var(--ro);}
+.nls a.on{background:var(--ro2);}
+.nsr{position:relative;margin-left:auto;}
+.nsr input{padding:6px 10px 6px 28px;background:var(--br2);border:1px solid var(--br);border-radius:6px;color:var(--dm);font-size:11px;font-family:'Inter',sans-serif;outline:none;width:170px;transition:all.3s;cursor:none;}
+.nsr input:focus{border-color:rgba(212,136,106,.3);background:var(--ro3);}
+.nsic{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.3;pointer-events:none;}
+.nca{display:flex;align-items:center;gap:5px;padding:6px 14px;background:rgba(212,136,106,.1);border:1px solid rgba(212,136,106,.2);border-radius:6px;color:var(--ro);font-size:11px;text-decoration:none;cursor:none;transition:all.25s;margin-left:10px;}
+.nca:hover{background:rgba(212,136,106,.18);}
+.cbd{width:14px;height:14px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--bg);}
+
+/* ════════════════════════
+   DIAGONAL HERO SECTION
+════════════════════════ */
+.hero{min-height:100vh;position:relative;z-index:2;display:grid;grid-template-columns:1fr 520px;align-items:center;padding:80px 0 60px;}
+
+/* BIG BG TEXT */
+.hero-bg-txt{position:absolute;left:-20px;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:clamp(100px,16vw,200px);font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(240,226,212,.03);letter-spacing:-.03em;line-height:.85;pointer-events:none;white-space:nowrap;}
+
+/* LEFT: INFO */
+.hi{padding:0 0 0 52px;position:relative;z-index:1;}
+.hi-path{display:flex;align-items:center;gap:5px;margin-bottom:28px;}
+.hi-path a,.hi-path span{font-size:10px;color:var(--dd);text-decoration:none;transition:color.2s;}
+.hi-path a:hover{color:var(--ro);}
+.hi-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.tg{padding:3px 10px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;}
+.tg.a{background:var(--ro2);color:var(--ro);border:1px solid rgba(212,136,106,.2);}
+.tg.f{background:var(--pu2);color:#c084b8;border:1px solid rgba(123,63,110,.25);}
+.tg.m{background:var(--br2);color:var(--dd);border:1px solid var(--br);}
+
+.hi-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,4.5vw,58px);font-weight:300;letter-spacing:-.01em;line-height:1.05;margin-bottom:8px;}
+.hi-title em{font-style:italic;color:var(--ro);display:block;}
+.hi-title strong{font-weight:600;}
+
+.hi-desc{font-size:13px;color:var(--dm);line-height:1.8;margin-bottom:24px;max-width:420px;padding-left:14px;border-left:1.5px solid rgba(212,136,106,.25);}
+
+/* PRICE */
+.pbox{display:inline-flex;align-items:baseline;gap:10px;padding:12px 20px;border:1px solid var(--br);border-radius:6px;background:var(--br2);margin-bottom:12px;}
+.pmain{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;line-height:1;letter-spacing:-.02em;}
+.pcur{font-size:14px;color:var(--dm);font-weight:300;margin-right:2px;}
+.pold{font-size:13px;color:var(--dd);text-decoration:line-through;}
+.psave{padding:3px 10px;background:rgba(212,136,106,.12);color:var(--ro);border:1px solid rgba(212,136,106,.2);border-radius:3px;font-size:10px;font-weight:600;}
+
+/* RATING */
+.rrow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dd);margin-bottom:20px;}
+.sts{display:flex;gap:2px;}
+.st{width:11px;height:11px;stroke:rgba(240,226,212,.12);fill:none;stroke-width:1.5;}
+.st.y{fill:#d4a84b;stroke:#d4a84b;}
+.rl{color:var(--ro);text-decoration:none;}
+
+/* OPTIONS */
+.opt-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-bottom:18px;}
+.opt{} 
+.olb{font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--dd);margin-bottom:7px;}
+.szr{display:flex;gap:4px;flex-wrap:wrap;}
+.sz{width:38px;height:32px;border:1px solid var(--br);background:var(--br2);color:var(--dm);font-family:'Inter',sans-serif;font-size:10px;font-weight:500;border-radius:4px;cursor:none;transition:all.2s;}
+.sz:hover{border-color:var(--ro);color:var(--ro);}
+.sz.on{border-color:var(--ro);background:var(--ro2);color:var(--ro);}
+.clr{display:flex;gap:5px;}
+.cl{padding:5px 11px;border:1px solid var(--br);border-radius:3px;background:var(--br2);color:var(--dm);font-size:10px;cursor:none;transition:all.2s;display:flex;align-items:center;gap:5px;}
+.cl:hover,.cl.on{border-color:var(--ro);color:var(--tx);}
+.cld{width:8px;height:8px;border-radius:50%;}
+.abr{display:flex;gap:4px;}
+.ab{padding:5px 11px;border:1px solid var(--br);border-radius:3px;background:var(--br2);color:var(--dm);font-size:10px;cursor:none;transition:all.2s;}
+.ab:hover{border-color:var(--bl);color:var(--bl);}
+.ab.on{border-color:var(--bl);background:var(--bl2);color:var(--bl);}
+
+/* QTY */
+.qr{display:flex;gap:7px;align-items:center;margin-bottom:14px;}
+.qw{display:flex;align-items:center;border:1px solid var(--br);border-radius:4px;overflow:hidden;background:var(--br2);}
+.qb{width:30px;height:30px;background:transparent;border:none;color:var(--tx);font-size:14px;cursor:none;transition:background.2s;}
+.qb:hover{background:rgba(240,226,212,.06);}
+.qn{width:38px;height:30px;background:transparent;border:none;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;text-align:center;outline:none;}
+.wa{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:30px;border:1px solid rgba(37,211,102,.18);background:rgba(37,211,102,.05);border-radius:4px;color:#25d366;font-size:10px;text-decoration:none;cursor:none;transition:all.2s;}
+.wa:hover{background:rgba(37,211,102,.1);}
+
+/* CTA */
+.ctag{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.bac{padding:12px;background:linear-gradient(135deg,var(--ro),#9e5538);color:var(--bg);border:none;border-radius:4px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:none;transition:box-shadow.25s,transform.25s;letter-spacing:.02em;}
+.bac:hover{box-shadow:0 10px 30px rgba(212,136,106,.3);transform:translateY(-2px);}
+.bvi{padding:12px;background:transparent;color:var(--tx);border:1px solid var(--br);border-radius:4px;font-family:'Inter',sans-serif;font-size:11px;cursor:none;transition:all.25s;}
+.bvi:hover{border-color:rgba(212,136,106,.3);color:var(--ro);}
+
+/* PERKS */
+.perks{display:flex;flex-direction:column;gap:5px;}
+.pk{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--dm);padding:6px 10px;border-radius:4px;border:1px solid var(--br);background:var(--br2);}
+.pkd{color:var(--ro);font-size:12px;flex-shrink:0;}
+
+/* RIGHT: PRODUCT VISUAL */
+.hv{position:relative;z-index:1;}
+.hv-frame{position:relative;width:100%;aspect-ratio:.85/1;overflow:hidden;border-radius:2px 60px 2px 60px;background:linear-gradient(145deg,#1a0f0d,#0f0a08,#0a0808);border:1px solid rgba(212,136,106,.1);}
+#pcan{position:absolute;inset:0;width:100%;height:100%;}
+.hv-corner{position:absolute;width:60px;height:60px;}
+.hv-corner.tl{top:0;left:0;border-top:1px solid var(--ro);border-left:1px solid var(--ro);opacity:.3;}
+.hv-corner.br{bottom:0;right:0;border-bottom:1px solid var(--ro);border-right:1px solid var(--ro);opacity:.3;}
+.hv-info{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:space-between;padding:0 20px;}
+.hvi{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.2em;color:rgba(212,136,106,.5);text-transform:uppercase;background:rgba(12,8,7,.7);backdrop-filter:blur(8px);padding:4px 9px;border-radius:2px;border:1px solid rgba(212,136,106,.1);}
+.hv-thumbs{display:flex;gap:8px;margin-top:10px;padding:0 4px;}
+.pvt{width:56px;height:56px;border-radius:4px 20px 4px 20px;border:1px solid var(--br);background:var(--br2);cursor:none;transition:all.25s;overflow:hidden;position:relative;flex-shrink:0;}
+.pvt.on,.pvt:hover{border-color:rgba(212,136,106,.35);background:var(--ro2);}
+.pvt canvas{position:absolute;inset:0;width:100%;height:100%;}
+
+/* ════════════════════════
+   MOVING TICKER
+════════════════════════ */
+.ticker{padding:10px 0;background:var(--w1);border-top:1px solid var(--br);border-bottom:1px solid var(--br);overflow:hidden;position:relative;z-index:2;}
+.tk-row{display:flex;gap:0;width:max-content;}
+.tk-row.fwd{animation:tkf 24s linear infinite;}
+.tk-row.rev{animation:tkr 30s linear infinite;}
+.tki{display:flex;align-items:center;gap:16px;padding:0 20px;white-space:nowrap;}
+.tklb{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.2em;color:var(--dd);text-transform:uppercase;}
+.tkv{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:400;color:var(--ro);font-style:italic;}
+.tksep{color:rgba(212,136,106,.2);font-size:12px;margin:0 2px;}
+@keyframes tkf{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes tkr{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+
+/* ════════════════════════
+   LAYER SECTION — diagonal
+════════════════════════ */
+.layers-sec{position:relative;z-index:2;padding:80px 0;background:var(--w1);}
+.layers-inner{max-width:1200px;margin:0 auto;padding:0 52px;}
+.sec-eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.eyechip{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.22em;color:var(--ro);text-transform:uppercase;}
+.eyeline{flex:1;height:1px;background:var(--br);}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,4vw,52px);font-weight:300;letter-spacing:-.01em;line-height:1.05;margin-bottom:8px;}
+.sec-title em{font-style:italic;color:var(--ro);}
+.sec-sub{font-size:12px;color:var(--dm);line-height:1.7;margin-bottom:40px;max-width:420px;}
+
+/* DIAGONAL LAYER CARDS */
+.layer-diag{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative;}
+.layer-diag::before{content:'';position:absolute;top:0;bottom:0;left:33.33%;width:1px;background:var(--br);}
+.layer-diag::after{content:'';position:absolute;top:0;bottom:0;left:66.66%;width:1px;background:var(--br);}
+.lcard{padding:36px 32px;position:relative;border-top:1px solid var(--br);}
+.lcard:nth-child(2){padding-top:60px;}
+.lcard:nth-child(3){padding-top:84px;}
+.lcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.lcard:nth-child(1)::before{background:linear-gradient(90deg,var(--ro),transparent);}
+.lcard:nth-child(2)::before{background:linear-gradient(90deg,var(--bl),transparent);}
+.lcard:nth-child(3)::before{background:linear-gradient(90deg,#c084b8,transparent);}
+.lc-n{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--dd);margin-bottom:12px;}
+.lc-t{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;letter-spacing:-.01em;margin-bottom:10px;}
+.lc-d{font-size:12px;color:var(--dm);line-height:1.7;}
+.lc-b{display:inline-flex;margin-top:14px;padding:3px 10px;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+
+/* ════════════════════════
+   BENEFITS — full width rows
+════════════════════════ */
+.benefits-sec{position:relative;z-index:2;padding:80px 0;}
+.benefits-inner{max-width:1200px;margin:0 auto;padding:0 52px;}
+.ben-rows{margin-top:36px;}
+.ben-row{display:grid;grid-template-columns:56px 1fr 1.4fr;gap:0;padding:24px 0;border-bottom:1px solid var(--br);align-items:start;transition:background.2s;cursor:default;}
+.ben-row:first-child{border-top:1px solid var(--br);}
+.ben-row:hover{padding-left:10px;background:rgba(212,136,106,.02);}
+.bn-n{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:rgba(212,136,106,.15);line-height:1;transition:color.3s;font-style:italic;}
+.ben-row:hover .bn-n{color:rgba(212,136,106,.35);}
+.bn-l{padding-right:32px;}
+.bn-t{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:-.01em;margin-bottom:6px;}
+.bn-tag{display:inline-flex;padding:2px 8px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border-radius:2px;}
+.bn-d{font-size:12px;color:var(--dm);line-height:1.72;}
+
+/* ════════════════════════
+   FIT CARE SUPPORT
+════════════════════════ */
+.fcs-sec{background:var(--w1);border-top:1px solid var(--br);position:relative;z-index:2;padding:80px 0;}
+.fcs-inner{max-width:1200px;margin:0 auto;padding:0 52px;}
+.fcs-top{display:grid;grid-template-columns:1fr 1.8fr;gap:60px;align-items:end;margin-bottom:36px;}
+.fcs-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:24px;}
+.fcard{padding:28px 24px;background:var(--bg);transition:background.25s;}
+.fcard:hover{background:rgba(240,226,212,.015);}
+.fcard-ic{width:32px;height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:12px;}
+.fcard-ic.r{background:rgba(212,136,106,.1);border:1px solid rgba(212,136,106,.15);}
+.fcard-ic.b{background:var(--bl2);border:1px solid rgba(240,184,176,.15);}
+.fcard-ic.p{background:var(--pu2);border:1px solid rgba(123,63,110,.2);}
+.fcard-h{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;margin-bottom:8px;}
+.fcard-h.rc{color:var(--ro);}
+.fcard-h.bc{color:var(--bl);}
+.fcard-h.pc{color:#c084b8;}
+.fcard-p{font-size:11px;color:var(--dm);line-height:1.72;}
+
+/* FAQ */
+.faq{border:1px solid var(--br);border-radius:4px;overflow:hidden;}
+.fqi{border-bottom:1px solid var(--br);}
+.fqi:last-child{border-bottom:none;}
+.fqq{width:100%;padding:14px 18px;background:transparent;border:none;color:var(--tx);font-family:'Inter',sans-serif;font-size:12px;text-align:left;cursor:none;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:color.2s;}
+.fqq:hover{color:var(--ro);}
+.fqic{color:var(--dd);font-size:15px;line-height:1;transition:transform.3s,color.2s;flex-shrink:0;}
+.fqi.op .fqic{transform:rotate(45deg);color:var(--ro);}
+.fqa{max-height:0;overflow:hidden;transition:max-height.4s ease;}
+.fqi.op .fqa{max-height:140px;}
+.fqai{padding:0 18px 14px;font-size:11px;color:var(--dm);line-height:1.72;}
+
+/* ════════════════════════
+   REVIEWS
+════════════════════════ */
+.rev-sec{position:relative;z-index:2;padding:80px 0;}
+.rev-inner{max-width:1200px;margin:0 auto;padding:0 52px;}
+.rev-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;}
+.rev-layout{display:grid;grid-template-columns:1fr 1fr 220px;gap:16px;align-items:start;}
+.rvc{padding:20px;border:1px solid var(--br);border-radius:4px;background:var(--br2);transition:border-color.25s;}
+.rvc:hover{border-color:rgba(212,136,106,.18);}
+.rvt{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+.rva{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:12px;font-weight:400;flex-shrink:0;}
+.rvn{font-weight:500;font-size:12px;}
+.rvd{font-size:9px;color:var(--dd);}
+.rvp{font-size:11px;color:var(--dm);line-height:1.65;margin-bottom:7px;}
+.rvb{display:inline-flex;gap:3px;align-items:center;font-size:8px;color:var(--ro);background:var(--ro2);border:1px solid rgba(212,136,106,.12);border-radius:2px;padding:2px 7px;}
+.rsum{padding:20px;border:1px solid var(--br);border-radius:4px;background:var(--br2);position:sticky;top:68px;}
+.rsn{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;letter-spacing:-.03em;line-height:1;margin-bottom:2px;}
+.rsof{font-size:9px;color:var(--dd);margin-bottom:14px;}
+.rsbars{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.rsrow{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--dm);}
+.rsbtr{flex:1;height:2px;background:rgba(240,226,212,.05);border-radius:1px;overflow:hidden;}
+.rsbf{height:100%;border-radius:1px;background:linear-gradient(90deg,var(--ro),var(--bl));transform-origin:left;transform:scaleX(0);transition:transform 1.4s cubic-bezier(.4,0,.2,1);}
+.rscnt{min-width:14px;text-align:right;}
+.wrbtn{width:100%;padding:8px;background:var(--ro2);border:1px solid rgba(212,136,106,.2);border-radius:3px;color:var(--ro);font-family:'Inter',sans-serif;font-size:10px;font-weight:600;cursor:none;transition:all.25s;}
+.wrbtn:hover{background:rgba(212,136,106,.18);}
+
+/* STICKY */
+#sb{position:fixed;bottom:0;left:0;right:0;z-index:400;display:flex;align-items:center;gap:16px;padding:10px 44px;background:rgba(12,8,7,.95);backdrop-filter:blur(20px);border-top:1px solid var(--br);transform:translateY(100%);transition:transform.4s cubic-bezier(.4,0,.2,1);}
+#sb.up{transform:translateY(0);}
+.sbn{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:300;letter-spacing:.02em;}
+.sbp{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ro);}
+.sbb{padding:9px 28px;background:linear-gradient(135deg,var(--ro),#9e5538);color:var(--bg);border:none;border-radius:4px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:none;transition:all.25s;margin-left:auto;letter-spacing:.03em;}
+.sbb:hover{box-shadow:0 8px 24px rgba(212,136,106,.3);transform:translateY(-1px);}
+
+/* FOOTER */
+footer{padding:32px 52px;border-top:1px solid var(--br);background:var(--w1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;z-index:2;}
+.fb{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:300;letter-spacing:.05em;color:var(--cr);}
+.fb em{font-style:italic;color:var(--ro);}
+.fls{display:flex;gap:16px;}
+.fls a{font-size:10px;color:var(--dd);text-decoration:none;transition:color.2s;letter-spacing:.03em;}
+.fls a:hover{color:var(--ro);}
+.fc2{font-size:9px;color:var(--dd);letter-spacing:.04em;}
+
+/* REVEALS */
+.rv{opacity:0;transform:translateY(16px);transition:opacity.65s ease,transform.65s ease;}
+.rv.v{opacity:1;transform:none;}
+.rl{opacity:0;transform:translateX(-16px);transition:opacity.65s ease,transform.65s ease;}
+.rl.v{opacity:1;transform:none;}
+.rr{opacity:0;transform:translateX(16px);transition:opacity.65s ease,transform.65s ease;}
+.rr.v{opacity:1;transform:none;}
+.sg>*{opacity:0;transform:translateY(12px);transition:opacity.45s ease,transform.45s ease;}
+.sg.v>*:nth-child(1){opacity:1;transform:none;transition-delay:.04s;}
+.sg.v>*:nth-child(2){opacity:1;transform:none;transition-delay:.1s;}
+.sg.v>*:nth-child(3){opacity:1;transform:none;transition-delay:.16s;}
+.sg.v>*:nth-child(4){opacity:1;transform:none;transition-delay:.22s;}
+</style>
+</head>
+<body>
+<div id="cr"></div><div id="cr2"></div>
+<div class="amb" id="amb"></div>
+
+<!-- LOADER -->
+<div id="ldr">
+  <div class="ll-wrap">
+    <div class="ll-tag">Her Care Collection · 2025</div>
+    <div class="ll-name"><em>Aevyrixa</em></div>
+    <div class="ll-line"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nb"><span class="nm"><em>Aevyrixa</em> Her Care</span></a>
+  <div class="ndiv"></div>
+  <div class="nls">
+    <a href="#">Home</a><a href="#">Shop</a>
+    <a href="#" class="on">Product</a>
+    <a href="#">Track Order</a><a href="#">Profile</a>
+  </div>
+  <div class="nsr">
+    <svg class="nsic" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search products...">
+  </div>
+  <a href="#" class="nca">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+    <div class="cbd">2</div>
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="position:relative;z-index:2;max-width:1360px;margin:0 auto;">
+  <div class="hero-bg-txt">PERIOD<br>CARE</div>
+
+  <!-- INFO LEFT -->
+  <div class="hi rl">
+    <div class="hi-path">
+      <a href="#">Products</a><span style="margin:0 4px;color:var(--dd)">·</span>
+      <a href="#">Period Care</a><span style="margin:0 4px;color:var(--dd)">·</span>
+      <span style="color:var(--dm)">Period Panty</span>
+    </div>
+    <div class="hi-tags">
+      <span class="tg a">Available</span>
+      <span class="tg f">✦ Featured</span>
+      <span class="tg m">6 variants</span>
+    </div>
+    <h1 class="hi-title">
+      Aevyrixa<br>
+      <em>Period Panty</em>
+      <strong>Heavy Flow</strong>
+    </h1>
+    <p class="hi-desc">A reusable triple-layer period panty for heavier days. Soft waistband, anti-leak gusset, and breathable moisture-wicking fabric for all-day confidence — without bulk. OEKO-TEX certified, 2+ year lifespan.</p>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+      <div class="pbox">
+        <div class="pmain"><span class="pcur">BDT</span> 39</div>
+        <div class="pold">BDT 52</div>
+        <div class="psave">−25%</div>
+      </div>
+    </div>
+
+    <div class="rrow">
+      <div class="sts">
+        <svg class="st" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="st" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="st" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="st" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="st" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <span>No reviews yet ·</span>
+      <a href="#revs" class="rl">Write the first →</a>
+    </div>
+
+    <div class="opt-wrap">
+      <div class="opt">
+        <div class="olb">Size <a href="#" style="color:var(--ro);font-size:9px;margin-left:8px">Guide →</a></div>
+        <div class="szr">
+          <button class="sz on">XS</button><button class="sz">S</button>
+          <button class="sz">M</button><button class="sz">L</button>
+          <button class="sz">XL</button><button class="sz">XXL</button>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="olb">Absorbency</div>
+        <div class="abr">
+          <button class="ab">Light</button>
+          <button class="ab on">Moderate</button>
+          <button class="ab">Heavy</button>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="olb">Color</div>
+        <div class="clr">
+          <button class="cl on"><div class="cld" style="background:#111;border:1px solid #555"></div>Black</button>
+          <button class="cl"><div class="cld" style="background:#c8a882"></div>Nude</button>
+          <button class="cl"><div class="cld" style="background:#f4a7b9"></div>Soft Pink</button>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="olb">Quantity</div>
+        <div class="qr">
+          <div class="qw"><button class="qb" id="qm">−</button><input class="qn" id="qv" type="number" value="1" min="1"><button class="qb" id="qp">+</button></div>
+          <a href="https://wa.me/" class="wa">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctag">
+      <button class="bac">Add to Cart</button>
+      <button class="bvi">Add & View Cart →</button>
+    </div>
+
+    <div class="perks sg">
+      <div class="pk"><span class="pkd">✦</span>Discreet delivery — no product names on packaging</div>
+      <div class="pk"><span class="pkd">✦</span>Recycled eco-certified packaging</div>
+      <div class="pk"><span class="pkd">✦</span>5-Day Hygiene Support on all orders</div>
+    </div>
+  </div>
+
+  <!-- VISUAL RIGHT -->
+  <div class="hv rr" style="padding-right:52px;">
+    <div class="hv-frame">
+      <canvas id="pcan"></canvas>
+      <div class="hv-corner tl"></div>
+      <div class="hv-corner br"></div>
+      <div class="hv-info">
+        <span class="hvi">Reusable Period Panty</span>
+        <span class="hvi">Moderate Flow</span>
+      </div>
+    </div>
+    <div class="hv-thumbs">
+      <div class="pvt on" id="pt0"><canvas id="tc0"></canvas></div>
+      <div class="pvt" id="pt1"><canvas id="tc1"></canvas></div>
+      <div class="pvt" id="pt2"><canvas id="tc2"></canvas></div>
+      <div class="pvt" id="pt3"><canvas id="tc3"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- MOVING TICKER (2 rows) -->
+<div class="ticker">
+  <div class="tk-row fwd">
+    <div class="tki"><span class="tklb">Absorbency</span><span class="tkv">3–4 Tampons</span><span class="tksep">·</span><span class="tklb">Layers</span><span class="tkv">Triple-Layer Gusset</span><span class="tksep">·</span><span class="tklb">Lifespan</span><span class="tkv">2+ Years</span><span class="tksep">·</span><span class="tklb">Material</span><span class="tkv">OEKO-TEX Certified</span><span class="tksep">·</span><span class="tklb">Packaging</span><span class="tkv">100% Recycled</span><span class="tksep">·</span><span class="tklb">Wash</span><span class="tkv">Machine Wash Cold</span><span class="tksep">·</span><span class="tklb">Sizes</span><span class="tkv">XS · S · M · L · XL · XXL</span><span class="tksep">·</span></div>
+    <div class="tki"><span class="tklb">Absorbency</span><span class="tkv">3–4 Tampons</span><span class="tksep">·</span><span class="tklb">Layers</span><span class="tkv">Triple-Layer Gusset</span><span class="tksep">·</span><span class="tklb">Lifespan</span><span class="tkv">2+ Years</span><span class="tksep">·</span><span class="tklb">Material</span><span class="tkv">OEKO-TEX Certified</span><span class="tksep">·</span><span class="tklb">Packaging</span><span class="tkv">100% Recycled</span><span class="tksep">·</span><span class="tklb">Wash</span><span class="tkv">Machine Wash Cold</span><span class="tksep">·</span><span class="tklb">Sizes</span><span class="tkv">XS · S · M · L · XL · XXL</span><span class="tksep">·</span></div>
+  </div>
+</div>
+
+<!-- LAYER SECTION -->
+<section class="layers-sec rv" id="layers">
+  <div class="layers-inner">
+    <div class="sec-eyebrow"><span class="eyechip">Construction</span><div class="eyeline"></div></div>
+    <h2 class="sec-title">Three layers.<br><em>One purpose.</em></h2>
+    <p class="sec-sub">Each layer engineered for a clear role. Together they deliver protection that outperforms any disposable — every single day.</p>
+    <div class="layer-diag sg">
+      <div class="lcard">
+        <div class="lc-n">Layer 01</div>
+        <div class="lc-t">Moisture Wicking</div>
+        <p class="lc-d">Ultra-soft outer fabric pulls moisture away instantly. Stays dry to the touch. Breathable mesh structure prevents heat buildup throughout the day.</p>
+        <div class="lc-b" style="background:var(--ro2);color:var(--ro)">Anti-Bacterial</div>
+      </div>
+      <div class="lcard">
+        <div class="lc-n">Layer 02</div>
+        <div class="lc-t">Absorbent Core</div>
+        <p class="lc-d">High-density microfiber holds 3–4 tampons of flow. Distributes fluid evenly across the gusset — no overflow, no shifting, no surprises.</p>
+        <div class="lc-b" style="background:var(--bl2);color:var(--bl)">Heavy Flow Ready</div>
+      </div>
+      <div class="lcard">
+        <div class="lc-n">Layer 03</div>
+        <div class="lc-t">Leak Barrier</div>
+        <p class="lc-d">Waterproof PUL completely blocks leakage while still allowing air circulation. Protects clothing without that sealed-in feeling.</p>
+        <div class="lc-b" style="background:var(--pu2);color:#c084b8">Waterproof</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section class="benefits-sec rv" id="benefits">
+  <div class="benefits-inner">
+    <div class="sec-eyebrow"><span class="eyechip">Promise</span><div class="eyeline"></div></div>
+    <h2 class="sec-title">Four reasons<br><em>to trust it</em></h2>
+    <div class="ben-rows sg">
+      <div class="ben-row">
+        <div class="bn-n">01</div>
+        <div class="bn-l"><div class="bn-t">Comfort All Day</div><div class="bn-tag" style="background:var(--ro2);color:var(--ro)">All-Day Wear</div></div>
+        <p class="bn-d">Soft waistband and seamless gusset design sit flat under any outfit. You'll forget you're wearing protection at all — no readjusting, no discomfort.</p>
+      </div>
+      <div class="ben-row">
+        <div class="bn-n">02</div>
+        <div class="bn-l"><div class="bn-t">Zero Visible Bulk</div><div class="bn-tag" style="background:var(--bl2);color:var(--bl)">Invisible Fit</div></div>
+        <p class="bn-d">Contoured cut sits flat under jeans, activewear or a dress. No pad lines. No visible bulk. Full protection, completely hidden from view.</p>
+      </div>
+      <div class="ben-row">
+        <div class="bn-n">03</div>
+        <div class="bn-l"><div class="bn-t">Truly Reusable</div><div class="bn-tag" style="background:var(--pu2);color:#c084b8">2+ Year Life</div></div>
+        <p class="bn-d">Replaces hundreds of disposables per year. Gets softer with every wash. Pays for itself within a single cycle and keeps paying back for years.</p>
+      </div>
+      <div class="ben-row">
+        <div class="bn-n">04</div>
+        <div class="bn-l"><div class="bn-t">Body Safe Always</div><div class="bn-tag" style="background:rgba(0,180,90,.08);color:#00b45a">OEKO-TEX</div></div>
+        <p class="bn-d">No harmful chemicals, no irritating dyes — every fabric tested and certified safe for sensitive skin. Gentle exactly where it matters most.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FIT CARE SUPPORT -->
+<section class="fcs-sec rv" id="fcs">
+  <div class="fcs-inner">
+    <div class="fcs-top">
+      <div>
+        <div class="sec-eyebrow" style="margin-bottom:12px"><span class="eyechip" style="color:var(--bl)">Guidance</span><div class="eyeline"></div></div>
+        <h2 class="sec-title">Fit, Care<br><em>& Support</em></h2>
+      </div>
+      <p style="font-size:12px;color:var(--dm);line-height:1.75">Everything about fit, washing, and after-purchase support — in one place. If still unsure, we're one WhatsApp message away, seven days a week.</p>
+    </div>
+    <div class="fcs-cards sg">
+      <div class="fcard"><div class="fcard-ic r">📏</div><div class="fcard-h rc">Fit</div><p class="fcard-p">Available XS–XXL. If between sizes, size up — the waistband stretches generously. Check the size guide before ordering for best results.</p></div>
+      <div class="fcard"><div class="fcard-ic b">💧</div><div class="fcard-h bc">Care</div><p class="fcard-p">Rinse cold after use. Machine wash gentle, cold. No bleach, no softener, no tumble drying. Line dry only. Lasts 2+ years with correct care.</p></div>
+      <div class="fcard"><div class="fcard-ic p">🛡️</div><div class="fcard-h pc">Support</div><p class="fcard-p">5-Day Hygiene Support for damaged orders. Keep packaging until confirmed. WhatsApp — response within hours, including weekends.</p></div>
+    </div>
+    <div class="faq">
+      <div class="fqi"><button class="fqq">Can I wear it alone on heavy days?<span class="fqic">+</span></button><div class="fqa"><div class="fqai">Yes. The triple-layer gusset holds 3–4 tampons on its own. For very heavy days, pair with a cup for extra security. Most users wear it standalone from day one.</div></div></div>
+      <div class="fqi"><button class="fqq">How do I wash it properly?<span class="fqic">+</span></button><div class="fqa"><div class="fqai">Rinse cold until water runs clear. Machine wash cold, gentle cycle, mild detergent. No bleach, softener, or tumble drying. Hang dry. With this routine it lasts 2+ years easily.</div></div></div>
+      <div class="fqi"><button class="fqq">How do I find my size?<span class="fqic">+</span></button><div class="fqa"><div class="fqai">Measure the widest point of your hips and match to the size chart. Between sizes? Always go up. Still unsure? Message us on WhatsApp for a personal recommendation.</div></div></div>
+      <div class="fqi"><button class="fqq">Is the delivery packaging discreet?<span class="fqic">+</span></button><div class="fqa"><div class="fqai">Completely. Plain outer packaging, no brand or product name visible outside. Return address shows "Aevyrixa HC" only. Your privacy is always protected.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="rev-sec rv" id="revs">
+  <div class="rev-inner">
+    <div class="rev-top">
+      <div>
+        <div class="sec-eyebrow" style="margin-bottom:10px"><span class="eyechip">Reviews</span><div class="eyeline"></div></div>
+        <h2 class="sec-title" style="font-size:clamp(28px,3vw,40px)">Real &amp; <em>verified</em></h2>
+      </div>
+      <button class="wrbtn" style="width:auto;padding:8px 18px">✍ Write a Review</button>
+    </div>
+    <div class="rev-layout sg">
+      <div class="rvc">
+        <div class="rvt">
+          <div class="rva" style="background:var(--ro2);color:var(--ro);border:1px solid rgba(212,136,106,.15)">RN</div>
+          <div><div class="rvn">Rafi Noor</div><div class="rvd">Verified · 2 weeks ago</div></div>
+          <div class="sts" style="margin-left:auto">
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+        </div>
+        <p class="rvp">Completely replaced my disposables. Zero leaks on my heaviest days. Sizing guide was accurate and the delivery was totally discreet.</p>
+        <div class="rvb">✓ Admin Approved</div>
+      </div>
+      <div class="rvc">
+        <div class="rvt">
+          <div class="rva" style="background:var(--pu2);color:#c084b8;border:1px solid rgba(123,63,110,.2)">SK</div>
+          <div><div class="rvn">Sadia Khan</div><div class="rvd">Verified · 1 month ago</div></div>
+          <div class="sts" style="margin-left:auto">
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st y" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="st" width="10" height="10" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+        </div>
+        <p class="rvp">Packaging was perfectly discreet. Premium quality for the price. Fit spot-on with the guide. Will order more colours soon.</p>
+        <div class="rvb">✓ Admin Approved</div>
+      </div>
+      <div class="rsum">
+        <div class="rsn">4.5</div>
+        <div class="rsof">2 verified reviews</div>
+        <div class="rsbars">
+          <div class="rsrow"><span>5★</span><div class="rsbtr"><div class="rsbf" style="width:60%"></div></div><span class="rscnt">1</span></div>
+          <div class="rsrow"><span>4★</span><div class="rsbtr"><div class="rsbf" style="width:40%;animation-delay:.1s"></div></div><span class="rscnt">1</span></div>
+          <div class="rsrow"><span>3★</span><div class="rsbtr"><div class="rsbf" style="width:0"></div></div><span class="rscnt">0</span></div>
+          <div class="rsrow"><span>2★</span><div class="rsbtr"><div class="rsbf" style="width:0"></div></div><span class="rscnt">0</span></div>
+          <div class="rsrow"><span>1★</span><div class="rsbtr"><div class="rsbf" style="width:0"></div></div><span class="rscnt">0</span></div>
+        </div>
+        <button class="wrbtn">✍ Write a Review</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fb"><em>Aevyrixa</em> Her Care</div>
+  <div class="fls"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Returns</a><a href="#">WhatsApp</a><a href="#">Contact</a></div>
+  <div class="fc2">© 2025 Aevyrixa. All rights reserved.</div>
+</footer>
+
+<div id="sb">
+  <div><div class="sbn">Period Panty — Heavy Flow Support</div><div class="sbp">BDT 39 <span style="color:var(--dd);font-size:11px;font-family:'Inter';text-decoration:line-through">52</span></div></div>
+  <button class="sbb">Add to Cart</button>
+</div>
+
+<script>
+// LOADER
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('ldr').classList.add('out'),1600));
+
+// CURSOR
+const cr=document.getElementById('cr'),cr2=document.getElementById('cr2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function t(){cr.style.left=mx+'px';cr.style.top=my+'px';rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cr2.style.left=rx+'px';cr2.style.top=ry+'px';requestAnimationFrame(t);})();
+
+// PRODUCT CANVAS — warm rose glow style
+function drawProd(el, phase){
+  if(!el)return;
+  const p=el.parentElement;
+  el.width=p?p.offsetWidth:el.offsetWidth||400;
+  el.height=p?p.offsetHeight:el.offsetHeight||400;
+  const ctx=el.getContext('2d');
+  let t=phase||0;
+  const isThumb=el.id!=='pcan';
+  function draw(){
+    const W=el.width,H=el.height,cx=W/2,cy=H/2;
+    ctx.clearRect(0,0,W,H);
+    // warm bg
+    const bg=ctx.createRadialGradient(cx,cy*.7,0,cx,cy,W*.75);
+    bg.addColorStop(0,'rgba(90,40,28,.55)');
+    bg.addColorStop(.5,'rgba(40,18,12,.3)');
+    bg.addColorStop(1,'rgba(12,8,7,0)');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    // warm glow rings
+    for(let i=3;i>=1;i--){
+      const r=Math.min(W,H)*.23+i*Math.min(W,H)*.055;
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(212,136,106,${.05/i})`;ctx.lineWidth=1;ctx.stroke();
+    }
+    // float
+    const fy=cy+Math.sin(t*.42)*(isThumb?3.5:9);
+    const fw=Math.min(W,H)*(isThumb?.33:.35);
+    const fh=fw*.57;
+    // shadow
+    ctx.save();ctx.globalAlpha=.12;
+    const sg=ctx.createRadialGradient(cx,fy+fh*.82,0,cx,fy+fh*.82,fw*.55);
+    sg.addColorStop(0,'rgba(212,136,106,.3)');sg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(cx,fy+fh*.82,fw*.5,fh*.13,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    // warm body
+    const body=ctx.createLinearGradient(cx-fw,fy-fh,cx+fw,fy+fh);
+    body.addColorStop(0,'rgba(220,160,130,.22)');
+    body.addColorStop(.5,'rgba(190,120,90,.13)');
+    body.addColorStop(1,'rgba(140,80,55,.06)');
+    ctx.beginPath();ctx.ellipse(cx,fy,fw,fh,0,0,Math.PI*2);
+    ctx.fillStyle=body;ctx.fill();
+    ctx.strokeStyle='rgba(212,136,106,.4)';ctx.lineWidth=1.2;ctx.stroke();
+    // waistband
+    ctx.beginPath();ctx.ellipse(cx,fy-fh*.61,fw*.7,fh*.1,0,0,Math.PI*2);
+    ctx.strokeStyle='rgba(212,136,106,.22)';ctx.lineWidth=.8;ctx.stroke();
+    // gusset
+    const gg=ctx.createRadialGradient(cx,fy+fh*.09,0,cx,fy+fh*.09,fw*.32);
+    gg.addColorStop(0,'rgba(212,136,106,.2)');gg.addColorStop(1,'rgba(212,136,106,.02)');
+    ctx.beginPath();ctx.ellipse(cx,fy+fh*.09,fw*.36,fh*.36,0,0,Math.PI*2);
+    ctx.fillStyle=gg;ctx.fill();ctx.strokeStyle='rgba(212,136,106,.2)';ctx.lineWidth=.8;ctx.stroke();
+    // highlight
+    const hl=ctx.createLinearGradient(cx-fw*.4,fy-fh*.44,cx,fy);
+    hl.addColorStop(0,'rgba(255,240,230,.14)');hl.addColorStop(1,'rgba(255,240,230,0)');
+    ctx.beginPath();ctx.ellipse(cx-fw*.1,fy-fh*.19,fw*.27,fh*.17,-.28,0,Math.PI*2);
+    ctx.fillStyle=hl;ctx.fill();
+    // layer lines warm
+    [{y:fy-fh*.14,a:.08},{y:fy+fh*.06,a:.05},{y:fy+fh*.22,a:.04}].forEach(l=>{
+      ctx.beginPath();ctx.moveTo(cx-fw*.52,l.y);ctx.lineTo(cx+fw*.52,l.y);
+      ctx.strokeStyle=`rgba(212,136,106,${l.a})`;ctx.lineWidth=.6;ctx.stroke();
+    });
+    t+=.014;requestAnimationFrame(draw);
+  }
+  draw();
+}
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    const pc=document.getElementById('pcan');
+    if(pc){pc.width=pc.parentElement.offsetWidth;pc.height=pc.parentElement.offsetHeight;drawProd(pc,0);}
+    document.querySelectorAll('[id^=tc]').forEach((tc,i)=>{tc.width=56;tc.height=56;drawProd(tc,i*1.8);});
+  },100);
+});
+
+// NAV + STICKY
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('sc',scrollY>30);
+  document.getElementById('sb').classList.toggle('up',scrollY>520);
+});
+
+// REVEALS
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v');}),{threshold:.1});
+document.querySelectorAll('.rv,.rl,.rr,.sg').forEach(el=>obs.observe(el));
+
+// INTERACTIONS
+document.querySelectorAll('.sz').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.sz').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+document.querySelectorAll('.cl').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.cl').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+document.querySelectorAll('.ab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.ab').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+document.querySelectorAll('[id^=pt]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[id^=pt]').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+document.getElementById('qm').addEventListener('click',()=>{const v=document.getElementById('qv');if(+v.value>1)v.value=+v.value-1;});
+document.getElementById('qp').addEventListener('click',()=>{const v=document.getElementById('qv');v.value=+v.value+1;});
+document.querySelectorAll('.fqq').forEach(q=>q.addEventListener('click',()=>{const it=q.parentElement,op=it.classList.contains('op');document.querySelectorAll('.fqi').forEach(i=>i.classList.remove('op'));if(!op)it.classList.add('op');}));
+</script>
+</body>
+</html>

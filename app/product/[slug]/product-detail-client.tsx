@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,10 +32,7 @@ import {
   stockBadgeClass,
   stockStatusLabel,
 } from "@/app/lib/product-display";
-import {
-  formatProductPrice,
-  type ProductVisualTheme,
-} from "@/app/lib/products";
+import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
 import type { ProductCatalogItem } from "@/app/lib/product-types";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
@@ -48,36 +45,32 @@ const themeStyles: Record<
     badge: string;
     selected: string;
     primary: string;
-    panel: string;
     glow: string;
     border: string;
   }
 > = {
   "blush-violet": {
     accent: "text-[#FF4DB8]",
-    badge: "border-[#FF4DB8]/22 bg-[#2A183D]/80 text-[#FFB3D1]",
-    selected: "border-[#FF4DB8]/50 bg-[#2A183D] text-white",
+    badge: "border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] text-[#FFB3D1]",
+    selected: "border-[#FF4DB8]/60 bg-[#FF4DB8]/[0.10] text-[#FFB3D1]",
     primary: "from-[#FF4DB8] to-[#FF3FA4] text-white",
-    panel: "shadow-[0_8px_32px_rgba(255,77,184,0.12)]",
-    glow: "bg-[#FF4DB8]/[0.10]",
+    glow: "bg-[#FF4DB8]/[0.12]",
     border: "border-[#FF4DB8]/18 hover:border-[#FF4DB8]/40",
   },
   "cyan-night": {
-    accent: "text-[#00D4C6]",
-    badge: "border-[#00D4C6]/22 bg-[#0F1E2A]/80 text-[#31E6D4]",
-    selected: "border-[#00D4C6]/50 bg-[#102028] text-white",
+    accent: "text-[#31E6D4]",
+    badge: "border-[#00D4C6]/24 bg-[#00D4C6]/[0.08] text-[#31E6D4]",
+    selected: "border-[#00D4C6]/60 bg-[#00D4C6]/[0.10] text-[#31E6D4]",
     primary: "from-[#00D4C6] to-[#0FB8AC] text-[#080611]",
-    panel: "shadow-[0_8px_32px_rgba(0,212,198,0.10)]",
-    glow: "bg-[#00D4C6]/[0.08]",
+    glow: "bg-[#00D4C6]/[0.10]",
     border: "border-[#00D4C6]/18 hover:border-[#00D4C6]/40",
   },
   "rose-gold": {
-    accent: "text-[#A855F7]",
-    badge: "border-[#A855F7]/22 bg-[#1E1240]/80 text-[#C084FC]",
-    selected: "border-[#A855F7]/50 bg-[#231448] text-white",
+    accent: "text-[#C084FC]",
+    badge: "border-[#A855F7]/24 bg-[#A855F7]/[0.10] text-[#C084FC]",
+    selected: "border-[#A855F7]/60 bg-[#A855F7]/[0.12] text-[#C084FC]",
     primary: "from-[#A855F7] to-[#8B5CF6] text-white",
-    panel: "shadow-[0_8px_32px_rgba(168,85,247,0.10)]",
-    glow: "bg-[#A855F7]/[0.09]",
+    glow: "bg-[#A855F7]/[0.12]",
     border: "border-[#A855F7]/18 hover:border-[#A855F7]/40",
   },
 };
@@ -95,8 +88,7 @@ const safeTickerFallback = [
 const safeSupportFallbackFaqs = [
   {
     question: "How should I check the size?",
-    answer:
-      "Check fit over clean underwear or clean fitted clothing only before direct wear.",
+    answer: "Check fit over clean underwear or clean fitted clothing only before direct wear.",
   },
   {
     question: "What keeps an item eligible for support?",
@@ -147,13 +139,9 @@ export default function ProductDetailClient({
     themeStyles[displayProduct.visualTheme] ?? themeStyles["blush-violet"];
   const canAddToCart = isPurchasableStock(displayProduct.stockStatus);
 
-  const [selectedSize, setSelectedSize] = useState<string>(
-    displayProduct.sizes[0] || ""
-  );
-  const [selectedColor, setSelectedColor] = useState<string>(
-    displayProduct.colors[0] || ""
-  );
-  const [selectedAbsorbency, setSelectedAbsorbency] = useState<string>(
+  const [selectedSize, setSelectedSize] = useState(displayProduct.sizes[0] || "");
+  const [selectedColor, setSelectedColor] = useState(displayProduct.colors[0] || "");
+  const [selectedAbsorbency, setSelectedAbsorbency] = useState(
     displayProduct.absorbencyOptions[0] || displayProduct.absorbency
   );
   const [quantity, setQuantity] = useState(1);
@@ -162,8 +150,79 @@ export default function ProductDetailClient({
     () => new Set()
   );
 
-  const decreaseQuantity = () =>
-    setQuantity((q) => Math.max(1, q - 1));
+  const mediaItems: MediaItem[] = [];
+  const seenUrls = new Set<string>();
+  if (displayProduct.imageUrl) {
+    seenUrls.add(displayProduct.imageUrl);
+    mediaItems.push({ type: "image", url: displayProduct.imageUrl });
+  }
+  const extraImages = Array.isArray(displayProduct.images) ? displayProduct.images : [];
+  for (const img of extraImages) {
+    if (typeof img === "string" && img && !seenUrls.has(img)) {
+      seenUrls.add(img);
+      mediaItems.push({ type: "image", url: img });
+    }
+  }
+  if (displayProduct.videoUrl) {
+    mediaItems.push({
+      type: "video",
+      url: displayProduct.videoUrl,
+      poster: displayProduct.posterUrl ?? displayProduct.imageUrl,
+    });
+  }
+
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const safeIndex = Math.min(selectedMediaIndex, Math.max(0, mediaItems.length - 1));
+  const selectedMedia =
+    mediaItems.length > 0 && !brokenMediaUrls.has(mediaItems[safeIndex].url)
+      ? mediaItems[safeIndex]
+      : null;
+  const showThumbnails = mediaItems.length > 1;
+  const selectedSummary = [selectedSize, selectedColor, selectedAbsorbency]
+    .filter(Boolean)
+    .join(" / ");
+  const supportHref = settings.whatsappUrl || "/support";
+  const supportLabel = settings.whatsappUrl ? "WhatsApp help" : "Live support";
+  const deliveryText =
+    settings.deliveryCoverageText ||
+    "Bangladesh delivery is available with order confirmation before dispatch.";
+  const privacyText =
+    settings.privacyPackagingMessage || "Orders ship in discreet privacy packaging.";
+  const supportText =
+    settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible concerns.";
+  const sizeFitItems = [
+    displayProduct.sizes.length > 0
+      ? `Available sizes: ${displayProduct.sizes.join(", ")}`
+      : "Size availability is shown before checkout.",
+    "If you are between sizes, choose the fit that feels more comfortable around the waist and leg opening.",
+    "Check fit over clean clothing before direct wear.",
+  ];
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxOpen]);
+
+  const touchStartXRef = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || mediaItems.length < 2) return;
+    const delta = e.changedTouches[0].clientX - touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (Math.abs(delta) < 50) return;
+    setSelectedMediaIndex((i) =>
+      delta < 0 ? (i + 1) % mediaItems.length : (i - 1 + mediaItems.length) % mediaItems.length
+    );
+  };
+
+  const decreaseQuantity = () => setQuantity((q) => Math.max(1, q - 1));
   const increaseQuantity = () => setQuantity((q) => q + 1);
 
   const handleAddToCart = (goToCart = false) => {
@@ -186,12 +245,7 @@ export default function ProductDetailClient({
       .join(" / ");
     addItem(
       {
-        id: buildCartLineId(
-          displayProduct,
-          selectedSize,
-          selectedColor,
-          selectedAbsorbency
-        ),
+        id: buildCartLineId(displayProduct, selectedSize, selectedColor, selectedAbsorbency),
         productId: displayProduct.id,
         slug: displayProduct.slug,
         name: displayProduct.name,
@@ -208,90 +262,6 @@ export default function ProductDetailClient({
       quantity
     );
     if (goToCart) router.push("/cart");
-  };
-
-  // Build media gallery
-  const mediaItems: MediaItem[] = [];
-  const seenUrls = new Set<string>();
-  if (displayProduct.imageUrl) {
-    seenUrls.add(displayProduct.imageUrl);
-    mediaItems.push({ type: "image", url: displayProduct.imageUrl });
-  }
-  const extraImages = Array.isArray(displayProduct.images)
-    ? displayProduct.images
-    : [];
-  for (const img of extraImages) {
-    if (typeof img === "string" && img && !seenUrls.has(img)) {
-      seenUrls.add(img);
-      mediaItems.push({ type: "image", url: img });
-    }
-  }
-  if (displayProduct.videoUrl) {
-    mediaItems.push({
-      type: "video",
-      url: displayProduct.videoUrl,
-      poster: displayProduct.posterUrl ?? displayProduct.imageUrl,
-    });
-  }
-
-  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
-  const safeIndex = Math.min(
-    selectedMediaIndex,
-    Math.max(0, mediaItems.length - 1)
-  );
-  const selectedMedia =
-    mediaItems.length > 0 && !brokenMediaUrls.has(mediaItems[safeIndex].url)
-      ? mediaItems[safeIndex]
-      : null;
-  const showThumbnails = mediaItems.length > 1;
-  const selectedSummary = [selectedSize, selectedColor, selectedAbsorbency]
-    .filter(Boolean)
-    .join(" / ");
-  const supportHref = settings.whatsappUrl || "/support";
-  const supportLabel = settings.whatsappUrl ? "WhatsApp help" : "Live support";
-  const deliveryText =
-    settings.deliveryCoverageText ||
-    "Bangladesh delivery is available with order confirmation before dispatch.";
-  const privacyText =
-    settings.privacyPackagingMessage ||
-    "Orders ship in discreet privacy packaging.";
-  const supportText =
-    settings.supportWindowMessage ||
-    "3-Day Hygiene-Safe Support on eligible concerns.";
-  const sizeFitItems = [
-    displayProduct.sizes.length > 0
-      ? `Available sizes: ${displayProduct.sizes.join(", ")}`
-      : "Size availability is shown before checkout.",
-    "If you are between sizes, choose the fit that feels more comfortable around the waist and leg opening.",
-    "Check fit over clean clothing before direct wear.",
-  ];
-
-  // Lightbox
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxOpen(false);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [lightboxOpen]);
-
-  // Touch swipe for mobile gallery navigation
-  const touchStartXRef = useRef<number | null>(null);
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0].clientX;
-  };
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current === null || mediaItems.length < 2) return;
-    const delta = e.changedTouches[0].clientX - touchStartXRef.current;
-    touchStartXRef.current = null;
-    if (Math.abs(delta) < 50) return;
-    if (delta < 0) {
-      setSelectedMediaIndex((i) => (i + 1) % mediaItems.length);
-    } else {
-      setSelectedMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length);
-    }
   };
 
   const hasSavings =
@@ -313,45 +283,7 @@ export default function ProductDetailClient({
           (reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount) * 10
         ) / 10
       : 0;
-  const topTrustItems = [
-    { icon: PackageCheck, text: privacyText },
-    { icon: Truck, text: deliveryText },
-    { icon: ShieldCheck, text: supportText },
-  ];
-  const promiseCards = [
-    ...benefits.slice(0, 4).map((benefit, index) => ({
-      title:
-        index === 0
-          ? "Comfort"
-          : index === 1
-            ? "Confidence"
-            : index === 2
-              ? "Routine"
-              : "Care",
-      body: benefit,
-    })),
-  ];
-  const carePanels = [
-    {
-      icon: Ruler,
-      title: "Fit",
-      items: sizeFitItems.slice(0, 3),
-    },
-    {
-      icon: CheckCircle2,
-      title: "Care",
-      items: care.slice(0, 3),
-    },
-    {
-      icon: ShieldCheck,
-      title: "Support",
-      items: [
-        supportText,
-        "Keep hygiene seal and packaging intact until fit is confirmed.",
-        "Message us for size, care, or order help before checkout.",
-      ],
-    },
-  ];
+
   const productSignalBadges = [
     displayProduct.badgeText,
     displayProduct.isBestSeller ? "Best Seller" : "",
@@ -372,32 +304,22 @@ export default function ProductDetailClient({
     )
     .filter(Boolean);
   const layerCards = [
-    {
-      title: hms.layerComfortLayer1Title,
-      body: hms.layerComfortLayer1Description,
-    },
-    {
-      title: hms.layerComfortLayer2Title,
-      body: hms.layerComfortLayer2Description,
-    },
-    {
-      title: hms.layerComfortLayer3Title,
-      body: hms.layerComfortLayer3Description,
-    },
+    { title: hms.layerComfortLayer1Title, body: hms.layerComfortLayer1Description },
+    { title: hms.layerComfortLayer2Title, body: hms.layerComfortLayer2Description },
+    { title: hms.layerComfortLayer3Title, body: hms.layerComfortLayer3Description },
   ].filter((card) => card.title || card.body);
+  const displayLayerCards =
+    layerCards.length > 0
+      ? layerCards
+      : [
+          { title: "Comfort Knit Layer", body: "Soft, stretch-fit fabric that moves naturally with your body through the day." },
+          { title: "Absorbent Core", body: "A slim internal layer for quiet, discreet support during light to moderate flow." },
+          { title: "Protective Shell", body: "A smooth outer layer with a refined silhouette and clean, everyday finish." },
+        ];
   const supportFaqs = [
-    {
-      question: hms.faqPreviewItem1Question,
-      answer: hms.faqPreviewItem1Answer,
-    },
-    {
-      question: hms.faqPreviewItem2Question,
-      answer: hms.faqPreviewItem2Answer,
-    },
-    {
-      question: hms.faqPreviewItem3Question,
-      answer: hms.faqPreviewItem3Answer,
-    },
+    { question: hms.faqPreviewItem1Question, answer: hms.faqPreviewItem1Answer },
+    { question: hms.faqPreviewItem2Question, answer: hms.faqPreviewItem2Answer },
+    { question: hms.faqPreviewItem3Question, answer: hms.faqPreviewItem3Answer },
   ].filter((faq) => faq.question && faq.answer);
   const displayFaqs = supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
   const selectedImageUrl = selectedMedia?.type === "image" ? selectedMedia.url : "";
@@ -412,15 +334,28 @@ export default function ProductDetailClient({
     (hms.layerComfortMediaMode === "video_text" ||
       hms.layerComfortMediaMode === "background_media_text" ||
       hms.layerComfortMediaMode === "media_only");
+  const promiseCards = benefits.slice(0, 4).map((benefit, index) => ({
+    title: ["Comfort", "Confidence", "Routine", "Care"][index] || "Benefit",
+    body: benefit,
+  }));
+  const carePanels = [
+    { icon: Ruler, title: "Fit", items: sizeFitItems.slice(0, 3), tone: "text-[#FF4DB8]" },
+    { icon: CheckCircle2, title: "Care", items: care.slice(0, 3), tone: "text-[#31E6D4]" },
+    {
+      icon: ShieldCheck,
+      title: "Support",
+      items: [
+        supportText,
+        "Keep hygiene seal and packaging intact until fit is confirmed.",
+        "Message us for size, care, or order help before checkout.",
+      ],
+      tone: "text-[#C084FC]",
+    },
+  ];
 
   return (
-    <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+7rem+env(safe-area-inset-bottom,0px))] text-white md:pb-40 lg:pb-0">
-      {/* Background glows */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-18%] top-[5%] h-[310px] w-[310px] rounded-full bg-[#FF4DB8]/[0.07] blur-[120px]" />
-        <div className="absolute right-[-18%] top-[20%] h-[360px] w-[360px] rounded-full bg-[#A855F7]/[0.06] blur-[140px]" />
-        <div className="absolute bottom-[-14%] left-[28%] h-[280px] w-[280px] rounded-full bg-[#00D4C6]/[0.05] blur-[120px]" />
-      </div>
+    <main className="aev-bloom-product min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+6rem+env(safe-area-inset-bottom,0px))] text-white lg:pb-0">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_48%_at_18%_26%,rgba(255,77,184,0.11),transparent_62%),radial-gradient(ellipse_50%_40%_at_82%_64%,rgba(0,212,198,0.08),transparent_60%),linear-gradient(180deg,#080611,#090713_48%,#050711)]" />
 
       <SiteHeader
         active="product"
@@ -428,291 +363,267 @@ export default function ProductDetailClient({
         settings={settings}
       />
 
-      <section className="mx-auto max-w-[98rem] px-4 pb-10 pt-5 sm:px-6 md:pt-10 lg:px-8 2xl:px-6">
-        <div className="grid w-full min-w-0 max-w-full gap-5 overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[linear-gradient(132deg,rgba(255,77,184,0.08),rgba(21,16,36,0.96)_34%,rgba(0,212,198,0.055)_100%)] p-2.5 shadow-[0_28px_120px_rgba(0,0,0,0.44),0_0_70px_rgba(255,77,184,0.10)] sm:rounded-[2rem] sm:p-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(25rem,0.8fr)] lg:gap-0">
-          <div className="min-w-0 p-1 sm:p-2 lg:p-4">
-            <div
-              className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.20),transparent_34%),radial-gradient(circle_at_16%_82%,rgba(0,212,198,0.10),transparent_32%),linear-gradient(145deg,#1B1230,#07050E)] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:rounded-[1.8rem]"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              <div className={`pointer-events-none absolute inset-8 rounded-full opacity-55 blur-[72px] ${style.glow}`} />
-              <div className="aspect-[1.18] w-full min-[430px]:aspect-[1.2] lg:aspect-[1.08] xl:aspect-[1.18]">
-                {selectedMedia?.type === "video" ? (
-                  <video
-                    src={selectedMedia.url}
-                    poster={selectedMedia.poster}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full bg-[#0B0F1A] object-contain"
-                    onError={() =>
-                      setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
-                    }
-                  />
-                ) : selectedMedia?.type === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={safeIndex}
-                    src={selectedMedia.url}
-                    alt={displayProduct.name}
-                    loading={safeIndex === 0 ? "eager" : "lazy"}
-                    decoding="async"
-                    className="aev-media-img-reveal relative h-full w-full cursor-zoom-in object-contain p-3 transition duration-500 hover:scale-[1.015] sm:p-6 lg:p-8"
-                    onClick={() => setLightboxOpen(true)}
-                    onError={() =>
-                      setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
-                    }
-                  />
-                ) : (
-                  <ProductVisual
-                    visualTheme={displayProduct.visualTheme}
-                    label={displayProduct.absorbency}
-                  />
-                )}
-              </div>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-gradient-to-t from-[#080611]/88 via-[#080611]/34 to-transparent p-3 sm:p-5">
-                <span className="rounded-full border border-[#FF4DB8]/24 bg-[#080611]/75 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FFB3D1] backdrop-blur-sm">
-                  {displayProduct.category || "Aevyrixa Her Care"}
-                </span>
-                <span className="hidden rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D8CBE8] backdrop-blur-sm sm:inline-flex">
-                  Tap to view
-                </span>
-              </div>
-            </div>
+      <section className="relative z-[2] grid min-h-[calc(100vh-3.5rem)] items-center gap-8 px-4 pb-10 pt-20 sm:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(25rem,32.5rem)] lg:gap-10 lg:px-12 lg:py-24">
+        <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
+          Aevyrixa
+        </div>
 
-            {showThumbnails && (
-              <div className="mt-3 flex snap-x gap-2.5 overflow-x-auto pb-1 sm:gap-3">
-                {mediaItems.map((item, index) => (
-                  <button
-                    key={`${item.type}-${item.url}-${index}`}
-                    onClick={() => setSelectedMediaIndex(index)}
-                    aria-label={
-                      item.type === "video"
-                        ? "Play video"
-                        : `Product image ${index + 1}`
-                    }
-                    disabled={brokenMediaUrls.has(item.url)}
-                    className={`relative h-[64px] w-[64px] shrink-0 snap-start overflow-hidden rounded-2xl border transition sm:h-[82px] sm:w-[82px] lg:h-[92px] lg:w-[92px] ${
-                      safeIndex === index
-                        ? "aev-media-thumb-active border-[#FF4DB8]/70 bg-[#211633] shadow-[0_0_24px_rgba(255,77,184,0.18)]"
-                        : "border-white/[0.08] bg-[#1B1230] hover:border-[#FF4DB8]/32"
-                    } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : ""}`}
-                  >
-                    {item.type === "image" ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.url}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                        onError={() =>
-                          setBrokenMediaUrls((urls) => new Set(urls).add(item.url))
-                        }
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle,rgba(255,77,184,0.20),transparent_58%),#1B1230]">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#080611]/76">
-                          <Play className="h-4 w-4 fill-[#FF4DB8]/70 text-[#FF4DB8]/80" />
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
+        <div className="relative z-[1] min-w-0">
+          <div className="mb-7 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6B5F7A]">
+            <Link href="/" className="transition hover:text-[#FF4DB8]">Home</Link>
+            <span>/</span>
+            <Link href="/product" className="transition hover:text-[#FF4DB8]">Products</Link>
+            <span>/</span>
+            <span className="truncate text-[#9C91AA]">{displayProduct.name}</span>
+          </div>
+
+          <div className="mb-5 flex flex-wrap gap-1.5">
+            <span className={`rounded-[3px] border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] ${style.badge}`}>
+              {displayProduct.absorbency}
+            </span>
+            {productSignalBadges.slice(0, 2).map((badge) => (
+              <span key={badge} className="rounded-[3px] border border-[#A855F7]/25 bg-[#A855F7]/[0.12] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#C084FC]">
+                {badge}
+              </span>
+            ))}
+            <span className={`rounded-[3px] border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] ${stockBadgeClass(displayProduct.stockStatus)}`}>
+              {stockStatusLabel(displayProduct.stockStatus)}
+            </span>
+          </div>
+
+          <h1 className="max-w-[12ch] break-words font-serif text-[2.35rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:text-[3.75rem]">
+            {displayProduct.name}
+          </h1>
+
+          {(displayProduct.shortDescription || displayProduct.description) && (
+            <p className="mt-4 max-w-[27rem] border-l-2 border-[#FF4DB8]/30 pl-4 text-[13px] leading-7 text-[#9C91AA]">
+              {displayProduct.shortDescription || displayProduct.description}
+            </p>
+          )}
+
+          <div className="mt-6 inline-flex flex-wrap items-baseline gap-2 rounded-md border border-white/[0.08] bg-white/[0.035] px-5 py-3">
+            <span className="font-serif text-4xl leading-none text-white">
+              {formatProductPrice(displayProduct)}
+            </span>
+            {typeof displayProduct.compareAtPrice === "number" && (
+              <span className="text-sm text-[#6B5F7A] line-through">
+                {formatProductPrice({
+                  price: displayProduct.compareAtPrice,
+                  currency: displayProduct.currency,
+                })}
+              </span>
+            )}
+            {hasSavings && (
+              <span className="rounded-[3px] border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2.5 py-1 text-[10px] font-bold text-[#31E6D4]">
+                Save {savingsPct}%
+              </span>
             )}
           </div>
 
-          <div className="min-w-0 rounded-[1.55rem] border border-white/[0.08] bg-[#0D0918]/72 p-4 shadow-[inset_1px_0_0_rgba(255,77,184,0.10)] backdrop-blur-xl sm:p-5 lg:m-3 lg:p-6 xl:p-7">
-            <Link
-              href="/product"
-              className="inline-flex items-center gap-2 text-sm font-medium text-[#9C91AA] transition hover:text-[#D8CBE8]"
-            >
-              <ChevronRight className="h-4 w-4 rotate-180" />
-              Back to products
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#6B5F7A]">
+            <StarRating rating={averageRating} />
+            <span>
+              {reviewCount > 0
+                ? `${averageRating.toFixed(1)} from ${reviewCount} approved ${reviewCount === 1 ? "review" : "reviews"}`
+                : "No approved reviews yet"}
+            </span>
+            <Link href="#reviews" className="font-semibold text-[#FF4DB8] hover:text-[#FFB3D1]">
+              View reviews
             </Link>
+          </div>
 
-            <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2">
-              <span className={`rounded-full border px-3 py-1 text-xs font-medium ${style.badge}`}>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <VariantSelector
+              label="Size"
+              options={displayProduct.sizes}
+              selected={selectedSize}
+              onSelect={(value) => {
+                setSelectedSize(value);
+                setSelectionMessage("");
+              }}
+              selectedClassName={style.selected}
+              hint="Check size over clean underwear or clothing only before direct wear."
+              disabled={!canAddToCart}
+            />
+            <VariantSelector
+              label="Color"
+              options={displayProduct.colors}
+              selected={selectedColor}
+              onSelect={(value) => {
+                setSelectedColor(value);
+                setSelectionMessage("");
+              }}
+              selectedClassName={style.selected}
+              type="color"
+              disabled={!canAddToCart}
+            />
+            <VariantSelector
+              label="Absorbency"
+              options={displayProduct.absorbencyOptions}
+              selected={selectedAbsorbency}
+              onSelect={(value) => {
+                setSelectedAbsorbency(value);
+                setSelectionMessage("");
+              }}
+              selectedClassName={style.selected}
+              disabled={!canAddToCart}
+            />
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="flex overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
+              <button
+                onClick={decreaseQuantity}
+                disabled={!canAddToCart || quantity <= 1}
+                className="h-8 w-8 text-[#D8CBE8] transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="mx-auto h-4 w-4" />
+              </button>
+              <span className="flex h-8 w-10 items-center justify-center text-sm font-semibold text-white">
+                {quantity}
+              </span>
+              <button
+                onClick={increaseQuantity}
+                disabled={!canAddToCart}
+                className="h-8 w-8 text-[#D8CBE8] transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
+                aria-label="Increase quantity"
+              >
+                <Plus className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+            <Link
+              href={supportHref}
+              className="inline-flex h-8 flex-1 items-center justify-center gap-2 rounded border border-[#00D4C6]/20 bg-[#00D4C6]/[0.06] px-3 text-[11px] font-semibold text-[#31E6D4] transition hover:bg-[#00D4C6]/[0.10] sm:flex-none"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              {supportLabel}
+            </Link>
+          </div>
+
+          {selectionMessage && (
+            <p className="mt-3 rounded border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.07] px-3 py-2 text-xs leading-5 text-[#FFB3D1]">
+              {selectionMessage}
+            </p>
+          )}
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <button
+              onClick={() => handleAddToCart(false)}
+              disabled={!canAddToCart}
+              className={`min-h-11 rounded bg-gradient-to-r px-5 text-[12px] font-bold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:from-[#1B1230] disabled:to-[#1B1230] disabled:text-[#6B5F7A]/50 ${style.primary}`}
+            >
+              {canAddToCart ? "Add to Cart" : "Out of Stock"}
+            </button>
+            <button
+              onClick={() => handleAddToCart(true)}
+              disabled={!canAddToCart}
+              className="min-h-11 rounded border border-white/[0.08] bg-transparent px-5 text-[12px] font-semibold text-white transition hover:border-[#FF4DB8]/35 hover:text-[#FFB3D1] disabled:cursor-not-allowed disabled:text-[#6B5F7A]/50"
+            >
+              {canAddToCart ? "Add and View Cart" : "Unavailable"}
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-1.5">
+            {[
+              { icon: PackageCheck, text: privacyText },
+              { icon: Truck, text: deliveryText },
+              { icon: ShieldCheck, text: supportText },
+            ].map(({ icon: Icon, text }, index) => (
+              <div key={`${text}-${index}`} className="flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA]">
+                <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${index === 1 ? "text-[#31E6D4]" : style.accent}`} />
+                <span>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative z-[1] lg:pr-1">
+          <div
+            className="relative aspect-[0.85/1] overflow-hidden rounded-[2px_60px_2px_60px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)]"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className={`pointer-events-none absolute inset-10 rounded-full blur-[76px] ${style.glow}`} />
+            {selectedMedia?.type === "video" ? (
+              <video
+                src={selectedMedia.url}
+                poster={selectedMedia.poster}
+                controls
+                playsInline
+                preload="metadata"
+                className="relative h-full w-full bg-[#080611] object-contain"
+                onError={() =>
+                  setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
+                }
+              />
+            ) : selectedMedia?.type === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={safeIndex}
+                src={selectedMedia.url}
+                alt={displayProduct.name}
+                loading={safeIndex === 0 ? "eager" : "lazy"}
+                decoding="async"
+                className="relative h-full w-full cursor-zoom-in object-contain p-4 transition duration-500 hover:scale-[1.015] sm:p-8"
+                onClick={() => setLightboxOpen(true)}
+                onError={() =>
+                  setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
+                }
+              />
+            ) : (
+              <ProductVisual
+                visualTheme={displayProduct.visualTheme}
+                label={displayProduct.absorbency}
+              />
+            )}
+            <div className="pointer-events-none absolute left-0 top-0 h-16 w-16 border-l border-t border-[#FF4DB8]/35" />
+            <div className="pointer-events-none absolute bottom-0 right-0 h-16 w-16 border-b border-r border-[#FF4DB8]/35" />
+            <div className="absolute bottom-5 left-0 right-0 flex justify-between gap-3 px-5">
+              <span className="rounded-sm border border-[#FF4DB8]/14 bg-[#080611]/75 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#FF4DB8]/70 backdrop-blur">
+                {displayProduct.category || "Aevyrixa Her Care"}
+              </span>
+              <span className="rounded-sm border border-[#00D4C6]/14 bg-[#080611]/75 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#31E6D4]/70 backdrop-blur">
                 {displayProduct.absorbency}
               </span>
-              {productSignalBadges.slice(0, 2).map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded-full border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-3 py-1 text-xs font-medium text-[#FFB3D1]"
-                >
-                  {badge}
-                </span>
-              ))}
-              {displayProduct.featured && (
-                <span className="rounded-full border border-[#FFB84D]/30 bg-[#FFB84D]/10 px-3 py-1 text-xs font-medium text-[#FFC36A]">
-                  Featured
-                </span>
-              )}
-              <span className={`rounded-full border px-3 py-1 text-xs font-medium ${stockBadgeClass(displayProduct.stockStatus)}`}>
-                {stockStatusLabel(displayProduct.stockStatus)}
-              </span>
-            </div>
-
-            <h1 className="aev-product-title-r3h mt-4 max-w-[14ch] break-words font-serif text-[1.62rem] font-semibold leading-[1.04] text-white [overflow-wrap:anywhere] min-[390px]:text-[1.9rem] sm:max-w-none sm:text-5xl lg:text-[3.25rem]">
-              {displayProduct.name}
-            </h1>
-
-            {displayProduct.shortDescription && (
-              <p className={`aev-mobile-secondary-copy mt-3 text-base font-medium leading-7 ${style.accent}`}>
-                {displayProduct.shortDescription}
-              </p>
-            )}
-
-            <div className="mt-5 flex flex-wrap items-end gap-3 border-y border-[#FF4DB8]/10 py-4">
-              <span className="text-3xl font-semibold text-[#FFB3D1] sm:text-4xl">
-                {formatProductPrice(displayProduct)}
-              </span>
-              {typeof displayProduct.compareAtPrice === "number" && (
-                <span className="pb-1 text-lg text-[#6B5F7A] line-through">
-                  {formatProductPrice({
-                    price: displayProduct.compareAtPrice,
-                    currency: displayProduct.currency,
-                  })}
-                </span>
-              )}
-              {hasSavings && (
-                <span className="mb-1 rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2.5 py-1 text-xs font-semibold text-[#31E6D4]">
-                  Save {savingsPct}%
-                </span>
-              )}
-            </div>
-
-            <div className="aev-product-review-summary mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-[#FFB84D]/18 bg-[#FFB84D]/[0.055] px-4 py-3">
-              <StarRating rating={averageRating} />
-              <span className="text-sm font-semibold text-white">
-                {reviewCount > 0
-                  ? `${averageRating.toFixed(1)} from ${reviewCount} approved ${reviewCount === 1 ? "review" : "reviews"}`
-                  : "No approved reviews yet"}
-              </span>
-              <Link href="#reviews" className="text-sm font-semibold text-[#FFB84D] hover:text-[#FFE1A3]">
-                View reviews
-              </Link>
-            </div>
-
-            <div className="mt-5 space-y-5">
-              <VariantSelector
-                label="Size"
-                options={displayProduct.sizes}
-                selected={selectedSize}
-                onSelect={(value) => {
-                  setSelectedSize(value);
-                  setSelectionMessage("");
-                }}
-                selectedClassName={style.selected}
-                hint="Check size over clean underwear or clothing only before direct wear."
-                disabled={!canAddToCart}
-              />
-              <VariantSelector
-                label="Color"
-                options={displayProduct.colors}
-                selected={selectedColor}
-                onSelect={(value) => {
-                  setSelectedColor(value);
-                  setSelectionMessage("");
-                }}
-                selectedClassName={style.selected}
-                type="color"
-                disabled={!canAddToCart}
-              />
-              <VariantSelector
-                label="Absorbency"
-                options={displayProduct.absorbencyOptions}
-                selected={selectedAbsorbency}
-                onSelect={(value) => {
-                  setSelectedAbsorbency(value);
-                  setSelectionMessage("");
-                }}
-                selectedClassName={style.selected}
-                disabled={!canAddToCart}
-              />
-
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-[#9C91AA]/70">
-                    Quantity
-                  </p>
-                  <div className="flex w-fit items-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230]">
-                    <button
-                      onClick={decreaseQuantity}
-                      disabled={!canAddToCart || quantity <= 1}
-                      className="px-4 py-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="min-w-[48px] text-center text-sm font-semibold text-white">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={increaseQuantity}
-                      disabled={!canAddToCart}
-                      className="px-4 py-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                <Link
-                  href={supportHref}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF4DB8]/20 bg-[#1B1230]/80 px-4 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/45 hover:text-white"
-                >
-                  <MessageCircle className={`h-4 w-4 ${style.accent}`} />
-                  {supportLabel}
-                </Link>
-              </div>
-
-              {selectionMessage && (
-                <p className="rounded-2xl border border-[#FF4DB8]/22 bg-[#1B1230] px-4 py-3 text-sm leading-6 text-[#D8CBE8]">
-                  {selectionMessage}
-                </p>
-              )}
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
-                  onClick={() => handleAddToCart(false)}
-                  disabled={!canAddToCart}
-                  className={`aev-button-primary aev-action-primary min-h-[3.35rem] rounded-full px-6 py-3.5 text-sm font-semibold transition ${
-                    canAddToCart
-                      ? `bg-gradient-to-r shadow-[0_4px_24px_rgba(255,77,184,0.38)] hover:scale-[1.01] hover:shadow-[0_4px_32px_rgba(255,77,184,0.52)] ${style.primary}`
-                      : "cursor-not-allowed border border-white/10 bg-[#1B1230] text-[#6B5F7A]/50"
-                  }`}
-                >
-                  {canAddToCart ? "Add to Cart" : "Out of Stock"}
-                </button>
-                <button
-                  onClick={() => handleAddToCart(true)}
-                  disabled={!canAddToCart}
-                  className={`aev-button-secondary aev-action-secondary min-h-[3.35rem] rounded-full border px-6 py-3.5 text-sm font-semibold transition ${
-                    canAddToCart
-                      ? "border-[#FF4DB8]/22 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/45 hover:bg-[#211633] hover:text-white"
-                      : "cursor-not-allowed border-white/8 bg-[#1B1230] text-[#6B5F7A]/50"
-                  }`}
-                >
-                  {canAddToCart ? "Add and View Cart" : "Unavailable"}
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-2.5 border-t border-[#FF4DB8]/10 pt-4">
-              {topTrustItems.map(({ icon: Icon, text }, index) => (
-                <div
-                  key={`${text}-${index}`}
-                  className="flex items-start gap-3 text-xs leading-5 text-[#9C91AA]"
-                >
-                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${index === 1 ? "text-[#00D4C6]" : style.accent}`} />
-                  <span>{text}</span>
-                </div>
-              ))}
             </div>
           </div>
+
+          {showThumbnails && (
+            <div className="mt-2.5 flex gap-2 overflow-x-auto px-1 pb-1">
+              {mediaItems.map((item, index) => (
+                <button
+                  key={`${item.type}-${item.url}-${index}`}
+                  onClick={() => setSelectedMediaIndex(index)}
+                  aria-label={item.type === "video" ? "Play video" : `Product image ${index + 1}`}
+                  disabled={brokenMediaUrls.has(item.url)}
+                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[4px_20px_4px_20px] border bg-white/[0.035] transition ${
+                    safeIndex === index
+                      ? "border-[#FF4DB8]/55 bg-[#FF4DB8]/[0.08]"
+                      : "border-white/[0.08] hover:border-[#FF4DB8]/35"
+                  } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : ""}`}
+                >
+                  {item.type === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.url}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                      onError={() =>
+                        setBrokenMediaUrls((urls) => new Set(urls).add(item.url))
+                      }
+                    />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center bg-[#1B1230]">
+                      <Play className="h-4 w-4 fill-[#FF4DB8] text-[#FF4DB8]" />
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -720,13 +631,37 @@ export default function ProductDetailClient({
         <ProductTicker items={safeTickerItems} />
       )}
 
-      <section className="mx-auto grid max-w-[94rem] gap-5 px-4 pb-14 pt-5 sm:px-6 lg:grid-cols-12 lg:px-8 2xl:px-6">
-        {hms.layerComfortEnabled && (
-          <div className="overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] shadow-[0_20px_80px_rgba(0,0,0,0.24)] lg:col-span-12">
-            <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-              <div className="min-h-[18rem] bg-[#080611]">
-                <div className="relative aspect-[16/11] h-full overflow-hidden lg:aspect-auto">
-                  {showLayerVideo && layerMediaUrl ? (
+      {hms.layerComfortEnabled && (
+        <section className="relative z-[2] bg-[#0D0918] py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+            <SectionHeading
+              eyebrow={hms.layerComfortEyebrow || "Construction"}
+              title={hms.layerComfortHeading || "Three layers. One purpose."}
+              description={
+                hms.layerComfortDescription ||
+                displayProduct.description ||
+                displayProduct.shortDescription ||
+                ""
+              }
+            />
+            <div className="mt-10 grid gap-0 lg:grid-cols-3">
+              {displayLayerCards.slice(0, 3).map((card, index) => (
+                <article
+                  key={`${card.title}-${index}`}
+                  className="aev-clean-hover-line border-t border-white/[0.08] px-5 py-8 lg:px-8"
+                >
+                  <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#6B5F7A]">
+                    Layer {String(index + 1).padStart(2, "0")}
+                  </p>
+                  <h3 className="mt-3 font-serif text-2xl text-white">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#9C91AA]">{card.body}</p>
+                </article>
+              ))}
+            </div>
+            {layerMediaUrl && (
+              <div className="mt-8 overflow-hidden rounded-[4px_42px_4px_42px] border border-white/[0.08] bg-[#080611]">
+                <div className="relative aspect-[16/7] min-h-56">
+                  {showLayerVideo ? (
                     <video
                       src={layerMediaUrl}
                       poster={hms.layerComfortImageUrl || displayProduct.imageUrl}
@@ -735,7 +670,7 @@ export default function ProductDetailClient({
                       preload="metadata"
                       className="h-full w-full object-cover"
                     />
-                  ) : layerMediaUrl ? (
+                  ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={layerMediaUrl}
@@ -744,138 +679,81 @@ export default function ProductDetailClient({
                       decoding="async"
                       className="h-full w-full object-cover"
                     />
-                  ) : (
-                    <ProductVisual
-                      visualTheme={displayProduct.visualTheme}
-                      label={displayProduct.absorbency}
-                    />
                   )}
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,rgba(8,6,17,0.72))]" />
-                  <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/10 bg-[#080611]/72 p-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#D8CBE8] backdrop-blur-md sm:left-5 sm:right-auto sm:max-w-sm sm:p-4">
-                    {displayProduct.category} / {displayProduct.absorbency}
-                  </div>
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080611]/78 via-transparent to-transparent" />
                 </div>
               </div>
-              <div className="flex flex-col justify-center p-5 sm:p-7 lg:p-10">
-                <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                  {hms.layerComfortEyebrow || "Her Care Layer System"}
-                </p>
-                <h2 className="mt-3 max-w-2xl font-serif text-3xl font-semibold leading-tight text-white sm:text-4xl">
-                  {hms.layerComfortHeading || "Layered comfort built for calm daily wear."}
-                </h2>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-[#D8CBE8]/78">
-                  {hms.layerComfortDescription || displayProduct.description || displayProduct.shortDescription}
-                </p>
-                <div className="mt-6 grid gap-3">
-                  {layerCards.map((card, index) => (
-                    <div
-                      key={`${card.title}-${index}`}
-                      className="aev-clean-hover-line rounded-[1.15rem] border border-[#FF4DB8]/10 bg-[#1B1230]/78 p-4"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[#00D4C6] shadow-[0_0_16px_rgba(0,212,198,0.45)]" />
-                        <div>
-                          <h3 className="text-sm font-semibold text-white">{card.title}</h3>
-                          <p className="mt-1 text-sm leading-6 text-[#9C91AA]">{card.body}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  {(hms.layerComfortCtaText || hms.layerComfortCtaLink) && (
-                    <Link
-                      href={hms.layerComfortCtaLink || "/product"}
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:text-white"
-                    >
-                      {hms.layerComfortCtaText || "Explore care"}
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  )}
-                  <Link
-                    href={supportHref}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#00D4C6]/22 bg-[#00D4C6]/[0.06] px-4 text-sm font-semibold text-[#31E6D4] transition hover:border-[#00D4C6]/45 hover:text-white"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Fit help
-                  </Link>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
-        )}
+        </section>
+      )}
 
-        <div className="lg:col-span-12">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                {hms.findCareEyebrow || "Product Promise"}
-              </p>
-              <h2 className="mt-2 font-serif text-2xl font-semibold text-white sm:text-3xl">
-                {hms.findCareHeading || "Clear benefits, no guesswork"}
-              </h2>
-            </div>
-            <p className="max-w-xl text-sm leading-6 text-[#9C91AA]">
-              {hms.findCareDescription || "Short, practical signals pulled from the product setup."}
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {promiseCards.map((card, index) => (
-              <div
-                key={`${card.body}-${index}`}
-                className="aev-clean-hover-line rounded-[1.35rem] border border-[#FF4DB8]/10 bg-[linear-gradient(145deg,rgba(255,77,184,0.055),rgba(27,18,48,0.92))] p-4 shadow-[0_14px_48px_rgba(0,0,0,0.22)] sm:p-5"
-              >
-                <Check className={`h-5 w-5 ${style.accent}`} />
-                <h3 className="mt-4 text-base font-semibold text-white">{card.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[#9C91AA]">{card.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024]/92 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.24)] sm:p-6 lg:col-span-12 xl:p-7">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:items-start">
-            <div>
-              <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                {hms.faqPreviewEyebrow || "Fit, Care & Support"}
-              </p>
-              <h2 className="mt-3 font-serif text-2xl font-semibold text-white sm:text-3xl">
-                {hms.faqPreviewHeading || "Practical guidance in one place"}
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-[#9C91AA]">
-                Check fit over clean underwear or clothing only. Keep items unused, unwashed, and in original packaging with hygiene seal intact where applicable.
-              </p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              {carePanels.map(({ icon: Icon, title, items }) => (
-                <div
-                  key={title}
-                  className="rounded-[1.25rem] border border-[#FF4DB8]/10 bg-[#1B1230]/84 p-4"
+      {promiseCards.length > 0 && (
+        <section className="relative z-[2] py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+            <SectionHeading
+              eyebrow={hms.findCareEyebrow || "Promise"}
+              title={hms.findCareHeading || "Four reasons to trust it"}
+              description={hms.findCareDescription || ""}
+            />
+            <div className="mt-9">
+              {promiseCards.map((card, index) => (
+                <article
+                  key={`${card.body}-${index}`}
+                  className="grid gap-3 border-b border-white/[0.08] py-6 transition hover:bg-[#FF4DB8]/[0.025] sm:grid-cols-[3.5rem_1fr_1.4fr] sm:gap-0"
                 >
-                  <Icon className={`h-5 w-5 ${style.accent}`} />
-                  <h3 className="mt-3 font-semibold text-white">{title}</h3>
-                  <div className="mt-3 space-y-2">
-                    {items.map((item, index) => (
-                      <p key={`${title}-${index}`} className="text-sm leading-6 text-[#9C91AA]">
-                        {item}
-                      </p>
-                    ))}
+                  <div className="font-serif text-4xl italic leading-none text-[#FF4DB8]/20">
+                    {String(index + 1).padStart(2, "0")}
                   </div>
-                </div>
+                  <div className="sm:pr-8">
+                    <h3 className="font-serif text-xl text-white">{card.title}</h3>
+                    <span className="mt-2 inline-flex rounded-sm border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FFB3D1]">
+                      Her Care
+                    </span>
+                  </div>
+                  <p className="text-sm leading-7 text-[#9C91AA]">{card.body}</p>
+                </article>
               ))}
             </div>
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
+        </section>
+      )}
+
+      <section className="relative z-[2] border-y border-white/[0.08] bg-[#0D0918] py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+          <div className="grid gap-8 lg:grid-cols-[1fr_1.8fr] lg:items-end">
+            <SectionHeading
+              eyebrow={hms.faqPreviewEyebrow || "Guidance"}
+              title={hms.faqPreviewHeading || "Fit, Care & Support"}
+              description=""
+            />
+            <p className="max-w-3xl text-sm leading-7 text-[#9C91AA]">
+              Everything about fit, washing, and after-purchase support in one place. If still unsure, support is one message away.
+            </p>
+          </div>
+          <div className="mt-9 grid gap-0 sm:grid-cols-3">
+            {carePanels.map(({ icon: Icon, title, items, tone }) => (
+              <article key={title} className="aev-clean-hover-line border border-white/[0.06] bg-[#080611] p-6">
+                <Icon className={`h-6 w-6 ${tone}`} />
+                <h3 className="mt-4 font-serif text-lg text-white">{title}</h3>
+                <div className="mt-3 space-y-2">
+                  {items.map((item, index) => (
+                    <p key={`${title}-${index}`} className="text-xs leading-6 text-[#9C91AA]">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-6 overflow-hidden rounded border border-white/[0.08]">
             {displayFaqs.map((faq, index) => (
-              <details
-                key={`${faq.question}-${index}`}
-                className="group rounded-[1.15rem] border border-[#FF4DB8]/10 bg-[#080611]/44 p-4"
-              >
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-white marker:hidden">
+              <details key={`${faq.question}-${index}`} className="group border-b border-white/[0.08] last:border-b-0">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-white marker:hidden">
                   <span>{faq.question}</span>
-                  <ChevronDown className={`h-4 w-4 shrink-0 transition group-open:rotate-180 ${style.accent}`} />
+                  <ChevronDown className="h-4 w-4 shrink-0 text-[#FF4DB8] transition group-open:rotate-180" />
                 </summary>
-                <p className="mt-3 text-sm leading-6 text-[#9C91AA]">{faq.answer}</p>
+                <p className="px-5 pb-4 text-xs leading-6 text-[#9C91AA]">{faq.answer}</p>
               </details>
             ))}
           </div>
@@ -888,22 +766,17 @@ export default function ProductDetailClient({
         reviewCount={reviewCount}
       />
 
-      {/* ── Related products ── */}
       {displayRelated.length > 0 && (
-        <section className="mx-auto max-w-[94rem] px-4 pb-14 sm:px-6 lg:px-8 2xl:px-6">
-          <div className="rounded-[1.85rem] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,rgba(21,16,36,0.94),rgba(8,6,17,0.96))] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.28)] sm:p-6 xl:p-7">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                More From Our Collection
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                You May Also Like
-              </h2>
-            </div>
+        <section className="relative z-[2] mx-auto max-w-7xl px-4 pb-16 sm:px-7 lg:px-12">
+          <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+            <SectionHeading
+              eyebrow="More From Our Collection"
+              title="You May Also Like"
+              description=""
+            />
             <Link
               href="/product"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF4DB8]/20 bg-[#1B1230]/80 px-4 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/45 hover:text-white"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
             >
               Shop all
               <ChevronRight className="h-4 w-4" />
@@ -914,7 +787,6 @@ export default function ProductDetailClient({
               <StorefrontProductCard key={rp.id} product={rp} compact />
             ))}
           </div>
-          </div>
         </section>
       )}
 
@@ -922,7 +794,6 @@ export default function ProductDetailClient({
         <SiteFooter settings={settings} />
       </div>
 
-      {/* ── Lightbox ── */}
       {lightboxOpen && selectedMedia?.type === "image" && (
         <div
           className="aev-lightbox-overlay"
@@ -950,62 +821,58 @@ export default function ProductDetailClient({
         </div>
       )}
 
-      {/* ── Mobile sticky add-to-cart bar — sits above bottom nav ── */}
-      <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-3 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md min-[390px]:px-4 md:bottom-0 md:pb-[calc(1rem+env(safe-area-inset-bottom,0px))] md:pt-3 lg:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-2 min-[420px]:gap-3">
+      <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-3 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md md:bottom-0 lg:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
-            <div className="flex items-baseline gap-2">
-              <p className="text-xl font-semibold text-[#FFB3D1]">
-                {formatProductPrice(displayProduct)}
-              </p>
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${stockBadgeClass(displayProduct.stockStatus)}`}>
-                {stockStatusLabel(displayProduct.stockStatus)}
-              </span>
-            </div>
-            <p className="mt-0.5 truncate text-[11px] leading-4 text-[#9C91AA]">
+            <p className="text-lg font-semibold text-[#FFB3D1]">
+              {formatProductPrice(displayProduct)}
+            </p>
+            <p className="truncate text-[11px] leading-4 text-[#9C91AA]">
               {selectedSummary || "Select your preferred options"} / Qty {quantity}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230] sm:flex">
-              <button
-                onClick={decreaseQuantity}
-                disabled={!canAddToCart || quantity <= 1}
-                className="p-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
-                aria-label="Decrease quantity"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="min-w-7 text-center text-sm font-semibold text-white">
-                {quantity}
-              </span>
-              <button
-                onClick={increaseQuantity}
-                disabled={!canAddToCart}
-                className="p-3 text-[#D8CBE8] transition hover:text-white disabled:cursor-not-allowed disabled:text-[#6B5F7A]/40"
-                aria-label="Increase quantity"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-            <button
-              onClick={() => handleAddToCart(false)}
-              disabled={!canAddToCart}
-              className={`flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition min-[390px]:px-5 ${
-                canAddToCart
-                  ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] hover:scale-[1.01] ${style.primary}`
-                  : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"
-              }`}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {canAddToCart ? "Add" : "Out"}
-              </span>
-            </button>
-          </div>
+          <button
+            onClick={() => handleAddToCart(false)}
+            disabled={!canAddToCart}
+            className={`flex min-h-11 shrink-0 items-center justify-center gap-2 rounded px-4 text-sm font-semibold transition ${
+              canAddToCart
+                ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] ${style.primary}`
+                : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"
+            }`}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Add
+          </button>
         </div>
       </div>
     </main>
+  );
+}
+
+function SectionHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div>
+      <div className="mb-4 flex items-center gap-4">
+        <span className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
+          {eyebrow}
+        </span>
+        <span className="h-px flex-1 bg-white/[0.08]" />
+      </div>
+      <h2 className="max-w-2xl font-serif text-4xl font-light leading-[1.05] text-white sm:text-5xl">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-3 max-w-xl text-sm leading-7 text-[#9C91AA]">{description}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -1032,35 +899,33 @@ function VariantSelector({
 
   return (
     <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.26em] text-[#9C91AA]/70">
+      <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B5F7A]">
         {label}
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {options.map((option, index) => {
           const isSelected = selected === option;
           return (
-          <button
-            key={`${label}-${option}-${index}`}
-            onClick={() => onSelect(option)}
-            disabled={disabled}
-            aria-pressed={isSelected}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-45 ${
-              isSelected
-                ? selectedClassName
-                : "border-white/10 bg-[#1B1230] text-[#D8CBE8] hover:border-[#FF4DB8]/28 hover:bg-[#211633]"
-            }`}
-          >
-            {type === "color" && <ColorSwatch color={option} />}
-            {option}
-            {isSelected && (
-              <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            )}
-          </button>
+            <button
+              key={`${label}-${option}-${index}`}
+              onClick={() => onSelect(option)}
+              disabled={disabled}
+              aria-pressed={isSelected}
+              className={`inline-flex min-h-8 items-center gap-1.5 rounded border px-3 py-1.5 text-[11px] font-medium transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                isSelected
+                  ? selectedClassName
+                  : "border-white/[0.08] bg-white/[0.035] text-[#9C91AA] hover:border-[#FF4DB8]/40 hover:text-[#FFB3D1]"
+              }`}
+            >
+              {type === "color" && <ColorSwatch color={option} />}
+              {option}
+              {isSelected && <Check className="h-3 w-3 shrink-0" aria-hidden="true" />}
+            </button>
           );
         })}
       </div>
       {hint && (
-        <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#9C91AA]">
+        <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-5 text-[#6B5F7A]">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
           <span>{hint}</span>
         </p>
@@ -1086,7 +951,7 @@ function ColorSwatch({ color }: { color: string }) {
 
   return (
     <span
-      className={`h-4 w-4 rounded-full border border-[#FF4DB8]/30 ${swatchClass}`}
+      className={`h-2.5 w-2.5 rounded-full border border-[#FF4DB8]/30 ${swatchClass}`}
       aria-hidden="true"
     />
   );
@@ -1096,12 +961,16 @@ function ProductTicker({ items }: { items: string[] }) {
   const loop = [...items, ...items];
 
   return (
-    <div className="aev-product-ticker" aria-label="Product service highlights">
+    <div className="relative z-[2] overflow-hidden border-y border-white/[0.08] bg-[#0D0918] py-2.5">
       <div className="aev-product-ticker-track">
-        <div className="aev-product-ticker-group">
+        <div className="flex w-max items-center">
           {loop.map((item, index) => (
-            <span key={`${item}-${index}`} className="aev-product-ticker-item">
-              {item}
+            <span key={`${item}-${index}`} className="flex items-center gap-4 px-5">
+              <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#6B5F7A]">
+                Her Care
+              </span>
+              <span className="font-serif text-sm italic text-[#FF4DB8]">{item}</span>
+              <span className="text-[#FF4DB8]/25">.</span>
             </span>
           ))}
         </div>
@@ -1113,11 +982,14 @@ function ProductTicker({ items }: { items: string[] }) {
 function StarRating({ rating }: { rating: number }) {
   const rounded = Math.round(rating);
   return (
-    <span className="inline-flex items-center gap-0.5 text-[#FFB84D]" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+    <span
+      className="inline-flex items-center gap-0.5 text-[#FFB84D]"
+      aria-label={`${rating.toFixed(1)} out of 5 stars`}
+    >
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`h-4 w-4 ${star <= rounded ? "fill-current" : "fill-transparent opacity-45"}`}
+          className={`h-3.5 w-3.5 ${star <= rounded ? "fill-current" : "fill-transparent opacity-45"}`}
         />
       ))}
     </span>
@@ -1133,60 +1005,64 @@ function ProductReviewsSection({
   averageRating: number;
   reviewCount: number;
 }) {
+  const ratingRows = [5, 4, 3, 2, 1].map((rating) => {
+    const count = reviews.filter((review) => Math.round(review.rating) === rating).length;
+    const percent = reviewCount > 0 ? (count / reviewCount) * 100 : 0;
+    return { rating, count, percent };
+  });
+
   return (
-    <section id="reviews" className="mx-auto max-w-[94rem] px-4 pb-14 sm:px-6 lg:px-8 2xl:px-6">
-      <div className="rounded-[1.85rem] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,rgba(21,16,36,0.98),rgba(12,9,24,0.98))] p-5 shadow-[0_22px_90px_rgba(255,77,184,0.08)] sm:p-6 xl:p-7">
-        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.34fr)] md:items-stretch">
-          <div className="rounded-[1.35rem] border border-[#FF4DB8]/10 bg-[#1B1230]/64 p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#00D4C6]/75">
-              Customer Reviews
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
-              Real and admin-approved feedback
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#9C91AA]">
-              Approved reviews are shown here. Verified purchase appears only when a review is linked to a real customer order.
-            </p>
-          </div>
-          <div className="flex flex-col justify-between rounded-[1.35rem] border border-[#FFB84D]/18 bg-[#FFB84D]/[0.06] p-4 sm:p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#FFB84D]/80">
-                Rating Summary
-              </p>
-              <div className="mt-3">
-                <StarRating rating={averageRating} />
-              </div>
-            </div>
-            <p className="mt-4 text-sm font-semibold leading-6 text-white">
-              {reviewCount > 0 ? `${averageRating.toFixed(1)} average · ${reviewCount} ${reviewCount === 1 ? "review" : "reviews"}` : "No reviews yet"}
-            </p>
-          </div>
+    <section id="reviews" className="relative z-[2] py-16 sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <SectionHeading
+            eyebrow="Reviews"
+            title="Real and approved"
+            description="Approved reviews are shown here. Verified purchase appears only when a review is linked to a real customer order."
+          />
+          <Link
+            href="/account"
+            className="inline-flex min-h-10 items-center justify-center rounded border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
+          >
+            Write a Review
+          </Link>
         </div>
 
-        {reviews.length === 0 ? (
-          <div className="mt-5 rounded-[1.35rem] border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-5 text-sm leading-7 text-[#D8CBE8] sm:p-6">
-            No approved reviews yet. The section will populate after eligible customer feedback is reviewed.
-          </div>
-        ) : (
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {reviews.map((review) => (
-              <article key={review.id} className="rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#1B1230] p-4 shadow-[0_14px_50px_rgba(0,0,0,0.22)] sm:p-5">
-                <div className="flex flex-wrap items-center gap-2">
+        <div className="grid gap-4 lg:grid-cols-[1fr_1fr_15rem]">
+          {reviews.length === 0 ? (
+            <div className="lg:col-span-2 rounded border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-6 text-sm leading-7 text-[#D8CBE8]">
+              No approved reviews yet. The section will populate after eligible customer feedback is reviewed.
+            </div>
+          ) : (
+            reviews.slice(0, 4).map((review) => (
+              <article
+                key={review.id}
+                className="aev-clean-hover-line rounded border border-white/[0.08] bg-white/[0.035] p-5"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.08] text-xs font-bold text-[#FFB3D1]">
+                    {review.customerName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
+                        {review.title || "Customer review"}
+                      </h3>
+                      {review.isFeatured && (
+                        <span className="rounded border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#31E6D4]">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-[11px] text-[#6B5F7A]">
+                      {review.customerName} / {formatReviewDate(review.approvedAt || review.createdAt)}
+                    </p>
+                  </div>
                   <StarRating rating={review.rating} />
-                  {review.isFeatured && (
-                    <span className="rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#31E6D4]">
-                      Featured
-                    </span>
-                  )}
                 </div>
-                <h3 className="mt-3 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
-                  {review.title || "Customer review"}
-                </h3>
-                <p className="mt-2 text-xs text-[#9C91AA]">
-                  {review.customerName} · {formatReviewDate(review.approvedAt || review.createdAt)}
-                </p>
-                <p className="mt-2">
-                  <span className="rounded-full border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] px-2.5 py-1 text-[11px] font-semibold text-[#31E6D4]">
+                <p className="mt-4 text-sm leading-7 text-[#9C91AA]">{review.body}</p>
+                <p className="mt-3">
+                  <span className="rounded border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] px-2 py-1 text-[10px] font-semibold text-[#31E6D4]">
                     {review.verifiedPurchase && review.sourceType === "order-linked"
                       ? "Verified purchase"
                       : review.sourceType === "imported"
@@ -1195,9 +1071,6 @@ function ProductReviewsSection({
                           ? "Admin-approved review"
                           : "Customer review"}
                   </span>
-                </p>
-                <p className="mt-3 break-words text-sm leading-7 text-[#D8CBE8]/80 [overflow-wrap:anywhere]">
-                  {review.body}
                 </p>
                 {review.mediaUrls.length > 0 && (
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
@@ -1208,15 +1081,40 @@ function ProductReviewsSection({
                         src={url}
                         alt=""
                         loading="lazy"
-                        className="h-16 w-16 shrink-0 rounded-xl border border-white/10 object-cover"
+                        className="h-16 w-16 shrink-0 rounded border border-white/10 object-cover"
                       />
                     ))}
                   </div>
                 )}
               </article>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+
+          <aside className="rounded border border-white/[0.08] bg-[#0D0918] p-5 lg:sticky lg:top-20">
+            <div className="font-serif text-5xl leading-none text-white">
+              {reviewCount > 0 ? averageRating.toFixed(1) : "0.0"}
+            </div>
+            <p className="mt-1 text-[11px] text-[#6B5F7A]">
+              {reviewCount > 0
+                ? `${reviewCount} approved ${reviewCount === 1 ? "review" : "reviews"}`
+                : "No approved reviews"}
+            </p>
+            <div className="mt-5 space-y-2">
+              {ratingRows.map(({ rating, count, percent }) => (
+                <div key={rating} className="grid grid-cols-[2rem_1fr_1.5rem] items-center gap-2 text-[10px] text-[#9C91AA]">
+                  <span>{rating} star</span>
+                  <span className="h-1 overflow-hidden rounded bg-white/[0.06]">
+                    <span
+                      className="block h-full rounded bg-gradient-to-r from-[#FF4DB8] to-[#31E6D4]"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </span>
+                  <span className="text-right">{count}</span>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   );
@@ -1227,4 +1125,3 @@ function formatReviewDate(value: string) {
   if (Number.isNaN(date.getTime())) return "Recently";
   return new Intl.DateTimeFormat("en-BD", { dateStyle: "medium" }).format(date);
 }
-
