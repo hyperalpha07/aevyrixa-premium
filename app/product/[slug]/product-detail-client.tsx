@@ -37,7 +37,6 @@ import type { ProductCatalogItem } from "@/app/lib/product-types";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
 import type { PublicProductReview } from "@/app/lib/review-types";
-import { smartHomeCtaHref } from "@/app/lib/shop-routing";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -75,16 +74,6 @@ const themeStyles: Record<
     border: "border-[#A855F7]/18 hover:border-[#A855F7]/40",
   },
 };
-
-const safeTickerFallback = [
-  "Discreet Packaging",
-  "3-Day Hygiene-Safe Support",
-  "Premium Comfort",
-  "BDT Pricing",
-  "Reusable Care",
-  "Secure Checkout",
-  "Bangladesh Delivery",
-];
 
 const safeSupportFallbackFaqs = [
   {
@@ -291,50 +280,12 @@ export default function ProductDetailClient({
     displayProduct.isTrending ? "Trending" : "",
     displayProduct.isNewArrival ? "New Arrival" : "",
   ].filter((badge): badge is string => Boolean(badge));
-  const tickerItems = (hms.marqueeItems || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const safeTickerItems = (tickerItems.length ? tickerItems : safeTickerFallback)
-    .map((item) =>
-      item
-        .replace(/\bfree returns\b/gi, "3-Day Hygiene-Safe Support")
-        .replace(/\bguarantee(?:d)?\b/gi, "support")
-        .replace(/\b\d{2,}\s*k?\+?\s*(?:women|customers|orders)\b/gi, "")
-        .trim()
-    )
-    .filter(Boolean);
-  const layerCards = [
-    { title: hms.layerComfortLayer1Title, body: hms.layerComfortLayer1Description },
-    { title: hms.layerComfortLayer2Title, body: hms.layerComfortLayer2Description },
-    { title: hms.layerComfortLayer3Title, body: hms.layerComfortLayer3Description },
-  ].filter((card) => card.title || card.body);
-  const displayLayerCards =
-    layerCards.length > 0
-      ? layerCards
-      : [
-          { title: "Comfort Knit Layer", body: "Soft, stretch-fit fabric that moves naturally with your body through the day." },
-          { title: "Absorbent Core", body: "A slim internal layer for quiet, discreet support during light to moderate flow." },
-          { title: "Protective Shell", body: "A smooth outer layer with a refined silhouette and clean, everyday finish." },
-        ];
   const supportFaqs = [
     { question: hms.faqPreviewItem1Question, answer: hms.faqPreviewItem1Answer },
     { question: hms.faqPreviewItem2Question, answer: hms.faqPreviewItem2Answer },
     { question: hms.faqPreviewItem3Question, answer: hms.faqPreviewItem3Answer },
   ].filter((faq) => faq.question && faq.answer);
   const displayFaqs = supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
-  const selectedImageUrl = selectedMedia?.type === "image" ? selectedMedia.url : "";
-  const layerMediaUrl =
-    hms.layerComfortMediaMode === "video_text" ||
-    hms.layerComfortMediaMode === "background_media_text" ||
-    hms.layerComfortMediaMode === "media_only"
-      ? hms.layerComfortVideoUrl || hms.layerComfortImageUrl
-      : hms.layerComfortImageUrl || selectedImageUrl || displayProduct.imageUrl || "";
-  const showLayerVideo =
-    Boolean(hms.layerComfortVideoUrl) &&
-    (hms.layerComfortMediaMode === "video_text" ||
-      hms.layerComfortMediaMode === "background_media_text" ||
-      hms.layerComfortMediaMode === "media_only");
   const promiseCards = benefits.slice(0, 4).map((benefit, index) => ({
     title: ["Comfort", "Confidence", "Routine", "Care"][index] || "Benefit",
     body: benefit,
@@ -353,33 +304,6 @@ export default function ProductDetailClient({
       tone: "text-[#C084FC]",
     },
   ];
-  const findCareCards = [
-    {
-      title: hms.findCareCard1Title || "Flow Days",
-      description:
-        hms.findCareCard1Description ||
-        "Reusable care for light to moderate flow routines.",
-      href: smartHomeCtaHref(hms.findCareCard1LinkUrl, "findCareFlowDays"),
-      tone: "rose",
-    },
-    {
-      title: hms.findCareCard2Title || "Daily Comfort",
-      description:
-        hms.findCareCard2Description ||
-        "Soft comfort wear for repeat everyday movement.",
-      href: smartHomeCtaHref(hms.findCareCard2LinkUrl, "findCareDailyComfort"),
-      tone: "cyan",
-    },
-    {
-      title: hms.findCareCard3Title || "Gentle Support",
-      description:
-        hms.findCareCard3Description ||
-        "Smooth support picks for easy daily layering.",
-      href: smartHomeCtaHref(hms.findCareCard3LinkUrl, "findCareGentleSupport"),
-      tone: "violet",
-    },
-  ];
-
   return (
     <main className="aev-bloom-product aev-product-page-shell min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+6rem+env(safe-area-inset-bottom,0px))] text-white lg:pb-0">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_48%_at_18%_26%,rgba(255,77,184,0.11),transparent_62%),radial-gradient(ellipse_50%_40%_at_82%_64%,rgba(0,212,198,0.08),transparent_60%),linear-gradient(180deg,#080611,#090713_48%,#050711)]" />
@@ -659,69 +583,6 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      {hms.showMarquee && safeTickerItems.length > 0 && (
-        <ProductTicker items={safeTickerItems} />
-      )}
-
-      {hms.layerComfortEnabled && (
-        <section className="relative z-[2] bg-[#0D0918] py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-            <SectionHeading
-              eyebrow={hms.layerComfortEyebrow || "Construction"}
-              title={hms.layerComfortHeading || "Three layers. One purpose."}
-              description={
-                hms.layerComfortDescription ||
-                displayProduct.description ||
-                displayProduct.shortDescription ||
-                ""
-              }
-            />
-            <div className="aev-bloom-layer-diag mt-10 grid gap-0 lg:grid-cols-3">
-              {displayLayerCards.slice(0, 3).map((card, index) => (
-                <article
-                  key={`${card.title}-${index}`}
-                  className="aev-clean-hover-line aev-bloom-layer-card border-t border-white/[0.08] px-5 py-8 lg:px-8"
-                >
-                  <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#6B5F7A]">
-                    Layer {String(index + 1).padStart(2, "0")}
-                  </p>
-                  <h3 className="mt-3 font-serif text-2xl text-white">{card.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-[#9C91AA]">{card.body}</p>
-                </article>
-              ))}
-            </div>
-            {layerMediaUrl && (
-              <div className="mt-8 overflow-hidden rounded-[4px_42px_4px_42px] border border-white/[0.08] bg-[#080611]">
-                <div className="relative aspect-[16/7] min-h-56">
-                  {showLayerVideo ? (
-                    <video
-                      src={layerMediaUrl}
-                      poster={hms.layerComfortImageUrl || displayProduct.imageUrl}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={layerMediaUrl}
-                      alt={hms.layerComfortAltText || displayProduct.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080611]/78 via-transparent to-transparent" />
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {promiseCards.length > 0 && (
         <section className="relative z-[2] py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
@@ -747,46 +608,6 @@ export default function ProductDetailClient({
                   </div>
                   <p className="text-sm leading-7 text-[#9C91AA]">{card.body}</p>
                 </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {hms.findCareEnabled && (
-        <section className="relative z-[2] border-y border-white/[0.08] bg-[#0D0918] py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-            <div className="grid gap-8 lg:grid-cols-[1fr_1.8fr] lg:items-end">
-              <SectionHeading
-                eyebrow={hms.findCareEyebrow || "Find Your Care"}
-                title={hms.findCareHeading || "Choose the care that matches your day."}
-                description=""
-              />
-              <p className="max-w-3xl text-sm leading-7 text-[#9C91AA]">
-                {hms.findCareDescription ||
-                  "Use a quick visual guide to move from flow-day support to daily comfort and gentle support picks."}
-              </p>
-            </div>
-            <div className="mt-9 grid gap-[2px] lg:grid-cols-3">
-              {findCareCards.map((card, index) => (
-                <Link
-                  key={`${card.title}-${index}`}
-                  href={card.href}
-                  className={`aev-find-care-card aev-find-care-card-${card.tone} group relative min-h-[12rem] overflow-hidden bg-[#080611] p-6 transition hover:bg-white/[0.018]`}
-                >
-                  <span className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#6B5F7A]">
-                    Care {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <h3 className="mt-5 font-serif text-2xl font-light leading-tight text-white">
-                    {card.title}
-                  </h3>
-                  <p className="mt-3 max-w-xs text-sm leading-7 text-[#9C91AA]">
-                    {card.description}
-                  </p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#FFB3D1] transition group-hover:translate-x-1 group-hover:text-white">
-                    Explore <span aria-hidden="true">{"\u2192"}</span>
-                  </span>
-                </Link>
               ))}
             </div>
           </div>
@@ -841,7 +662,7 @@ export default function ProductDetailClient({
       />
 
       {displayRelated.length > 0 && (
-        <section className="relative z-[2] mx-auto max-w-7xl px-4 pb-16 sm:px-7 lg:px-12">
+        <section className="aev-related-recommendations relative z-[2] mx-auto max-w-7xl px-3 pb-[calc(var(--aev-mobile-bottom-nav-height)+8rem+env(safe-area-inset-bottom,0px))] sm:px-7 sm:pb-16 lg:px-12">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <SectionHeading
               eyebrow="More From Our Collection"
@@ -856,9 +677,9 @@ export default function ProductDetailClient({
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="aev-related-grid grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3">
             {displayRelated.map((rp) => (
-              <StorefrontProductCard key={rp.id} product={rp} compact />
+              <StorefrontProductCard key={rp.id} product={rp} compact recommendation />
             ))}
           </div>
         </section>
@@ -1036,42 +857,6 @@ function ColorSwatch({ color }: { color: string }) {
       className={`h-2.5 w-2.5 rounded-full border border-[#FF4DB8]/30 ${swatchClass}`}
       aria-hidden="true"
     />
-  );
-}
-
-function ProductTicker({ items }: { items: string[] }) {
-  const loop = [...items, ...items];
-  const reversedLoop = [...items].reverse().concat([...items].reverse());
-
-  return (
-    <div className="relative z-[2] overflow-hidden border-y border-white/[0.08] bg-[#0D0918] py-2">
-      <div className="aev-product-ticker-track">
-        <div className="flex w-max items-center">
-          {loop.map((item, index) => (
-            <span key={`${item}-${index}`} className="flex items-center gap-4 px-5 py-1">
-              <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#6B5F7A]">
-                Her Care
-              </span>
-              <span className="font-serif text-sm italic text-[#FF4DB8]">{item}</span>
-              <span className="text-[#FF4DB8]/25">.</span>
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="aev-product-ticker-track aev-product-ticker-track-reverse">
-        <div className="flex w-max items-center">
-          {reversedLoop.map((item, index) => (
-            <span key={`reverse-${item}-${index}`} className="flex items-center gap-4 px-5 py-1">
-              <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#6B5F7A]">
-                Aevyrixa
-              </span>
-              <span className="font-serif text-sm italic text-[#31E6D4]">{item}</span>
-              <span className="text-[#31E6D4]/20">.</span>
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 

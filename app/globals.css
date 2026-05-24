@@ -3075,6 +3075,126 @@ button {
   }
 }
 
+.aev-related-recommendations {
+  overflow-x: clip;
+}
+
+.aev-related-grid {
+  align-items: stretch;
+}
+
+.aev-recommendation-card {
+  border-radius: 0.85rem;
+}
+
+@media (max-width: 639px) {
+  .aev-related-recommendations {
+    max-width: 100vw;
+  }
+
+  .aev-related-recommendations .mb-7 {
+    margin-bottom: 1rem;
+  }
+
+  .aev-related-recommendations h2 {
+    font-size: clamp(1.75rem, 8vw, 2.15rem);
+    line-height: 1.05;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card {
+    min-width: 0;
+    border-radius: 0.75rem;
+    padding: 0.42rem;
+    box-shadow: 0 0.85rem 2rem rgba(0, 0, 0, 0.28), 0 0 1.1rem rgba(255, 77, 184, 0.045);
+  }
+
+  .aev-related-recommendations .aev-product-card-r2a::after {
+    opacity: 0.48;
+  }
+
+  .aev-related-recommendations .aev-product-image-frame {
+    border-radius: 0.62rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0.65rem 1.35rem rgba(0, 0, 0, 0.22);
+  }
+
+  .aev-related-recommendations .aev-product-image-frame > div {
+    aspect-ratio: 1 / 1.06;
+  }
+
+  .aev-related-recommendations .aev-product-image-frame img {
+    padding: 0.34rem;
+  }
+
+  .aev-related-recommendations .aev-quick-view-trigger {
+    height: 1.85rem;
+    width: 1.85rem;
+    right: 0.38rem;
+    top: 0.38rem;
+  }
+
+  .aev-related-recommendations .aev-quick-view-trigger svg {
+    height: 0.78rem;
+    width: 0.78rem;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card > div:last-child {
+    padding: 0.45rem 0.14rem 0.22rem;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card .flex.min-w-0.flex-wrap.items-center {
+    gap: 0.25rem;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card .flex.min-w-0.flex-wrap.items-center span {
+    max-width: 100%;
+    padding: 0.1rem 0.38rem;
+    font-size: 0.5rem;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card h3 {
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    line-height: 1.22;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card p {
+    display: none;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card .mt-2\.5 {
+    margin-top: 0.38rem;
+    gap: 0.35rem;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card .mt-2\.5 span:first-child {
+    font-size: 0.86rem;
+    line-height: 1.1;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card .mt-2\.5 .line-through {
+    font-size: 0.62rem;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card .mt-auto {
+    padding-top: 0.46rem;
+  }
+
+  .aev-related-recommendations .aev-card-cta {
+    min-height: 2.05rem;
+    border-radius: 0.55rem;
+    padding: 0.42rem 0.5rem;
+    font-size: 0.68rem;
+    line-height: 1.1;
+  }
+
+  .aev-related-recommendations .aev-card-cta svg {
+    height: 0.78rem;
+    width: 0.78rem;
+  }
+}
+
 @keyframes aev-product-card-shine {
   from { background-position: -135% 0, center; }
   to   { background-position: 145% 0, center; }

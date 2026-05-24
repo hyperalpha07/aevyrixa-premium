@@ -120,11 +120,13 @@ export default function StorefrontProductCard({
   rating,
   compact = false,
   priority = false,
+  recommendation = false,
 }: {
   product: ProductCatalogItem;
   rating?: ReviewSummary;
   compact?: boolean;
   priority?: boolean;
+  recommendation?: boolean;
 }) {
   const { addItem } = useCart();
   const [quickViewOpen, setQuickViewOpen] = useState(false);
@@ -194,14 +196,14 @@ export default function StorefrontProductCard({
       className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
       <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-      Add to Cart
+      {recommendation ? "Add" : "Add to Cart"}
     </button>
   ) : (
     <Link
       href={productHref}
       className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
-      Choose Options
+      {recommendation ? "Options" : "Choose Options"}
     </Link>
   );
 
@@ -227,7 +229,7 @@ export default function StorefrontProductCard({
   return (
     <>
       <article
-        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.15rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] sm:rounded-[1.35rem] md:rounded-[1.65rem] md:p-3 ${style.border}`}
+        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.15rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] sm:rounded-[1.35rem] md:rounded-[1.65rem] md:p-3 ${recommendation ? "aev-recommendation-card" : ""} ${style.border}`}
       >
         <div className="relative">
           <Link
