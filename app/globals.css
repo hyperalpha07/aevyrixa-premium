@@ -925,14 +925,87 @@ button {
 }
 
 .aev-v2-hero-main {
-  min-height: 19rem;
+  min-height: 16.75rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
   background:
     radial-gradient(circle at 88% -12%, rgba(255, 77, 184, 0.17), transparent 34%),
+    radial-gradient(circle at 76% 72%, rgba(0, 212, 198, 0.07), transparent 32%),
     linear-gradient(135deg, #130f22, #18132a);
+}
+
+.aev-shop-hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aev-shop-hero-art::before,
+.aev-shop-hero-art::after,
+.aev-shop-hero-orbit,
+.aev-shop-hero-line {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.aev-shop-hero-art::before {
+  right: -4.8rem;
+  top: -5.4rem;
+  width: 20rem;
+  aspect-ratio: 1;
+  border-radius: 48% 52% 44% 56%;
+  background:
+    conic-gradient(from 18deg, transparent 0 12%, rgba(255, 77, 184, 0.16) 12% 18%, transparent 18% 34%, rgba(0, 212, 198, 0.11) 34% 40%, transparent 40% 66%, rgba(139, 92, 246, 0.16) 66% 74%, transparent 74%),
+    radial-gradient(circle at 50% 50%, rgba(255, 179, 209, 0.08), transparent 60%);
+  opacity: 0.78;
+  transform: rotate(18deg);
+}
+
+.aev-shop-hero-art::after {
+  right: 8%;
+  bottom: -2.9rem;
+  width: 17rem;
+  height: 8rem;
+  border: 1px solid rgba(255, 179, 209, 0.12);
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 32% 50%, rgba(255, 77, 184, 0.12), transparent 54%),
+    radial-gradient(ellipse at 72% 48%, rgba(0, 212, 198, 0.10), transparent 56%);
+  opacity: 0.72;
+  transform: rotate(-9deg);
+}
+
+.aev-shop-hero-orbit-one {
+  right: 4.2rem;
+  top: 2.2rem;
+  width: 11rem;
+  height: 11rem;
+  border: 1px solid rgba(255, 77, 184, 0.13);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.15rem rgba(255, 77, 184, 0.018);
+}
+
+.aev-shop-hero-orbit-two {
+  right: 1.4rem;
+  top: 4.3rem;
+  width: 8.2rem;
+  height: 8.2rem;
+  border: 1px dashed rgba(0, 212, 198, 0.17);
+  border-radius: 50%;
+}
+
+.aev-shop-hero-line {
+  right: 1.6rem;
+  top: 44%;
+  width: 20rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 77, 184, 0.24), rgba(0, 212, 198, 0.14), transparent);
+  transform: rotate(-20deg);
 }
 
 .aev-v2-hero-main::after,
@@ -973,6 +1046,11 @@ button {
   animation: aev-v2-ticker 28s linear infinite;
 }
 
+.aev-v2-ticker-item {
+  min-height: 1.5rem;
+  white-space: nowrap;
+}
+
 @keyframes aev-v2-ticker {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-50%, 0, 0); }
@@ -980,6 +1058,21 @@ button {
 
 .aev-v2-sort-bar {
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.aev-v2-sort-bar :where(select, button, input) {
+  max-width: 100%;
+}
+
+.aev-v2-sort-bar .aev-button-ghost {
+  min-height: 2.5rem;
+  border-radius: 0.38rem;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+}
+
+.aev-v2-sort-bar .aev-button-ghost::after {
+  display: none;
 }
 
 .aev-v2-product-card {
@@ -998,6 +1091,12 @@ button {
   border-radius: 0.4rem;
 }
 
+@media (min-width: 640px) {
+  .aev-v2-product-card .aev-v2-card-body-action {
+    display: none;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .aev-v2-trust-card:hover {
     transform: translate3d(0, -2px, 0);
@@ -1013,7 +1112,7 @@ button {
 
 @media (max-width: 767px) {
   .aev-v2-hero-main {
-    min-height: 14.5rem;
+    min-height: 13.25rem;
   }
 
   .aev-v2-sort-bar {
@@ -1034,6 +1133,25 @@ button {
   .aev-v2-hero-main {
     padding: 1rem;
     border-radius: 0.9rem;
+  }
+
+  .aev-shop-hero-art::before {
+    right: -5.6rem;
+    top: -4.2rem;
+    width: 14rem;
+  }
+
+  .aev-shop-hero-art::after,
+  .aev-shop-hero-orbit-two {
+    display: none;
+  }
+
+  .aev-shop-hero-orbit-one {
+    right: -1.8rem;
+    top: 3.2rem;
+    width: 7rem;
+    height: 7rem;
+    opacity: 0.68;
   }
 
   .aev-v2-spotlight-card {
@@ -1059,6 +1177,12 @@ button {
   .aev-v2-product-card {
     border-radius: 0.72rem;
     padding: 0.38rem;
+  }
+
+  .aev-v2-product-card .aev-card-cta {
+    min-height: 2rem;
+    padding-inline: 0.55rem;
+    font-size: 0.64rem;
   }
 }
 
@@ -3199,8 +3323,8 @@ button {
 
 .aev-quick-view-panel {
   position: relative;
-  width: min(58rem, 100%);
-  max-height: min(86vh, 44rem);
+  width: min(60rem, 100%);
+  max-height: min(88dvh, 45rem);
   overflow: auto;
   border-radius: 1.6rem;
   border: 1px solid rgba(255, 77, 184, 0.20);
@@ -3214,6 +3338,35 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
   overscroll-behavior: contain;
   animation: aev-quick-view-panel 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.aev-quick-view-grid,
+.aev-quick-view-content,
+.aev-quick-view-pills,
+.aev-quick-view-meta,
+.aev-quick-view-options,
+.aev-quick-view-actions {
+  min-width: 0;
+}
+
+.aev-quick-view-content {
+  overflow-wrap: anywhere;
+}
+
+.aev-quick-view-pills > *,
+.aev-quick-view-options > * {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aev-quick-view-media {
+  align-self: stretch;
+}
+
+.aev-quick-view-actions :where(a, button) {
+  max-width: 100%;
+  text-align: center;
 }
 
 .aev-button-primary:active,
@@ -3255,14 +3408,54 @@ button {
 @media (max-width: 639px) {
   .aev-quick-view-overlay {
     align-items: flex-end;
-    padding: 0.75rem 0.75rem calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.55rem 0.55rem calc(5.45rem + env(safe-area-inset-bottom, 0px));
   }
 
   .aev-quick-view-panel {
     width: 100%;
-    max-height: calc(100dvh - 6.75rem - env(safe-area-inset-bottom, 0px));
-    border-radius: 1.35rem 1.35rem 1rem 1rem;
+    max-height: calc(100dvh - 6.25rem - env(safe-area-inset-bottom, 0px));
+    border-radius: 1.1rem 1.1rem 0.85rem 0.85rem;
     animation-name: aev-quick-view-sheet;
+  }
+
+  .aev-quick-view-panel > button[aria-label="Close quick view"] {
+    right: 0.75rem;
+    top: 0.75rem;
+    height: 2.25rem;
+    width: 2.25rem;
+  }
+
+  .aev-quick-view-grid {
+    gap: 0.75rem;
+    padding: 0.6rem;
+  }
+
+  .aev-quick-view-media {
+    min-height: min(12rem, 45dvh);
+  }
+
+  .aev-quick-view-content {
+    padding: 0.2rem 0.1rem 0.35rem;
+  }
+
+  .aev-quick-view-meta {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 0.85rem;
+  }
+
+  .aev-quick-view-options {
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+  }
+
+  .aev-quick-view-options > * {
+    border-radius: 0.7rem;
+    font-size: 0.68rem;
+    line-height: 1.35;
+  }
+
+  .aev-quick-view-actions {
+    margin-top: 0.9rem;
   }
 }
 

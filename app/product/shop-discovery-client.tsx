@@ -6,9 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   ChevronDown,
+  CreditCard,
   HeartHandshake,
+  LockKeyhole,
   Moon,
+  Package,
   PackageCheck,
+  Repeat2,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -75,13 +79,18 @@ function normalized(value: string | undefined) {
 function safeShopCopy(value: string) {
   return value
     .replace(/5-Day Hygiene Support/gi, "3-Day Hygiene-Safe Support")
+    .replace(/100%\s*guaranteed/gi, "Carefully supported")
     .replace(/2yr Guaranteed reusable lifespan/gi, "Reusable care, made for repeat wear")
+    .replace(/2yr\+?\s*guaranteed/gi, "Reusable care")
     .replace(/2yr reusable lifespan/gi, "Reusable care, made for repeat wear")
     .replace(/100% Discreet delivery/gi, "Discreet privacy packaging")
+    .replace(/100%\s*discreet delivery/gi, "Discreet privacy packaging")
     .replace(/OEKO-TEX Certified/gi, "Comfort-focused materials")
+    .replace(/OEKO\s*TEX certified/gi, "Comfort-focused materials")
     .replace(/Anti-Leak/gi, "Layered support")
     .replace(/Anti-Bacterial/gi, "Breathable comfort")
-    .replace(/Anti[-\s]?bacterial/gi, "Breathable comfort");
+    .replace(/Anti[-\s]?bacterial/gi, "Breathable comfort")
+    .replace(/leak-proof/gi, "layered support");
 }
 
 function productMatchesCategory(products: ProductCatalogItem[], category: string) {
@@ -265,9 +274,11 @@ export default function ShopDiscoveryClient({
   const safeAnnouncementItems = [
     "Discreet privacy packaging",
     settings.supportWindowMessage || "3-Day Hygiene-Safe Support",
-    settings.deliveryCoverageText || "Bangladesh delivery",
+    "Premium Comfort",
     "BDT pricing",
+    "Reusable care",
     "Secure checkout",
+    settings.deliveryCoverageText || "Bangladesh delivery",
   ].map(safeShopCopy);
   const marqueeItems = (
     settings.homepageMediaSettings.marqueeItems ||
@@ -283,9 +294,10 @@ export default function ShopDiscoveryClient({
     settings.appearanceSettings.homepageHeroTitle !== "Aevyrixa Her Care"
       ? settings.appearanceSettings.homepageHeroTitle
       : "Comfort that moves with you";
-  const heroSubtitle =
+  const heroSubtitle = safeShopCopy(
     settings.appearanceSettings.homepageHeroSubtitle ||
-    "Premium reusable care for everyday comfort, discreet packaging, and Bangladesh delivery.";
+      "Premium reusable care for everyday comfort, discreet packaging, and Bangladesh delivery."
+  );
   const primaryCta = settings.appearanceSettings.primaryCtaText || "Shop Collection";
   const secondaryCta =
     settings.homepageMediaSettings.findCareCtaText ||
@@ -311,6 +323,17 @@ export default function ShopDiscoveryClient({
       tone: "text-[#C084FC]",
     },
   ];
+  const tickerIconFor = (item: string) => {
+    const text = normalized(item);
+    if (text.includes("packag") || text.includes("privacy") || text.includes("discreet")) return Package;
+    if (text.includes("hygiene") || text.includes("support")) return ShieldCheck;
+    if (text.includes("comfort")) return HeartHandshake;
+    if (text.includes("secure") || text.includes("checkout") || text.includes("lock")) return LockKeyhole;
+    if (text.includes("bdt") || text.includes("pricing")) return CreditCard;
+    if (text.includes("reusable") || text.includes("repeat") || text.includes("care")) return Repeat2;
+    if (text.includes("delivery") || text.includes("bangladesh")) return Truck;
+    return Sparkles;
+  };
 
   const resetFilters = () => {
     setQuery("");
@@ -431,6 +454,11 @@ export default function ShopDiscoveryClient({
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_22.5rem]">
           <div className="grid gap-3">
             <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.38)] sm:p-7">
+              <div className="aev-shop-hero-art" aria-hidden="true">
+                <span className="aev-shop-hero-orbit aev-shop-hero-orbit-one" />
+                <span className="aev-shop-hero-orbit aev-shop-hero-orbit-two" />
+                <span className="aev-shop-hero-line" />
+              </div>
               <div>
                 <div className="mb-3 flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
@@ -549,16 +577,19 @@ export default function ShopDiscoveryClient({
 
       <section className="aev-v2-ticker overflow-hidden border-y border-white/[0.07] bg-[#0E0A1C] py-2">
         <div className="aev-v2-ticker-track flex w-max items-center">
-          {[...tickerItems, ...tickerItems].map((item, index) => (
+          {[...tickerItems, ...tickerItems].map((item, index) => {
+            const TickerIcon = tickerIconFor(item);
+            return (
             <span
               key={`${item}-${index}`}
-              className="flex items-center gap-4 px-4 text-[0.68rem] font-semibold text-[#9C91AA]"
+              className="aev-v2-ticker-item flex items-center gap-2.5 px-3.5 text-[0.66rem] font-semibold text-[#9C91AA] sm:px-4"
             >
-              <Sparkles className="h-3 w-3 text-[#FF4DB8]" />
+              <TickerIcon className="h-3.5 w-3.5 text-[#FF4DB8]" />
               {item}
               <span className="text-[#FF4DB8]/35">/</span>
             </span>
-          ))}
+            );
+          })}
         </div>
       </section>
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
-import { ArrowRight, Eye, ShoppingCart, X } from "lucide-react";
+import { ArrowRight, Eye, Heart, ShoppingCart, X } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
 import {
@@ -298,6 +298,13 @@ export default function StorefrontProductCard({
           <div className="aev-v2-card-reveal pointer-events-none absolute inset-0 z-10 hidden flex-col justify-end rounded-[1rem] bg-[linear-gradient(180deg,transparent_26%,rgba(8,6,17,0.9))] p-3 opacity-0 transition duration-300 sm:flex md:rounded-[1.35rem]">
             <div className="pointer-events-auto flex items-center gap-2">
               {revealAction}
+              <button
+                type="button"
+                className="aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 bg-white/[0.08] text-[#9C91AA] backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1]"
+                aria-label={`Save ${product.name} to wishlist`}
+              >
+                <Heart className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
 
@@ -394,8 +401,8 @@ export default function StorefrontProductCard({
               <X className="h-4.5 w-4.5" />
             </button>
 
-            <div className="grid min-h-0 gap-4 p-3 sm:grid-cols-[0.95fr_1.05fr] sm:gap-5 sm:p-4">
-              <div className="relative min-h-[15rem] overflow-hidden rounded-[1.15rem] border border-white/[0.08] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.18),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(0,212,198,0.09),transparent_32%),linear-gradient(145deg,#211633,#080611)] sm:min-h-[21rem] sm:rounded-[1.4rem]">
+            <div className="aev-quick-view-grid grid min-h-0 gap-4 p-3 md:grid-cols-[0.95fr_1.05fr] md:gap-5 md:p-4">
+              <div className="aev-quick-view-media relative min-h-[13.5rem] overflow-hidden rounded-[1.15rem] border border-white/[0.08] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.18),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(0,212,198,0.09),transparent_32%),linear-gradient(145deg,#211633,#080611)] md:min-h-[22rem] md:rounded-[1.4rem]">
                 <div className={`pointer-events-none absolute inset-x-8 top-12 h-36 rounded-full blur-3xl ${style.glow}`} />
                 <div className="aev-product-shine pointer-events-none absolute inset-0 opacity-55" />
                 {imageUrl ? (
@@ -414,8 +421,8 @@ export default function StorefrontProductCard({
                 )}
               </div>
 
-              <div className="flex min-w-0 flex-col p-1 sm:p-2">
-                <div className="flex flex-wrap gap-1.5 pr-10">
+              <div className="aev-quick-view-content flex min-w-0 flex-col p-1 md:p-2">
+                <div className="aev-quick-view-pills flex flex-wrap gap-1.5 pr-11 md:pr-10">
                   <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${stockBadgeClass(product.stockStatus)}`}>
                     {stockStatusLabel(product.stockStatus)}
                   </span>
@@ -453,7 +460,7 @@ export default function StorefrontProductCard({
                   )}
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-2 text-xs text-[#D8CBE8]/72">
+                <div className="aev-quick-view-meta mt-5 grid grid-cols-2 gap-2 text-xs text-[#D8CBE8]/72">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-3">
                     <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9C91AA]">
                       Stock
@@ -473,7 +480,7 @@ export default function StorefrontProductCard({
                 </div>
 
                 {optionPreviews.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="aev-quick-view-options mt-4 flex flex-wrap gap-2">
                     {optionPreviews.map((option) => (
                       <span
                         key={option.label}
@@ -486,7 +493,7 @@ export default function StorefrontProductCard({
                   </div>
                 )}
 
-                <div className="mt-5 grid gap-2 sm:mt-auto">
+                <div className="aev-quick-view-actions mt-5 grid gap-2 md:mt-auto">
                   {modalPrimaryAction}
                   <Link
                     href={productHref}
