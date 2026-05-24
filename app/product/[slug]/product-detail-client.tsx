@@ -82,21 +82,31 @@ const themeStyles: Record<
   },
 };
 
-const faqs = [
+const safeTickerFallback = [
+  "Discreet Packaging",
+  "3-Day Hygiene-Safe Support",
+  "Premium Comfort",
+  "BDT Pricing",
+  "Reusable Care",
+  "Secure Checkout",
+  "Bangladesh Delivery",
+];
+
+const safeSupportFallbackFaqs = [
   {
-    question: "Can I wear it on its own?",
+    question: "How should I check the size?",
     answer:
-      "Choose the absorbency that matches your routine. Some customers also use reusable period underwear as backup support on higher-flow days.",
+      "Check fit over clean underwear or clean fitted clothing only before direct wear.",
   },
   {
-    question: "How should I wash it?",
+    question: "What keeps an item eligible for support?",
     answer:
-      "Rinse cold after wear, wash cold with mild detergent, and air dry fully. Avoid bleach, fabric softener, and high heat.",
+      "Items should remain unused, unwashed, and in original packaging with tags and hygiene liner or seal intact where applicable.",
   },
   {
-    question: "How do I choose a size?",
+    question: "When should I contact support?",
     answer:
-      "Start with your usual underwear size. If you are between sizes, choose the fit that feels more comfortable around the waist and leg opening.",
+      "Contact support within the 3-Day Hygiene-Safe Support window for eligible order, size, wrong item, or damaged item concerns.",
   },
 ];
 
@@ -130,6 +140,7 @@ export default function ProductDetailClient({
   const router = useRouter();
   const { addItem } = useCart();
   const displayProduct = publicProduct(product);
+  const hms = settings.homepageMediaSettings;
   const benefits = displayBenefits(displayProduct);
   const care = displayCare(displayProduct);
   const style =
@@ -341,6 +352,66 @@ export default function ProductDetailClient({
       ],
     },
   ];
+  const productSignalBadges = [
+    displayProduct.badgeText,
+    displayProduct.isBestSeller ? "Best Seller" : "",
+    displayProduct.isTrending ? "Trending" : "",
+    displayProduct.isNewArrival ? "New Arrival" : "",
+  ].filter((badge): badge is string => Boolean(badge));
+  const tickerItems = (hms.marqueeItems || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const safeTickerItems = (tickerItems.length ? tickerItems : safeTickerFallback)
+    .map((item) =>
+      item
+        .replace(/\bfree returns\b/gi, "3-Day Hygiene-Safe Support")
+        .replace(/\bguarantee(?:d)?\b/gi, "support")
+        .replace(/\b\d{2,}\s*k?\+?\s*(?:women|customers|orders)\b/gi, "")
+        .trim()
+    )
+    .filter(Boolean);
+  const layerCards = [
+    {
+      title: hms.layerComfortLayer1Title,
+      body: hms.layerComfortLayer1Description,
+    },
+    {
+      title: hms.layerComfortLayer2Title,
+      body: hms.layerComfortLayer2Description,
+    },
+    {
+      title: hms.layerComfortLayer3Title,
+      body: hms.layerComfortLayer3Description,
+    },
+  ].filter((card) => card.title || card.body);
+  const supportFaqs = [
+    {
+      question: hms.faqPreviewItem1Question,
+      answer: hms.faqPreviewItem1Answer,
+    },
+    {
+      question: hms.faqPreviewItem2Question,
+      answer: hms.faqPreviewItem2Answer,
+    },
+    {
+      question: hms.faqPreviewItem3Question,
+      answer: hms.faqPreviewItem3Answer,
+    },
+  ].filter((faq) => faq.question && faq.answer);
+  const displayFaqs = supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
+  const selectedImageUrl = selectedMedia?.type === "image" ? selectedMedia.url : "";
+  const layerMediaUrl =
+    hms.layerComfortMediaMode === "video_text" ||
+    hms.layerComfortMediaMode === "background_media_text" ||
+    hms.layerComfortMediaMode === "media_only"
+      ? hms.layerComfortVideoUrl || hms.layerComfortImageUrl
+      : hms.layerComfortImageUrl || selectedImageUrl || displayProduct.imageUrl || "";
+  const showLayerVideo =
+    Boolean(hms.layerComfortVideoUrl) &&
+    (hms.layerComfortMediaMode === "video_text" ||
+      hms.layerComfortMediaMode === "background_media_text" ||
+      hms.layerComfortMediaMode === "media_only");
 
   return (
     <main className="aev-cinematic-page min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+7rem+env(safe-area-inset-bottom,0px))] text-white md:pb-40 lg:pb-0">
@@ -358,7 +429,7 @@ export default function ProductDetailClient({
       />
 
       <section className="mx-auto max-w-[98rem] px-4 pb-10 pt-5 sm:px-6 md:pt-10 lg:px-8 2xl:px-6">
-        <div className="grid gap-5 rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[linear-gradient(132deg,rgba(255,77,184,0.08),rgba(21,16,36,0.96)_34%,rgba(0,212,198,0.055)_100%)] p-2.5 shadow-[0_28px_120px_rgba(0,0,0,0.44),0_0_70px_rgba(255,77,184,0.10)] sm:rounded-[2rem] sm:p-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(25rem,0.8fr)] lg:gap-0">
+        <div className="grid w-full min-w-0 max-w-full gap-5 overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[linear-gradient(132deg,rgba(255,77,184,0.08),rgba(21,16,36,0.96)_34%,rgba(0,212,198,0.055)_100%)] p-2.5 shadow-[0_28px_120px_rgba(0,0,0,0.44),0_0_70px_rgba(255,77,184,0.10)] sm:rounded-[2rem] sm:p-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(25rem,0.8fr)] lg:gap-0">
           <div className="min-w-0 p-1 sm:p-2 lg:p-4">
             <div
               className="relative overflow-hidden rounded-[1.45rem] border border-white/10 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.20),transparent_34%),radial-gradient(circle_at_16%_82%,rgba(0,212,198,0.10),transparent_32%),linear-gradient(145deg,#1B1230,#07050E)] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:rounded-[1.8rem]"
@@ -366,7 +437,7 @@ export default function ProductDetailClient({
               onTouchEnd={handleTouchEnd}
             >
               <div className={`pointer-events-none absolute inset-8 rounded-full opacity-55 blur-[72px] ${style.glow}`} />
-              <div className="aspect-[0.98] w-full min-[430px]:aspect-[1.06] lg:aspect-[1.08] xl:aspect-[1.18]">
+              <div className="aspect-[1.18] w-full min-[430px]:aspect-[1.2] lg:aspect-[1.08] xl:aspect-[1.18]">
                 {selectedMedia?.type === "video" ? (
                   <video
                     src={selectedMedia.url}
@@ -466,6 +537,14 @@ export default function ProductDetailClient({
               <span className={`rounded-full border px-3 py-1 text-xs font-medium ${style.badge}`}>
                 {displayProduct.absorbency}
               </span>
+              {productSignalBadges.slice(0, 2).map((badge) => (
+                <span
+                  key={badge}
+                  className="rounded-full border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-3 py-1 text-xs font-medium text-[#FFB3D1]"
+                >
+                  {badge}
+                </span>
+              ))}
               {displayProduct.featured && (
                 <span className="rounded-full border border-[#FFB84D]/30 bg-[#FFB84D]/10 px-3 py-1 text-xs font-medium text-[#FFC36A]">
                   Featured
@@ -476,7 +555,7 @@ export default function ProductDetailClient({
               </span>
             </div>
 
-            <h1 className="mt-4 break-words text-[2rem] font-semibold leading-[1.06] text-white [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl lg:text-[3.15rem]">
+            <h1 className="aev-product-title-r3h mt-4 max-w-[14ch] break-words font-serif text-[1.62rem] font-semibold leading-[1.04] text-white [overflow-wrap:anywhere] min-[390px]:text-[1.9rem] sm:max-w-none sm:text-5xl lg:text-[3.25rem]">
               {displayProduct.name}
             </h1>
 
@@ -637,83 +716,114 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[94rem] gap-5 px-4 pb-14 sm:px-6 lg:grid-cols-12 lg:px-8 2xl:px-6">
-        <div className="overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] shadow-[0_20px_80px_rgba(0,0,0,0.24)] lg:col-span-12">
-          <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            <div className="min-h-[18rem] bg-[#080611]">
-              <div className="aspect-[16/11] h-full lg:aspect-auto">
-                {selectedMedia?.type === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={selectedMedia.url}
-                    alt=""
-                    className="h-full w-full object-contain p-5 sm:p-8"
-                  />
-                ) : selectedMedia?.type === "video" ? (
-                  <video
-                    src={selectedMedia.url}
-                    poster={selectedMedia.poster}
-                    controls
-                    playsInline
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <ProductVisual
-                    visualTheme={displayProduct.visualTheme}
-                    label={displayProduct.absorbency}
-                  />
-                )}
+      {hms.showMarquee && safeTickerItems.length > 0 && (
+        <ProductTicker items={safeTickerItems} />
+      )}
+
+      <section className="mx-auto grid max-w-[94rem] gap-5 px-4 pb-14 pt-5 sm:px-6 lg:grid-cols-12 lg:px-8 2xl:px-6">
+        {hms.layerComfortEnabled && (
+          <div className="overflow-hidden rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] shadow-[0_20px_80px_rgba(0,0,0,0.24)] lg:col-span-12">
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <div className="min-h-[18rem] bg-[#080611]">
+                <div className="relative aspect-[16/11] h-full overflow-hidden lg:aspect-auto">
+                  {showLayerVideo && layerMediaUrl ? (
+                    <video
+                      src={layerMediaUrl}
+                      poster={hms.layerComfortImageUrl || displayProduct.imageUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : layerMediaUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={layerMediaUrl}
+                      alt={hms.layerComfortAltText || displayProduct.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <ProductVisual
+                      visualTheme={displayProduct.visualTheme}
+                      label={displayProduct.absorbency}
+                    />
+                  )}
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,rgba(8,6,17,0.72))]" />
+                  <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/10 bg-[#080611]/72 p-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#D8CBE8] backdrop-blur-md sm:left-5 sm:right-auto sm:max-w-sm sm:p-4">
+                    {displayProduct.category} / {displayProduct.absorbency}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col justify-center p-5 sm:p-7 lg:p-10">
-              <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                Why it matters
-              </p>
-              <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
-                Product support made easier to understand.
-              </h2>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-[#D8CBE8]/78">
-                {displayProduct.description || displayProduct.shortDescription}
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="#reviews"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FFB84D]/24 bg-[#FFB84D]/[0.07] px-4 text-sm font-semibold text-[#FFC36A] transition hover:border-[#FFB84D]/50 hover:text-white"
-                >
-                  <Star className="h-4 w-4" />
-                  Reviews
-                </Link>
-                <Link
-                  href={supportHref}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#00D4C6]/22 bg-[#00D4C6]/[0.06] px-4 text-sm font-semibold text-[#31E6D4] transition hover:border-[#00D4C6]/45 hover:text-white"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Fit help
-                </Link>
+              <div className="flex flex-col justify-center p-5 sm:p-7 lg:p-10">
+                <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
+                  {hms.layerComfortEyebrow || "Her Care Layer System"}
+                </p>
+                <h2 className="mt-3 max-w-2xl font-serif text-3xl font-semibold leading-tight text-white sm:text-4xl">
+                  {hms.layerComfortHeading || "Layered comfort built for calm daily wear."}
+                </h2>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-[#D8CBE8]/78">
+                  {hms.layerComfortDescription || displayProduct.description || displayProduct.shortDescription}
+                </p>
+                <div className="mt-6 grid gap-3">
+                  {layerCards.map((card, index) => (
+                    <div
+                      key={`${card.title}-${index}`}
+                      className="aev-clean-hover-line rounded-[1.15rem] border border-[#FF4DB8]/10 bg-[#1B1230]/78 p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[#00D4C6] shadow-[0_0_16px_rgba(0,212,198,0.45)]" />
+                        <div>
+                          <h3 className="text-sm font-semibold text-white">{card.title}</h3>
+                          <p className="mt-1 text-sm leading-6 text-[#9C91AA]">{card.body}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {(hms.layerComfortCtaText || hms.layerComfortCtaLink) && (
+                    <Link
+                      href={hms.layerComfortCtaLink || "/product"}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:text-white"
+                    >
+                      {hms.layerComfortCtaText || "Explore care"}
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                  <Link
+                    href={supportHref}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#00D4C6]/22 bg-[#00D4C6]/[0.06] px-4 text-sm font-semibold text-[#31E6D4] transition hover:border-[#00D4C6]/45 hover:text-white"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Fit help
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="lg:col-span-12">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                Product Promise
+                {hms.findCareEyebrow || "Product Promise"}
               </p>
-              <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-                Clear benefits, no guesswork
+              <h2 className="mt-2 font-serif text-2xl font-semibold text-white sm:text-3xl">
+                {hms.findCareHeading || "Clear benefits, no guesswork"}
               </h2>
             </div>
             <p className="max-w-xl text-sm leading-6 text-[#9C91AA]">
-              Short, practical signals pulled from the product setup so admin-managed copy remains the source of truth.
+              {hms.findCareDescription || "Short, practical signals pulled from the product setup."}
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {promiseCards.map((card, index) => (
               <div
                 key={`${card.body}-${index}`}
-                className="rounded-[1.35rem] border border-[#FF4DB8]/10 bg-[linear-gradient(145deg,rgba(255,77,184,0.055),rgba(27,18,48,0.92))] p-4 shadow-[0_14px_48px_rgba(0,0,0,0.22)] sm:p-5"
+                className="aev-clean-hover-line rounded-[1.35rem] border border-[#FF4DB8]/10 bg-[linear-gradient(145deg,rgba(255,77,184,0.055),rgba(27,18,48,0.92))] p-4 shadow-[0_14px_48px_rgba(0,0,0,0.22)] sm:p-5"
               >
                 <Check className={`h-5 w-5 ${style.accent}`} />
                 <h3 className="mt-4 text-base font-semibold text-white">{card.title}</h3>
@@ -727,13 +837,13 @@ export default function ProductDetailClient({
           <div className="grid gap-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:items-start">
             <div>
               <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${style.accent}`}>
-                Fit, Care & Support
+                {hms.faqPreviewEyebrow || "Fit, Care & Support"}
               </p>
-              <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
-                Practical guidance in one place
+              <h2 className="mt-3 font-serif text-2xl font-semibold text-white sm:text-3xl">
+                {hms.faqPreviewHeading || "Practical guidance in one place"}
               </h2>
               <p className="mt-3 text-sm leading-7 text-[#9C91AA]">
-                Size, wash, delivery, and hygiene-safe support details are consolidated here so the top purchase stage can stay focused.
+                Check fit over clean underwear or clothing only. Keep items unused, unwashed, and in original packaging with hygiene seal intact where applicable.
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
@@ -756,7 +866,7 @@ export default function ProductDetailClient({
             </div>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {faqs.map((faq, index) => (
+            {displayFaqs.map((faq, index) => (
               <details
                 key={`${faq.question}-${index}`}
                 className="group rounded-[1.15rem] border border-[#FF4DB8]/10 bg-[#080611]/44 p-4"
@@ -808,7 +918,9 @@ export default function ProductDetailClient({
         </section>
       )}
 
-      <SiteFooter settings={settings} />
+      <div className="hidden lg:block">
+        <SiteFooter settings={settings} />
+      </div>
 
       {/* ── Lightbox ── */}
       {lightboxOpen && selectedMedia?.type === "image" && (
@@ -855,7 +967,7 @@ export default function ProductDetailClient({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden items-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230] min-[420px]:flex">
+            <div className="hidden items-center rounded-full border border-[#FF4DB8]/18 bg-[#1B1230] sm:flex">
               <button
                 onClick={decreaseQuantity}
                 disabled={!canAddToCart || quantity <= 1}
@@ -879,14 +991,16 @@ export default function ProductDetailClient({
             <button
               onClick={() => handleAddToCart(false)}
               disabled={!canAddToCart}
-              className={`flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition min-[390px]:px-5 ${
+              className={`flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition min-[390px]:px-5 ${
                 canAddToCart
                   ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] hover:scale-[1.01] ${style.primary}`
                   : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"
               }`}
             >
               <ShoppingCart className="h-4 w-4" />
-              {canAddToCart ? "Add" : "Out"}
+              <span className="hidden sm:inline">
+                {canAddToCart ? "Add" : "Out"}
+              </span>
             </button>
           </div>
         </div>
@@ -978,6 +1092,24 @@ function ColorSwatch({ color }: { color: string }) {
   );
 }
 
+function ProductTicker({ items }: { items: string[] }) {
+  const loop = [...items, ...items];
+
+  return (
+    <div className="aev-product-ticker" aria-label="Product service highlights">
+      <div className="aev-product-ticker-track">
+        <div className="aev-product-ticker-group">
+          {loop.map((item, index) => (
+            <span key={`${item}-${index}`} className="aev-product-ticker-item">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StarRating({ rating }: { rating: number }) {
   const rounded = Math.round(rating);
   return (
@@ -1055,11 +1187,13 @@ function ProductReviewsSection({
                 </p>
                 <p className="mt-2">
                   <span className="rounded-full border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] px-2.5 py-1 text-[11px] font-semibold text-[#31E6D4]">
-                    {review.verifiedPurchase
+                    {review.verifiedPurchase && review.sourceType === "order-linked"
                       ? "Verified purchase"
                       : review.sourceType === "imported"
                         ? "Curated customer feedback"
-                        : "Customer review"}
+                        : review.sourceType === "admin-added"
+                          ? "Admin-approved review"
+                          : "Customer review"}
                   </span>
                 </p>
                 <p className="mt-3 break-words text-sm leading-7 text-[#D8CBE8]/80 [overflow-wrap:anywhere]">
