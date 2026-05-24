@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aevyrixa Her Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080612;--s1:#0e0a1c;--s2:#130f22;--s3:#18132a;
+  --pk:#ff2d82;--pk2:rgba(255,45,130,.12);--pk3:rgba(255,45,130,.06);
+  --tl:#00dfc8;--tl2:rgba(0,223,200,.1);
+  --pu:#8b5cf6;--pu2:rgba(139,92,246,.1);
+  --am:#f59e0b;--am2:rgba(245,158,11,.1);
+  --tx:#f2eeff;--dm:#8878a0;--dd:#3e3658;
+  --br:rgba(255,255,255,.07);--br2:rgba(255,255,255,.04);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+background:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(255,45,130,.05) 0%,transparent 60%),
+radial-gradient(ellipse 60% 50% at 85% 80%,rgba(139,92,246,.06) 0%,transparent 60%),
+radial-gradient(ellipse 50% 40% at 50% 50%,rgba(0,223,200,.03) 0%,transparent 70%);}
+
+/* CURSOR */
+#dot{position:fixed;width:7px;height:7px;border-radius:50%;background:var(--pk);pointer-events:none;z-index:9000;transform:translate(-50%,-50%);mix-blend-mode:screen;}
+#ring{position:fixed;width:28px;height:28px;border:1px solid rgba(255,45,130,.3);border-radius:50%;pointer-events:none;z-index:8999;transform:translate(-50%,-50%);transition:width.25s,height.25s,border-color.25s;}
+body:has(a:hover) #dot,body:has(button:hover) #dot{background:var(--tl);width:10px;height:10px;}
+body:has(a:hover) #ring,body:has(button:hover) #ring{border-color:rgba(0,223,200,.4);width:40px;height:40px;}
+
+/* LOADER */
+#ldr{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity.8s,visibility.8s;}
+#ldr.out{opacity:0;visibility:hidden;}
+.ll-logo{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,56px);font-weight:800;letter-spacing:-.04em;background:linear-gradient(90deg,var(--pk),var(--pu),var(--tl));-webkit-background-clip:text;background-clip:text;color:transparent;background-size:300%;animation:grshift 2s linear infinite;}
+@keyframes grshift{0%{background-position:0%}100%{background-position:300%}}
+.ll-sub{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.35em;color:var(--dd);text-transform:uppercase;}
+.ll-bar{width:80px;height:1px;background:var(--br);position:relative;overflow:hidden;}
+.ll-bar::after{content:'';position:absolute;inset:0;background:var(--pk);transform:translateX(-100%);animation:lbsw 1.2s ease .3s forwards;}
+@keyframes lbsw{to{transform:translateX(100%)}}
+
+/* PROGRESS */
+#prg{position:fixed;top:0;left:0;right:0;height:2px;z-index:800;}
+#prgf{height:100%;background:linear-gradient(90deg,var(--pk),var(--pu),var(--tl));transform-origin:left;transform:scaleX(0);}
+
+/* ANN BAR */
+.ann{background:linear-gradient(90deg,#ff1a6e,#8b3cf0,#00c4b0);padding:7px 20px;text-align:center;position:relative;z-index:2;}
+.ann span{font-size:11px;color:#fff;font-weight:500;letter-spacing:.03em;}
+.ann span+span::before{content:'·';margin:0 10px;opacity:.5;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:600;height:54px;display:flex;align-items:center;padding:0 36px;gap:14px;background:rgba(8,6,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--br);}
+.nlogo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;}
+.nlogo-mark{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--pk),var(--pu));display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;}
+.nlogo-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,var(--pk),var(--pu));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.nlogo-tag{font-size:8px;color:var(--pk);letter-spacing:.1em;text-transform:uppercase;}
+.nsep{width:1px;height:16px;background:var(--br);margin:0 4px;}
+.nlinks{display:flex;gap:2px;}
+.nlinks a{padding:4px 11px;font-size:11px;color:var(--dm);text-decoration:none;border-radius:5px;transition:all.2s;}
+.nlinks a:hover,.nlinks a.on{color:var(--tx);background:var(--br2);}
+.nlinks a.on{color:var(--pk);}
+.nsearch{flex:1;max-width:220px;margin-left:auto;position:relative;}
+.nsearch input{width:100%;padding:6px 10px 6px 28px;background:var(--br2);border:1px solid var(--br);border-radius:6px;color:var(--dm);font-size:11px;font-family:'DM Sans',sans-serif;outline:none;transition:all.25s;cursor:none;}
+.nsearch input:focus{border-color:rgba(255,45,130,.3);}
+.nsico{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.25;pointer-events:none;}
+.nicons{display:flex;gap:5px;margin-left:8px;}
+.nico{width:32px;height:32px;border:1px solid var(--br);border-radius:6px;background:var(--br2);display:flex;align-items:center;justify-content:center;cursor:none;transition:all.2s;text-decoration:none;color:var(--dm);position:relative;}
+.nico:hover{border-color:rgba(255,45,130,.3);color:var(--pk);background:var(--pk3);}
+.nbadge{position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:var(--pk);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;border:1px solid var(--bg);}
+
+/* ═══════════════ COMPACT HERO (BENTO) ═══════════════ */
+.hero{position:relative;z-index:1;padding:28px 36px;display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:stretch;max-height:62vh;min-height:340px;}
+
+/* LEFT BENTO AREA */
+.hero-l{display:grid;grid-template-rows:1fr auto;gap:12px;}
+.hero-main-card{background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--br);border-radius:16px;padding:28px 32px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;}
+.hero-main-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(rgba(255,45,130,.15),transparent 70%);pointer-events:none;}
+.hm-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.hm-dot{width:5px;height:5px;border-radius:50%;background:var(--pk);animation:pdot 2s ease-in-out infinite;}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(255,45,130,.4)}60%{box-shadow:0 0 0 6px rgba(255,45,130,0)}}
+.hm-tag{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.25em;color:var(--dm);text-transform:uppercase;}
+.hm-h{font-family:'Syne',sans-serif;font-size:clamp(22px,2.8vw,34px);font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:8px;}
+.hm-h em{font-style:normal;background:linear-gradient(90deg,var(--pk),var(--pu));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hm-sub{font-size:12px;color:var(--dm);line-height:1.65;margin-bottom:16px;max-width:380px;}
+.hm-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.hbtn-pk{padding:10px 24px;background:var(--pk);color:#fff;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:none;transition:all.25s;letter-spacing:.03em;}
+.hbtn-pk:hover{box-shadow:0 8px 24px rgba(255,45,130,.35);transform:translateY(-1px);}
+.hbtn-gh{padding:10px 20px;background:transparent;color:var(--tx);border:1px solid var(--br);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:none;transition:all.25s;}
+.hbtn-gh:hover{border-color:rgba(255,45,130,.35);color:var(--pk);}
+
+/* HERO BOTTOM BENTO ROW */
+.hero-bottom-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.hstat-card{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;transition:border-color.25s;}
+.hstat-card:hover{border-color:rgba(255,45,130,.2);}
+.hsc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.hsc-n{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.03em;line-height:1;}
+.hsc-l{font-size:9px;color:var(--dm);margin-top:1px;}
+
+/* RIGHT BENTO */
+.hero-r{display:grid;grid-template-rows:1fr auto;gap:12px;}
+.hero-prod-card{background:linear-gradient(145deg,#1a0e28,#0e0a1f,#0a0e24);border:1px solid var(--br);border-radius:16px;overflow:hidden;position:relative;flex:1;}
+#hcan{position:absolute;inset:0;width:100%;height:100%;}
+.hpc-overlay{position:absolute;bottom:0;left:0;right:0;padding:12px 14px;background:linear-gradient(transparent,rgba(8,6,18,.9));}
+.hpc-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.15em;color:rgba(255,45,130,.6);text-transform:uppercase;}
+.hpc-name{font-size:12px;font-weight:600;color:var(--tx);}
+.hero-trust{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:12px 16px;}
+.trust-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.tpill{padding:3px 9px;border-radius:20px;font-size:9px;font-weight:500;border:1px solid var(--br);color:var(--dm);display:flex;align-items:center;gap:4px;}
+.tpill-dot{width:4px;height:4px;border-radius:50%;}
+
+/* ═══════════════ TICKER ═══════════════ */
+.ticker{overflow:hidden;padding:9px 0;background:var(--s1);border-top:1px solid var(--br);border-bottom:1px solid var(--br);position:relative;z-index:1;}
+.tk-track{display:flex;width:max-content;animation:tkanim 25s linear infinite;}
+@keyframes tkanim{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tki{display:flex;align-items:center;gap:18px;padding:0 18px;white-space:nowrap;}
+.tk-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dm);}
+.tk-ic{font-size:11px;}
+.tk-sep{color:var(--pk);opacity:.3;}
+
+/* ═══════════════ FLOW FINDER ═══════════════ */
+.flow-finder{padding:28px 36px;background:linear-gradient(90deg,rgba(255,45,130,.04),rgba(139,92,246,.05),rgba(0,223,200,.03));border-bottom:1px solid var(--br);position:relative;z-index:1;}
+.ff-inner{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.ff-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:-.02em;flex-shrink:0;}
+.ff-label span{color:var(--pk);}
+.ff-btns{display:flex;gap:7px;flex-wrap:wrap;}
+.ff-btn{padding:7px 18px;border:1px solid var(--br);border-radius:20px;background:var(--br2);color:var(--dm);font-size:11px;font-weight:500;cursor:none;transition:all.25s;display:flex;align-items:center;gap:6px;}
+.ff-btn .fb-dot{width:6px;height:6px;border-radius:50%;transition:background.25s;}
+.ff-btn:hover{border-color:rgba(255,45,130,.3);color:var(--tx);}
+.ff-btn.on{color:var(--tx);}
+.ff-btn.on[data-flow="light"]{border-color:var(--tl);background:var(--tl2);}
+.ff-btn.on[data-flow="light"] .fb-dot{background:var(--tl);}
+.ff-btn.on[data-flow="moderate"]{border-color:var(--pu);background:var(--pu2);}
+.ff-btn.on[data-flow="moderate"] .fb-dot{background:var(--pu);}
+.ff-btn.on[data-flow="heavy"]{border-color:var(--pk);background:var(--pk2);}
+.ff-btn.on[data-flow="heavy"] .fb-dot{background:var(--pk);}
+.ff-btn.on[data-flow="night"]{border-color:var(--am);background:var(--am2);}
+.ff-btn.on[data-flow="night"] .fb-dot{background:var(--am);}
+.ff-result{margin-left:auto;font-size:11px;color:var(--dm);}
+.ff-result span{color:var(--pk);font-weight:600;}
+
+/* ═══════════════ SHOP AREA ═══════════════ */
+.shop-area{max-width:1240px;margin:0 auto;padding:0 36px;}
+
+/* SORT BAR */
+.sort-bar{display:flex;align-items:center;gap:10px;padding:18px 0 14px;border-bottom:1px solid var(--br);}
+.sort-bar-left{display:flex;gap:5px;flex:1;flex-wrap:wrap;}
+.scat{padding:5px 13px;border:1px solid var(--br);border-radius:20px;background:var(--br2);color:var(--dm);font-size:10px;font-weight:500;cursor:none;transition:all.2s;white-space:nowrap;}
+.scat:hover{border-color:rgba(255,45,130,.3);color:var(--tx);}
+.scat.on{border-color:var(--pk);background:var(--pk2);color:var(--pk);}
+.sort-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sort-sel{padding:5px 10px;background:var(--br2);border:1px solid var(--br);border-radius:6px;color:var(--dm);font-size:10px;font-family:'DM Sans',sans-serif;outline:none;cursor:none;}
+.rct{font-size:10px;color:var(--dd);}
+
+/* SECTION LABEL */
+.sec-lbl{padding:24px 0 16px;display:flex;align-items:center;gap:12px;}
+.sl-eye{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.22em;color:var(--pk);text-transform:uppercase;}
+.sl-h{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;}
+.sl-line{flex:1;height:1px;background:var(--br);}
+
+/* PRODUCT GRID */
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+.pgrid.cols3{grid-template-columns:repeat(3,1fr);}
+
+/* ─── PRODUCT CARD ─── */
+.pcard{border-radius:14px;overflow:hidden;background:var(--s1);border:1px solid var(--br);cursor:none;transition:border-color.3s,box-shadow.3s;position:relative;}
+.pcard:hover{border-color:rgba(255,45,130,.22);box-shadow:0 0 0 1px rgba(255,45,130,.08),0 12px 32px rgba(0,0,0,.35);}
+/* Glow matches product color */
+.pcard[data-glow="pk"]:hover{box-shadow:0 0 20px rgba(255,45,130,.12),0 12px 32px rgba(0,0,0,.35);}
+.pcard[data-glow="tl"]:hover{box-shadow:0 0 20px rgba(0,223,200,.1),0 12px 32px rgba(0,0,0,.35);border-color:rgba(0,223,200,.2);}
+.pcard[data-glow="pu"]:hover{box-shadow:0 0 20px rgba(139,92,246,.1),0 12px 32px rgba(0,0,0,.35);border-color:rgba(139,92,246,.2);}
+
+/* IMAGE */
+.pc-img{position:relative;aspect-ratio:1;overflow:hidden;}
+.pc-img canvas{position:absolute;inset:0;width:100%;height:100%;}
+.pc-badges{position:absolute;top:10px;left:10px;display:flex;gap:4px;flex-wrap:wrap;z-index:2;}
+.pcb{padding:3px 8px;border-radius:20px;font-size:8px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;backdrop-filter:blur(8px);}
+.pcb.n{background:rgba(255,45,130,.85);color:#fff;}
+.pcb.f{background:rgba(139,92,246,.85);color:#fff;}
+.pcb.l{background:rgba(245,158,11,.85);color:#fff;}
+.pcb.o{background:rgba(50,50,70,.8);color:rgba(255,255,255,.5);}
+/* STOCK DOT */
+.pc-stock{position:absolute;top:10px;right:10px;z-index:2;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(8,6,18,.7);backdrop-filter:blur(8px);border:1px solid var(--br);}
+.psd{width:5px;height:5px;border-radius:50%;animation:psdot 2s ease-in-out infinite;}
+.psd.ins{background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.4);}
+.psd.out{background:var(--dd);animation:none;}
+@keyframes psdot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+.ps-txt{font-size:8px;font-weight:600;}
+.ps-txt.ins{color:#22c55e;}
+.ps-txt.out{color:var(--dm);}
+
+/* SLIDE-UP HOVER REVEAL */
+.pc-reveal{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;z-index:3;background:linear-gradient(transparent 30%,rgba(8,6,18,.88));transform:translateY(100%);transition:transform.3s cubic-bezier(.4,0,.2,1);}
+.pcard:hover .pc-reveal{transform:translateY(0);}
+.pr-actions{display:flex;gap:6px;}
+.pr-add{flex:1;padding:9px;background:var(--pk);border:none;border-radius:7px;color:#fff;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;cursor:none;transition:all.2s;letter-spacing:.03em;}
+.pr-add:hover{background:#e81870;}
+.pr-add.done{background:#22c55e;}
+.pr-wish{width:34px;height:34px;border:1px solid rgba(255,255,255,.15);border-radius:7px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;cursor:none;transition:all.2s;color:var(--dm);flex-shrink:0;}
+.pr-wish:hover{border-color:var(--pk);color:var(--pk);}
+
+/* CARD BODY */
+.pc-body{padding:13px 13px 14px;}
+.pc-type{font-size:9px;color:var(--dm);letter-spacing:.05em;margin-bottom:5px;}
+.pc-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:-.02em;line-height:1.25;margin-bottom:4px;}
+.pc-desc{font-size:10px;color:var(--dm);line-height:1.5;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pc-price-row{display:flex;align-items:center;justify-content:space-between;}
+.pc-price{display:flex;align-items:baseline;gap:5px;}
+.pc-p{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--pk);}
+.pc-po{font-size:10px;color:var(--dd);text-decoration:line-through;}
+.pc-ps{font-size:8px;font-weight:700;color:var(--tl);}
+.pc-btn{padding:6px 13px;border:none;border-radius:5px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;cursor:none;transition:all.2s;letter-spacing:.04em;}
+.pc-btn.add{background:var(--pk2);color:var(--pk);}
+.pc-btn.add:hover{background:rgba(255,45,130,.2);}
+.pc-btn.opt{background:var(--pu2);color:var(--pu);}
+.pc-btn.opt:hover{background:rgba(139,92,246,.2);}
+
+/* ═══════════════ BENTO BRAND SECTION ═══════════════ */
+.brand-bento{padding:36px 36px;border-top:1px solid var(--br);position:relative;z-index:1;}
+.bb-inner{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto;gap:12px;}
+.bb-card{border:1px solid var(--br);border-radius:14px;background:var(--s1);padding:20px;transition:border-color.25s;}
+.bb-card:hover{border-color:rgba(255,45,130,.18);}
+.bb-card.wide{grid-column:span 2;}
+.bb-card.tall{grid-row:span 2;}
+.bb-icon{font-size:22px;margin-bottom:10px;}
+.bb-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.04em;background:linear-gradient(90deg,var(--pk),var(--pu));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;margin-bottom:4px;}
+.bb-l{font-size:11px;color:var(--dm);line-height:1.5;}
+.bb-card.accent{background:linear-gradient(135deg,rgba(255,45,130,.08),rgba(139,92,246,.06));border-color:rgba(255,45,130,.15);}
+.bb-big-h{font-family:'Syne',sans-serif;font-size:clamp(18px,2vw,24px);font-weight:800;letter-spacing:-.04em;line-height:1.15;margin-bottom:8px;}
+.bb-big-h em{font-style:italic;color:var(--pk);}
+.bb-big-p{font-size:12px;color:var(--dm);line-height:1.7;}
+.bb-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;}
+.bb-chip{padding:3px 9px;border:1px solid var(--br);border-radius:20px;font-size:9px;color:var(--dm);}
+
+/* ═══════════════ HELP BLOCK ═══════════════ */
+.help-block{margin:0 36px 32px;border:1px solid var(--br);border-radius:14px;padding:36px 40px;background:var(--s1);position:relative;overflow:hidden;text-align:center;max-width:1240px;margin-left:auto;margin-right:auto;}
+.help-block::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% 50%,rgba(255,45,130,.05),transparent);pointer-events:none;}
+.hb-rel{position:relative;z-index:1;}
+.hb-e{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.25em;color:var(--pk);text-transform:uppercase;margin-bottom:10px;}
+.hb-h{font-family:'Syne',sans-serif;font-size:clamp(20px,2.5vw,28px);font-weight:800;letter-spacing:-.04em;margin-bottom:8px;}
+.hb-sub{font-size:12px;color:var(--dm);margin-bottom:20px;max-width:400px;margin-left:auto;margin-right:auto;}
+.hb-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.hb-wa{padding:10px 24px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.2);border-radius:7px;color:#25d366;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:none;display:flex;align-items:center;gap:7px;transition:all.25s;}
+.hb-wa:hover{background:rgba(37,211,102,.18);}
+.hb-mail{padding:10px 24px;background:var(--br2);border:1px solid var(--br);border-radius:7px;color:var(--dm);font-family:'DM Sans',sans-serif;font-size:11px;cursor:none;transition:all.25s;}
+.hb-mail:hover{border-color:rgba(255,45,130,.3);color:var(--pk);}
+
+/* ═══════════════ FOOTER ═══════════════ */
+footer{background:var(--s1);border-top:1px solid var(--br);padding:40px 36px 24px;position:relative;z-index:1;}
+.ft-top{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px;}
+.ft-brand .fl{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;background:linear-gradient(90deg,var(--pk),var(--pu));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px;}
+.ft-brand .fs{font-size:9px;color:var(--pk);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.ft-brand p{font-size:11px;color:var(--dm);line-height:1.7;margin-bottom:14px;}
+.ft-contacts{display:flex;flex-direction:column;gap:4px;}
+.ftc{font-size:10px;color:var(--dm);}
+.ftc a{color:var(--dm);text-decoration:none;transition:color.2s;}
+.ftc a:hover{color:var(--pk);}
+.ft-socials{display:flex;gap:6px;margin-top:12px;}
+.ftsoc{width:30px;height:30px;border:1px solid var(--br);border-radius:6px;background:var(--br2);display:flex;align-items:center;justify-content:center;cursor:none;transition:all.2s;text-decoration:none;color:var(--dm);}
+.ftsoc:hover{border-color:rgba(255,45,130,.3);color:var(--pk);}
+.ft-col h4{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dd);margin-bottom:12px;}
+.ft-col a{display:block;font-size:11px;color:var(--dm);text-decoration:none;margin-bottom:7px;transition:color.2s;}
+.ft-col a:hover{color:var(--pk);}
+.ft-bottom{max-width:1240px;margin:0 auto;padding-top:20px;border-top:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.ftb-copy{font-size:9px;color:var(--dd);}
+.ftb-links{display:flex;gap:14px;}
+.ftb-links a{font-size:9px;color:var(--dd);text-decoration:none;transition:color.2s;}
+.ftb-links a:hover{color:var(--pk);}
+
+/* STICKY CART */
+#scart{position:fixed;bottom:0;left:0;right:0;z-index:500;display:flex;align-items:center;gap:16px;padding:10px 36px;background:rgba(8,6,18,.95);backdrop-filter:blur(20px);border-top:1px solid var(--br);transform:translateY(100%);transition:transform.4s cubic-bezier(.4,0,.2,1);}
+#scart.up{transform:translateY(0);}
+.sc-info{flex:1;}
+.sc-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:-.01em;}
+.sc-price{font-size:10px;color:var(--pk);}
+.sc-btn{padding:9px 28px;background:var(--pk);color:#fff;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:none;transition:all.25s;}
+.sc-btn:hover{box-shadow:0 6px 20px rgba(255,45,130,.3);transform:translateY(-1px);}
+
+/* REVEALS */
+.rv{opacity:0;transform:translateY(14px);transition:opacity.55s ease,transform.55s ease;}
+.rv.v{opacity:1;transform:none;}
+.sg>*{opacity:0;transform:translateY(12px);transition:opacity.45s ease,transform.45s ease;}
+.sg.v>*:nth-child(1){opacity:1;transform:none;transition-delay:.03s;}
+.sg.v>*:nth-child(2){opacity:1;transform:none;transition-delay:.08s;}
+.sg.v>*:nth-child(3){opacity:1;transform:none;transition-delay:.13s;}
+.sg.v>*:nth-child(4){opacity:1;transform:none;transition-delay:.18s;}
+.sg.v>*:nth-child(5){opacity:1;transform:none;transition-delay:.23s;}
+.sg.v>*:nth-child(6){opacity:1;transform:none;transition-delay:.28s;}
+.sg.v>*:nth-child(7){opacity:1;transform:none;transition-delay:.33s;}
+</style>
+</head>
+<body>
+<div id="dot"></div><div id="ring"></div>
+<div id="prg"><div id="prgf"></div></div>
+
+<!-- LOADER -->
+<div id="ldr">
+  <div class="ll-sub">Her Care Collection</div>
+  <div class="ll-logo">AEVYRIXA</div>
+  <div class="ll-sub" style="margin-top:4px">Premium Women's Care · Bangladesh</div>
+  <div class="ll-bar"></div>
+</div>
+
+<!-- ANN -->
+<div class="ann">
+  <span>🎀 Free discreet delivery above BDT 150</span>
+  <span>📦 Plain packaging — no brand name outside</span>
+  <span>🛡️ 5-Day Hygiene Support</span>
+  <span>🚚 Nationwide Bangladesh delivery</span>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nlogo">
+    <div class="nlogo-mark">A</div>
+    <div><div class="nlogo-name">Aevyrixa</div><div class="nlogo-tag">Her Care</div></div>
+  </a>
+  <div class="nsep"></div>
+  <div class="nlinks">
+    <a href="#">Home</a><a href="#" class="on">Shop</a>
+    <a href="#">Track Order</a><a href="#">Profile</a>
+  </div>
+  <div class="nsearch">
+    <svg class="nsico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search Her Care...">
+  </div>
+  <div class="nicons">
+    <a href="#" class="nico" title="Wishlist">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </a>
+    <a href="#" class="nico" title="Cart">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <div class="nbadge">3</div>
+    </a>
+  </div>
+</nav>
+
+<!-- COMPACT HERO (BENTO GRID) -->
+<section class="hero">
+  <!-- LEFT -->
+  <div class="hero-l">
+    <div class="hero-main-card">
+      <div>
+        <div class="hm-eyebrow"><div class="hm-dot"></div><span class="hm-tag">Her Care Collection · 2025</span></div>
+        <h1 class="hm-h">Comfort that<br><em>moves with you</em></h1>
+        <p class="hm-sub">Premium reusable period care for Bangladeshi women. Soft, discreet, built to last — delivered in plain packaging to your door.</p>
+      </div>
+      <div class="hm-btns">
+        <button class="hbtn-pk">Shop Collection</button>
+        <button class="hbtn-gh">Find My Size →</button>
+      </div>
+    </div>
+    <div class="hero-bottom-row">
+      <div class="hstat-card">
+        <div class="hsc-icon" style="background:var(--pk2)">♻️</div>
+        <div><div class="hsc-n">2yr</div><div class="hsc-l">Reusable lifespan</div></div>
+      </div>
+      <div class="hstat-card">
+        <div class="hsc-icon" style="background:var(--tl2)">📦</div>
+        <div><div class="hsc-n">100%</div><div class="hsc-l">Discreet delivery</div></div>
+      </div>
+      <div class="hstat-card">
+        <div class="hsc-icon" style="background:var(--pu2)">🛡️</div>
+        <div><div class="hsc-n">OEKO</div><div class="hsc-l">TEX Certified</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- RIGHT -->
+  <div class="hero-r">
+    <div class="hero-prod-card">
+      <canvas id="hcan"></canvas>
+      <div class="hpc-overlay">
+        <div class="hpc-label">Heavy Flow Support</div>
+        <div class="hpc-name">Aevyrixa Her Care Period Panty</div>
+      </div>
+    </div>
+    <div class="hero-trust">
+      <div class="trust-pills">
+        <div class="tpill"><div class="tpill-dot" style="background:#22c55e"></div>In Stock</div>
+        <div class="tpill"><div class="tpill-dot" style="background:var(--pk)"></div>Triple Layer</div>
+        <div class="tpill"><div class="tpill-dot" style="background:var(--tl)"></div>Anti-Leak</div>
+        <div class="tpill"><div class="tpill-dot" style="background:var(--pu)"></div>Anti-Bacterial</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="tk-track">
+    <div class="tki">
+      <div class="tk-item"><span class="tk-ic">🎀</span>Discreet Packaging</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">♻️</span>Reusable · 2+ Years</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">🛡️</span>Triple-Layer Protection</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">🚚</span>Nationwide BD Delivery</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">✅</span>OEKO-TEX Certified</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">💬</span>WhatsApp Support</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">💳</span>Pay on Delivery</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">🎀</span>Discreet Packaging</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">♻️</span>Reusable · 2+ Years</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">🛡️</span>Triple-Layer Protection</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">🚚</span>Nationwide BD Delivery</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">✅</span>OEKO-TEX Certified</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">💬</span>WhatsApp Support</div><span class="tk-sep">✦</span>
+      <div class="tk-item"><span class="tk-ic">💳</span>Pay on Delivery</div><span class="tk-sep">✦</span>
+    </div>
+  </div>
+</div>
+
+<!-- FLOW FINDER -->
+<div class="flow-finder">
+  <div class="ff-inner">
+    <div class="ff-label">Find your <span>flow</span> →</div>
+    <div class="ff-btns">
+      <button class="ff-btn on" data-flow="all" onclick="flowFilter(this,'all')"><div class="fb-dot" style="background:var(--dm)"></div>Show All</button>
+      <button class="ff-btn" data-flow="light" onclick="flowFilter(this,'light')"><div class="fb-dot" style="background:var(--dd)"></div>Light Days</button>
+      <button class="ff-btn" data-flow="moderate" onclick="flowFilter(this,'moderate')"><div class="fb-dot" style="background:var(--dd)"></div>Moderate</button>
+      <button class="ff-btn" data-flow="heavy" onclick="flowFilter(this,'heavy')"><div class="fb-dot" style="background:var(--dd)"></div>Heavy Flow</button>
+      <button class="ff-btn" data-flow="night" onclick="flowFilter(this,'night')"><div class="fb-dot" style="background:var(--dd)"></div>Night Comfort</button>
+    </div>
+    <div class="ff-result" id="ffres">Showing <span>6</span> products</div>
+  </div>
+</div>
+
+<!-- SHOP GRID -->
+<div class="shop-area">
+  <!-- SORT BAR -->
+  <div class="sort-bar rv">
+    <div class="sort-bar-left">
+      <button class="scat on" onclick="sortCat(this,'all')">All</button>
+      <button class="scat" onclick="sortCat(this,'best')">⭐ Best Picks</button>
+      <button class="scat" onclick="sortCat(this,'new')">🆕 New</button>
+      <button class="scat" onclick="sortCat(this,'limited')">⚡ Limited Stock</button>
+    </div>
+    <div class="sort-right">
+      <span class="rct" id="rct">6 products</span>
+      <select class="sort-sel" onchange="doSort(this.value)">
+        <option value="">Featured</option>
+        <option value="low">Price: Low→High</option>
+        <option value="high">Price: High→Low</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- BEST PICKS -->
+  <div class="sec-lbl rv"><span class="sl-eye">Best Picks</span><span class="sl-line"></span><span class="sl-h">Our best picks</span><span class="sl-line"></span></div>
+  <div class="pgrid cols3 sg" id="pg1">
+
+    <div class="pcard" data-flow="night" data-cat="best" data-price="42" data-glow="pk">
+      <div class="pc-img" style="background:linear-gradient(145deg,#28102a,#1a0a20,#200a28)">
+        <canvas class="pcc" data-r="220" data-g="80" data-b="180" data-p="0"></canvas>
+        <div class="pc-badges"><span class="pcb f">Featured</span><span class="pcb n">New</span></div>
+        <div class="pc-stock"><div class="psd ins"></div><span class="ps-txt ins">In stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" onclick="addCart(this)">+ Add to Cart</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Period Panty – Night Comfort</div>
+        <div class="pc-desc">Extended comfort for sleep, travel, and long wear moments with soft secure fit.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 42</span><span class="pc-po">BDT 56</span><span class="pc-ps">−25%</span></div>
+          <button class="pc-btn opt">Options</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard" data-flow="heavy" data-cat="best" data-price="39" data-glow="tl">
+      <div class="pc-img" style="background:linear-gradient(145deg,#061828,#041020,#06181e)">
+        <canvas class="pcc" data-r="0" data-g="200" data-b="190" data-p="2"></canvas>
+        <div class="pc-badges"><span class="pcb f">Featured</span><span class="pcb n">New</span></div>
+        <div class="pc-stock"><div class="psd ins"></div><span class="ps-txt ins">In stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" onclick="addCart(this)">+ Add to Cart</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Period Panty – Heavy Flow</div>
+        <div class="pc-desc">Supportive reusable panty for heavier routine days with secure coverage.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 39</span><span class="pc-po">BDT 52</span><span class="pc-ps">−25%</span></div>
+          <button class="pc-btn opt">Options</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard" data-flow="light moderate" data-cat="best" data-price="34" data-glow="pu">
+      <div class="pc-img" style="background:linear-gradient(145deg,#180e28,#100820,#1a0e30)">
+        <canvas class="pcc" data-r="160" data-g="100" data-b="240" data-p="4"></canvas>
+        <div class="pc-badges"><span class="pcb f">Featured</span><span class="pcb n">New</span></div>
+        <div class="pc-stock"><div class="psd ins"></div><span class="ps-txt ins">In stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" onclick="addCart(this)">+ Add to Cart</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Period Panty – Everyday Comfort</div>
+        <div class="pc-desc">Soft reusable period underwear for lighter routine days with smooth everyday feel.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 34</span><span class="pc-po">BDT 44</span><span class="pc-ps">−23%</span></div>
+          <button class="pc-btn opt">Options</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW ARRIVALS -->
+  <div class="sec-lbl rv" style="margin-top:12px"><span class="sl-eye">New Arrivals</span><span class="sl-line"></span><span class="sl-h">Fresh from the collection</span><span class="sl-line"></span></div>
+  <div class="pgrid sg" id="pg2">
+
+    <div class="pcard" data-flow="moderate" data-cat="new" data-price="31" data-glow="pu">
+      <div class="pc-img" style="background:linear-gradient(145deg,#180e2a,#0f081e,#1e1030)">
+        <canvas class="pcc" data-r="190" data-g="100" data-b="230" data-p="1"></canvas>
+        <div class="pc-badges"><span class="pcb n">New</span></div>
+        <div class="pc-stock"><div class="psd ins"></div><span class="ps-txt ins">In stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" onclick="addCart(this)">+ Add to Cart</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Basic Smoke – Her Care</div>
+        <div class="pc-desc">Premium reusable Her Care comfort with a discreet polished fit.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 31</span></div>
+          <button class="pc-btn add" onclick="addCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard" data-flow="moderate" data-cat="new" data-price="31" data-glow="pu">
+      <div class="pc-img" style="background:linear-gradient(145deg,#12102a,#0c0820,#181030)">
+        <canvas class="pcc" data-r="130" data-g="80" data-b="245" data-p="3"></canvas>
+        <div class="pc-badges"><span class="pcb n">New</span></div>
+        <div class="pc-stock"><div class="psd ins"></div><span class="ps-txt ins">In stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" onclick="addCart(this)">+ Add to Cart</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Network Probe – Her Care</div>
+        <div class="pc-desc">Premium reusable Her Care comfort with a discreet, polished smooth fit.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 31</span></div>
+          <button class="pc-btn add" onclick="addCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard" data-flow="heavy" data-cat="new limited" data-price="43" data-glow="tl">
+      <div class="pc-img" style="background:linear-gradient(145deg,#0c1a10,#081210,#0a1a14)">
+        <canvas class="pcc" data-r="0" data-g="185" data-b="165" data-p="5"></canvas>
+        <div class="pc-badges"><span class="pcb n">New</span><span class="pcb l">Limited</span></div>
+        <div class="pc-stock"><div class="psd out"></div><span class="ps-txt out">Out of stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" style="background:var(--pu2);color:var(--pu)">Notify Me</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Rich Variant Smoke</div>
+        <div class="pc-desc">Variant-ready reusable Her Care smoke product with premium coverage.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 43</span><span class="pc-po">BDT 58</span><span class="pc-ps">−26%</span></div>
+          <button class="pc-btn opt">Options</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pcard" data-flow="light moderate" data-cat="new limited" data-price="12" data-glow="pk">
+      <div class="pc-img" style="background:linear-gradient(145deg,#1e0e28,#160a1e,#240e30)">
+        <canvas class="pcc" data-r="220" data-g="80" data-b="210" data-p="6"></canvas>
+        <div class="pc-badges"><span class="pcb n">New</span><span class="pcb l">Limited</span></div>
+        <div class="pc-stock"><div class="psd ins"></div><span class="ps-txt ins">In stock</span></div>
+        <div class="pc-reveal">
+          <div class="pr-actions">
+            <button class="pr-add" onclick="addCart(this)">+ Add to Cart</button>
+            <button class="pr-wish"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-type">Reusable Period Panty</div>
+        <div class="pc-name">Smoke Draft – Special Edition</div>
+        <div class="pc-desc">Exclusive limited edition soft-smoke variant with gentle everyday absorbency.</div>
+        <div class="pc-price-row">
+          <div class="pc-price"><span class="pc-p">BDT 12</span><span class="pc-po">BDT 15</span><span class="pc-ps">−20%</span></div>
+          <button class="pc-btn opt">Options</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BRAND BENTO -->
+<section class="brand-bento rv" id="about">
+  <div class="bb-inner sg">
+    <div class="bb-card wide accent">
+      <div class="bb-big-h">Premium women's care,<br><em>delivered discreetly</em><br>across Bangladesh</div>
+      <p class="bb-big-p">Aevyrixa was built for women who deserve better — better comfort, better protection, and complete privacy. Every product is designed for the realities of everyday life in Bangladesh.</p>
+      <div class="bb-chips">
+        <span class="bb-chip">Premium Comfort</span>
+        <span class="bb-chip">Discreet Packaging</span>
+        <span class="bb-chip">Bangladesh Delivery</span>
+        <span class="bb-chip">Hygiene-Safe Support</span>
+      </div>
+    </div>
+    <div class="bb-card"><div class="bb-icon">♻️</div><div class="bb-n">2yr+</div><div class="bb-l">Guaranteed reusable lifespan on every product</div></div>
+    <div class="bb-card"><div class="bb-icon">🎀</div><div class="bb-n">100%</div><div class="bb-l">Discreet packaging — no brand names visible outside</div></div>
+    <div class="bb-card"><div class="bb-icon">🛡️</div><div class="bb-n">OEKO</div><div class="bb-l">TEX certified body-safe materials throughout</div></div>
+    <div class="bb-card"><div class="bb-icon">🚚</div><div class="bb-n">BD</div><div class="bb-l">Nationwide delivery across all Bangladesh districts</div></div>
+    <div class="bb-card"><div class="bb-icon">💬</div><div class="bb-n">24/7</div><div class="bb-l">WhatsApp support — response within hours always</div></div>
+  </div>
+</section>
+
+<!-- HELP BLOCK -->
+<div class="help-block rv">
+  <div class="hb-rel">
+    <div class="hb-e">Need Help Choosing?</div>
+    <h2 class="hb-h">Get discreet guidance before you order.</h2>
+    <p class="hb-sub">Ask about fit, coverage, and care routine. Simple, private, and pressure-free.</p>
+    <div class="hb-btns">
+      <button class="hb-wa">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp Support
+      </button>
+      <button class="hb-mail">📧 Email Support</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-top">
+    <div class="ft-brand">
+      <div class="fl">Aevyrixa</div>
+      <div class="fs">Her Care</div>
+      <p>Premium women's comfort, hygiene & reusable care for Bangladesh. Plain packaging delivery with order confirmation before dispatch.</p>
+      <div class="ft-contacts">
+        <div class="ftc">📧 <a href="mailto:support@aevyrixa.com">support@aevyrixa.com</a></div>
+        <div class="ftc">📞 <a href="tel:01644037384">01644037384</a></div>
+      </div>
+      <div class="ft-socials">
+        <a href="https://wa.me/01644037384" class="ftsoc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </a>
+        <a href="mailto:support@aevyrixa.com" class="ftsoc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="ft-col">
+      <h4>Shop</h4>
+      <a href="#">Her Care Collection</a>
+      <a href="#">Night Comfort</a>
+      <a href="#">Heavy Flow Support</a>
+      <a href="#">Everyday Comfort</a>
+      <a href="#">New Arrivals</a>
+    </div>
+    <div class="ft-col">
+      <h4>Support</h4>
+      <a href="#">Track Order</a>
+      <a href="#">FAQ</a>
+      <a href="#">Contact</a>
+      <a href="#">Request Support</a>
+      <a href="#">Refund Policy</a>
+      <a href="#">Shipping Policy</a>
+    </div>
+    <div class="ft-col">
+      <h4>Connect</h4>
+      <a href="https://wa.me/01644037384">WhatsApp Us</a>
+      <a href="mailto:support@aevyrixa.com">Email Support</a>
+      <a href="#">Size Guide</a>
+      <a href="#">Care Guide</a>
+      <a href="#">About Aevyrixa</a>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <div class="ftb-copy">Copyright 2025 Aevyrixa. All rights reserved.</div>
+    <div class="ftb-links">
+      <a href="#">About</a><a href="#">Privacy Policy</a><a href="#">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<div id="scart">
+  <div class="sc-info">
+    <div class="sc-name">Period Panty – Heavy Flow Support</div>
+    <div class="sc-price">BDT 39 added to cart</div>
+  </div>
+  <button class="sc-btn">View Cart →</button>
+</div>
+
+<script>
+// LOADER
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('ldr').classList.add('out'),1600));
+
+// CURSOR
+const dot=document.getElementById('dot'),ring=document.getElementById('ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function t(){dot.style.left=mx+'px';dot.style.top=my+'px';rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(t);})();
+
+// SCROLL PROGRESS
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement.scrollHeight-innerHeight;
+  document.getElementById('prgf').style.transform=`scaleX(${scrollY/h})`;
+  document.getElementById('scart').classList.toggle('up',scrollY>600);
+});
+
+// HERO CANVAS
+function drawHero(){
+  const c=document.getElementById('hcan');if(!c)return;
+  c.width=c.parentElement.offsetWidth;c.height=c.parentElement.offsetHeight;
+  const ctx=c.getContext('2d');let t=0;
+  function d(){
+    const W=c.width,H=c.height,cx=W/2,cy=H/2;
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createRadialGradient(cx,cy*.7,0,cx,cy,W*.75);
+    bg.addColorStop(0,'rgba(50,15,70,.55)');bg.addColorStop(.5,'rgba(15,8,30,.3)');bg.addColorStop(1,'rgba(8,6,18,0)');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    for(let i=3;i>=1;i--){const r=Math.min(W,H)*.22+i*Math.min(W,H)*.06;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle=`rgba(255,45,130,${.04/i})`;ctx.lineWidth=1;ctx.stroke();}
+    const fy=cy+Math.sin(t*.42)*10,fw=Math.min(W,H)*.35,fh=fw*.55;
+    const body=ctx.createLinearGradient(cx-fw,fy-fh,cx+fw,fy+fh);
+    body.addColorStop(0,'rgba(255,60,150,.22)');body.addColorStop(.5,'rgba(180,50,120,.13)');body.addColorStop(1,'rgba(120,30,90,.06)');
+    ctx.beginPath();ctx.ellipse(cx,fy,fw,fh,0,0,Math.PI*2);ctx.fillStyle=body;ctx.fill();
+    ctx.strokeStyle='rgba(255,45,130,.38)';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(cx,fy-fh*.62,fw*.7,fh*.1,0,0,Math.PI*2);ctx.strokeStyle='rgba(255,45,130,.2)';ctx.lineWidth=.8;ctx.stroke();
+    const gg=ctx.createRadialGradient(cx,fy+fh*.09,0,cx,fy+fh*.09,fw*.33);
+    gg.addColorStop(0,'rgba(255,45,130,.2)');gg.addColorStop(1,'rgba(255,45,130,.02)');
+    ctx.beginPath();ctx.ellipse(cx,fy+fh*.09,fw*.36,fh*.35,0,0,Math.PI*2);ctx.fillStyle=gg;ctx.fill();ctx.strokeStyle='rgba(255,45,130,.18)';ctx.lineWidth=.8;ctx.stroke();
+    const hl=ctx.createLinearGradient(cx-fw*.4,fy-fh*.44,cx,fy);hl.addColorStop(0,'rgba(255,200,230,.13)');hl.addColorStop(1,'rgba(255,200,230,0)');
+    ctx.beginPath();ctx.ellipse(cx-fw*.1,fy-fh*.2,fw*.26,fh*.17,-.28,0,Math.PI*2);ctx.fillStyle=hl;ctx.fill();
+    t+=.014;requestAnimationFrame(d);
+  }d();
+}
+
+// PRODUCT CANVASES
+function drawProd(el){
+  const r=+el.dataset.r,g=+el.dataset.g,b=+el.dataset.b,phase=+el.dataset.p;
+  el.width=el.parentElement.offsetWidth||200;
+  el.height=el.parentElement.offsetHeight||200;
+  const ctx=el.getContext('2d');let t=phase;
+  function d(){
+    const W=el.width,H=el.height,cx=W/2,cy=H/2;
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createRadialGradient(cx,cy*.7,0,cx,cy,W*.7);
+    bg.addColorStop(0,`rgba(${Math.round(r*.25)},${Math.round(g*.25)},${Math.round(b*.25)},.5)`);
+    bg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const fy=cy+Math.sin(t*.4)*7,fw=Math.min(W,H)*.35,fh=fw*.55;
+    const body=ctx.createLinearGradient(cx-fw,fy-fh,cx+fw,fy+fh);
+    body.addColorStop(0,`rgba(${r},${g},${b},.22)`);body.addColorStop(.5,`rgba(${Math.round(r*.8)},${Math.round(g*.8)},${Math.round(b*.8)},.13)`);body.addColorStop(1,`rgba(${Math.round(r*.5)},${Math.round(g*.5)},${Math.round(b*.5)},.06)`);
+    ctx.beginPath();ctx.ellipse(cx,fy,fw,fh,0,0,Math.PI*2);ctx.fillStyle=body;ctx.fill();
+    ctx.strokeStyle=`rgba(${r},${g},${b},.38)`;ctx.lineWidth=1.1;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(cx,fy-fh*.62,fw*.7,fh*.1,0,0,Math.PI*2);ctx.strokeStyle=`rgba(${r},${g},${b},.18)`;ctx.lineWidth=.7;ctx.stroke();
+    const gg=ctx.createRadialGradient(cx,fy+fh*.1,0,cx,fy+fh*.1,fw*.32);
+    gg.addColorStop(0,`rgba(${r},${g},${b},.18)`);gg.addColorStop(1,`rgba(${r},${g},${b},.01)`);
+    ctx.beginPath();ctx.ellipse(cx,fy+fh*.1,fw*.35,fh*.34,0,0,Math.PI*2);ctx.fillStyle=gg;ctx.fill();ctx.strokeStyle=`rgba(${r},${g},${b},.15)`;ctx.lineWidth=.6;ctx.stroke();
+    const hl=ctx.createLinearGradient(cx-fw*.4,fy-fh*.44,cx,fy);hl.addColorStop(0,'rgba(255,255,255,.12)');hl.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.beginPath();ctx.ellipse(cx-fw*.1,fy-fh*.2,fw*.26,fh*.16,-.28,0,Math.PI*2);ctx.fillStyle=hl;ctx.fill();
+    t+=.014;requestAnimationFrame(d);
+  }d();
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    drawHero();
+    document.querySelectorAll('.pcc').forEach(el=>drawProd(el));
+    window.addEventListener('resize',()=>{
+      const hc=document.getElementById('hcan');
+      if(hc){hc.width=hc.parentElement.offsetWidth;hc.height=hc.parentElement.offsetHeight;}
+    });
+  },100);
+});
+
+// FLOW FINDER
+function flowFilter(btn,flow){
+  document.querySelectorAll('.ff-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const cards=document.querySelectorAll('.pcard');
+  let visible=0;
+  cards.forEach(card=>{
+    const f=card.dataset.flow||'';
+    const show=flow==='all'||f.includes(flow);
+    card.style.display=show?'block':'none';
+    if(show)visible++;
+  });
+  document.getElementById('ffres').innerHTML=`Showing <span>${visible}</span> products`;
+}
+
+// CATEGORY SORT
+function sortCat(btn,cat){
+  document.querySelectorAll('.scat').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const cards=document.querySelectorAll('.pcard');
+  let v=0;
+  cards.forEach(card=>{
+    const c=card.dataset.cat||'';
+    const show=cat==='all'||c.includes(cat);
+    card.style.display=show?'block':'none';
+    if(show)v++;
+  });
+  document.getElementById('rct').textContent=v+' product'+(v!==1?'s':'');
+}
+
+// SORT BY PRICE
+function doSort(val){
+  ['pg1','pg2'].forEach(id=>{
+    const g=document.getElementById(id);if(!g)return;
+    const cards=[...g.children];
+    cards.sort((a,b)=>val==='low'?+a.dataset.price-+b.dataset.price:val==='high'?+b.dataset.price-+a.dataset.price:0);
+    cards.forEach(c=>g.appendChild(c));
+  });
+}
+
+// ADD TO CART
+function addCart(btn){
+  const orig=btn.textContent;
+  btn.textContent='✓ Added!';
+  btn.classList.add('done');
+  setTimeout(()=>{btn.textContent=orig;btn.classList.remove('done');},2000);
+}
+
+// REVEALS
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v');}),{threshold:.08});
+document.querySelectorAll('.rv,.sg').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

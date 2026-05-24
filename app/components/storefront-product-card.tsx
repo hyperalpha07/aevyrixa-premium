@@ -206,6 +206,23 @@ export default function StorefrontProductCard({
       {recommendation ? "Options" : "Choose Options"}
     </Link>
   );
+  const revealAction = quickAddAvailable ? (
+    <button
+      type="button"
+      onClick={handleQuickAdd}
+      className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-[#FF4DB8] px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-white transition hover:bg-[#E81870]"
+    >
+      <ShoppingCart className="h-3.5 w-3.5" />
+      Add
+    </button>
+  ) : (
+    <Link
+      href={productHref}
+      className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center rounded-md bg-[#8B5CF6]/18 px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-[#C084FC] transition hover:bg-[#8B5CF6]/26"
+    >
+      Options
+    </Link>
+  );
 
   const modalPrimaryAction = quickAddAvailable ? (
     <button
@@ -229,7 +246,7 @@ export default function StorefrontProductCard({
   return (
     <>
       <article
-        className={`aev-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.15rem] border bg-[#120D20]/94 p-2 shadow-[0_18px_64px_rgba(0,0,0,0.38),0_0_28px_rgba(255,77,184,0.06)] sm:rounded-[1.35rem] md:rounded-[1.65rem] md:p-3 ${recommendation ? "aev-recommendation-card" : ""} ${style.border}`}
+        className={`aev-product-card aev-v2-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[0.9rem] border bg-[#0E0A1C]/96 p-1.5 shadow-[0_16px_46px_rgba(0,0,0,0.34),0_0_22px_rgba(255,77,184,0.045)] sm:rounded-[1rem] sm:p-2 ${recommendation ? "aev-recommendation-card" : ""} ${style.border}`}
       >
         <div className="relative">
           <Link
@@ -278,6 +295,12 @@ export default function StorefrontProductCard({
             </div>
           </Link>
 
+          <div className="aev-v2-card-reveal pointer-events-none absolute inset-0 z-10 hidden flex-col justify-end rounded-[1rem] bg-[linear-gradient(180deg,transparent_26%,rgba(8,6,17,0.9))] p-3 opacity-0 transition duration-300 sm:flex md:rounded-[1.35rem]">
+            <div className="pointer-events-auto flex items-center gap-2">
+              {revealAction}
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => setQuickViewOpen(true)}
@@ -288,7 +311,7 @@ export default function StorefrontProductCard({
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col px-1 pb-2.5 pt-2 md:px-2 md:pb-3 md:pt-4">
+        <div className="flex flex-1 flex-col px-1.5 pb-2 pt-2 sm:px-2 sm:pb-2.5 sm:pt-3">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-[0_0_14px_rgba(0,0,0,0.16)] sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
               {stockStatusLabel(product.stockStatus)}
@@ -329,7 +352,7 @@ export default function StorefrontProductCard({
           )}
 
           <div className="mt-2.5 flex flex-wrap items-baseline gap-2 sm:mt-3">
-            <span className="text-[0.98rem] font-extrabold text-[#FFB3D1] sm:text-lg md:text-xl">
+            <span className="text-[0.98rem] font-extrabold text-[#FF4DB8] sm:text-lg">
               {formatProductPrice(product)}
             </span>
             {typeof product.compareAtPrice === "number" && (
@@ -342,7 +365,7 @@ export default function StorefrontProductCard({
             )}
           </div>
 
-          <div className="mt-auto grid pt-2.5 sm:pt-3">
+          <div className="aev-v2-card-body-action mt-auto grid pt-2.5 sm:pt-3">
             {primaryAction}
           </div>
         </div>

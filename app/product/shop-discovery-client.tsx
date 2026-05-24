@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowRight,
   ChevronDown,
+  HeartHandshake,
   Moon,
+  PackageCheck,
   Search,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Truck,
   X,
 } from "lucide-react";
 import StorefrontProductCard, {
@@ -17,7 +21,9 @@ import StorefrontProductCard, {
   isNewProduct,
   productDateValue,
 } from "@/app/components/storefront-product-card";
+import ProductVisual from "@/app/components/product-visual";
 import type { ProductCatalogItem, ProductStockStatus } from "@/app/lib/product-types";
+import { formatProductPrice } from "@/app/lib/products";
 import type {
   CategoryCmsEntry,
   StorefrontSettings,
@@ -64,6 +70,18 @@ const discoveryChips = [
 
 function normalized(value: string | undefined) {
   return (value ?? "").trim().toLowerCase();
+}
+
+function safeShopCopy(value: string) {
+  return value
+    .replace(/5-Day Hygiene Support/gi, "3-Day Hygiene-Safe Support")
+    .replace(/2yr Guaranteed reusable lifespan/gi, "Reusable care, made for repeat wear")
+    .replace(/2yr reusable lifespan/gi, "Reusable care, made for repeat wear")
+    .replace(/100% Discreet delivery/gi, "Discreet privacy packaging")
+    .replace(/OEKO-TEX Certified/gi, "Comfort-focused materials")
+    .replace(/Anti-Leak/gi, "Layered support")
+    .replace(/Anti-Bacterial/gi, "Breathable comfort")
+    .replace(/Anti[-\s]?bacterial/gi, "Breathable comfort");
 }
 
 function productMatchesCategory(products: ProductCatalogItem[], category: string) {
@@ -126,6 +144,7 @@ export default function ShopDiscoveryClient({
   activeCategories,
   reviewSummaries = [],
   initialFilters = emptyShopQueryFilters,
+  settings,
 }: ShopDiscoveryClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -164,6 +183,7 @@ export default function ShopDiscoveryClient({
   );
 
   const bestPicks = featuredProducts.length > 0 ? featuredProducts : newArrivals;
+  const spotlightProduct = bestPicks[0] ?? products[0];
   const limitedStockProducts = useMemo(
     () => products.filter((product) => isLimitedStock(product)).slice(0, 4),
     [products]
@@ -242,6 +262,55 @@ export default function ShopDiscoveryClient({
     query ? `Search: ${query}` : "",
     collection && !category && signal === "all" ? collection : "",
   ].filter(Boolean);
+  const safeAnnouncementItems = [
+    "Discreet privacy packaging",
+    settings.supportWindowMessage || "3-Day Hygiene-Safe Support",
+    settings.deliveryCoverageText || "Bangladesh delivery",
+    "BDT pricing",
+    "Secure checkout",
+  ].map(safeShopCopy);
+  const marqueeItems = (
+    settings.homepageMediaSettings.marqueeItems ||
+    safeAnnouncementItems.join(", ")
+  )
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map(safeShopCopy);
+  const tickerItems = marqueeItems.length > 0 ? marqueeItems : safeAnnouncementItems;
+  const heroTitle =
+    settings.appearanceSettings.homepageHeroTitle &&
+    settings.appearanceSettings.homepageHeroTitle !== "Aevyrixa Her Care"
+      ? settings.appearanceSettings.homepageHeroTitle
+      : "Comfort that moves with you";
+  const heroSubtitle =
+    settings.appearanceSettings.homepageHeroSubtitle ||
+    "Premium reusable care for everyday comfort, discreet packaging, and Bangladesh delivery.";
+  const primaryCta = settings.appearanceSettings.primaryCtaText || "Shop Collection";
+  const secondaryCta =
+    settings.homepageMediaSettings.findCareCtaText ||
+    settings.appearanceSettings.secondaryCtaText ||
+    "Find Your Care";
+  const trustCards = [
+    {
+      icon: PackageCheck,
+      kicker: "Privacy",
+      label: "Discreet privacy packaging",
+      tone: "text-[#FFB3D1]",
+    },
+    {
+      icon: HeartHandshake,
+      kicker: "Support",
+      label: "3-Day Hygiene-Safe Support",
+      tone: "text-[#31E6D4]",
+    },
+    {
+      icon: Truck,
+      kicker: "Delivery",
+      label: "Bangladesh delivery",
+      tone: "text-[#C084FC]",
+    },
+  ];
 
   const resetFilters = () => {
     setQuery("");
@@ -358,108 +427,148 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-shop-intro aev-mobile-safe relative mx-auto max-w-7xl px-4 pb-5 pt-5 sm:px-6 sm:pt-7 md:pb-6 md:pt-9">
-        <div className="pointer-events-none absolute inset-x-3 top-4 -z-10 h-[13rem] rounded-[2rem] bg-[radial-gradient(circle_at_18%_18%,rgba(255,77,184,0.18),transparent_32%),radial-gradient(circle_at_90%_10%,rgba(168,85,247,0.13),transparent_30%),radial-gradient(circle_at_60%_88%,rgba(0,212,198,0.06),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent_58%)] shadow-[0_24px_90px_rgba(0,0,0,0.24)] sm:h-[15rem]" />
-
-        <div className="relative mx-auto max-w-6xl">
-          <div className="mx-auto max-w-5xl">
-            {context.eyebrow && (
-              <p className="aev-section-label mb-2">{context.eyebrow}</p>
-            )}
-            <h1 className="aev-heading break-words text-[1.65rem] [overflow-wrap:anywhere] sm:text-[2.2rem] lg:text-[2.65rem]">
-              {context.heading}
-            </h1>
-            <p className="aev-subtext mt-1.5 hidden max-w-2xl text-sm sm:block sm:text-base">
-              {context.copy}
-            </p>
-          </div>
-
-          <div className="aev-panel aev-glow-border mx-auto mt-3 max-w-5xl p-2.5 shadow-[0_20px_72px_rgba(0,0,0,0.38),0_0_36px_rgba(255,77,184,0.08)] sm:mt-4 sm:p-3">
-            <div className="grid gap-2 md:grid-cols-[minmax(18rem,1fr)_auto_auto_auto] md:items-center">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#FF4DB8]/60" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search products or categories..."
-                  className="aev-input min-h-11 rounded-full py-2.5 pl-11 pr-11 text-sm placeholder:text-[#6B5F7A]"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#9C91AA] transition hover:bg-[#211633] hover:text-white"
-                    aria-label="Clear search"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-7xl px-3 pb-3 pt-4 sm:px-6 sm:pb-5 sm:pt-6">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_22.5rem]">
+          <div className="grid gap-3">
+            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.38)] sm:p-7">
+              <div>
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
+                  <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
+                    Aevyrixa Her Care Shop
+                  </p>
+                </div>
+                <h1 className="max-w-[18rem] break-words text-[1.78rem] font-black leading-[1.04] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:max-w-xl min-[390px]:text-[1.95rem] sm:text-[2.55rem] lg:text-[3rem]">
+                  {heroTitle === "Comfort that moves with you" ? (
+                    <>
+                      Comfort that moves
+                      <br />
+                      with you
+                    </>
+                  ) : (
+                    heroTitle
+                  )}
+                </h1>
+                <p className="mt-3 max-w-md text-sm leading-6 text-[#D8CBE8]/68 sm:text-base">
+                  {heroSubtitle}
+                </p>
               </div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 md:contents">
-                <select
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value as SortMode)}
-                  className="aev-input min-h-11 min-w-0 rounded-full px-3 py-2 text-sm font-semibold md:w-40"
-                  aria-label="Sort products"
+              <div className="mt-5 flex flex-wrap gap-2">
+                <a
+                  href="#shop-products"
+                  className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 text-xs font-bold text-white sm:min-h-11 sm:px-6"
                 >
-                  <option value="featured">Featured</option>
-                  <option value="newest">Newest</option>
-                  <option value="price-asc">Price low</option>
-                  <option value="price-desc">Price high</option>
-                  <option value="stock">In stock</option>
-                </select>
+                  {primaryCta}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen(true)}
-                  className="aev-button-secondary inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold sm:px-4"
+                  className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-xs font-semibold sm:min-h-11 sm:px-5"
                 >
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                  Filters
-                  <ChevronDown className="hidden h-3.5 w-3.5 sm:block" />
-                </button>
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="aev-button-ghost min-h-11 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold sm:px-4 sm:text-sm"
-                  aria-label="Reset filters"
-                >
-                  Reset
+                  {secondaryCta}
                 </button>
               </div>
             </div>
+
+            <div className="aev-v2-trust-grid grid gap-2 sm:gap-3">
+              {trustCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <div
+                    key={card.kicker}
+                    className="aev-v2-trust-card min-w-0 rounded-xl border border-white/[0.07] bg-[#0E0A1C] p-3 sm:flex sm:items-center sm:gap-3 sm:p-4"
+                  >
+                    <span className={`mb-2 grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.04] sm:mb-0 ${card.tone}`}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[0.68rem] font-black uppercase tracking-[0.12em] text-white sm:text-sm">
+                        {card.kicker}
+                      </span>
+                      <span className="mt-0.5 block max-w-full break-words text-[0.58rem] leading-4 text-[#9C91AA] [overflow-wrap:anywhere] sm:line-clamp-2 sm:text-[0.7rem]">
+                        {card.label}
+                      </span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
-            {[
-              `${products.length} Products`,
-              "BDT Pricing",
-              "Discreet Packaging",
-              "Bangladesh Delivery",
-            ].map((item, index) => (
-              <span
-                key={item}
-                className={`aev-shop-meta-chip ${index > 1 ? "aev-shop-meta-chip-secondary" : ""} shrink-0 rounded-full border border-white/10 bg-[#151024]/72 px-2.5 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#D8CBE8]/78 backdrop-blur-xl sm:px-3 sm:py-1.5 sm:text-[0.68rem]`}
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-
-          {activeFilterLabels.length > 0 && (
-            <div className="mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
-              {activeFilterLabels.map((label) => (
+          <div className="aev-v2-spotlight-card relative min-h-[18rem] overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
+            {spotlightProduct ? (
+              <Link href={`/product/${spotlightProduct.slug}`} className="group block h-full">
+                <div className="relative h-full min-h-[18rem]">
+                  {spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]}
+                      alt={spotlightProduct.name}
+                      className="absolute inset-0 h-full w-full object-contain p-8 transition duration-700 group-hover:scale-[1.04]"
+                    />
+                  ) : (
+                    <ProductVisual
+                      visualTheme={spotlightProduct.visualTheme}
+                      label={spotlightProduct.absorbency}
+                      compact
+                    />
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#080611]/95 via-[#080611]/54 to-transparent p-4">
+                    <p className="text-[0.58rem] font-bold uppercase tracking-[0.2em] text-[#FF4DB8]/75">
+                      Spotlight
+                    </p>
+                    <p className="mt-1 line-clamp-1 text-sm font-bold text-white">
+                      {spotlightProduct.name}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-[#FFB3D1]">
+                      {formatProductPrice(spotlightProduct)}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="grid h-full min-h-[18rem] place-items-center p-8 text-center text-sm text-[#9C91AA]">
+                Products will appear here when available.
+              </div>
+            )}
+            <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
+              {safeAnnouncementItems.slice(0, 2).map((item, index) => (
                 <span
-                  key={label}
-                  className="shrink-0 rounded-full border border-[#FF4DB8]/28 bg-[#FF4DB8]/[0.09] px-3 py-1.5 text-xs font-semibold text-[#FFB3D1]"
+                  key={item}
+                  className={`max-w-[9.5rem] truncate rounded-full border border-white/10 bg-[#080611]/72 px-2.5 py-1 text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/75 backdrop-blur sm:max-w-[13rem] ${index > 0 ? "hidden sm:inline-flex" : ""}`}
                 >
-                  {label}
+                  {item}
                 </span>
               ))}
             </div>
-          )}
+          </div>
+        </div>
+      </section>
 
-          {availableDiscoveryChips.length > 0 && (
-            <div className="aev-shop-discovery-chips mx-auto mt-2 flex max-w-5xl gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
+      <section className="aev-v2-ticker overflow-hidden border-y border-white/[0.07] bg-[#0E0A1C] py-2">
+        <div className="aev-v2-ticker-track flex w-max items-center">
+          {[...tickerItems, ...tickerItems].map((item, index) => (
+            <span
+              key={`${item}-${index}`}
+              className="flex items-center gap-4 px-4 text-[0.68rem] font-semibold text-[#9C91AA]"
+            >
+              <Sparkles className="h-3 w-3 text-[#FF4DB8]" />
+              {item}
+              <span className="text-[#FF4DB8]/35">/</span>
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {availableDiscoveryChips.length > 0 && (
+        <section className="aev-v2-flow-finder border-b border-white/[0.07] bg-[linear-gradient(90deg,rgba(255,77,184,0.045),rgba(168,85,247,0.05),rgba(0,212,198,0.035))] px-3 py-4 sm:px-6">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+            <p className="shrink-0 text-sm font-black tracking-tight text-white">
+              Find your <span className="text-[#FF4DB8]">flow</span>
+            </p>
+            <div className="aev-v2-flow-chips grid gap-2 pb-0.5 sm:flex sm:flex-wrap">
               {availableDiscoveryChips.map((chip) => {
                 const Icon = chip.icon;
                 const active =
@@ -469,10 +578,10 @@ export default function ShopDiscoveryClient({
                     key={`${chip.label}-${chip.category}`}
                     type="button"
                     onClick={() => selectDiscoveryChip(chip)}
-                    className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition ${
+                    className={`inline-flex min-h-9 min-w-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                       active
-                        ? "border-[#FF4DB8]/55 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_18px_rgba(255,77,184,0.32)]"
-                        : "border-white/10 bg-[#151024]/88 text-[#D8CBE8]/78 backdrop-blur-xl hover:border-[#FF4DB8]/32 hover:text-white"
+                        ? "border-[#FF4DB8]/55 bg-[#FF4DB8]/14 text-white"
+                        : "border-white/10 bg-white/[0.035] text-[#9C91AA] hover:border-[#FF4DB8]/32 hover:text-white"
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -481,11 +590,93 @@ export default function ShopDiscoveryClient({
                 );
               })}
             </div>
-          )}
-        </div>
-      </section>
+            <p className="text-xs text-[#9C91AA] sm:ml-auto">
+              Showing <span className="font-bold text-[#FF4DB8]">{filteredProducts.length}</span> real product{filteredProducts.length === 1 ? "" : "s"}
+            </p>
+          </div>
+        </section>
+      )}
 
-      <section className="mx-auto max-w-7xl px-4 pb-14 pt-0 sm:px-6 sm:pb-18 md:pt-1">
+      <section id="shop-products" className="mx-auto max-w-7xl px-3 pb-12 pt-0 sm:px-6 sm:pb-18">
+        <div className="aev-v2-sort-bar sticky top-[4.9rem] z-30 -mx-3 mb-4 border-b border-white/[0.07] bg-[#080611]/92 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-[6.25rem]">
+          <div className="mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div className="relative min-w-0">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#FF4DB8]/60" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search products or categories..."
+                className="aev-input min-h-10 rounded-md py-2 pl-9 pr-9 text-sm placeholder:text-[#6B5F7A]"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-[#9C91AA] transition hover:bg-[#211633] hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2 lg:flex">
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as SortMode)}
+                className="aev-input col-span-2 min-h-10 min-w-0 rounded-md px-3 py-2 text-xs font-semibold sm:col-span-1 lg:w-36"
+                aria-label="Sort products"
+              >
+                <option value="featured">Featured</option>
+                <option value="newest">Newest</option>
+                <option value="price-asc">Price low</option>
+                <option value="price-desc">Price high</option>
+                <option value="stock">In stock</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(true)}
+                className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-xs font-semibold sm:px-4"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filters
+                <ChevronDown className="hidden h-3.5 w-3.5 sm:block" />
+              </button>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="aev-button-ghost min-h-10 whitespace-nowrap rounded-md px-3 py-2 text-xs font-semibold sm:px-4"
+                aria-label="Reset filters"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-2 flex max-w-7xl gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
+            {[
+              `${products.length} Products`,
+              "BDT Pricing",
+              "Discreet Packaging",
+              "Bangladesh Delivery",
+            ].map((item) => (
+              <span
+                key={item}
+                className="aev-shop-meta-chip shrink-0 rounded-full border border-white/10 bg-[#151024]/72 px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[#D8CBE8]/78 backdrop-blur-xl sm:text-[0.66rem]"
+              >
+                {item}
+              </span>
+            ))}
+            {activeFilterLabels.map((label) => (
+              <span
+                key={label}
+                className="shrink-0 rounded-full border border-[#FF4DB8]/28 bg-[#FF4DB8]/[0.09] px-2.5 py-1 text-[0.66rem] font-semibold text-[#FFB3D1]"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+
         <div className="min-w-0">
           <div className="mb-3 flex flex-col gap-1 border-b border-white/[0.08] pb-2.5 sm:mb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-3">
             <h2 className="aev-heading text-xl sm:text-2xl md:text-3xl">

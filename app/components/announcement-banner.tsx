@@ -13,6 +13,14 @@ const styleClasses = {
   success: "border-emerald-200/24 bg-emerald-200/[0.09] text-emerald-50",
 };
 
+const safeShopFallbackItems = [
+  "Discreet privacy packaging",
+  "3-Day Hygiene-Safe Support",
+  "Bangladesh delivery",
+  "BDT pricing",
+  "Secure checkout",
+];
+
 export default function AnnouncementBanner({
   settings,
   surface,
@@ -49,14 +57,33 @@ export default function AnnouncementBanner({
     surfaceEnabled &&
     !dismissed;
 
-  if (!enabled) return null;
+  if (!enabled) {
+    if (surface !== "shop") return null;
+
+    return (
+      <div className="aev-shop-announcement-strip border-b border-white/10 px-3 py-2 text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 overflow-hidden">
+          <div className="flex min-w-max items-center gap-2">
+            {safeShopFallbackItems.map((item) => (
+              <span
+                key={item}
+                className="aev-shop-announcement-item text-[0.66rem] font-semibold uppercase tracking-[0.14em]"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const tone = styleClasses[announcement.announcementStyle] ?? styleClasses.info;
   const href = announcement.announcementLinkUrl.trim();
   const label = announcement.announcementLinkLabel.trim();
 
   return (
-    <div className={`border-b px-4 py-2.5 text-sm ${tone}`}>
+    <div className={`aev-shop-announcement-admin border-b px-4 py-2.5 text-sm ${tone}`}>
       <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="min-w-0 break-words leading-6">{announcement.announcementText}</p>
         <div className="flex shrink-0 items-center gap-3">
