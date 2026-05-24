@@ -390,13 +390,14 @@ export default function ProductDetailClient({
         settings={settings}
       />
 
-      <section className="aev-bloom-hero relative z-[2] mx-auto grid w-full max-w-[75rem] items-center gap-8 px-4 pb-10 pt-20 sm:px-7 lg:grid-cols-[minmax(0,1fr)_32.5rem] lg:gap-10 lg:px-12 lg:pb-16 lg:pt-24">
+      <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[78rem] items-start gap-5 px-4 pb-10 pt-20 sm:gap-7 sm:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(29rem,32rem)] lg:gap-8 lg:px-12 lg:pb-16 lg:pt-24">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
           Aevyrixa
         </div>
 
-        <div className="relative z-[1] order-2 min-w-0 lg:order-1">
-          <div className="mb-7 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6B5F7A]">
+        <div className="aev-product-info-card relative z-[1] order-2 min-w-0 overflow-hidden rounded-[2px_42px_2px_42px] border border-[#FF4DB8]/12 bg-[#0D0918]/82 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-6 lg:order-1 lg:p-7">
+          <div className="aev-premium-edge-line" aria-hidden="true" />
+          <div className="mb-5 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6B5F7A]">
             <Link href="/" className="transition hover:text-[#FF4DB8]">Home</Link>
             <span>/</span>
             <Link href="/product" className="transition hover:text-[#FF4DB8]">Products</Link>
@@ -418,7 +419,7 @@ export default function ProductDetailClient({
             </span>
           </div>
 
-          <h1 className="max-w-[12ch] break-words font-serif text-[2.35rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:text-[3.75rem]">
+          <h1 className="max-w-[12ch] break-words font-serif text-[2.1rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:text-[3.35rem]">
             {displayProduct.name}
           </h1>
 
@@ -428,7 +429,7 @@ export default function ProductDetailClient({
             </p>
           )}
 
-          <div className="mt-6 inline-flex flex-wrap items-baseline gap-2 rounded-md border border-white/[0.08] bg-white/[0.035] px-5 py-3">
+          <div className="mt-5 inline-flex flex-wrap items-baseline gap-2 rounded-md border border-white/[0.08] bg-white/[0.035] px-4 py-3 sm:px-5">
             <span className="font-serif text-4xl leading-none text-white">
               {formatProductPrice(displayProduct)}
             </span>
@@ -459,7 +460,7 @@ export default function ProductDetailClient({
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+          <div className="mt-5 grid gap-x-5 gap-y-3 sm:grid-cols-2">
             <VariantSelector
               label="Size"
               options={displayProduct.sizes}
@@ -567,10 +568,11 @@ export default function ProductDetailClient({
 
         <div className="relative z-[1] order-1 lg:order-2 lg:pr-1">
           <div
-            className="aev-bloom-media-frame relative aspect-[0.85/1] overflow-hidden rounded-[2px_60px_2px_60px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)]"
+            className="aev-bloom-media-frame relative aspect-[0.9/1] overflow-hidden rounded-[2px_54px_2px_54px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] lg:aspect-[0.88/1]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
+            <div className="aev-premium-edge-line" aria-hidden="true" />
             <div className={`aev-bloom-media-glow pointer-events-none absolute inset-10 rounded-full blur-[76px] ${style.glow}`} />
             <div className="aev-bloom-media-ring pointer-events-none absolute left-1/2 top-1/2 h-[54%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#FF4DB8]/10" />
             <div className="aev-bloom-media-ring aev-bloom-media-ring-delay pointer-events-none absolute left-1/2 top-1/2 h-[68%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#31E6D4]/[0.07]" />
@@ -695,9 +697,11 @@ export default function ProductDetailClient({
                     <video
                       src={layerMediaUrl}
                       poster={hms.layerComfortImageUrl || displayProduct.imageUrl}
-                      controls
+                      autoPlay
+                      muted
+                      loop
                       playsInline
-                      preload="metadata"
+                      preload="auto"
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -892,7 +896,7 @@ export default function ProductDetailClient({
       )}
 
       <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-3 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md md:bottom-0 lg:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="relative mx-auto h-12 w-[calc(100vw-1.5rem)] max-w-lg overflow-hidden pr-[7.5rem]">
           <div className="min-w-0">
             <p className="text-lg font-semibold text-[#FFB3D1]">
               {formatProductPrice(displayProduct)}
@@ -904,7 +908,7 @@ export default function ProductDetailClient({
           <button
             onClick={() => handleAddToCart(false)}
             disabled={!canAddToCart}
-            className={`flex min-h-11 shrink-0 items-center justify-center gap-2 rounded px-4 text-sm font-semibold transition ${
+            className={`absolute right-0 top-0 flex min-h-11 w-[6.75rem] shrink-0 items-center justify-center gap-1.5 rounded px-3 text-sm font-semibold transition ${
               canAddToCart
                 ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] ${style.primary}`
                 : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"

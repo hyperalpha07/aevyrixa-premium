@@ -975,6 +975,61 @@ button {
   min-height: auto;
 }
 
+.aev-product-info-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 1.4rem 4.5rem rgba(0, 0, 0, 0.32),
+    0 0 2.5rem rgba(0, 212, 198, 0.045);
+}
+
+.aev-premium-edge-line {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  padding: 1px;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.aev-premium-edge-line::before {
+  content: "";
+  position: absolute;
+  inset: -42%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 54deg,
+      rgba(49, 230, 212, 0.42) 78deg,
+      rgba(255, 77, 184, 0.38) 112deg,
+      rgba(192, 132, 252, 0.34) 142deg,
+      transparent 178deg,
+      transparent 360deg
+    );
+  opacity: 0.72;
+  animation: aev-premium-edge-spin 9.5s linear infinite;
+}
+
+.aev-premium-edge-line::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 77, 184, 0.05),
+    0 0 22px rgba(49, 230, 212, 0.07);
+}
+
 .aev-bloom-media-frame {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.045),
@@ -1130,16 +1185,32 @@ button {
   .aev-bloom-layer-card:nth-child(3) {
     padding-top: 2rem;
   }
+
+  .aev-bloom-media-frame {
+    max-height: min(36rem, 86vw);
+    margin-inline: auto;
+  }
 }
 
 @media (max-width: 767px) {
   .aev-bloom-hero {
-    padding-bottom: 2rem;
-    padding-top: 4.75rem;
+    gap: 1rem;
+    padding-bottom: 1.75rem;
+    padding-top: 4.65rem;
   }
 
   .aev-bloom-media-frame {
-    max-height: min(31rem, 118vw);
+    max-height: min(27.5rem, 105vw);
+    margin-inline: 0;
+    border-radius: 2px 2.35rem 2px 2.35rem;
+  }
+
+  .aev-product-info-card {
+    border-radius: 2px 2rem 2px 2rem;
+  }
+
+  .aev-bloom-media-frame .aev-bloom-product-media {
+    padding: 0.9rem;
   }
 
   .aev-find-care-card {
@@ -1808,6 +1879,10 @@ button {
 @keyframes aev-bloom-media-shadow {
   0%, 100% { opacity: 0.5; transform: scale(0.92); }
   50%      { opacity: 0.86; transform: scale(1.08); }
+}
+
+@keyframes aev-premium-edge-spin {
+  to { transform: rotate(1turn); }
 }
 
 @keyframes aev-video-orbit {
@@ -4197,7 +4272,8 @@ button {
   .aev-bloom-product-media,
   .aev-bloom-media-glow,
   .aev-bloom-media-ring,
-  .aev-bloom-media-frame::after {
+  .aev-bloom-media-frame::after,
+  .aev-premium-edge-line::before {
     animation: none;
   }
 
