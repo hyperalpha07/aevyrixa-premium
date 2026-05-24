@@ -1193,28 +1193,241 @@ button {
 }
 
 @media (max-width: 767px) {
+  .aev-product-page-shell {
+    max-width: 100vw;
+    overflow-x: hidden;
+    padding-bottom: calc(var(--aev-mobile-bottom-nav-height) + 8.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .aev-bloom-hero {
-    gap: 1rem;
-    padding-bottom: 1.75rem;
-    padding-top: 4.65rem;
+    width: 100%;
+    max-width: 100vw;
+    gap: 1.15rem;
+    padding: 4.9rem 1rem 2.15rem;
+    overflow-x: hidden;
+  }
+
+  .aev-bloom-hero > * {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .aev-bloom-media-frame {
-    max-height: min(27.5rem, 105vw);
+    width: 100%;
+    max-height: min(27rem, 101vw);
     margin-inline: 0;
     border-radius: 2px 2.35rem 2px 2.35rem;
   }
 
   .aev-product-info-card {
     border-radius: 2px 2rem 2px 2rem;
+    padding: 1.15rem;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .aev-product-info-card :where(div, p, span, a, button) {
+    min-width: 0;
+  }
+
+  .aev-product-mobile-title {
+    width: 100%;
+    max-width: 100%;
+    font-size: clamp(1.82rem, 8.8vw, 2.32rem);
+    line-height: 1.06;
+    text-wrap: balance;
+  }
+
+  .aev-product-mobile-copy {
+    margin-top: 1rem;
+    padding-left: 0.85rem;
+    font-size: 0.8125rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+  }
+
+  .aev-product-mobile-price {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    padding: 0.85rem 0.95rem;
+  }
+
+  .aev-product-mobile-price > span:first-child {
+    font-size: clamp(1.95rem, 9vw, 2.35rem);
+  }
+
+  .aev-product-mobile-rating {
+    align-items: flex-start;
+    gap: 0.45rem 0.6rem;
+    line-height: 1.5;
+  }
+
+  .aev-product-mobile-rating > span:not(:first-child),
+  .aev-product-mobile-rating > a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .aev-product-mobile-options {
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  .aev-product-mobile-options > div,
+  .aev-product-mobile-options > div > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .aev-product-mobile-options button {
+    min-height: 2.35rem;
+    min-width: 0;
+    max-width: 100%;
+    justify-content: center;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .aev-product-mobile-options p {
+    overflow-wrap: anywhere;
+  }
+
+  .aev-product-mobile-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    align-items: stretch;
+    margin-top: 1.35rem;
+  }
+
+  .aev-product-qty-control {
+    height: 2.75rem;
+    align-self: stretch;
+    justify-self: start;
+  }
+
+  .aev-product-qty-control button,
+  .aev-product-qty-control span {
+    height: 2.75rem;
+  }
+
+  .aev-product-qty-control button {
+    width: 2.75rem;
+  }
+
+  .aev-product-qty-control span {
+    width: 2.9rem;
+  }
+
+  .aev-product-help-button {
+    width: 100%;
+    height: auto;
+    min-height: 2.75rem;
+    min-width: 0;
+    padding-inline: 0.8rem;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .aev-product-mobile-cta {
+    gap: 0.65rem;
+    margin-top: 1rem;
+  }
+
+  .aev-product-cta-button {
+    min-height: 3rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .aev-product-support-cards {
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .aev-product-support-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: auto;
+    align-items: flex-start;
+    padding: 0.8rem 0.85rem;
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+
+  .aev-product-support-card span {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    white-space: normal;
   }
 
   .aev-bloom-media-frame .aev-bloom-product-media {
     padding: 0.9rem;
   }
 
+  .aev-bloom-media-frame .absolute.bottom-5 {
+    bottom: 1rem;
+    gap: 0.5rem;
+    padding-inline: 0.9rem;
+  }
+
+  .aev-bloom-media-frame .absolute.bottom-5 span {
+    min-width: 0;
+    max-width: 50%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
   .aev-find-care-card {
     min-height: 10.75rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .aev-mobile-buy-bar {
+    max-width: 100vw;
+    overflow: hidden;
+    padding: 0.7rem 0.75rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .aev-mobile-buy-bar-inner {
+    width: 100%;
+    max-width: min(32rem, 100%);
+  }
+
+  .aev-mobile-buy-summary {
+    display: -webkit-box;
+    max-height: 2.5rem;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .aev-mobile-buy-button {
+    min-height: 2.85rem;
+    width: clamp(6.25rem, 30vw, 7.25rem);
+    padding-inline: 0.75rem;
+  }
+}
+
+@media (max-width: 374px) {
+  .aev-mobile-buy-bar-inner {
+    gap: 0.65rem;
+  }
+
+  .aev-mobile-buy-button {
+    width: 5.85rem;
+    font-size: 0.8125rem;
   }
 }
 

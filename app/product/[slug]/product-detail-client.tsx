@@ -381,7 +381,7 @@ export default function ProductDetailClient({
   ];
 
   return (
-    <main className="aev-bloom-product min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+6rem+env(safe-area-inset-bottom,0px))] text-white lg:pb-0">
+    <main className="aev-bloom-product aev-product-page-shell min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+6rem+env(safe-area-inset-bottom,0px))] text-white lg:pb-0">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_48%_at_18%_26%,rgba(255,77,184,0.11),transparent_62%),radial-gradient(ellipse_50%_40%_at_82%_64%,rgba(0,212,198,0.08),transparent_60%),linear-gradient(180deg,#080611,#090713_48%,#050711)]" />
 
       <SiteHeader
@@ -419,17 +419,17 @@ export default function ProductDetailClient({
             </span>
           </div>
 
-          <h1 className="max-w-[12ch] break-words font-serif text-[2.1rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:text-[3.35rem]">
+          <h1 className="aev-product-mobile-title max-w-[12ch] break-words font-serif text-[2.1rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:text-[3.35rem]">
             {displayProduct.name}
           </h1>
 
           {(displayProduct.shortDescription || displayProduct.description) && (
-            <p className="mt-4 max-w-[27rem] border-l-2 border-[#FF4DB8]/30 pl-4 text-[13px] leading-7 text-[#9C91AA]">
+            <p className="aev-product-mobile-copy mt-4 max-w-[27rem] border-l-2 border-[#FF4DB8]/30 pl-4 text-[13px] leading-7 text-[#9C91AA]">
               {displayProduct.shortDescription || displayProduct.description}
             </p>
           )}
 
-          <div className="mt-5 inline-flex flex-wrap items-baseline gap-2 rounded-md border border-white/[0.08] bg-white/[0.035] px-4 py-3 sm:px-5">
+          <div className="aev-product-mobile-price mt-5 inline-flex flex-wrap items-baseline gap-2 rounded-md border border-white/[0.08] bg-white/[0.035] px-4 py-3 sm:px-5">
             <span className="font-serif text-4xl leading-none text-white">
               {formatProductPrice(displayProduct)}
             </span>
@@ -448,7 +448,7 @@ export default function ProductDetailClient({
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#6B5F7A]">
+          <div className="aev-product-mobile-rating mt-4 flex flex-wrap items-center gap-2 text-xs text-[#6B5F7A]">
             <StarRating rating={averageRating} />
             <span>
               {reviewCount > 0
@@ -460,7 +460,7 @@ export default function ProductDetailClient({
             </Link>
           </div>
 
-          <div className="mt-5 grid gap-x-5 gap-y-3 sm:grid-cols-2">
+          <div className="aev-product-mobile-options mt-5 grid gap-x-5 gap-y-3 sm:grid-cols-2">
             <VariantSelector
               label="Size"
               options={displayProduct.sizes}
@@ -498,8 +498,8 @@ export default function ProductDetailClient({
             />
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <div className="flex overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
+          <div className="aev-product-mobile-controls mt-5 flex flex-wrap items-center gap-2">
+            <div className="aev-product-qty-control flex overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
               <button
                 onClick={decreaseQuantity}
                 disabled={!canAddToCart || quantity <= 1}
@@ -522,7 +522,7 @@ export default function ProductDetailClient({
             </div>
             <Link
               href={supportHref}
-              className="inline-flex h-8 flex-1 items-center justify-center gap-2 rounded border border-[#25D366]/20 bg-[#25D366]/[0.055] px-3 text-[11px] font-semibold text-[#25D366] shadow-[0_0_18px_rgba(37,211,102,0.06)] transition hover:border-[#25D366]/35 hover:bg-[#25D366]/[0.10] sm:flex-none"
+              className="aev-product-help-button inline-flex h-8 flex-1 items-center justify-center gap-2 rounded border border-[#25D366]/20 bg-[#25D366]/[0.055] px-3 text-[11px] font-semibold text-[#25D366] shadow-[0_0_18px_rgba(37,211,102,0.06)] transition hover:border-[#25D366]/35 hover:bg-[#25D366]/[0.10] sm:flex-none"
             >
               {settings.whatsappUrl ? <WhatsAppIcon className="h-3.5 w-3.5" /> : <MessageCircle className="h-3.5 w-3.5" />}
               {supportLabel}
@@ -535,32 +535,32 @@ export default function ProductDetailClient({
             </p>
           )}
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <div className="aev-product-mobile-cta mt-4 grid gap-2 sm:grid-cols-2">
             <button
               onClick={() => handleAddToCart(false)}
               disabled={!canAddToCart}
-              className={`min-h-11 rounded bg-gradient-to-r px-5 text-[12px] font-bold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:from-[#1B1230] disabled:to-[#1B1230] disabled:text-[#6B5F7A]/50 ${style.primary}`}
+              className={`aev-product-cta-button min-h-11 rounded bg-gradient-to-r px-5 text-[12px] font-bold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:from-[#1B1230] disabled:to-[#1B1230] disabled:text-[#6B5F7A]/50 ${style.primary}`}
             >
               {canAddToCart ? "Add to Cart" : "Out of Stock"}
             </button>
             <button
               onClick={() => handleAddToCart(true)}
               disabled={!canAddToCart}
-              className="min-h-11 rounded border border-white/[0.08] bg-transparent px-5 text-[12px] font-semibold text-white transition hover:border-[#FF4DB8]/35 hover:text-[#FFB3D1] disabled:cursor-not-allowed disabled:text-[#6B5F7A]/50"
+              className="aev-product-cta-button min-h-11 rounded border border-white/[0.08] bg-transparent px-5 text-[12px] font-semibold text-white transition hover:border-[#FF4DB8]/35 hover:text-[#FFB3D1] disabled:cursor-not-allowed disabled:text-[#6B5F7A]/50"
             >
               {canAddToCart ? "Add and View Cart" : "Unavailable"}
             </button>
           </div>
 
-          <div className="mt-4 grid gap-1.5">
+          <div className="aev-product-support-cards mt-4 grid gap-1.5">
             {[
               { icon: PackageCheck, text: privacyText },
               { icon: Truck, text: deliveryText },
               { icon: ShieldCheck, text: supportText },
             ].map(({ icon: Icon, text }, index) => (
-              <div key={`${text}-${index}`} className="flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA]">
+              <div key={`${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA]">
                 <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${index === 1 ? "text-[#31E6D4]" : style.accent}`} />
-                <span>{text}</span>
+                <span className="min-w-0">{text}</span>
               </div>
             ))}
           </div>
@@ -895,20 +895,20 @@ export default function ProductDetailClient({
         </div>
       )}
 
-      <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-3 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md md:bottom-0 lg:hidden">
-        <div className="relative mx-auto h-12 w-[calc(100vw-1.5rem)] max-w-lg overflow-hidden pr-[7.5rem]">
+      <div className="aev-mobile-buy-bar fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-[#FF4DB8]/14 bg-[#080611]/96 px-3 py-3 shadow-[0_-14px_38px_rgba(0,0,0,0.54),0_-1px_0_rgba(255,77,184,0.16)] backdrop-blur-md md:bottom-0 lg:hidden">
+        <div className="aev-mobile-buy-bar-inner mx-auto grid w-full max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <p className="text-lg font-semibold text-[#FFB3D1]">
               {formatProductPrice(displayProduct)}
             </p>
-            <p className="truncate text-[11px] leading-4 text-[#9C91AA]">
+            <p className="aev-mobile-buy-summary text-[11px] leading-4 text-[#9C91AA]">
               {selectedSummary || "Select your preferred options"} / Qty {quantity}
             </p>
           </div>
           <button
             onClick={() => handleAddToCart(false)}
             disabled={!canAddToCart}
-            className={`absolute right-0 top-0 flex min-h-11 w-[6.75rem] shrink-0 items-center justify-center gap-1.5 rounded px-3 text-sm font-semibold transition ${
+            className={`aev-mobile-buy-button flex min-h-11 w-[6.75rem] shrink-0 items-center justify-center gap-1.5 rounded px-3 text-sm font-semibold transition ${
               canAddToCart
                 ? `bg-gradient-to-r shadow-[0_4px_20px_rgba(255,77,184,0.38)] ${style.primary}`
                 : "cursor-not-allowed bg-[#1B1230] text-[#6B5F7A]/50"
