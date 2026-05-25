@@ -1,5 +1,5 @@
 export const reviewStatuses = ["pending", "approved", "rejected", "hidden"] as const;
-export const reviewSourceTypes = ["order-linked", "admin-added", "imported"] as const;
+export const reviewSourceTypes = ["order-linked", "customer-submitted", "admin-added", "imported"] as const;
 
 export type ReviewStatus = (typeof reviewStatuses)[number];
 export type ReviewSourceType = (typeof reviewSourceTypes)[number];

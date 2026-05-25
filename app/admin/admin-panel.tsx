@@ -3635,14 +3635,23 @@ function ProductEditor({
       slug: draft.slug || slugify(draft.name),
       sizes: textToList(sizes),
       colors: draft.colorOptions.length > 0
-        ? draft.colorOptions.map((color) => color.name.trim()).filter(Boolean)
+        ? draft.colorOptions
+            .filter((color) => color.visible !== false)
+            .map((color) => color.name.trim())
+            .filter(Boolean)
         : textToList(colors),
       colorOptions: draft.colorOptions.map((color, index) => ({
         ...color,
         name: color.name.trim(),
         hex: color.hex.trim() || safeColorHex(color.name),
+        visible: color.visible !== false,
         sortOrder: color.sortOrder ?? index + 1,
       })).filter((color) => color.name),
+      contentBlocks: draft.contentBlocks.map((block, index) => ({
+        ...block,
+        sortOrder: block.sortOrder ?? index + 1,
+        visible: block.visible !== false,
+      })),
       benefits: linesToList(benefits),
       care: linesToList(care),
     };
@@ -4224,13 +4233,18 @@ function AdminEditorCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[1.25rem] border border-white/10 bg-black/22 p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/55">
-        {eyebrow}
-      </p>
-      <h4 className="mt-1 text-base font-semibold text-white">{title}</h4>
+    <details open className="group rounded-[1.25rem] border border-white/10 bg-black/22 p-4">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 marker:hidden">
+        <span>
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/55">
+            {eyebrow}
+          </span>
+          <span className="mt-1 block text-base font-semibold text-white">{title}</span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-white/45 transition group-open:rotate-180" />
+      </summary>
       <div className="mt-4">{children}</div>
-    </section>
+    </details>
   );
 }
 
@@ -4301,8 +4315,22 @@ function ContentBlockEditor({
         </button>
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
+        <SelectField
+          label="Block type"
+          value={block.type}
+          options={["text", "image", "video", "image-text", "video-text", "feature-grid", "comparison"]}
+          onChange={(value) => onChange({ type: value as ProductContentBlock["type"] })}
+        />
+        <SelectField
+          label="Show block"
+          value={block.visible ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) => onChange({ visible: value === "Yes" })}
+        />
         <TextField label="Title" value={block.title} onChange={(value) => onChange({ title: value })} />
+        <TextField label="Subtitle" value={block.subtitle} onChange={(value) => onChange({ subtitle: value })} />
         <TextField label="Short text" value={block.text} onChange={(value) => onChange({ text: value })} />
+        <TextAreaField label="Long text" value={block.longText} onChange={(value) => onChange({ longText: value })} />
         <TextField label="Media URL" value={block.mediaUrl} onChange={(value) => onChange({ mediaUrl: value })} />
         <TextField label="Media alt" value={block.mediaAlt} onChange={(value) => onChange({ mediaAlt: value })} />
         <SelectField
@@ -4312,10 +4340,33 @@ function ContentBlockEditor({
           onChange={(value) => onChange({ mediaType: value as ProductContentBlock["mediaType"] })}
         />
         <SelectField
+          label="Media fit"
+          value={block.mediaFit}
+          options={["contain", "smart", "cover"]}
+          onChange={(value) => onChange({ mediaFit: value as ProductContentBlock["mediaFit"] })}
+        />
+        <SelectField
           label="Media position"
           value={block.mediaPosition}
-          options={["left", "right", "top"]}
+          options={["left", "right", "top", "full"]}
           onChange={(value) => onChange({ mediaPosition: value as ProductContentBlock["mediaPosition"] })}
+        />
+        <SelectField
+          label="Layout"
+          value={block.layout}
+          options={["media-left", "media-right", "media-top", "full-width", "grid"]}
+          onChange={(value) => onChange({ layout: value as ProductContentBlock["layout"] })}
+        />
+        <SelectField
+          label="Media position Y"
+          value={block.mediaObjectPosition}
+          options={["center", "top", "bottom"]}
+          onChange={(value) => onChange({ mediaObjectPosition: value as ProductContentBlock["mediaObjectPosition"] })}
+        />
+        <TextField
+          label="Sort order"
+          value={block.sortOrder?.toString() ?? ""}
+          onChange={(value) => onChange({ sortOrder: value.trim() ? Number(value) : undefined })}
         />
         <TextField label="CTA label" value={block.ctaLabel} onChange={(value) => onChange({ ctaLabel: value })} />
         <TextField label="CTA link" value={block.ctaLink} onChange={(value) => onChange({ ctaLink: value })} />
@@ -4377,6 +4428,12 @@ function ColorOptionEditor({
         <TextField label="Name" value={color.name} onChange={(value) => onChange({ name: value, hex: color.hex || safeColorHex(value) })} />
         <TextField label="Hex color" value={color.hex} onChange={(value) => onChange({ hex: value })} placeholder="#000000" />
         <TextField label="Secondary hex / gradient" value={color.secondaryHex} onChange={(value) => onChange({ secondaryHex: value })} />
+        <SelectField
+          label="Show color"
+          value={color.visible ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) => onChange({ visible: value === "Yes" })}
+        />
         <TextField label="Swatch image URL" value={color.swatchImageUrl} onChange={(value) => onChange({ swatchImageUrl: value })} />
         <TextField label="Color product media URL" value={color.mediaUrl} onChange={(value) => onChange({ mediaUrl: value })} />
         <SelectField
@@ -7986,6 +8043,7 @@ function ReviewsSection({
               {editingId && draft.sourceType === "order-linked" && (
                 <option value="order-linked">Order-linked review</option>
               )}
+              <option value="customer-submitted">Customer-submitted review</option>
               <option value="admin-added">Admin-approved review</option>
               <option value="imported">Curated customer feedback</option>
             </select>

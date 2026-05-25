@@ -7,18 +7,36 @@ export type ProductSectionMedia = {
   type: "image" | "video" | "auto";
   alt: string;
   fit: ProductMediaFit;
+  position?: ProductMediaPosition;
 };
 
 export type ProductSectionMediaMap = Partial<Record<ProductSectionMediaKey, ProductSectionMedia>>;
 
+export type ProductMediaPosition = "center" | "top" | "bottom";
+
 export type ProductContentBlock = {
   id: string;
+  type:
+    | "text"
+    | "image"
+    | "video"
+    | "image-text"
+    | "video-text"
+    | "feature-grid"
+    | "comparison";
   title: string;
+  subtitle: string;
   text: string;
+  longText: string;
   mediaUrl: string;
   mediaType: "image" | "video" | "auto";
   mediaAlt: string;
-  mediaPosition: "left" | "right" | "top";
+  mediaFit: ProductMediaFit;
+  mediaPosition: "left" | "right" | "top" | "full";
+  mediaObjectPosition: ProductMediaPosition;
+  layout: "media-left" | "media-right" | "media-top" | "full-width" | "grid";
+  visible: boolean;
+  sortOrder?: number;
   ctaLabel: string;
   ctaLink: string;
 };
@@ -31,6 +49,7 @@ export type ProductColorOption = {
   swatchImageUrl: string;
   mediaUrl: string;
   mediaType: "image" | "video" | "auto";
+  visible: boolean;
   stockQuantity?: number;
   sortOrder?: number;
 };
@@ -82,19 +101,26 @@ export const defaultVisualThemeSettings: ProductVisualThemeSettings = {
 };
 
 export function createEmptySectionMedia(): ProductSectionMedia {
-  return { url: "", type: "auto", alt: "", fit: "contain" };
+  return { url: "", type: "auto", alt: "", fit: "contain", position: "center" };
 }
 
 export function createContentBlock(): ProductContentBlock {
   const id = `block-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   return {
     id,
+    type: "image-text",
     title: "",
+    subtitle: "",
     text: "",
+    longText: "",
     mediaUrl: "",
     mediaType: "auto",
     mediaAlt: "",
+    mediaFit: "contain",
     mediaPosition: "right",
+    mediaObjectPosition: "center",
+    layout: "media-right",
+    visible: true,
     ctaLabel: "",
     ctaLink: "",
   };
@@ -110,6 +136,7 @@ export function createColorOption(name = ""): ProductColorOption {
     swatchImageUrl: "",
     mediaUrl: "",
     mediaType: "auto",
+    visible: true,
   };
 }
 
@@ -177,6 +204,32 @@ function mediaFit(value: unknown): ProductMediaFit {
   return value === "cover" || value === "smart" || value === "contain" ? value : "contain";
 }
 
+function mediaObjectPosition(value: unknown): ProductMediaPosition {
+  return value === "top" || value === "bottom" || value === "center" ? value : "center";
+}
+
+function contentBlockType(value: unknown): ProductContentBlock["type"] {
+  return value === "text" ||
+    value === "image" ||
+    value === "video" ||
+    value === "image-text" ||
+    value === "video-text" ||
+    value === "feature-grid" ||
+    value === "comparison"
+    ? value
+    : "image-text";
+}
+
+function contentBlockLayout(value: unknown): ProductContentBlock["layout"] {
+  return value === "media-left" ||
+    value === "media-right" ||
+    value === "media-top" ||
+    value === "full-width" ||
+    value === "grid"
+    ? value
+    : "media-right";
+}
+
 function normalizeSectionMedia(value: unknown): ProductSectionMediaMap {
   if (!isRecord(value)) return {};
   return (Object.keys(productSectionLabels) as ProductSectionMediaKey[]).reduce((acc, key) => {
@@ -189,6 +242,7 @@ function normalizeSectionMedia(value: unknown): ProductSectionMediaMap {
       type: mediaType(item.type),
       alt: text(item.alt),
       fit: mediaFit(item.fit),
+      position: mediaObjectPosition(item.position),
     };
     return acc;
   }, {} as ProductSectionMediaMap);
@@ -198,19 +252,33 @@ function normalizeContentBlocks(value: unknown): ProductContentBlock[] {
   if (!Array.isArray(value)) return [];
   return value.filter(isRecord).map((item, index) => {
     const mediaPosition: ProductContentBlock["mediaPosition"] =
-      item.mediaPosition === "left" || item.mediaPosition === "top" ? item.mediaPosition : "right";
+      item.mediaPosition === "left" ||
+      item.mediaPosition === "top" ||
+      item.mediaPosition === "full"
+        ? item.mediaPosition
+        : "right";
+    const layout = contentBlockLayout(item.layout);
     return {
       id: text(item.id) || `block-${index}`,
+      type: contentBlockType(item.type),
       title: text(item.title),
+      subtitle: text(item.subtitle),
       text: text(item.text),
+      longText: text(item.longText || item.long_text),
       mediaUrl: text(item.mediaUrl),
       mediaType: mediaType(item.mediaType),
       mediaAlt: text(item.mediaAlt),
+      mediaFit: mediaFit(item.mediaFit || item.fit),
       mediaPosition,
+      mediaObjectPosition: mediaObjectPosition(item.mediaObjectPosition || item.mediaPositionY),
+      layout,
+      visible: item.visible !== false,
+      sortOrder: optionalNumber(item.sortOrder),
       ctaLabel: text(item.ctaLabel),
       ctaLink: text(item.ctaLink),
     };
-  }).filter((item) => item.title || item.text || item.mediaUrl);
+  }).filter((item) => item.visible && (item.title || item.subtitle || item.text || item.longText || item.mediaUrl))
+    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
 }
 
 export function normalizeColorOptions(value: unknown, legacyColors: string[] = []): ProductColorOption[] {
@@ -227,10 +295,11 @@ export function normalizeColorOptions(value: unknown, legacyColors: string[] = [
           swatchImageUrl: text(item.swatchImageUrl || item.swatchImage),
           mediaUrl: text(item.mediaUrl || item.productMediaUrl),
           mediaType: mediaType(item.mediaType),
+          visible: item.visible !== false,
           stockQuantity: optionalNumber(item.stockQuantity),
           sortOrder: optionalNumber(item.sortOrder),
         } satisfies ProductColorOption;
-      }).filter((item): item is ProductColorOption => Boolean(item))
+      }).filter((item): item is ProductColorOption => Boolean(item && item.visible))
     : [];
 
   if (fromJson.length > 0) {
@@ -240,6 +309,7 @@ export function normalizeColorOptions(value: unknown, legacyColors: string[] = [
   return legacyColors.map((name, index) => ({
     ...createColorOption(name),
     id: `legacy-color-${index}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    visible: true,
     sortOrder: index + 1,
   }));
 }

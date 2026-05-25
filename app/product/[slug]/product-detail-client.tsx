@@ -152,6 +152,8 @@ export default function ProductDetailClient({
   const care = displayCare(displayProduct);
   const cms = extractProductCmsContent(displayProduct.media, displayProduct.colors);
   const colorOptions = cms.colorOptions;
+  const displayColorNames =
+    colorOptions.length > 0 ? colorOptions.map((option) => option.name) : displayProduct.colors;
   const sectionMediaEntries = (Object.keys(productSectionLabels) as ProductSectionMediaKey[])
     .map((key) => ({ key, media: cms.sectionMedia[key] }))
     .filter((entry): entry is { key: ProductSectionMediaKey; media: ProductSectionMedia } =>
@@ -163,7 +165,7 @@ export default function ProductDetailClient({
   const canAddToCart = isPurchasableStock(displayProduct.stockStatus);
 
   const [selectedSize, setSelectedSize] = useState(displayProduct.sizes[0] || "");
-  const [selectedColor, setSelectedColor] = useState(displayProduct.colors[0] || "");
+  const [selectedColor, setSelectedColor] = useState(displayColorNames[0] || "");
   const [selectedAbsorbency, setSelectedAbsorbency] = useState(
     displayProduct.absorbencyOptions[0] || displayProduct.absorbency
   );
@@ -266,7 +268,7 @@ export default function ProductDetailClient({
       setSelectionMessage("Please select a size before adding this item.");
       return;
     }
-    if (displayProduct.colors.length > 0 && !selectedColor) {
+    if (displayColorNames.length > 0 && !selectedColor) {
       setSelectionMessage("Please select a color before adding this item.");
       return;
     }
@@ -330,7 +332,12 @@ export default function ProductDetailClient({
     { question: hms.faqPreviewItem2Question, answer: hms.faqPreviewItem2Answer },
     { question: hms.faqPreviewItem3Question, answer: hms.faqPreviewItem3Answer },
   ].filter((faq) => faq.question && faq.answer);
-  const displayFaqs = supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
+  const cmsFaqs = cms.faqItems
+    .filter((faq) => faq.visible)
+    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
+    .map((faq) => ({ question: faq.question, answer: faq.answer }));
+  const displayFaqs =
+    cmsFaqs.length > 0 ? cmsFaqs : supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
   const promiseCards =
     cms.benefitItems.filter((item) => item.visible).length > 0
       ? cms.benefitItems
@@ -473,7 +480,7 @@ export default function ProductDetailClient({
             />
             <VariantSelector
               label="Color"
-              options={displayProduct.colors}
+              options={displayColorNames}
               colorOptions={colorOptions}
               selected={selectedColor}
               onSelect={(value) => {
@@ -659,7 +666,7 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      {(sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
+      {(displayProduct.description || sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
         <ProductContentMediaSections
           description={displayProduct.description}
           sectionMediaEntries={sectionMediaEntries}
@@ -842,46 +849,102 @@ function ProductContentMediaSections({
   contentBlocks: ProductContentBlock[];
   productName: string;
 }) {
+  const [showAllMedia, setShowAllMedia] = useState(false);
+  const [defaultMediaCount, setDefaultMediaCount] = useState(6);
+  const galleryMedia = [
+    ...sectionMediaEntries.map(({ key, media }) => ({
+      id: `section-${key}`,
+      title: productSectionLabels[key],
+      media,
+    })),
+    ...contentBlocks
+      .filter((block) => block.mediaUrl)
+      .map((block) => ({
+        id: `block-${block.id}`,
+        title: block.title || block.subtitle || "Product media",
+        media: {
+          url: block.mediaUrl,
+          type: block.mediaType,
+          alt: block.mediaAlt,
+          fit: block.mediaFit || "contain",
+          position: block.mediaObjectPosition || "center",
+        } satisfies ProductSectionMedia,
+      })),
+  ].filter((item) => item.media.url);
+  const visibleGalleryMedia = showAllMedia ? galleryMedia : galleryMedia.slice(0, defaultMediaCount);
+  const hiddenMediaCount = Math.max(0, galleryMedia.length - visibleGalleryMedia.length);
+
+  useEffect(() => {
+    const updateCount = () => setDefaultMediaCount(window.matchMedia("(max-width: 767px)").matches ? 4 : 6);
+    updateCount();
+    window.addEventListener("resize", updateCount);
+    return () => window.removeEventListener("resize", updateCount);
+  }, []);
+
   return (
     <section className="relative z-[2] border-y border-white/[0.07] bg-[#0B0814] py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
           {description && (
-            <div>
+            <div className="rounded border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
               <SectionHeading eyebrow="Story" title="Product details" description="" />
-              <p className="mt-4 max-w-xl text-sm leading-8 text-[#D8CBE8]/76">
-                {description}
-              </p>
+              <div className="mt-4 space-y-4 text-sm leading-8 text-[#D8CBE8]/76">
+                {description
+                  .split(/\n{2,}/)
+                  .map((paragraph) => paragraph.trim())
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={`${paragraph.slice(0, 16)}-${index}`}>{paragraph}</p>
+                  ))}
+              </div>
             </div>
           )}
-          <div className="grid gap-4">
-            {sectionMediaEntries.map(({ key, media }) => (
-              <article
-                key={key}
-                className="grid gap-4 rounded border border-white/[0.08] bg-white/[0.035] p-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] sm:p-4"
-              >
-                <div className="p-2 sm:p-3">
-                  <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-[#FF4DB8]">
-                    {productSectionLabels[key]}
+          {galleryMedia.length > 0 && (
+            <div>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
+                    Product Gallery
                   </p>
-                  <h3 className="mt-2 font-serif text-2xl text-white">
-                    {key === "story"
-                      ? "A closer look"
-                      : key === "promise"
-                        ? "Product promise"
-                        : key === "care"
-                          ? "Care guidance"
-                          : "Fit guidance"}
-                  </h3>
+                  <h3 className="mt-2 font-serif text-2xl text-white">A closer look</h3>
                 </div>
-                <ProductInlineMedia media={media} fallbackAlt={`${productName} ${productSectionLabels[key]}`} />
-              </article>
-            ))}
-          </div>
+                {galleryMedia.length > defaultMediaCount && (
+                  <span className="rounded border border-white/[0.08] bg-white/[0.035] px-2.5 py-1 text-[10px] text-[#9C91AA]">
+                    {galleryMedia.length} media
+                  </span>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleGalleryMedia.map((item, index) => (
+                  <article key={item.id} className="group overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
+                    <ProductInlineMedia
+                      media={item.media}
+                      fallbackAlt={`${productName} ${item.title}`}
+                      compact
+                    />
+                    <div className="border-t border-white/[0.07] px-3 py-2">
+                      <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9C91AA]">
+                        {item.title || `Media ${index + 1}`}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {galleryMedia.length > defaultMediaCount && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllMedia((value) => !value)}
+                  className="mt-5 inline-flex min-h-10 items-center justify-center rounded border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
+                >
+                  {showAllMedia ? "Show less" : `Show more (${hiddenMediaCount})`}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {contentBlocks.length > 0 && (
-          <div className="mt-6 grid gap-4">
+          <div className="mt-8 grid gap-4">
             {contentBlocks.map((block) => (
               <ContentBlockCard key={block.id} block={block} productName={productName} />
             ))}
@@ -895,22 +958,34 @@ function ProductContentMediaSections({
 function ProductInlineMedia({
   media,
   fallbackAlt,
+  compact = false,
 }: {
   media: ProductSectionMedia;
   fallbackAlt: string;
+  compact?: boolean;
 }) {
   const type = inferMediaType(media.url, media.type);
   const fitClass = media.fit === "cover" ? "object-cover" : "object-contain";
+  const positionClass =
+    media.position === "top"
+      ? "object-top"
+      : media.position === "bottom"
+        ? "object-bottom"
+        : "object-center";
+  const sizeClass = compact
+    ? "aspect-[4/3] min-h-[10rem]"
+    : "aspect-[4/3] min-h-[14rem] max-h-[30rem]";
   return (
-    <div className="relative min-h-[14rem] overflow-hidden rounded border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)]">
+    <div className={`relative overflow-hidden rounded border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] ${sizeClass}`}>
       <div className="pointer-events-none absolute inset-8 rounded-full bg-[#FF4DB8]/10 blur-3xl" />
       {type === "video" ? (
         <video
           src={media.url}
           controls
           playsInline
+          muted
           preload="metadata"
-          className={`relative h-full max-h-[26rem] min-h-[14rem] w-full bg-[#080611] ${fitClass}`}
+          className={`relative h-full w-full bg-[#080611] ${fitClass} ${positionClass}`}
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
@@ -919,7 +994,7 @@ function ProductInlineMedia({
           alt={media.alt || fallbackAlt}
           loading="lazy"
           decoding="async"
-          className={`relative h-full max-h-[26rem] min-h-[14rem] w-full p-4 ${fitClass}`}
+          className={`relative h-full w-full ${media.fit === "cover" ? "" : "p-3 sm:p-4"} ${fitClass} ${positionClass}`}
         />
       )}
     </div>
@@ -939,7 +1014,8 @@ function ContentBlockCard({
         url: block.mediaUrl,
         type: block.mediaType,
         alt: block.mediaAlt,
-        fit: "contain" as const,
+        fit: block.mediaFit || "contain",
+        position: block.mediaObjectPosition || "center",
       }
     : null;
   const mediaNode = media ? (
@@ -948,7 +1024,19 @@ function ContentBlockCard({
   const textNode = (
     <div className="p-4 sm:p-5">
       {block.title && <h3 className="font-serif text-2xl text-white">{block.title}</h3>}
+      {block.subtitle && <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#FFB3D1]">{block.subtitle}</p>}
       {block.text && <p className="mt-3 text-sm leading-7 text-[#D8CBE8]/76">{block.text}</p>}
+      {block.longText && (
+        <div className="mt-3 space-y-3 text-sm leading-7 text-[#9C91AA]">
+          {block.longText
+            .split(/\n{2,}/)
+            .map((paragraph) => paragraph.trim())
+            .filter(Boolean)
+            .map((paragraph, index) => (
+              <p key={`${block.id}-long-${index}`}>{paragraph}</p>
+            ))}
+        </div>
+      )}
       {block.ctaLabel && block.ctaLink && (
         <Link
           href={block.ctaLink}
@@ -970,7 +1058,7 @@ function ContentBlockCard({
   }
 
   return (
-    <article className="grid gap-0 overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] lg:grid-cols-2">
+    <article className={`grid gap-0 overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] ${block.mediaPosition === "full" ? "" : "lg:grid-cols-2"}`}>
       {block.mediaPosition === "left" && mediaNode}
       {textNode}
       {block.mediaPosition !== "left" && mediaNode}
@@ -1181,25 +1269,33 @@ function ProductReviewsSection({
                   <span className="rounded border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] px-2 py-1 text-[10px] font-semibold text-[#31E6D4]">
                     {review.verifiedPurchase && review.sourceType === "order-linked"
                       ? "Verified purchase"
-                      : review.sourceType === "imported"
-                        ? "Curated customer feedback"
-                        : review.sourceType === "admin-added"
-                          ? "Admin-approved review"
-                          : "Customer review"}
+                      : "Customer review"}
                   </span>
                 </p>
                 {review.mediaUrls.length > 0 && (
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                    {review.mediaUrls.slice(0, 3).map((url, index) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={`${review.id}-${url}-${index}`}
-                        src={url}
-                        alt=""
-                        loading="lazy"
-                        className="h-16 w-16 shrink-0 rounded border border-white/10 object-cover"
-                      />
-                    ))}
+                    {review.mediaUrls.slice(0, 3).map((url, index) =>
+                      inferMediaType(url) === "video" ? (
+                        <video
+                          key={`${review.id}-${url}-${index}`}
+                          src={url}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          controls
+                          className="h-16 w-16 shrink-0 rounded border border-white/10 bg-[#080611] object-cover"
+                        />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={`${review.id}-${url}-${index}`}
+                          src={url}
+                          alt=""
+                          loading="lazy"
+                          className="h-16 w-16 shrink-0 rounded border border-white/10 object-cover"
+                        />
+                      )
+                    )}
                   </div>
                 )}
               </article>
