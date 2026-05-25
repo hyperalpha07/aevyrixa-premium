@@ -25,9 +25,7 @@ import StorefrontProductCard, {
   isNewProduct,
   productDateValue,
 } from "@/app/components/storefront-product-card";
-import ProductVisual from "@/app/components/product-visual";
 import type { ProductCatalogItem, ProductStockStatus } from "@/app/lib/product-types";
-import { formatProductPrice } from "@/app/lib/products";
 import type {
   CategoryCmsEntry,
   StorefrontSettings,
@@ -193,7 +191,6 @@ export default function ShopDiscoveryClient({
   );
 
   const bestPicks = featuredProducts.length > 0 ? featuredProducts : newArrivals;
-  const spotlightProduct = bestPicks[0] ?? products[0];
   const limitedStockProducts = useMemo(
     () => products.filter((product) => isLimitedStock(product)).slice(0, 4),
     [products]
@@ -282,37 +279,43 @@ export default function ShopDiscoveryClient({
     "Bangladesh Delivery",
   ].map(safeShopCopy);
   const tickerItems = safeAnnouncementItems;
-  const heroTitle =
-    settings.appearanceSettings.homepageHeroTitle &&
-    settings.appearanceSettings.homepageHeroTitle !== "Aevyrixa Her Care"
-      ? settings.appearanceSettings.homepageHeroTitle
-      : "Comfort that moves with you";
+  const hms = settings.homepageMediaSettings;
+  const heroTitle = safeShopCopy(hms.shopHeroTitle || "Comfort that moves with you");
   const heroSubtitle = safeShopCopy(
-    settings.appearanceSettings.homepageHeroSubtitle ||
-      "Premium reusable care for everyday comfort, discreet packaging, and Bangladesh delivery."
+    hms.shopHeroSubtitle ||
+      "Premium women's comfort, hygiene & reusable care with discreet Bangladesh delivery."
   );
-  const primaryCta = settings.appearanceSettings.primaryCtaText || "Shop Collection";
-  const secondaryCta =
-    settings.homepageMediaSettings.findCareCtaText ||
-    settings.appearanceSettings.secondaryCtaText ||
-    "Find Your Care";
+  const primaryCta = hms.shopHeroPrimaryCtaText || "Shop Now";
+  const primaryCtaLink = hms.shopHeroPrimaryCtaLink || "#shop-products";
+  const secondaryCta = hms.shopHeroSecondaryCtaText || "Track Order";
+  const secondaryCtaLink = hms.shopHeroSecondaryCtaLink || "/track-order";
+  const heroEyebrow = hms.shopHeroEyebrow || "AEVYRIXA HER CARE SHOP";
+  const heroMediaUrl = hms.shopHeroMediaUrl || "";
+  const heroMediaAlt = hms.shopHeroMediaAlt || "Aevyrixa Her Care";
+  const heroMediaType = hms.shopHeroMediaType || "auto";
+  const heroBadge1 = safeShopCopy(hms.shopHeroBadge1 || "Discreet Packaging");
+  const heroBadge2 = safeShopCopy(hms.shopHeroBadge2 || "3-Day Hygiene-Safe Support");
+  const heroCaption = hms.shopHeroCaption || "";
+  const isHeroVideo =
+    heroMediaType === "video" ||
+    (heroMediaType === "auto" && /\.(mp4|webm|ogg)(\?|$)/i.test(heroMediaUrl));
   const trustCards = [
     {
       icon: PackageCheck,
-      kicker: "Privacy",
-      label: "Discreet privacy packaging",
+      kicker: safeShopCopy(hms.shopHeroTrust1Label || "Privacy"),
+      label: safeShopCopy(hms.shopHeroTrust1Description || "Discreet privacy packaging"),
       tone: "text-[#FFB3D1]",
     },
     {
       icon: HeartHandshake,
-      kicker: "Support",
-      label: "3-Day Hygiene-Safe Support",
+      kicker: safeShopCopy(hms.shopHeroTrust2Label || "Support"),
+      label: safeShopCopy(hms.shopHeroTrust2Description || "3-Day Hygiene-Safe Support"),
       tone: "text-[#31E6D4]",
     },
     {
       icon: Truck,
-      kicker: "Delivery",
-      label: "Bangladesh delivery",
+      kicker: safeShopCopy(hms.shopHeroTrust3Label || "Delivery"),
+      label: safeShopCopy(hms.shopHeroTrust3Description || "Bangladesh delivery"),
       tone: "text-[#C084FC]",
     },
   ];
@@ -446,78 +449,62 @@ export default function ShopDiscoveryClient({
       <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[70rem] px-3 pb-2 pt-2 sm:px-5 lg:px-6">
         <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_16.5rem] xl:grid-cols-[minmax(0,1fr)_17.5rem]">
           <div className="grid gap-3">
+            {/* Main hero content card */}
             <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-4">
-              {/* Flex row on mobile: text left + mini spotlight right */}
-              <div className="flex items-start gap-2.5 lg:block">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-3 flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
-                    <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
-                      Aevyrixa Her Care Shop
-                    </p>
-                  </div>
-                  <h1 className="max-w-[18rem] break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:max-w-xl min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.08rem]">
-                    {heroTitle === "Comfort that moves with you" ? (
-                      <>
-                        Comfort that moves
-                        <br />
-                        with you
-                      </>
-                    ) : (
-                      heroTitle
-                    )}
-                  </h1>
-                  <p className="mt-2 max-w-md text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
-                    {heroSubtitle}
-                  </p>
-                </div>
-                {/* Mobile-only mini spotlight — hidden on lg+ */}
-                {spotlightProduct && (
-                  <Link
-                    href={`/product/${spotlightProduct.slug}`}
-                    className="relative block h-[6rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl border border-white/[0.08] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F)] shadow-[0_8px_24px_rgba(0,0,0,0.44)] sm:h-[7rem] sm:w-[5.5rem] lg:hidden"
-                    aria-label={`View ${spotlightProduct.name}`}
-                  >
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(255,77,184,0.20),transparent_40%)]" />
-                    {(spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]}
-                        alt={spotlightProduct.name}
-                        className="absolute inset-0 h-full w-full object-contain p-1.5"
-                      />
-                    ) : (
-                      <div className="absolute inset-0">
-                        <ProductVisual
-                          visualTheme={spotlightProduct.visualTheme}
-                          label={spotlightProduct.absorbency}
-                          compact
-                        />
-                      </div>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#080611]/95 to-transparent px-1.5 pb-1.5 pt-3">
-                      <p className="line-clamp-1 text-[0.45rem] font-bold leading-tight text-white">{spotlightProduct.name}</p>
-                      <p className="text-[0.46rem] font-semibold text-[#FF4DB8]">{formatProductPrice(spotlightProduct)}</p>
-                    </div>
-                  </Link>
-                )}
+              <div className="mb-3 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
+                  {heroEyebrow}
+                </p>
               </div>
+              <h1 className="max-w-xl break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.08rem]">
+                {heroTitle}
+              </h1>
+              <p className="mt-2 max-w-md text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
+                {heroSubtitle}
+              </p>
+
               <div className="mt-3 flex flex-wrap gap-2">
-                <a
-                  href="#shop-products"
+                <Link
+                  href={primaryCtaLink}
                   className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 text-xs font-bold text-white sm:min-h-11 sm:px-6"
                 >
                   {primaryCta}
                   <ArrowRight className="h-3.5 w-3.5" />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen(true)}
+                </Link>
+                <Link
+                  href={secondaryCtaLink}
                   className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-xs font-semibold sm:min-h-11 sm:px-5"
                 >
                   {secondaryCta}
-                </button>
+                </Link>
               </div>
+
+              {/* Mobile compact hero media — hidden on lg+ */}
+              {heroMediaUrl && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden" style={{ maxHeight: "10rem" }}>
+                  {isHeroVideo ? (
+                    <video
+                      src={heroMediaUrl}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="h-full w-full object-cover"
+                      style={{ maxHeight: "10rem" }}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={heroMediaUrl}
+                      alt={heroMediaAlt}
+                      className="h-full w-full object-cover"
+                      style={{ maxHeight: "10rem" }}
+                    />
+                  )}
+                </div>
+              )}
+
               {/* Mobile compact trust chips — hidden on lg+ */}
               <div className="mt-2.5 flex flex-wrap gap-1.5 lg:hidden">
                 {trustCards.map((card) => {
@@ -544,7 +531,7 @@ export default function ShopDiscoveryClient({
                     key={card.kicker}
                     className="aev-v2-trust-card min-w-0 rounded-xl border border-white/[0.07] bg-[#0E0A1C] p-2.5 sm:flex sm:items-center sm:gap-2.5 sm:p-3"
                   >
-                    <span className={`mb-2 grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.04] sm:mb-0 ${card.tone}`}>
+                    <span className={`mb-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.04] sm:mb-0 ${card.tone}`}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0">
@@ -561,54 +548,81 @@ export default function ShopDiscoveryClient({
             </div>
           </div>
 
-          {/* Desktop spotlight card — hidden on mobile, shown lg+ */}
-          <div className="aev-v2-spotlight-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:min-h-[12.25rem]">
+          {/* Desktop hero media card — hidden on mobile, shown lg+ */}
+          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:min-h-[12.25rem]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
-            {spotlightProduct ? (
-              <Link href={`/product/${spotlightProduct.slug}`} className="group block h-full">
-                <div className="relative h-full lg:min-h-[12.25rem]">
-                  {spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]}
-                      alt={spotlightProduct.name}
-                      className="absolute inset-0 h-full w-full object-contain p-4 transition duration-700 group-hover:scale-[1.04] lg:p-5"
-                    />
-                  ) : (
-                    <ProductVisual
-                      visualTheme={spotlightProduct.visualTheme}
-                      label={spotlightProduct.absorbency}
-                      compact
-                    />
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#080611]/95 via-[#080611]/54 to-transparent p-4">
-                    <p className="text-[0.58rem] font-bold uppercase tracking-[0.2em] text-[#FF4DB8]/75">
-                      Spotlight
-                    </p>
-                    <p className="mt-1 line-clamp-1 text-sm font-bold text-white">
-                      {spotlightProduct.name}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-[#FFB3D1]">
-                      {formatProductPrice(spotlightProduct)}
-                    </p>
-                  </div>
-                </div>
-              </Link>
+
+            {heroMediaUrl ? (
+              isHeroVideo ? (
+                <video
+                  src={heroMediaUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={heroMediaUrl}
+                  alt={heroMediaAlt}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              )
             ) : (
-              <div className="grid h-full lg:min-h-[12.25rem] place-items-center p-5 text-center text-sm text-[#9C91AA]">
-                Products will appear here when available.
+              /* Default brand trust visual when no media is set */
+              <div className="relative flex h-full min-h-[12.25rem] flex-col justify-between p-5">
+                <div className="pointer-events-none absolute inset-0 opacity-70">
+                  <div className="absolute left-1/2 top-1/3 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF4DB8]/20 blur-2xl" />
+                  <div className="absolute bottom-1/4 left-1/4 h-14 w-14 rounded-full bg-[#31E6D4]/15 blur-xl" />
+                </div>
+                <div className="relative grid grid-cols-3 gap-2">
+                  {trustCards.map((card) => {
+                    const Icon = card.icon;
+                    return (
+                      <div
+                        key={card.kicker}
+                        className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.04] px-1 py-3"
+                      >
+                        <span className={`grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] ${card.tone}`}>
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="text-center text-[0.5rem] font-bold uppercase leading-tight tracking-wide text-white/60">
+                          {card.kicker}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="relative mt-auto pt-3 text-center text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">
+                  Aevyrixa Her Care
+                </p>
               </div>
             )}
+
+            {/* Badges */}
             <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
-              {safeAnnouncementItems.slice(0, 2).map((item, index) => (
-                <span
-                  key={item}
-                  className={`max-w-[9.5rem] truncate rounded-full border border-white/10 bg-[#080611]/72 px-2.5 py-1 text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/75 backdrop-blur sm:max-w-[13rem] ${index > 0 ? "hidden sm:inline-flex" : ""}`}
-                >
-                  {item}
+              {heroBadge1 && (
+                <span className="max-w-[10rem] truncate rounded-full border border-white/10 bg-[#080611]/72 px-2.5 py-1 text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/75 backdrop-blur">
+                  {heroBadge1}
                 </span>
-              ))}
+              )}
+              {heroBadge2 && (
+                <span className="hidden max-w-[10rem] truncate rounded-full border border-white/10 bg-[#080611]/72 px-2.5 py-1 text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-[#D8CBE8]/75 backdrop-blur sm:inline-flex">
+                  {heroBadge2}
+                </span>
+              )}
             </div>
+
+            {/* Optional caption */}
+            {heroCaption && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#080611]/90 to-transparent px-4 pb-4 pt-6">
+                <p className="text-[0.62rem] font-semibold leading-5 text-[#D8CBE8]/80">
+                  {heroCaption}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>

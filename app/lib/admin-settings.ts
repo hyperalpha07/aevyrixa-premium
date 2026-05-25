@@ -335,6 +335,26 @@ export type HomepageMediaSettings = {
   faqPreviewItem2Answer: string;
   faqPreviewItem3Question: string;
   faqPreviewItem3Answer: string;
+  shopHeroEnabled: boolean;
+  shopHeroEyebrow: string;
+  shopHeroTitle: string;
+  shopHeroSubtitle: string;
+  shopHeroPrimaryCtaText: string;
+  shopHeroPrimaryCtaLink: string;
+  shopHeroSecondaryCtaText: string;
+  shopHeroSecondaryCtaLink: string;
+  shopHeroMediaUrl: string;
+  shopHeroMediaType: "image" | "video" | "auto";
+  shopHeroMediaAlt: string;
+  shopHeroBadge1: string;
+  shopHeroBadge2: string;
+  shopHeroCaption: string;
+  shopHeroTrust1Label: string;
+  shopHeroTrust1Description: string;
+  shopHeroTrust2Label: string;
+  shopHeroTrust2Description: string;
+  shopHeroTrust3Label: string;
+  shopHeroTrust3Description: string;
 };
 
 export type AdvancedSettings = {
@@ -691,6 +711,26 @@ const defaultGroups: AdminSettingsGroups = {
     faqPreviewItem2Answer: "For lighter days, reusable period care may fit your routine. Choose backup protection for heavier flow if you need it.",
     faqPreviewItem3Question: "How do I wash it?",
     faqPreviewItem3Answer: "Rinse with cool water, wash gently, and air dry before storing.",
+    shopHeroEnabled: true,
+    shopHeroEyebrow: "AEVYRIXA HER CARE SHOP",
+    shopHeroTitle: "Comfort that moves with you",
+    shopHeroSubtitle: "Premium women's comfort, hygiene & reusable care with discreet Bangladesh delivery.",
+    shopHeroPrimaryCtaText: "Shop Now",
+    shopHeroPrimaryCtaLink: "/product",
+    shopHeroSecondaryCtaText: "Track Order",
+    shopHeroSecondaryCtaLink: "/track-order",
+    shopHeroMediaUrl: "",
+    shopHeroMediaType: "auto" as "image" | "video" | "auto",
+    shopHeroMediaAlt: "Aevyrixa Her Care",
+    shopHeroBadge1: "Discreet Packaging",
+    shopHeroBadge2: "3-Day Hygiene-Safe Support",
+    shopHeroCaption: "",
+    shopHeroTrust1Label: "Privacy",
+    shopHeroTrust1Description: "Discreet privacy packaging",
+    shopHeroTrust2Label: "Support",
+    shopHeroTrust2Description: "3-Day Hygiene-Safe Support",
+    shopHeroTrust3Label: "Delivery",
+    shopHeroTrust3Description: "Bangladesh delivery",
   },
 };
 
@@ -803,6 +843,10 @@ function layerComfortMediaModeValue(value: unknown): LayerComfortMediaMode {
   return value === "image_text" || value === "video_text" || value === "background_media_text" || value === "media_only"
     ? value
     : "animation";
+}
+
+function shopHeroMediaTypeValue(value: unknown): "image" | "video" | "auto" {
+  return value === "image" || value === "video" ? value : "auto";
 }
 
 function categoryMediaModeValue(value: unknown, fallback: HomepageCategoryMediaMode): HomepageCategoryMediaMode {
@@ -1735,6 +1779,26 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
         homepageMediaRaw.faqPreviewItem3Answer,
         defaultGroups.homepageMediaSettings.faqPreviewItem3Answer
       ),
+      shopHeroEnabled: booleanValue(homepageMediaRaw.shopHeroEnabled, defaultGroups.homepageMediaSettings.shopHeroEnabled),
+      shopHeroEyebrow: safeText(homepageMediaRaw.shopHeroEyebrow, defaultGroups.homepageMediaSettings.shopHeroEyebrow),
+      shopHeroTitle: safeText(homepageMediaRaw.shopHeroTitle, defaultGroups.homepageMediaSettings.shopHeroTitle),
+      shopHeroSubtitle: safeText(homepageMediaRaw.shopHeroSubtitle, defaultGroups.homepageMediaSettings.shopHeroSubtitle),
+      shopHeroPrimaryCtaText: safeText(homepageMediaRaw.shopHeroPrimaryCtaText, defaultGroups.homepageMediaSettings.shopHeroPrimaryCtaText),
+      shopHeroPrimaryCtaLink: safeText(homepageMediaRaw.shopHeroPrimaryCtaLink, defaultGroups.homepageMediaSettings.shopHeroPrimaryCtaLink),
+      shopHeroSecondaryCtaText: safeText(homepageMediaRaw.shopHeroSecondaryCtaText, defaultGroups.homepageMediaSettings.shopHeroSecondaryCtaText),
+      shopHeroSecondaryCtaLink: safeText(homepageMediaRaw.shopHeroSecondaryCtaLink, defaultGroups.homepageMediaSettings.shopHeroSecondaryCtaLink),
+      shopHeroMediaUrl: publicUrlValue(homepageMediaRaw.shopHeroMediaUrl),
+      shopHeroMediaType: shopHeroMediaTypeValue(homepageMediaRaw.shopHeroMediaType),
+      shopHeroMediaAlt: safeText(homepageMediaRaw.shopHeroMediaAlt, defaultGroups.homepageMediaSettings.shopHeroMediaAlt),
+      shopHeroBadge1: safeText(homepageMediaRaw.shopHeroBadge1, defaultGroups.homepageMediaSettings.shopHeroBadge1),
+      shopHeroBadge2: safeText(homepageMediaRaw.shopHeroBadge2, defaultGroups.homepageMediaSettings.shopHeroBadge2),
+      shopHeroCaption: safeText(homepageMediaRaw.shopHeroCaption, defaultGroups.homepageMediaSettings.shopHeroCaption),
+      shopHeroTrust1Label: safeText(homepageMediaRaw.shopHeroTrust1Label, defaultGroups.homepageMediaSettings.shopHeroTrust1Label),
+      shopHeroTrust1Description: safeText(homepageMediaRaw.shopHeroTrust1Description, defaultGroups.homepageMediaSettings.shopHeroTrust1Description),
+      shopHeroTrust2Label: safeText(homepageMediaRaw.shopHeroTrust2Label, defaultGroups.homepageMediaSettings.shopHeroTrust2Label),
+      shopHeroTrust2Description: safeText(homepageMediaRaw.shopHeroTrust2Description, defaultGroups.homepageMediaSettings.shopHeroTrust2Description),
+      shopHeroTrust3Label: safeText(homepageMediaRaw.shopHeroTrust3Label, defaultGroups.homepageMediaSettings.shopHeroTrust3Label),
+      shopHeroTrust3Description: safeText(homepageMediaRaw.shopHeroTrust3Description, defaultGroups.homepageMediaSettings.shopHeroTrust3Description),
     },
   };
 

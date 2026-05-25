@@ -5858,6 +5858,131 @@ function SettingsSection({
               </SettingsCard>
 
               <SettingsCard
+                eyebrow="Shop Page — Hero"
+                title="Shop hero section"
+                description="Controls all text, media, CTA, badges, and trust items in the hero at the top of the /product shop page."
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <ToggleField
+                    label="Show shop hero"
+                    checked={draft.homepageMediaSettings.shopHeroEnabled}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroEnabled: value })}
+                  />
+                  <TextField
+                    label="Eyebrow"
+                    value={draft.homepageMediaSettings.shopHeroEyebrow}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroEyebrow: value })}
+                    placeholder="AEVYRIXA HER CARE SHOP"
+                  />
+                  <TextField
+                    label="Title"
+                    value={draft.homepageMediaSettings.shopHeroTitle}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroTitle: value })}
+                    placeholder="Comfort that moves with you"
+                  />
+                  <TextAreaField
+                    label="Subtitle"
+                    value={draft.homepageMediaSettings.shopHeroSubtitle}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroSubtitle: value })}
+                  />
+                  <TextField
+                    label="Primary CTA text"
+                    value={draft.homepageMediaSettings.shopHeroPrimaryCtaText}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroPrimaryCtaText: value })}
+                    placeholder="Shop Now"
+                  />
+                  <TextField
+                    label="Primary CTA link"
+                    value={draft.homepageMediaSettings.shopHeroPrimaryCtaLink}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroPrimaryCtaLink: value })}
+                    placeholder="/product"
+                  />
+                  <TextField
+                    label="Secondary CTA text"
+                    value={draft.homepageMediaSettings.shopHeroSecondaryCtaText}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroSecondaryCtaText: value })}
+                    placeholder="Track Order"
+                  />
+                  <TextField
+                    label="Secondary CTA link"
+                    value={draft.homepageMediaSettings.shopHeroSecondaryCtaLink}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroSecondaryCtaLink: value })}
+                    placeholder="/track-order"
+                  />
+                  <div className="lg:col-span-2">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Hero Media (right side / desktop)</p>
+                    <div className="grid gap-4 lg:grid-cols-3">
+                      <SelectField
+                        label="Media type"
+                        value={draft.homepageMediaSettings.shopHeroMediaType}
+                        options={["auto", "image", "video"] as const}
+                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaType: value as "image" | "video" | "auto" })}
+                      />
+                      <TextField
+                        label="Media URL"
+                        value={draft.homepageMediaSettings.shopHeroMediaUrl}
+                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaUrl: value })}
+                        placeholder="https://…"
+                        inputMode="url"
+                        helper="Leave empty to show default brand trust visual."
+                      />
+                      <TextField
+                        label="Media alt text"
+                        value={draft.homepageMediaSettings.shopHeroMediaAlt}
+                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaAlt: value })}
+                        placeholder="Aevyrixa Her Care"
+                      />
+                    </div>
+                  </div>
+                  <TextField
+                    label="Badge 1"
+                    value={draft.homepageMediaSettings.shopHeroBadge1}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroBadge1: value })}
+                    placeholder="Discreet Packaging"
+                  />
+                  <TextField
+                    label="Badge 2"
+                    value={draft.homepageMediaSettings.shopHeroBadge2}
+                    onChange={(value) => updateHomepageMediaSettings({ shopHeroBadge2: value })}
+                    placeholder="3-Day Hygiene-Safe Support"
+                  />
+                  <div className="lg:col-span-2">
+                    <TextField
+                      label="Caption (optional, shown below media)"
+                      value={draft.homepageMediaSettings.shopHeroCaption}
+                      onChange={(value) => updateHomepageMediaSettings({ shopHeroCaption: value })}
+                      placeholder="Leave empty to hide caption"
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/50">Trust Items</p>
+                    <div className="grid gap-3 lg:grid-cols-3">
+                      {([1, 2, 3] as const).map((index) => {
+                        const labelKey = `shopHeroTrust${index}Label` as const;
+                        const descKey = `shopHeroTrust${index}Description` as const;
+                        return (
+                          <div key={index} className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                            <TextField
+                              label={`Trust ${index} label`}
+                              value={draft.homepageMediaSettings[labelKey]}
+                              onChange={(value) => updateHomepageMediaSettings({ [labelKey]: value } as Partial<HomepageMediaSettings>)}
+                              placeholder={["Privacy", "Support", "Delivery"][index - 1]}
+                            />
+                            <TextField
+                              label={`Trust ${index} description`}
+                              value={draft.homepageMediaSettings[descKey]}
+                              onChange={(value) => updateHomepageMediaSettings({ [descKey]: value } as Partial<HomepageMediaSettings>)}
+                              placeholder={["Discreet privacy packaging", "3-Day Hygiene-Safe Support", "Bangladesh delivery"][index - 1]}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </SettingsCard>
+
+              <SettingsCard
                 eyebrow="Category CMS"
                 title="Manage categories"
                 description="Category cards, status (active / coming soon / hidden), media, sort order, and link URLs are managed in the dedicated Categories workspace."
