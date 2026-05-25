@@ -41,6 +41,17 @@ import type { ProductCatalogItem } from "@/app/lib/product-types";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
 import type { PublicProductReview } from "@/app/lib/review-types";
+import {
+  extractProductCmsContent,
+  inferMediaType,
+  productSectionLabels,
+  safeColorHex,
+  type ProductBenefitItem,
+  type ProductColorOption,
+  type ProductContentBlock,
+  type ProductSectionMedia,
+  type ProductSectionMediaKey,
+} from "@/app/lib/product-content";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -139,6 +150,14 @@ export default function ProductDetailClient({
   const hms = settings.homepageMediaSettings;
   const benefits = displayBenefits(displayProduct);
   const care = displayCare(displayProduct);
+  const cms = extractProductCmsContent(displayProduct.media, displayProduct.colors);
+  const colorOptions = cms.colorOptions;
+  const sectionMediaEntries = (Object.keys(productSectionLabels) as ProductSectionMediaKey[])
+    .map((key) => ({ key, media: cms.sectionMedia[key] }))
+    .filter((entry): entry is { key: ProductSectionMediaKey; media: ProductSectionMedia } =>
+      Boolean(entry.media?.url)
+    );
+  const contentBlocks = cms.contentBlocks;
   const style =
     themeStyles[displayProduct.visualTheme] ?? themeStyles["blush-violet"];
   const canAddToCart = isPurchasableStock(displayProduct.stockStatus);
@@ -174,11 +193,23 @@ export default function ProductDetailClient({
       poster: displayProduct.posterUrl ?? displayProduct.imageUrl,
     });
   }
+  const selectedColorOption = colorOptions.find(
+    (option) => option.name.toLowerCase() === selectedColor.toLowerCase()
+  );
+  const colorSpecificMedia = selectedColorOption?.mediaUrl
+    ? {
+        type: inferMediaType(selectedColorOption.mediaUrl, selectedColorOption.mediaType),
+        url: selectedColorOption.mediaUrl,
+        poster: selectedColorOption.mediaType === "video" ? displayProduct.imageUrl : undefined,
+      } satisfies MediaItem
+    : null;
 
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const safeIndex = Math.min(selectedMediaIndex, Math.max(0, mediaItems.length - 1));
   const selectedMedia =
-    mediaItems.length > 0 && !brokenMediaUrls.has(mediaItems[safeIndex].url)
+    colorSpecificMedia && !brokenMediaUrls.has(colorSpecificMedia.url)
+      ? colorSpecificMedia
+      : mediaItems.length > 0 && !brokenMediaUrls.has(mediaItems[safeIndex].url)
       ? mediaItems[safeIndex]
       : null;
   const showThumbnails = mediaItems.length > 1;
@@ -300,10 +331,24 @@ export default function ProductDetailClient({
     { question: hms.faqPreviewItem3Question, answer: hms.faqPreviewItem3Answer },
   ].filter((faq) => faq.question && faq.answer);
   const displayFaqs = supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
-  const promiseCards = benefits.slice(0, 4).map((benefit, index) => ({
-    title: ["Comfort", "Confidence", "Routine", "Care"][index] || "Benefit",
-    body: benefit,
-  }));
+  const promiseCards =
+    cms.benefitItems.filter((item) => item.visible).length > 0
+      ? cms.benefitItems
+          .filter((item) => item.visible)
+          .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
+          .slice(0, 4)
+          .map((item) => ({
+            title: item.title,
+            body: item.description,
+            badge: item.badge,
+            iconKey: item.iconKey,
+          }))
+      : benefits.slice(0, 4).map((benefit, index) => ({
+          title: ["Comfort", "Packaging", "Care", "Guidance"][index] || "Comfort point",
+          body: benefit,
+          badge: ["Daily routine", "Discreet", "Reusable", "Clear info"][index] || "Her Care",
+          iconKey: "sparkles",
+        }));
   const carePanels = [
     { icon: Ruler, title: "Fit", items: sizeFitItems.slice(0, 3), tone: "text-[#FF4DB8]" },
     { icon: CheckCircle2, title: "Care", items: care.slice(0, 3), tone: "text-[#31E6D4]" },
@@ -429,10 +474,12 @@ export default function ProductDetailClient({
             <VariantSelector
               label="Color"
               options={displayProduct.colors}
+              colorOptions={colorOptions}
               selected={selectedColor}
               onSelect={(value) => {
                 setSelectedColor(value);
                 setSelectionMessage("");
+                setSelectedMediaIndex(0);
               }}
               selectedClassName={style.selected}
               type="color"
@@ -612,30 +659,41 @@ export default function ProductDetailClient({
         </div>
       </section>
 
+      {(sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
+        <ProductContentMediaSections
+          description={displayProduct.description}
+          sectionMediaEntries={sectionMediaEntries}
+          contentBlocks={contentBlocks}
+          productName={displayProduct.name}
+        />
+      )}
+
       {promiseCards.length > 0 && (
-        <section className="relative z-[2] py-16 sm:py-20">
+        <section className="relative z-[2] py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
             <SectionHeading
               eyebrow="Promise"
-              title="Four reasons to trust it"
+              title="Why customers choose it"
               description=""
             />
-            <div className="mt-9">
+            <div className="aev-trust-reasons mt-7 grid gap-3">
               {promiseCards.map((card, index) => (
                 <article
                   key={`${card.body}-${index}`}
-                  className="grid gap-3 border-b border-white/[0.08] py-6 transition hover:bg-[#FF4DB8]/[0.025] sm:grid-cols-[3.5rem_1fr_1.4fr] sm:gap-0"
+                  className="aev-trust-reason-row group relative grid gap-3 overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] p-4 transition duration-300 hover:border-[#FF4DB8]/24 hover:bg-[#FF4DB8]/[0.045] sm:grid-cols-[3.25rem_1fr_1.45fr] sm:items-center sm:p-5"
+                  style={{ animationDelay: `${index * 90}ms` }}
                 >
-                  <div className="font-serif text-4xl italic leading-none text-[#FF4DB8]/20">
+                  <div className="aev-trust-line-sweep" aria-hidden="true" />
+                  <div className="font-serif text-3xl italic leading-none text-[#FF4DB8]/35">
                     {String(index + 1).padStart(2, "0")}
                   </div>
                   <div className="sm:pr-8">
-                    <h3 className="font-serif text-xl text-white">{card.title}</h3>
+                    <h3 className="font-serif text-lg text-white sm:text-xl">{card.title}</h3>
                     <span className="mt-2 inline-flex rounded-sm border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FFB3D1]">
-                      Her Care
+                      {card.badge || "Her Care"}
                     </span>
                   </div>
-                  <p className="text-sm leading-7 text-[#9C91AA]">{card.body}</p>
+                  <p className="text-sm leading-7 text-[#D8CBE8]/82">{card.body}</p>
                 </article>
               ))}
             </div>
@@ -773,6 +831,153 @@ export default function ProductDetailClient({
   );
 }
 
+function ProductContentMediaSections({
+  description,
+  sectionMediaEntries,
+  contentBlocks,
+  productName,
+}: {
+  description: string;
+  sectionMediaEntries: Array<{ key: ProductSectionMediaKey; media: ProductSectionMedia }>;
+  contentBlocks: ProductContentBlock[];
+  productName: string;
+}) {
+  return (
+    <section className="relative z-[2] border-y border-white/[0.07] bg-[#0B0814] py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+          {description && (
+            <div>
+              <SectionHeading eyebrow="Story" title="Product details" description="" />
+              <p className="mt-4 max-w-xl text-sm leading-8 text-[#D8CBE8]/76">
+                {description}
+              </p>
+            </div>
+          )}
+          <div className="grid gap-4">
+            {sectionMediaEntries.map(({ key, media }) => (
+              <article
+                key={key}
+                className="grid gap-4 rounded border border-white/[0.08] bg-white/[0.035] p-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] sm:p-4"
+              >
+                <div className="p-2 sm:p-3">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-[#FF4DB8]">
+                    {productSectionLabels[key]}
+                  </p>
+                  <h3 className="mt-2 font-serif text-2xl text-white">
+                    {key === "story"
+                      ? "A closer look"
+                      : key === "promise"
+                        ? "Product promise"
+                        : key === "care"
+                          ? "Care guidance"
+                          : "Fit guidance"}
+                  </h3>
+                </div>
+                <ProductInlineMedia media={media} fallbackAlt={`${productName} ${productSectionLabels[key]}`} />
+              </article>
+            ))}
+          </div>
+        </div>
+
+        {contentBlocks.length > 0 && (
+          <div className="mt-6 grid gap-4">
+            {contentBlocks.map((block) => (
+              <ContentBlockCard key={block.id} block={block} productName={productName} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ProductInlineMedia({
+  media,
+  fallbackAlt,
+}: {
+  media: ProductSectionMedia;
+  fallbackAlt: string;
+}) {
+  const type = inferMediaType(media.url, media.type);
+  const fitClass = media.fit === "cover" ? "object-cover" : "object-contain";
+  return (
+    <div className="relative min-h-[14rem] overflow-hidden rounded border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)]">
+      <div className="pointer-events-none absolute inset-8 rounded-full bg-[#FF4DB8]/10 blur-3xl" />
+      {type === "video" ? (
+        <video
+          src={media.url}
+          controls
+          playsInline
+          preload="metadata"
+          className={`relative h-full max-h-[26rem] min-h-[14rem] w-full bg-[#080611] ${fitClass}`}
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={media.url}
+          alt={media.alt || fallbackAlt}
+          loading="lazy"
+          decoding="async"
+          className={`relative h-full max-h-[26rem] min-h-[14rem] w-full p-4 ${fitClass}`}
+        />
+      )}
+    </div>
+  );
+}
+
+function ContentBlockCard({
+  block,
+  productName,
+}: {
+  block: ProductContentBlock;
+  productName: string;
+}) {
+  const hasMedia = Boolean(block.mediaUrl);
+  const media = hasMedia
+    ? {
+        url: block.mediaUrl,
+        type: block.mediaType,
+        alt: block.mediaAlt,
+        fit: "contain" as const,
+      }
+    : null;
+  const mediaNode = media ? (
+    <ProductInlineMedia media={media} fallbackAlt={`${productName} ${block.title}`} />
+  ) : null;
+  const textNode = (
+    <div className="p-4 sm:p-5">
+      {block.title && <h3 className="font-serif text-2xl text-white">{block.title}</h3>}
+      {block.text && <p className="mt-3 text-sm leading-7 text-[#D8CBE8]/76">{block.text}</p>}
+      {block.ctaLabel && block.ctaLink && (
+        <Link
+          href={block.ctaLink}
+          className="mt-4 inline-flex min-h-10 items-center rounded border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
+        >
+          {block.ctaLabel}
+        </Link>
+      )}
+    </div>
+  );
+
+  if (!hasMedia || block.mediaPosition === "top") {
+    return (
+      <article className="overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
+        {mediaNode}
+        {textNode}
+      </article>
+    );
+  }
+
+  return (
+    <article className="grid gap-0 overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] lg:grid-cols-2">
+      {block.mediaPosition === "left" && mediaNode}
+      {textNode}
+      {block.mediaPosition !== "left" && mediaNode}
+    </article>
+  );
+}
+
 function WhatsAppIcon({ className = "" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -811,6 +1016,7 @@ function SectionHeading({
 function VariantSelector({
   label,
   options,
+  colorOptions = [],
   selected,
   onSelect,
   selectedClassName,
@@ -820,6 +1026,7 @@ function VariantSelector({
 }: {
   label: string;
   options: string[];
+  colorOptions?: ProductColorOption[];
   selected: string;
   onSelect: (value: string) => void;
   selectedClassName: string;
@@ -837,6 +1044,9 @@ function VariantSelector({
       <div className="flex flex-wrap gap-1.5">
         {options.map((option, index) => {
           const isSelected = selected === option;
+          const colorOption = colorOptions.find(
+            (item) => item.name.toLowerCase() === option.toLowerCase()
+          );
           return (
             <button
               key={`${label}-${option}-${index}`}
@@ -849,7 +1059,7 @@ function VariantSelector({
                   : "border-white/[0.08] bg-white/[0.035] text-[#9C91AA] hover:border-[#FF4DB8]/40 hover:text-[#FFB3D1]"
               }`}
             >
-              {type === "color" && <ColorSwatch color={option} />}
+              {type === "color" && <ColorSwatch color={option} option={colorOption} />}
               {option}
               {isSelected && <Check className="h-3 w-3 shrink-0" aria-hidden="true" />}
             </button>
@@ -866,24 +1076,20 @@ function VariantSelector({
   );
 }
 
-function ColorSwatch({ color }: { color: string }) {
-  const normalized = color.trim().toLowerCase();
-  const swatchClass =
-    normalized.includes("black")
-      ? "bg-zinc-950"
-      : normalized.includes("nude")
-        ? "bg-[#d7b59b]"
-        : normalized.includes("pink")
-          ? "bg-[#FF80C8]"
-          : normalized.includes("white")
-            ? "bg-white"
-            : normalized.includes("rose")
-              ? "bg-rose-400"
-              : "bg-gradient-to-br from-[#FF4DB8] to-[#A855F7]";
+function ColorSwatch({ color, option }: { color: string; option?: ProductColorOption }) {
+  const hex = option?.hex || safeColorHex(color);
+  const style = option?.swatchImageUrl
+    ? { backgroundImage: `url(${option.swatchImageUrl})` }
+    : {
+        background: option?.secondaryHex
+          ? `linear-gradient(135deg, ${hex}, ${option.secondaryHex})`
+          : hex,
+      };
 
   return (
     <span
-      className={`h-2.5 w-2.5 rounded-full border border-[#FF4DB8]/30 ${swatchClass}`}
+      className="h-2.5 w-2.5 rounded-full border border-[#FF4DB8]/30 bg-cover bg-center"
+      style={style}
       aria-hidden="true"
     />
   );

@@ -90,6 +90,25 @@ import {
   type AdminRole,
   type AdminSessionUser,
 } from "@/app/lib/admin-permissions";
+import {
+  buildProductCmsMedia,
+  createBenefitItem,
+  createColorOption,
+  createContentBlock,
+  createEmptySectionMedia,
+  createFaqItem,
+  defaultVisualThemeSettings,
+  extractProductCmsContent,
+  productSectionLabels,
+  safeColorHex,
+  type ProductBenefitItem,
+  type ProductColorOption,
+  type ProductContentBlock,
+  type ProductFaqItem,
+  type ProductSectionMediaKey,
+  type ProductSectionMediaMap,
+  type ProductVisualThemeSettings,
+} from "@/app/lib/product-content";
 
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
@@ -300,6 +319,13 @@ type AdminProduct = {
   videoUrl: string;
   posterUrl: string;
   images: string[];
+  media: unknown[];
+  sectionMedia: ProductSectionMediaMap;
+  contentBlocks: ProductContentBlock[];
+  colorOptions: ProductColorOption[];
+  benefitItems: ProductBenefitItem[];
+  faqItems: ProductFaqItem[];
+  visualThemeSettings: ProductVisualThemeSettings;
   deletedAt?: string;
   deletedReason?: string;
   createdAt?: string;
@@ -396,6 +422,17 @@ const emptyProduct: AdminProduct = {
   videoUrl: "",
   posterUrl: "",
   images: [],
+  media: [],
+  sectionMedia: {},
+  contentBlocks: [],
+  colorOptions: ["Black", "Nude", "Soft Pink"].map((name, index) => ({
+    ...createColorOption(name),
+    id: `default-color-${index}`,
+    sortOrder: index + 1,
+  })),
+  benefitItems: [],
+  faqItems: [],
+  visualThemeSettings: defaultVisualThemeSettings,
 };
 
 const defaultSettings = defaultAdminSettings;
@@ -575,6 +612,9 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
   const visualTheme = visualThemes.includes(value.visualTheme as ProductVisualTheme)
     ? (value.visualTheme as ProductVisualTheme)
     : "blush-violet";
+  const colors = stringArrayValue(value.colors);
+  const media = Array.isArray(value.media) ? value.media : [];
+  const cms = extractProductCmsContent(media, colors);
 
   return {
     id: textValue(value.id) || `admin-product-${slug}`,
@@ -586,7 +626,7 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     compareAtPrice: textValue(value.compareAtPrice) || "",
     category: textValue(value.category) || "",
     sizes: stringArrayValue(value.sizes),
-    colors: stringArrayValue(value.colors),
+    colors,
     absorbency: textValue(value.absorbency) || "",
     benefits: stringArrayValue(value.benefits),
     care: stringArrayValue(value.care),
@@ -614,6 +654,23 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
     videoUrl: textValue(value.videoUrl) || "",
     posterUrl: textValue(value.posterUrl) || "",
     images: stringArrayValue(value.images),
+    media,
+    sectionMedia: isRecord(value.sectionMedia)
+      ? extractProductCmsContent(
+          buildProductCmsMedia(media, { ...cms, sectionMedia: value.sectionMedia }),
+          colors
+        ).sectionMedia
+      : cms.sectionMedia,
+    contentBlocks: Array.isArray(value.contentBlocks) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, contentBlocks: value.contentBlocks as ProductContentBlock[] }), colors).contentBlocks : cms.contentBlocks,
+    colorOptions: Array.isArray(value.colorOptions) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, colorOptions: value.colorOptions as ProductColorOption[] }), colors).colorOptions : cms.colorOptions,
+    benefitItems: Array.isArray(value.benefitItems) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, benefitItems: value.benefitItems as ProductBenefitItem[] }), colors).benefitItems : cms.benefitItems,
+    faqItems: Array.isArray(value.faqItems) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, faqItems: value.faqItems as ProductFaqItem[] }), colors).faqItems : cms.faqItems,
+    visualThemeSettings: isRecord(value.visualThemeSettings)
+      ? extractProductCmsContent(
+          buildProductCmsMedia(media, { ...cms, visualThemeSettings: value.visualThemeSettings as ProductVisualThemeSettings }),
+          colors
+        ).visualThemeSettings
+      : cms.visualThemeSettings,
     deletedAt: textValue(value.deletedAt),
     deletedReason: textValue(value.deletedReason),
     createdAt: textValue(value.createdAt),
@@ -657,6 +714,17 @@ function productSeed(): AdminProduct[] {
     videoUrl: "",
     posterUrl: "",
     images: [],
+    media: [],
+    sectionMedia: {},
+    contentBlocks: [],
+    colorOptions: product.colors.map((name, index) => ({
+      ...createColorOption(name),
+      id: `seed-color-${product.id}-${index}`,
+      sortOrder: index + 1,
+    })),
+    benefitItems: [],
+    faqItems: [],
+    visualThemeSettings: defaultVisualThemeSettings,
     deletedAt: undefined,
     deletedReason: undefined,
     createdAt: undefined,
@@ -788,6 +856,15 @@ function adminStatus(status: StoreProductStatus): ProductStatus {
 }
 
 function productToApiPayload(product: AdminProduct) {
+  const cms = {
+    sectionMedia: product.sectionMedia,
+    contentBlocks: product.contentBlocks,
+    colorOptions: product.colorOptions,
+    benefitItems: product.benefitItems,
+    faqItems: product.faqItems,
+    visualThemeSettings: product.visualThemeSettings,
+  };
+
   return {
     id: product.id,
     name: product.name,
@@ -812,7 +889,9 @@ function productToApiPayload(product: AdminProduct) {
     stockStatus: product.stockStatus,
     stockQuantity: product.stockQuantity,
     sizes: product.sizes,
-    colors: product.colors,
+    colors: product.colorOptions.length > 0
+      ? product.colorOptions.map((color) => color.name).filter(Boolean)
+      : product.colors,
     absorbency: product.absorbency,
     absorbencyOptions: product.absorbency ? [product.absorbency] : [],
     visual: product.visualTheme,
@@ -826,11 +905,14 @@ function productToApiPayload(product: AdminProduct) {
     videoUrl: product.videoUrl,
     posterUrl: product.posterUrl,
     images: product.images,
-    media: [],
+    media: buildProductCmsMedia(product.media, cms),
   };
 }
 
 function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
+  const media = Array.isArray(product.media) ? product.media : [];
+  const cms = extractProductCmsContent(media, product.colors);
+
   return {
     id: product.id,
     name: product.name,
@@ -869,6 +951,13 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
     images: Array.isArray(product.images)
       ? (product.images as unknown[]).filter((u): u is string => typeof u === "string")
       : [],
+    media,
+    sectionMedia: cms.sectionMedia,
+    contentBlocks: cms.contentBlocks,
+    colorOptions: cms.colorOptions,
+    benefitItems: cms.benefitItems,
+    faqItems: cms.faqItems,
+    visualThemeSettings: cms.visualThemeSettings,
     deletedAt: product.deletedAt,
     deletedReason: product.deletedReason,
     createdAt: product.createdAt,
@@ -3380,10 +3469,70 @@ function ProductEditor({
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
   const [galleryUploadError, setGalleryUploadError] = useState<string | null>(null);
+  const [cmsUploading, setCmsUploading] = useState<Record<string, boolean>>({});
+  const [cmsUploadError, setCmsUploadError] = useState<Record<string, string | null>>({});
 
   const updateField = (field: keyof AdminProduct, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
     setLocalError(null);
+  };
+
+  const updateSectionMedia = (
+    section: ProductSectionMediaKey,
+    updates: Partial<NonNullable<ProductSectionMediaMap[ProductSectionMediaKey]>>
+  ) => {
+    setDraft((current) => {
+      const existing = current.sectionMedia[section] ?? createEmptySectionMedia();
+      return {
+        ...current,
+        sectionMedia: {
+          ...current.sectionMedia,
+          [section]: { ...existing, ...updates },
+        },
+      };
+    });
+  };
+
+  const clearSectionMedia = (section: ProductSectionMediaKey) => {
+    setDraft((current) => {
+      const next = { ...current.sectionMedia };
+      delete next[section];
+      return { ...current, sectionMedia: next };
+    });
+  };
+
+  const uploadCmsMedia = async (file: File, key: string, onUploaded: (url: string, type: "image" | "video") => void) => {
+    if (!canUploadMedia) {
+      setCmsUploadError((current) => ({ ...current, [key]: blockedPermissionMessage }));
+      return;
+    }
+    setCmsUploading((current) => ({ ...current, [key]: true }));
+    setCmsUploadError((current) => ({ ...current, [key]: null }));
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("productSlug", draft.slug || "draft");
+
+      const response = await fetch("/api/product-media/upload", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+      const payload = (await response.json()) as Record<string, unknown>;
+      if (!response.ok || typeof payload.url !== "string") {
+        const msg = Array.isArray(payload.errors) && typeof payload.errors[0] === "string"
+          ? payload.errors[0]
+          : "Upload failed.";
+        setCmsUploadError((current) => ({ ...current, [key]: msg }));
+        return;
+      }
+      onUploaded(payload.url, payload.type === "video" ? "video" : "image");
+    } catch {
+      setCmsUploadError((current) => ({ ...current, [key]: "Upload failed. Check your connection." }));
+    } finally {
+      setCmsUploading((current) => ({ ...current, [key]: false }));
+    }
   };
 
   async function handleMediaUpload(file: File, mediaType: "image" | "video" | "gallery") {
@@ -3485,7 +3634,15 @@ function ProductEditor({
       ...draft,
       slug: draft.slug || slugify(draft.name),
       sizes: textToList(sizes),
-      colors: textToList(colors),
+      colors: draft.colorOptions.length > 0
+        ? draft.colorOptions.map((color) => color.name.trim()).filter(Boolean)
+        : textToList(colors),
+      colorOptions: draft.colorOptions.map((color, index) => ({
+        ...color,
+        name: color.name.trim(),
+        hex: color.hex.trim() || safeColorHex(color.name),
+        sortOrder: color.sortOrder ?? index + 1,
+      })).filter((color) => color.name),
       benefits: linesToList(benefits),
       care: linesToList(care),
     };
@@ -3715,6 +3872,313 @@ function ProductEditor({
             </div>
           </div>
         </div>
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <AdminEditorCard title="Description Media / Story Blocks" eyebrow="CMS content">
+            <div className="grid gap-4 lg:grid-cols-2">
+              {(Object.keys(productSectionLabels) as ProductSectionMediaKey[]).map((section) => {
+                const item = draft.sectionMedia[section] ?? createEmptySectionMedia();
+                const uploadKey = `section-${section}`;
+                return (
+                  <div key={section} className="rounded-2xl border border-white/10 bg-black/18 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70">
+                        {productSectionLabels[section]}
+                      </p>
+                      {draft.sectionMedia[section]?.url && (
+                        <button
+                          type="button"
+                          onClick={() => clearSectionMedia(section)}
+                          className="text-xs font-semibold text-rose-200/80 hover:text-rose-100"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid gap-3">
+                      <TextField
+                        label="Media URL"
+                        value={item.url}
+                        onChange={(value) => updateSectionMedia(section, { url: value })}
+                      />
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <SelectField
+                          label="Media type"
+                          value={item.type}
+                          options={["auto", "image", "video"]}
+                          onChange={(value) => updateSectionMedia(section, { type: value as "auto" | "image" | "video" })}
+                        />
+                        <SelectField
+                          label="Media fit"
+                          value={item.fit}
+                          options={["contain", "smart", "cover"]}
+                          onChange={(value) => updateSectionMedia(section, { fit: value as "contain" | "smart" | "cover" })}
+                        />
+                      </div>
+                      <TextField
+                        label="Alt text"
+                        value={item.alt}
+                        onChange={(value) => updateSectionMedia(section, { alt: value })}
+                      />
+                      <MiniUploadButton
+                        label="Upload image/video"
+                        uploading={Boolean(cmsUploading[uploadKey])}
+                        error={cmsUploadError[uploadKey] ?? null}
+                        onUpload={(file) =>
+                          uploadCmsMedia(file, uploadKey, (url, type) =>
+                            updateSectionMedia(section, { url, type })
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Optional extra description blocks
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      contentBlocks: [...current.contentBlocks, createContentBlock()],
+                    }))
+                  }
+                  className="inline-flex items-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-3 py-2 text-xs font-semibold text-cyan-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add block
+                </button>
+              </div>
+              {draft.contentBlocks.map((block, index) => (
+                <ContentBlockEditor
+                  key={block.id}
+                  block={block}
+                  index={index}
+                  uploading={Boolean(cmsUploading[`block-${block.id}`])}
+                  uploadError={cmsUploadError[`block-${block.id}`] ?? null}
+                  onChange={(updates) =>
+                    setDraft((current) => ({
+                      ...current,
+                      contentBlocks: current.contentBlocks.map((item) =>
+                        item.id === block.id ? { ...item, ...updates } : item
+                      ),
+                    }))
+                  }
+                  onRemove={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      contentBlocks: current.contentBlocks.filter((item) => item.id !== block.id),
+                    }))
+                  }
+                  onUpload={(file) =>
+                    uploadCmsMedia(file, `block-${block.id}`, (url, type) =>
+                      setDraft((current) => ({
+                        ...current,
+                        contentBlocks: current.contentBlocks.map((item) =>
+                          item.id === block.id ? { ...item, mediaUrl: url, mediaType: type } : item
+                        ),
+                      }))
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </AdminEditorCard>
+
+          <AdminEditorCard title="Variants & Color Media" eyebrow="Color system">
+            <TextField
+              label="Legacy color list fallback"
+              value={colors}
+              onChange={setColors}
+              placeholder="Black, Nude, Soft Pink"
+            />
+            <div className="mt-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Color options with real swatches and linked media
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      colorOptions: [...current.colorOptions, createColorOption()],
+                    }))
+                  }
+                  className="inline-flex items-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-3 py-2 text-xs font-semibold text-cyan-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add color
+                </button>
+              </div>
+              {draft.colorOptions.map((color, index) => (
+                <ColorOptionEditor
+                  key={color.id}
+                  color={color}
+                  index={index}
+                  uploading={Boolean(cmsUploading[`color-${color.id}`])}
+                  swatchUploading={Boolean(cmsUploading[`swatch-${color.id}`])}
+                  uploadError={cmsUploadError[`color-${color.id}`] ?? cmsUploadError[`swatch-${color.id}`] ?? null}
+                  onChange={(updates) =>
+                    setDraft((current) => ({
+                      ...current,
+                      colorOptions: current.colorOptions.map((item) =>
+                        item.id === color.id ? { ...item, ...updates } : item
+                      ),
+                    }))
+                  }
+                  onRemove={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      colorOptions: current.colorOptions.filter((item) => item.id !== color.id),
+                    }))
+                  }
+                  onMove={(direction) =>
+                    setDraft((current) => {
+                      const next = [...current.colorOptions];
+                      const target = index + direction;
+                      if (target < 0 || target >= next.length) return current;
+                      [next[index], next[target]] = [next[target], next[index]];
+                      return {
+                        ...current,
+                        colorOptions: next.map((item, itemIndex) => ({ ...item, sortOrder: itemIndex + 1 })),
+                      };
+                    })
+                  }
+                  onUploadMedia={(file) =>
+                    uploadCmsMedia(file, `color-${color.id}`, (url, type) =>
+                      setDraft((current) => ({
+                        ...current,
+                        colorOptions: current.colorOptions.map((item) =>
+                          item.id === color.id ? { ...item, mediaUrl: url, mediaType: type } : item
+                        ),
+                      }))
+                    )
+                  }
+                  onUploadSwatch={(file) =>
+                    uploadCmsMedia(file, `swatch-${color.id}`, (url) =>
+                      setDraft((current) => ({
+                        ...current,
+                        colorOptions: current.colorOptions.map((item) =>
+                          item.id === color.id ? { ...item, swatchImageUrl: url } : item
+                        ),
+                      }))
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </AdminEditorCard>
+
+          <AdminEditorCard title="Benefits, FAQ & Theme" eyebrow="Future-proof content">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <DynamicItemsEditor
+                title="Editable comfort points"
+                items={draft.benefitItems}
+                emptyLabel="No custom reason rows yet. Fallback benefits stay policy-safe."
+                onAdd={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    benefitItems: [...current.benefitItems, createBenefitItem()],
+                  }))
+                }
+                renderItem={(item, index) => (
+                  <BenefitItemEditor
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    onChange={(updates) =>
+                      setDraft((current) => ({
+                        ...current,
+                        benefitItems: current.benefitItems.map((benefit) =>
+                          benefit.id === item.id ? { ...benefit, ...updates } : benefit
+                        ),
+                      }))
+                    }
+                    onRemove={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        benefitItems: current.benefitItems.filter((benefit) => benefit.id !== item.id),
+                      }))
+                    }
+                  />
+                )}
+              />
+              <DynamicItemsEditor
+                title="Product-specific FAQ"
+                items={draft.faqItems}
+                emptyLabel="No product FAQ yet. Store support FAQs remain available."
+                onAdd={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    faqItems: [...current.faqItems, createFaqItem()],
+                  }))
+                }
+                renderItem={(item, index) => (
+                  <FaqItemEditor
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    onChange={(updates) =>
+                      setDraft((current) => ({
+                        ...current,
+                        faqItems: current.faqItems.map((faq) =>
+                          faq.id === item.id ? { ...faq, ...updates } : faq
+                        ),
+                      }))
+                    }
+                    onRemove={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        faqItems: current.faqItems.filter((faq) => faq.id !== item.id),
+                      }))
+                    }
+                  />
+                )}
+              />
+            </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              <TextField
+                label="Accent color"
+                value={draft.visualThemeSettings.accentColor}
+                onChange={(value) =>
+                  setDraft((current) => ({
+                    ...current,
+                    visualThemeSettings: { ...current.visualThemeSettings, accentColor: value },
+                  }))
+                }
+                placeholder="#FF4DB8"
+              />
+              <TextField
+                label="Secondary accent"
+                value={draft.visualThemeSettings.secondaryAccent}
+                onChange={(value) =>
+                  setDraft((current) => ({
+                    ...current,
+                    visualThemeSettings: { ...current.visualThemeSettings, secondaryAccent: value },
+                  }))
+                }
+                placeholder="#31E6D4"
+              />
+              <TextField
+                label="Media glow color"
+                value={draft.visualThemeSettings.mediaGlowColor}
+                onChange={(value) =>
+                  setDraft((current) => ({
+                    ...current,
+                    visualThemeSettings: { ...current.visualThemeSettings, mediaGlowColor: value },
+                  }))
+                }
+                placeholder="#FF4DB8"
+              />
+            </div>
+          </AdminEditorCard>
+        </div>
         <TextField label="SEO title" value={draft.seoTitle} onChange={(value) => updateField("seoTitle", value)} />
         <TextAreaField label="Short description" value={draft.shortDescription} onChange={(value) => updateField("shortDescription", value)} />
         <TextAreaField label="SEO description" value={draft.seoDescription} onChange={(value) => updateField("seoDescription", value)} />
@@ -3747,6 +4211,293 @@ function ProductEditor({
         </button>
       </div>
     </form>
+  );
+}
+
+function AdminEditorCard({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[1.25rem] border border-white/10 bg-black/22 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/55">
+        {eyebrow}
+      </p>
+      <h4 className="mt-1 text-base font-semibold text-white">{title}</h4>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function MiniUploadButton({
+  label,
+  uploading,
+  error,
+  onUpload,
+}: {
+  label: string;
+  uploading: boolean;
+  error: string | null;
+  onUpload: (file: File) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div>
+      <button
+        type="button"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/18 bg-white/[0.035] px-3 text-xs font-semibold text-white/58 transition hover:border-cyan-200/35 hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
+      >
+        <Upload className="h-3.5 w-3.5" />
+        {uploading ? "Uploading..." : label}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onUpload(file);
+          event.target.value = "";
+        }}
+      />
+      {error && <p className="mt-1.5 text-xs text-rose-300/90">{error}</p>}
+    </div>
+  );
+}
+
+function ContentBlockEditor({
+  block,
+  index,
+  uploading,
+  uploadError,
+  onChange,
+  onRemove,
+  onUpload,
+}: {
+  block: ProductContentBlock;
+  index: number;
+  uploading: boolean;
+  uploadError: string | null;
+  onChange: (updates: Partial<ProductContentBlock>) => void;
+  onRemove: () => void;
+  onUpload: (file: File) => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/18 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+          Block {index + 1}
+        </p>
+        <button type="button" onClick={onRemove} className="text-xs font-semibold text-rose-200/80 hover:text-rose-100">
+          Remove
+        </button>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <TextField label="Title" value={block.title} onChange={(value) => onChange({ title: value })} />
+        <TextField label="Short text" value={block.text} onChange={(value) => onChange({ text: value })} />
+        <TextField label="Media URL" value={block.mediaUrl} onChange={(value) => onChange({ mediaUrl: value })} />
+        <TextField label="Media alt" value={block.mediaAlt} onChange={(value) => onChange({ mediaAlt: value })} />
+        <SelectField
+          label="Media type"
+          value={block.mediaType}
+          options={["auto", "image", "video"]}
+          onChange={(value) => onChange({ mediaType: value as ProductContentBlock["mediaType"] })}
+        />
+        <SelectField
+          label="Media position"
+          value={block.mediaPosition}
+          options={["left", "right", "top"]}
+          onChange={(value) => onChange({ mediaPosition: value as ProductContentBlock["mediaPosition"] })}
+        />
+        <TextField label="CTA label" value={block.ctaLabel} onChange={(value) => onChange({ ctaLabel: value })} />
+        <TextField label="CTA link" value={block.ctaLink} onChange={(value) => onChange({ ctaLink: value })} />
+        <div className="lg:col-span-2">
+          <MiniUploadButton label="Upload block media" uploading={uploading} error={uploadError} onUpload={onUpload} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ColorOptionEditor({
+  color,
+  index,
+  uploading,
+  swatchUploading,
+  uploadError,
+  onChange,
+  onRemove,
+  onMove,
+  onUploadMedia,
+  onUploadSwatch,
+}: {
+  color: ProductColorOption;
+  index: number;
+  uploading: boolean;
+  swatchUploading: boolean;
+  uploadError: string | null;
+  onChange: (updates: Partial<ProductColorOption>) => void;
+  onRemove: () => void;
+  onMove: (direction: -1 | 1) => void;
+  onUploadMedia: (file: File) => void;
+  onUploadSwatch: (file: File) => void;
+}) {
+  const swatch = color.swatchImageUrl
+    ? { backgroundImage: `url(${color.swatchImageUrl})` }
+    : {
+        background: color.secondaryHex
+          ? `linear-gradient(135deg, ${color.hex || safeColorHex(color.name)}, ${color.secondaryHex})`
+          : color.hex || safeColorHex(color.name),
+      };
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/18 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="h-6 w-6 rounded-full border border-white/20 bg-cover bg-center" style={swatch} />
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+            Color {index + 1}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => onMove(-1)} className="text-xs text-white/55 hover:text-white">Up</button>
+          <button type="button" onClick={() => onMove(1)} className="text-xs text-white/55 hover:text-white">Down</button>
+          <button type="button" onClick={onRemove} className="text-xs font-semibold text-rose-200/80 hover:text-rose-100">Remove</button>
+        </div>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <TextField label="Name" value={color.name} onChange={(value) => onChange({ name: value, hex: color.hex || safeColorHex(value) })} />
+        <TextField label="Hex color" value={color.hex} onChange={(value) => onChange({ hex: value })} placeholder="#000000" />
+        <TextField label="Secondary hex / gradient" value={color.secondaryHex} onChange={(value) => onChange({ secondaryHex: value })} />
+        <TextField label="Swatch image URL" value={color.swatchImageUrl} onChange={(value) => onChange({ swatchImageUrl: value })} />
+        <TextField label="Color product media URL" value={color.mediaUrl} onChange={(value) => onChange({ mediaUrl: value })} />
+        <SelectField
+          label="Media type"
+          value={color.mediaType}
+          options={["auto", "image", "video"]}
+          onChange={(value) => onChange({ mediaType: value as ProductColorOption["mediaType"] })}
+        />
+        <TextField
+          label="Stock quantity"
+          value={color.stockQuantity?.toString() ?? ""}
+          onChange={(value) => onChange({ stockQuantity: value.trim() ? Number(value) : undefined })}
+        />
+        <TextField
+          label="Sort order"
+          value={color.sortOrder?.toString() ?? ""}
+          onChange={(value) => onChange({ sortOrder: value.trim() ? Number(value) : undefined })}
+        />
+        <MiniUploadButton label="Upload color media" uploading={uploading} error={uploadError} onUpload={onUploadMedia} />
+        <MiniUploadButton label="Upload swatch image" uploading={swatchUploading} error={null} onUpload={onUploadSwatch} />
+      </div>
+    </div>
+  );
+}
+
+function DynamicItemsEditor<T>({
+  title,
+  items,
+  emptyLabel,
+  onAdd,
+  renderItem,
+}: {
+  title: string;
+  items: T[];
+  emptyLabel: string;
+  onAdd: () => void;
+  renderItem: (item: T, index: number) => ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/18 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{title}</p>
+        <button type="button" onClick={onAdd} className="inline-flex items-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-3 py-2 text-xs font-semibold text-cyan-50">
+          <Plus className="h-3.5 w-3.5" />
+          Add
+        </button>
+      </div>
+      <div className="mt-3 space-y-3">
+        {items.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-white/10 bg-white/[0.025] p-3 text-xs leading-5 text-white/42">
+            {emptyLabel}
+          </p>
+        ) : (
+          items.map(renderItem)
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BenefitItemEditor({
+  item,
+  index,
+  onChange,
+  onRemove,
+}: {
+  item: ProductBenefitItem;
+  index: number;
+  onChange: (updates: Partial<ProductBenefitItem>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/22 p-3">
+      <div className="mb-2 flex justify-between gap-3 text-xs text-white/45">
+        <span>Reason {index + 1}</span>
+        <button type="button" onClick={onRemove} className="text-rose-200/80 hover:text-rose-100">Remove</button>
+      </div>
+      <div className="grid gap-3">
+        <TextField label="Title" value={item.title} onChange={(value) => onChange({ title: value })} />
+        <TextField label="Short description" value={item.description} onChange={(value) => onChange({ description: value })} />
+        <TextField label="Icon key" value={item.iconKey} onChange={(value) => onChange({ iconKey: value })} />
+        <TextField label="Badge" value={item.badge} onChange={(value) => onChange({ badge: value })} />
+        <SelectField
+          label="Show"
+          value={item.visible ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) => onChange({ visible: value === "Yes" })}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FaqItemEditor({
+  item,
+  index,
+  onChange,
+  onRemove,
+}: {
+  item: ProductFaqItem;
+  index: number;
+  onChange: (updates: Partial<ProductFaqItem>) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/22 p-3">
+      <div className="mb-2 flex justify-between gap-3 text-xs text-white/45">
+        <span>FAQ {index + 1}</span>
+        <button type="button" onClick={onRemove} className="text-rose-200/80 hover:text-rose-100">Remove</button>
+      </div>
+      <div className="grid gap-3">
+        <TextField label="Question" value={item.question} onChange={(value) => onChange({ question: value })} />
+        <TextAreaField label="Answer" value={item.answer} onChange={(value) => onChange({ answer: value })} />
+        <SelectField
+          label="Show"
+          value={item.visible ? "Yes" : "No"}
+          options={["Yes", "No"]}
+          onChange={(value) => onChange({ visible: value === "Yes" })}
+        />
+      </div>
+    </div>
   );
 }
 

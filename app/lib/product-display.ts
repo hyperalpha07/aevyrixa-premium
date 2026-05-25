@@ -4,6 +4,7 @@ import type {
   ProductVisualTheme,
 } from "@/app/lib/product-types";
 import { SITE_CURRENCY } from "@/app/lib/currency";
+import { extractProductCmsContent } from "@/app/lib/product-content";
 
 export const fallbackProductCopy = {
   category: "Reusable Period Care",
@@ -84,6 +85,8 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
   const visualTheme = safeVisualTheme(product.visualTheme ?? product.visual);
   const absorbency = cleanText(product.absorbency) || fallbackProductCopy.absorbency;
   const absorbencyOptions = cleanTextArray(product.absorbencyOptions);
+  const colors = cleanTextArray(product.colors);
+  const cms = extractProductCmsContent(product.media, colors);
 
   return {
     ...product,
@@ -99,7 +102,7 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
       : 0,
     stockStatus: product.stockStatus ?? "in_stock",
     sizes: cleanTextArray(product.sizes),
-    colors: cleanTextArray(product.colors),
+    colors,
     absorbency,
     absorbencyOptions:
       absorbencyOptions.length > 0 ? absorbencyOptions : [absorbency],
@@ -108,6 +111,12 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
     visualVariant: cleanText(product.visualVariant) || visualTheme,
     benefits: cleanTextArray(product.benefits),
     care: cleanTextArray(product.care),
+    sectionMedia: product.sectionMedia ?? cms.sectionMedia,
+    contentBlocks: product.contentBlocks ?? cms.contentBlocks,
+    colorOptions: product.colorOptions ?? cms.colorOptions,
+    benefitItems: product.benefitItems ?? cms.benefitItems,
+    faqItems: product.faqItems ?? cms.faqItems,
+    visualThemeSettings: product.visualThemeSettings ?? cms.visualThemeSettings,
   };
 }
 

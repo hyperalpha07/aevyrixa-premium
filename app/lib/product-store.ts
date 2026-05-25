@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/product-types";
 import { legacyProductToCatalogItem, products as staticProducts } from "@/app/lib/products";
 import { SITE_CURRENCY } from "@/app/lib/currency";
+import { extractProductCmsContent } from "@/app/lib/product-content";
 
 const SUPABASE_PRODUCTS_TABLE = "products";
 
@@ -305,6 +306,9 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
   const name = textValue(input.name);
   const slug = slugValue(input.slug) || slugValue(name) || `product-${Date.now()}`;
 
+  const media = Array.isArray(input.media) ? input.media : [];
+  const cms = extractProductCmsContent(media, stringArrayValue(input.colors));
+
   return {
     id: textValue(input.id) || `product-${slug}-${Date.now()}`,
     slug,
@@ -342,7 +346,13 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
     primaryImagePath: optionalText(input.primaryImagePath),
     videoPath: optionalText(input.videoPath),
     images: Array.isArray(input.images) ? input.images : [],
-    media: Array.isArray(input.media) ? input.media : [],
+    media,
+    sectionMedia: cms.sectionMedia,
+    contentBlocks: cms.contentBlocks,
+    colorOptions: cms.colorOptions,
+    benefitItems: cms.benefitItems,
+    faqItems: cms.faqItems,
+    visualThemeSettings: cms.visualThemeSettings,
     benefits: stringArrayValue(input.benefits),
     care: stringArrayValue(input.care),
     seoTitle: optionalText(input.seoTitle),
@@ -357,6 +367,9 @@ export function buildProductInput(input: ProductMutationInput): ProductCatalogIt
 function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
   const visualTheme = normalizeVisual(row.visual_theme ?? row.visual);
   const merchandising = recordValue(row.merchandising);
+  const media = Array.isArray(row.media) ? (row.media as unknown[]) : [];
+  const colors = stringArrayValue(row.colors);
+  const cms = extractProductCmsContent(media, colors);
 
   return {
     id: row.id ?? "",
@@ -383,7 +396,7 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     stockStatus: normalizeStockStatus(row.stock_status),
     stockQuantity: numberValue(row.stock_quantity),
     sizes: stringArrayValue(row.sizes),
-    colors: stringArrayValue(row.colors),
+    colors,
     absorbency: row.absorbency ?? "Moderate",
     absorbencyOptions: stringArrayValue(row.absorbency_options),
     visual: visualTheme,
@@ -398,7 +411,13 @@ function mapSupabaseProduct(row: SupabaseProductRow): ProductCatalogItem {
     images: Array.isArray(row.images)
       ? (row.images as string[]).filter((u): u is string => typeof u === "string")
       : [],
-    media: Array.isArray(row.media) ? (row.media as unknown[]) : [],
+    media,
+    sectionMedia: cms.sectionMedia,
+    contentBlocks: cms.contentBlocks,
+    colorOptions: cms.colorOptions,
+    benefitItems: cms.benefitItems,
+    faqItems: cms.faqItems,
+    visualThemeSettings: cms.visualThemeSettings,
     benefits: stringArrayValue(row.benefits),
     care: stringArrayValue(row.care),
     seoTitle: row.seo_title ?? undefined,

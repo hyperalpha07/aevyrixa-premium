@@ -46,6 +46,12 @@ export type ProductCatalogItem = {
   videoPath?: string;
   images?: string[];
   media?: unknown[];
+  sectionMedia?: unknown;
+  contentBlocks?: unknown[];
+  colorOptions?: unknown[];
+  benefitItems?: unknown[];
+  faqItems?: unknown[];
+  visualThemeSettings?: unknown;
   benefits: string[];
   care: string[];
   seoTitle?: string;
