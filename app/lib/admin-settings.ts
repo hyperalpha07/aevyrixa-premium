@@ -355,6 +355,8 @@ export type HomepageMediaSettings = {
   shopHeroTrust2Description: string;
   shopHeroTrust3Label: string;
   shopHeroTrust3Description: string;
+  shopHeroMediaFit: "contain" | "cover" | "smart";
+  shopHeroMediaPosition: "center" | "top" | "bottom";
 };
 
 export type AdvancedSettings = {
@@ -731,6 +733,8 @@ const defaultGroups: AdminSettingsGroups = {
     shopHeroTrust2Description: "3-Day Hygiene-Safe Support",
     shopHeroTrust3Label: "Delivery",
     shopHeroTrust3Description: "Bangladesh delivery",
+    shopHeroMediaFit: "contain",
+    shopHeroMediaPosition: "center",
   },
 };
 
@@ -847,6 +851,14 @@ function layerComfortMediaModeValue(value: unknown): LayerComfortMediaMode {
 
 function shopHeroMediaTypeValue(value: unknown): "image" | "video" | "auto" {
   return value === "image" || value === "video" ? value : "auto";
+}
+
+function shopHeroMediaFitValue(value: unknown): "contain" | "cover" | "smart" {
+  return value === "cover" || value === "smart" ? value : "contain";
+}
+
+function shopHeroMediaPositionValue(value: unknown): "center" | "top" | "bottom" {
+  return value === "top" || value === "bottom" ? value : "center";
 }
 
 function categoryMediaModeValue(value: unknown, fallback: HomepageCategoryMediaMode): HomepageCategoryMediaMode {
@@ -1799,6 +1811,8 @@ export function normalizeAdminSettings(value: unknown): AdminSettings {
       shopHeroTrust2Description: safeText(homepageMediaRaw.shopHeroTrust2Description, defaultGroups.homepageMediaSettings.shopHeroTrust2Description),
       shopHeroTrust3Label: safeText(homepageMediaRaw.shopHeroTrust3Label, defaultGroups.homepageMediaSettings.shopHeroTrust3Label),
       shopHeroTrust3Description: safeText(homepageMediaRaw.shopHeroTrust3Description, defaultGroups.homepageMediaSettings.shopHeroTrust3Description),
+      shopHeroMediaFit: shopHeroMediaFitValue(homepageMediaRaw.shopHeroMediaFit),
+      shopHeroMediaPosition: shopHeroMediaPositionValue(homepageMediaRaw.shopHeroMediaPosition),
     },
   };
 

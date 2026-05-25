@@ -296,6 +296,9 @@ export default function ShopDiscoveryClient({
   const heroBadge1 = hms.shopHeroBadge1 ? safeShopCopy(hms.shopHeroBadge1) : "";
   const heroBadge2 = hms.shopHeroBadge2 ? safeShopCopy(hms.shopHeroBadge2) : "";
   const heroCaption = hms.shopHeroCaption || "";
+  const heroMediaFit = hms.shopHeroMediaFit || "contain";
+  const heroMediaPosition = hms.shopHeroMediaPosition || "center";
+  const effectiveFit: "contain" | "cover" = heroMediaFit === "cover" ? "cover" : "contain";
   const isHeroVideo =
     heroMediaType === "video" ||
     (heroMediaType === "auto" && /\.(mp4|webm|ogg)(\?|$)/i.test(heroMediaUrl));
@@ -482,7 +485,19 @@ export default function ShopDiscoveryClient({
 
               {/* Mobile compact hero media — hidden on lg+ */}
               {heroMediaUrl && (
-                <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden" style={{ maxHeight: "10rem" }}>
+                <div className="relative mt-3 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden" style={{ maxHeight: "10rem" }}>
+                  {effectiveFit === "contain" && !isHeroVideo && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `url(${heroMediaUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        filter: "blur(20px) brightness(0.28)",
+                        transform: "scale(1.1)",
+                      }}
+                    />
+                  )}
                   {isHeroVideo ? (
                     <video
                       src={heroMediaUrl}
@@ -490,16 +505,16 @@ export default function ShopDiscoveryClient({
                       muted
                       loop
                       playsInline
-                      className="h-full w-full object-cover"
-                      style={{ maxHeight: "10rem" }}
+                      className="relative h-full w-full"
+                      style={{ maxHeight: "10rem", objectFit: effectiveFit, objectPosition: heroMediaPosition }}
                     />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={heroMediaUrl}
                       alt={heroMediaAlt}
-                      className="h-full w-full object-cover"
-                      style={{ maxHeight: "10rem" }}
+                      className="relative h-full w-full"
+                      style={{ maxHeight: "10rem", objectFit: effectiveFit, objectPosition: heroMediaPosition }}
                     />
                   )}
                 </div>
@@ -553,23 +568,39 @@ export default function ShopDiscoveryClient({
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
 
             {heroMediaUrl ? (
-              isHeroVideo ? (
-                <video
-                  src={heroMediaUrl}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={heroMediaUrl}
-                  alt={heroMediaAlt}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              )
+              <>
+                {effectiveFit === "contain" && !isHeroVideo && (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url(${heroMediaUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      filter: "blur(28px) brightness(0.28)",
+                      transform: "scale(1.12)",
+                    }}
+                  />
+                )}
+                {isHeroVideo ? (
+                  <video
+                    src={heroMediaUrl}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 h-full w-full"
+                    style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={heroMediaUrl}
+                    alt={heroMediaAlt}
+                    className="absolute inset-0 h-full w-full"
+                    style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
+                  />
+                )}
+              </>
             ) : (
               /* Default brand trust visual when no media is set */
               <div className="relative flex h-full min-h-[12.25rem] flex-col justify-between p-5">

@@ -5918,7 +5918,19 @@ function SettingsSection({
                         options={["auto", "image", "video"] as const}
                         onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaType: value as "image" | "video" | "auto" })}
                       />
-                      <div className="lg:col-span-2">
+                      <SelectField
+                        label="Media fit"
+                        value={draft.homepageMediaSettings.shopHeroMediaFit}
+                        options={["contain", "cover", "smart"] as const}
+                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaFit: value as "contain" | "cover" | "smart" })}
+                      />
+                      <SelectField
+                        label="Media position"
+                        value={draft.homepageMediaSettings.shopHeroMediaPosition}
+                        options={["center", "top", "bottom"] as const}
+                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaPosition: value as "center" | "top" | "bottom" })}
+                      />
+                      <div className="lg:col-span-3">
                         <TextField
                           label="Media alt text"
                           value={draft.homepageMediaSettings.shopHeroMediaAlt}
