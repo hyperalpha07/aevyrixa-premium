@@ -47,6 +47,10 @@ export default function AevyrixaGlobalArt() {
         <span />
         <span />
       </div>
+      <div className="aevyrixa-art-packaging">
+        <span />
+        <span />
+      </div>
     </div>
   );
 }

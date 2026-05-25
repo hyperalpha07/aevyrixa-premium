@@ -8,12 +8,16 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  CreditCard,
+  HeartHandshake,
   Info,
+  LockKeyhole,
   MessageCircle,
   Minus,
   PackageCheck,
   Play,
   Plus,
+  Repeat2,
   Ruler,
   ShieldCheck,
   ShoppingCart,
@@ -90,6 +94,16 @@ const safeSupportFallbackFaqs = [
     answer:
       "Contact support within the 3-Day Hygiene-Safe Support window for eligible order, size, wrong item, or damaged item concerns.",
   },
+];
+
+const productTickerItems = [
+  { label: "Discreet Packaging", icon: PackageCheck },
+  { label: "3-Day Hygiene-Safe Support", icon: ShieldCheck },
+  { label: "Bangladesh Delivery", icon: Truck },
+  { label: "Secure Checkout", icon: LockKeyhole },
+  { label: "Premium Comfort", icon: HeartHandshake },
+  { label: "Reusable Care", icon: Repeat2 },
+  { label: "BDT Pricing", icon: CreditCard },
 ];
 
 type MediaItem =
@@ -313,6 +327,21 @@ export default function ProductDetailClient({
         productHref={`/product/${displayProduct.slug}`}
         settings={settings}
       />
+
+      <section className="aev-product-ticker relative z-[2]" aria-label="Aevyrixa service highlights">
+        <div className="aev-product-ticker-track">
+          {[0, 1].map((group) => (
+            <div className="aev-product-ticker-group" key={group}>
+              {productTickerItems.map(({ label, icon: Icon }) => (
+                <span className="aev-product-ticker-item" key={`${group}-${label}`}>
+                  <Icon className="h-3.5 w-3.5 text-white/90" aria-hidden="true" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[78rem] items-start gap-5 px-4 pb-10 pt-20 sm:gap-7 sm:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(29rem,32rem)] lg:gap-8 lg:px-12 lg:pb-16 lg:pt-24">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">

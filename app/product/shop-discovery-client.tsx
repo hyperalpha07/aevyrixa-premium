@@ -443,10 +443,10 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[76rem] px-3 pb-2.5 pt-2.5 sm:px-5 sm:pb-3 sm:pt-3 lg:px-6">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[70rem] px-3 pb-2 pt-2 sm:px-5 lg:px-6">
+        <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_16.5rem] xl:grid-cols-[minmax(0,1fr)_17.5rem]">
           <div className="grid gap-3">
-            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3.5 shadow-[0_20px_64px_rgba(0,0,0,0.34)] sm:p-4 lg:p-5">
+            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-4">
               <div className="aev-shop-hero-art" aria-hidden="true">
                 <span className="aev-shop-hero-orbit aev-shop-hero-orbit-one" />
                 <span className="aev-shop-hero-orbit aev-shop-hero-orbit-two" />
@@ -459,7 +459,7 @@ export default function ShopDiscoveryClient({
                     Aevyrixa Her Care Shop
                   </p>
                 </div>
-                <h1 className="max-w-[18rem] break-words text-[1.55rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:max-w-xl min-[390px]:text-[1.72rem] sm:text-[2.05rem] lg:text-[2.25rem]">
+                <h1 className="max-w-[18rem] break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:max-w-xl min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.08rem]">
                   {heroTitle === "Comfort that moves with you" ? (
                     <>
                       Comfort that moves
@@ -470,7 +470,7 @@ export default function ShopDiscoveryClient({
                     heroTitle
                   )}
                 </h1>
-                <p className="mt-2 max-w-md text-sm leading-6 text-[#D8CBE8]/68">
+                <p className="mt-2 max-w-md text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
                   {heroSubtitle}
                 </p>
               </div>
@@ -517,17 +517,17 @@ export default function ShopDiscoveryClient({
             </div>
           </div>
 
-          <div className="aev-v2-spotlight-card relative min-h-[13rem] overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_20px_64px_rgba(0,0,0,0.38)] lg:min-h-[14.5rem]">
+          <div className="aev-v2-spotlight-card relative min-h-[10.75rem] overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:min-h-[12.25rem]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
             {spotlightProduct ? (
               <Link href={`/product/${spotlightProduct.slug}`} className="group block h-full">
-                <div className="relative h-full min-h-[13rem] lg:min-h-[14.5rem]">
+                <div className="relative h-full min-h-[10.75rem] lg:min-h-[12.25rem]">
                   {spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]}
                       alt={spotlightProduct.name}
-                      className="absolute inset-0 h-full w-full object-contain p-6 transition duration-700 group-hover:scale-[1.04] lg:p-7"
+                      className="absolute inset-0 h-full w-full object-contain p-4 transition duration-700 group-hover:scale-[1.04] lg:p-5"
                     />
                   ) : (
                     <ProductVisual
@@ -550,7 +550,7 @@ export default function ShopDiscoveryClient({
                 </div>
               </Link>
             ) : (
-              <div className="grid h-full min-h-[14.5rem] place-items-center p-6 text-center text-sm text-[#9C91AA] lg:min-h-[16rem]">
+              <div className="grid h-full min-h-[10.75rem] place-items-center p-5 text-center text-sm text-[#9C91AA] lg:min-h-[12.25rem]">
                 Products will appear here when available.
               </div>
             )}
@@ -623,7 +623,7 @@ export default function ShopDiscoveryClient({
 
       <section id="shop-products" className="mx-auto max-w-7xl px-3 pb-12 pt-0 sm:px-6 sm:pb-18">
         <div className="aev-v2-sort-bar sticky top-[4.9rem] z-30 -mx-3 mb-4 border-b border-white/[0.07] bg-[#080611]/92 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-[6.25rem]">
-          <div className="mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(14rem,28rem)_auto] lg:items-center lg:justify-between">
+          <div className="mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(12rem,23rem)_minmax(0,auto)] lg:items-center lg:justify-between">
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#FF4DB8]/60" />
               <input
@@ -643,7 +643,7 @@ export default function ShopDiscoveryClient({
                 </button>
               )}
             </div>
-            <div className="aev-shop-control-row grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 lg:flex lg:items-center">
+            <div className="aev-shop-control-row grid grid-cols-[minmax(0,1fr)_minmax(5.4rem,auto)_minmax(4.6rem,auto)] gap-2 lg:flex lg:items-center">
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortMode)}

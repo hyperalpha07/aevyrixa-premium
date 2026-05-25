@@ -138,8 +138,9 @@ export default function StorefrontProductCard({
   const productHref = `/product/${product.slug}`;
   const quickAddAvailable = canQuickAdd(product);
   const badges = productBadges(product);
-  const mobileOverlayBadge = badges[0];
-  const mobileBodyBadges = badges.slice(1, 2);
+  const mediaBadges = badges.slice(0, shopCard ? 1 : 2);
+  const mobileOverlayBadge = mediaBadges[0];
+  const mobileBodyBadges = badges.slice(mediaBadges.length, mediaBadges.length + 2);
   const imageUrl = productImageUrl(product);
   const optionPreviews = [
     optionPreview("Size", product.sizes),
@@ -312,7 +313,7 @@ export default function StorefrontProductCard({
                 </div>
               )}
               <div className="absolute left-2 top-2 hidden max-w-[calc(100%-4.1rem)] flex-wrap gap-1.5 sm:flex">
-                {badges.slice(0, 2).map((badge) => (
+                {mediaBadges.map((badge) => (
                   <span
                     key={badge}
                     className="rounded-full border border-[#FF4DB8]/32 bg-[#080611]/86 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#FFB3D1] shadow-[0_0_16px_rgba(255,77,184,0.12)] backdrop-blur-md"
@@ -401,7 +402,7 @@ export default function StorefrontProductCard({
             )}
           </div>
 
-          <div className={`aev-v2-card-body-action mt-auto pt-2.5 sm:pt-3 ${shopCard ? "flex items-center gap-2" : "grid"}`}>
+          <div className={`aev-v2-card-body-action mt-auto pt-2.5 sm:pt-3 ${shopCard ? "flex items-center gap-1.5 sm:gap-2" : "grid"}`}>
             {primaryAction}
             {shopCard && (
               <button
@@ -439,7 +440,7 @@ export default function StorefrontProductCard({
               <X className="h-4.5 w-4.5" />
             </button>
 
-            <div className="aev-quick-view-grid grid min-h-0 gap-4 p-3 md:grid-cols-[0.95fr_1.05fr] md:gap-5 md:p-4">
+            <div className="aev-quick-view-grid grid min-h-0 gap-4 p-3 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:gap-5 md:p-4">
               <div className="aev-quick-view-media relative min-h-[13.5rem] overflow-hidden rounded-[1.15rem] border border-white/[0.08] bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.18),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(0,212,198,0.09),transparent_32%),linear-gradient(145deg,#211633,#080611)] md:min-h-[22rem] md:rounded-[1.4rem]">
                 <div className={`pointer-events-none absolute inset-x-8 top-12 h-36 rounded-full blur-3xl ${style.glow}`} />
                 <div className="aev-product-shine pointer-events-none absolute inset-0 opacity-55" />
@@ -460,7 +461,7 @@ export default function StorefrontProductCard({
               </div>
 
               <div className="aev-quick-view-content flex min-w-0 flex-col p-1 md:p-2">
-                <div className="aev-quick-view-pills flex flex-wrap gap-1.5 pr-11 md:pr-10">
+                <div className="aev-quick-view-pills flex flex-wrap gap-1.5 pr-12 md:pr-10">
                   <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${stockBadgeClass(product.stockStatus)}`}>
                     {stockStatusLabel(product.stockStatus)}
                   </span>
