@@ -5918,20 +5918,72 @@ function SettingsSection({
                         options={["auto", "image", "video"] as const}
                         onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaType: value as "image" | "video" | "auto" })}
                       />
-                      <TextField
-                        label="Media URL"
-                        value={draft.homepageMediaSettings.shopHeroMediaUrl}
-                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaUrl: value })}
-                        placeholder="https://…"
-                        inputMode="url"
-                        helper="Leave empty to show default brand trust visual."
-                      />
-                      <TextField
-                        label="Media alt text"
-                        value={draft.homepageMediaSettings.shopHeroMediaAlt}
-                        onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaAlt: value })}
-                        placeholder="Aevyrixa Her Care"
-                      />
+                      <div className="lg:col-span-2">
+                        <TextField
+                          label="Media alt text"
+                          value={draft.homepageMediaSettings.shopHeroMediaAlt}
+                          onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaAlt: value })}
+                          placeholder="Aevyrixa Her Care"
+                        />
+                      </div>
+                      <div className="lg:col-span-3 grid gap-4 lg:grid-cols-2">
+                        <MediaUploadField
+                          label="Upload image"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          mediaType="image"
+                          currentUrl={(() => { const url = draft.homepageMediaSettings.shopHeroMediaUrl; const type = draft.homepageMediaSettings.shopHeroMediaType; if (!url) return ""; if (type === "video") return ""; if (type === "image") return url; return /\.(mp4|webm|mov|m4v|ogg)$/i.test(url) ? "" : url; })()}
+                          uploading={!!hmUploading["shopHeroImage"]}
+                          error={hmUploadError["shopHeroImage"] ?? null}
+                          onUpload={async (file) => {
+                            setHmUploading((prev) => ({ ...prev, shopHeroImage: true }));
+                            setHmUploadError((prev) => ({ ...prev, shopHeroImage: null }));
+                            try {
+                              const form = new FormData();
+                              form.append("file", file);
+                              form.append("section", "shop-hero");
+                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                              const pl = (await res.json()) as Record<string, unknown>;
+                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, shopHeroImage: "Upload failed." })); }
+                              else { updateHomepageMediaSettings({ shopHeroMediaUrl: pl.url as string }); }
+                            } catch { setHmUploadError((prev) => ({ ...prev, shopHeroImage: "Upload failed." })); }
+                            finally { setHmUploading((prev) => ({ ...prev, shopHeroImage: false })); }
+                          }}
+                          onClear={() => updateHomepageMediaSettings({ shopHeroMediaUrl: "" })}
+                        />
+                        <MediaUploadField
+                          label="Upload video"
+                          accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
+                          mediaType="video"
+                          currentUrl={(() => { const url = draft.homepageMediaSettings.shopHeroMediaUrl; const type = draft.homepageMediaSettings.shopHeroMediaType; if (!url) return ""; if (type === "image") return ""; if (type === "video") return url; return /\.(mp4|webm|mov|m4v|ogg)$/i.test(url) ? url : ""; })()}
+                          uploading={!!hmUploading["shopHeroVideo"]}
+                          error={hmUploadError["shopHeroVideo"] ?? null}
+                          onUpload={async (file) => {
+                            setHmUploading((prev) => ({ ...prev, shopHeroVideo: true }));
+                            setHmUploadError((prev) => ({ ...prev, shopHeroVideo: null }));
+                            try {
+                              const form = new FormData();
+                              form.append("file", file);
+                              form.append("section", "shop-hero");
+                              const res = await fetch("/api/homepage-media/upload", { method: "POST", body: form, credentials: "include" });
+                              const pl = (await res.json()) as Record<string, unknown>;
+                              if (!res.ok || typeof pl.url !== "string") { setHmUploadError((prev) => ({ ...prev, shopHeroVideo: "Upload failed." })); }
+                              else { updateHomepageMediaSettings({ shopHeroMediaUrl: pl.url as string }); }
+                            } catch { setHmUploadError((prev) => ({ ...prev, shopHeroVideo: "Upload failed." })); }
+                            finally { setHmUploading((prev) => ({ ...prev, shopHeroVideo: false })); }
+                          }}
+                          onClear={() => updateHomepageMediaSettings({ shopHeroMediaUrl: "" })}
+                        />
+                      </div>
+                      <div className="lg:col-span-3">
+                        <TextField
+                          label="Media URL (manual / fallback)"
+                          value={draft.homepageMediaSettings.shopHeroMediaUrl}
+                          onChange={(value) => updateHomepageMediaSettings({ shopHeroMediaUrl: value })}
+                          placeholder="https://…"
+                          inputMode="url"
+                          helper="Leave empty to show default brand trust visual. Upload above auto-fills this."
+                        />
+                      </div>
                     </div>
                   </div>
                   <TextField
