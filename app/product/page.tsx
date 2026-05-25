@@ -62,6 +62,7 @@ export default async function ProductCollectionPage({
         <div className="absolute right-[-18%] top-[22%] h-[340px] w-[340px] rounded-full bg-[#A855F7]/[0.06] blur-[130px]" />
         <div className="absolute bottom-[-14%] left-[30%] h-[280px] w-[280px] rounded-full bg-[#00D4C6]/[0.05] blur-[120px]" />
       </div>
+      <div className="aev-shop-page-art" aria-hidden="true" />
 
       <SiteHeader
         active="shop"

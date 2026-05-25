@@ -882,6 +882,51 @@ button {
 }
 
 /* V2 shop reference adaptation */
+.aev-shop-page-art {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.9;
+}
+
+.aev-shop-page-art::before,
+.aev-shop-page-art::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+}
+
+.aev-shop-page-art::before {
+  background:
+    radial-gradient(ellipse 34% 24% at 12% 18%, rgba(255, 77, 184, 0.075), transparent 70%),
+    radial-gradient(ellipse 30% 22% at 86% 34%, rgba(139, 92, 246, 0.07), transparent 70%),
+    radial-gradient(ellipse 34% 24% at 52% 86%, rgba(0, 212, 198, 0.055), transparent 74%);
+}
+
+.aev-shop-page-art::after {
+  background:
+    repeating-radial-gradient(ellipse at 78% 18%, transparent 0 4.25rem, rgba(255, 77, 184, 0.055) 4.32rem 4.36rem, transparent 4.42rem 7.8rem),
+    repeating-radial-gradient(ellipse at 14% 74%, transparent 0 5.2rem, rgba(0, 212, 198, 0.05) 5.28rem 5.32rem, transparent 5.38rem 9rem),
+    linear-gradient(118deg, transparent 0 18%, rgba(255, 77, 184, 0.045) 18.08% 18.2%, transparent 18.32% 46%, rgba(0, 212, 198, 0.04) 46.08% 46.2%, transparent 46.32%),
+    linear-gradient(28deg, transparent 0 60%, rgba(139, 92, 246, 0.045) 60.08% 60.22%, transparent 60.34%);
+  filter: drop-shadow(0 0 18px rgba(255, 77, 184, 0.08));
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.38) 42%, rgba(0, 0, 0, 0.56));
+  animation: aev-shop-art-flow 18s ease-in-out infinite alternate;
+}
+
+.aev-v2-shop-hero,
+.aev-v2-ticker,
+.aev-v2-flow-finder,
+#shop-products,
+.aev-shop-merch-section,
+.aev-shop-support-cta {
+  position: relative;
+  z-index: 1;
+}
+
 .aev-shop-announcement-strip {
   background: linear-gradient(90deg, #ff1a6e, #8b3cf0, #00c4b0);
   box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
@@ -894,7 +939,7 @@ button {
 }
 
 .aev-v2-shop-hero {
-  max-width: 100vw;
+  max-width: min(76rem, 100vw);
   overflow-x: clip;
 }
 
@@ -908,7 +953,7 @@ button {
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: 22rem;
+  height: 17rem;
   pointer-events: none;
   background:
     radial-gradient(ellipse 52% 64% at 12% 16%, rgba(255, 77, 184, 0.11), transparent 62%),
@@ -925,7 +970,7 @@ button {
 }
 
 .aev-v2-hero-main {
-  min-height: 16.75rem;
+  min-height: 14.25rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -956,7 +1001,7 @@ button {
 .aev-shop-hero-art::before {
   right: -4.8rem;
   top: -5.4rem;
-  width: 20rem;
+  width: 16rem;
   aspect-ratio: 1;
   border-radius: 48% 52% 44% 56%;
   background:
@@ -969,8 +1014,8 @@ button {
 .aev-shop-hero-art::after {
   right: 8%;
   bottom: -2.9rem;
-  width: 17rem;
-  height: 8rem;
+  width: 14rem;
+  height: 6.4rem;
   border: 1px solid rgba(255, 179, 209, 0.12);
   border-radius: 999px;
   background:
@@ -1002,7 +1047,7 @@ button {
 .aev-shop-hero-line {
   right: 1.6rem;
   top: 44%;
-  width: 20rem;
+  width: 15rem;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 77, 184, 0.24), rgba(0, 212, 198, 0.14), transparent);
   transform: rotate(-20deg);
@@ -1044,10 +1089,11 @@ button {
 
 .aev-v2-ticker-track {
   animation: aev-v2-ticker 28s linear infinite;
+  will-change: transform;
 }
 
 .aev-v2-ticker-item {
-  min-height: 1.5rem;
+  min-height: 1.35rem;
   white-space: nowrap;
 }
 
@@ -1075,6 +1121,32 @@ button {
   display: none;
 }
 
+.aev-v2-sort-bar .aev-shop-control-row {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.aev-v2-sort-bar .aev-shop-control-row > :where(select, button) {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 479px) {
+  .aev-v2-sort-bar .aev-shop-control-row {
+    display: flex;
+    align-items: stretch;
+    width: calc(100vw - 1.5rem);
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .aev-v2-sort-bar .aev-shop-control-row > :where(select, button) {
+    flex: 1 1 0;
+    padding-inline: 0.5rem;
+    font-size: 0.68rem;
+  }
+}
+
 .aev-v2-product-card {
   transition:
     border-color 220ms ease,
@@ -1089,11 +1161,22 @@ button {
 .aev-v2-product-card .aev-card-cta {
   min-height: 2.25rem;
   border-radius: 0.4rem;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.aev-v2-card-reveal-button {
+  white-space: nowrap;
+  line-height: 1;
 }
 
 @media (min-width: 640px) {
   .aev-v2-product-card .aev-v2-card-body-action {
     display: none;
+  }
+
+  .aev-v2-product-card.aev-shop-card .aev-v2-card-body-action {
+    display: flex;
   }
 }
 
@@ -1112,7 +1195,7 @@ button {
 
 @media (max-width: 767px) {
   .aev-v2-hero-main {
-    min-height: 13.25rem;
+    min-height: 11.75rem;
   }
 
   .aev-v2-sort-bar {
@@ -1155,13 +1238,13 @@ button {
   }
 
   .aev-v2-spotlight-card {
-    min-height: 13rem;
+    min-height: 12rem;
     border-radius: 0.9rem;
   }
 
   .aev-v2-spotlight-card a > div,
   .aev-v2-spotlight-card > div {
-    min-height: 13rem;
+    min-height: 12rem;
   }
 
   .aev-v2-trust-card {
@@ -1187,12 +1270,24 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .aev-shop-page-art::after,
   .aev-v2-ticker-track,
   .aev-v2-product-card,
   .aev-v2-card-reveal,
   .aev-v2-trust-card {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+@keyframes aev-shop-art-flow {
+  from {
+    transform: translate3d(-1.2%, -0.6%, 0) rotate(-0.5deg);
+    filter: hue-rotate(0deg) drop-shadow(0 0 18px rgba(255, 77, 184, 0.08));
+  }
+  to {
+    transform: translate3d(1.1%, 0.8%, 0) rotate(0.6deg);
+    filter: hue-rotate(24deg) drop-shadow(0 0 20px rgba(0, 212, 198, 0.07));
   }
 }
 
@@ -3323,8 +3418,8 @@ button {
 
 .aev-quick-view-panel {
   position: relative;
-  width: min(60rem, 100%);
-  max-height: min(88dvh, 45rem);
+  width: min(54rem, 100%);
+  max-height: min(86dvh, 42rem);
   overflow: auto;
   border-radius: 1.6rem;
   border: 1px solid rgba(255, 77, 184, 0.20);
@@ -3351,6 +3446,7 @@ button {
 
 .aev-quick-view-content {
   overflow-wrap: anywhere;
+  min-height: 0;
 }
 
 .aev-quick-view-pills > *,
@@ -3362,11 +3458,13 @@ button {
 
 .aev-quick-view-media {
   align-self: stretch;
+  min-width: 0;
 }
 
 .aev-quick-view-actions :where(a, button) {
   max-width: 100%;
   text-align: center;
+  white-space: normal;
 }
 
 .aev-button-primary:active,
@@ -3413,7 +3511,7 @@ button {
 
   .aev-quick-view-panel {
     width: 100%;
-    max-height: calc(100dvh - 6.25rem - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 6rem - env(safe-area-inset-bottom, 0px));
     border-radius: 1.1rem 1.1rem 0.85rem 0.85rem;
     animation-name: aev-quick-view-sheet;
   }
@@ -3431,7 +3529,7 @@ button {
   }
 
   .aev-quick-view-media {
-    min-height: min(12rem, 45dvh);
+    min-height: min(11.5rem, 38dvh);
   }
 
   .aev-quick-view-content {
@@ -3796,6 +3894,13 @@ button {
 
   .aev-product-card .aev-card-cta {
     min-height: 2.75rem;
+  }
+
+  .aev-v2-product-card .aev-card-cta {
+    min-height: 2.05rem;
+    border-radius: 0.42rem;
+    padding-inline: 0.5rem;
+    font-size: 0.62rem;
   }
 
   .aev-shop-intro {

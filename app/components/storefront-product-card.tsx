@@ -121,12 +121,14 @@ export default function StorefrontProductCard({
   compact = false,
   priority = false,
   recommendation = false,
+  shopCard = false,
 }: {
   product: ProductCatalogItem;
   rating?: ReviewSummary;
   compact?: boolean;
   priority?: boolean;
   recommendation?: boolean;
+  shopCard?: boolean;
 }) {
   const { addItem } = useCart();
   const [quickViewOpen, setQuickViewOpen] = useState(false);
@@ -137,7 +139,7 @@ export default function StorefrontProductCard({
   const quickAddAvailable = canQuickAdd(product);
   const badges = productBadges(product);
   const mobileOverlayBadge = badges[0];
-  const mobileBodyBadges = badges.slice(1);
+  const mobileBodyBadges = badges.slice(1, 2);
   const imageUrl = productImageUrl(product);
   const optionPreviews = [
     optionPreview("Size", product.sizes),
@@ -172,6 +174,15 @@ export default function StorefrontProductCard({
     });
   };
 
+  const handleShopCardAdd = () => {
+    if (quickAddAvailable) {
+      handleQuickAdd();
+      return;
+    }
+
+    setQuickViewOpen(true);
+  };
+
   useEffect(() => {
     if (!quickViewOpen) return;
 
@@ -189,7 +200,16 @@ export default function StorefrontProductCard({
     };
   }, [quickViewOpen]);
 
-  const primaryAction = quickAddAvailable ? (
+  const primaryAction = shopCard ? (
+    <button
+      type="button"
+      onClick={handleShopCardAdd}
+      className="aev-button-primary aev-card-cta inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
+    >
+      <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+      Add to Cart
+    </button>
+  ) : quickAddAvailable ? (
     <button
       type="button"
       onClick={handleQuickAdd}
@@ -206,7 +226,16 @@ export default function StorefrontProductCard({
       {recommendation ? "Options" : "Choose Options"}
     </Link>
   );
-  const revealAction = quickAddAvailable ? (
+  const revealAction = shopCard ? (
+    <button
+      type="button"
+      onClick={handleShopCardAdd}
+      className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-[#FF4DB8] px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-white transition hover:bg-[#E81870]"
+    >
+      <ShoppingCart className="h-3.5 w-3.5" />
+      Add to Cart
+    </button>
+  ) : quickAddAvailable ? (
     <button
       type="button"
       onClick={handleQuickAdd}
@@ -246,7 +275,7 @@ export default function StorefrontProductCard({
   return (
     <>
       <article
-        className={`aev-product-card aev-v2-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[0.9rem] border bg-[#0E0A1C]/96 p-1.5 shadow-[0_16px_46px_rgba(0,0,0,0.34),0_0_22px_rgba(255,77,184,0.045)] sm:rounded-[1rem] sm:p-2 ${recommendation ? "aev-recommendation-card" : ""} ${style.border}`}
+        className={`aev-product-card aev-v2-product-card aev-flagship-card-r1 aev-product-card-r2a group flex h-full min-w-0 flex-col overflow-hidden rounded-[0.9rem] border bg-[#0E0A1C]/96 p-1.5 shadow-[0_16px_46px_rgba(0,0,0,0.34),0_0_22px_rgba(255,77,184,0.045)] sm:rounded-[1rem] sm:p-2 ${shopCard ? "aev-shop-card" : ""} ${recommendation ? "aev-recommendation-card" : ""} ${style.border}`}
       >
         <div className="relative">
           <Link
@@ -295,18 +324,20 @@ export default function StorefrontProductCard({
             </div>
           </Link>
 
-          <div className="aev-v2-card-reveal pointer-events-none absolute inset-0 z-10 hidden flex-col justify-end rounded-[1rem] bg-[linear-gradient(180deg,transparent_26%,rgba(8,6,17,0.9))] p-3 opacity-0 transition duration-300 sm:flex md:rounded-[1.35rem]">
-            <div className="pointer-events-auto flex items-center gap-2">
-              {revealAction}
-              <button
-                type="button"
-                className="aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 bg-white/[0.08] text-[#9C91AA] backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1]"
-                aria-label={`Save ${product.name} to wishlist`}
-              >
-                <Heart className="h-3.5 w-3.5" />
-              </button>
+          {!shopCard && (
+            <div className="aev-v2-card-reveal pointer-events-none absolute inset-0 z-10 hidden flex-col justify-end rounded-[1rem] bg-[linear-gradient(180deg,transparent_26%,rgba(8,6,17,0.9))] p-3 opacity-0 transition duration-300 sm:flex md:rounded-[1.35rem]">
+              <div className="pointer-events-auto flex items-center gap-2">
+                {revealAction}
+                <button
+                  type="button"
+                  className="aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 bg-white/[0.08] text-[#9C91AA] backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1]"
+                  aria-label={`Save ${product.name} to wishlist`}
+                >
+                  <Heart className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <button
             type="button"
@@ -372,8 +403,17 @@ export default function StorefrontProductCard({
             )}
           </div>
 
-          <div className="aev-v2-card-body-action mt-auto grid pt-2.5 sm:pt-3">
+          <div className={`aev-v2-card-body-action mt-auto pt-2.5 sm:pt-3 ${shopCard ? "flex items-center gap-2" : "grid"}`}>
             {primaryAction}
+            {shopCard && (
+              <button
+                type="button"
+                className="aev-v2-card-wish grid h-10 w-10 shrink-0 place-items-center rounded-md border border-white/12 bg-white/[0.04] text-[#9C91AA] transition hover:border-[#FF4DB8]/45 hover:text-[#FFB3D1] sm:h-11 sm:w-11"
+                aria-label={`Save ${product.name} to wishlist`}
+              >
+                <Heart className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </article>
