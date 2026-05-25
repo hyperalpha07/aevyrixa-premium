@@ -5,7 +5,6 @@ import { CartProvider } from "@/app/components/cart/cart-context";
 import CartDrawer from "@/app/components/cart/cart-drawer";
 import AnalyticsScripts from "@/app/components/analytics-scripts";
 import WhatsAppWidget from "@/app/components/whatsapp-widget";
-import AevyrixaGlobalArt from "@/app/components/aevyrixa-global-art";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,7 +63,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AevyrixaGlobalArt />
         <CartProvider>
           {children}
           <CartDrawer />

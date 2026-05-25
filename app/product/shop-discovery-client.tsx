@@ -447,11 +447,6 @@ export default function ShopDiscoveryClient({
         <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_16.5rem] xl:grid-cols-[minmax(0,1fr)_17.5rem]">
           <div className="grid gap-3">
             <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-4">
-              <div className="aev-shop-hero-art" aria-hidden="true">
-                <span className="aev-shop-hero-orbit aev-shop-hero-orbit-one" />
-                <span className="aev-shop-hero-orbit aev-shop-hero-orbit-two" />
-                <span className="aev-shop-hero-line" />
-              </div>
               {/* Flex row on mobile: text left + mini spotlight right */}
               <div className="flex items-start gap-2.5 lg:block">
                 <div className="min-w-0 flex-1">

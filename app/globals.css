@@ -504,200 +504,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body > :where(:not(.aevyrixa-global-art):not(script):not(style)) {
-  position: relative;
-  z-index: 1;
-}
-
-.aevyrixa-global-art {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-  contain: layout paint;
-  opacity: 0.92;
-}
-
-.aevyrixa-art-field,
-.aevyrixa-art-veins,
-.aevyrixa-art-petals,
-.aevyrixa-art-packaging {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.aevyrixa-art-field {
-  background:
-    radial-gradient(ellipse 46% 34% at 8% 16%, rgba(255, 77, 184, 0.138), transparent 66%),
-    radial-gradient(ellipse 36% 30% at 92% 22%, rgba(168, 85, 247, 0.125), transparent 68%),
-    radial-gradient(ellipse 40% 30% at 72% 82%, rgba(0, 212, 198, 0.088), transparent 72%),
-    radial-gradient(ellipse 28% 22% at 52% 52%, rgba(255, 179, 209, 0.048), transparent 70%),
-    conic-gradient(from 232deg at 52% 44%, transparent 0 18%, rgba(255, 77, 184, 0.042) 22%, transparent 31%, rgba(49, 230, 212, 0.038) 42%, transparent 54%, rgba(168, 85, 247, 0.048) 68%, transparent 82%),
-    linear-gradient(180deg, rgba(8, 6, 17, 0.12), rgba(5, 7, 17, 0.56));
-  background-size: 120% 120%, 118% 118%, 125% 125%, 110% 110%, 150% 150%, 100% 100%;
-  filter: saturate(1.12);
-  animation: aev-global-field-drift 24s ease-in-out infinite alternate;
-}
-
-.aevyrixa-art-field::before,
-.aevyrixa-art-field::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.46;
-}
-
-.aevyrixa-art-field::before {
-  inset: -18% -12%;
-  background:
-    repeating-radial-gradient(ellipse at 16% 72%, transparent 0 4.7rem, rgba(255, 179, 209, 0.07) 4.76rem 4.82rem, transparent 4.9rem 8.8rem),
-    repeating-radial-gradient(ellipse at 84% 28%, transparent 0 5.2rem, rgba(49, 230, 212, 0.06) 5.27rem 5.33rem, transparent 5.42rem 9.5rem);
-  mask-image: linear-gradient(180deg, transparent, black 16%, black 82%, transparent);
-  animation: aev-global-contour 30s ease-in-out infinite alternate;
-}
-
-.aevyrixa-art-field::after {
-  left: 50%;
-  top: 50%;
-  width: min(64rem, 150vw);
-  height: min(34rem, 90vh);
-  border: 1px solid rgba(255, 179, 209, 0.055);
-  border-radius: 46% 54% 49% 51%;
-  background:
-    radial-gradient(ellipse at 28% 48%, rgba(255, 77, 184, 0.058), transparent 54%),
-    radial-gradient(ellipse at 72% 52%, rgba(0, 212, 198, 0.048), transparent 58%);
-  transform: translate3d(-50%, -50%, 0) rotate(-8deg);
-  filter: blur(0.2px);
-  animation: aev-global-petal-aura 34s ease-in-out infinite;
-}
-
-.aevyrixa-art-veins {
-  width: 100%;
-  height: 100%;
-  opacity: 0.52;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 12px rgba(255, 77, 184, 0.14));
-}
-
-.aevyrixa-art-path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-width: 1.05;
-  stroke-dasharray: 4 18 72 34;
-  animation: aev-global-vein-shift 26s linear infinite;
-}
-
-.aevyrixa-art-path-a {
-  stroke: url("#aev-global-line-a");
-}
-
-.aevyrixa-art-path-b {
-  stroke: url("#aev-global-line-b");
-  stroke-width: 0.9;
-  opacity: 0.78;
-  animation-duration: 31s;
-  animation-direction: reverse;
-}
-
-.aevyrixa-art-path-c {
-  stroke: url("#aev-global-line-a");
-  stroke-width: 0.72;
-  opacity: 0.6;
-  animation-duration: 38s;
-}
-
-.aevyrixa-art-petals span {
-  position: absolute;
-  display: block;
-  border: 1px solid rgba(255, 179, 209, 0.085);
-  border-radius: 52% 48% 56% 44%;
-  background:
-    conic-gradient(from 30deg, transparent 0 14%, rgba(255, 77, 184, 0.072) 14% 20%, transparent 20% 48%, rgba(0, 212, 198, 0.056) 48% 54%, transparent 54% 74%, rgba(168, 85, 247, 0.07) 74% 81%, transparent 81%),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.025), transparent 62%);
-  opacity: 0.46;
-  filter: blur(0.2px);
-  animation: aev-global-petal-float 28s ease-in-out infinite;
-}
-
-.aevyrixa-art-petals span:nth-child(1) {
-  right: -6rem;
-  top: 8rem;
-  width: min(25rem, 62vw);
-  aspect-ratio: 1;
-}
-
-.aevyrixa-art-petals span:nth-child(2) {
-  bottom: 4rem;
-  left: -8rem;
-  width: min(28rem, 70vw);
-  aspect-ratio: 1.2;
-  animation-delay: -9s;
-}
-
-.aevyrixa-art-petals span:nth-child(3) {
-  right: 18%;
-  bottom: -10rem;
-  width: min(34rem, 84vw);
-  aspect-ratio: 1.8;
-  opacity: 0.28;
-  animation-delay: -16s;
-}
-
-.aevyrixa-art-packaging span {
-  position: absolute;
-  display: block;
-  border: 1px solid rgba(49, 230, 212, 0.08);
-  border-radius: 0.9rem;
-  background:
-    linear-gradient(90deg, transparent 0 18%, rgba(255, 179, 209, 0.06) 18.4% 18.8%, transparent 19.2% 78%, rgba(49, 230, 212, 0.05) 78.4% 78.8%, transparent 79.2%),
-    linear-gradient(145deg, rgba(255, 77, 184, 0.035), rgba(168, 85, 247, 0.026), rgba(0, 212, 198, 0.026));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 0 34px rgba(0, 212, 198, 0.035);
-  opacity: 0.36;
-  transform: rotate(-12deg) skewY(-5deg);
-  animation: aev-global-package-drift 36s ease-in-out infinite alternate;
-}
-
-.aevyrixa-art-packaging span::before,
-.aevyrixa-art-packaging span::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-
-.aevyrixa-art-packaging span::before {
-  inset: 18% 10% auto;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 179, 209, 0.26), rgba(49, 230, 212, 0.16), transparent);
-}
-
-.aevyrixa-art-packaging span::after {
-  inset: auto 12% 16%;
-  height: 28%;
-  border: 1px solid rgba(255, 179, 209, 0.07);
-  border-radius: 999px 999px 0.55rem 0.55rem;
-  background: radial-gradient(ellipse at 50% 40%, rgba(255, 77, 184, 0.06), transparent 62%);
-}
-
-.aevyrixa-art-packaging span:nth-child(1) {
-  left: 8%;
-  top: 18%;
-  width: min(18rem, 52vw);
-  height: min(10rem, 28vw);
-}
-
-.aevyrixa-art-packaging span:nth-child(2) {
-  right: 4%;
-  bottom: 14%;
-  width: min(22rem, 60vw);
-  height: min(12rem, 32vw);
-  opacity: 0.28;
-  transform: rotate(14deg) skewY(4deg);
-  animation-delay: -14s;
-}
 
 :where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero) {
   isolation: isolate;
@@ -1114,51 +920,6 @@ button {
   will-change: transform;
 }
 
-/* V2 shop reference adaptation */
-.aev-shop-page-art {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-  opacity: 0.9;
-}
-
-.aev-shop-page-art::before,
-.aev-shop-page-art::after {
-  content: "";
-  position: absolute;
-  inset: -12%;
-  pointer-events: none;
-}
-
-.aev-shop-page-art::before {
-  background:
-    radial-gradient(ellipse 34% 24% at 12% 18%, rgba(255, 77, 184, 0.075), transparent 70%),
-    radial-gradient(ellipse 30% 22% at 86% 34%, rgba(139, 92, 246, 0.07), transparent 70%),
-    radial-gradient(ellipse 34% 24% at 52% 86%, rgba(0, 212, 198, 0.055), transparent 74%);
-}
-
-.aev-shop-page-art::after {
-  background:
-    repeating-radial-gradient(ellipse at 78% 18%, transparent 0 4.25rem, rgba(255, 77, 184, 0.055) 4.32rem 4.36rem, transparent 4.42rem 7.8rem),
-    repeating-radial-gradient(ellipse at 14% 74%, transparent 0 5.2rem, rgba(0, 212, 198, 0.05) 5.28rem 5.32rem, transparent 5.38rem 9rem),
-    linear-gradient(118deg, transparent 0 18%, rgba(255, 77, 184, 0.045) 18.08% 18.2%, transparent 18.32% 46%, rgba(0, 212, 198, 0.04) 46.08% 46.2%, transparent 46.32%),
-    linear-gradient(28deg, transparent 0 60%, rgba(139, 92, 246, 0.045) 60.08% 60.22%, transparent 60.34%);
-  filter: drop-shadow(0 0 18px rgba(255, 77, 184, 0.08));
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.38) 42%, rgba(0, 0, 0, 0.56));
-  animation: aev-shop-art-flow 18s ease-in-out infinite alternate;
-}
-
-.aev-v2-shop-hero,
-.aev-v2-ticker,
-.aev-v2-flow-finder,
-#shop-products,
-.aev-shop-merch-section,
-.aev-shop-support-cta {
-  position: relative;
-  z-index: 1;
-}
 
 .aev-shop-announcement-strip {
   background: linear-gradient(90deg, #ff1a6e, #8b3cf0, #00c4b0);
@@ -1172,7 +933,7 @@ button {
 }
 
 .aev-v2-shop-hero {
-  max-width: min(76rem, 100vw);
+  max-width: min(70rem, 100vw);
   overflow-x: clip;
 }
 
@@ -1186,8 +947,9 @@ button {
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: 17rem;
+  height: 12rem;
   pointer-events: none;
+  opacity: 0.72;
   background:
     radial-gradient(ellipse 52% 64% at 12% 16%, rgba(255, 77, 184, 0.11), transparent 62%),
     radial-gradient(ellipse 46% 58% at 86% 28%, rgba(139, 92, 246, 0.12), transparent 64%),
@@ -1203,7 +965,7 @@ button {
 }
 
 .aev-v2-hero-main {
-  min-height: 12.75rem;
+  min-height: 10.8rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1214,77 +976,6 @@ button {
     linear-gradient(135deg, #130f22, #18132a);
 }
 
-.aev-shop-hero-art {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.aev-shop-hero-art::before,
-.aev-shop-hero-art::after,
-.aev-shop-hero-orbit,
-.aev-shop-hero-line {
-  position: absolute;
-  content: "";
-  pointer-events: none;
-}
-
-.aev-shop-hero-art::before {
-  right: -4.8rem;
-  top: -5.4rem;
-  width: 16rem;
-  aspect-ratio: 1;
-  border-radius: 48% 52% 44% 56%;
-  background:
-    conic-gradient(from 18deg, transparent 0 12%, rgba(255, 77, 184, 0.16) 12% 18%, transparent 18% 34%, rgba(0, 212, 198, 0.11) 34% 40%, transparent 40% 66%, rgba(139, 92, 246, 0.16) 66% 74%, transparent 74%),
-    radial-gradient(circle at 50% 50%, rgba(255, 179, 209, 0.08), transparent 60%);
-  opacity: 0.78;
-  transform: rotate(18deg);
-}
-
-.aev-shop-hero-art::after {
-  right: 8%;
-  bottom: -2.9rem;
-  width: 14rem;
-  height: 6.4rem;
-  border: 1px solid rgba(255, 179, 209, 0.12);
-  border-radius: 999px;
-  background:
-    radial-gradient(ellipse at 32% 50%, rgba(255, 77, 184, 0.12), transparent 54%),
-    radial-gradient(ellipse at 72% 48%, rgba(0, 212, 198, 0.10), transparent 56%);
-  opacity: 0.72;
-  transform: rotate(-9deg);
-}
-
-.aev-shop-hero-orbit-one {
-  right: 4.2rem;
-  top: 2.2rem;
-  width: 11rem;
-  height: 11rem;
-  border: 1px solid rgba(255, 77, 184, 0.13);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.15rem rgba(255, 77, 184, 0.018);
-}
-
-.aev-shop-hero-orbit-two {
-  right: 1.4rem;
-  top: 4.3rem;
-  width: 8.2rem;
-  height: 8.2rem;
-  border: 1px dashed rgba(0, 212, 198, 0.17);
-  border-radius: 50%;
-}
-
-.aev-shop-hero-line {
-  right: 1.6rem;
-  top: 44%;
-  width: 15rem;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 77, 184, 0.24), rgba(0, 212, 198, 0.14), transparent);
-  transform: rotate(-20deg);
-}
 
 .aev-v2-hero-main::after,
 .aev-v2-spotlight-card::after,
@@ -1455,25 +1146,6 @@ button {
     border-radius: 0.9rem;
   }
 
-  .aev-shop-hero-art::before {
-    right: -5.6rem;
-    top: -4.2rem;
-    width: 14rem;
-  }
-
-  .aev-shop-hero-art::after,
-  .aev-shop-hero-orbit-two {
-    display: none;
-  }
-
-  .aev-shop-hero-orbit-one {
-    right: -1.8rem;
-    top: 3.2rem;
-    width: 7rem;
-    height: 7rem;
-    opacity: 0.68;
-  }
-
   .aev-v2-spotlight-card {
     min-height: 12rem;
     border-radius: 0.9rem;
@@ -1507,15 +1179,6 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aevyrixa-art-field,
-  .aevyrixa-art-field::before,
-  .aevyrixa-art-field::after,
-  .aevyrixa-art-path,
-  .aevyrixa-art-petals span,
-  .aevyrixa-art-packaging span,
-  :where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::before,
-  :where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::after,
-  .aev-shop-page-art::after,
   .aev-v2-ticker-track,
   .aev-v2-product-card,
   .aev-v2-card-reveal,
@@ -1525,324 +1188,6 @@ button {
   }
 }
 
-/* Shop polish final overrides */
-body > main {
-  background:
-    linear-gradient(180deg, rgba(8, 6, 17, 0.74), rgba(8, 6, 17, 0.58) 48%, rgba(5, 7, 17, 0.76)) !important;
-}
-
-.aev-v2-shop-hero {
-  max-width: min(70rem, 100vw);
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.aev-v2-shop-hero::before {
-  height: 12rem;
-  opacity: 0.72;
-}
-
-.aev-v2-hero-main {
-  min-height: 10.8rem;
-}
-
-.aev-shop-hero-art::before {
-  right: -3.4rem;
-  top: -4rem;
-  width: 12rem;
-}
-
-.aev-shop-hero-art::after {
-  bottom: -2.2rem;
-  width: 10.5rem;
-  height: 4.8rem;
-}
-
-.aev-shop-hero-orbit-one {
-  right: 3.2rem;
-  top: 1.5rem;
-  width: 8.2rem;
-  height: 8.2rem;
-}
-
-.aev-shop-hero-orbit-two {
-  right: 1.1rem;
-  top: 3.2rem;
-  width: 6.4rem;
-  height: 6.4rem;
-}
-
-.aev-shop-hero-line {
-  width: 11rem;
-}
-
-.aev-v2-sort-bar {
-  overflow: visible;
-}
-
-.aev-v2-sort-bar .aev-shop-control-row {
-  align-items: stretch;
-}
-
-.aev-v2-sort-bar .aev-shop-control-row > :where(select, button) {
-  min-height: 2.5rem;
-  width: 100%;
-}
-
-.aev-v2-sort-bar .aev-shop-control-row .aev-button-secondary,
-.aev-v2-sort-bar .aev-shop-control-row .aev-button-ghost {
-  padding-inline: 0.7rem;
-}
-
-.aev-v2-product-card.aev-shop-card .aev-v2-card-body-action {
-  min-height: 2.3rem;
-}
-
-.aev-v2-product-card.aev-shop-card .aev-card-cta,
-.aev-v2-product-card.aev-shop-card .aev-v2-card-reveal-button {
-  color: #fff;
-  text-align: center;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
-}
-
-.aev-v2-product-card.aev-shop-card .aev-v2-card-reveal {
-  pointer-events: none;
-}
-
-.aev-v2-product-card.aev-shop-card:is(:hover, :focus-within) .aev-v2-card-reveal {
-  pointer-events: auto;
-}
-
-.aev-quick-view-panel {
-  width: min(52rem, calc(100vw - 2rem));
-  max-height: min(88dvh, 40rem);
-  overflow-x: hidden;
-}
-
-.aev-quick-view-grid {
-  align-items: stretch;
-}
-
-.aev-quick-view-media {
-  min-height: 18rem;
-}
-
-.aev-quick-view-content h2 {
-  max-width: 100%;
-  padding-right: 0.25rem;
-}
-
-.aev-quick-view-pills,
-.aev-quick-view-options {
-  row-gap: 0.4rem;
-}
-
-.aev-quick-view-meta > * {
-  min-width: 0;
-}
-
-.aev-quick-view-actions {
-  width: 100%;
-}
-
-.aev-product-ticker-item svg {
-  flex: 0 0 auto;
-}
-
-@media (hover: none), (pointer: coarse) {
-  .aev-v2-product-card.aev-shop-card .aev-v2-card-reveal {
-    display: none;
-  }
-
-  .aev-v2-product-card.aev-shop-card .aev-v2-card-body-action {
-    display: flex;
-  }
-}
-
-@media (min-width: 640px) and (hover: hover) and (pointer: fine) {
-  .aev-v2-product-card.aev-shop-card .aev-v2-card-body-action {
-    display: none;
-  }
-}
-
-@media (max-width: 767px) {
-  .aev-v2-shop-hero {
-    padding-top: 0.45rem;
-    padding-bottom: 0.45rem;
-  }
-
-  .aev-v2-hero-main {
-    min-height: auto;
-  }
-
-  .aev-v2-spotlight-card,
-  .aev-v2-spotlight-card a > div,
-  .aev-v2-spotlight-card > div {
-    min-height: 10rem;
-  }
-
-  .aev-v2-sort-bar {
-    top: 4.15rem;
-  }
-}
-
-@media (max-width: 479px) {
-  .aevyrixa-global-art {
-    opacity: 0.68;
-  }
-
-  .aevyrixa-art-veins {
-    opacity: 0.28;
-  }
-
-  .aevyrixa-art-packaging span:nth-child(1) {
-    left: -18%;
-    top: 22%;
-  }
-
-  .aevyrixa-art-packaging span:nth-child(2) {
-    right: -24%;
-    bottom: 20%;
-  }
-
-  .aev-v2-sort-bar .aev-shop-control-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .aev-v2-sort-bar .aev-shop-control-row > :where(select, button) {
-    justify-content: center;
-    min-width: 0;
-    padding-inline: 0.45rem;
-  }
-
-  .aev-v2-sort-bar .aev-shop-control-row .aev-button-secondary svg:last-child {
-    display: none;
-  }
-
-  .aev-v2-product-card.aev-shop-card .aev-card-cta {
-    min-height: 2.1rem;
-    padding-inline: 0.5rem;
-    font-size: 0.62rem;
-  }
-
-  .aev-v2-product-card.aev-shop-card .aev-v2-card-wish {
-    height: 2.1rem;
-    width: 2.1rem;
-  }
-
-  .aev-quick-view-overlay {
-    padding-inline: 0.45rem;
-  }
-
-  .aev-quick-view-panel {
-    width: 100%;
-    max-height: calc(100dvh - 5.9rem - env(safe-area-inset-bottom, 0px));
-  }
-
-  .aev-quick-view-media {
-    min-height: min(10rem, 34dvh);
-  }
-
-  .aev-quick-view-content h2 {
-    font-size: 1.12rem;
-    line-height: 1.18;
-  }
-}
-
-@keyframes aev-shop-art-flow {
-  from {
-    transform: translate3d(-1.2%, -0.6%, 0) rotate(-0.5deg);
-    filter: hue-rotate(0deg) drop-shadow(0 0 18px rgba(255, 77, 184, 0.08));
-  }
-  to {
-    transform: translate3d(1.1%, 0.8%, 0) rotate(0.6deg);
-    filter: hue-rotate(24deg) drop-shadow(0 0 20px rgba(0, 212, 198, 0.07));
-  }
-}
-
-@keyframes aev-global-field-drift {
-  from {
-    background-position: 0% 0%, 100% 10%, 50% 100%, 0% 45%, center;
-    filter: hue-rotate(0deg) saturate(1.05);
-  }
-  to {
-    background-position: 8% 4%, 92% 0%, 58% 88%, 100% 54%, center;
-    filter: hue-rotate(24deg) saturate(1.14);
-  }
-}
-
-@keyframes aev-global-contour {
-  from {
-    transform: translate3d(-1.2%, -0.8%, 0) rotate(-0.4deg);
-    opacity: 0.36;
-  }
-  to {
-    transform: translate3d(1.2%, 0.8%, 0) rotate(0.5deg);
-    opacity: 0.52;
-  }
-}
-
-@keyframes aev-global-petal-aura {
-  0%, 100% {
-    transform: translate3d(-50%, -50%, 0) rotate(-8deg) scale(0.98);
-  }
-  50% {
-    transform: translate3d(-50%, -50%, 0) rotate(-2deg) scale(1.04);
-  }
-}
-
-@keyframes aev-global-vein-shift {
-  from {
-    stroke-dashoffset: 0;
-    filter: hue-rotate(0deg);
-  }
-  to {
-    stroke-dashoffset: -190;
-    filter: hue-rotate(38deg);
-  }
-}
-
-@keyframes aev-global-petal-float {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(-5deg) scale(1);
-  }
-  50% {
-    transform: translate3d(1.2rem, -0.8rem, 0) rotate(4deg) scale(1.04);
-  }
-}
-
-@keyframes aev-global-package-drift {
-  from {
-    filter: hue-rotate(0deg);
-    opacity: 0.30;
-  }
-  to {
-    filter: hue-rotate(26deg);
-    opacity: 0.44;
-  }
-}
-
-@keyframes aev-hero-art-breathe {
-  from {
-    transform: translate3d(-0.8%, -0.4%, 0);
-    filter: hue-rotate(0deg);
-    opacity: 0.84;
-  }
-  to {
-    transform: translate3d(0.8%, 0.6%, 0);
-    filter: hue-rotate(22deg);
-    opacity: 1;
-  }
-}
-
-@keyframes aev-hero-art-orbit {
-  0%, 100% {
-    transform: rotate(-13deg) translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: rotate(-7deg) translate3d(-0.8rem, 0.5rem, 0) scale(1.035);
-  }
-}
 
 .aev-product-ticker-track-reverse {
   animation-name: aev-home-marquee-shift-reverse;
@@ -1924,73 +1269,11 @@ body > main {
   transform: translateX(290%);
 }
 
-body > main {
-  background:
-    linear-gradient(180deg, rgba(8, 6, 17, 0.74), rgba(8, 6, 17, 0.58) 48%, rgba(5, 7, 17, 0.76)) !important;
-}
-
 .aev-home,
 .aev-cinematic-page,
 .aev-bloom-product {
   position: relative;
   isolation: isolate;
-}
-
-.aev-v2-shop-hero {
-  max-width: min(70rem, 100vw);
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.aev-v2-shop-hero::before {
-  height: 12rem;
-  opacity: 0.72;
-}
-
-.aev-v2-hero-main {
-  min-height: 10.8rem;
-}
-
-.aev-shop-hero-art {
-  opacity: 0.82;
-}
-
-.aev-shop-hero-art::before {
-  right: -3.4rem;
-  top: -4rem;
-  width: 12rem;
-}
-
-.aev-shop-hero-art::after {
-  bottom: -2.2rem;
-  width: 10.5rem;
-  height: 4.8rem;
-}
-
-.aev-shop-hero-orbit-one {
-  right: 3.2rem;
-  top: 1.5rem;
-  width: 8.2rem;
-  height: 8.2rem;
-}
-
-.aev-shop-hero-orbit-two {
-  right: 1.1rem;
-  top: 3.2rem;
-  width: 6.4rem;
-  height: 6.4rem;
-}
-
-.aev-shop-hero-line {
-  width: 11rem;
-}
-
-:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::before {
-  opacity: 0.92;
-}
-
-:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::after {
-  opacity: 0.76;
 }
 
 .aev-v2-sort-bar {
@@ -2108,24 +1391,6 @@ body > main {
 }
 
 @media (max-width: 479px) {
-  .aevyrixa-global-art {
-    opacity: 0.68;
-  }
-
-  .aevyrixa-art-veins {
-    opacity: 0.28;
-  }
-
-  .aevyrixa-art-packaging span:nth-child(1) {
-    left: -18%;
-    top: 22%;
-  }
-
-  .aevyrixa-art-packaging span:nth-child(2) {
-    right: -24%;
-    bottom: 20%;
-  }
-
   .aev-v2-sort-bar .aev-shop-control-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -5913,93 +5178,7 @@ body > main {
   }
 }
 
-/* ─── Enhanced global art: fabric flow, protection arcs, orbital ellipses ─── */
-
-.aevyrixa-art-fabric {
-  fill: none;
-  stroke: url("#aev-global-arc-grad");
-  stroke-linecap: round;
-  stroke-width: 0.72;
-  opacity: 0.28;
-  stroke-dasharray: 5 22 82 22;
-  animation: aev-global-vein-shift 38s ease-in-out infinite alternate;
-}
-
-.aevyrixa-art-arc {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.aevyrixa-art-arc-inner {
-  stroke: url("#aev-global-arc-grad");
-  stroke-width: 0.60;
-  opacity: 0.22;
-  stroke-dasharray: 8 38 120 38;
-  animation: aev-global-arc-breathe 28s ease-in-out infinite;
-}
-
-.aevyrixa-art-arc-outer {
-  stroke: url("#aev-global-line-b");
-  stroke-width: 0.46;
-  opacity: 0.16;
-  stroke-dasharray: 6 52 100 52;
-  animation: aev-global-arc-breathe 34s ease-in-out infinite reverse;
-  animation-delay: -10s;
-}
-
-.aevyrixa-art-orbital {
-  stroke: url("#aev-global-orbital-grad");
-  stroke-width: 0.54;
-  opacity: 0.22;
-  stroke-dasharray: 3 16 54 16;
-  animation: aev-global-vein-shift 22s linear infinite;
-}
-
-.aevyrixa-art-orbital-b {
-  opacity: 0.17;
-  animation-duration: 29s;
-  animation-direction: reverse;
-}
-
-@keyframes aev-global-arc-breathe {
-  0%, 100% {
-    stroke-dashoffset: 0;
-    opacity: 0.18;
-  }
-  50% {
-    stroke-dashoffset: -90;
-    opacity: 0.28;
-  }
-}
-
 /* ─── Mobile hero mini spotlight layout ─── */
-
-/* Keep hero art orbits from overlapping mini-spotlight on mobile */
-@media (max-width: 1023px) {
-  .aev-shop-hero-orbit-one {
-    right: -2.4rem;
-    top: 2.6rem;
-    width: 6.5rem;
-    height: 6.5rem;
-    opacity: 0.55;
-  }
-
-  .aev-shop-hero-orbit-two {
-    display: none;
-  }
-
-  .aev-shop-hero-art::before {
-    right: -4.5rem;
-    top: -3.8rem;
-    width: 11rem;
-    opacity: 0.65;
-  }
-
-  .aev-shop-hero-line {
-    width: 8rem;
-  }
-}
 
 /* Quick view — ensure no text overlap on mobile */
 @media (max-width: 479px) {
@@ -6024,31 +5203,3 @@ body > main {
   }
 }
 
-/* Reduce global art on very small screens */
-@media (max-width: 479px) {
-  .aevyrixa-global-art {
-    opacity: 0.72;
-  }
-
-  .aevyrixa-art-veins {
-    opacity: 0.34;
-  }
-
-  .aevyrixa-art-fabric,
-  .aevyrixa-art-arc-inner,
-  .aevyrixa-art-arc-outer,
-  .aevyrixa-art-orbital,
-  .aevyrixa-art-orbital-b {
-    opacity: 0.12;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .aevyrixa-art-fabric,
-  .aevyrixa-art-arc-inner,
-  .aevyrixa-art-arc-outer,
-  .aevyrixa-art-orbital,
-  .aevyrixa-art-orbital-b {
-    animation: none !important;
-  }
-}
