@@ -4613,10 +4613,6 @@ button {
     display: none;
   }
 
-  .aev-shop-support-cta {
-    padding-bottom: calc(var(--aev-mobile-bottom-nav-height) + 1.5rem);
-  }
-
   .aev-shop-support-cta .aev-panel {
     padding: 1.15rem;
   }
@@ -5196,10 +5192,24 @@ button {
   }
 }
 
-/* Fix: footer already handles mobile nav clearance, so CTA doesn't need double padding */
+/* Hide shop CTA on mobile — support is accessible via bottom nav */
 @media (max-width: 767px) {
   .aev-shop-support-cta {
-    padding-bottom: 1.5rem;
+    display: none;
+  }
+
+  /* Bottom nav clearance for the product grid (last visible section on mobile) */
+  .aev-shop-products-section {
+    padding-bottom: calc(var(--aev-mobile-bottom-nav-height) + 1.5rem);
+  }
+}
+
+/* Center last lone card in 2-col mobile grid */
+@media (max-width: 639px) {
+  .aev-shop-products-grid > *:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 0.375rem);
+    margin-inline: auto;
   }
 }
 

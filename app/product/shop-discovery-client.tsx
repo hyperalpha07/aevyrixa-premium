@@ -680,7 +680,7 @@ export default function ShopDiscoveryClient({
         </section>
       )}
 
-      <section id="shop-products" className="mx-auto max-w-7xl px-3 pb-6 pt-0 sm:px-6 sm:pb-10">
+      <section id="shop-products" className="aev-shop-products-section mx-auto max-w-7xl px-3 pb-6 pt-0 sm:px-6 sm:pb-10">
         <div className="aev-v2-sort-bar sticky top-[4.9rem] z-30 -mx-3 mb-4 border-b border-white/[0.07] bg-[#080611]/92 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-[6.25rem]">
           <div className="mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(12rem,23rem)_minmax(0,auto)] lg:items-center lg:justify-between">
             <div className="relative min-w-0">
@@ -798,7 +798,7 @@ export default function ShopDiscoveryClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="aev-shop-products-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map((product) => (
                 <StorefrontProductCard
                   key={product.id}
