@@ -485,7 +485,7 @@ export default function ShopDiscoveryClient({
 
               {/* Mobile compact hero media — hidden on lg+ */}
               {heroMediaUrl && (
-                <div className="relative mt-3 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden" style={{ maxHeight: "10rem" }}>
+                <div className="relative mt-3 h-36 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden">
                   {effectiveFit === "contain" && !isHeroVideo && (
                     <div
                       className="absolute inset-0"
@@ -505,16 +505,16 @@ export default function ShopDiscoveryClient({
                       muted
                       loop
                       playsInline
-                      className="relative h-full w-full"
-                      style={{ maxHeight: "10rem", objectFit: effectiveFit, objectPosition: heroMediaPosition }}
+                      className="absolute inset-0 h-full w-full"
+                      style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
                     />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={heroMediaUrl}
                       alt={heroMediaAlt}
-                      className="relative h-full w-full"
-                      style={{ maxHeight: "10rem", objectFit: effectiveFit, objectPosition: heroMediaPosition }}
+                      className="absolute inset-0 h-full w-full"
+                      style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
                     />
                   )}
                 </div>
@@ -564,7 +564,7 @@ export default function ShopDiscoveryClient({
           </div>
 
           {/* Desktop hero media card — hidden on mobile, shown lg+ */}
-          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:min-h-[12.25rem]">
+          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:aspect-[4/3] lg:self-start">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
 
             {heroMediaUrl ? (
