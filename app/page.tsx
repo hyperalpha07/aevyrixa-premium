@@ -72,9 +72,9 @@ const trustItems = [
 ] as const;
 
 const statItems = [
-  { value: "5000+", label: "Happy Customers" },
-  { value: "4.8★", label: "Customer Rating" },
-  { value: "100%", label: "Discreet Packaging" },
+  { value: "BDT", label: "Local Pricing" },
+  { value: "3-Day", label: "Hygiene-Safe Support" },
+  { value: "Care", label: "Discreet Packaging" },
 ] as const;
 
 const marqueeItems = [

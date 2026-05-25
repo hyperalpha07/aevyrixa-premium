@@ -324,20 +324,18 @@ export default function StorefrontProductCard({
             </div>
           </Link>
 
-          {!shopCard && (
-            <div className="aev-v2-card-reveal pointer-events-none absolute inset-0 z-10 hidden flex-col justify-end rounded-[1rem] bg-[linear-gradient(180deg,transparent_26%,rgba(8,6,17,0.9))] p-3 opacity-0 transition duration-300 sm:flex md:rounded-[1.35rem]">
-              <div className="pointer-events-auto flex items-center gap-2">
-                {revealAction}
-                <button
-                  type="button"
-                  className="aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 bg-white/[0.08] text-[#9C91AA] backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1]"
-                  aria-label={`Save ${product.name} to wishlist`}
-                >
-                  <Heart className="h-3.5 w-3.5" />
-                </button>
-              </div>
+          <div className="aev-v2-card-reveal pointer-events-none absolute inset-0 z-10 hidden flex-col justify-end rounded-[1rem] bg-[linear-gradient(180deg,transparent_26%,rgba(8,6,17,0.9))] p-3 opacity-0 transition duration-300 sm:flex md:rounded-[1.35rem]">
+            <div className="pointer-events-auto flex items-center gap-2">
+              {revealAction}
+              <button
+                type="button"
+                className="aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 bg-white/[0.08] text-[#9C91AA] backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1]"
+                aria-label={`Save ${product.name} to wishlist`}
+              >
+                <Heart className="h-3.5 w-3.5" />
+              </button>
             </div>
-          )}
+          </div>
 
           <button
             type="button"

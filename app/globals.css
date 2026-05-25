@@ -498,9 +498,186 @@ body {
 body {
   min-height: 100vh;
   min-width: 320px;
+  isolation: isolate;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body > :where(:not(.aevyrixa-global-art):not(script):not(style)) {
+  position: relative;
+  z-index: 1;
+}
+
+.aevyrixa-global-art {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout paint;
+  opacity: 0.86;
+}
+
+.aevyrixa-art-field,
+.aevyrixa-art-veins,
+.aevyrixa-art-petals {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.aevyrixa-art-field {
+  background:
+    radial-gradient(ellipse 46% 34% at 8% 16%, rgba(255, 77, 184, 0.115), transparent 66%),
+    radial-gradient(ellipse 36% 30% at 92% 22%, rgba(168, 85, 247, 0.105), transparent 68%),
+    radial-gradient(ellipse 40% 30% at 72% 82%, rgba(0, 212, 198, 0.072), transparent 72%),
+    conic-gradient(from 232deg at 52% 44%, transparent 0 18%, rgba(255, 77, 184, 0.035) 22%, transparent 31%, rgba(49, 230, 212, 0.032) 42%, transparent 54%, rgba(168, 85, 247, 0.04) 68%, transparent 82%),
+    linear-gradient(180deg, rgba(8, 6, 17, 0.12), rgba(5, 7, 17, 0.56));
+  background-size: 120% 120%, 118% 118%, 125% 125%, 150% 150%, 100% 100%;
+  filter: saturate(1.08);
+  animation: aev-global-field-drift 24s ease-in-out infinite alternate;
+}
+
+.aevyrixa-art-field::before,
+.aevyrixa-art-field::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.46;
+}
+
+.aevyrixa-art-field::before {
+  inset: -18% -12%;
+  background:
+    repeating-radial-gradient(ellipse at 16% 72%, transparent 0 4.7rem, rgba(255, 179, 209, 0.07) 4.76rem 4.82rem, transparent 4.9rem 8.8rem),
+    repeating-radial-gradient(ellipse at 84% 28%, transparent 0 5.2rem, rgba(49, 230, 212, 0.06) 5.27rem 5.33rem, transparent 5.42rem 9.5rem);
+  mask-image: linear-gradient(180deg, transparent, black 16%, black 82%, transparent);
+  animation: aev-global-contour 30s ease-in-out infinite alternate;
+}
+
+.aevyrixa-art-field::after {
+  left: 50%;
+  top: 50%;
+  width: min(64rem, 150vw);
+  height: min(34rem, 90vh);
+  border: 1px solid rgba(255, 179, 209, 0.055);
+  border-radius: 46% 54% 49% 51%;
+  background:
+    radial-gradient(ellipse at 28% 48%, rgba(255, 77, 184, 0.058), transparent 54%),
+    radial-gradient(ellipse at 72% 52%, rgba(0, 212, 198, 0.048), transparent 58%);
+  transform: translate3d(-50%, -50%, 0) rotate(-8deg);
+  filter: blur(0.2px);
+  animation: aev-global-petal-aura 34s ease-in-out infinite;
+}
+
+.aevyrixa-art-veins {
+  width: 100%;
+  height: 100%;
+  opacity: 0.42;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 12px rgba(255, 77, 184, 0.12));
+}
+
+.aevyrixa-art-path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 1.05;
+  stroke-dasharray: 4 18 72 34;
+  animation: aev-global-vein-shift 26s linear infinite;
+}
+
+.aevyrixa-art-path-a {
+  stroke: url("#aev-global-line-a");
+}
+
+.aevyrixa-art-path-b {
+  stroke: url("#aev-global-line-b");
+  stroke-width: 0.9;
+  opacity: 0.78;
+  animation-duration: 31s;
+  animation-direction: reverse;
+}
+
+.aevyrixa-art-path-c {
+  stroke: url("#aev-global-line-a");
+  stroke-width: 0.72;
+  opacity: 0.6;
+  animation-duration: 38s;
+}
+
+.aevyrixa-art-petals span {
+  position: absolute;
+  display: block;
+  border: 1px solid rgba(255, 179, 209, 0.085);
+  border-radius: 52% 48% 56% 44%;
+  background:
+    conic-gradient(from 30deg, transparent 0 14%, rgba(255, 77, 184, 0.072) 14% 20%, transparent 20% 48%, rgba(0, 212, 198, 0.056) 48% 54%, transparent 54% 74%, rgba(168, 85, 247, 0.07) 74% 81%, transparent 81%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.025), transparent 62%);
+  opacity: 0.46;
+  filter: blur(0.2px);
+  animation: aev-global-petal-float 28s ease-in-out infinite;
+}
+
+.aevyrixa-art-petals span:nth-child(1) {
+  right: -6rem;
+  top: 8rem;
+  width: min(25rem, 62vw);
+  aspect-ratio: 1;
+}
+
+.aevyrixa-art-petals span:nth-child(2) {
+  bottom: 4rem;
+  left: -8rem;
+  width: min(28rem, 70vw);
+  aspect-ratio: 1.2;
+  animation-delay: -9s;
+}
+
+.aevyrixa-art-petals span:nth-child(3) {
+  right: 18%;
+  bottom: -10rem;
+  width: min(34rem, 84vw);
+  aspect-ratio: 1.8;
+  opacity: 0.28;
+  animation-delay: -16s;
+}
+
+:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero) {
+  isolation: isolate;
+}
+
+:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::before,
+:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+
+:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::before {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 42% 38% at 74% 18%, rgba(255, 77, 184, 0.13), transparent 68%),
+    radial-gradient(ellipse 34% 28% at 18% 76%, rgba(0, 212, 198, 0.075), transparent 70%),
+    repeating-radial-gradient(ellipse at 78% 38%, transparent 0 3.7rem, rgba(255, 179, 209, 0.052) 3.78rem 3.84rem, transparent 3.94rem 7.2rem);
+  mask-image: linear-gradient(180deg, black, rgba(0, 0, 0, 0.72) 70%, transparent);
+  animation: aev-hero-art-breathe 18s ease-in-out infinite alternate;
+}
+
+:where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::after {
+  right: max(-10rem, -14vw);
+  top: clamp(1rem, 9vw, 6rem);
+  width: min(35rem, 82vw);
+  height: min(22rem, 46vh);
+  border: 1px solid rgba(255, 179, 209, 0.10);
+  border-radius: 58% 42% 52% 48%;
+  background:
+    conic-gradient(from 120deg, transparent 0 12%, rgba(255, 77, 184, 0.105) 12% 17%, transparent 17% 42%, rgba(49, 230, 212, 0.082) 42% 48%, transparent 48% 70%, rgba(168, 85, 247, 0.095) 70% 76%, transparent 76%),
+    radial-gradient(ellipse at 42% 54%, rgba(255, 179, 209, 0.052), transparent 62%);
+  transform: rotate(-13deg);
+  opacity: 0.72;
+  animation: aev-hero-art-orbit 24s ease-in-out infinite;
 }
 
 a {
@@ -970,7 +1147,7 @@ button {
 }
 
 .aev-v2-hero-main {
-  min-height: 14.25rem;
+  min-height: 12.75rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1124,24 +1301,28 @@ button {
 .aev-v2-sort-bar .aev-shop-control-row {
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .aev-v2-sort-bar .aev-shop-control-row > :where(select, button) {
-  width: 100%;
+  width: auto;
   min-width: 0;
+}
+
+.aev-v2-sort-bar .aev-shop-control-row select {
+  width: 100%;
 }
 
 @media (max-width: 479px) {
   .aev-v2-sort-bar .aev-shop-control-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: stretch;
-    width: calc(100vw - 1.5rem);
-    max-width: calc(100vw - 1.5rem);
+    width: 100%;
+    max-width: 100%;
   }
 
   .aev-v2-sort-bar .aev-shop-control-row > :where(select, button) {
-    flex: 1 1 0;
     padding-inline: 0.5rem;
     font-size: 0.68rem;
   }
@@ -1155,7 +1336,10 @@ button {
 }
 
 .aev-v2-card-reveal {
-  transform: translate3d(0, 100%, 0);
+  transform: translate3d(0, 1rem, 0);
+  transition:
+    opacity 260ms ease,
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .aev-v2-product-card .aev-card-cta {
@@ -1168,15 +1352,12 @@ button {
 .aev-v2-card-reveal-button {
   white-space: nowrap;
   line-height: 1;
+  box-shadow: 0 10px 28px rgba(255, 77, 184, 0.24);
 }
 
 @media (min-width: 640px) {
   .aev-v2-product-card .aev-v2-card-body-action {
     display: none;
-  }
-
-  .aev-v2-product-card.aev-shop-card .aev-v2-card-body-action {
-    display: flex;
   }
 }
 
@@ -1195,7 +1376,7 @@ button {
 
 @media (max-width: 767px) {
   .aev-v2-hero-main {
-    min-height: 11.75rem;
+    min-height: 10.75rem;
   }
 
   .aev-v2-sort-bar {
@@ -1270,6 +1451,13 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .aevyrixa-art-field,
+  .aevyrixa-art-field::before,
+  .aevyrixa-art-field::after,
+  .aevyrixa-art-path,
+  .aevyrixa-art-petals span,
+  :where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::before,
+  :where(.aev-home-hero, .aev-bloom-hero, .aev-info-hero)::after,
   .aev-shop-page-art::after,
   .aev-v2-ticker-track,
   .aev-v2-product-card,
@@ -1288,6 +1476,79 @@ button {
   to {
     transform: translate3d(1.1%, 0.8%, 0) rotate(0.6deg);
     filter: hue-rotate(24deg) drop-shadow(0 0 20px rgba(0, 212, 198, 0.07));
+  }
+}
+
+@keyframes aev-global-field-drift {
+  from {
+    background-position: 0% 0%, 100% 10%, 50% 100%, 0% 45%, center;
+    filter: hue-rotate(0deg) saturate(1.05);
+  }
+  to {
+    background-position: 8% 4%, 92% 0%, 58% 88%, 100% 54%, center;
+    filter: hue-rotate(24deg) saturate(1.14);
+  }
+}
+
+@keyframes aev-global-contour {
+  from {
+    transform: translate3d(-1.2%, -0.8%, 0) rotate(-0.4deg);
+    opacity: 0.36;
+  }
+  to {
+    transform: translate3d(1.2%, 0.8%, 0) rotate(0.5deg);
+    opacity: 0.52;
+  }
+}
+
+@keyframes aev-global-petal-aura {
+  0%, 100% {
+    transform: translate3d(-50%, -50%, 0) rotate(-8deg) scale(0.98);
+  }
+  50% {
+    transform: translate3d(-50%, -50%, 0) rotate(-2deg) scale(1.04);
+  }
+}
+
+@keyframes aev-global-vein-shift {
+  from {
+    stroke-dashoffset: 0;
+    filter: hue-rotate(0deg);
+  }
+  to {
+    stroke-dashoffset: -190;
+    filter: hue-rotate(38deg);
+  }
+}
+
+@keyframes aev-global-petal-float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(-5deg) scale(1);
+  }
+  50% {
+    transform: translate3d(1.2rem, -0.8rem, 0) rotate(4deg) scale(1.04);
+  }
+}
+
+@keyframes aev-hero-art-breathe {
+  from {
+    transform: translate3d(-0.8%, -0.4%, 0);
+    filter: hue-rotate(0deg);
+    opacity: 0.84;
+  }
+  to {
+    transform: translate3d(0.8%, 0.6%, 0);
+    filter: hue-rotate(22deg);
+    opacity: 1;
+  }
+}
+
+@keyframes aev-hero-art-orbit {
+  0%, 100% {
+    transform: rotate(-13deg) translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: rotate(-7deg) translate3d(-0.8rem, 0.5rem, 0) scale(1.035);
   }
 }
 
