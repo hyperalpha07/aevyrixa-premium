@@ -95,6 +95,7 @@ import {
   createBenefitItem,
   createColorOption,
   createContentBlock,
+  createDescriptionMediaItem,
   createEmptySectionMedia,
   createFaqItem,
   defaultVisualThemeSettings,
@@ -104,6 +105,7 @@ import {
   type ProductBenefitItem,
   type ProductColorOption,
   type ProductContentBlock,
+  type ProductDescriptionMediaItem,
   type ProductFaqItem,
   type ProductSectionMediaKey,
   type ProductSectionMediaMap,
@@ -321,6 +323,7 @@ type AdminProduct = {
   images: string[];
   media: unknown[];
   sectionMedia: ProductSectionMediaMap;
+  descriptionMedia: ProductDescriptionMediaItem[];
   contentBlocks: ProductContentBlock[];
   colorOptions: ProductColorOption[];
   benefitItems: ProductBenefitItem[];
@@ -424,6 +427,7 @@ const emptyProduct: AdminProduct = {
   images: [],
   media: [],
   sectionMedia: {},
+  descriptionMedia: [],
   contentBlocks: [],
   colorOptions: ["Black", "Nude", "Soft Pink"].map((name, index) => ({
     ...createColorOption(name),
@@ -661,6 +665,15 @@ function normalizeAdminProduct(value: unknown): AdminProduct | null {
           colors
         ).sectionMedia
       : cms.sectionMedia,
+    descriptionMedia: Array.isArray(value.descriptionMedia)
+      ? extractProductCmsContent(
+          buildProductCmsMedia(media, {
+            ...cms,
+            descriptionMedia: value.descriptionMedia as ProductDescriptionMediaItem[],
+          }),
+          colors
+        ).descriptionMedia
+      : cms.descriptionMedia,
     contentBlocks: Array.isArray(value.contentBlocks) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, contentBlocks: value.contentBlocks as ProductContentBlock[] }), colors).contentBlocks : cms.contentBlocks,
     colorOptions: Array.isArray(value.colorOptions) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, colorOptions: value.colorOptions as ProductColorOption[] }), colors).colorOptions : cms.colorOptions,
     benefitItems: Array.isArray(value.benefitItems) ? extractProductCmsContent(buildProductCmsMedia(media, { ...cms, benefitItems: value.benefitItems as ProductBenefitItem[] }), colors).benefitItems : cms.benefitItems,
@@ -716,6 +729,7 @@ function productSeed(): AdminProduct[] {
     images: [],
     media: [],
     sectionMedia: {},
+    descriptionMedia: [],
     contentBlocks: [],
     colorOptions: product.colors.map((name, index) => ({
       ...createColorOption(name),
@@ -858,6 +872,7 @@ function adminStatus(status: StoreProductStatus): ProductStatus {
 function productToApiPayload(product: AdminProduct) {
   const cms = {
     sectionMedia: product.sectionMedia,
+    descriptionMedia: product.descriptionMedia,
     contentBlocks: product.contentBlocks,
     colorOptions: product.colorOptions,
     benefitItems: product.benefitItems,
@@ -953,6 +968,7 @@ function apiProductToAdminProduct(product: ProductCatalogItem): AdminProduct {
       : [],
     media,
     sectionMedia: cms.sectionMedia,
+    descriptionMedia: cms.descriptionMedia,
     contentBlocks: cms.contentBlocks,
     colorOptions: cms.colorOptions,
     benefitItems: cms.benefitItems,
@@ -3501,6 +3517,56 @@ function ProductEditor({
     });
   };
 
+  const updateDescriptionMedia = (
+    id: string,
+    updates: Partial<ProductDescriptionMediaItem>
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      descriptionMedia: current.descriptionMedia.map((item) =>
+        item.id === id ? { ...item, ...updates } : item
+      ),
+    }));
+  };
+
+  const addDescriptionMediaUrl = () => {
+    setDraft((current) => ({
+      ...current,
+      descriptionMedia: [
+        ...current.descriptionMedia,
+        {
+          ...createDescriptionMediaItem(),
+          sortOrder: current.descriptionMedia.length + 1,
+        },
+      ],
+    }));
+  };
+
+  const moveDescriptionMedia = (index: number, direction: -1 | 1) => {
+    setDraft((current) => {
+      const next = [...current.descriptionMedia];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return current;
+      [next[index], next[target]] = [next[target], next[index]];
+      return {
+        ...current,
+        descriptionMedia: next.map((item, itemIndex) => ({
+          ...item,
+          sortOrder: itemIndex + 1,
+        })),
+      };
+    });
+  };
+
+  const removeDescriptionMedia = (id: string) => {
+    setDraft((current) => ({
+      ...current,
+      descriptionMedia: current.descriptionMedia
+        .filter((item) => item.id !== id)
+        .map((item, index) => ({ ...item, sortOrder: index + 1 })),
+    }));
+  };
+
   const uploadCmsMedia = async (file: File, key: string, onUploaded: (url: string, type: "image" | "video") => void) => {
     if (!canUploadMedia) {
       setCmsUploadError((current) => ({ ...current, [key]: blockedPermissionMessage }));
@@ -3532,6 +3598,26 @@ function ProductEditor({
       setCmsUploadError((current) => ({ ...current, [key]: "Upload failed. Check your connection." }));
     } finally {
       setCmsUploading((current) => ({ ...current, [key]: false }));
+    }
+  };
+
+  const uploadDescriptionMediaFiles = async (files: FileList | File[]) => {
+    const uploadFiles = Array.from(files);
+    for (const [index, file] of uploadFiles.entries()) {
+      await uploadCmsMedia(file, `description-media-${Date.now()}-${index}`, (url, type) => {
+        setDraft((current) => ({
+          ...current,
+          descriptionMedia: [
+            ...current.descriptionMedia,
+            {
+              ...createDescriptionMediaItem(url),
+              type,
+              alt: draft.name,
+              sortOrder: current.descriptionMedia.length + 1,
+            },
+          ],
+        }));
+      });
     }
   };
 
@@ -3652,6 +3738,14 @@ function ProductEditor({
         sortOrder: block.sortOrder ?? index + 1,
         visible: block.visible !== false,
       })),
+      descriptionMedia: draft.descriptionMedia.map((item, index) => ({
+        ...item,
+        url: item.url.trim(),
+        alt: item.alt.trim(),
+        caption: item.caption.trim(),
+        visible: item.visible !== false,
+        sortOrder: item.sortOrder ?? index + 1,
+      })).filter((item) => item.url),
       benefits: linesToList(benefits),
       care: linesToList(care),
     };
@@ -3943,6 +4037,19 @@ function ProductEditor({
                 );
               })}
             </div>
+
+            <DescriptionMediaManager
+              items={draft.descriptionMedia}
+              uploading={Object.keys(cmsUploading).some((key) => key.startsWith("description-media") && cmsUploading[key])}
+              uploadError={
+                Object.entries(cmsUploadError).find(([key, value]) => key.startsWith("description-media") && value)?.[1] ?? null
+              }
+              onAddUrl={addDescriptionMediaUrl}
+              onUploadFiles={uploadDescriptionMediaFiles}
+              onChange={updateDescriptionMedia}
+              onRemove={removeDescriptionMedia}
+              onMove={moveDescriptionMedia}
+            />
 
             <div className="mt-5 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -4285,6 +4392,167 @@ function MiniUploadButton({
       {error && <p className="mt-1.5 text-xs text-rose-300/90">{error}</p>}
     </div>
   );
+}
+
+function DescriptionMediaManager({
+  items,
+  uploading,
+  uploadError,
+  onAddUrl,
+  onUploadFiles,
+  onChange,
+  onRemove,
+  onMove,
+}: {
+  items: ProductDescriptionMediaItem[];
+  uploading: boolean;
+  uploadError: string | null;
+  onAddUrl: () => void;
+  onUploadFiles: (files: FileList | File[]) => void;
+  onChange: (id: string, updates: Partial<ProductDescriptionMediaItem>) => void;
+  onRemove: (id: string) => void;
+  onMove: (index: number, direction: -1 | 1) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    onUploadFiles(files);
+  };
+
+  return (
+    <div className="mt-5 rounded-2xl border border-white/10 bg-black/18 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70">
+            Description Media Gallery
+          </p>
+          <p className="mt-1 text-xs leading-5 text-white/42">
+            Compact product-page gallery. Upload many files or add URLs, then order them.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onAddUrl}
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3 text-xs font-semibold text-white/70"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add URL
+          </button>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-3 text-xs font-semibold text-cyan-50 disabled:opacity-55"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {uploading ? "Uploading..." : "Upload files"}
+          </button>
+        </div>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.mov,.webm,.m4v"
+        className="hidden"
+        onChange={(event) => {
+          handleFiles(event.target.files);
+          event.target.value = "";
+        }}
+      />
+      <div
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragging(false);
+          handleFiles(event.dataTransfer.files);
+        }}
+        className={`mt-4 rounded-2xl border border-dashed p-4 text-center text-xs text-white/45 transition ${
+          isDragging
+            ? "border-cyan-200/55 bg-cyan-200/[0.08] text-cyan-50"
+            : "border-white/14 bg-white/[0.025]"
+        }`}
+      >
+        Drop product description photos or videos here
+      </div>
+      {uploadError && <p className="mt-2 text-xs text-rose-300/90">{uploadError}</p>}
+
+      <div className="mt-4 grid gap-3">
+        {items.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-white/12 bg-black/20 p-4 text-sm text-white/42">
+            No description media yet.
+          </p>
+        ) : (
+          items.map((item, index) => (
+            <div key={item.id} className="grid gap-3 rounded-2xl border border-white/10 bg-[#08111f] p-3 lg:grid-cols-[7rem_1fr]">
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                {inferAdminMediaType(item.url, item.type) === "video" ? (
+                  <video src={item.url} muted playsInline preload="metadata" className="aspect-square h-full w-full object-cover" />
+                ) : item.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.url} alt="" loading="lazy" className="aspect-square h-full w-full object-cover" />
+                ) : (
+                  <div className="flex aspect-square items-center justify-center text-xs text-white/30">URL</div>
+                )}
+              </div>
+              <div className="grid gap-3 lg:grid-cols-2">
+                <TextField label="Media URL" value={item.url} onChange={(value) => onChange(item.id, { url: value })} />
+                <TextField label="Alt text" value={item.alt} onChange={(value) => onChange(item.id, { alt: value })} />
+                <TextField label="Caption" value={item.caption} onChange={(value) => onChange(item.id, { caption: value })} />
+                <SelectField
+                  label="Type"
+                  value={item.type}
+                  options={["auto", "image", "video"]}
+                  onChange={(value) => onChange(item.id, { type: value as ProductDescriptionMediaItem["type"] })}
+                />
+                <SelectField
+                  label="Fit"
+                  value={item.fit}
+                  options={["contain", "smart", "cover"]}
+                  onChange={(value) => onChange(item.id, { fit: value as ProductDescriptionMediaItem["fit"] })}
+                />
+                <SelectField
+                  label="Position"
+                  value={item.position || "center"}
+                  options={["center", "top", "bottom"]}
+                  onChange={(value) => onChange(item.id, { position: value as ProductDescriptionMediaItem["position"] })}
+                />
+                <SelectField
+                  label="Show item"
+                  value={item.visible ? "Yes" : "No"}
+                  options={["Yes", "No"]}
+                  onChange={(value) => onChange(item.id, { visible: value === "Yes" })}
+                />
+                <div className="flex flex-wrap items-end gap-2">
+                  <button type="button" onClick={() => onMove(index, -1)} disabled={index === 0} className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/65 disabled:opacity-35">
+                    Up
+                  </button>
+                  <button type="button" onClick={() => onMove(index, 1)} disabled={index === items.length - 1} className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/65 disabled:opacity-35">
+                    Down
+                  </button>
+                  <button type="button" onClick={() => onRemove(item.id)} className="rounded-full border border-rose-200/20 bg-rose-200/[0.07] px-3 py-2 text-xs font-semibold text-rose-50">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function inferAdminMediaType(url: string, explicit: "image" | "video" | "auto" = "auto") {
+  if (explicit !== "auto") return explicit;
+  return /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(url) ? "video" : "image";
 }
 
 function ContentBlockEditor({
@@ -7817,6 +8085,8 @@ function ReviewsSection({
   const [query, setQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [reviewMediaUploading, setReviewMediaUploading] = useState(false);
+  const [reviewMediaUploadError, setReviewMediaUploadError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState(() => emptyReviewDraft(products));
   const [error, setError] = useState("");
@@ -7932,6 +8202,40 @@ function ReviewsSection({
     }
   };
 
+  const uploadReviewMedia = async (file: File) => {
+    if (!canManage) return;
+    setReviewMediaUploading(true);
+    setReviewMediaUploadError("");
+    try {
+      const selectedProduct = products.find((product) => product.id === draft.productId);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("productSlug", selectedProduct?.slug || draft.productSlug || "review");
+      const response = await fetch("/api/product-media/upload", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+      const payload = (await response.json()) as Record<string, unknown>;
+      if (!response.ok || typeof payload.url !== "string") {
+        const msg =
+          Array.isArray(payload.errors) && typeof payload.errors[0] === "string"
+            ? payload.errors[0]
+            : "Review media upload failed.";
+        setReviewMediaUploadError(msg);
+        return;
+      }
+      setDraft((current) => ({
+        ...current,
+        mediaUrls: [...current.mediaUrls.filter(Boolean), payload.url as string].slice(0, 3),
+      }));
+    } catch {
+      setReviewMediaUploadError("Review media upload failed. Check your connection.");
+    } finally {
+      setReviewMediaUploading(false);
+    }
+  };
+
   const statusCounts = reviews.reduce(
     (counts, review) => {
       counts[review.status] += 1;
@@ -8014,12 +8318,44 @@ function ReviewsSection({
               className="w-full resize-none rounded-2xl border border-white/10 bg-[#08111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-200/40 disabled:opacity-55"
             />
           </label>
-          <AdminTextInput
-            label="Media URL (optional)"
-            value={draft.mediaUrls[0] || ""}
-            disabled={!canManage}
-            onChange={(value) => setDraft((current) => ({ ...current, mediaUrls: value ? [value] : [""] }))}
-          />
+          <div className="lg:col-span-2">
+            <AdminTextInput
+              label="Media URL (optional)"
+              value={draft.mediaUrls[0] || ""}
+              disabled={!canManage}
+              onChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  mediaUrls: value ? [value, ...current.mediaUrls.slice(1)].filter(Boolean) : current.mediaUrls.slice(1),
+                }))
+              }
+            />
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <MiniUploadButton
+                label="Upload review image/video"
+                uploading={reviewMediaUploading}
+                error={reviewMediaUploadError || null}
+                onUpload={uploadReviewMedia}
+              />
+              {draft.mediaUrls.filter(Boolean).map((url, index) => (
+                <span key={`${url}-${index}`} className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/58">
+                  <span className="max-w-[14rem] truncate">Media {index + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDraft((current) => ({
+                        ...current,
+                        mediaUrls: current.mediaUrls.filter((item) => item !== url),
+                      }))
+                    }
+                    className="text-rose-200 hover:text-rose-100"
+                  >
+                    Remove
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
           <AdminTextInput
             label="Review date"
             type="date"

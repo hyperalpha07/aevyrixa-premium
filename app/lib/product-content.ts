@@ -14,6 +14,13 @@ export type ProductSectionMediaMap = Partial<Record<ProductSectionMediaKey, Prod
 
 export type ProductMediaPosition = "center" | "top" | "bottom";
 
+export type ProductDescriptionMediaItem = ProductSectionMedia & {
+  id: string;
+  caption: string;
+  visible: boolean;
+  sortOrder?: number;
+};
+
 export type ProductContentBlock = {
   id: string;
   type:
@@ -80,6 +87,7 @@ export type ProductVisualThemeSettings = {
 
 export type ProductCmsContent = {
   sectionMedia: ProductSectionMediaMap;
+  descriptionMedia: ProductDescriptionMediaItem[];
   contentBlocks: ProductContentBlock[];
   colorOptions: ProductColorOption[];
   benefitItems: ProductBenefitItem[];
@@ -102,6 +110,20 @@ export const defaultVisualThemeSettings: ProductVisualThemeSettings = {
 
 export function createEmptySectionMedia(): ProductSectionMedia {
   return { url: "", type: "auto", alt: "", fit: "contain", position: "center" };
+}
+
+export function createDescriptionMediaItem(url = ""): ProductDescriptionMediaItem {
+  const id = `desc-media-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  return {
+    id,
+    url,
+    type: "auto",
+    alt: "",
+    caption: "",
+    fit: "contain",
+    position: "center",
+    visible: true,
+  };
 }
 
 export function createContentBlock(): ProductContentBlock {
@@ -248,6 +270,29 @@ function normalizeSectionMedia(value: unknown): ProductSectionMediaMap {
   }, {} as ProductSectionMediaMap);
 }
 
+function normalizeDescriptionMedia(value: unknown): ProductDescriptionMediaItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(isRecord)
+    .map((item, index): ProductDescriptionMediaItem | null => {
+      const url = text(item.url);
+      if (!url) return null;
+      return {
+        id: text(item.id) || `desc-media-${index}`,
+        url,
+        type: mediaType(item.type),
+        alt: text(item.alt),
+        caption: text(item.caption),
+        fit: mediaFit(item.fit),
+        position: mediaObjectPosition(item.position),
+        sortOrder: optionalNumber(item.sortOrder),
+        visible: item.visible !== false,
+      };
+    })
+    .filter((item): item is ProductDescriptionMediaItem => Boolean(item && item.visible))
+    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+}
+
 function normalizeContentBlocks(value: unknown): ProductContentBlock[] {
   if (!Array.isArray(value)) return [];
   return value.filter(isRecord).map((item, index) => {
@@ -353,6 +398,7 @@ export function extractProductCmsContent(media: unknown, legacyColors: string[] 
   const source = isRecord(cmsEntry) ? cmsEntry : {};
   return {
     sectionMedia: normalizeSectionMedia(source.sectionMedia),
+    descriptionMedia: normalizeDescriptionMedia(source.descriptionMedia),
     contentBlocks: normalizeContentBlocks(source.contentBlocks),
     colorOptions: normalizeColorOptions(source.colorOptions, legacyColors),
     benefitItems: normalizeBenefitItems(source.benefitItems),
@@ -373,6 +419,7 @@ export function buildProductCmsMedia(
       kind: "product_cms",
       version: 1,
       sectionMedia: cms.sectionMedia,
+      descriptionMedia: cms.descriptionMedia,
       contentBlocks: cms.contentBlocks,
       colorOptions: cms.colorOptions,
       benefitItems: cms.benefitItems,

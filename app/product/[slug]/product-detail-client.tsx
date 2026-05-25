@@ -49,6 +49,7 @@ import {
   type ProductBenefitItem,
   type ProductColorOption,
   type ProductContentBlock,
+  type ProductDescriptionMediaItem,
   type ProductSectionMedia,
   type ProductSectionMediaKey,
 } from "@/app/lib/product-content";
@@ -152,6 +153,7 @@ export default function ProductDetailClient({
   const care = displayCare(displayProduct);
   const cms = extractProductCmsContent(displayProduct.media, displayProduct.colors);
   const colorOptions = cms.colorOptions;
+  const descriptionMedia = cms.descriptionMedia.filter((item) => item.visible !== false);
   const displayColorNames =
     colorOptions.length > 0 ? colorOptions.map((option) => option.name) : displayProduct.colors;
   const sectionMediaEntries = (Object.keys(productSectionLabels) as ProductSectionMediaKey[])
@@ -395,12 +397,12 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[78rem] items-start gap-5 px-4 pb-10 pt-20 sm:gap-7 sm:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(29rem,32rem)] lg:gap-8 lg:px-12 lg:pb-16 lg:pt-24">
+      <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[78rem] items-start gap-5 px-4 pb-10 pt-20 sm:gap-7 sm:px-7 lg:grid-cols-[minmax(0,42rem)_minmax(29rem,32rem)] lg:gap-8 lg:px-12 lg:pb-16 lg:pt-24">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
           Aevyrixa
         </div>
 
-        <div className="aev-product-info-card relative z-[1] order-2 min-w-0 overflow-hidden rounded-[2px_42px_2px_42px] border border-[#FF4DB8]/12 bg-[#0D0918]/82 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-6 lg:order-1 lg:p-7">
+        <div className="aev-product-info-card relative z-[1] order-2 min-w-0 overflow-hidden rounded-[2px_42px_2px_42px] border border-[#FF4DB8]/12 bg-[#0D0918]/82 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-6 lg:order-2 lg:p-7">
           <div className="aev-premium-edge-line" aria-hidden="true" />
           <div className="mb-5 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6B5F7A]">
             <Link href="/" className="transition hover:text-[#FF4DB8]">Home</Link>
@@ -573,7 +575,7 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        <div className="relative z-[1] order-1 lg:order-2 lg:pr-1">
+        <div className="relative z-[1] order-1 lg:sticky lg:top-20 lg:order-1 lg:self-start lg:pr-1">
           <div
             className="aev-bloom-media-frame relative aspect-[0.9/1] overflow-hidden rounded-[2px_54px_2px_54px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] lg:aspect-[0.88/1]"
             onTouchStart={handleTouchStart}
@@ -666,9 +668,10 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      {(displayProduct.description || sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
+      {(displayProduct.description || descriptionMedia.length > 0 || sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
         <ProductContentMediaSections
           description={displayProduct.description}
+          descriptionMedia={descriptionMedia}
           sectionMediaEntries={sectionMediaEntries}
           contentBlocks={contentBlocks}
           productName={displayProduct.name}
@@ -840,42 +843,37 @@ export default function ProductDetailClient({
 
 function ProductContentMediaSections({
   description,
+  descriptionMedia,
   sectionMediaEntries,
   contentBlocks,
   productName,
 }: {
   description: string;
+  descriptionMedia: ProductDescriptionMediaItem[];
   sectionMediaEntries: Array<{ key: ProductSectionMediaKey; media: ProductSectionMedia }>;
   contentBlocks: ProductContentBlock[];
   productName: string;
 }) {
   const [showAllMedia, setShowAllMedia] = useState(false);
-  const [defaultMediaCount, setDefaultMediaCount] = useState(6);
-  const galleryMedia = [
-    ...sectionMediaEntries.map(({ key, media }) => ({
-      id: `section-${key}`,
-      title: productSectionLabels[key],
-      media,
-    })),
-    ...contentBlocks
-      .filter((block) => block.mediaUrl)
-      .map((block) => ({
-        id: `block-${block.id}`,
-        title: block.title || block.subtitle || "Product media",
-        media: {
-          url: block.mediaUrl,
-          type: block.mediaType,
-          alt: block.mediaAlt,
-          fit: block.mediaFit || "contain",
-          position: block.mediaObjectPosition || "center",
-        } satisfies ProductSectionMedia,
-      })),
-  ].filter((item) => item.media.url);
-  const visibleGalleryMedia = showAllMedia ? galleryMedia : galleryMedia.slice(0, defaultMediaCount);
-  const hiddenMediaCount = Math.max(0, galleryMedia.length - visibleGalleryMedia.length);
+  const [defaultMediaCount, setDefaultMediaCount] = useState(4);
+  const purposeMedia = sectionMediaEntries.filter(({ key }) => key !== "promise");
+  const visibleGalleryMedia = showAllMedia
+    ? descriptionMedia
+    : descriptionMedia.slice(0, defaultMediaCount);
+  const hiddenMediaCount = Math.max(0, descriptionMedia.length - visibleGalleryMedia.length);
 
   useEffect(() => {
-    const updateCount = () => setDefaultMediaCount(window.matchMedia("(max-width: 767px)").matches ? 4 : 6);
+    const updateCount = () => {
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        setDefaultMediaCount(2);
+        return;
+      }
+      if (window.matchMedia("(max-width: 1023px)").matches) {
+        setDefaultMediaCount(3);
+        return;
+      }
+      setDefaultMediaCount(4);
+    };
     updateCount();
     window.addEventListener("resize", updateCount);
     return () => window.removeEventListener("resize", updateCount);
@@ -899,38 +897,40 @@ function ProductContentMediaSections({
               </div>
             </div>
           )}
-          {galleryMedia.length > 0 && (
+          {descriptionMedia.length > 0 && (
             <div>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
-                    Product Gallery
+                    Description Gallery
                   </p>
                   <h3 className="mt-2 font-serif text-2xl text-white">A closer look</h3>
                 </div>
-                {galleryMedia.length > defaultMediaCount && (
+                {descriptionMedia.length > defaultMediaCount && (
                   <span className="rounded border border-white/[0.08] bg-white/[0.035] px-2.5 py-1 text-[10px] text-[#9C91AA]">
-                    {galleryMedia.length} media
+                    {descriptionMedia.length} media
                   </span>
                 )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {visibleGalleryMedia.map((item, index) => (
                   <article key={item.id} className="group overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
                     <ProductInlineMedia
-                      media={item.media}
-                      fallbackAlt={`${productName} ${item.title}`}
+                      media={item}
+                      fallbackAlt={`${productName} description media ${index + 1}`}
                       compact
                     />
-                    <div className="border-t border-white/[0.07] px-3 py-2">
+                    {(item.caption || item.alt) && (
+                      <div className="border-t border-white/[0.07] px-3 py-2">
                       <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9C91AA]">
-                        {item.title || `Media ${index + 1}`}
+                        {item.caption || item.alt}
                       </p>
                     </div>
+                    )}
                   </article>
                 ))}
               </div>
-              {galleryMedia.length > defaultMediaCount && (
+              {descriptionMedia.length > defaultMediaCount && (
                 <button
                   type="button"
                   onClick={() => setShowAllMedia((value) => !value)}
@@ -942,6 +942,26 @@ function ProductContentMediaSections({
             </div>
           )}
         </div>
+
+        {purposeMedia.length > 0 && (
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {purposeMedia.map(({ key, media }) => (
+              <article key={key} className="overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
+                <ProductInlineMedia
+                  media={media}
+                  fallbackAlt={`${productName} ${productSectionLabels[key]}`}
+                  compact
+                />
+                <div className="border-t border-white/[0.07] p-4">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#FF4DB8]">
+                    {productSectionLabels[key]}
+                  </p>
+                  {media.alt && <p className="mt-2 text-sm leading-6 text-[#D8CBE8]/72">{media.alt}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
 
         {contentBlocks.length > 0 && (
           <div className="mt-8 grid gap-4">
