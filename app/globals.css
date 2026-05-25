@@ -516,7 +516,7 @@ body > :where(:not(.aevyrixa-global-art):not(script):not(style)) {
   pointer-events: none;
   overflow: hidden;
   contain: layout paint;
-  opacity: 0.86;
+  opacity: 0.92;
 }
 
 .aevyrixa-art-field,
@@ -530,13 +530,14 @@ body > :where(:not(.aevyrixa-global-art):not(script):not(style)) {
 
 .aevyrixa-art-field {
   background:
-    radial-gradient(ellipse 46% 34% at 8% 16%, rgba(255, 77, 184, 0.115), transparent 66%),
-    radial-gradient(ellipse 36% 30% at 92% 22%, rgba(168, 85, 247, 0.105), transparent 68%),
-    radial-gradient(ellipse 40% 30% at 72% 82%, rgba(0, 212, 198, 0.072), transparent 72%),
-    conic-gradient(from 232deg at 52% 44%, transparent 0 18%, rgba(255, 77, 184, 0.035) 22%, transparent 31%, rgba(49, 230, 212, 0.032) 42%, transparent 54%, rgba(168, 85, 247, 0.04) 68%, transparent 82%),
+    radial-gradient(ellipse 46% 34% at 8% 16%, rgba(255, 77, 184, 0.138), transparent 66%),
+    radial-gradient(ellipse 36% 30% at 92% 22%, rgba(168, 85, 247, 0.125), transparent 68%),
+    radial-gradient(ellipse 40% 30% at 72% 82%, rgba(0, 212, 198, 0.088), transparent 72%),
+    radial-gradient(ellipse 28% 22% at 52% 52%, rgba(255, 179, 209, 0.048), transparent 70%),
+    conic-gradient(from 232deg at 52% 44%, transparent 0 18%, rgba(255, 77, 184, 0.042) 22%, transparent 31%, rgba(49, 230, 212, 0.038) 42%, transparent 54%, rgba(168, 85, 247, 0.048) 68%, transparent 82%),
     linear-gradient(180deg, rgba(8, 6, 17, 0.12), rgba(5, 7, 17, 0.56));
-  background-size: 120% 120%, 118% 118%, 125% 125%, 150% 150%, 100% 100%;
-  filter: saturate(1.08);
+  background-size: 120% 120%, 118% 118%, 125% 125%, 110% 110%, 150% 150%, 100% 100%;
+  filter: saturate(1.12);
   animation: aev-global-field-drift 24s ease-in-out infinite alternate;
 }
 
@@ -575,9 +576,9 @@ body > :where(:not(.aevyrixa-global-art):not(script):not(style)) {
 .aevyrixa-art-veins {
   width: 100%;
   height: 100%;
-  opacity: 0.42;
+  opacity: 0.52;
   mix-blend-mode: screen;
-  filter: drop-shadow(0 0 12px rgba(255, 77, 184, 0.12));
+  filter: drop-shadow(0 0 12px rgba(255, 77, 184, 0.14));
 }
 
 .aevyrixa-art-path {
@@ -5909,5 +5910,145 @@ body > main {
   .aev-button-primary:active,
   .aev-card-cta:active {
     transform: none;
+  }
+}
+
+/* ─── Enhanced global art: fabric flow, protection arcs, orbital ellipses ─── */
+
+.aevyrixa-art-fabric {
+  fill: none;
+  stroke: url("#aev-global-arc-grad");
+  stroke-linecap: round;
+  stroke-width: 0.72;
+  opacity: 0.28;
+  stroke-dasharray: 5 22 82 22;
+  animation: aev-global-vein-shift 38s ease-in-out infinite alternate;
+}
+
+.aevyrixa-art-arc {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.aevyrixa-art-arc-inner {
+  stroke: url("#aev-global-arc-grad");
+  stroke-width: 0.60;
+  opacity: 0.22;
+  stroke-dasharray: 8 38 120 38;
+  animation: aev-global-arc-breathe 28s ease-in-out infinite;
+}
+
+.aevyrixa-art-arc-outer {
+  stroke: url("#aev-global-line-b");
+  stroke-width: 0.46;
+  opacity: 0.16;
+  stroke-dasharray: 6 52 100 52;
+  animation: aev-global-arc-breathe 34s ease-in-out infinite reverse;
+  animation-delay: -10s;
+}
+
+.aevyrixa-art-orbital {
+  stroke: url("#aev-global-orbital-grad");
+  stroke-width: 0.54;
+  opacity: 0.22;
+  stroke-dasharray: 3 16 54 16;
+  animation: aev-global-vein-shift 22s linear infinite;
+}
+
+.aevyrixa-art-orbital-b {
+  opacity: 0.17;
+  animation-duration: 29s;
+  animation-direction: reverse;
+}
+
+@keyframes aev-global-arc-breathe {
+  0%, 100% {
+    stroke-dashoffset: 0;
+    opacity: 0.18;
+  }
+  50% {
+    stroke-dashoffset: -90;
+    opacity: 0.28;
+  }
+}
+
+/* ─── Mobile hero mini spotlight layout ─── */
+
+/* Keep hero art orbits from overlapping mini-spotlight on mobile */
+@media (max-width: 1023px) {
+  .aev-shop-hero-orbit-one {
+    right: -2.4rem;
+    top: 2.6rem;
+    width: 6.5rem;
+    height: 6.5rem;
+    opacity: 0.55;
+  }
+
+  .aev-shop-hero-orbit-two {
+    display: none;
+  }
+
+  .aev-shop-hero-art::before {
+    right: -4.5rem;
+    top: -3.8rem;
+    width: 11rem;
+    opacity: 0.65;
+  }
+
+  .aev-shop-hero-line {
+    width: 8rem;
+  }
+}
+
+/* Quick view — ensure no text overlap on mobile */
+@media (max-width: 479px) {
+  .aev-quick-view-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aev-quick-view-media {
+    min-height: min(11rem, 36dvh);
+    max-height: min(14rem, 42dvh);
+  }
+
+  .aev-quick-view-content {
+    padding-top: 0.5rem;
+  }
+}
+
+/* Fix: footer already handles mobile nav clearance, so CTA doesn't need double padding */
+@media (max-width: 767px) {
+  .aev-shop-support-cta {
+    padding-bottom: 1.5rem;
+  }
+}
+
+/* Reduce global art on very small screens */
+@media (max-width: 479px) {
+  .aevyrixa-global-art {
+    opacity: 0.72;
+  }
+
+  .aevyrixa-art-veins {
+    opacity: 0.34;
+  }
+
+  .aevyrixa-art-fabric,
+  .aevyrixa-art-arc-inner,
+  .aevyrixa-art-arc-outer,
+  .aevyrixa-art-orbital,
+  .aevyrixa-art-orbital-b {
+    opacity: 0.12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aevyrixa-art-fabric,
+  .aevyrixa-art-arc-inner,
+  .aevyrixa-art-arc-outer,
+  .aevyrixa-art-orbital,
+  .aevyrixa-art-orbital-b {
+    animation: none !important;
   }
 }

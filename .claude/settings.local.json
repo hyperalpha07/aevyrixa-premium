@@ -29,7 +29,11 @@
       "Bash(grep -rn --include=\"*.tsx\" --include=\"*.ts\" -i \"USD\\\\|\\\\$\\\\s*[0-9]\\\\|money back guarantee\\\\|100%.*leak\\\\|medical cure\" \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\\\\app\")",
       "Bash(npx next *)",
       "PowerShell(head *)",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\"; \\(Get-Location\\).Path)"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\LENOVO\\\\aevyrixa-premium\"; \\(Get-Location\\).Path)",
+      "Bash(Select-Object FullName)",
+      "Bash(Format-List)",
+      "Bash(awk -F: '{if \\($1 <= 5351\\) print}')",
+      "Bash(npm.cmd run *)"
     ]
   }
 }

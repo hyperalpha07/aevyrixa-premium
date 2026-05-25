@@ -452,27 +452,60 @@ export default function ShopDiscoveryClient({
                 <span className="aev-shop-hero-orbit aev-shop-hero-orbit-two" />
                 <span className="aev-shop-hero-line" />
               </div>
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
-                  <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
-                    Aevyrixa Her Care Shop
+              {/* Flex row on mobile: text left + mini spotlight right */}
+              <div className="flex items-start gap-2.5 lg:block">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
+                    <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
+                      Aevyrixa Her Care Shop
+                    </p>
+                  </div>
+                  <h1 className="max-w-[18rem] break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:max-w-xl min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.08rem]">
+                    {heroTitle === "Comfort that moves with you" ? (
+                      <>
+                        Comfort that moves
+                        <br />
+                        with you
+                      </>
+                    ) : (
+                      heroTitle
+                    )}
+                  </h1>
+                  <p className="mt-2 max-w-md text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
+                    {heroSubtitle}
                   </p>
                 </div>
-                <h1 className="max-w-[18rem] break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:max-w-xl min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.08rem]">
-                  {heroTitle === "Comfort that moves with you" ? (
-                    <>
-                      Comfort that moves
-                      <br />
-                      with you
-                    </>
-                  ) : (
-                    heroTitle
-                  )}
-                </h1>
-                <p className="mt-2 max-w-md text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
-                  {heroSubtitle}
-                </p>
+                {/* Mobile-only mini spotlight — hidden on lg+ */}
+                {spotlightProduct && (
+                  <Link
+                    href={`/product/${spotlightProduct.slug}`}
+                    className="relative block h-[6rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl border border-white/[0.08] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F)] shadow-[0_8px_24px_rgba(0,0,0,0.44)] sm:h-[7rem] sm:w-[5.5rem] lg:hidden"
+                    aria-label={`View ${spotlightProduct.name}`}
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(255,77,184,0.20),transparent_40%)]" />
+                    {(spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0]}
+                        alt={spotlightProduct.name}
+                        className="absolute inset-0 h-full w-full object-contain p-1.5"
+                      />
+                    ) : (
+                      <div className="absolute inset-0">
+                        <ProductVisual
+                          visualTheme={spotlightProduct.visualTheme}
+                          label={spotlightProduct.absorbency}
+                          compact
+                        />
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#080611]/95 to-transparent px-1.5 pb-1.5 pt-3">
+                      <p className="line-clamp-1 text-[0.45rem] font-bold leading-tight text-white">{spotlightProduct.name}</p>
+                      <p className="text-[0.46rem] font-semibold text-[#FF4DB8]">{formatProductPrice(spotlightProduct)}</p>
+                    </div>
+                  </Link>
+                )}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <a
@@ -490,9 +523,25 @@ export default function ShopDiscoveryClient({
                   {secondaryCta}
                 </button>
               </div>
+              {/* Mobile compact trust chips — hidden on lg+ */}
+              <div className="mt-2.5 flex flex-wrap gap-1.5 lg:hidden">
+                {trustCards.map((card) => {
+                  const TrustIcon = card.icon;
+                  return (
+                    <div
+                      key={card.kicker}
+                      className="flex items-center gap-1.5 rounded-full border border-white/[0.07] bg-[#0E0A1C]/90 px-2.5 py-1.5 backdrop-blur-sm"
+                    >
+                      <TrustIcon className={`h-3 w-3 shrink-0 ${card.tone}`} />
+                      <span className="text-[0.6rem] font-bold tracking-wide text-white">{card.kicker}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="aev-v2-trust-grid grid gap-2 sm:gap-3">
+            {/* Desktop trust grid — hidden on mobile, shown lg+ */}
+            <div className="aev-v2-trust-grid hidden gap-2 sm:gap-3 lg:grid">
               {trustCards.map((card) => {
                 const Icon = card.icon;
                 return (
@@ -517,11 +566,12 @@ export default function ShopDiscoveryClient({
             </div>
           </div>
 
-          <div className="aev-v2-spotlight-card relative min-h-[10.75rem] overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:min-h-[12.25rem]">
+          {/* Desktop spotlight card — hidden on mobile, shown lg+ */}
+          <div className="aev-v2-spotlight-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:min-h-[12.25rem]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
             {spotlightProduct ? (
               <Link href={`/product/${spotlightProduct.slug}`} className="group block h-full">
-                <div className="relative h-full min-h-[10.75rem] lg:min-h-[12.25rem]">
+                <div className="relative h-full lg:min-h-[12.25rem]">
                   {spotlightProduct.imageUrl || spotlightProduct.primaryImageUrl || spotlightProduct.images?.[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -550,7 +600,7 @@ export default function ShopDiscoveryClient({
                 </div>
               </Link>
             ) : (
-              <div className="grid h-full min-h-[10.75rem] place-items-center p-5 text-center text-sm text-[#9C91AA] lg:min-h-[12.25rem]">
+              <div className="grid h-full lg:min-h-[12.25rem] place-items-center p-5 text-center text-sm text-[#9C91AA]">
                 Products will appear here when available.
               </div>
             )}
@@ -621,7 +671,7 @@ export default function ShopDiscoveryClient({
         </section>
       )}
 
-      <section id="shop-products" className="mx-auto max-w-7xl px-3 pb-12 pt-0 sm:px-6 sm:pb-18">
+      <section id="shop-products" className="mx-auto max-w-7xl px-3 pb-6 pt-0 sm:px-6 sm:pb-10">
         <div className="aev-v2-sort-bar sticky top-[4.9rem] z-30 -mx-3 mb-4 border-b border-white/[0.07] bg-[#080611]/92 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-[6.25rem]">
           <div className="mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(12rem,23rem)_minmax(0,auto)] lg:items-center lg:justify-between">
             <div className="relative min-w-0">
@@ -831,7 +881,7 @@ export default function ShopDiscoveryClient({
         </div>
       )}
 
-      <section className="aev-shop-support-cta px-4 pb-14 sm:px-6 sm:pb-20">
+      <section className="aev-shop-support-cta px-4 pb-8 sm:px-6 sm:pb-14">
         <div className="aev-panel aev-glow-border mx-auto max-w-7xl overflow-hidden p-6 text-center sm:p-10">
           <p className="aev-section-label">Need help choosing?</p>
           <h2 className="aev-heading mx-auto mt-3 max-w-3xl text-2xl sm:text-4xl">
