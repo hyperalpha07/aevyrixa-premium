@@ -293,8 +293,8 @@ export default function ShopDiscoveryClient({
   const heroMediaUrl = hms.shopHeroMediaUrl || "";
   const heroMediaAlt = hms.shopHeroMediaAlt || "Aevyrixa Her Care";
   const heroMediaType = hms.shopHeroMediaType || "auto";
-  const heroBadge1 = safeShopCopy(hms.shopHeroBadge1 || "Discreet Packaging");
-  const heroBadge2 = safeShopCopy(hms.shopHeroBadge2 || "3-Day Hygiene-Safe Support");
+  const heroBadge1 = hms.shopHeroBadge1 ? safeShopCopy(hms.shopHeroBadge1) : "";
+  const heroBadge2 = hms.shopHeroBadge2 ? safeShopCopy(hms.shopHeroBadge2) : "";
   const heroCaption = hms.shopHeroCaption || "";
   const isHeroVideo =
     heroMediaType === "video" ||
