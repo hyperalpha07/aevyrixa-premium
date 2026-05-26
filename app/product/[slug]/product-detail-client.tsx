@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Check,
   CheckCircle2,
+  ChevronLeft,
   ChevronDown,
   ChevronRight,
   CreditCard,
@@ -23,6 +24,8 @@ import {
   ShoppingCart,
   Star,
   Truck,
+  X,
+  Maximize2,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import ProductVisual from "@/app/components/product-visual";
@@ -122,6 +125,13 @@ type MediaItem =
   | { type: "image"; url: string }
   | { type: "video"; url: string; poster?: string };
 
+type PreviewMediaItem = {
+  type: "image" | "video";
+  url: string;
+  poster?: string;
+  alt: string;
+};
+
 function buildCartLineId(
   product: ProductCatalogItem,
   size: string,
@@ -176,6 +186,9 @@ export default function ProductDetailClient({
   const [brokenMediaUrls, setBrokenMediaUrls] = useState<Set<string>>(
     () => new Set()
   );
+  const [lightboxItems, setLightboxItems] = useState<PreviewMediaItem[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const mediaItems: MediaItem[] = [];
   const seenUrls = new Set<string>();
@@ -216,6 +229,19 @@ export default function ProductDetailClient({
       : mediaItems.length > 0 && !brokenMediaUrls.has(mediaItems[safeIndex].url)
       ? mediaItems[safeIndex]
       : null;
+  const productPreviewMedia = mediaItems
+    .filter((item) => !brokenMediaUrls.has(item.url))
+    .map((item, index) => ({
+      ...item,
+      alt: item.type === "video" ? `${displayProduct.name} video` : `${displayProduct.name} image ${index + 1}`,
+    }));
+  const descriptionPreviewMedia: PreviewMediaItem[] = descriptionMedia.map((item, index) => ({
+    type: inferMediaType(item.url, item.type),
+    url: item.url,
+    alt: item.alt || item.caption || `${displayProduct.name} description media ${index + 1}`,
+  }));
+  const lightboxMedia = lightboxItems[lightboxIndex] ?? null;
+  const hasLightboxNavigation = lightboxItems.length > 1;
   const showThumbnails = mediaItems.length > 1;
   const selectedSummary = [selectedSize, selectedColor, selectedAbsorbency]
     .filter(Boolean)
@@ -237,15 +263,62 @@ export default function ProductDetailClient({
     "Check fit over clean clothing before direct wear.",
   ];
 
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const openLightbox = (items: PreviewMediaItem[], index: number) => {
+    const validItems = items.filter((item) => item.url && !brokenMediaUrls.has(item.url));
+    if (validItems.length === 0) return;
+    const selectedUrl = items[index]?.url;
+    const validIndex = Math.max(
+      0,
+      selectedUrl ? validItems.findIndex((item) => item.url === selectedUrl) : index
+    );
+    setLightboxItems(validItems);
+    setLightboxIndex(validIndex >= 0 ? validIndex : 0);
+    setLightboxOpen(true);
+  };
+  const openProductMediaPreview = (index: number) => {
+    const targetUrl = mediaItems[index]?.url;
+    const previewIndex = Math.max(0, productPreviewMedia.findIndex((item) => item.url === targetUrl));
+    openLightbox(productPreviewMedia, previewIndex);
+  };
+  const openSelectedMediaPreview = () => {
+    if (!selectedMedia) return;
+    if (colorSpecificMedia && selectedMedia.url === colorSpecificMedia.url) {
+      openLightbox(
+        [
+          {
+            ...colorSpecificMedia,
+            alt: `${displayProduct.name} ${selectedColor || "selected color"}`,
+          },
+          ...productPreviewMedia.filter((item) => item.url !== colorSpecificMedia.url),
+        ],
+        0
+      );
+      return;
+    }
+    openProductMediaPreview(safeIndex);
+  };
+  const closeLightbox = () => setLightboxOpen(false);
+  const showPreviousLightboxMedia = () => {
+    setLightboxIndex((index) => (index - 1 + lightboxItems.length) % lightboxItems.length);
+  };
+  const showNextLightboxMedia = () => {
+    setLightboxIndex((index) => (index + 1) % lightboxItems.length);
+  };
+
   useEffect(() => {
     if (!lightboxOpen) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxOpen(false);
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft" && lightboxItems.length > 1) {
+        setLightboxIndex((index) => (index - 1 + lightboxItems.length) % lightboxItems.length);
+      }
+      if (e.key === "ArrowRight" && lightboxItems.length > 1) {
+        setLightboxIndex((index) => (index + 1) % lightboxItems.length);
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [lightboxOpen]);
+  }, [lightboxItems.length, lightboxOpen]);
 
   const touchStartXRef = useRef<number | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -586,17 +659,28 @@ export default function ProductDetailClient({
             <div className="aev-bloom-media-ring pointer-events-none absolute left-1/2 top-1/2 h-[54%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#FF4DB8]/10" />
             <div className="aev-bloom-media-ring aev-bloom-media-ring-delay pointer-events-none absolute left-1/2 top-1/2 h-[68%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#31E6D4]/[0.07]" />
             {selectedMedia?.type === "video" ? (
-              <video
-                src={selectedMedia.url}
-                poster={selectedMedia.poster}
-                controls
-                playsInline
-                preload="metadata"
-                className="aev-bloom-product-media relative h-full w-full bg-[#080611] object-contain"
-                onError={() =>
-                  setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
-                }
-              />
+              <>
+                <video
+                  src={selectedMedia.url}
+                  poster={selectedMedia.poster}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aev-bloom-product-media relative h-full w-full bg-[#080611] object-contain"
+                  onError={() =>
+                    setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={openSelectedMediaPreview}
+                  className="absolute right-4 top-4 z-[4] inline-flex min-h-10 items-center gap-2 rounded-full border border-[#FF4DB8]/24 bg-[#080611]/78 px-3 text-xs font-semibold text-[#FFB3D1] backdrop-blur-md transition hover:border-[#FF4DB8]/45 hover:text-white"
+                  aria-label="Open product video preview"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                  View
+                </button>
+              </>
             ) : selectedMedia?.type === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -606,7 +690,7 @@ export default function ProductDetailClient({
                 loading={safeIndex === 0 ? "eager" : "lazy"}
                 decoding="async"
                 className="aev-bloom-product-media relative h-full w-full cursor-zoom-in object-contain p-4 transition duration-500 hover:scale-[1.015] sm:p-8"
-                onClick={() => setLightboxOpen(true)}
+                onClick={openSelectedMediaPreview}
                 onError={() =>
                   setBrokenMediaUrls((urls) => new Set(urls).add(selectedMedia.url))
                 }
@@ -635,14 +719,17 @@ export default function ProductDetailClient({
               {mediaItems.map((item, index) => (
                 <button
                   key={`${item.type}-${item.url}-${index}`}
-                  onClick={() => setSelectedMediaIndex(index)}
-                  aria-label={item.type === "video" ? "Play video" : `Product image ${index + 1}`}
+                  onClick={() => {
+                    setSelectedMediaIndex(index);
+                    openProductMediaPreview(index);
+                  }}
+                  aria-label={item.type === "video" ? "Preview product video" : `Preview product image ${index + 1}`}
                   disabled={brokenMediaUrls.has(item.url)}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[4px_20px_4px_20px] border bg-white/[0.035] transition ${
                     safeIndex === index
                       ? "border-[#FF4DB8]/60 bg-[#FF4DB8]/[0.08] shadow-[0_0_22px_rgba(255,77,184,0.16)]"
                       : "border-white/[0.08] hover:border-[#FF4DB8]/35"
-                  } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : ""}`}
+                  } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : "cursor-zoom-in"}`}
                 >
                   {item.type === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -661,6 +748,9 @@ export default function ProductDetailClient({
                       <Play className="h-4 w-4 fill-[#FF4DB8] text-[#FF4DB8]" />
                     </span>
                   )}
+                  <span className="pointer-events-none absolute bottom-1 right-1 rounded-full border border-white/10 bg-[#080611]/82 p-1 text-white/80">
+                    <Maximize2 className="h-2.5 w-2.5" />
+                  </span>
                 </button>
               ))}
             </div>
@@ -688,6 +778,8 @@ export default function ProductDetailClient({
           sectionMediaEntries={sectionMediaEntries}
           contentBlocks={contentBlocks}
           productName={displayProduct.name}
+          descriptionPreviewMedia={descriptionPreviewMedia}
+          onPreviewMedia={openLightbox}
         />
       )}
 
@@ -799,30 +891,85 @@ export default function ProductDetailClient({
         <SiteFooter settings={settings} />
       </div>
 
-      {lightboxOpen && selectedMedia?.type === "image" && (
+      {lightboxOpen && lightboxMedia && (
         <div
           className="aev-lightbox-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Product image enlarged view"
-          onClick={() => setLightboxOpen(false)}
+          aria-label="Product media enlarged view"
+          onClick={closeLightbox}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={(event) => {
+            if (touchStartXRef.current === null || !hasLightboxNavigation) return;
+            const delta = event.changedTouches[0].clientX - touchStartXRef.current;
+            touchStartXRef.current = null;
+            if (Math.abs(delta) < 50) return;
+            if (delta < 0) showNextLightboxMedia();
+            else showPreviousLightboxMedia();
+          }}
         >
           <button
-            onClick={() => setLightboxOpen(false)}
-            aria-label="Close image view"
-            className="absolute right-4 top-4 z-10 rounded-full border border-[#FF4DB8]/22 bg-[#080611]/80 p-2 text-[#D8CBE8] backdrop-blur-md transition hover:text-white"
+            onClick={closeLightbox}
+            aria-label="Close media preview"
+            className="aev-lightbox-close"
           >
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+            <X className="h-5 w-5" />
           </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={selectedMedia.url}
-            alt={displayProduct.name}
-            className="aev-lightbox-img"
+
+          {hasLightboxNavigation && (
+            <>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  showPreviousLightboxMedia();
+                }}
+                className="aev-lightbox-nav aev-lightbox-nav-prev"
+                aria-label="Previous media"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  showNextLightboxMedia();
+                }}
+                className="aev-lightbox-nav aev-lightbox-nav-next"
+                aria-label="Next media"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="aev-lightbox-panel"
             onClick={(e) => e.stopPropagation()}
-          />
+          >
+            {lightboxMedia.type === "video" ? (
+              <video
+                src={lightboxMedia.url}
+                poster={lightboxMedia.poster}
+                controls
+                playsInline
+                autoPlay
+                className="aev-lightbox-media"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={lightboxMedia.url}
+                alt={lightboxMedia.alt}
+                className="aev-lightbox-media"
+              />
+            )}
+            {hasLightboxNavigation && (
+              <div className="aev-lightbox-count">
+                {lightboxIndex + 1} / {lightboxItems.length}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -860,12 +1007,16 @@ function ProductContentMediaSections({
   sectionMediaEntries,
   contentBlocks,
   productName,
+  descriptionPreviewMedia,
+  onPreviewMedia,
 }: {
   description: string;
   descriptionMedia: ProductDescriptionMediaItem[];
   sectionMediaEntries: Array<{ key: ProductSectionMediaKey; media: ProductSectionMedia }>;
   contentBlocks: ProductContentBlock[];
   productName: string;
+  descriptionPreviewMedia: PreviewMediaItem[];
+  onPreviewMedia: (items: PreviewMediaItem[], index: number) => void;
 }) {
   const [showAllMedia, setShowAllMedia] = useState(false);
   const [defaultMediaCount, setDefaultMediaCount] = useState(4);
@@ -933,6 +1084,7 @@ function ProductContentMediaSections({
                         media={item}
                         fallbackAlt={`${productName} description media ${index + 1}`}
                         compact
+                        onPreview={() => onPreviewMedia(descriptionPreviewMedia, index)}
                       />
                       {(item.caption || item.alt) && (
                         <div className="border-t border-white/[0.07] px-3 py-2">
@@ -994,10 +1146,12 @@ function ProductInlineMedia({
   media,
   fallbackAlt,
   compact = false,
+  onPreview,
 }: {
   media: ProductSectionMedia;
   fallbackAlt: string;
   compact?: boolean;
+  onPreview?: () => void;
 }) {
   const type = inferMediaType(media.url, media.type);
   const fitClass = media.fit === "cover" ? "object-cover" : "object-contain";
@@ -1011,17 +1165,41 @@ function ProductInlineMedia({
     ? "aspect-[4/3] min-h-[8.5rem] max-h-[13rem]"
     : "aspect-[4/3] min-h-[10rem] max-h-[18rem]";
   return (
-    <div className={`relative overflow-hidden rounded border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] ${sizeClass}`}>
+    <div
+      className={`relative overflow-hidden rounded border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] ${onPreview ? "cursor-zoom-in" : ""} ${sizeClass}`}
+      role={onPreview && type === "image" ? "button" : undefined}
+      tabIndex={onPreview && type === "image" ? 0 : undefined}
+      onClick={type === "image" ? onPreview : undefined}
+      onKeyDown={(event) => {
+        if (!onPreview || type !== "image") return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onPreview();
+        }
+      }}
+    >
       <div className="pointer-events-none absolute inset-8 rounded-full bg-[#FF4DB8]/10 blur-3xl" />
       {type === "video" ? (
-        <video
-          src={media.url}
-          controls
-          playsInline
-          muted
-          preload="metadata"
-          className={`relative h-full w-full bg-[#080611] ${fitClass} ${positionClass}`}
-        />
+        <>
+          <video
+            src={media.url}
+            controls
+            playsInline
+            muted
+            preload="metadata"
+            className={`relative h-full w-full bg-[#080611] ${fitClass} ${positionClass}`}
+          />
+          {onPreview && (
+            <button
+              type="button"
+              onClick={onPreview}
+              className="absolute right-2 top-2 z-[2] inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#FF4DB8]/24 bg-[#080611]/78 text-[#FFB3D1] backdrop-blur-md transition hover:border-[#FF4DB8]/45 hover:text-white"
+              aria-label="Open media preview"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          )}
+        </>
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -1031,6 +1209,12 @@ function ProductInlineMedia({
           decoding="async"
           className={`relative h-full w-full ${media.fit === "cover" ? "" : "p-3 sm:p-4"} ${fitClass} ${positionClass}`}
         />
+      )}
+      {onPreview && type === "image" && (
+        <span className="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-[#080611]/78 px-2 py-1 text-[10px] font-semibold text-[#FFB3D1] backdrop-blur">
+          <Maximize2 className="h-3 w-3" />
+          View
+        </span>
       )}
     </div>
   );
