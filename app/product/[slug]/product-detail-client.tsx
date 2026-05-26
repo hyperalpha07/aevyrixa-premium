@@ -445,6 +445,23 @@ export default function ProductDetailClient({
       tone: "text-[#C084FC]",
     },
   ];
+  const productTicker = (
+    <section className="aev-product-ticker aev-product-ticker-after-hero relative z-[2]" aria-label="Aevyrixa service highlights">
+      <div className="aev-product-ticker-track">
+        {[0, 1].map((group) => (
+          <div className="aev-product-ticker-group" key={group}>
+            {productTickerItems.map(({ label, icon: Icon }) => (
+              <span className="aev-product-ticker-item" key={`${group}-${label}`}>
+                <Icon className="h-3.5 w-3.5 text-white/90" aria-hidden="true" />
+                {label}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
   return (
     <main className="aev-bloom-product aev-product-page-shell min-h-screen overflow-x-hidden bg-[#080611] pb-[calc(var(--aev-mobile-bottom-nav-height)+6rem+env(safe-area-inset-bottom,0px))] text-white lg:pb-0">
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_70%_48%_at_18%_26%,rgba(255,77,184,0.11),transparent_62%),radial-gradient(ellipse_50%_40%_at_82%_64%,rgba(0,212,198,0.08),transparent_60%),linear-gradient(180deg,#080611,#090713_48%,#050711)]" />
@@ -454,21 +471,6 @@ export default function ProductDetailClient({
         productHref={`/product/${displayProduct.slug}`}
         settings={settings}
       />
-
-      <section className="aev-product-ticker relative z-[2] mt-5 sm:mt-7 lg:mt-8" aria-label="Aevyrixa service highlights">
-        <div className="aev-product-ticker-track">
-          {[0, 1].map((group) => (
-            <div className="aev-product-ticker-group" key={group}>
-              {productTickerItems.map(({ label, icon: Icon }) => (
-                <span className="aev-product-ticker-item" key={`${group}-${label}`}>
-                  <Icon className="h-3.5 w-3.5 text-white/90" aria-hidden="true" />
-                  {label}
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[82rem] items-start gap-5 px-4 pb-8 pt-8 sm:gap-7 sm:px-7 sm:pb-10 sm:pt-10 lg:grid-cols-[minmax(0,36rem)_minmax(0,38rem)] lg:gap-8 lg:px-12 lg:pb-10 lg:pt-12">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
@@ -721,15 +723,14 @@ export default function ProductDetailClient({
                   key={`${item.type}-${item.url}-${index}`}
                   onClick={() => {
                     setSelectedMediaIndex(index);
-                    openProductMediaPreview(index);
                   }}
-                  aria-label={item.type === "video" ? "Preview product video" : `Preview product image ${index + 1}`}
+                  aria-label={item.type === "video" ? "Select product video" : `Select product image ${index + 1}`}
                   disabled={brokenMediaUrls.has(item.url)}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[4px_20px_4px_20px] border bg-white/[0.035] transition ${
                     safeIndex === index
                       ? "border-[#FF4DB8]/60 bg-[#FF4DB8]/[0.08] shadow-[0_0_22px_rgba(255,77,184,0.16)]"
                       : "border-white/[0.08] hover:border-[#FF4DB8]/35"
-                  } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : "cursor-zoom-in"}`}
+                  } ${brokenMediaUrls.has(item.url) ? "cursor-not-allowed opacity-35" : "cursor-pointer"}`}
                 >
                   {item.type === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -748,9 +749,6 @@ export default function ProductDetailClient({
                       <Play className="h-4 w-4 fill-[#FF4DB8] text-[#FF4DB8]" />
                     </span>
                   )}
-                  <span className="pointer-events-none absolute bottom-1 right-1 rounded-full border border-white/10 bg-[#080611]/82 p-1 text-white/80">
-                    <Maximize2 className="h-2.5 w-2.5" />
-                  </span>
                 </button>
               ))}
             </div>
@@ -770,6 +768,8 @@ export default function ProductDetailClient({
           </div>
         </div>
       </section>
+
+      {productTicker}
 
       {(displayProduct.description || descriptionMedia.length > 0 || sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
         <ProductContentMediaSections
