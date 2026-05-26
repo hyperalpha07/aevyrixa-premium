@@ -1677,7 +1677,7 @@ button {
     width: 100%;
     max-width: 100vw;
     gap: 1.15rem;
-    padding: 4.9rem 1rem 2.15rem;
+    padding: 1.35rem 1rem 2rem;
     overflow-x: hidden;
   }
 
@@ -1895,6 +1895,16 @@ button {
 }
 
 @media (max-width: 374px) {
+  .aev-product-mobile-price {
+    display: grid;
+    gap: 0.45rem;
+    justify-items: start;
+  }
+
+  .aev-product-mobile-price > span:first-child {
+    font-size: 1.82rem;
+  }
+
   .aev-mobile-buy-bar-inner {
     gap: 0.65rem;
   }

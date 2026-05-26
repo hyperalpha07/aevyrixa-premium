@@ -382,7 +382,7 @@ export default function ProductDetailClient({
         settings={settings}
       />
 
-      <section className="aev-product-ticker relative z-[2]" aria-label="Aevyrixa service highlights">
+      <section className="aev-product-ticker relative z-[2] mt-5 sm:mt-7 lg:mt-8" aria-label="Aevyrixa service highlights">
         <div className="aev-product-ticker-track">
           {[0, 1].map((group) => (
             <div className="aev-product-ticker-group" key={group}>
@@ -397,7 +397,7 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[78rem] items-start gap-5 px-4 pb-10 pt-20 sm:gap-7 sm:px-7 lg:grid-cols-[minmax(0,42rem)_minmax(29rem,32rem)] lg:gap-8 lg:px-12 lg:pb-16 lg:pt-24">
+      <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[82rem] items-start gap-5 px-4 pb-8 pt-8 sm:gap-7 sm:px-7 sm:pb-10 sm:pt-10 lg:grid-cols-[minmax(0,36rem)_minmax(0,38rem)] lg:gap-8 lg:px-12 lg:pb-10 lg:pt-12">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
           Aevyrixa
         </div>
@@ -426,7 +426,7 @@ export default function ProductDetailClient({
             </span>
           </div>
 
-          <h1 className="aev-product-mobile-title max-w-[12ch] break-words font-serif text-[2.1rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:text-[3.35rem]">
+          <h1 className="aev-product-mobile-title max-w-[12ch] break-words font-serif text-[2.1rem] font-light leading-[1.04] tracking-normal text-white [overflow-wrap:anywhere] sm:text-5xl lg:max-w-[18ch] lg:text-[3rem]">
             {displayProduct.name}
           </h1>
 
@@ -561,13 +561,13 @@ export default function ProductDetailClient({
             </button>
           </div>
 
-          <div className="aev-product-support-cards mt-4 grid gap-1.5">
+          <div className="aev-product-support-cards mt-4 grid gap-1.5 lg:hidden">
             {[
               { icon: PackageCheck, text: privacyText },
               { icon: Truck, text: deliveryText },
               { icon: ShieldCheck, text: supportText },
             ].map(({ icon: Icon, text }, index) => (
-              <div key={`${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA]">
+              <div key={`${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA] lg:px-2.5 lg:text-[10px] lg:leading-[1.55]">
                 <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${index === 1 ? "text-[#31E6D4]" : style.accent}`} />
                 <span className="min-w-0">{text}</span>
               </div>
@@ -575,9 +575,9 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        <div className="relative z-[1] order-1 lg:sticky lg:top-20 lg:order-1 lg:self-start lg:pr-1">
+        <div className="relative z-[1] order-1 lg:order-1 lg:self-start lg:pr-1">
           <div
-            className="aev-bloom-media-frame relative aspect-[0.9/1] overflow-hidden rounded-[2px_54px_2px_54px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] lg:aspect-[0.88/1]"
+            className="aev-bloom-media-frame relative aspect-[0.92/1] max-h-[34rem] overflow-hidden rounded-[2px_54px_2px_54px] border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] lg:aspect-[0.96/1] lg:max-h-[38rem]"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -665,6 +665,19 @@ export default function ProductDetailClient({
               ))}
             </div>
           )}
+
+          <div className="aev-product-support-cards mt-4 hidden gap-1.5 lg:grid">
+            {[
+              { icon: PackageCheck, text: privacyText },
+              { icon: Truck, text: deliveryText },
+              { icon: ShieldCheck, text: supportText },
+            ].map(({ icon: Icon, text }, index) => (
+              <div key={`media-${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA]">
+                <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${index === 1 ? "text-[#31E6D4]" : style.accent}`} />
+                <span className="min-w-0">{text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -880,67 +893,69 @@ function ProductContentMediaSections({
   }, []);
 
   return (
-    <section className="relative z-[2] border-y border-white/[0.07] bg-[#0B0814] py-12 sm:py-16">
+    <section className="relative z-[2] border-y border-white/[0.07] bg-[#0B0814] py-8 sm:py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-        <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-          {description && (
-            <div className="rounded border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
-              <SectionHeading eyebrow="Story" title="Product details" description="" />
-              <div className="mt-4 space-y-4 text-sm leading-8 text-[#D8CBE8]/76">
-                {description
-                  .split(/\n{2,}/)
-                  .map((paragraph) => paragraph.trim())
-                  .filter(Boolean)
-                  .map((paragraph, index) => (
-                    <p key={`${paragraph.slice(0, 16)}-${index}`}>{paragraph}</p>
-                  ))}
+        <div className="overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] shadow-[0_1.2rem_3.8rem_rgba(0,0,0,0.22)]">
+          <div className={`grid gap-0 ${description && descriptionMedia.length > 0 ? "lg:grid-cols-[0.92fr_1.08fr]" : ""}`}>
+            {description && (
+              <div className={`border-b border-white/[0.07] p-5 sm:p-6 lg:border-b-0 ${descriptionMedia.length > 0 ? "lg:border-r lg:border-r-white/[0.07]" : ""}`}>
+                <SectionHeading eyebrow="Story" title="Product details" description="" />
+                <div className="mt-4 space-y-4 text-sm leading-8 text-[#D8CBE8]/76">
+                  {description
+                    .split(/\n{2,}/)
+                    .map((paragraph) => paragraph.trim())
+                    .filter(Boolean)
+                    .map((paragraph, index) => (
+                      <p key={`${paragraph.slice(0, 16)}-${index}`}>{paragraph}</p>
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
-          {descriptionMedia.length > 0 && (
-            <div>
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
-                    Description Gallery
-                  </p>
-                  <h3 className="mt-2 font-serif text-2xl text-white">A closer look</h3>
+            )}
+            {descriptionMedia.length > 0 && (
+              <div className="p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
+                      Description Gallery
+                    </p>
+                    <h3 className="mt-2 font-serif text-2xl text-white">A closer look</h3>
+                  </div>
+                  {descriptionMedia.length > defaultMediaCount && (
+                    <span className="rounded border border-white/[0.08] bg-white/[0.035] px-2.5 py-1 text-[10px] text-[#9C91AA]">
+                      {descriptionMedia.length} media
+                    </span>
+                  )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {visibleGalleryMedia.map((item, index) => (
+                    <article key={item.id} className="group overflow-hidden rounded border border-white/[0.08] bg-[#080611]/55">
+                      <ProductInlineMedia
+                        media={item}
+                        fallbackAlt={`${productName} description media ${index + 1}`}
+                        compact
+                      />
+                      {(item.caption || item.alt) && (
+                        <div className="border-t border-white/[0.07] px-3 py-2">
+                          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9C91AA]">
+                            {item.caption || item.alt}
+                          </p>
+                        </div>
+                      )}
+                    </article>
+                  ))}
                 </div>
                 {descriptionMedia.length > defaultMediaCount && (
-                  <span className="rounded border border-white/[0.08] bg-white/[0.035] px-2.5 py-1 text-[10px] text-[#9C91AA]">
-                    {descriptionMedia.length} media
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllMedia((value) => !value)}
+                    className="mt-5 inline-flex min-h-10 items-center justify-center rounded border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
+                  >
+                    {showAllMedia ? "Show less" : `Show more (${hiddenMediaCount})`}
+                  </button>
                 )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {visibleGalleryMedia.map((item, index) => (
-                  <article key={item.id} className="group overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
-                    <ProductInlineMedia
-                      media={item}
-                      fallbackAlt={`${productName} description media ${index + 1}`}
-                      compact
-                    />
-                    {(item.caption || item.alt) && (
-                      <div className="border-t border-white/[0.07] px-3 py-2">
-                      <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9C91AA]">
-                        {item.caption || item.alt}
-                      </p>
-                    </div>
-                    )}
-                  </article>
-                ))}
-              </div>
-              {descriptionMedia.length > defaultMediaCount && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllMedia((value) => !value)}
-                  className="mt-5 inline-flex min-h-10 items-center justify-center rounded border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
-                >
-                  {showAllMedia ? "Show less" : `Show more (${hiddenMediaCount})`}
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {purposeMedia.length > 0 && (
@@ -993,8 +1008,8 @@ function ProductInlineMedia({
         ? "object-bottom"
         : "object-center";
   const sizeClass = compact
-    ? "aspect-[4/3] min-h-[10rem]"
-    : "aspect-[4/3] min-h-[14rem] max-h-[30rem]";
+    ? "aspect-[4/3] min-h-[8.5rem] max-h-[13rem]"
+    : "aspect-[4/3] min-h-[10rem] max-h-[18rem]";
   return (
     <div className={`relative overflow-hidden rounded border border-[#FF4DB8]/12 bg-[linear-gradient(145deg,#211633,#100A1E,#080611)] ${sizeClass}`}>
       <div className="pointer-events-none absolute inset-8 rounded-full bg-[#FF4DB8]/10 blur-3xl" />
@@ -1039,7 +1054,7 @@ function ContentBlockCard({
       }
     : null;
   const mediaNode = media ? (
-    <ProductInlineMedia media={media} fallbackAlt={`${productName} ${block.title}`} />
+    <ProductInlineMedia media={media} fallbackAlt={`${productName} ${block.title}`} compact />
   ) : null;
   const textNode = (
     <div className="p-4 sm:p-5">
