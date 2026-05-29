@@ -8051,18 +8051,30 @@ function reviewProductSlug(product?: AdminProduct, fallback = "") {
 }
 
 function validReviewMediaUrls(urls: string[]) {
+  const seen = new Set<string>();
   return urls
     .map((url) => url.trim())
     .filter((url) => {
       if (!url) return false;
       try {
         const parsed = new URL(url);
-        return parsed.protocol === "http:" || parsed.protocol === "https:";
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+        if (seen.has(url)) return false;
+        seen.add(url);
+        return true;
       } catch {
         return false;
       }
     })
     .slice(0, 3);
+}
+
+function reviewSourceTypeForSubmit(
+  value: AdminReviewClientRecord["sourceType"]
+): "order-linked" | "admin-added" | "imported" {
+  if (value === "order-linked") return "order-linked";
+  if (value === "imported" || value === "customer-submitted") return "imported";
+  return "admin-added";
 }
 
 function AdminTextInput({
@@ -8150,16 +8162,18 @@ function ReviewsSection({
   const draftHasValidDate = !draft.createdAt || Number.isFinite(new Date(draft.createdAt).getTime());
   const validMediaUrls = validReviewMediaUrls(draft.mediaUrls);
   const hasInvalidMediaUrl = draft.mediaUrls.some((url) => url.trim() && !validMediaUrls.includes(url.trim()));
+  const validReviewStatuses = new Set(["pending", "approved", "rejected", "hidden"]);
+  const submitValidationMessages = [
+    !selectedDraftProduct ? "Missing: product" : "",
+    !draft.customerName.trim() ? "Missing: customer name" : "",
+    !Number.isFinite(draft.rating) || draft.rating < 1 || draft.rating > 5 ? "Invalid: rating" : "",
+    !draft.body.trim() ? "Missing: review text" : "",
+    !draftHasValidDate ? "Invalid: review date" : "",
+    !validReviewStatuses.has(draft.status) ? "Invalid: status" : "",
+  ].filter(Boolean);
   const canSubmitDraft =
     canManage &&
-    Boolean(draft.productId) &&
-    Boolean(draft.customerName.trim()) &&
-    Number.isFinite(draft.rating) &&
-    draft.rating >= 1 &&
-    draft.rating <= 5 &&
-    Boolean(draft.body.trim()) &&
-    draftHasValidDate &&
-    Boolean(draft.status);
+    submitValidationMessages.length === 0;
 
   const saveReview = async (
     review: AdminReviewClientRecord,
@@ -8195,18 +8209,22 @@ function ReviewsSection({
         ...draft,
         productSlug: reviewProductSlug(selectedDraftProduct, draft.productSlug || draft.productId),
         mediaUrls: validReviewMediaUrls(draft.mediaUrls),
-        sourceType: draft.sourceType || "admin-added",
+        sourceType: reviewSourceTypeForSubmit(draft.sourceType),
+        verifiedPurchase: false,
         isFeatured: draft.status === "approved" && draft.isFeatured,
         createdAt: draft.createdAt || new Date().toISOString().slice(0, 10),
       };
+      console.log("Submitting admin review payload", payload);
       if (editingId) {
         const updated = await updateReviewInApi({ id: editingId, ...payload });
-        setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        const refreshedReviews = await readReviewsFromApi();
+        setReviews(refreshedReviews ?? ((current) => current.map((item) => (item.id === updated.id ? updated : item))));
         setMessage("Review saved.");
         setStatusFilter(updated.status);
       } else {
         const created = await createReviewInApi(payload);
-        setReviews((current) => [created, ...current]);
+        const refreshedReviews = await readReviewsFromApi();
+        setReviews(refreshedReviews ?? ((current) => [created, ...current]));
         setMessage("Review added.");
         setStatusFilter(created.status);
       }
@@ -8485,6 +8503,19 @@ function ReviewsSection({
             >
               {editingId ? "Save review" : "Add review"}
             </button>
+            {!canSubmitDraft && (
+              <div className="basis-full text-xs leading-5 text-amber-100/78">
+                {submitValidationMessages.length > 0 ? (
+                  <ul className="list-disc space-y-1 pl-4">
+                    {submitValidationMessages.map((message) => (
+                      <li key={message}>{message}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Missing: review management permission</p>
+                )}
+              </div>
+            )}
             {editingId && (
               <button
                 type="button"

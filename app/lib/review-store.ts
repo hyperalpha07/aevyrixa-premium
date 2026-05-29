@@ -124,9 +124,13 @@ function normalizeStatus(value: unknown): ReviewStatus {
 }
 
 function normalizeSourceType(value: unknown): ReviewSourceType {
+  if (value === "customer-submitted" || value === "curated" || value === "curated-customer-feedback") {
+    return "imported";
+  }
+  if (value === "admin-approved") return "admin-added";
   return reviewSourceTypes.includes(value as never)
     ? (value as ReviewSourceType)
-    : "order-linked";
+    : "admin-added";
 }
 
 function stringArray(value: unknown) {
@@ -221,7 +225,7 @@ export function validateReviewSubmission(input: ReviewSubmissionInput) {
 }
 
 function toInsertPayload(input: ReviewSubmissionInput) {
-  const sourceType = input.sourceType ?? "order-linked";
+  const sourceType = normalizeSourceType(input.sourceType);
   const verifiedPurchase =
     sourceType === "order-linked" && Boolean(input.verifiedPurchase && input.orderReference);
   const status = input.status && reviewStatuses.includes(input.status) ? input.status : "pending";
@@ -283,10 +287,10 @@ function toUpdatePayload(updates: {
   if (updates.title !== undefined) payload.title = sanitizeReviewText(updates.title, 120) || null;
   if (updates.body !== undefined) payload.body = sanitizeReviewText(updates.body, 1200);
   if (updates.mediaUrls !== undefined) payload.media_urls = stringArray(updates.mediaUrls).slice(0, 3);
-  if (updates.sourceType !== undefined) payload.source_type = updates.sourceType;
+  if (updates.sourceType !== undefined) payload.source_type = normalizeSourceType(updates.sourceType);
   if (updates.verifiedPurchase !== undefined) {
     payload.verified_purchase =
-      updates.sourceType === "order-linked" && Boolean(updates.verifiedPurchase);
+      normalizeSourceType(updates.sourceType) === "order-linked" && Boolean(updates.verifiedPurchase);
   }
   if (updates.orderId !== undefined) payload.order_id = uuidOrNull(updates.orderId);
   if (updates.orderReference !== undefined) payload.order_reference = sanitizeReviewText(updates.orderReference, 120) || null;
@@ -444,7 +448,7 @@ export async function createReview(input: ReviewSubmissionInput) {
 
   if (!hasSupabaseConfig()) {
     const now = new Date().toISOString();
-    const sourceType = input.sourceType ?? "order-linked";
+    const sourceType = normalizeSourceType(input.sourceType);
     const status = input.status ?? "pending";
     const review: ProductReview = {
       ...toInsertPayload(input),

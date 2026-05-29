@@ -31,7 +31,12 @@ function statusValue(value: unknown): ReviewStatus | undefined {
 }
 
 function sourceTypeValue(value: unknown): ReviewSourceType {
-  return reviewSourceTypes.includes(value as never)
+  if (value === "order-linked") return "order-linked";
+  if (value === "imported" || value === "customer-submitted" || value === "curated-customer-feedback" || value === "curated") {
+    return "imported";
+  }
+  if (value === "admin-added" || value === "admin-approved") return "admin-added";
+  return reviewSourceTypes.includes(value as never) && value !== "customer-submitted"
     ? (value as ReviewSourceType)
     : "admin-added";
 }
