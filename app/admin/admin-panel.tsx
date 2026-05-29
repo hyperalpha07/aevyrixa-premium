@@ -8047,15 +8047,6 @@ function emptyReviewDraft(products: AdminProduct[]) {
   };
 }
 
-function reviewProductSlug(product?: AdminProduct, fallback = "") {
-  const slug = product?.slug || fallback;
-  if (slug.trim()) return slug.trim();
-  return (product?.name || "review")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
 function validReviewMediaUrls(urls: string[]) {
   const seen = new Set<string>();
   return urls
@@ -8077,8 +8068,7 @@ function validReviewMediaUrls(urls: string[]) {
 
 function reviewSourceTypeForSubmit(
   value: AdminReviewClientRecord["sourceType"]
-): "order-linked" | "admin-added" | "imported" {
-  if (value === "order-linked") return "order-linked";
+): "admin-added" | "imported" {
   if (value === "imported" || value === "customer-submitted") return "imported";
   return "admin-added";
 }
@@ -8137,6 +8127,7 @@ function ReviewsSection({
   const [draft, setDraft] = useState(() => emptyReviewDraft(products));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [draftSubmitError, setDraftSubmitError] = useState("");
   const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
   const canManage = hasPermission(session, "reviews.manage");
@@ -8174,25 +8165,10 @@ function ReviewsSection({
       product.slug === draft.productSlug ||
       product.slug === draft.productId
   );
-  const draftProductSlug = reviewProductSlug(selectedDraftProduct, draft.productSlug || draft.productId);
-  const draftProductValid = Boolean(selectedDraftProduct || draftProductSlug.trim());
   const draftDateValue = draft.createdAt || new Date().toISOString().slice(0, 10);
-  const draftHasValidDate = Number.isFinite(new Date(draftDateValue).getTime());
-  const draftRatingValid = Number.isFinite(draft.rating) && draft.rating >= 1 && draft.rating <= 5;
-  const draftStatusValid = isValidReviewStatus(draft.status);
   const draftSourceType = reviewSourceTypeForSubmit(draft.sourceType);
   const validMediaUrls = validReviewMediaUrls(draft.mediaUrls);
   const hasInvalidMediaUrl = draft.mediaUrls.some((url) => url.trim() && !validMediaUrls.includes(url.trim()));
-  const submitValidationMessages = [
-    !canManage ? "Missing: review management permission" : "",
-    !draftProductValid ? "Missing: product" : "",
-    !draft.customerName.trim() ? "Missing: customer name" : "",
-    !draftRatingValid ? "Invalid: rating" : "",
-    !draft.body.trim() ? "Missing: review text" : "",
-    !draftHasValidDate ? "Invalid: review date" : "",
-    !draftStatusValid ? "Invalid: status" : "",
-  ].filter(Boolean);
-  const canSubmitDraft = submitValidationMessages.length === 0;
 
   const saveReview = async (
     review: AdminReviewClientRecord,
@@ -8214,24 +8190,46 @@ function ReviewsSection({
 
   const saveDraft = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canManage) {
-      setError("Missing: review management permission");
+    const canSubmitReview =
+      session.userType === "owner" ||
+      session.role === "owner" ||
+      session.role === "manager" ||
+      session.permissions?.["reviews.manage"] === true;
+
+    if (!canSubmitReview) {
+      setDraftSubmitError("Missing review management permission");
+      setError("Missing review management permission");
       setMessage("");
       return;
     }
-    if (!canSubmitDraft) {
-      setError(submitValidationMessages.join(" ") || "Review cannot be submitted.");
+
+    const submitValidationMessages = [
+      !selectedDraftProduct && !draft.productSlug.trim() ? "Select a product or enter a product slug." : "",
+      !draft.customerName.trim() ? "Customer display name is required." : "",
+      !Number.isFinite(draft.rating) || draft.rating < 1 || draft.rating > 5
+        ? "Rating must be between 1 and 5."
+        : "",
+      !draft.body.trim() ? "Review text is required." : "",
+      !isValidReviewStatus(draft.status) ? "Status is required." : "",
+    ].filter(Boolean);
+
+    if (submitValidationMessages.length > 0) {
+      const validationError = submitValidationMessages.join(" ");
+      setDraftSubmitError(validationError);
+      setError(validationError);
       setMessage("");
       return;
     }
+
     setSavingId(editingId || "new");
     setError("");
+    setDraftSubmitError("");
     setMessage("");
     try {
       const payload = {
         ...draft,
-        productId: selectedDraftProduct?.id || draft.productId,
-        productSlug: draftProductSlug,
+        productId: selectedDraftProduct?.id || "",
+        productSlug: selectedDraftProduct?.slug || draft.productSlug.trim(),
         mediaUrls: validMediaUrls,
         sourceType: draftSourceType,
         verifiedPurchase: false,
@@ -8257,7 +8255,10 @@ function ReviewsSection({
       setEditingId(null);
       setDraft(emptyReviewDraft(products));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Review could not be saved.");
+      const errorMessage = err instanceof Error ? err.message : "Review could not be saved.";
+      console.error("Admin review submit failed:", err);
+      setDraftSubmitError(errorMessage);
+      setError(errorMessage);
     } finally {
       setSavingId(null);
     }
@@ -8522,45 +8523,25 @@ function ReviewsSection({
             Feature after approval
           </label>
           <div className="flex flex-wrap gap-2 lg:col-span-2">
+            {draftSubmitError && (
+              <div className="basis-full rounded-2xl border border-rose-200/22 bg-rose-200/[0.08] p-3 text-sm leading-6 text-rose-50/86">
+                {draftSubmitError}
+              </div>
+            )}
             <button
               type="submit"
-              disabled={!canSubmitDraft || savingId === "new" || savingId === editingId}
+              disabled={savingId === "new" || savingId === editingId}
               className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.10] px-5 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45 disabled:opacity-45"
             >
               {editingId ? "Save review" : "Add review"}
             </button>
-            {!canSubmitDraft && (
-              <div className="basis-full rounded-2xl border border-amber-200/18 bg-amber-200/[0.055] p-3 text-xs leading-5 text-amber-50/78">
-                <div className="font-semibold text-amber-50/90">Review submit check</div>
-                <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2 xl:grid-cols-3">
-                  <span>userType: {session.userType}</span>
-                  <span>username: {session.username}</span>
-                  <span>role: {session.role}</span>
-                  <span>canManage: {String(canManage)}</span>
-                  <span>product id: {draft.productId || "empty"}</span>
-                  <span>product slug: {draftProductSlug || "empty"}</span>
-                  <span>product valid: {String(draftProductValid)}</span>
-                  <span>customer valid: {String(Boolean(draft.customerName.trim()))}</span>
-                  <span>rating: {draft.rating} / valid {String(draftRatingValid)}</span>
-                  <span>review text valid: {String(Boolean(draft.body.trim()))}</span>
-                  <span>date: {draftDateValue || "empty"} / valid {String(draftHasValidDate)}</span>
-                  <span>status: {draft.status} / valid {String(draftStatusValid)}</span>
-                  <span>source: {draft.sourceType} =&gt; {draftSourceType}</span>
-                  <span>media URL valid: {String(!hasInvalidMediaUrl)}</span>
-                  <span>uploaded media count: {validMediaUrls.length}</span>
-                  <span>final canSubmitDraft: {String(canSubmitDraft)}</span>
-                </div>
-                <div className="mt-2">
-                  disabled reasons: {submitValidationMessages.length > 0 ? submitValidationMessages.join("; ") : "none"}
-                </div>
-              </div>
-            )}
             {editingId && (
               <button
                 type="button"
                 onClick={() => {
                   setEditingId(null);
                   setDraft(emptyReviewDraft(products));
+                  setDraftSubmitError("");
                 }}
                 className="rounded-full border border-white/10 bg-white/[0.05] px-5 py-3 text-sm font-semibold text-white/70 transition hover:text-white"
               >
