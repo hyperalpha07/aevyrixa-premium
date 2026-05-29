@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock3,
+  Heart,
   Headphones,
   LogOut,
   MapPin,
@@ -28,6 +29,12 @@ import {
   fetchStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import {
+  readWishlistItems,
+  WISHLIST_UPDATED_EVENT,
+  writeWishlistItems,
+  type WishlistItem,
+} from "@/app/lib/wishlist-storage";
 
 type AccountView = "dashboard" | "orders" | "addresses" | "support";
 type Customer = {
@@ -137,6 +144,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const [addressDraft, setAddressDraft] = useState<AddressForm>(emptyAddress);
   const [isAddressOpen, setIsAddressOpen] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -150,6 +158,17 @@ export default function AccountClient({ view }: { view: AccountView }) {
     });
     return () => {
       isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncWishlist = () => setWishlistItems(readWishlistItems());
+    syncWishlist();
+    window.addEventListener("storage", syncWishlist);
+    window.addEventListener(WISHLIST_UPDATED_EVENT, syncWishlist);
+    return () => {
+      window.removeEventListener("storage", syncWishlist);
+      window.removeEventListener(WISHLIST_UPDATED_EVENT, syncWishlist);
     };
   }, []);
 
@@ -191,6 +210,14 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const logout = async () => {
     await fetch("/api/account/logout", { method: "POST" }).catch(() => null);
     router.replace("/account/login");
+  };
+
+  const removeWishlistItem = (item: WishlistItem) => {
+    const next = wishlistItems.filter(
+      (wishlistItem) => wishlistItem.productId !== item.productId && wishlistItem.slug !== item.slug
+    );
+    setWishlistItems(next);
+    writeWishlistItems(next);
   };
 
   const saveAddress = async (event: FormEvent<HTMLFormElement>) => {
@@ -316,6 +343,8 @@ export default function AccountClient({ view }: { view: AccountView }) {
                   addressCount={addresses.length}
                   customer={customer}
                   settings={settings}
+                  wishlistItems={wishlistItems}
+                  onRemoveWishlistItem={removeWishlistItem}
                   onLogout={logout}
                   onOpenLiveChat={openLiveChat}
                 />
@@ -511,6 +540,8 @@ function Dashboard({
   addressCount,
   customer,
   settings,
+  wishlistItems,
+  onRemoveWishlistItem,
   onLogout,
   onOpenLiveChat,
 }: {
@@ -520,6 +551,8 @@ function Dashboard({
   addressCount: number;
   customer: Customer;
   settings: StorefrontSettings;
+  wishlistItems: WishlistItem[];
+  onRemoveWishlistItem: (item: WishlistItem) => void;
   onLogout: () => void;
   onOpenLiveChat: () => void;
 }) {
@@ -571,9 +604,59 @@ function Dashboard({
             )}
           </Panel>
           <DashboardSupport settings={settings} onOpenLiveChat={onOpenLiveChat} />
+          <WishlistPanel items={wishlistItems} onRemove={onRemoveWishlistItem} />
         </div>
       </div>
     </div>
+  );
+}
+
+function WishlistPanel({
+  items,
+  onRemove,
+}: {
+  items: WishlistItem[];
+  onRemove: (item: WishlistItem) => void;
+}) {
+  return (
+    <Panel className="aev-intent-art overflow-hidden">
+      <SectionTitle title="Favorites" href="/product" />
+      {items.length === 0 ? (
+        <EmptyLine text="No favorites saved yet." />
+      ) : (
+        <div className="space-y-3">
+          {items.slice(0, 4).map((item) => (
+            <div key={`${item.productId}-${item.slug}`} className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-3">
+              <Link href={`/product/${item.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-[#FF4DB8]/18 bg-[#080611]/70 text-[#FFB3D1]">
+                  {item.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.image} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <Heart className="h-4 w-4" />
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-white">{item.name}</span>
+                  <span className="mt-1 block truncate text-xs text-[#9C91AA]">
+                    {formatCurrency(item.price)}
+                    {item.variant ? ` / ${item.variant}` : ""}
+                  </span>
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => onRemove(item)}
+                className="mini-action shrink-0"
+                aria-label={`Remove ${item.name} from favorites`}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
   );
 }
 

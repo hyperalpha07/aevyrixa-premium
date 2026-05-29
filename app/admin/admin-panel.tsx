@@ -8041,6 +8041,30 @@ function emptyReviewDraft(products: AdminProduct[]) {
   };
 }
 
+function reviewProductSlug(product?: AdminProduct, fallback = "") {
+  const slug = product?.slug || fallback;
+  if (slug.trim()) return slug.trim();
+  return (product?.name || "review")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function validReviewMediaUrls(urls: string[]) {
+  return urls
+    .map((url) => url.trim())
+    .filter((url) => {
+      if (!url) return false;
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    })
+    .slice(0, 3);
+}
+
 function AdminTextInput({
   label,
   value,
@@ -8124,10 +8148,11 @@ function ReviewsSection({
 
   const selectedDraftProduct = products.find((product) => product.id === draft.productId);
   const draftHasValidDate = !draft.createdAt || Number.isFinite(new Date(draft.createdAt).getTime());
+  const validMediaUrls = validReviewMediaUrls(draft.mediaUrls);
+  const hasInvalidMediaUrl = draft.mediaUrls.some((url) => url.trim() && !validMediaUrls.includes(url.trim()));
   const canSubmitDraft =
     canManage &&
     Boolean(draft.productId) &&
-    Boolean((selectedDraftProduct?.slug || draft.productSlug).trim()) &&
     Boolean(draft.customerName.trim()) &&
     Number.isFinite(draft.rating) &&
     draft.rating >= 1 &&
@@ -8168,8 +8193,8 @@ function ReviewsSection({
     try {
       const payload = {
         ...draft,
-        productSlug: selectedDraftProduct?.slug || draft.productSlug,
-        mediaUrls: draft.mediaUrls.filter(Boolean),
+        productSlug: reviewProductSlug(selectedDraftProduct, draft.productSlug || draft.productId),
+        mediaUrls: validReviewMediaUrls(draft.mediaUrls),
         sourceType: draft.sourceType || "admin-added",
         isFeatured: draft.status === "approved" && draft.isFeatured,
         createdAt: draft.createdAt || new Date().toISOString().slice(0, 10),
@@ -8390,6 +8415,11 @@ function ReviewsSection({
                 </span>
               ))}
             </div>
+            {hasInvalidMediaUrl && (
+              <p className="mt-2 text-xs leading-5 text-amber-100/78">
+                Media URL is optional. Invalid media links will be ignored; use a full http or https URL.
+              </p>
+            )}
           </div>
           <AdminTextInput
             label="Review date"

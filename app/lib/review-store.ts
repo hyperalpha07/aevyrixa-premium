@@ -184,7 +184,7 @@ function toPublicReview(review: ProductReview): PublicProductReview {
     id: review.id,
     productId: review.productId,
     productSlug: review.productSlug,
-    customerName: maskCustomerName(review.customerName),
+    customerName: review.customerName,
     rating: review.rating,
     title: review.title,
     body: review.body,

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import type { MouseEvent } from "react";
 import { ArrowRight, Eye, Heart, ShoppingCart, X } from "lucide-react";
 import { useCart } from "@/app/components/cart/cart-context";
 import ProductVisual from "@/app/components/product-visual";
@@ -13,6 +14,12 @@ import {
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
 import type { ProductCatalogItem } from "@/app/lib/product-types";
 import type { ReviewSummary } from "@/app/lib/review-types";
+import {
+  isWishlistItemSaved,
+  readWishlistItems,
+  WISHLIST_UPDATED_EVENT,
+  writeWishlistItems,
+} from "@/app/lib/wishlist-storage";
 
 const themeStyles: Record<
   ProductVisualTheme,
@@ -73,9 +80,9 @@ export function productDateValue(product: ProductCatalogItem) {
 function canQuickAdd(product: ProductCatalogItem) {
   return (
     isPurchasableStock(product.stockStatus) &&
-    product.sizes.length <= 1 &&
-    product.colors.length <= 1 &&
-    product.absorbencyOptions.length <= 1
+    (product.sizes.length === 0 || Boolean(product.sizes[0])) &&
+    (product.colors.length === 0 || Boolean(product.colors[0])) &&
+    (product.absorbencyOptions.length === 0 || Boolean(product.absorbencyOptions[0] || product.absorbency))
   );
 }
 
@@ -132,6 +139,8 @@ export default function StorefrontProductCard({
 }) {
   const { addItem } = useCart();
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteMessage, setFavoriteMessage] = useState("");
   const titleId = useId();
   const descriptionId = useId();
   const style = themeStyles[product.visualTheme] ?? themeStyles["blush-violet"];
@@ -184,6 +193,59 @@ export default function StorefrontProductCard({
     setQuickViewOpen(true);
   };
 
+  const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const current = readWishlistItems();
+    const saved = isWishlistItemSaved(current, product.id, product.slug);
+    const variantSummary = [
+      product.sizes[0],
+      product.colors[0],
+      product.absorbencyOptions[0] || product.absorbency,
+    ]
+      .filter(Boolean)
+      .join(" / ");
+    const next = saved
+      ? current.filter((item) => item.productId !== product.id && item.slug !== product.slug)
+      : [
+          {
+            id: product.id,
+            productId: product.id,
+            slug: product.slug,
+            name: product.name,
+            price: product.price,
+            image: imageUrl,
+            variant: variantSummary || undefined,
+            addedAt: new Date().toISOString(),
+          },
+          ...current.filter((item) => item.productId !== product.id && item.slug !== product.slug),
+        ];
+
+    writeWishlistItems(next);
+    setIsFavorite(!saved);
+    setFavoriteMessage(saved ? "Removed from favorites" : "Added to favorites");
+  };
+
+  useEffect(() => {
+    const syncFavorite = () => {
+      setIsFavorite(isWishlistItemSaved(readWishlistItems(), product.id, product.slug));
+    };
+    syncFavorite();
+    window.addEventListener("storage", syncFavorite);
+    window.addEventListener(WISHLIST_UPDATED_EVENT, syncFavorite);
+    return () => {
+      window.removeEventListener("storage", syncFavorite);
+      window.removeEventListener(WISHLIST_UPDATED_EVENT, syncFavorite);
+    };
+  }, [product.id, product.slug]);
+
+  useEffect(() => {
+    if (!favoriteMessage) return;
+    const timeout = window.setTimeout(() => setFavoriteMessage(""), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [favoriteMessage]);
+
   useEffect(() => {
     if (!quickViewOpen) return;
 
@@ -214,18 +276,20 @@ export default function StorefrontProductCard({
     <button
       type="button"
       onClick={handleQuickAdd}
-      className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
+      className="aev-button-primary aev-card-cta inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
       <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       Add to Cart
     </button>
   ) : (
-    <Link
-      href={productHref}
-      className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
+    <button
+      type="button"
+      onClick={handleShopCardAdd}
+      className="aev-button-primary aev-card-cta inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
+      <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       Add to Cart
-    </Link>
+    </button>
   );
   const revealAction = shopCard ? (
     <button
@@ -246,12 +310,14 @@ export default function StorefrontProductCard({
       Add to Cart
     </button>
   ) : (
-    <Link
-      href={productHref}
-      className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center rounded-md bg-[#8B5CF6]/18 px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-[#C084FC] transition hover:bg-[#8B5CF6]/26"
+    <button
+      type="button"
+      onClick={handleShopCardAdd}
+      className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-[#FF4DB8] px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-white transition hover:bg-[#E81870]"
     >
+      <ShoppingCart className="h-3.5 w-3.5" />
       Add to Cart
-    </Link>
+    </button>
   );
 
   const modalPrimaryAction = quickAddAvailable ? (
@@ -330,10 +396,16 @@ export default function StorefrontProductCard({
               {revealAction}
               <button
                 type="button"
-                className="aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 bg-white/[0.08] text-[#9C91AA] backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1]"
-                aria-label={`Save ${product.name} to wishlist`}
+                onClick={handleFavoriteClick}
+                className={`aev-v2-card-wish grid h-9 w-9 shrink-0 place-items-center rounded-md border backdrop-blur transition hover:border-[#FF4DB8]/55 hover:text-[#FFB3D1] ${
+                  isFavorite
+                    ? "border-[#FF4DB8]/55 bg-[#FF4DB8]/16 text-[#FFB3D1]"
+                    : "border-white/15 bg-white/[0.08] text-[#9C91AA]"
+                }`}
+                aria-label={`${isFavorite ? "Remove" : "Save"} ${product.name} ${isFavorite ? "from" : "to"} wishlist`}
+                aria-pressed={isFavorite}
               >
-                <Heart className="h-3.5 w-3.5" />
+                <Heart className={`h-3.5 w-3.5 ${isFavorite ? "fill-current" : ""}`} />
               </button>
             </div>
           </div>
@@ -402,20 +474,30 @@ export default function StorefrontProductCard({
             )}
           </div>
 
-          <div className={`aev-v2-card-body-action mt-auto pt-2.5 sm:pt-3 ${shopCard ? "flex items-center gap-1.5 sm:gap-2" : "grid"}`}>
+          <div className="aev-v2-card-body-action mt-auto flex items-center gap-1.5 pt-2.5 sm:gap-2 sm:pt-3">
             {primaryAction}
-            {shopCard && (
-              <button
-                type="button"
-                className="aev-v2-card-wish grid h-10 w-10 shrink-0 place-items-center rounded-md border border-white/12 bg-white/[0.04] text-[#9C91AA] transition hover:border-[#FF4DB8]/45 hover:text-[#FFB3D1] sm:h-11 sm:w-11"
-                aria-label={`Save ${product.name} to wishlist`}
-              >
-                <Heart className="h-3.5 w-3.5" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleFavoriteClick}
+              className={`aev-v2-card-wish grid h-10 w-10 shrink-0 place-items-center rounded-md border transition hover:border-[#FF4DB8]/45 hover:text-[#FFB3D1] sm:h-11 sm:w-11 ${
+                isFavorite
+                  ? "border-[#FF4DB8]/45 bg-[#FF4DB8]/14 text-[#FFB3D1]"
+                  : "border-white/12 bg-white/[0.04] text-[#9C91AA]"
+              }`}
+              aria-label={`${isFavorite ? "Remove" : "Save"} ${product.name} ${isFavorite ? "from" : "to"} wishlist`}
+              aria-pressed={isFavorite}
+            >
+              <Heart className={`h-3.5 w-3.5 ${isFavorite ? "fill-current" : ""}`} />
+            </button>
           </div>
         </div>
       </article>
+
+      {favoriteMessage && (
+        <div className="fixed bottom-[calc(var(--aev-mobile-bottom-nav-height)+1rem)] left-1/2 z-[120] -translate-x-1/2 rounded-full border border-[#FF4DB8]/28 bg-[#080611]/92 px-4 py-2 text-xs font-semibold text-[#FFB3D1] shadow-[0_16px_44px_rgba(0,0,0,0.36)] backdrop-blur md:bottom-6">
+          {favoriteMessage}
+        </div>
+      )}
 
       {quickViewOpen && (
         <div
