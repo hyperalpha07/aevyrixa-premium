@@ -24,6 +24,8 @@ type SupabaseReviewRow = {
   rating?: number | string | null;
   title?: string | null;
   body?: string | null;
+  media_url?: string | null;
+  media_type?: string | null;
   media_urls?: unknown;
   status?: string | null;
   source_type?: string | null;
@@ -150,6 +152,13 @@ function dateIsoOrUndefined(value: unknown) {
   return Number.isFinite(date.getTime()) ? date.toISOString() : undefined;
 }
 
+function mediaTypeForUrl(url: string) {
+  const clean = url.split("?")[0]?.toLowerCase() ?? "";
+  if (/\.(mp4|webm|mov|m4v)$/.test(clean)) return "video";
+  if (/\.(jpg|jpeg|png|gif|webp|avif|svg)$/.test(clean)) return "image";
+  return null;
+}
+
 function uuidOrNull(value: unknown) {
   const text = sanitizeReviewText(value, 120);
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text)
@@ -159,6 +168,8 @@ function uuidOrNull(value: unknown) {
 
 function mapRow(row: SupabaseReviewRow): ProductReview {
   const createdAt = row.created_at || new Date().toISOString();
+  const mediaUrls = stringArray(row.media_urls);
+  const fallbackMediaUrl = textValue(row.media_url);
   return {
     id: textValue(row.id),
     productId: textValue(row.product_id),
@@ -171,7 +182,7 @@ function mapRow(row: SupabaseReviewRow): ProductReview {
     rating: clampRating(row.rating),
     title: optionalText(row.title),
     body: textValue(row.body),
-    mediaUrls: stringArray(row.media_urls),
+    mediaUrls: mediaUrls.length > 0 ? mediaUrls : stringArray([fallbackMediaUrl]),
     status: normalizeStatus(row.status),
     sourceType: normalizeSourceType(row.source_type),
     verifiedPurchase: boolValue(row.verified_purchase),
@@ -214,7 +225,6 @@ export function sanitizeReviewText(value: unknown, maxLength: number) {
 
 export function validateReviewSubmission(input: ReviewSubmissionInput) {
   const errors: string[] = [];
-  if (!sanitizeReviewText(input.productId, 120)) errors.push("Product is required.");
   if (!sanitizeReviewText(input.productSlug, 160)) errors.push("Product slug is required.");
   if (!sanitizeReviewText(input.customerName, 120)) errors.push("Customer name is required.");
   if (!sanitizeReviewText(input.body, 1200)) errors.push("Review body is required.");
@@ -229,8 +239,10 @@ function toInsertPayload(input: ReviewSubmissionInput) {
   const verifiedPurchase =
     sourceType === "order-linked" && Boolean(input.verifiedPurchase && input.orderReference);
   const status = input.status && reviewStatuses.includes(input.status) ? input.status : "pending";
+  const mediaUrls = stringArray(input.mediaUrls).slice(0, 3);
+  const firstMediaUrl = mediaUrls[0] ?? null;
   return {
-    product_id: sanitizeReviewText(input.productId, 120),
+    product_id: uuidOrNull(input.productId),
     product_slug: sanitizeReviewText(input.productSlug, 160),
     order_id: uuidOrNull(input.orderId),
     order_reference: sanitizeReviewText(input.orderReference, 120) || null,
@@ -240,11 +252,14 @@ function toInsertPayload(input: ReviewSubmissionInput) {
     rating: clampRating(input.rating),
     title: sanitizeReviewText(input.title, 120) || null,
     body: sanitizeReviewText(input.body, 1200),
-    media_urls: stringArray(input.mediaUrls).slice(0, 3),
+    media_urls: mediaUrls,
+    media_url: firstMediaUrl,
+    media_type: firstMediaUrl ? mediaTypeForUrl(firstMediaUrl) : null,
     status,
     source_type: sourceType,
     verified_purchase: verifiedPurchase,
     is_featured: Boolean(input.isFeatured) && status === "approved",
+    is_approved: status === "approved",
     admin_note: sanitizeReviewText(input.adminNote, 500) || null,
     created_at: dateIsoOrUndefined(input.createdAt),
     approved_at: status === "approved" ? new Date().toISOString() : null,
@@ -273,6 +288,7 @@ function toUpdatePayload(updates: {
   };
   if (updates.status) {
     payload.status = updates.status;
+    payload.is_approved = updates.status === "approved";
     payload.approved_at =
       updates.status === "approved" ? new Date().toISOString() : null;
   }
@@ -280,13 +296,19 @@ function toUpdatePayload(updates: {
   if (updates.adminNote !== undefined) {
     payload.admin_note = sanitizeReviewText(updates.adminNote, 500) || null;
   }
-  if (updates.productId !== undefined) payload.product_id = sanitizeReviewText(updates.productId, 120);
+  if (updates.productId !== undefined) payload.product_id = uuidOrNull(updates.productId);
   if (updates.productSlug !== undefined) payload.product_slug = sanitizeReviewText(updates.productSlug, 160);
   if (updates.customerName !== undefined) payload.customer_name = sanitizeReviewText(updates.customerName, 120);
   if (updates.rating !== undefined) payload.rating = clampRating(updates.rating);
   if (updates.title !== undefined) payload.title = sanitizeReviewText(updates.title, 120) || null;
   if (updates.body !== undefined) payload.body = sanitizeReviewText(updates.body, 1200);
-  if (updates.mediaUrls !== undefined) payload.media_urls = stringArray(updates.mediaUrls).slice(0, 3);
+  if (updates.mediaUrls !== undefined) {
+    const mediaUrls = stringArray(updates.mediaUrls).slice(0, 3);
+    const firstMediaUrl = mediaUrls[0] ?? null;
+    payload.media_urls = mediaUrls;
+    payload.media_url = firstMediaUrl;
+    payload.media_type = firstMediaUrl ? mediaTypeForUrl(firstMediaUrl) : null;
+  }
   if (updates.sourceType !== undefined) payload.source_type = normalizeSourceType(updates.sourceType);
   if (updates.verifiedPurchase !== undefined) {
     payload.verified_purchase =

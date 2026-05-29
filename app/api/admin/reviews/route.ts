@@ -9,7 +9,7 @@ import {
   listAllReviews,
   createReview,
   deleteReview,
-  reviewErrorResponse,
+  ReviewStoreError,
   sanitizeReviewText,
   updateReview,
 } from "@/app/lib/review-store";
@@ -32,10 +32,21 @@ function statusValue(value: unknown): ReviewStatus | undefined {
 
 function sourceTypeValue(value: unknown): ReviewSourceType {
   if (value === "order-linked") return "order-linked";
-  if (value === "imported" || value === "customer-submitted" || value === "curated-customer-feedback" || value === "curated") {
+  if (
+    value === "imported" ||
+    value === "customer-submitted" ||
+    value === "curated-customer-feedback" ||
+    value === "curated" ||
+    value === "Customer-submitted review" ||
+    value === "Curated customer feedback" ||
+    value === "Imported review"
+  ) {
     return "imported";
   }
-  if (value === "admin-added" || value === "admin-approved") return "admin-added";
+  if (value === "admin-added" || value === "admin-approved" || value === "Admin-approved review") {
+    return "admin-added";
+  }
+  if (value === "Order-linked review") return "order-linked";
   return reviewSourceTypes.includes(value as never) && value !== "customer-submitted"
     ? (value as ReviewSourceType)
     : "admin-added";
@@ -44,6 +55,17 @@ function sourceTypeValue(value: unknown): ReviewSourceType {
 function ratingValue(value: unknown) {
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? Math.min(5, Math.max(1, Math.round(parsed))) : 0;
+}
+
+function adminReviewErrorResponse(error: unknown) {
+  if (error instanceof ReviewStoreError) {
+    return Response.json(
+      { errors: [error.message], code: error.code },
+      { status: error.status }
+    );
+  }
+  console.error("Review API error:", error);
+  return Response.json({ errors: ["Review request failed."] }, { status: 500 });
 }
 
 export async function GET(request: Request) {
@@ -55,7 +77,7 @@ export async function GET(request: Request) {
     const reviews = await listAllReviews();
     return Response.json({ reviews });
   } catch (error) {
-    return reviewErrorResponse(error);
+    return adminReviewErrorResponse(error);
   }
 }
 
@@ -108,7 +130,7 @@ export async function POST(request: Request) {
     });
     return Response.json({ review }, { status: 201 });
   } catch (error) {
-    return reviewErrorResponse(error);
+    return adminReviewErrorResponse(error);
   }
 }
 
@@ -192,7 +214,7 @@ export async function PATCH(request: Request) {
     });
     return Response.json({ review });
   } catch (error) {
-    return reviewErrorResponse(error);
+    return adminReviewErrorResponse(error);
   }
 }
 
@@ -228,6 +250,6 @@ export async function DELETE(request: Request) {
     });
     return Response.json({ ok: true });
   } catch (error) {
-    return reviewErrorResponse(error);
+    return adminReviewErrorResponse(error);
   }
 }

@@ -1063,6 +1063,9 @@ async function updateReviewInApi(
     errors?: string[];
   } | null;
   if (!response.ok || !payload?.review) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Admin review update failed", { updates, payload });
+    }
     throw new Error(payload?.errors?.[0] ?? "Review could not be updated.");
   }
   return payload.review;
@@ -1095,6 +1098,9 @@ async function createReviewInApi(
     errors?: string[];
   } | null;
   if (!response.ok || !payload?.review) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Admin review create failed", { review, payload });
+    }
     throw new Error(payload?.errors?.[0] ?? "Review could not be created.");
   }
   return payload.review;
@@ -8077,6 +8083,10 @@ function reviewSourceTypeForSubmit(
   return "admin-added";
 }
 
+function isValidReviewStatus(value: string): value is AdminReviewClientRecord["status"] {
+  return value === "pending" || value === "approved" || value === "rejected" || value === "hidden";
+}
+
 function AdminTextInput({
   label,
   value,
@@ -8158,22 +8168,31 @@ function ReviewsSection({
     });
   }, [query, ratingFilter, reviews, statusFilter]);
 
-  const selectedDraftProduct = products.find((product) => product.id === draft.productId);
-  const draftHasValidDate = !draft.createdAt || Number.isFinite(new Date(draft.createdAt).getTime());
+  const selectedDraftProduct = products.find(
+    (product) =>
+      product.id === draft.productId ||
+      product.slug === draft.productSlug ||
+      product.slug === draft.productId
+  );
+  const draftProductSlug = reviewProductSlug(selectedDraftProduct, draft.productSlug || draft.productId);
+  const draftProductValid = Boolean(selectedDraftProduct || draftProductSlug.trim());
+  const draftDateValue = draft.createdAt || new Date().toISOString().slice(0, 10);
+  const draftHasValidDate = Number.isFinite(new Date(draftDateValue).getTime());
+  const draftRatingValid = Number.isFinite(draft.rating) && draft.rating >= 1 && draft.rating <= 5;
+  const draftStatusValid = isValidReviewStatus(draft.status);
+  const draftSourceType = reviewSourceTypeForSubmit(draft.sourceType);
   const validMediaUrls = validReviewMediaUrls(draft.mediaUrls);
   const hasInvalidMediaUrl = draft.mediaUrls.some((url) => url.trim() && !validMediaUrls.includes(url.trim()));
-  const validReviewStatuses = new Set(["pending", "approved", "rejected", "hidden"]);
   const submitValidationMessages = [
-    !selectedDraftProduct ? "Missing: product" : "",
+    !canManage ? "Missing: review management permission" : "",
+    !draftProductValid ? "Missing: product" : "",
     !draft.customerName.trim() ? "Missing: customer name" : "",
-    !Number.isFinite(draft.rating) || draft.rating < 1 || draft.rating > 5 ? "Invalid: rating" : "",
+    !draftRatingValid ? "Invalid: rating" : "",
     !draft.body.trim() ? "Missing: review text" : "",
     !draftHasValidDate ? "Invalid: review date" : "",
-    !validReviewStatuses.has(draft.status) ? "Invalid: status" : "",
+    !draftStatusValid ? "Invalid: status" : "",
   ].filter(Boolean);
-  const canSubmitDraft =
-    canManage &&
-    submitValidationMessages.length === 0;
+  const canSubmitDraft = submitValidationMessages.length === 0;
 
   const saveReview = async (
     review: AdminReviewClientRecord,
@@ -8195,9 +8214,13 @@ function ReviewsSection({
 
   const saveDraft = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage) {
+      setError("Missing: review management permission");
+      setMessage("");
+      return;
+    }
     if (!canSubmitDraft) {
-      setError("Select a product, enter customer name and review text, choose a 1-5 rating, valid date, and status.");
+      setError(submitValidationMessages.join(" ") || "Review cannot be submitted.");
       setMessage("");
       return;
     }
@@ -8207,14 +8230,17 @@ function ReviewsSection({
     try {
       const payload = {
         ...draft,
-        productSlug: reviewProductSlug(selectedDraftProduct, draft.productSlug || draft.productId),
-        mediaUrls: validReviewMediaUrls(draft.mediaUrls),
-        sourceType: reviewSourceTypeForSubmit(draft.sourceType),
+        productId: selectedDraftProduct?.id || draft.productId,
+        productSlug: draftProductSlug,
+        mediaUrls: validMediaUrls,
+        sourceType: draftSourceType,
         verifiedPurchase: false,
         isFeatured: draft.status === "approved" && draft.isFeatured,
-        createdAt: draft.createdAt || new Date().toISOString().slice(0, 10),
+        createdAt: draftDateValue,
       };
-      console.log("Submitting admin review payload", payload);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Submitting admin review payload", payload);
+      }
       if (editingId) {
         const updated = await updateReviewInApi({ id: editingId, ...payload });
         const refreshedReviews = await readReviewsFromApi();
@@ -8504,16 +8530,29 @@ function ReviewsSection({
               {editingId ? "Save review" : "Add review"}
             </button>
             {!canSubmitDraft && (
-              <div className="basis-full text-xs leading-5 text-amber-100/78">
-                {submitValidationMessages.length > 0 ? (
-                  <ul className="list-disc space-y-1 pl-4">
-                    {submitValidationMessages.map((message) => (
-                      <li key={message}>{message}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>Missing: review management permission</p>
-                )}
+              <div className="basis-full rounded-2xl border border-amber-200/18 bg-amber-200/[0.055] p-3 text-xs leading-5 text-amber-50/78">
+                <div className="font-semibold text-amber-50/90">Review submit check</div>
+                <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2 xl:grid-cols-3">
+                  <span>userType: {session.userType}</span>
+                  <span>username: {session.username}</span>
+                  <span>role: {session.role}</span>
+                  <span>canManage: {String(canManage)}</span>
+                  <span>product id: {draft.productId || "empty"}</span>
+                  <span>product slug: {draftProductSlug || "empty"}</span>
+                  <span>product valid: {String(draftProductValid)}</span>
+                  <span>customer valid: {String(Boolean(draft.customerName.trim()))}</span>
+                  <span>rating: {draft.rating} / valid {String(draftRatingValid)}</span>
+                  <span>review text valid: {String(Boolean(draft.body.trim()))}</span>
+                  <span>date: {draftDateValue || "empty"} / valid {String(draftHasValidDate)}</span>
+                  <span>status: {draft.status} / valid {String(draftStatusValid)}</span>
+                  <span>source: {draft.sourceType} =&gt; {draftSourceType}</span>
+                  <span>media URL valid: {String(!hasInvalidMediaUrl)}</span>
+                  <span>uploaded media count: {validMediaUrls.length}</span>
+                  <span>final canSubmitDraft: {String(canSubmitDraft)}</span>
+                </div>
+                <div className="mt-2">
+                  disabled reasons: {submitValidationMessages.length > 0 ? submitValidationMessages.join("; ") : "none"}
+                </div>
               </div>
             )}
             {editingId && (

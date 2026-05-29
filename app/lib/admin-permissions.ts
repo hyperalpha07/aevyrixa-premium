@@ -48,6 +48,7 @@ export type AdminSessionUser = {
   role: AdminRole;
   permissions: Record<AdminPermission, boolean>;
   staffId?: string;
+  isOwner?: boolean;
 };
 
 export type AdminSection =
@@ -254,8 +255,10 @@ export function hasPermission(
   permission: AdminPermission
 ) {
   if (!session) return false;
-  if (session.userType === "owner" || session.role === "owner") return true;
-  return Boolean(session.permissions[permission]);
+  if (session.userType === "owner" || session.role === "owner" || session.isOwner === true) {
+    return true;
+  }
+  return Boolean(session.permissions?.[permission]);
 }
 
 export function requirePermission(
