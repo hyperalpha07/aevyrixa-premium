@@ -139,6 +139,13 @@ function clampRating(value: unknown) {
   return Math.min(5, Math.max(1, rating));
 }
 
+function dateIsoOrUndefined(value: unknown) {
+  const text = textValue(value);
+  if (!text) return undefined;
+  const date = new Date(text);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : undefined;
+}
+
 function uuidOrNull(value: unknown) {
   const text = sanitizeReviewText(value, 120);
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text)
@@ -183,7 +190,7 @@ function toPublicReview(review: ProductReview): PublicProductReview {
     body: review.body,
     mediaUrls: review.mediaUrls,
     sourceType: review.sourceType,
-    verifiedPurchase: review.verifiedPurchase,
+    verifiedPurchase: review.sourceType === "order-linked" && review.verifiedPurchase,
     isFeatured: review.isFeatured,
     createdAt: review.createdAt,
     approvedAt: review.approvedAt,
@@ -235,7 +242,7 @@ function toInsertPayload(input: ReviewSubmissionInput) {
     verified_purchase: verifiedPurchase,
     is_featured: Boolean(input.isFeatured) && status === "approved",
     admin_note: sanitizeReviewText(input.adminNote, 500) || null,
-    created_at: input.createdAt ? new Date(input.createdAt).toISOString() : undefined,
+    created_at: dateIsoOrUndefined(input.createdAt),
     approved_at: status === "approved" ? new Date().toISOString() : null,
   };
 }
@@ -283,7 +290,10 @@ function toUpdatePayload(updates: {
   }
   if (updates.orderId !== undefined) payload.order_id = uuidOrNull(updates.orderId);
   if (updates.orderReference !== undefined) payload.order_reference = sanitizeReviewText(updates.orderReference, 120) || null;
-  if (updates.createdAt !== undefined) payload.created_at = new Date(updates.createdAt).toISOString();
+  if (updates.createdAt !== undefined) {
+    const createdAt = dateIsoOrUndefined(updates.createdAt);
+    if (createdAt) payload.created_at = createdAt;
+  }
   return payload;
 }
 
@@ -457,7 +467,7 @@ export async function createReview(input: ReviewSubmissionInput) {
         Boolean(input.verifiedPurchase && input.orderReference),
       isFeatured: Boolean(input.isFeatured) && status === "approved",
       adminNote: sanitizeReviewText(input.adminNote, 500) || undefined,
-      createdAt: input.createdAt ? new Date(input.createdAt).toISOString() : now,
+      createdAt: dateIsoOrUndefined(input.createdAt) ?? now,
       updatedAt: now,
       approvedAt: status === "approved" ? now : undefined,
     };
@@ -509,7 +519,7 @@ export async function updateReview(
       ...(updates.orderReference !== undefined
         ? { orderReference: sanitizeReviewText(updates.orderReference, 120) || undefined }
         : {}),
-      ...(updates.createdAt !== undefined ? { createdAt: new Date(updates.createdAt).toISOString() } : {}),
+      ...(updates.createdAt !== undefined ? { createdAt: dateIsoOrUndefined(updates.createdAt) ?? demoReviews[index].createdAt } : {}),
       ...(typeof updates.isFeatured === "boolean" ? { isFeatured: updates.isFeatured } : {}),
       ...(updates.adminNote !== undefined ? { adminNote: sanitizeReviewText(updates.adminNote, 500) } : {}),
       approvedAt: updates.status === "approved" ? new Date().toISOString() : demoReviews[index].approvedAt,

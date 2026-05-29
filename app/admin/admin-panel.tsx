@@ -231,7 +231,7 @@ type AdminReviewClientRecord = {
   body: string;
   mediaUrls: string[];
   status: "pending" | "approved" | "rejected" | "hidden";
-  sourceType: "order-linked" | "admin-added" | "imported";
+  sourceType: "order-linked" | "customer-submitted" | "admin-added" | "imported";
   verifiedPurchase: boolean;
   isFeatured: boolean;
   adminNote?: string;
@@ -8089,6 +8089,7 @@ function ReviewsSection({
   const [reviewMediaUploadError, setReviewMediaUploadError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState(() => emptyReviewDraft(products));
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
@@ -8121,15 +8122,31 @@ function ReviewsSection({
     });
   }, [query, ratingFilter, reviews, statusFilter]);
 
+  const selectedDraftProduct = products.find((product) => product.id === draft.productId);
+  const draftHasValidDate = !draft.createdAt || Number.isFinite(new Date(draft.createdAt).getTime());
+  const canSubmitDraft =
+    canManage &&
+    Boolean(draft.productId) &&
+    Boolean((selectedDraftProduct?.slug || draft.productSlug).trim()) &&
+    Boolean(draft.customerName.trim()) &&
+    Number.isFinite(draft.rating) &&
+    draft.rating >= 1 &&
+    draft.rating <= 5 &&
+    Boolean(draft.body.trim()) &&
+    draftHasValidDate &&
+    Boolean(draft.status);
+
   const saveReview = async (
     review: AdminReviewClientRecord,
     updates: Omit<Parameters<typeof updateReviewInApi>[0], "id">
   ) => {
     setSavingId(review.id);
     setError("");
+    setMessage("");
     try {
       const updated = await updateReviewInApi({ id: review.id, ...updates });
       setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setMessage("Review saved.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review could not be updated.");
     } finally {
@@ -8140,22 +8157,33 @@ function ReviewsSection({
   const saveDraft = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canManage) return;
+    if (!canSubmitDraft) {
+      setError("Select a product, enter customer name and review text, choose a 1-5 rating, valid date, and status.");
+      setMessage("");
+      return;
+    }
     setSavingId(editingId || "new");
     setError("");
+    setMessage("");
     try {
-      const selectedProduct = products.find((product) => product.id === draft.productId);
       const payload = {
         ...draft,
-        productSlug: selectedProduct?.slug || draft.productSlug,
+        productSlug: selectedDraftProduct?.slug || draft.productSlug,
         mediaUrls: draft.mediaUrls.filter(Boolean),
+        sourceType: draft.sourceType || "admin-added",
         isFeatured: draft.status === "approved" && draft.isFeatured,
+        createdAt: draft.createdAt || new Date().toISOString().slice(0, 10),
       };
       if (editingId) {
         const updated = await updateReviewInApi({ id: editingId, ...payload });
         setReviews((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        setMessage("Review saved.");
+        setStatusFilter(updated.status);
       } else {
         const created = await createReviewInApi(payload);
         setReviews((current) => [created, ...current]);
+        setMessage("Review added.");
+        setStatusFilter(created.status);
       }
       setEditingId(null);
       setDraft(emptyReviewDraft(products));
@@ -8188,6 +8216,7 @@ function ReviewsSection({
     if (!canManage) return;
     setSavingId(review.id);
     setError("");
+    setMessage("");
     try {
       await deleteReviewInApi(review.id);
       setReviews((current) => current.filter((item) => item.id !== review.id));
@@ -8195,6 +8224,7 @@ function ReviewsSection({
         setEditingId(null);
         setDraft(emptyReviewDraft(products));
       }
+      setMessage("Review deleted.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review could not be deleted.");
     } finally {
@@ -8249,6 +8279,11 @@ function ReviewsSection({
       <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
         Reviews are private until approved. Admin-added or imported reviews are labeled as customer feedback only; verified purchase is reserved for order-linked account reviews.
       </div>
+      {message && (
+        <div className="rounded-[1.25rem] border border-emerald-200/22 bg-emerald-200/[0.08] p-4 text-sm leading-6 text-emerald-50/86">
+          {message}
+        </div>
+      )}
       {error && (
         <div className="rounded-[1.25rem] border border-rose-200/22 bg-rose-200/[0.08] p-4 text-sm leading-6 text-rose-50/86">
           {error}
@@ -8415,7 +8450,7 @@ function ReviewsSection({
           <div className="flex flex-wrap gap-2 lg:col-span-2">
             <button
               type="submit"
-              disabled={!canManage || savingId === "new" || savingId === editingId}
+              disabled={!canSubmitDraft || savingId === "new" || savingId === editingId}
               className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.10] px-5 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45 disabled:opacity-45"
             >
               {editingId ? "Save review" : "Add review"}

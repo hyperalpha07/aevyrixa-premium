@@ -217,14 +217,14 @@ export default function StorefrontProductCard({
       className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
       <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-      {recommendation ? "Add" : "Add to Cart"}
+      Add to Cart
     </button>
   ) : (
     <Link
       href={productHref}
       className="aev-button-primary aev-card-cta inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold text-white sm:min-h-11 sm:px-4 sm:text-sm"
     >
-      {recommendation ? "Options" : "Choose Options"}
+      Add to Cart
     </Link>
   );
   const revealAction = shopCard ? (
@@ -243,14 +243,14 @@ export default function StorefrontProductCard({
       className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-[#FF4DB8] px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-white transition hover:bg-[#E81870]"
     >
       <ShoppingCart className="h-3.5 w-3.5" />
-      Add
+      Add to Cart
     </button>
   ) : (
     <Link
       href={productHref}
       className="aev-v2-card-reveal-button inline-flex min-h-9 flex-1 items-center justify-center rounded-md bg-[#8B5CF6]/18 px-3 text-[0.68rem] font-black uppercase tracking-[0.06em] text-[#C084FC] transition hover:bg-[#8B5CF6]/26"
     >
-      Options
+      Add to Cart
     </Link>
   );
 
@@ -268,7 +268,7 @@ export default function StorefrontProductCard({
       href={productHref}
       className="aev-button-primary inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold text-white"
     >
-      Choose Options
+      Add to Cart
       <ArrowRight className="h-4 w-4" />
     </Link>
   );
