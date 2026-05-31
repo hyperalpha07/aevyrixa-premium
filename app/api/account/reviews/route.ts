@@ -41,38 +41,48 @@ export async function POST(request: Request) {
     const orderReference = sanitizeReviewText(payload.orderReference, 120);
     const productId = sanitizeReviewText(payload.productId, 120);
     const productSlug = sanitizeReviewText(payload.productSlug, 160);
+    const mediaUrls = Array.isArray(payload.mediaUrls)
+      ? payload.mediaUrls.filter((url): url is string => typeof url === "string")
+      : [];
+
+    if (!productSlug) {
+      return Response.json({ errors: ["Product slug is required."] }, { status: 400 });
+    }
+
     const { orders } = await listOrders();
     const customerPhone = normalizeCustomerPhone(customer.phone);
-    const order = orders
-      .filter((item) => !item.deletedAt && !item.softDeletedAt)
-      .find((item) => {
-        const sameOrder = (item.orderReference || item.orderId) === orderReference;
-        if (!sameOrder) return false;
-        if (item.customerId) return item.customerId === customer.id;
-        return normalizeCustomerPhone(item.customer.phone) === customerPhone;
-      });
+    const order = orderReference
+      ? orders
+          .filter((item) => !item.deletedAt && !item.softDeletedAt)
+          .find((item) => {
+            const sameOrder = (item.orderReference || item.orderId) === orderReference;
+            if (!sameOrder) return false;
+            if (item.customerId) return item.customerId === customer.id;
+            return normalizeCustomerPhone(item.customer.phone) === customerPhone;
+          })
+      : undefined;
 
-    if (!order) {
+    if (orderReference && !order) {
       return Response.json(
         { errors: ["This order is not linked to your account."] },
         { status: 403 }
       );
     }
 
-    if (!reviewableStatus(order.status, order.deliveryStatus)) {
+    if (order && !reviewableStatus(order.status, order.deliveryStatus)) {
       return Response.json(
         { errors: ["Reviews are available after your order is confirmed or delivered."] },
         { status: 403 }
       );
     }
 
-    const purchasedItem = order.items.find((item) => {
+    const purchasedItem = order?.items.find((item) => {
       const itemProductId = sanitizeReviewText(item.productId, 120);
       const itemSlug = sanitizeReviewText(item.slug, 160);
       return (productId && itemProductId === productId) || (productSlug && itemSlug === productSlug);
     });
 
-    if (!purchasedItem) {
+    if (order && !purchasedItem) {
       return Response.json(
         { errors: ["This product was not found in the selected order."] },
         { status: 403 }
@@ -84,7 +94,9 @@ export async function POST(request: Request) {
       const sameCustomer = review.customerId
         ? review.customerId === customer.id
         : normalizeCustomerPhone(review.customerPhone || "") === customerPhone;
-      const sameOrder = review.orderReference === (order.orderReference || order.orderId);
+      const sameOrder = order
+        ? review.orderReference === (order.orderReference || order.orderId)
+        : !review.orderReference;
       const sameProduct =
         (productId && review.productId === productId) ||
         (productSlug && review.productSlug === productSlug);
@@ -92,25 +104,26 @@ export async function POST(request: Request) {
     });
     if (duplicate) {
       return Response.json(
-        { errors: ["You already submitted a review for this product from this order."] },
+        { errors: ["You already submitted feedback for this product."] },
         { status: 409 }
       );
     }
 
     const review = await createReview({
-      productId: productId || purchasedItem.productId || purchasedItem.id,
-      productSlug: productSlug || purchasedItem.slug || "",
-      orderId: uuidOrUndefined(order.orderId),
-      orderReference: order.orderReference || order.orderId,
+      productId: productId || purchasedItem?.productId || purchasedItem?.id || "",
+      productSlug: productSlug || purchasedItem?.slug || "",
+      orderId: order ? uuidOrUndefined(order.orderId) : undefined,
+      orderReference: order ? order.orderReference || order.orderId : undefined,
       customerId: customer.id,
       customerName: customer.fullName,
       customerPhone: customer.phone,
       rating: ratingValue(payload.rating),
       title: sanitizeReviewText(payload.title, 120),
       body: sanitizeReviewText(payload.body, 1200),
-      mediaUrls: [],
-      sourceType: "order-linked",
-      verifiedPurchase: true,
+      mediaUrls,
+      sourceType: order ? "order-linked" : "imported",
+      verifiedPurchase: Boolean(order),
+      status: "pending",
     });
 
     return Response.json(
@@ -121,7 +134,7 @@ export async function POST(request: Request) {
           rating: review.rating,
           productSlug: review.productSlug,
         },
-        message: "Review submitted. It will appear after admin approval.",
+        message: "Thanks. Your feedback is pending approval.",
       },
       { status: 201 }
     );

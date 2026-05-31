@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Check,
   CheckCircle2,
@@ -189,6 +189,17 @@ export default function ProductDetailClient({
   const [lightboxItems, setLightboxItems] = useState<PreviewMediaItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewDraft, setReviewDraft] = useState({
+    rating: 5,
+    title: "",
+    body: "",
+    mediaUrls: [] as string[],
+  });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMediaUploading, setReviewMediaUploading] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewError, setReviewError] = useState("");
 
   const mediaItems: MediaItem[] = [];
   const seenUrls = new Set<string>();
@@ -396,6 +407,109 @@ export default function ProductDetailClient({
         ) / 10
       : 0;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("review") === "write") {
+      setReviewModalOpen(true);
+    }
+  }, []);
+
+  const openReviewFlow = async () => {
+    setReviewError("");
+    setReviewMessage("");
+    try {
+      const response = await fetch("/api/account/session", {
+        cache: "no-store",
+        credentials: "include",
+      });
+      if (response.ok) {
+        setReviewModalOpen(true);
+        return;
+      }
+    } catch {
+      // Fall through to login redirect.
+    }
+    const returnTo = `/product/${encodeURIComponent(displayProduct.slug)}?review=write`;
+    router.push(`/account/login?returnTo=${encodeURIComponent(returnTo)}`);
+  };
+
+  const uploadReviewMedia = async (file: File) => {
+    setReviewMediaUploading(true);
+    setReviewError("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("productSlug", displayProduct.slug);
+      const response = await fetch("/api/account/reviews/media", {
+        method: "POST",
+        body: form,
+        credentials: "include",
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        url?: string;
+        errors?: string[];
+      } | null;
+      if (!response.ok || typeof payload?.url !== "string") {
+        setReviewError(payload?.errors?.[0] || "Review media upload failed.");
+        return;
+      }
+      setReviewDraft((current) => ({
+        ...current,
+        mediaUrls: [...current.mediaUrls, payload.url as string].slice(0, 3),
+      }));
+    } catch {
+      setReviewError("Review media upload failed. Check your connection.");
+    } finally {
+      setReviewMediaUploading(false);
+    }
+  };
+
+  const submitReview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!reviewDraft.body.trim()) {
+      setReviewError("Review text is required.");
+      return;
+    }
+    setReviewSubmitting(true);
+    setReviewError("");
+    setReviewMessage("");
+    try {
+      const response = await fetch("/api/account/reviews", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          productId: displayProduct.id,
+          productSlug: displayProduct.slug,
+          rating: reviewDraft.rating,
+          title: reviewDraft.title,
+          body: reviewDraft.body,
+          mediaUrls: reviewDraft.mediaUrls,
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        message?: string;
+        errors?: string[];
+      } | null;
+      if (!response.ok) {
+        if (response.status === 401) {
+          const returnTo = `/product/${encodeURIComponent(displayProduct.slug)}?review=write`;
+          router.push(`/account/login?returnTo=${encodeURIComponent(returnTo)}`);
+          return;
+        }
+        setReviewError(payload?.errors?.[0] || "Review could not be submitted.");
+        return;
+      }
+      setReviewMessage(payload?.message || "Thanks. Your feedback is pending approval.");
+      setReviewDraft({ rating: 5, title: "", body: "", mediaUrls: [] });
+    } catch {
+      setReviewError("Review could not be submitted. Check your connection.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
   const productSignalBadges = [
     displayProduct.badgeText,
     displayProduct.isBestSeller ? "Best Seller" : "",
@@ -535,7 +649,7 @@ export default function ProductDetailClient({
             <span>
               {reviewCount > 0
                 ? `${averageRating.toFixed(1)} from ${reviewCount} approved ${reviewCount === 1 ? "review" : "reviews"}`
-                : "No approved reviews yet"}
+                : "No approved feedback yet."}
             </span>
             <Link href="#reviews" className="font-semibold text-[#FF4DB8] hover:text-[#FFB3D1]">
               View reviews
@@ -861,7 +975,123 @@ export default function ProductDetailClient({
         reviews={reviews}
         averageRating={averageRating}
         reviewCount={reviewCount}
+        onWriteReview={openReviewFlow}
       />
+
+      {reviewModalOpen && (
+        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 px-4 py-5 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-lg rounded-2xl border border-[#FF4DB8]/18 bg-[#0D0918] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.5)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FF4DB8]">
+                  Customer feedback
+                </p>
+                <h2 className="mt-2 text-xl font-semibold text-white">Write a review</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewModalOpen(false)}
+                className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-[#D8CBE8] transition hover:border-[#FF4DB8]/35 hover:text-white"
+                aria-label="Close review form"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <form onSubmit={submitReview} className="mt-5 space-y-4">
+              <label className="block">
+                <span className="text-sm font-medium text-[#D8CBE8]">Rating</span>
+                <select
+                  required
+                  value={reviewDraft.rating}
+                  onChange={(event) =>
+                    setReviewDraft((current) => ({ ...current, rating: Number(event.target.value) }))
+                  }
+                  className="mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-[#080611] px-4 text-sm text-white outline-none focus:border-[#FF4DB8]/40"
+                >
+                  {[5, 4, 3, 2, 1].map((rating) => (
+                    <option key={rating} value={rating}>
+                      {rating} star{rating === 1 ? "" : "s"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-[#D8CBE8]">Review title optional</span>
+                <input
+                  value={reviewDraft.title}
+                  onChange={(event) =>
+                    setReviewDraft((current) => ({ ...current, title: event.target.value }))
+                  }
+                  className="mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-[#080611] px-4 text-sm text-white outline-none focus:border-[#FF4DB8]/40"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-[#D8CBE8]">Review text</span>
+                <textarea
+                  required
+                  rows={4}
+                  value={reviewDraft.body}
+                  onChange={(event) =>
+                    setReviewDraft((current) => ({ ...current, body: event.target.value }))
+                  }
+                  className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-[#080611] px-4 py-3 text-sm text-white outline-none focus:border-[#FF4DB8]/40"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-[#D8CBE8]">Upload image/video optional</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/x-m4v"
+                  disabled={reviewMediaUploading || reviewDraft.mediaUrls.length >= 3}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.currentTarget.value = "";
+                    if (file) void uploadReviewMedia(file);
+                  }}
+                  className="mt-2 block w-full rounded-xl border border-white/10 bg-[#080611] px-4 py-3 text-sm text-[#D8CBE8] file:mr-3 file:rounded-full file:border-0 file:bg-[#FF4DB8]/16 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#FFB3D1]"
+                />
+              </label>
+              {reviewDraft.mediaUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {reviewDraft.mediaUrls.map((url, index) => (
+                    <button
+                      key={`${url}-${index}`}
+                      type="button"
+                      onClick={() =>
+                        setReviewDraft((current) => ({
+                          ...current,
+                          mediaUrls: current.mediaUrls.filter((item) => item !== url),
+                        }))
+                      }
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-[#D8CBE8]"
+                    >
+                      Remove media {index + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {reviewMediaUploading && <p className="text-sm text-[#9C91AA]">Uploading media...</p>}
+              {reviewError && (
+                <div className="rounded-xl border border-rose-300/20 bg-rose-300/[0.08] p-3 text-sm text-rose-100">
+                  {reviewError}
+                </div>
+              )}
+              {reviewMessage && (
+                <div className="rounded-xl border border-emerald-300/20 bg-emerald-300/[0.08] p-3 text-sm text-emerald-100">
+                  {reviewMessage}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={reviewSubmitting || reviewMediaUploading}
+                className="aev-button-primary inline-flex min-h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {reviewSubmitting ? "Submitting..." : "Submit review"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {displayRelated.length > 0 && (
         <section className="aev-related-recommendations relative z-[2] mx-auto max-w-7xl px-3 pb-[calc(var(--aev-mobile-bottom-nav-height)+8rem+env(safe-area-inset-bottom,0px))] sm:px-7 sm:pb-16 lg:px-12">
@@ -1423,10 +1653,12 @@ function ProductReviewsSection({
   reviews,
   averageRating,
   reviewCount,
+  onWriteReview,
 }: {
   reviews: PublicProductReview[];
   averageRating: number;
   reviewCount: number;
+  onWriteReview: () => void;
 }) {
   const ratingRows = [5, 4, 3, 2, 1].map((rating) => {
     const count = reviews.filter((review) => Math.round(review.rating) === rating).length;
@@ -1440,21 +1672,22 @@ function ProductReviewsSection({
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
             eyebrow="Reviews"
-            title="Real and approved"
-            description="Approved reviews are shown here. Verified purchase appears only when a review is linked to a real customer order."
+            title="Customer feedback"
+            description="Reviews are shown after approval. Verified purchase appears only when feedback is linked to a confirmed customer order."
           />
-          <Link
-            href="/account"
+          <button
+            type="button"
+            onClick={onWriteReview}
             className="inline-flex min-h-10 items-center justify-center rounded border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
           >
             Write a Review
-          </Link>
+          </button>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr_15rem]">
           {reviews.length === 0 ? (
             <div className="lg:col-span-2 rounded border border-dashed border-[#00D4C6]/22 bg-[#00D4C6]/[0.045] p-6 text-sm leading-7 text-[#D8CBE8]">
-              No approved reviews yet. The section will populate after eligible customer feedback is reviewed.
+              No approved feedback yet. Be the first to share your experience after your order.
             </div>
           ) : (
             reviews.slice(0, 4).map((review) => (
@@ -1469,7 +1702,7 @@ function ProductReviewsSection({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
-                        {review.title || "Customer review"}
+                        {review.title || "Customer feedback"}
                       </h3>
                       {review.isFeatured && (
                         <span className="rounded border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#31E6D4]">
@@ -1488,7 +1721,7 @@ function ProductReviewsSection({
                   <span className="rounded border border-[#00D4C6]/20 bg-[#00D4C6]/[0.07] px-2 py-1 text-[10px] font-semibold text-[#31E6D4]">
                     {review.verifiedPurchase && review.sourceType === "order-linked"
                       ? "Verified purchase"
-                      : "Customer review"}
+                      : "Customer feedback"}
                   </span>
                 </p>
                 {review.mediaUrls.length > 0 && (
@@ -1528,7 +1761,7 @@ function ProductReviewsSection({
             <p className="mt-1 text-[11px] text-[#6B5F7A]">
               {reviewCount > 0
                 ? `${reviewCount} approved ${reviewCount === 1 ? "review" : "reviews"}`
-                : "No approved reviews"}
+                : "No approved feedback yet."}
             </p>
             <div className="mt-5 space-y-2">
               {ratingRows.map(({ rating, count, percent }) => (

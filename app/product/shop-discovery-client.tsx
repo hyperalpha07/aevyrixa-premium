@@ -449,25 +449,25 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[70rem] px-3 pb-2 pt-2 sm:px-5 lg:px-6">
-        <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_16.5rem] xl:grid-cols-[minmax(0,1fr)_17.5rem]">
+      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[78rem] px-3 pb-2 pt-2 sm:px-5 lg:px-8">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="grid gap-3">
             {/* Main hero content card */}
-            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-4">
+            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-7">
               <div className="mb-3 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
                   {heroEyebrow}
                 </p>
               </div>
-              <h1 className="max-w-xl break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.08rem]">
+              <h1 className="max-w-2xl break-words text-[1.42rem] font-black leading-[1.06] tracking-tight text-white [overflow-wrap:anywhere] min-[390px]:text-[1.58rem] sm:text-[1.9rem] lg:text-[2.45rem]">
                 {heroTitle}
               </h1>
-              <p className="mt-2 max-w-md text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6">
+              <p className="mt-3 max-w-xl text-xs leading-5 text-[#D8CBE8]/68 sm:text-sm sm:leading-6 lg:text-[0.95rem]">
                 {heroSubtitle}
               </p>
 
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 <Link
                   href={primaryCtaLink}
                   className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 text-xs font-bold text-white sm:min-h-11 sm:px-6"
@@ -564,7 +564,7 @@ export default function ShopDiscoveryClient({
           </div>
 
           {/* Desktop hero media card — hidden on mobile, shown lg+ */}
-          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:aspect-[4/3] lg:self-start">
+          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:self-stretch">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
 
             {heroMediaUrl ? (

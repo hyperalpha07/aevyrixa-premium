@@ -20,6 +20,7 @@ export type ProductReview = {
   status: ReviewStatus;
   sourceType: ReviewSourceType;
   verifiedPurchase: boolean;
+  isApproved: boolean;
   isFeatured: boolean;
   adminNote?: string;
   createdAt: string;

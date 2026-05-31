@@ -30,6 +30,7 @@ type SupabaseReviewRow = {
   status?: string | null;
   source_type?: string | null;
   verified_purchase?: boolean | string | null;
+  is_approved?: boolean | string | null;
   is_featured?: boolean | string | null;
   admin_note?: string | null;
   created_at?: string | null;
@@ -170,6 +171,7 @@ function mapRow(row: SupabaseReviewRow): ProductReview {
   const createdAt = row.created_at || new Date().toISOString();
   const mediaUrls = stringArray(row.media_urls);
   const fallbackMediaUrl = textValue(row.media_url);
+  const status = normalizeStatus(row.status);
   return {
     id: textValue(row.id),
     productId: textValue(row.product_id),
@@ -183,9 +185,10 @@ function mapRow(row: SupabaseReviewRow): ProductReview {
     title: optionalText(row.title),
     body: textValue(row.body),
     mediaUrls: mediaUrls.length > 0 ? mediaUrls : stringArray([fallbackMediaUrl]),
-    status: normalizeStatus(row.status),
+    status,
     sourceType: normalizeSourceType(row.source_type),
     verifiedPurchase: boolValue(row.verified_purchase),
+    isApproved: row.is_approved === undefined ? status === "approved" : boolValue(row.is_approved),
     isFeatured: boolValue(row.is_featured),
     adminNote: optionalText(row.admin_note),
     createdAt,
@@ -391,7 +394,9 @@ export async function listApprovedReviewsForProduct(productSlug: string, limit =
     const reviews = await listReviewsFromSupabase(
       `${SUPABASE_REVIEWS_TABLE}?product_slug=eq.${encodeURIComponent(productSlug)}&status=eq.approved&select=*&order=is_featured.desc,created_at.desc&limit=${limit}`
     );
-    return reviews.map(toPublicReview);
+    return reviews
+      .filter((review) => review.status === "approved" && review.isApproved)
+      .map(toPublicReview);
   } catch (error) {
     console.error("Review product lookup fell back empty:", error);
     return [];
@@ -411,7 +416,9 @@ export async function listFeaturedTestimonials(limit = 6) {
     const reviews = await listReviewsFromSupabase(
       `${SUPABASE_REVIEWS_TABLE}?status=eq.approved&select=*&order=is_featured.desc,created_at.desc&limit=${limit}`
     );
-    return reviews.map(toPublicReview);
+    return reviews
+      .filter((review) => review.status === "approved" && review.isApproved)
+      .map(toPublicReview);
   } catch (error) {
     console.error("Review testimonials lookup fell back empty:", error);
     return [];
@@ -491,6 +498,7 @@ export async function createReview(input: ReviewSubmissionInput) {
       verifiedPurchase:
         sourceType === "order-linked" &&
         Boolean(input.verifiedPurchase && input.orderReference),
+      isApproved: status === "approved",
       isFeatured: Boolean(input.isFeatured) && status === "approved",
       adminNote: sanitizeReviewText(input.adminNote, 500) || undefined,
       createdAt: dateIsoOrUndefined(input.createdAt) ?? now,
@@ -528,6 +536,7 @@ export async function updateReview(
     demoReviews[index] = {
       ...demoReviews[index],
       ...(updates.status ? { status: updates.status } : {}),
+      ...(updates.status ? { isApproved: updates.status === "approved" } : {}),
       ...(updates.productId !== undefined ? { productId: sanitizeReviewText(updates.productId, 120) } : {}),
       ...(updates.productSlug !== undefined ? { productSlug: sanitizeReviewText(updates.productSlug, 160) } : {}),
       ...(updates.customerName !== undefined ? { customerName: sanitizeReviewText(updates.customerName, 120) } : {}),

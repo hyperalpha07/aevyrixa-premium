@@ -221,7 +221,7 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
-  if (!hasPermission(session, "reviews.manage")) {
+  if (!hasPermission(session, "reviews.manage") && !hasPermission(session, "reviews.moderate")) {
     await logStaffActivity({
       actor: session,
       action: "permission.denied",

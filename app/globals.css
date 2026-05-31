@@ -938,7 +938,7 @@ button {
 }
 
 .aev-v2-shop-hero {
-  max-width: min(70rem, 100vw);
+  max-width: min(78rem, 100vw);
   overflow-x: clip;
 }
 
@@ -1497,6 +1497,31 @@ button {
   opacity: 0.86;
   filter: drop-shadow(0 0 8px rgba(255, 77, 184, 0.20)) drop-shadow(0 0 10px rgba(49, 230, 212, 0.10));
   animation: aev-premium-edge-spin 9.5s linear infinite;
+}
+
+@media (min-width: 1024px) {
+  .aev-v2-shop-hero {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .aev-v2-hero-main {
+    min-height: 20rem;
+  }
+
+  .aev-v2-hero-media-card {
+    min-height: 18rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .aev-v2-hero-main {
+    min-height: 22rem;
+  }
+
+  .aev-v2-hero-media-card {
+    min-height: 20rem;
+  }
 }
 
 .aev-premium-edge-line::after {
