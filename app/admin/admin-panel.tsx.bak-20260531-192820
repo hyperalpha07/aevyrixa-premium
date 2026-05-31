@@ -173,11 +173,7 @@ type AdminView =
   | "support"
   | "categories"
   | "staff"
-  | "customers"
-  | "discounts"
-  | "analytics"
-  | "integrations"
-  | "billing";
+  | "customers";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type PaymentStatusFilter = "All" | PaymentStatus;
 type StatusFilter = "All" | OrderStatus;
@@ -415,17 +411,13 @@ const navItems = [
   { label: "Dashboard", href: "/admin", icon: Gauge, view: "dashboard", permission: "dashboard.view" },
   { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders", permission: "orders.view" },
   { label: "Products", href: "/admin/products", icon: Boxes, view: "products", permission: "products.view" },
+  { label: "Media", href: "/admin/media", icon: ImageIcon, view: "media", permission: "products.media", fallbackPermission: "products.view" },
   { label: "Reviews", href: "/admin/reviews", icon: Star, view: "reviews", permission: "reviews.view" },
   { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories", permission: "categories.manage" },
-  { label: "Customers", href: "/admin/customers", icon: Users, view: "customers", permission: "customers.view" },
-  { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view" },
-  { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
-  { label: "Media", href: "/admin/media", icon: ImageIcon, view: "media", permission: "products.media", fallbackPermission: "products.view" },
-  { label: "Discounts", href: "/admin/discounts", icon: Tag, view: "discounts", permission: "settings.manage", fallbackPermission: "settings.view" },
-  { label: "Analytics", href: "/admin/analytics", icon: Gauge, view: "analytics", permission: "analytics.view" },
   { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
-  { label: "Integrations", href: "/admin/integrations", icon: Globe, view: "integrations", permission: "settings.view", fallbackPermission: "settings.editSensitive" },
-  { label: "Billing", href: "/admin/billing", icon: CreditCard, view: "billing", permission: "analytics.view", fallbackPermission: "orders.view" },
+  { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view" },
+  { label: "Customers", href: "/admin/customers", icon: Users, view: "customers", permission: "customers.view" },
+  { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
 ] satisfies Array<{
   label: string;
   href: string;
@@ -455,7 +447,6 @@ const commandRailGroups: Array<{
       { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders", permission: "orders.view", badge: "orders" },
       { label: "Products", href: "/admin/products", icon: Boxes, view: "products", permission: "products.view" },
       { label: "Reviews", href: "/admin/reviews", icon: Star, view: "reviews", permission: "reviews.view", badge: "reviews" },
-      { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories", permission: "categories.manage" },
       { label: "Customers", href: "/admin/customers", icon: Users, view: "customers", permission: "customers.view" },
       { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view", badge: "support" },
     ],
@@ -465,16 +456,16 @@ const commandRailGroups: Array<{
     items: [
       { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
       { label: "Media", href: "/admin/media", icon: ImageIcon, view: "media", permission: "products.media", fallbackPermission: "products.view" },
-      { label: "Discounts", href: "/admin/discounts", icon: Tag, view: "discounts", permission: "settings.manage", fallbackPermission: "settings.view" },
-      { label: "Analytics", href: "/admin/analytics", icon: Gauge, view: "analytics", permission: "analytics.view" },
+      { label: "Discounts", href: "#discounts-coming-soon", icon: Tag, disabled: true },
+      { label: "Analytics", href: "#analytics-coming-soon", icon: Gauge, permission: "analytics.view", disabled: true },
     ],
   },
   {
     label: "System",
     items: [
       { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
-      { label: "Integrations", href: "/admin/integrations", icon: Globe, view: "integrations", permission: "settings.view", fallbackPermission: "settings.editSensitive" },
-      { label: "Billing", href: "/admin/billing", icon: CreditCard, view: "billing", permission: "analytics.view", fallbackPermission: "orders.view" },
+      { label: "Integrations", href: "#integrations-coming-soon", icon: Globe, disabled: true },
+      { label: "Billing", href: "#billing-coming-soon", icon: CreditCard, disabled: true },
     ],
   },
 ];
@@ -2368,13 +2359,12 @@ export default function AdminPanel({
               <button
                 type="button"
                 disabled
-                title="Aevyrixa Pro help center is coming soon"
                 className="mt-3 rounded-full border border-pink-200/20 bg-pink-300/10 px-4 py-2 text-xs font-semibold text-pink-100"
               >
-                Coming soon
+                Learn more
               </button>
             </div>
-            <Link href="/admin/support" className="aev-admin-help-card flex items-center gap-3 rounded-2xl border p-4" data-admin-hover-sound="true">
+            <div className="aev-admin-help-card flex items-center gap-3 rounded-2xl border p-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-violet-200/25 bg-violet-300/12">
                 <HelpCircle className="h-4 w-4 text-violet-100" />
               </span>
@@ -2382,7 +2372,7 @@ export default function AdminPanel({
                 <p className="text-sm font-semibold text-white">Need Help?</p>
                 <p className="text-xs text-white/45">Live support available</p>
               </div>
-            </Link>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <Link
                 href="/"
@@ -2444,14 +2434,7 @@ export default function AdminPanel({
                   <span>Storefront</span>
                   <strong>Live</strong>
                 </span>
-                <button
-                  type="button"
-                  data-admin-hover-sound="true"
-                  onClick={() => router.push(supportUnreadCount > 0 ? "/admin/support" : pendingReviewCount > 0 ? "/admin/reviews" : "/admin")}
-                  className="aev-admin-icon-button"
-                  aria-label="Notifications"
-                  title="Open current admin alerts"
-                >
+                <button type="button" data-admin-hover-sound="true" className="aev-admin-icon-button" aria-label="Notifications">
                   <BellIcon className="h-4 w-4" />
                   {(supportUnreadCount + pendingReviewCount) > 0 && (
                     <span className="aev-admin-alert-dot">{Math.min(9, supportUnreadCount + pendingReviewCount)}</span>
@@ -2534,20 +2517,6 @@ export default function AdminPanel({
               <CustomersSection session={session} />
             ) : view === "staff" ? (
               <StaffSection session={session} />
-            ) : view === "discounts" ? (
-              <DiscountsSection orders={orders} session={session} />
-            ) : view === "analytics" ? (
-              <AnalyticsSection
-                orders={orders}
-                products={adminProducts}
-                reviews={reviews}
-                supportUnreadCount={supportUnreadCount}
-                session={session}
-              />
-            ) : view === "integrations" ? (
-              <IntegrationsSection settings={settings} session={session} />
-            ) : view === "billing" ? (
-              <BillingSection orders={orders} session={session} />
             ) : (
               <DashboardSection
                 orders={orders}
@@ -2997,10 +2966,6 @@ function viewTitle(view: AdminView) {
   if (view === "categories") return "Category Management";
   if (view === "customers") return "Customers";
   if (view === "staff") return "Staff & Permissions";
-  if (view === "discounts") return "Promotions";
-  if (view === "analytics") return "Analytics";
-  if (view === "integrations") return "Integrations";
-  if (view === "billing") return "Billing";
   return "Dashboard";
 }
 
@@ -3459,19 +3424,13 @@ function UploadTile() {
 }
 
 function QuickActionsPanel({ session }: { session: AdminSessionUser }) {
-  const actions: Array<{
-    label: string;
-    href: string;
-    icon: typeof Gauge;
-    permission?: AdminPermission;
-    disabled?: boolean;
-  }> = [
+  const actions = [
     { label: "Add Product", href: "/admin/products", icon: Plus, permission: "products.edit" as AdminPermission },
-    { label: "Manage Orders", href: "/admin/orders", icon: ShoppingBag, permission: "orders.view" as AdminPermission },
-    { label: "Discounts", href: "/admin/discounts", icon: Tag, permission: "settings.view" as AdminPermission },
-    { label: "Support Radar", href: "/admin/support", icon: BellIcon, permission: "support.view" as AdminPermission },
-    { label: "Media Vault", href: "/admin/media", icon: ImageIcon, permission: "products.view" as AdminPermission },
-    { label: "Analytics", href: "/admin/analytics", icon: Rows3, permission: "analytics.view" as AdminPermission },
+    { label: "Create Order", href: "/admin/orders", icon: ShoppingBag, permission: "orders.view" as AdminPermission },
+    { label: "Add Discount", href: "#discounts-coming-soon", icon: Tag, disabled: true },
+    { label: "Send Notification", href: "/admin/support", icon: BellIcon, permission: "support.view" as AdminPermission },
+    { label: "Upload Media", href: "/admin/products", icon: ImageIcon, permission: "products.edit" as AdminPermission },
+    { label: "Generate Report", href: "#analytics-coming-soon", icon: Rows3, disabled: true },
   ];
 
   return (
@@ -8532,361 +8491,6 @@ function supportTimeLabel(value?: string | null) {
   return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-function AdminComingSoonPanel({
-  title,
-  message,
-  icon: Icon = Zap,
-}: {
-  title: string;
-  message: string;
-  icon?: typeof Zap;
-}) {
-  return (
-    <div className="aev-admin-coming-soon rounded-[1.25rem] border border-amber-200/20 bg-amber-200/[0.055] p-4 text-sm text-amber-50/78">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-amber-100/25 bg-amber-200/10 text-amber-100">
-          <Icon className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="font-semibold text-amber-50">{title}</p>
-          <p className="mt-1 leading-6">{message}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DisabledAdminAction({
-  children,
-  title = "Not connected yet",
-}: {
-  children: ReactNode;
-  title?: string;
-}) {
-  return (
-    <button
-      type="button"
-      disabled
-      title={title}
-      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-4 text-sm font-semibold text-white/38"
-    >
-      {children}
-    </button>
-  );
-}
-
-function DiscountsSection({
-  orders,
-  session,
-}: {
-  orders: StoredOrder[];
-  session: AdminSessionUser;
-}) {
-  const canView = hasPermission(session, "settings.view") || hasPermission(session, "settings.manage");
-  const paidOrders = orders.filter((order) => order.paymentStatus === "verified");
-  const activeOrders = orders.filter((order) => !order.archivedAt && !order.deletedAt && !order.softDeletedAt);
-  const promoDiagnostics = [
-    { label: "Eligible Orders", value: String(activeOrders.length), tone: "cyan" as const },
-    { label: "Paid Orders", value: String(paidOrders.length), tone: "green" as const },
-    { label: "Campaign Engine", value: "Offline", tone: "amber" as const },
-  ];
-
-  if (!canView) {
-    return <NoDataState label={blockedPermissionMessage} />;
-  }
-
-  return (
-    <div className="mt-6 space-y-5">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-200/70">Promotions Control</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Discount command deck</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-                Promotion diagnostics are visible from live order data. Discount creation is intentionally disabled until a discount engine/API is connected.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <DisabledAdminAction title="Discount engine not connected yet">
-                <Plus className="h-4 w-4" />
-                Create discount
-              </DisabledAdminAction>
-              <Link href="/admin/settings" className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold">
-                <Settings className="h-4 w-4" />
-                Store settings
-              </Link>
-            </div>
-          </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {promoDiagnostics.map((item) => (
-              <StatusMetric key={item.label} label={item.label} value={item.value} tone={item.tone === "green" ? "green" : "amber"} />
-            ))}
-          </div>
-        </section>
-        <AdminComingSoonPanel
-          title="Discount backend not connected yet"
-          message="Create, edit, delete, usage limits, and automatic code validation are disabled until a promotion data model and API are added."
-          icon={Tag}
-        />
-      </div>
-
-      <section className="rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
-        <SectionHeader title="Campaign queue" />
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
-          {["WELCOME10", "BUNDLECARE", "RETURNINGVIP"].map((code, index) => (
-            <article key={code} className="rounded-[1.25rem] border border-white/10 bg-white/[0.035] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-white">{code}</p>
-                  <p className="mt-1 text-xs text-white/45">{index === 0 ? "Percent discount" : index === 1 ? "Bundle promotion" : "Customer segment"}</p>
-                </div>
-                <TinyBadge label="Coming soon" tone="amber" />
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <ReadonlyField label="Value" value={index === 0 ? "10%" : "Not connected"} />
-                <ReadonlyField label="Usage" value="Engine offline" />
-              </div>
-              <div className="mt-4 flex gap-2">
-                <DisabledAdminAction title="Campaign editing requires discount backend">Edit</DisabledAdminAction>
-                <DisabledAdminAction title="Campaign deletion requires discount backend">Delete</DisabledAdminAction>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function AnalyticsSection({
-  orders,
-  products,
-  reviews,
-  supportUnreadCount,
-  session,
-}: {
-  orders: StoredOrder[];
-  products: AdminProduct[];
-  reviews: AdminReviewClientRecord[];
-  supportUnreadCount: number;
-  session: AdminSessionUser;
-}) {
-  const [rangePreset, setRangePreset] = useState<DashboardRangePreset>("last30");
-  const now = new Date();
-  const range = buildDashboardRange(rangePreset, dateInputValue(addDays(now, -29)), dateInputValue(now));
-  const ordersInRange = orders.filter((order) => isWithinDashboardRange(order.createdAt, range));
-  const revenue = ordersInRange.reduce((sum, order) => sum + orderTotal(order), 0);
-  const activeProducts = products.filter((product) => product.status === "Active" && !product.deletedAt);
-  const approvedReviews = reviews.filter((review) => review.status === "approved");
-  const daily = buildDailySeries(ordersInRange, range);
-
-  if (!hasPermission(session, "analytics.view")) {
-    return <NoDataState label={blockedPermissionMessage} />;
-  }
-
-  return (
-    <div className="mt-6 space-y-5">
-      <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-200/70">Analytics Command Center</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Live commerce telemetry</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-              Metrics are derived from available admin orders, products, reviews, and support signals. Funnel and conversion exports stay disabled until tracking is connected.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {(["today", "last7", "last30", "month"] as DashboardRangePreset[]).map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setRangePreset(preset)}
-                data-admin-sound="tab"
-                className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] ${
-                  rangePreset === preset
-                    ? "border-cyan-200/45 bg-cyan-200/14 text-cyan-50"
-                    : "border-white/10 bg-white/[0.035] text-white/48"
-                }`}
-              >
-                {preset === "last7" ? "7D" : preset === "last30" ? "30D" : preset}
-              </button>
-            ))}
-            <DisabledAdminAction title="Report export not connected yet">
-              <Upload className="h-4 w-4" />
-              Export report
-            </DisabledAdminAction>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <MetricCard label="Revenue" value={formatCurrency(revenue)} icon={Wallet} compact />
-        <MetricCard label="Orders" value={String(ordersInRange.length)} icon={ClipboardList} compact />
-        <MetricCard label="Products" value={String(activeProducts.length)} icon={Boxes} compact />
-        <MetricCard label="Reviews" value={String(approvedReviews.length)} icon={Star} compact />
-        <MetricCard label="Support" value={String(supportUnreadCount)} icon={MessageSquare} compact />
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
-        <DailyBars title="Order pulse" data={daily} valueLabel={(item) => `${item.value} orders`} />
-        <DistributionCard
-          title="Operational split"
-          data={[
-            { label: "Pending", value: ordersInRange.filter((order) => order.status === "Pending").length },
-            { label: "Confirmed", value: ordersInRange.filter((order) => order.status === "Confirmed").length },
-            { label: "Shipped", value: ordersInRange.filter((order) => order.status === "Shipped").length },
-            { label: "Delivered", value: ordersInRange.filter((order) => order.status === "Delivered").length },
-          ]}
-          emptyLabel="No order distribution yet."
-        />
-      </div>
-    </div>
-  );
-}
-
-function IntegrationsSection({
-  settings,
-  session,
-}: {
-  settings: AdminSettings;
-  session: AdminSessionUser;
-}) {
-  const canView = hasPermission(session, "settings.view") || hasPermission(session, "settings.editSensitive");
-  const cards = [
-    { name: "Supabase", status: "Configured by app APIs", href: "/admin/settings", icon: ShieldCheck, connected: true },
-    { name: "Vercel", status: "Deployment managed outside admin", href: "/admin/settings", icon: Globe, connected: true },
-    { name: "Telegram alerts", status: settings.notificationSettings.telegramNewOrderEnabled ? "Enabled in settings" : "Not enabled", href: "/admin/settings", icon: Send, connected: settings.notificationSettings.telegramNewOrderEnabled },
-    { name: "WhatsApp", status: settings.storeProfile.supportWhatsApp ? "Store contact configured" : "No number configured", href: "/admin/settings", icon: Phone, connected: Boolean(settings.storeProfile.supportWhatsApp) },
-    { name: "Courier API", status: settings.deliverySettings.courierIntegrationMode === "manual" ? "Manual mode" : "Integration selected", href: "/admin/settings", icon: PackageCheck, connected: settings.deliverySettings.courierIntegrationMode !== "manual" },
-    { name: "Payment/mobile wallet", status: "Managed from checkout settings", href: "/admin/settings", icon: Wallet, connected: true },
-    { name: "Email/SMS", status: "Provider not connected yet", href: "", icon: Inbox, connected: false },
-  ];
-
-  if (!canView) {
-    return <NoDataState label={blockedPermissionMessage} />;
-  }
-
-  return (
-    <div className="mt-6 space-y-5">
-      <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.28em] text-violet-200/70">Integration Hub</p>
-        <h2 className="mt-2 text-2xl font-semibold text-white">System connection matrix</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-          Connected items route to the real settings surface. Provider onboarding buttons remain disabled until matching backend handlers exist.
-        </p>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <article key={card.name} className="rounded-[1.25rem] border border-white/10 bg-black/24 p-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-200/10 text-cyan-100">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="font-semibold text-white">{card.name}</p>
-                  <p className="mt-1 text-sm leading-6 text-white/52">{card.status}</p>
-                </div>
-                <TinyBadge label={card.connected ? "Online" : "Soon"} tone={card.connected ? "green" : "amber"} />
-              </div>
-              <div className="mt-4">
-                {card.href ? (
-                  <Link href={card.href} className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold">
-                    Manage
-                  </Link>
-                ) : (
-                  <DisabledAdminAction title={`${card.name} backend not connected yet`}>Connect</DisabledAdminAction>
-                )}
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function BillingSection({
-  orders,
-  session,
-}: {
-  orders: StoredOrder[];
-  session: AdminSessionUser;
-}) {
-  const canView = hasPermission(session, "analytics.view") || hasPermission(session, "orders.view");
-  const liveOrders = orders.filter((order) => !order.archivedAt && !order.deletedAt && !order.softDeletedAt);
-  const revenue = liveOrders.reduce((sum, order) => sum + orderTotal(order), 0);
-  const codRevenue = liveOrders
-    .filter((order) => order.paymentDetails?.paymentMethod === "Cash on Delivery")
-    .reduce((sum, order) => sum + orderTotal(order), 0);
-  const walletRevenue = liveOrders
-    .filter((order) => order.paymentDetails?.paymentMethod === "Mobile Wallet Payment")
-    .reduce((sum, order) => sum + orderTotal(order), 0);
-  const paidRevenue = liveOrders
-    .filter((order) => order.paymentStatus === "verified")
-    .reduce((sum, order) => sum + orderTotal(order), 0);
-
-  if (!canView) {
-    return <NoDataState label={blockedPermissionMessage} />;
-  }
-
-  return (
-    <div className="mt-6 space-y-5">
-      <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-200/70">Finance / Billing Console</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Payment intelligence</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-              Finance summaries are calculated from available order totals and payment metadata. Invoice and expense ledgers are marked as not connected.
-            </p>
-          </div>
-          <DisabledAdminAction title="Finance export is not connected yet">
-            <Upload className="h-4 w-4" />
-            Export finance report
-          </DisabledAdminAction>
-        </div>
-      </section>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Gross revenue" value={formatCurrency(revenue)} icon={Wallet} compact />
-        <MetricCard label="Verified revenue" value={formatCurrency(paidRevenue)} icon={ShieldCheck} compact />
-        <MetricCard label="COD summary" value={formatCurrency(codRevenue)} icon={CreditCard} compact />
-        <MetricCard label="Wallet summary" value={formatCurrency(walletRevenue)} icon={Phone} compact />
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
-          <SectionHeader title="Payment queue" />
-          <div className="mt-4 space-y-3">
-            {liveOrders.slice(0, 6).map((order) => (
-              <div key={order.orderId} className="flex min-w-0 flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="font-semibold text-white">{orderReferenceKey(order)}</p>
-                  <p className="mt-1 text-xs text-white/45">{order.customer?.fullName || "Customer"} · {order.paymentDetails?.paymentMethod || "Payment method pending"}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TinyBadge label={order.paymentStatus || "pending"} tone={order.paymentStatus === "verified" ? "green" : "amber"} />
-                  <span className="text-sm font-semibold text-white">{formatCurrency(orderTotal(order))}</span>
-                </div>
-              </div>
-            ))}
-            {liveOrders.length === 0 && <NoDataState label="No finance-ready orders yet." />}
-          </div>
-        </section>
-        <AdminComingSoonPanel
-          title="Invoice and expense ledger not connected yet"
-          message="Invoice generation, expense tracking, tax exports, and payment reconciliation require a dedicated finance backend before actions can be enabled."
-          icon={CreditCard}
-        />
-      </div>
-    </div>
-  );
-}
-
 function CustomersSection({ session }: { session: AdminSessionUser }) {
   const canViewCustomers = hasPermission(session, "customers.view");
   const [customers, setCustomers] = useState<AdminCustomerClientRecord[]>([]);
@@ -12060,13 +11664,11 @@ function TinyBadge({
   tone = "cyan",
 }: {
   label: string;
-  tone?: "cyan" | "amber" | "slate" | "green";
+  tone?: "cyan" | "amber" | "slate";
 }) {
   const toneClass =
     tone === "amber"
       ? "border-amber-200/30 bg-amber-200/[0.09] text-amber-100"
-      : tone === "green"
-        ? "border-emerald-200/30 bg-emerald-200/[0.09] text-emerald-100"
       : tone === "slate"
         ? "border-white/15 bg-white/[0.06] text-white/58"
         : "border-cyan-200/25 bg-cyan-200/[0.08] text-cyan-100";

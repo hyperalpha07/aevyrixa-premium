@@ -62,7 +62,10 @@ export type AdminSection =
   | "support"
   | "customers"
   | "staff"
-  | "analytics";
+  | "analytics"
+  | "discounts"
+  | "integrations"
+  | "billing";
 
 export const blockedPermissionMessage =
   "You do not have permission to perform this action.";
@@ -289,6 +292,11 @@ export function canAccessSection(
     return hasPermission(session, "staff.manage") || hasPermission(session, "activity.view");
   }
   if (section === "analytics") return hasPermission(session, "analytics.view");
+  if (section === "discounts") return hasPermission(session, "settings.manage") || hasPermission(session, "settings.view");
+  if (section === "integrations") {
+    return hasPermission(session, "settings.view") || hasPermission(session, "settings.editSensitive");
+  }
+  if (section === "billing") return hasPermission(session, "analytics.view") || hasPermission(session, "orders.view");
 
   return false;
 }
@@ -304,6 +312,10 @@ const sectionPaths: Array<{ section: AdminSection; path: string }> = [
   { section: "support", path: "/admin/support" },
   { section: "customers", path: "/admin/customers" },
   { section: "staff", path: "/admin/staff" },
+  { section: "discounts", path: "/admin/discounts" },
+  { section: "analytics", path: "/admin/analytics" },
+  { section: "integrations", path: "/admin/integrations" },
+  { section: "billing", path: "/admin/billing" },
 ];
 
 export function firstAccessibleAdminPath(
