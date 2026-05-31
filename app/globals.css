@@ -5754,6 +5754,415 @@ button {
   box-shadow: 0 0 44px rgba(103, 247, 243, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.aev-admin-control-shell {
+  max-width: 100vw;
+}
+
+.aev-admin-command-rail {
+  display: flex;
+  flex-direction: column;
+}
+
+.aev-admin-command-nav {
+  flex: 1;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.aev-admin-rail-bottom {
+  flex-shrink: 0;
+}
+
+.aev-admin-topbar,
+.aev-admin-profile-card,
+.aev-admin-pro-card,
+.aev-admin-help-card,
+.aev-admin-control-panel,
+.aev-admin-hero-panel,
+.aev-admin-cms-preview {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 42%),
+    rgba(7, 10, 24, 0.70);
+  border-color: rgba(255, 119, 200, 0.16);
+  box-shadow:
+    0 18px 58px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(103, 247, 243, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.aev-admin-pro-card {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 119, 200, 0.18), transparent 64%),
+    linear-gradient(180deg, rgba(177, 140, 255, 0.09), rgba(7, 10, 24, 0.78));
+}
+
+.aev-admin-help-card {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(177, 140, 255, 0.18), transparent 42%),
+    rgba(255, 255, 255, 0.045);
+}
+
+.aev-admin-topbar {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 20;
+}
+
+.aev-admin-status-pill {
+  min-height: 3rem;
+}
+
+.aev-admin-status-pill span {
+  font-size: 0.62rem;
+  line-height: 1;
+  opacity: 0.62;
+}
+
+.aev-admin-status-pill strong {
+  color: #d5fff8;
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.aev-admin-status-operational {
+  border-color: rgba(52, 211, 153, 0.22);
+}
+
+.aev-admin-alert-dot {
+  align-items: center;
+  background: #ff4db8;
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-size: 0.62rem;
+  font-weight: 800;
+  height: 1rem;
+  justify-content: center;
+  min-width: 1rem;
+  position: absolute;
+  right: -0.25rem;
+  top: -0.25rem;
+}
+
+.aev-admin-icon-button {
+  position: relative;
+}
+
+.aev-admin-nav-item.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.aev-admin-hero-panel {
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(177, 140, 255, 0.14), transparent 44%),
+    linear-gradient(90deg, rgba(255, 119, 200, 0.08), rgba(103, 247, 243, 0.045)),
+    rgba(6, 10, 24, 0.74);
+  overflow: hidden;
+  position: relative;
+}
+
+.aev-admin-hero-panel::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 119, 200, 0.12), transparent);
+  content: "";
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  animation: aev-admin-card-scan 6s ease-in-out infinite;
+}
+
+.aev-admin-range-button {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.58);
+  transition: border-color 180ms ease, color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.aev-admin-range-button.is-active {
+  background: rgba(255, 119, 200, 0.12);
+  border-color: rgba(255, 119, 200, 0.38);
+  color: white;
+}
+
+.aev-admin-orb-stage,
+.aev-admin-system-radar {
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 77, 184, 0.22), transparent 12%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 1.2rem, rgba(103, 247, 243, 0.12) 1.24rem 1.28rem, transparent 1.32rem 2.4rem),
+    linear-gradient(135deg, rgba(103, 247, 243, 0.08), rgba(255, 119, 200, 0.05));
+  border-color: rgba(103, 247, 243, 0.15);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.aev-admin-orb-stage::before,
+.aev-admin-system-radar::before {
+  background: conic-gradient(from 0deg, rgba(103, 247, 243, 0.0), rgba(103, 247, 243, 0.44), rgba(255, 119, 200, 0.0) 42%);
+  content: "";
+  height: 150%;
+  position: absolute;
+  width: 150%;
+  animation: aev-admin-radar 5.8s linear infinite;
+}
+
+.aev-admin-orb-stage::after,
+.aev-admin-system-radar::after {
+  background:
+    linear-gradient(rgba(103, 247, 243, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 119, 200, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  content: "";
+  inset: 0;
+  opacity: 0.28;
+  position: absolute;
+}
+
+.aev-admin-orb-core {
+  background: radial-gradient(circle, #ff77c8 0 12%, rgba(255, 77, 184, 0.38) 13% 22%, transparent 24%);
+  border-radius: 999px;
+  box-shadow: 0 0 34px rgba(255, 77, 184, 0.8), 0 0 82px rgba(103, 247, 243, 0.24);
+  height: 9rem;
+  position: absolute;
+  width: 9rem;
+  z-index: 2;
+  animation: aev-admin-orb-breathe 2.8s ease-in-out infinite;
+}
+
+.aev-admin-orb-ring {
+  border: 1px solid rgba(103, 247, 243, 0.22);
+  border-radius: 50%;
+  position: absolute;
+  transform: rotateX(68deg);
+  z-index: 2;
+}
+
+.aev-admin-orb-ring.ring-one {
+  height: 8rem;
+  width: 15rem;
+  animation: aev-admin-radar 7s linear infinite;
+}
+
+.aev-admin-orb-ring.ring-two {
+  border-color: rgba(255, 119, 200, 0.22);
+  height: 11rem;
+  width: 20rem;
+  animation: aev-admin-radar 9s linear reverse infinite;
+}
+
+.aev-admin-orb-ring.ring-three {
+  border-color: rgba(177, 140, 255, 0.22);
+  height: 14rem;
+  width: 25rem;
+  animation: aev-admin-radar 11s linear infinite;
+}
+
+.aev-admin-stat-card {
+  background: rgba(3, 7, 18, 0.42);
+  color: rgba(103, 247, 243, 0.85);
+  overflow: hidden;
+  position: relative;
+}
+
+.aev-admin-stat-card.tone-pink { color: #ff77c8; }
+.aev-admin-stat-card.tone-violet { color: #b18cff; }
+.aev-admin-stat-card.tone-green { color: #5ef0ae; }
+
+.aev-admin-control-panel {
+  min-height: 100%;
+}
+
+.aev-admin-panel-badge,
+.aev-admin-status-chip {
+  border: 1px solid rgba(255, 119, 200, 0.20);
+  border-radius: 999px;
+  background: rgba(255, 119, 200, 0.10);
+  color: #ffc8eb;
+  display: inline-flex;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.35rem 0.55rem;
+  white-space: nowrap;
+}
+
+.aev-admin-panel-action {
+  background: rgba(255, 119, 200, 0.07);
+  border-color: rgba(255, 119, 200, 0.18);
+  color: #ffc8eb;
+}
+
+.aev-admin-compact-row,
+.aev-admin-review-row,
+.aev-admin-activity-row {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.9rem;
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.65rem;
+}
+
+.aev-admin-review-row {
+  align-items: flex-start;
+}
+
+.aev-admin-product-thumb {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255, 119, 200, 0.20), rgba(103, 247, 243, 0.10));
+  border-color: rgba(255, 255, 255, 0.16);
+  display: flex;
+  height: 2.65rem;
+  justify-content: center;
+  width: 2.65rem;
+}
+
+.aev-admin-row-icon {
+  align-items: center;
+  background: rgba(103, 247, 243, 0.10);
+  border: 1px solid rgba(103, 247, 243, 0.18);
+  border-radius: 0.8rem;
+  color: #9ffdfa;
+  display: flex;
+  height: 2.4rem;
+  justify-content: center;
+  width: 2.4rem;
+}
+
+.aev-admin-review-tabs span {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.65rem;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.65rem;
+  padding: 0.5rem 0.35rem;
+  text-align: center;
+}
+
+.aev-admin-review-tabs .is-active {
+  background: rgba(255, 119, 200, 0.16);
+  border-color: rgba(255, 119, 200, 0.34);
+  color: white;
+}
+
+.aev-admin-mini-action {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 700;
+  gap: 0.3rem;
+  min-height: 1.65rem;
+  padding: 0 0.55rem;
+}
+
+.aev-admin-health-block {
+  background: rgba(255, 119, 200, 0.045);
+  border-color: rgba(255, 119, 200, 0.12);
+}
+
+.aev-admin-activity-dot {
+  border-radius: 999px;
+  box-shadow: 0 0 12px currentColor;
+  flex-shrink: 0;
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.aev-admin-activity-dot.tone-green { color: #5ef0ae; background: #5ef0ae; }
+.aev-admin-activity-dot.tone-amber { color: #ffd28c; background: #ffd28c; }
+.aev-admin-activity-dot.tone-cyan { color: #67f7f3; background: #67f7f3; }
+.aev-admin-activity-dot.tone-pink { color: #ff77c8; background: #ff77c8; }
+.aev-admin-activity-dot.tone-violet { color: #b18cff; background: #b18cff; }
+
+.aev-admin-cms-preview {
+  overflow: hidden;
+}
+
+.aev-admin-cms-card {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.aev-admin-cms-tabs a {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 0.65rem 0.75rem;
+}
+
+.aev-admin-cms-tabs a.is-active {
+  background: rgba(255, 119, 200, 0.14);
+  border-color: rgba(255, 119, 200, 0.32);
+  color: white;
+}
+
+.aev-admin-cms-action {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-height: 2.25rem;
+  padding: 0.55rem 0.85rem;
+}
+
+.aev-admin-cms-action.is-primary {
+  background: linear-gradient(90deg, rgba(255, 77, 184, 0.80), rgba(177, 140, 255, 0.72));
+  color: white;
+}
+
+.aev-admin-quick-action {
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 119, 200, 0.14), transparent 58%),
+    rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 119, 200, 0.14);
+  border-radius: 0.9rem;
+  color: #ffc8eb;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.68rem;
+  font-weight: 750;
+  gap: 0.45rem;
+  justify-content: center;
+  min-height: 4.1rem;
+  padding: 0.7rem;
+  text-align: center;
+}
+
+.aev-admin-quick-action.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.aev-admin-status-metric {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #5ef0ae;
+}
+
+.aev-admin-status-metric.tone-amber {
+  color: #ffd28c;
+}
+
+.aev-admin-status-chip.tone-cyan { border-color: rgba(103, 247, 243, 0.22); background: rgba(103, 247, 243, 0.08); color: #b9fffd; }
+.aev-admin-status-chip.tone-amber { border-color: rgba(255, 210, 140, 0.22); background: rgba(255, 210, 140, 0.08); color: #ffe2ad; }
+.aev-admin-status-chip.tone-green { border-color: rgba(94, 240, 174, 0.22); background: rgba(94, 240, 174, 0.08); color: #c5ffe2; }
+
 .aev-admin-control-room :is(section, article, form).rounded-\[1\.25rem\],
 .aev-admin-control-room :is(section, article, form).rounded-\[1\.35rem\],
 .aev-admin-control-room :is(section, article, form).rounded-\[1\.5rem\],
@@ -5890,6 +6299,17 @@ button {
   }
 }
 
+@keyframes aev-admin-orb-breathe {
+  0%, 100% {
+    opacity: 0.78;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aev-admin-bg-gradient,
   .aev-admin-bg-radar,
@@ -5897,6 +6317,10 @@ button {
   .aev-admin-light-sweep,
   .aev-admin-signal-card::after,
   .aev-admin-live-dot,
+  .aev-admin-orb-core,
+  .aev-admin-orb-ring,
+  .aev-admin-orb-stage::before,
+  .aev-admin-system-radar::before,
   .aev-admin-nav-item:hover .aev-admin-nav-icon,
   .aev-admin-nav-item.is-active .aev-admin-nav-icon {
     animation: none;

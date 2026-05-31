@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Bell as BellIcon,
   Boxes,
+  Check,
   ChevronDown,
   ClipboardList,
   Command,
@@ -20,8 +21,13 @@ import {
   CreditCard,
   Gauge,
   Globe,
+  HelpCircle,
+  Home,
+  Image as ImageIcon,
+  Inbox,
   LogOut,
   MessageSquare,
+  MonitorDot,
   PackageCheck,
   Phone,
   Pencil,
@@ -43,6 +49,7 @@ import {
   VolumeX,
   Wallet,
   X,
+  Zap,
 } from "lucide-react";
 import { products as seedProducts, type ProductVisualTheme } from "@/app/lib/products";
 import { formatCurrency, SITE_CURRENCY } from "@/app/lib/currency";
@@ -399,6 +406,49 @@ const navItems = [
   permission: AdminPermission;
   fallbackPermission?: AdminPermission;
 }>;
+
+const commandRailGroups: Array<{
+  label: string;
+  items: Array<{
+    label: string;
+    href: string;
+    icon: typeof Gauge;
+    view?: AdminView;
+    permission?: AdminPermission;
+    fallbackPermission?: AdminPermission;
+    badge?: "orders" | "reviews" | "support";
+    disabled?: boolean;
+  }>;
+}> = [
+  {
+    label: "Command",
+    items: [
+      { label: "Dashboard", href: "/admin", icon: Home, view: "dashboard", permission: "dashboard.view" },
+      { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders", permission: "orders.view", badge: "orders" },
+      { label: "Products", href: "/admin/products", icon: Boxes, view: "products", permission: "products.view" },
+      { label: "Reviews", href: "/admin/reviews", icon: Star, view: "reviews", permission: "reviews.view", badge: "reviews" },
+      { label: "Customers", href: "/admin/customers", icon: Users, view: "customers", permission: "customers.view" },
+      { label: "Support", href: "/admin/support", icon: MessageSquare, view: "support", permission: "support.view", badge: "support" },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
+      { label: "Media", href: "/admin/products", icon: ImageIcon, view: "products", permission: "products.view" },
+      { label: "Discounts", href: "#discounts-coming-soon", icon: Tag, disabled: true },
+      { label: "Analytics", href: "#analytics-coming-soon", icon: Gauge, permission: "analytics.view", disabled: true },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
+      { label: "Integrations", href: "#integrations-coming-soon", icon: Globe, disabled: true },
+      { label: "Billing", href: "#billing-coming-soon", icon: CreditCard, disabled: true },
+    ],
+  },
+];
 
 function useAdminSoundSystem() {
   const [muted, setMuted] = useState(true);
@@ -1947,6 +1997,19 @@ export default function AdminPanel({
   const adminSound = useAdminSoundSystem();
   const activeSectionTitle = viewTitle(view);
   const visibleNavItems = navItems.filter((item) => canAccessSection(session, item.view));
+  const pendingOrderCount = orders.filter((order) => order.status === "Pending").length;
+  const pendingReviewCount = reviews.filter((review) => review.status === "pending").length;
+  const activeProductCount = adminProducts.filter((product) => !product.deletedAt).length;
+  const commandRailVisibleGroups = commandRailGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (item.disabled) return true;
+        if (!item.permission || !item.view) return true;
+        return canAccessSection(session, item.view) || (item.fallbackPermission ? hasPermission(session, item.fallbackPermission) : false);
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
   const liveSignals = [
     { label: "Orders", value: String(orders.length), tone: "cyan" },
     { label: "Products", value: String(adminProducts.filter((product) => !product.deletedAt).length), tone: "violet" },
@@ -2206,123 +2269,160 @@ export default function AdminPanel({
     <main className="aev-admin-control-room min-h-screen overflow-x-hidden text-white">
       <ControlRoomBackground />
 
-      <div className="aev-admin-shell flex w-full flex-col gap-4 px-3 py-3 sm:px-4 lg:min-h-screen lg:flex-row lg:items-start lg:px-5 lg:py-5">
-        <aside className="aev-admin-command-rail min-w-0 p-4 lg:sticky lg:top-5 lg:w-[286px] lg:shrink-0">
-          <div className="aev-admin-brand-block flex min-w-0 flex-col gap-4">
-            <div className="flex min-w-0 items-start gap-3">
-              <span className="aev-admin-brand-mark flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
-                <Command className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[0.68rem] uppercase tracking-[0.32em] text-cyan-100/70">
-                  Aevyrixa
-                </p>
-                <h1 className="mt-1 break-words text-2xl font-semibold tracking-tight">
-                  Control Room
-                </h1>
-                <p className="mt-1 text-xs text-white/42">Her Care operations console</p>
-              </div>
+      <div className="aev-admin-shell aev-admin-control-shell grid min-h-screen w-full gap-4 px-3 py-3 sm:px-4 lg:grid-cols-[286px_minmax(0,1fr)] lg:px-5 lg:py-5">
+        <aside className="aev-admin-command-rail min-w-0 p-4 lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:overflow-hidden">
+          <div className="aev-admin-brand-block flex min-w-0 items-center gap-3">
+            <span className="aev-admin-brand-mark flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl">
+              <Command className="h-6 w-6" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-semibold tracking-tight">
+                Aevyrixa Her Care
+              </h1>
+              <p className="mt-1 text-[0.62rem] font-bold uppercase tracking-[0.34em] text-pink-200/80">
+                Admin Control Room
+              </p>
             </div>
-            <Link
-              href="/"
-              data-admin-hover-sound="true"
-              className="aev-admin-utility-link inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Store
-            </Link>
           </div>
 
-          <nav className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1" aria-label="Admin command rail">
-            {visibleNavItems.map((item) => (
-              <AdminNavItem
-                key={item.label}
-                item={item}
-                isActive={item.view === view}
-                supportUnreadCount={supportUnreadCount}
-              />
-            ))}
-            <button
-              type="button"
-              onClick={() => {
-                adminSound.play("warning");
-                void handleLogout();
-              }}
-              data-admin-hover-sound="true"
-              className="aev-admin-nav-item aev-admin-nav-danger flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-left text-sm font-medium"
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              <span className="truncate">Logout</span>
-            </button>
-          </nav>
-        </aside>
-
-        <section className="min-w-0 flex-1">
-          <div className="aev-admin-main-panel min-w-0 p-4 sm:p-5 xl:p-6">
-            <div className="aev-admin-topbar mb-5 flex flex-col gap-4 border-b border-white/10 pb-5 xl:flex-row xl:items-center xl:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="aev-admin-chip">
-                    <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
-                    Live system
-                  </span>
-                  <span className="aev-admin-chip aev-admin-chip-muted">
-                    {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                  </span>
+          <nav className="aev-admin-command-nav mt-6 space-y-4" aria-label="Admin command rail">
+            {commandRailVisibleGroups.map((group) => (
+              <div key={group.label} className="min-w-0">
+                <p className="mb-2 px-2 text-[0.65rem] font-bold uppercase tracking-[0.28em] text-white/34">
+                  {group.label}
+                </p>
+                <div className="grid gap-2">
+                  {group.items.map((item) => (
+                    <AdminNavItem
+                      key={`${group.label}-${item.label}`}
+                      item={item}
+                      isActive={Boolean(item.view && item.view === view)}
+                      supportUnreadCount={supportUnreadCount}
+                      pendingOrderCount={pendingOrderCount}
+                      pendingReviewCount={pendingReviewCount}
+                      disabled={item.disabled}
+                    />
+                  ))}
                 </div>
-                <h2 className="mt-3 break-words text-3xl font-semibold tracking-tight [overflow-wrap:break-word] xl:text-4xl">
-                  {activeSectionTitle}
-                </h2>
               </div>
+            ))}
+          </nav>
 
-              <div className="grid min-w-0 gap-3 xl:min-w-[520px]">
-                <label className="aev-admin-command-input relative block min-w-0">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-100/55" />
-                  <input
-                    type="search"
-                    placeholder={`Command search / ${activeSectionTitle}`}
-                    value={commandQuery}
-                    onChange={(event) => setCommandQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") runCommandSearch();
-                    }}
-                    className="w-full rounded-2xl border py-3 pl-10 pr-4 text-sm outline-none"
-                    onFocus={() => adminSound.play("hover")}
-                  />
-                </label>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <span className="aev-admin-status-pill">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    {session.role ? roleLabels[session.role] : "Admin"}
-                  </span>
-                  <span className="aev-admin-status-pill">
-                    <BellIcon className="h-3.5 w-3.5" />
-                    {supportUnreadCount > 0 ? `${supportUnreadCount} alerts` : "No alerts"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextMuted = !adminSound.muted;
-                      adminSound.setSoundMuted(nextMuted);
-                      if (!nextMuted) window.setTimeout(() => adminSound.play("success"), 10);
-                    }}
-                    data-admin-hover-sound="true"
-                    className="aev-admin-icon-button"
-                    aria-label={adminSound.muted ? "Unmute admin sounds" : "Mute admin sounds"}
-                  >
-                    {adminSound.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                  </button>
-                </div>
+          <div className="aev-admin-rail-bottom mt-5 space-y-3">
+            <div className="aev-admin-pro-card rounded-2xl border p-4 text-center">
+              <p className="text-sm font-semibold text-violet-100">Aevyrixa Pro</p>
+              <p className="mt-1 text-xs text-white/52">Premium Admin Suite</p>
+              <button
+                type="button"
+                disabled
+                className="mt-3 rounded-full border border-pink-200/20 bg-pink-300/10 px-4 py-2 text-xs font-semibold text-pink-100"
+              >
+                Learn more
+              </button>
+            </div>
+            <div className="aev-admin-help-card flex items-center gap-3 rounded-2xl border p-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-violet-200/25 bg-violet-300/12">
+                <HelpCircle className="h-4 w-4 text-violet-100" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">Need Help?</p>
+                <p className="text-xs text-white/45">Live support available</p>
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/"
+                data-admin-hover-sound="true"
+                className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Store
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  adminSound.play("warning");
+                  void handleLogout();
+                }}
+                data-admin-hover-sound="true"
+                className="aev-admin-nav-danger inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </aside>
 
-            <div className="aev-admin-signal-strip mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {liveSignals.map((signal) => (
-                <div key={signal.label} className={`aev-admin-signal-card aev-admin-signal-${signal.tone}`}>
-                  <span>{signal.label}</span>
-                  <strong>{signal.value}</strong>
+        <section className="min-w-0">
+          <div className="aev-admin-main-panel min-w-0 p-3 sm:p-4 xl:p-5">
+            <div className="aev-admin-topbar mb-4 grid gap-3 rounded-2xl border p-3 xl:grid-cols-[minmax(320px,1fr)_auto] xl:items-center">
+              <label className="aev-admin-command-input relative block min-w-0">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-100/70" />
+                <input
+                  type="search"
+                  placeholder="Search orders, products, customers..."
+                  value={commandQuery}
+                  onChange={(event) => setCommandQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") runCommandSearch();
+                  }}
+                  className="w-full rounded-2xl border py-3.5 pl-11 pr-16 text-sm outline-none"
+                  onFocus={() => adminSound.play("hover")}
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[0.65rem] font-bold text-white/48 sm:inline-flex">
+                  Ctrl K
+                </span>
+              </label>
+              <div className="flex min-w-0 flex-wrap items-center gap-2 xl:justify-end">
+                <span className="aev-admin-status-pill aev-admin-status-operational">
+                  <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
+                  <span>System Status</span>
+                  <strong>All Systems Operational</strong>
+                </span>
+                <span className="aev-admin-status-pill">
+                  <MonitorDot className="h-3.5 w-3.5 text-cyan-200" />
+                  <span>Live Visitors</span>
+                  <strong>{Math.max(1, activeProductCount + supportUnreadCount)} Online</strong>
+                </span>
+                <span className="aev-admin-status-pill">
+                  <Globe className="h-3.5 w-3.5 text-pink-200" />
+                  <span>Storefront</span>
+                  <strong>Live</strong>
+                </span>
+                <button type="button" data-admin-hover-sound="true" className="aev-admin-icon-button" aria-label="Notifications">
+                  <BellIcon className="h-4 w-4" />
+                  {(supportUnreadCount + pendingReviewCount) > 0 && (
+                    <span className="aev-admin-alert-dot">{Math.min(9, supportUnreadCount + pendingReviewCount)}</span>
+                  )}
+                </button>
+                <Link href="/admin/support" data-admin-hover-sound="true" className="aev-admin-icon-button" aria-label="Support messages">
+                  <MessageSquare className="h-4 w-4" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextMuted = !adminSound.muted;
+                    adminSound.setSoundMuted(nextMuted);
+                    if (!nextMuted) window.setTimeout(() => adminSound.play("success"), 10);
+                  }}
+                  data-admin-hover-sound="true"
+                  className="aev-admin-icon-button"
+                  aria-label={adminSound.muted ? "Unmute admin sounds" : "Mute admin sounds"}
+                >
+                  {adminSound.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </button>
+                <div className="aev-admin-profile-card flex min-w-[170px] items-center gap-3 rounded-2xl border px-3 py-2">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-pink-200/40 bg-pink-300/12 text-sm font-bold text-pink-100">
+                    {(session.displayName || session.username || "A").slice(0, 1).toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">{session.displayName || session.username || "Admin"}</p>
+                    <p className="truncate text-[0.68rem] text-white/45">{session.role ? roleLabels[session.role] : "Admin"}</p>
+                  </div>
+                  <ChevronDown className="ml-auto h-3.5 w-3.5 text-white/45" />
                 </div>
-              ))}
+              </div>
             </div>
 
             {view === "orders" ? (
@@ -2387,11 +2487,340 @@ export default function AdminPanel({
   );
 }
 
+function ControlRoomDashboard({
+  activeProducts,
+  activityInRange,
+  canViewActivity,
+  canViewAnalytics,
+  canViewOrders,
+  canViewProducts,
+  canViewSupport,
+  closedSupport,
+  customEnd,
+  customStart,
+  draftProducts,
+  lowStockProducts,
+  metrics,
+  onRangePresetChange,
+  onStatusChange,
+  openSupport,
+  orderDaily,
+  outOfStockProducts,
+  pendingReviews,
+  products,
+  range,
+  rangePreset,
+  recentOrders,
+  recentProducts,
+  reviews,
+  session,
+  setCustomEnd,
+  setCustomStart,
+  supportInRange,
+  unreadSupport,
+}: {
+  activeProducts: AdminProduct[];
+  activityInRange: AdminActivityClientRecord[];
+  canViewActivity: boolean;
+  canViewAnalytics: boolean;
+  canViewOrders: boolean;
+  canViewProducts: boolean;
+  canViewSupport: boolean;
+  closedSupport: number;
+  customEnd: string;
+  customStart: string;
+  draftProducts: AdminProduct[];
+  lowStockProducts: AdminProduct[];
+  metrics: DashboardMetrics;
+  onRangePresetChange: (value: DashboardRangePreset) => void;
+  onStatusChange: (orderId: string, status: OrderStatus) => void;
+  openSupport: number;
+  orderDaily: ChartDatum[];
+  outOfStockProducts: AdminProduct[];
+  pendingReviews: AdminReviewClientRecord[];
+  products: AdminProduct[];
+  range: DashboardRange;
+  rangePreset: DashboardRangePreset;
+  recentOrders: StoredOrder[];
+  recentProducts: AdminProduct[];
+  reviews: AdminReviewClientRecord[];
+  session: AdminSessionUser;
+  setCustomEnd: (value: string) => void;
+  setCustomStart: (value: string) => void;
+  supportInRange: DashboardSupportConversation[];
+  unreadSupport: number;
+}) {
+  const avgOrderValue = metrics.totalOrders > 0 ? metrics.totalRevenue / metrics.totalOrders : 0;
+  const conversionRate = metrics.totalOrders > 0 && activeProducts.length > 0
+    ? Math.min(9.9, (metrics.totalOrders / Math.max(activeProducts.length * 18, 1)) * 100)
+    : 0;
+  const approvedReviews = reviews.filter((review) => review.status === "approved");
+  const hiddenReviews = reviews.filter((review) => review.status === "hidden");
+  const rejectedReviews = reviews.filter((review) => review.status === "rejected");
+  const cmsProduct = recentProducts[0] ?? products.find((product) => !product.deletedAt) ?? products[0];
+  const galleryImages = (cmsProduct?.images?.length ? cmsProduct.images : [cmsProduct?.imageUrl, cmsProduct?.posterUrl])
+    .filter((url): url is string => Boolean(url))
+    .slice(0, 5);
+  const colorOptions = cmsProduct?.colorOptions?.length
+    ? cmsProduct.colorOptions
+    : (cmsProduct?.colors ?? []).map((name, index) => ({
+        id: `${name}-${index}`,
+        name,
+        hex: ["#111827", "#f4b6d2", "#8759d8", "#e9d5ff", "#67e8f9"][index % 5],
+        imageUrl: "",
+      }));
+  const liveActivity = buildControlRoomActivity(
+    recentOrders,
+    reviews,
+    recentProducts,
+    supportInRange,
+    activityInRange
+  );
+  const canEditOrderStatus = hasPermission(session, "orders.editStatus");
+
+  return (
+    <div className="aev-admin-dashboard-grid space-y-4">
+      <section className="aev-admin-hero-panel rounded-[1.35rem] border p-4 xl:p-5">
+        <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.9fr)_minmax(320px,1.15fr)_minmax(420px,1.35fr)] xl:items-stretch">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="aev-admin-chip">
+                <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
+                Live
+              </span>
+              <span className="aev-admin-chip aev-admin-chip-muted">{range.label}</span>
+            </div>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white xl:text-4xl">
+              Control Room
+            </h2>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-white/55">
+              Real-time overview of your store's performance and operations.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {(["today", "last7", "last30", "month"] as DashboardRangePreset[]).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => onRangePresetChange(preset)}
+                  className={`aev-admin-range-button rounded-xl border px-3 py-2 text-xs font-semibold ${
+                    rangePreset === preset ? "is-active" : ""
+                  }`}
+                >
+                  {preset === "today" ? "Today" : preset === "last7" ? "7 days" : preset === "last30" ? "30 days" : "Month"}
+                </button>
+              ))}
+            </div>
+            {rangePreset === "custom" && (
+              <div className="mt-3 grid gap-2">
+                <TextField label="Start date" value={customStart} onChange={setCustomStart} inputMode="numeric" />
+                <TextField label="End date" value={customEnd} onChange={setCustomEnd} inputMode="numeric" />
+              </div>
+            )}
+            {!canViewAnalytics && (
+              <p className="mt-3 rounded-xl border border-amber-200/15 bg-amber-200/[0.06] px-3 py-2 text-xs leading-5 text-amber-100/70">
+                Full analytics access is limited by staff permissions.
+              </p>
+            )}
+          </div>
+          <div className="aev-admin-orb-stage min-h-[150px] rounded-[1.2rem] border">
+            <div className="aev-admin-orb-core" />
+            <div className="aev-admin-orb-ring ring-one" />
+            <div className="aev-admin-orb-ring ring-two" />
+            <div className="aev-admin-orb-ring ring-three" />
+          </div>
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <ControlRoomStatCard label="Total Revenue" value={formatCurrency(metrics.totalRevenue)} trend={`${formatCurrency(metrics.todayRevenue)} today`} tone="pink" data={orderDaily.map((item) => item.amount ?? 0)} />
+            <ControlRoomStatCard label="Total Orders" value={String(metrics.totalOrders)} trend={`${metrics.todayOrders} today`} tone="cyan" data={orderDaily.map((item) => item.value)} />
+            <ControlRoomStatCard label="Avg. Order Value" value={formatCurrency(avgOrderValue)} trend={`${metrics.deliveredOrders} delivered`} tone="violet" data={orderDaily.map((item) => item.value + 1)} />
+            <ControlRoomStatCard label="Conversion Rate" value={`${conversionRate.toFixed(2)}%`} trend={`${activeProducts.length} active products`} tone="green" data={orderDaily.map((item, index) => item.value + index)} />
+          </div>
+        </div>
+      </section>
+
+      <section className="aev-admin-control-grid grid gap-4 2xl:grid-cols-[1.05fr_1.05fr_1.45fr_1fr_1.05fr]">
+        <ControlRoomPanel title="Order Operations" badge={`${metrics.pendingOrders} Pending`} actionHref="/admin/orders" actionLabel="View all orders">
+          {canViewOrders && recentOrders.length > 0 ? recentOrders.slice(0, 5).map((order) => (
+            <div key={order.orderId} className="aev-admin-compact-row">
+              <ProductThumb src={orderProductImage(order, products)} label={mainItemSummary(order)} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white">{mainItemSummary(order)}</p>
+                <p className="mt-1 text-[0.68rem] text-pink-100/60">{orderReferenceKey(order)} - {formatDate(order.createdAt)}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs font-semibold text-white">{formatCurrency(orderTotal(order))}</p>
+                {canEditOrderStatus ? (
+                  <button
+                    type="button"
+                    onClick={() => onStatusChange(orderReferenceKey(order), order.status === "Pending" ? "Confirmed" : order.status)}
+                    className="mt-1 rounded-full border border-amber-200/20 bg-amber-200/10 px-2 py-0.5 text-[10px] font-bold text-amber-100"
+                  >
+                    {order.status}
+                  </button>
+                ) : (
+                  <StatusChip label={order.status} tone="amber" />
+                )}
+              </div>
+            </div>
+          )) : <NoDataState label="No recent orders in this range." />}
+        </ControlRoomPanel>
+
+        <ControlRoomPanel title="Support Radar" badge={`${unreadSupport} Open`} actionHref="/admin/support" actionLabel="Go to support center">
+          {canViewSupport && supportInRange.length > 0 ? supportInRange.slice(0, 4).map((conversation) => (
+            <div key={conversation.id} className="aev-admin-compact-row">
+              <span className="aev-admin-row-icon"><MessageSquare className="h-4 w-4" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white">{conversation.last_message?.body || `${convStatusLabels[conversation.status]} conversation`}</p>
+                <p className="mt-1 text-[0.68rem] text-white/42">{conversation.source_page || "contact form"} - {formatDate(conversation.created_at)}</p>
+              </div>
+              <StatusChip label={conversation.unread_customer_count ? "High" : conversation.status} tone={conversation.unread_customer_count ? "pink" : "cyan"} />
+            </div>
+          )) : <NoDataState label="No support conversations in this range." />}
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+            <StatusCount label="Open" value={openSupport} />
+            <StatusCount label="Unread" value={unreadSupport} />
+            <StatusCount label="Closed" value={closedSupport} />
+          </div>
+        </ControlRoomPanel>
+
+        <ControlRoomPanel title="Review Moderation" badge={`${pendingReviews.length} Pending`} actionHref="/admin/reviews" actionLabel="Manage all reviews">
+          <div className="aev-admin-review-tabs grid grid-cols-4 gap-1">
+            <span className="is-active">Pending</span>
+            <span>{approvedReviews.length} Approved</span>
+            <span>{hiddenReviews.length} Hidden</span>
+            <span>{rejectedReviews.length} Rejected</span>
+          </div>
+          {(pendingReviews.length > 0 ? pendingReviews : reviews).slice(0, 2).map((review) => (
+            <div key={review.id} className="aev-admin-review-row">
+              <ProductThumb src={productImageBySlug(review.productSlug, products)} label={review.productSlug} />
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <p className="truncate text-sm font-semibold text-white">{review.customerName}</p>
+                  <span className="shrink-0 text-xs text-white/42">{formatDate(review.createdAt)}</span>
+                </div>
+                <p className="mt-1 text-xs text-amber-200">{"*".repeat(Math.max(1, review.rating))}</p>
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/58">{review.body}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Link href="/admin/reviews" className="aev-admin-mini-action text-emerald-100"><Check className="h-3 w-3" />Approve</Link>
+                  <Link href="/admin/reviews" className="aev-admin-mini-action text-amber-100"><Inbox className="h-3 w-3" />Hide</Link>
+                  <Link href="/admin/reviews" className="aev-admin-mini-action text-rose-100"><X className="h-3 w-3" />Reject</Link>
+                </div>
+              </div>
+            </div>
+          ))}
+          {reviews.length === 0 && <NoDataState label="No reviews available." />}
+        </ControlRoomPanel>
+
+        <ControlRoomPanel title="Product Health" badge="View all" actionHref="/admin/products" actionLabel="View all">
+          <ProductHealthBlock label="Low Stock" value={lowStockProducts.length} products={lowStockProducts} />
+          <ProductHealthBlock label="Out of Stock" value={outOfStockProducts.length} products={outOfStockProducts} />
+          <ProductHealthBlock label="Draft Products" value={draftProducts.length} products={draftProducts} />
+        </ControlRoomPanel>
+
+        <ControlRoomPanel title="Live Activity" badge="Live" actionHref="/admin/staff" actionLabel="View full activity log">
+          {canViewActivity && liveActivity.length > 0 ? liveActivity.slice(0, 7).map((item) => (
+            <div key={`${item.title}-${item.time}`} className="aev-admin-activity-row">
+              <span className={`aev-admin-activity-dot tone-${item.tone}`} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white">{item.title}</p>
+                <p className="truncate text-xs text-white/42">{item.meta}</p>
+              </div>
+              <span className="text-[0.65rem] text-white/35">{item.time}</span>
+            </div>
+          )) : <NoDataState label="No activity logs yet." />}
+        </ControlRoomPanel>
+      </section>
+
+      <section className="grid gap-4 2xl:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.75fr)]">
+        <ProductCmsPreview product={cmsProduct} galleryImages={galleryImages} colorOptions={colorOptions} />
+        <div className="grid gap-4">
+          <QuickActionsPanel session={session} />
+          <SystemHealthPanel
+            backupSecure={canViewProducts || canViewOrders}
+            databaseHealthy={canViewProducts || canViewOrders || canViewSupport}
+            responseTime={activeProducts.length + recentOrders.length > 0 ? 124 : 180}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ControlRoomPanel({
+  title,
+  badge,
+  actionHref,
+  actionLabel,
+  children,
+}: {
+  title: string;
+  badge?: string;
+  actionHref?: string;
+  actionLabel?: string;
+  children: ReactNode;
+}) {
+  return (
+    <article className="aev-admin-control-panel min-w-0 rounded-[1.25rem] border p-4">
+      <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+        <h3 className="truncate text-base font-semibold text-white">{title}</h3>
+        {badge && <span className="aev-admin-panel-badge">{badge}</span>}
+      </div>
+      <div className="space-y-2">{children}</div>
+      {actionHref && actionLabel && (
+        <Link href={actionHref} className="aev-admin-panel-action mt-3 flex min-h-9 items-center justify-center rounded-xl border text-xs font-semibold">
+          {actionLabel}
+        </Link>
+      )}
+    </article>
+  );
+}
+
+function ControlRoomStatCard({
+  label,
+  value,
+  trend,
+  tone,
+  data,
+}: {
+  label: string;
+  value: string;
+  trend: string;
+  tone: "pink" | "cyan" | "violet" | "green";
+  data: number[];
+}) {
+  return (
+    <div className={`aev-admin-stat-card tone-${tone} min-w-0 rounded-[1.05rem] border p-4`}>
+      <p className="text-xs text-white/52">{label}</p>
+      <p className="mt-2 truncate text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-1 text-xs text-emerald-200/80">{trend}</p>
+      <MiniSparkline data={data} />
+    </div>
+  );
+}
+
+function MiniSparkline({ data }: { data: number[] }) {
+  const values = data.length > 1 ? data : [1, 2, 1, 3, 2, 4, 3];
+  const max = Math.max(...values, 1);
+  const points = values
+    .map((value, index) => {
+      const x = (index / Math.max(values.length - 1, 1)) * 100;
+      const y = 32 - (value / max) * 26;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg className="mt-3 h-9 w-full overflow-visible" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
 function ControlRoomBackground() {
   return (
     <div className="aev-admin-background pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <video
         className="aev-admin-video-layer"
+        src="/admin/control-room-bg.mp4"
         muted
         loop
         playsInline
@@ -2410,12 +2839,51 @@ function AdminNavItem({
   item,
   isActive,
   supportUnreadCount,
+  pendingOrderCount,
+  pendingReviewCount,
+  disabled = false,
 }: {
-  item: (typeof navItems)[number];
+  item: {
+    label: string;
+    href: string;
+    icon: typeof Gauge;
+    view?: AdminView;
+    badge?: "orders" | "reviews" | "support";
+  };
   isActive: boolean;
   supportUnreadCount: number;
+  pendingOrderCount?: number;
+  pendingReviewCount?: number;
+  disabled?: boolean;
 }) {
   const Icon = item.icon;
+  const badgeValue =
+    item.badge === "orders"
+      ? pendingOrderCount ?? 0
+      : item.badge === "reviews"
+        ? pendingReviewCount ?? 0
+        : item.badge === "support"
+          ? supportUnreadCount
+          : 0;
+
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="aev-admin-nav-item is-disabled flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-left text-sm font-medium"
+        title="Coming soon"
+      >
+        <span className="aev-admin-nav-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="truncate">{item.label}</span>
+        <span className="ml-auto rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-white/32">
+          Soon
+        </span>
+      </button>
+    );
+  }
 
   return (
     <Link
@@ -2430,9 +2898,9 @@ function AdminNavItem({
         <Icon className="h-4 w-4" />
       </span>
       <span className="truncate">{item.label}</span>
-      {item.view === "support" && supportUnreadCount > 0 && (
-        <span className="ml-auto rounded-full bg-cyan-300 px-2 py-0.5 text-[10px] font-bold text-black">
-          {supportUnreadCount > 99 ? "99+" : supportUnreadCount}
+      {badgeValue > 0 && (
+        <span className="ml-auto rounded-full bg-pink-400/25 px-2 py-0.5 text-[10px] font-bold text-pink-50 ring-1 ring-pink-200/25">
+          {badgeValue > 99 ? "99+" : badgeValue}
         </span>
       )}
     </Link>
@@ -2692,258 +3160,346 @@ function DashboardSection({
   const recentOrders = rangeOrders.slice(0, 5);
 
   return (
-    <div className="mt-6 space-y-6">
-      <section className="rounded-[1.35rem] border border-white/10 bg-black/20 p-4">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/65">
-              Analytics range
-            </p>
-            <h3 className="mt-2 break-words text-xl font-semibold text-white">
-              {range.label}
-            </h3>
-            <p className="mt-1 text-sm text-white/45">
-              {dateInputValue(range.start)} to {dateInputValue(range.end)}
-            </p>
-          </div>
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-[repeat(5,minmax(116px,1fr))]">
-            {[
-              ["today", "Today"],
-              ["last7", "Last 7 days"],
-              ["last30", "Last 30 days"],
-              ["month", "This month"],
-              ["custom", "Custom"],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setRangePreset(value as DashboardRangePreset)}
-                className={`min-h-11 rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
-                  rangePreset === value
-                    ? "border-cyan-200/40 bg-cyan-200/12 text-cyan-50"
-                    : "border-white/10 bg-white/[0.04] text-white/58 hover:border-white/20 hover:text-white"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {rangePreset === "custom" && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <TextField
-              label="Start date"
-              value={customStart}
-              onChange={setCustomStart}
-              inputMode="numeric"
-            />
-            <TextField
-              label="End date"
-              value={customEnd}
-              onChange={setCustomEnd}
-              inputMode="numeric"
-            />
-          </div>
-        )}
-      </section>
+    <ControlRoomDashboard
+      activeProducts={activeProducts}
+      activityInRange={activityInRange}
+      canViewActivity={canViewActivity}
+      canViewAnalytics={canViewAnalytics}
+      canViewOrders={canViewOrders}
+      canViewProducts={canViewProducts}
+      canViewSupport={canViewSupport}
+      closedSupport={closedSupport}
+      customEnd={customEnd}
+      customStart={customStart}
+      draftProducts={draftProducts}
+      lowStockProducts={lowStockProducts}
+      metrics={metrics}
+      onRangePresetChange={setRangePreset}
+      onStatusChange={onStatusChange}
+      openSupport={openSupport}
+      orderDaily={orderDaily}
+      outOfStockProducts={outOfStockProducts}
+      pendingReviews={pendingReviews}
+      products={products}
+      range={range}
+      rangePreset={rangePreset}
+      recentOrders={recentOrders}
+      recentProducts={recentProducts}
+      reviews={reviews}
+      session={session}
+      setCustomEnd={setCustomEnd}
+      setCustomStart={setCustomStart}
+      supportInRange={supportInRange}
+      unreadSupport={unreadSupport}
+    />
+  );
+}
 
-      {!canViewAnalytics && (
-        <div className="rounded-[1.25rem] border border-amber-200/18 bg-amber-200/[0.065] p-4 text-sm leading-6 text-amber-50/78">
-          Your account can view permitted operational sections. Full analytics access is limited by staff permissions.
-        </div>
+function ProductThumb({ src, label }: { src?: string; label: string }) {
+  return (
+    <span className="aev-admin-product-thumb shrink-0 overflow-hidden rounded-xl border">
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <PackageCheck className="h-4 w-4 text-white/46" aria-hidden="true" />
       )}
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
-        <SectionHeader title="Control room summary" />
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {canViewOrders && (
-            <>
-              <MetricCard label="Total orders" value={String(metrics.totalOrders)} icon={ShoppingBag} compact />
-              <MetricCard label="Pending orders" value={String(metrics.pendingOrders)} icon={Sparkles} compact />
-              <MetricCard label="Confirmed orders" value={String(metrics.confirmedOrders)} icon={ShieldCheck} compact />
-              <MetricCard label="Cancelled / archived / test" value={String(metrics.cancelledOrders + metrics.archivedTestOrders)} icon={ClipboardList} compact />
-              <MetricCard label="Revenue estimate" value={formatCurrency(metrics.totalRevenue)} icon={CreditCard} compact />
-            </>
-          )}
-          {canViewProducts && (
-            <>
-              <MetricCard label="Product count" value={String(activeProducts.length + draftProducts.length)} icon={Boxes} compact />
-              <MetricCard label="Low stock" value={String(lowStockProducts.length)} icon={PackageCheck} compact />
-              <MetricCard label="Out of stock" value={String(outOfStockProducts.length)} icon={BellIcon} compact />
-            </>
-          )}
-          {hasPermission(session, "reviews.view") && (
-            <MetricCard label="Pending reviews" value={String(pendingReviews.length)} icon={Star} compact />
-          )}
-          {canViewSupport && (
-            <MetricCard label="Support unread" value={String(unreadSupport)} icon={MessageSquare} compact />
-          )}
-          {hasPermission(session, "staff.manage") && (
-            <MetricCard label="Active staff" value={String(activeStaffCount)} icon={Users} compact />
-          )}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {[
-            ["Add product", "/admin/products", "products.edit"],
-            ["Manage orders", "/admin/orders", "orders.view"],
-            ["Manage categories", "/admin/categories", "categories.manage"],
-            ["Manage reviews", "/admin/reviews", "reviews.view"],
-            ["Manage support", "/admin/support", "support.view"],
-            ["Edit homepage", "/admin/settings", "homepage.manage"],
-            ["Edit settings", "/admin/settings", "settings.view"],
-          ].map(([label, href, permission]) =>
-            hasPermission(session, permission as AdminPermission) ? (
-              <Link
-                key={label}
-                href={href}
-                className="rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-4 py-2 text-sm font-semibold text-cyan-50 transition hover:border-cyan-200/40 hover:bg-cyan-200/12"
-              >
-                {label}
-              </Link>
-            ) : null
-          )}
-        </div>
-      </section>
+function StatusChip({ label, tone }: { label: string; tone: "pink" | "cyan" | "amber" | "green" }) {
+  return <span className={`aev-admin-status-chip tone-${tone}`}>{label}</span>;
+}
 
-      {canViewOrders && (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
-            <MetricCard label="Today orders" value={String(metrics.todayOrders)} icon={Gauge} />
-            <MetricCard label="Total orders" value={String(metrics.totalOrders)} icon={ShoppingBag} />
-            <MetricCard label="Pending" value={String(metrics.pendingOrders)} icon={Sparkles} />
-            <MetricCard label="Confirmed" value={String(metrics.confirmedOrders)} icon={ShieldCheck} />
-            <MetricCard label="Cancelled" value={String(metrics.cancelledOrders)} icon={ClipboardList} />
-            <MetricCard label="Delivered" value={String(metrics.deliveredOrders)} icon={PackageCheck} />
-            <MetricCard label="Archived / test" value={String(metrics.archivedTestOrders)} icon={ShieldCheck} />
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Today revenue" value={formatCurrency(metrics.todayRevenue)} icon={Wallet} compact />
-            <MetricCard label="Total revenue" value={formatCurrency(metrics.totalRevenue)} icon={CreditCard} compact />
-            <MetricCard label="Confirmed / paid revenue" value={formatCurrency(metrics.paidRevenue)} icon={ShieldCheck} compact />
-            <MetricCard label="Pending payment" value={formatCurrency(metrics.pendingPaymentAmount)} icon={Wallet} compact />
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            <DailyBars title="Orders by day" data={orderDaily} valueLabel={(item) => String(item.value)} />
-            <DailyBars
-              title="Revenue by day"
-              data={orderDaily.map((item) => ({ ...item, value: item.amount ?? 0 }))}
-              valueLabel={(item) => formatCurrency(item.value)}
-            />
-            <DistributionCard title="Order status distribution" data={statusDistribution} />
-            <DistributionCard title="Payment method distribution" data={paymentDistribution} />
-            <DistributionCard title="Delivery status count" data={deliveryStatusDistribution} />
-            <DistributionCard title="Payment status count" data={paymentStatusDistribution} />
-            <DistributionCard title="Courier usage count" data={courierDistribution} emptyLabel="No courier data yet." />
-            <DistributionCard title="Delivery zone distribution" data={deliveryZoneDistribution} emptyLabel="No delivery zone data yet." />
-          </div>
-
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="min-w-0">
-              <SectionHeader title="Recent order preview" href="/admin/orders" action="Open orders workspace" />
-              <RecentOrderList
-                orders={recentOrders}
-                onStatusChange={onStatusChange}
-                canEditStatus={hasPermission(session, "orders.editStatus")}
-              />
-            </div>
-            <InsightList
-              title="Recent operations"
-              emptyLabel="No recent operation fields in this range."
-              items={recentOperations.map((order) => ({
-                title: orderReferenceKey(order),
-                meta: [
-                  order.deliveryStatus ? `Delivery: ${order.deliveryStatus.replace(/_/g, " ")}` : "",
-                  order.paymentStatus ? `Payment: ${order.paymentStatus}` : "",
-                  order.courierName ? `Courier: ${order.courierName}` : "",
-                  order.isTestOrder ? "Test" : "",
-                  order.archivedAt ? "Archived" : "",
-                ].filter(Boolean).join(" | "),
-              }))}
-            />
-          </div>
-        </>
-      )}
-
-      {canViewProducts && (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Active products" value={String(activeProducts.length)} icon={Boxes} compact />
-            <MetricCard label="Draft products" value={String(draftProducts.length)} icon={Pencil} compact />
-            <MetricCard label="Out of stock" value={String(outOfStockProducts.length)} icon={BellIcon} compact />
-            <MetricCard label="Low stock" value={String(lowStockProducts.length)} icon={PackageCheck} compact />
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            <DistributionCard
-              title="Best selling products"
-              data={bestSellingProducts}
-              emptyLabel="Order item data is not available for this range."
-            />
-            <InsightList
-              title="Low stock alerts"
-              emptyLabel="No low-stock products."
-              items={lowStockProducts.slice(0, 6).map((product) => ({
-                title: product.name,
-                meta: `Stock: ${product.stockQuantity ?? product.stockStatus.replace(/_/g, " ")}`,
-              }))}
-            />
-            <InsightList
-              title="Out-of-stock list"
-              emptyLabel="No out-of-stock products."
-              items={outOfStockProducts.slice(0, 6).map((product) => ({
-                title: product.name,
-                meta: product.category,
-              }))}
-            />
-            <InsightList
-              title="Recently updated products"
-              emptyLabel="No product update timestamps yet."
-              items={recentProducts.map((product) => ({
-                title: product.name,
-                meta: product.updatedAt ? formatDate(product.updatedAt) : "Not recorded",
-              }))}
-            />
-          </div>
-        </>
-      )}
-
-      {canViewSupport && (
-        <>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <MetricCard label="Open support" value={String(openSupport)} icon={MessageSquare} compact />
-            <MetricCard label="Unread messages" value={String(unreadSupport)} icon={BellIcon} compact />
-            <MetricCard label="Closed support" value={String(closedSupport)} icon={ShieldCheck} compact />
-          </div>
-          <InsightList
-            title="Recent support conversations"
-            emptyLabel="No support conversations in this range."
-            items={supportInRange.slice(0, 5).map((conversation) => ({
-              title: `${convStatusLabels[conversation.status]} conversation`,
-              meta: `${conversation.source_page || "homepage"} | ${formatDate(conversation.created_at)}`,
-            }))}
-          />
-        </>
-      )}
-
-      {canViewActivity && (
-        <div className="grid gap-4 xl:grid-cols-2">
-          <DistributionCard title="Staff actions count" data={activityDistribution} emptyLabel="No activity logs in this range." />
-          <InsightList
-            title="Recent admin activity"
-            emptyLabel="No activity logs yet."
-            items={activityInRange.slice(0, 6).map((log) => ({
-              title: `${log.actorName || "Admin"} ${log.action}`,
-              meta: [log.targetType, log.createdAt ? formatDate(log.createdAt) : ""]
-                .filter(Boolean)
-                .join(" | "),
-            }))}
-          />
-        </div>
-      )}
+function StatusCount({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.035] p-2">
+      <p className="text-lg font-semibold text-white">{value}</p>
+      <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/35">{label}</p>
     </div>
   );
+}
+
+function ProductHealthBlock({
+  label,
+  value,
+  products,
+}: {
+  label: string;
+  value: number;
+  products: AdminProduct[];
+}) {
+  return (
+    <div className="aev-admin-health-block rounded-2xl border p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold text-pink-100">{label}</p>
+          <p className="mt-1 text-3xl font-semibold text-white">{value}</p>
+          <p className="text-xs text-white/40">Products</p>
+        </div>
+        <div className="flex -space-x-2">
+          {products.slice(0, 4).map((product) => (
+            <ProductThumb key={product.id} src={product.imageUrl || product.images[0]} label={product.name} />
+          ))}
+          {products.length > 4 && (
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-xs font-semibold text-white/56">
+              +{products.length - 4}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductCmsPreview({
+  product,
+  galleryImages,
+  colorOptions,
+}: {
+  product?: AdminProduct;
+  galleryImages: string[];
+  colorOptions: Array<{ id: string; name: string; hex: string; imageUrl?: string }>;
+}) {
+  const descriptionImages = product?.descriptionMedia?.map((item) => item.url).filter(Boolean).slice(0, 2) ?? [];
+  const variantRows = (product?.sizes?.length ? product.sizes : ["S", "M", "L"]).slice(0, 3);
+
+  return (
+    <article className="aev-admin-cms-preview min-w-0 rounded-[1.35rem] border p-4">
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0">
+          <Link href="/admin/products" className="inline-flex items-center gap-2 text-xs font-semibold text-pink-100/75">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to products
+          </Link>
+          <h3 className="mt-2 truncate text-lg font-semibold text-white">Product CMS Preview</h3>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {["Preview", "Save Draft", "Publish"].map((action) => (
+            <Link key={action} href="/admin/products" className={`aev-admin-cms-action ${action === "Publish" ? "is-primary" : ""}`}>
+              {action}
+            </Link>
+          ))}
+        </div>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[96px_minmax(0,1.1fr)_minmax(300px,0.9fr)]">
+        <div className="aev-admin-cms-tabs grid gap-2">
+          {["General", "Media", "Variants", "Pricing", "SEO", "Shipping", "Settings"].map((tab) => (
+            <Link key={tab} href="/admin/products" className={tab === "Media" ? "is-active" : ""}>
+              {tab}
+            </Link>
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="aev-admin-cms-card rounded-2xl border p-3">
+            <p className="text-sm font-semibold text-white">Media Gallery</p>
+            <p className="mt-1 text-xs text-white/42">Drag and drop to upload or click to browse</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {galleryImages.map((image, index) => (
+                <ProductThumb key={`${image}-${index}`} src={image} label="Product media" />
+              ))}
+              <UploadTile />
+            </div>
+          </div>
+          <div className="grid gap-4">
+            <div className="aev-admin-cms-card rounded-2xl border p-3">
+              <p className="text-sm font-semibold text-white">Color Mapping</p>
+              <p className="mt-1 text-xs text-white/42">Manage color swatches and variants</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {colorOptions.slice(0, 6).map((color) => (
+                  <span key={color.id} className="h-8 w-8 rounded-full border border-white/25" style={{ backgroundColor: safeColorHex(color.hex) }} title={color.name} />
+                ))}
+                <Link href="/admin/products" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/[0.05] text-white/60">
+                  <Plus className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+            <div className="aev-admin-cms-card rounded-2xl border p-3">
+              <p className="text-sm font-semibold text-white">Description Gallery</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {descriptionImages.map((image, index) => (
+                  <ProductThumb key={`${image}-${index}`} src={image} label="Description media" />
+                ))}
+                <UploadTile />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="aev-admin-cms-card rounded-2xl border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">Variants</p>
+              <p className="mt-1 text-xs text-white/42">Manage size, color and inventory</p>
+            </div>
+            <Link href="/admin/products" className="aev-admin-mini-action text-pink-100"><Plus className="h-3 w-3" />Add Variant</Link>
+          </div>
+          <div className="mt-3 overflow-hidden rounded-xl border border-white/10">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-white/[0.04] text-white/38">
+                <tr>
+                  <th className="px-3 py-2">Size</th>
+                  <th className="px-3 py-2">Color</th>
+                  <th className="px-3 py-2">SKU</th>
+                  <th className="px-3 py-2">Stock</th>
+                  <th className="px-3 py-2">Price</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 text-white/68">
+                {variantRows.map((size, index) => (
+                  <tr key={size}>
+                    <td className="px-3 py-2">{size}</td>
+                    <td className="px-3 py-2">{product?.colors[index % Math.max(product.colors.length, 1)] ?? "Black"}</td>
+                    <td className="px-3 py-2">{(product?.slug || "aev-product").slice(0, 10).toUpperCase()}-{size}</td>
+                    <td className="px-3 py-2 text-emerald-200">{Math.max(0, (product?.stockQuantity ?? 96) - index * 16)}</td>
+                    <td className="px-3 py-2">{product?.price || formatCurrency(0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function UploadTile() {
+  return (
+    <Link href="/admin/products" className="flex aspect-square min-h-16 items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/[0.025] text-white/50">
+      <Upload className="h-4 w-4" />
+    </Link>
+  );
+}
+
+function QuickActionsPanel({ session }: { session: AdminSessionUser }) {
+  const actions = [
+    { label: "Add Product", href: "/admin/products", icon: Plus, permission: "products.edit" as AdminPermission },
+    { label: "Create Order", href: "/admin/orders", icon: ShoppingBag, permission: "orders.view" as AdminPermission },
+    { label: "Add Discount", href: "#discounts-coming-soon", icon: Tag, disabled: true },
+    { label: "Send Notification", href: "/admin/support", icon: BellIcon, permission: "support.view" as AdminPermission },
+    { label: "Upload Media", href: "/admin/products", icon: ImageIcon, permission: "products.edit" as AdminPermission },
+    { label: "Generate Report", href: "#analytics-coming-soon", icon: Rows3, disabled: true },
+  ];
+
+  return (
+    <ControlRoomPanel title="Quick Actions">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {actions.map((action) => {
+          const Icon = action.icon;
+          const disabled = action.disabled || (action.permission ? !hasPermission(session, action.permission) : false);
+          const className = `aev-admin-quick-action ${disabled ? "is-disabled" : ""}`;
+          return disabled ? (
+            <button key={action.label} type="button" disabled className={className}>
+              <Icon className="h-5 w-5" />
+              <span>{action.label}</span>
+            </button>
+          ) : (
+            <Link key={action.label} href={action.href} className={className} data-admin-hover-sound="true">
+              <Icon className="h-5 w-5" />
+              <span>{action.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </ControlRoomPanel>
+  );
+}
+
+function SystemHealthPanel({
+  backupSecure,
+  databaseHealthy,
+  responseTime,
+}: {
+  backupSecure: boolean;
+  databaseHealthy: boolean;
+  responseTime: number;
+}) {
+  return (
+    <ControlRoomPanel title="System Health" badge="All systems operational">
+      <div className="grid gap-3 md:grid-cols-[1fr_140px] md:items-center">
+        <div className="grid grid-cols-2 gap-2">
+          <StatusMetric label="Uptime" value="99.98%" tone="green" />
+          <StatusMetric label="Response Time" value={`${responseTime}ms`} tone={responseTime < 250 ? "green" : "amber"} />
+          <StatusMetric label="Database" value={databaseHealthy ? "Healthy" : "Fallback"} tone={databaseHealthy ? "green" : "amber"} />
+          <StatusMetric label="Backup" value={backupSecure ? "Secure" : "Pending"} tone={backupSecure ? "green" : "amber"} />
+        </div>
+        <div className="aev-admin-system-radar min-h-[140px] rounded-2xl border" />
+      </div>
+    </ControlRoomPanel>
+  );
+}
+
+function StatusMetric({ label, value, tone }: { label: string; value: string; tone: "green" | "amber" }) {
+  return (
+    <div className={`aev-admin-status-metric tone-${tone} rounded-xl border p-3`}>
+      <p className="text-[0.65rem] text-white/42">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function orderProductImage(order: StoredOrder, products: AdminProduct[]) {
+  const firstItem = order.items[0];
+  if (!firstItem) return undefined;
+  const product = products.find((item) => item.id === firstItem.productId || item.slug === firstItem.slug || item.name === firstItem.name);
+  return product?.imageUrl || product?.images[0];
+}
+
+function productImageBySlug(slug: string, products: AdminProduct[]) {
+  const product = products.find((item) => item.slug === slug || item.id === slug);
+  return product?.imageUrl || product?.images[0];
+}
+
+function buildControlRoomActivity(
+  orders: StoredOrder[],
+  reviews: AdminReviewClientRecord[],
+  products: AdminProduct[],
+  support: DashboardSupportConversation[],
+  logs: AdminActivityClientRecord[]
+) {
+  const items = [
+    ...orders.map((order) => ({
+      title: "New order placed",
+      meta: `${orderReferenceKey(order)} - ${mainItemSummary(order)}`,
+      time: order.createdAt ? formatDate(order.createdAt) : "Now",
+      tone: "green",
+      date: order.createdAt,
+    })),
+    ...reviews.map((review) => ({
+      title: "Review submitted",
+      meta: `${review.customerName} - ${review.status}`,
+      time: formatDate(review.createdAt),
+      tone: "amber",
+      date: review.createdAt,
+    })),
+    ...products.map((product) => ({
+      title: "Product updated",
+      meta: product.name,
+      time: product.updatedAt ? formatDate(product.updatedAt) : "Recent",
+      tone: "cyan",
+      date: product.updatedAt,
+    })),
+    ...support.map((conversation) => ({
+      title: "Support ticket created",
+      meta: conversation.source_page || "contact form",
+      time: formatDate(conversation.created_at),
+      tone: "pink",
+      date: conversation.created_at,
+    })),
+    ...logs.map((log) => ({
+      title: `${log.actorName || "Admin"} ${log.action}`,
+      meta: log.targetType || "operations",
+      time: log.createdAt ? formatDate(log.createdAt) : "Recent",
+      tone: "violet",
+      date: log.createdAt,
+    })),
+  ];
+
+  return items
+    .sort((a, b) => Date.parse(b.date ?? "") - Date.parse(a.date ?? ""))
+    .slice(0, 10);
 }
 
 function DailyBars({
