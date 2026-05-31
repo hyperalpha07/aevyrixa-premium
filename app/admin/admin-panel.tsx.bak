@@ -14,7 +14,6 @@ import {
   Boxes,
   ChevronDown,
   ClipboardList,
-  Command,
   Tag,
   Copy,
   CreditCard,
@@ -39,8 +38,6 @@ import {
   Upload,
   Users,
   Video as VideoIcon,
-  Volume2,
-  VolumeX,
   Wallet,
   X,
 } from "lucide-react";
@@ -118,13 +115,6 @@ import {
 const LATEST_DRAFT_ORDER_KEY = "aevyrixa-draft-order";
 const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
 const ADMIN_PRODUCTS_KEY = "aevyrixa-admin-products";
-const ADMIN_SOUND_MUTED_KEY = "aevyrixa-admin-sound-muted";
-
-type AdminSoundCue = "click" | "hover" | "tab" | "success" | "warning";
-
-const adminSoundAssetPaths: Partial<Record<AdminSoundCue, string>> = {
-  // Drop real assets in public/admin/sounds and point these keys at them later.
-};
 
 const productStatuses = ["Active", "Draft"] as const;
 const stockStatuses: ProductStockStatus[] = [
@@ -399,110 +389,6 @@ const navItems = [
   permission: AdminPermission;
   fallbackPermission?: AdminPermission;
 }>;
-
-function useAdminSoundSystem() {
-  const [muted, setMuted] = useState(true);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const lastCueAtRef = useRef<Record<AdminSoundCue, number>>({
-    click: 0,
-    hover: 0,
-    tab: 0,
-    success: 0,
-    warning: 0,
-  });
-
-  useEffect(() => {
-    try {
-      setMuted(window.localStorage.getItem(ADMIN_SOUND_MUTED_KEY) !== "false");
-    } catch {
-      setMuted(true);
-    }
-  }, []);
-
-  const setSoundMuted = useCallback((nextMuted: boolean) => {
-    setMuted(nextMuted);
-    try {
-      window.localStorage.setItem(ADMIN_SOUND_MUTED_KEY, String(nextMuted));
-    } catch {
-      // Sound preference is optional.
-    }
-  }, []);
-
-  const play = useCallback(
-    (cue: AdminSoundCue) => {
-      if (muted) return;
-
-      const now = performance.now();
-      const minimumGap = cue === "hover" ? 190 : 85;
-      if (now - lastCueAtRef.current[cue] < minimumGap) return;
-      lastCueAtRef.current[cue] = now;
-
-      const assetPath = adminSoundAssetPaths[cue];
-      if (assetPath) {
-        const audio = new Audio(assetPath);
-        audio.volume = cue === "hover" ? 0.08 : 0.16;
-        void audio.play().catch(() => null);
-        return;
-      }
-
-      try {
-        const audioWindow = globalThis as typeof globalThis & {
-          webkitAudioContext?: typeof AudioContext;
-        };
-        const AudioContextCtor = window.AudioContext || audioWindow.webkitAudioContext;
-        if (!AudioContextCtor) return;
-        const context = audioContextRef.current ?? new AudioContextCtor();
-        audioContextRef.current = context;
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        const frequencies: Record<AdminSoundCue, number> = {
-          click: 360,
-          hover: 520,
-          tab: 660,
-          success: 780,
-          warning: 180,
-        };
-        const duration = cue === "warning" ? 0.16 : cue === "success" ? 0.18 : 0.075;
-        oscillator.type = cue === "warning" ? "sawtooth" : "sine";
-        oscillator.frequency.value = frequencies[cue];
-        gain.gain.setValueAtTime(cue === "hover" ? 0.018 : 0.034, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + duration);
-      } catch {
-        // Interaction audio is optional and should never block admin actions.
-      }
-    },
-    [muted]
-  );
-
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      const interactive = target?.closest("button,a,select,input[type='checkbox'],[role='button']");
-      if (!interactive) return;
-      const soundType = interactive.getAttribute("data-admin-sound");
-      play(soundType === "tab" ? "tab" : "click");
-    };
-
-    const handlePointerOver = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target?.closest("[data-admin-hover-sound='true']")) return;
-      play("hover");
-    };
-
-    document.addEventListener("click", handleClick);
-    document.addEventListener("pointerover", handlePointerOver);
-    return () => {
-      document.removeEventListener("click", handleClick);
-      document.removeEventListener("pointerover", handlePointerOver);
-    };
-  }, [play]);
-
-  return { muted, setSoundMuted, play };
-}
 
 const emptyProduct: AdminProduct = {
   id: "",
@@ -1942,17 +1828,6 @@ export default function AdminPanel({
   const [supportUnreadCount, setSupportUnreadCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [clock, setClock] = useState(() => new Date());
-  const [commandQuery, setCommandQuery] = useState("");
-  const adminSound = useAdminSoundSystem();
-  const activeSectionTitle = viewTitle(view);
-  const visibleNavItems = navItems.filter((item) => canAccessSection(session, item.view));
-  const liveSignals = [
-    { label: "Orders", value: String(orders.length), tone: "cyan" },
-    { label: "Products", value: String(adminProducts.filter((product) => !product.deletedAt).length), tone: "violet" },
-    { label: "Reviews", value: String(reviews.length), tone: "rose" },
-    { label: "Support", value: supportUnreadCount > 99 ? "99+" : String(supportUnreadCount), tone: "amber" },
-  ];
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -2065,11 +1940,6 @@ export default function AdminPanel({
     return () => window.clearInterval(interval);
   }, [session]);
 
-  useEffect(() => {
-    const interval = window.setInterval(() => setClock(new Date()), 1000);
-    return () => window.clearInterval(interval);
-  }, []);
-
   const updateOrderStatus = (orderKey: string, status: OrderStatus) => {
     if (!hasPermission(session, "orders.editStatus")) return;
     setOrders((current) => {
@@ -2176,26 +2046,10 @@ export default function AdminPanel({
     router.refresh();
   };
 
-  const runCommandSearch = () => {
-    const query = commandQuery.trim().toLowerCase();
-    if (!query) return;
-    const target = visibleNavItems.find((item) =>
-      item.label.toLowerCase().includes(query)
-    );
-    if (!target) {
-      adminSound.play("warning");
-      return;
-    }
-    adminSound.play("tab");
-    router.push(target.href);
-  };
-
   if (!isLoaded) {
     return (
-      <main className="aev-admin-control-room grid min-h-screen place-items-center overflow-hidden px-4 text-white">
-        <ControlRoomBackground />
-        <div className="aev-admin-loading rounded-[1.4rem] border border-cyan-200/18 bg-black/40 p-6 text-sm text-white/70">
-          <span className="aev-admin-live-dot mr-2 inline-block h-2 w-2 rounded-full bg-cyan-200" />
+      <main className="grid min-h-screen place-items-center overflow-x-hidden bg-[#030712] px-4 text-white">
+        <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.045] p-5 text-sm text-white/60">
           Loading admin control room...
         </div>
       </main>
@@ -2203,53 +2057,62 @@ export default function AdminPanel({
   }
 
   return (
-    <main className="aev-admin-control-room min-h-screen overflow-x-hidden text-white">
-      <ControlRoomBackground />
+    <main className="min-h-screen overflow-x-hidden bg-[#030712] text-white">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute left-[-18%] top-[-8%] h-[340px] w-[340px] rounded-full bg-cyan-400/16 blur-[130px]" />
+        <div className="absolute right-[-20%] top-[18%] h-[360px] w-[360px] rounded-full bg-violet-500/18 blur-[150px]" />
+        <div className="absolute bottom-[-20%] left-[22%] h-[320px] w-[320px] rounded-full bg-fuchsia-400/10 blur-[140px]" />
+      </div>
 
-      <div className="aev-admin-shell flex w-full flex-col gap-4 px-3 py-3 sm:px-4 lg:min-h-screen lg:flex-row lg:items-start lg:px-5 lg:py-5">
-        <aside className="aev-admin-command-rail min-w-0 p-4 lg:sticky lg:top-5 lg:w-[286px] lg:shrink-0">
-          <div className="aev-admin-brand-block flex min-w-0 flex-col gap-4">
-            <div className="flex min-w-0 items-start gap-3">
-              <span className="aev-admin-brand-mark flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl">
-                <Command className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[0.68rem] uppercase tracking-[0.32em] text-cyan-100/70">
-                  Aevyrixa
-                </p>
-                <h1 className="mt-1 break-words text-2xl font-semibold tracking-tight">
-                  Control Room
-                </h1>
-                <p className="mt-1 text-xs text-white/42">Her Care operations console</p>
-              </div>
+      <div className="flex w-full flex-col gap-4 px-3 py-3 sm:px-4 lg:min-h-screen lg:flex-row lg:items-start lg:px-5 lg:py-5">
+        <aside className="min-w-0 rounded-[1.4rem] border border-white/10 bg-white/[0.045] p-4 shadow-[0_0_60px_rgba(34,211,238,0.08)] backdrop-blur-2xl lg:sticky lg:top-5 lg:w-[260px] lg:shrink-0">
+          <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between lg:block">
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">
+                Aevyrixa
+              </p>
+              <h1 className="mt-2 break-words text-2xl font-semibold tracking-tight">
+                Aevyrixa Admin
+              </h1>
             </div>
             <Link
               href="/"
-              data-admin-hover-sound="true"
-              className="aev-admin-utility-link inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-medium text-white/75 transition hover:border-cyan-200/35 hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Store
             </Link>
           </div>
 
-          <nav className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1" aria-label="Admin command rail">
-            {visibleNavItems.map((item) => (
-              <AdminNavItem
-                key={item.label}
-                item={item}
-                isActive={item.view === view}
-                supportUnreadCount={supportUnreadCount}
-              />
-            ))}
+          <nav className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+            {navItems.filter((item) => canAccessSection(session, item.view)).map((item) => {
+              const Icon = item.icon;
+              const isActive = item.view === view;
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-3 text-sm font-medium transition ${
+                    isActive
+                      ? "border-cyan-200/35 bg-cyan-200/10 text-white shadow-[0_0_28px_rgba(34,211,238,0.12)]"
+                      : "border-white/10 bg-black/20 text-white/58 hover:border-white/20 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                  {item.view === "support" && supportUnreadCount > 0 && (
+                    <span className="ml-auto rounded-full bg-cyan-300 px-2 py-0.5 text-[10px] font-bold text-black">
+                      {supportUnreadCount > 99 ? "99+" : supportUnreadCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
             <button
               type="button"
-              onClick={() => {
-                adminSound.play("warning");
-                void handleLogout();
-              }}
-              data-admin-hover-sound="true"
-              className="aev-admin-nav-item aev-admin-nav-danger flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-left text-sm font-medium"
+              onClick={handleLogout}
+              className="flex min-w-0 items-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-3 text-left text-sm font-medium text-rose-100/78 transition hover:border-rose-100/35 hover:text-white"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               <span className="truncate">Logout</span>
@@ -2258,71 +2121,19 @@ export default function AdminPanel({
         </aside>
 
         <section className="min-w-0 flex-1">
-          <div className="aev-admin-main-panel min-w-0 p-4 sm:p-5 xl:p-6">
-            <div className="aev-admin-topbar mb-5 flex flex-col gap-4 border-b border-white/10 pb-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="min-w-0 rounded-[1.4rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-2xl sm:p-5 xl:p-6">
+            <div className="flex flex-col gap-3 border-b border-white/10 pb-5 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="aev-admin-chip">
-                    <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
-                    Live system
-                  </span>
-                  <span className="aev-admin-chip aev-admin-chip-muted">
-                    {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                  </span>
-                </div>
-                <h2 className="mt-3 break-words text-3xl font-semibold tracking-tight [overflow-wrap:break-word] xl:text-4xl">
-                  {activeSectionTitle}
+                <p className="text-xs uppercase tracking-[0.28em] text-fuchsia-200/70">
+                  Control Room
+                </p>
+                <h2 className="mt-2 break-words text-3xl font-semibold tracking-tight [overflow-wrap:break-word]">
+                  {viewTitle(view)}
                 </h2>
               </div>
-
-              <div className="grid min-w-0 gap-3 xl:min-w-[520px]">
-                <label className="aev-admin-command-input relative block min-w-0">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-100/55" />
-                  <input
-                    type="search"
-                    placeholder={`Command search / ${activeSectionTitle}`}
-                    value={commandQuery}
-                    onChange={(event) => setCommandQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") runCommandSearch();
-                    }}
-                    className="w-full rounded-2xl border py-3 pl-10 pr-4 text-sm outline-none"
-                    onFocus={() => adminSound.play("hover")}
-                  />
-                </label>
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <span className="aev-admin-status-pill">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    {session.role ? roleLabels[session.role] : "Admin"}
-                  </span>
-                  <span className="aev-admin-status-pill">
-                    <BellIcon className="h-3.5 w-3.5" />
-                    {supportUnreadCount > 0 ? `${supportUnreadCount} alerts` : "No alerts"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextMuted = !adminSound.muted;
-                      adminSound.setSoundMuted(nextMuted);
-                      if (!nextMuted) window.setTimeout(() => adminSound.play("success"), 10);
-                    }}
-                    data-admin-hover-sound="true"
-                    className="aev-admin-icon-button"
-                    aria-label={adminSound.muted ? "Unmute admin sounds" : "Mute admin sounds"}
-                  >
-                    {adminSound.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="aev-admin-signal-strip mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {liveSignals.map((signal) => (
-                <div key={signal.label} className={`aev-admin-signal-card aev-admin-signal-${signal.tone}`}>
-                  <span>{signal.label}</span>
-                  <strong>{signal.value}</strong>
-                </div>
-              ))}
+              <p className="max-w-3xl break-words text-sm leading-6 text-white/56 [overflow-wrap:break-word]">
+                Supabase-backed order operations with local fallback for development.
+              </p>
             </div>
 
             {view === "orders" ? (
@@ -2384,58 +2195,6 @@ export default function AdminPanel({
         </section>
       </div>
     </main>
-  );
-}
-
-function ControlRoomBackground() {
-  return (
-    <div className="aev-admin-background pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <video
-        className="aev-admin-video-layer"
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-      />
-      <div className="aev-admin-bg-gradient" />
-      <div className="aev-admin-bg-grid" />
-      <div className="aev-admin-bg-radar" />
-      <div className="aev-admin-particle-field" />
-      <div className="aev-admin-light-sweep" />
-    </div>
-  );
-}
-
-function AdminNavItem({
-  item,
-  isActive,
-  supportUnreadCount,
-}: {
-  item: (typeof navItems)[number];
-  isActive: boolean;
-  supportUnreadCount: number;
-}) {
-  const Icon = item.icon;
-
-  return (
-    <Link
-      href={item.href}
-      data-admin-sound="tab"
-      data-admin-hover-sound="true"
-      className={`aev-admin-nav-item flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium ${
-        isActive ? "is-active" : ""
-      }`}
-    >
-      <span className="aev-admin-nav-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="truncate">{item.label}</span>
-      {item.view === "support" && supportUnreadCount > 0 && (
-        <span className="ml-auto rounded-full bg-cyan-300 px-2 py-0.5 text-[10px] font-bold text-black">
-          {supportUnreadCount > 99 ? "99+" : supportUnreadCount}
-        </span>
-      )}
-    </Link>
   );
 }
 
