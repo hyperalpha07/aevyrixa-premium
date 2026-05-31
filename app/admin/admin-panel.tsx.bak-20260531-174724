@@ -127,16 +127,7 @@ const DRAFT_ORDERS_KEY = "aevyrixa-draft-orders";
 const ADMIN_PRODUCTS_KEY = "aevyrixa-admin-products";
 const ADMIN_SOUND_MUTED_KEY = "aevyrixa-admin-sound-muted";
 
-type AdminSoundCue =
-  | "click"
-  | "hover"
-  | "menu"
-  | "toggle"
-  | "tab"
-  | "primary"
-  | "success"
-  | "warning"
-  | "error";
+type AdminSoundCue = "click" | "hover" | "tab" | "success" | "warning";
 
 const adminSoundAssetPaths: Partial<Record<AdminSoundCue, string>> = {
   // Drop real assets in public/admin/sounds and point these keys at them later.
@@ -163,17 +154,7 @@ const CMS_CATEGORY_NAMES = [
 
 type ProductStatus = (typeof productStatuses)[number];
 type ProductFilter = "All" | "Active" | "Draft" | "Out of Stock" | "Deleted";
-type AdminView =
-  | "dashboard"
-  | "orders"
-  | "products"
-  | "media"
-  | "reviews"
-  | "settings"
-  | "support"
-  | "categories"
-  | "staff"
-  | "customers";
+type AdminView = "dashboard" | "orders" | "products" | "reviews" | "settings" | "support" | "categories" | "staff" | "customers";
 type PaymentFilter = "All" | (typeof paymentMethods)[number];
 type PaymentStatusFilter = "All" | PaymentStatus;
 type StatusFilter = "All" | OrderStatus;
@@ -411,7 +392,6 @@ const navItems = [
   { label: "Dashboard", href: "/admin", icon: Gauge, view: "dashboard", permission: "dashboard.view" },
   { label: "Orders", href: "/admin/orders", icon: ClipboardList, view: "orders", permission: "orders.view" },
   { label: "Products", href: "/admin/products", icon: Boxes, view: "products", permission: "products.view" },
-  { label: "Media", href: "/admin/media", icon: ImageIcon, view: "media", permission: "products.media", fallbackPermission: "products.view" },
   { label: "Reviews", href: "/admin/reviews", icon: Star, view: "reviews", permission: "reviews.view" },
   { label: "Categories", href: "/admin/categories", icon: Tag, view: "categories", permission: "categories.manage" },
   { label: "Settings", href: "/admin/settings", icon: Settings, view: "settings", permission: "settings.view" },
@@ -455,7 +435,7 @@ const commandRailGroups: Array<{
     label: "Operations",
     items: [
       { label: "Staff", href: "/admin/staff", icon: Users, view: "staff", permission: "staff.manage", fallbackPermission: "activity.view" },
-      { label: "Media", href: "/admin/media", icon: ImageIcon, view: "media", permission: "products.media", fallbackPermission: "products.view" },
+      { label: "Media", href: "/admin/products", icon: ImageIcon, view: "products", permission: "products.view" },
       { label: "Discounts", href: "#discounts-coming-soon", icon: Tag, disabled: true },
       { label: "Analytics", href: "#analytics-coming-soon", icon: Gauge, permission: "analytics.view", disabled: true },
     ],
@@ -476,13 +456,9 @@ function useAdminSoundSystem() {
   const lastCueAtRef = useRef<Record<AdminSoundCue, number>>({
     click: 0,
     hover: 0,
-    menu: 0,
-    toggle: 0,
     tab: 0,
-    primary: 0,
     success: 0,
     warning: 0,
-    error: 0,
   });
 
   useEffect(() => {
@@ -530,25 +506,16 @@ function useAdminSoundSystem() {
         const oscillator = context.createOscillator();
         const gain = context.createGain();
         const frequencies: Record<AdminSoundCue, number> = {
-          click: 420,
-          hover: 560,
-          menu: 330,
-          toggle: 610,
-          tab: 690,
-          primary: 760,
-          success: 880,
-          warning: 220,
-          error: 160,
+          click: 360,
+          hover: 520,
+          tab: 660,
+          success: 780,
+          warning: 180,
         };
-        const duration =
-          cue === "warning" || cue === "error"
-            ? 0.16
-            : cue === "success" || cue === "primary"
-              ? 0.18
-              : 0.085;
-        oscillator.type = cue === "warning" || cue === "error" ? "triangle" : "sine";
+        const duration = cue === "warning" ? 0.16 : cue === "success" ? 0.18 : 0.075;
+        oscillator.type = cue === "warning" ? "sawtooth" : "sine";
         oscillator.frequency.value = frequencies[cue];
-        gain.gain.setValueAtTime(cue === "hover" ? 0.014 : cue === "primary" ? 0.04 : 0.028, context.currentTime);
+        gain.gain.setValueAtTime(cue === "hover" ? 0.018 : 0.034, context.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
         oscillator.connect(gain);
         gain.connect(context.destination);
@@ -567,18 +534,7 @@ function useAdminSoundSystem() {
       const interactive = target?.closest("button,a,select,input[type='checkbox'],[role='button']");
       if (!interactive) return;
       const soundType = interactive.getAttribute("data-admin-sound");
-      const cue = (
-        soundType === "menu" ||
-        soundType === "toggle" ||
-        soundType === "tab" ||
-        soundType === "primary" ||
-        soundType === "success" ||
-        soundType === "warning" ||
-        soundType === "error"
-          ? soundType
-          : "click"
-      ) as AdminSoundCue;
-      play(cue);
+      play(soundType === "tab" ? "tab" : "click");
     };
 
     const handlePointerOver = (event: PointerEvent) => {
@@ -2450,7 +2406,6 @@ export default function AdminPanel({
                     adminSound.setSoundMuted(nextMuted);
                     if (!nextMuted) window.setTimeout(() => adminSound.play("success"), 10);
                   }}
-                  data-admin-sound="toggle"
                   data-admin-hover-sound="true"
                   className="aev-admin-icon-button"
                   aria-label={adminSound.muted ? "Unmute admin sounds" : "Mute admin sounds"}
@@ -2486,8 +2441,6 @@ export default function AdminPanel({
               />
             ) : view === "products" ? (
               <ProductsSection products={adminProducts} onSaveProducts={saveProducts} session={session} />
-            ) : view === "media" ? (
-              <MediaSection products={adminProducts} session={session} />
             ) : view === "reviews" ? (
               <ReviewsSection
                 reviews={reviews}
@@ -2876,10 +2829,8 @@ function ControlRoomBackground() {
       <div className="aev-admin-bg-gradient" />
       <div className="aev-admin-bg-grid" />
       <div className="aev-admin-bg-radar" />
-      <div className="aev-admin-bg-orbit" />
       <div className="aev-admin-particle-field" />
       <div className="aev-admin-light-sweep" />
-      <div className="aev-admin-bg-vignette" />
     </div>
   );
 }
@@ -2937,7 +2888,7 @@ function AdminNavItem({
   return (
     <Link
       href={item.href}
-      data-admin-sound="menu"
+      data-admin-sound="tab"
       data-admin-hover-sound="true"
       className={`aev-admin-nav-item flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium ${
         isActive ? "is-active" : ""
@@ -2959,7 +2910,6 @@ function AdminNavItem({
 function viewTitle(view: AdminView) {
   if (view === "orders") return "Orders";
   if (view === "products") return "Products";
-  if (view === "media") return "Media Vault";
   if (view === "reviews") return "Reviews";
   if (view === "settings") return "Settings";
   if (view === "support") return "Support Inbox";
@@ -4307,153 +4257,6 @@ function ProductsSection({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function MediaSection({
-  products,
-  session,
-}: {
-  products: AdminProduct[];
-  session: AdminSessionUser;
-}) {
-  const canUpload = hasPermission(session, "products.media");
-  const productMedia = products
-    .filter((product) => !product.deletedAt)
-    .flatMap((product) => {
-      const primaryMedia = [product.imageUrl, product.posterUrl, ...product.images]
-        .filter((url): url is string => Boolean(url))
-        .map((url, index) => ({
-          id: `${product.id}-primary-${index}`,
-          url,
-          product,
-          type: /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ? "Video" : "Image",
-          zone: index === 0 ? "Primary visual" : "Gallery",
-        }));
-      const sectionMedia = Object.entries(product.sectionMedia || {})
-        .flatMap(([zone, item]) => [item?.url]
-          .filter((url): url is string => Boolean(url))
-          .map((url, index) => ({
-            id: `${product.id}-${zone}-${index}`,
-            url,
-            product,
-            type: item?.type === "video" || /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ? "Video" : "Image",
-            zone: productSectionLabels[zone as ProductSectionMediaKey] ?? zone,
-          })));
-      const descriptionMedia = (product.descriptionMedia || [])
-        .filter((item) => item.url)
-        .map((item, index) => ({
-          id: `${product.id}-description-${index}`,
-          url: item.url,
-          product,
-          type: item.type === "video" ? "Video" : "Image",
-          zone: item.alt || "Description gallery",
-        }));
-
-      return [...primaryMedia, ...sectionMedia, ...descriptionMedia];
-    });
-  const imageCount = productMedia.filter((item) => item.type === "Image").length;
-  const videoCount = productMedia.filter((item) => item.type === "Video").length;
-  const featuredProducts = products.filter((product) => !product.deletedAt && (product.imageUrl || product.images.length > 0)).slice(0, 4);
-
-  return (
-    <div className="aev-admin-page-stack mt-6 space-y-5">
-      <section className="aev-admin-page-hero rounded-[1.35rem] border p-5">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-center">
-          <div className="min-w-0">
-            <span className="aev-admin-chip">
-              <ImageIcon className="h-3.5 w-3.5" />
-              Media Vault
-            </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-              Product visual operations
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/56">
-              A command view for product imagery, video assets, section media, and CMS visual coverage. Uploads continue through the existing product editor so backend behavior stays intact.
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <StatusMetric label="Assets indexed" value={String(productMedia.length)} tone="green" />
-              <StatusMetric label="Images" value={String(imageCount)} tone="green" />
-              <StatusMetric label="Videos" value={String(videoCount)} tone={videoCount > 0 ? "green" : "amber"} />
-            </div>
-          </div>
-          <div className="aev-admin-media-orb min-h-[210px] rounded-[1.25rem] border">
-            <div className="aev-admin-orb-core" />
-            <div className="aev-admin-orb-ring ring-one" />
-            <div className="aev-admin-orb-ring ring-two" />
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="aev-admin-control-panel rounded-[1.35rem] border p-4">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <SectionHeader title="Vault index" />
-            <Link
-              href="/admin/products"
-              data-admin-sound="primary"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-pink-200/30 bg-pink-300/12 px-4 text-sm font-semibold text-pink-50 transition hover:border-pink-100/55"
-            >
-              <Upload className="h-4 w-4" />
-              Upload in product CMS
-            </Link>
-          </div>
-          {productMedia.length === 0 ? (
-            <NoDataState label="No product media has been indexed yet." />
-          ) : (
-            <div className="aev-admin-media-grid grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-              {productMedia.slice(0, 24).map((item) => (
-                <article key={item.id} className="aev-admin-media-card rounded-2xl border p-3">
-                  <div className="aspect-square overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                    {item.type === "Video" ? (
-                      <video src={item.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.url} alt="" loading="lazy" className="h-full w-full object-cover" />
-                    )}
-                  </div>
-                  <div className="mt-3 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-white">{item.product.name}</p>
-                      <StatusChip label={item.type} tone={item.type === "Video" ? "pink" : "cyan"} />
-                    </div>
-                    <p className="mt-1 truncate text-xs text-white/42">{item.zone}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <aside className="grid gap-4">
-          <ControlRoomPanel title="Upload Protocol" badge={canUpload ? "Enabled" : "Read only"}>
-            <div className="space-y-3 text-sm leading-6 text-white/58">
-              <p>
-                Product, category, review, and homepage upload handlers are preserved. This vault surfaces the connected assets without inventing a separate backend.
-              </p>
-              <Link href="/admin/products" className="aev-admin-panel-action flex min-h-10 items-center justify-center rounded-xl border text-xs font-semibold">
-                Open product editor
-              </Link>
-            </div>
-          </ControlRoomPanel>
-          <ControlRoomPanel title="Coverage Radar">
-            <div className="space-y-3">
-              {featuredProducts.map((product) => (
-                <div key={product.id} className="aev-admin-compact-row">
-                  <ProductThumb src={product.imageUrl || product.images[0]} label={product.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{product.name}</p>
-                    <p className="text-xs text-white/42">{product.images.length} gallery assets</p>
-                  </div>
-                  <StatusChip label={product.status} tone={product.status === "Active" ? "green" : "amber"} />
-                </div>
-              ))}
-              {featuredProducts.length === 0 && <NoDataState label="No visual coverage yet." />}
-            </div>
-          </ControlRoomPanel>
-        </aside>
-      </section>
     </div>
   );
 }

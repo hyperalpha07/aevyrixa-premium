@@ -55,6 +55,7 @@ export type AdminSection =
   | "dashboard"
   | "orders"
   | "products"
+  | "media"
   | "reviews"
   | "categories"
   | "settings"
@@ -278,6 +279,7 @@ export function canAccessSection(
   if (section === "dashboard") return hasPermission(session, "dashboard.view");
   if (section === "orders") return hasPermission(session, "orders.view");
   if (section === "products") return hasPermission(session, "products.view");
+  if (section === "media") return hasPermission(session, "products.media") || hasPermission(session, "products.view");
   if (section === "reviews") return hasPermission(session, "reviews.view");
   if (section === "categories") return hasPermission(session, "categories.manage");
   if (section === "settings") return hasPermission(session, "settings.view");
@@ -295,6 +297,7 @@ const sectionPaths: Array<{ section: AdminSection; path: string }> = [
   { section: "dashboard", path: "/admin" },
   { section: "orders", path: "/admin/orders" },
   { section: "products", path: "/admin/products" },
+  { section: "media", path: "/admin/media" },
   { section: "reviews", path: "/admin/reviews" },
   { section: "categories", path: "/admin/categories" },
   { section: "settings", path: "/admin/settings" },
