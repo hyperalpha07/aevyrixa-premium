@@ -8530,11 +8530,10 @@ function ReviewsSection({
             )}
             <button
               type="submit"
-              disabled={savingId === "new" || savingId === editingId}
-              className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.10] px-5 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45 disabled:opacity-45"
-            >
-              {editingId ? "Save review" : "Add review"}
-            </button>
+   className="rounded-full border border-cyan-200/35 bg-cyan-200/[0.16] px-5 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/55 hover:bg-cyan-200/[0.22]"
+>
+  {savingId === "new" ? "Adding..." : editingId ? "Save review" : "Add review"}
+</button>
             {editingId && (
               <button
                 type="button"
