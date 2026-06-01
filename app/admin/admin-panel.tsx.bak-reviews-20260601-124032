@@ -8,7 +8,6 @@ import type {
   ReactNode,
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ReviewsCommandCenter from "@/app/admin/reviews-command-center";
 import {
   ArrowLeft,
   Bell as BellIcon,
@@ -2524,7 +2523,7 @@ export default function AdminPanel({
             ) : view === "media" ? (
               <MediaSection products={adminProducts} session={session} />
             ) : view === "reviews" ? (
-              <ReviewsCommandCenter
+              <ReviewsSection
                 reviews={reviews}
                 setReviews={setReviews}
                 products={adminProducts}
