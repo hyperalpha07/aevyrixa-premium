@@ -1624,6 +1624,22 @@ function formatDate(value?: string) {
   }).format(date);
 }
 
+function formatRelativeOrderAge(value?: string) {
+  if (!value) return "timing not recorded";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "timing not recorded";
+
+  const diffMinutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (diffMinutes < 1) return "just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ${diffMinutes % 60}m ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
 function isToday(value?: string) {
   if (!value) return false;
 
@@ -3281,9 +3297,17 @@ function DashboardSection({
   );
 }
 
-function ProductThumb({ src, label }: { src?: string; label: string }) {
+function ProductThumb({
+  src,
+  label,
+  className = "",
+}: {
+  src?: string;
+  label: string;
+  className?: string;
+}) {
   return (
-    <span className="aev-admin-product-thumb shrink-0 overflow-hidden rounded-xl border">
+    <span className={`aev-admin-product-thumb shrink-0 overflow-hidden rounded-xl border ${className}`}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" className="h-full w-full object-cover" />
@@ -3790,47 +3814,51 @@ function OrdersSection({
   const todayRevenue = todayOrders
     .filter((order) => order.status !== "Cancelled")
     .reduce((sum, order) => sum + orderTotal(order), 0);
+  const pendingCount = activeOrders.filter((order) => order.status === "Pending").length;
+  const confirmedCount = activeOrders.filter((order) => order.status === "Confirmed").length;
+  const cancelledCount = activeOrders.filter((order) => order.status === "Cancelled").length;
+  const deliveredCount = activeOrders.filter((order) => order.status === "Delivered").length;
   const metrics = [
     {
-      label: todayOrders.length > 0 ? "Total Orders Today" : "Total Orders",
-      value: String(todayOrders.length > 0 ? todayOrders.length : activeOrders.length),
-      detail: `${activeOrders.length} all-time`,
-      tone: "cyan",
+      label: "Total Orders Today",
+      value: String(todayOrders.length),
+      detail: `${activeOrders.length} active orders in system`,
+      tone: "violet",
       icon: ClipboardList,
     },
     {
       label: "Pending Orders",
-      value: String(activeOrders.filter((order) => order.status === "Pending").length),
-      detail: "Awaiting action",
+      value: String(pendingCount),
+      detail: "Awaiting confirmation",
       tone: "amber",
       icon: Wallet,
     },
     {
       label: "Confirmed Orders",
-      value: String(activeOrders.filter((order) => order.status === "Confirmed").length),
+      value: String(confirmedCount),
       detail: "Ready for fulfillment",
       tone: "cyan",
       icon: Check,
     },
     {
       label: "Cancelled Orders",
-      value: String(activeOrders.filter((order) => order.status === "Cancelled").length),
+      value: String(cancelledCount),
       detail: "Removed from revenue",
       tone: "rose",
       icon: X,
     },
     {
       label: "Delivered Orders",
-      value: String(activeOrders.filter((order) => order.status === "Delivered").length),
+      value: String(deliveredCount),
       detail: "Completed handoff",
       tone: "green",
       icon: PackageCheck,
     },
     {
-      label: todayRevenue > 0 ? "Revenue Today" : "Total Revenue",
-      value: formatCurrency(todayRevenue > 0 ? todayRevenue : revenueOrders.reduce((sum, order) => sum + orderTotal(order), 0)),
-      detail: "Cancelled excluded",
-      tone: "violet",
+      label: "Total Revenue (Today)",
+      value: formatCurrency(todayRevenue),
+      detail: `${formatCurrency(revenueOrders.reduce((sum, order) => sum + orderTotal(order), 0))} all-time active`,
+      tone: "pink",
       icon: CreditCard,
     },
   ];
@@ -3844,12 +3872,12 @@ function OrdersSection({
     sortOrder !== "Newest first";
 
   return (
-    <div className="aev-admin-orders-workspace mt-6 space-y-4">
-      <section className="aev-admin-page-hero min-w-0 rounded-[1.35rem] border p-4 sm:p-5">
+    <div className="aev-admin-orders-workspace mt-6 space-y-3">
+      <section className="aev-admin-page-hero min-w-0 rounded-[1.35rem] border border-pink-200/18 p-4 shadow-[0_0_56px_rgba(255,77,184,0.08)] sm:p-5">
         <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="aev-admin-chip">
+              <span className="aev-admin-chip border-emerald-200/24 bg-emerald-300/[0.08] text-emerald-100">
                 <span className="aev-admin-live-dot mr-2" />
                 Live
               </span>
@@ -3865,7 +3893,8 @@ function OrdersSection({
             </p>
           </div>
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row xl:justify-end">
-            <span className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-xs font-semibold text-white/62">
+            <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-xs font-semibold text-white/66">
+              <ClipboardList className="h-4 w-4 text-pink-100/80" />
               {dateInputValue(new Date())}
             </span>
             <button
@@ -3893,18 +3922,18 @@ function OrdersSection({
         </div>
       </section>
 
-      <section className="aev-admin-orders-filter rounded-[1.25rem] border border-pink-200/15 bg-black/22 p-3 sm:p-4">
+      <section className="aev-admin-orders-filter rounded-[1.1rem] border border-pink-200/18 bg-[#070b1a]/82 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
         <div className="grid gap-3 lg:grid-cols-[minmax(260px,1.25fr)_repeat(3,minmax(150px,0.7fr))] 2xl:grid-cols-[minmax(280px,1.25fr)_repeat(6,minmax(145px,0.65fr))_auto]">
           <label className="relative block min-w-0">
-            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
-              Search orders
+            <span className="mb-1.5 block text-[10px] uppercase tracking-[0.2em] text-white/40">
+              Search orders by reference / customer / phone
             </span>
-            <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
+            <Search className="pointer-events-none absolute bottom-3 left-3 h-4 w-4 text-pink-100/55" />
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Reference, customer, phone..."
-              className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
+              className="w-full rounded-xl border border-white/10 bg-[#08111f] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
             />
           </label>
           <SelectField
@@ -3938,7 +3967,7 @@ function OrdersSection({
             onChange={setSpecialFilter}
           />
           <SelectField
-            label="Sort"
+            label="Sort by"
             value={sortOrder}
             options={orderSortOptions}
             onChange={setSortOrder}
@@ -3955,7 +3984,7 @@ function OrdersSection({
               setSortOrder("Newest first");
             }}
             disabled={!hasActiveFilters}
-            className="mt-auto inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-pink-200/22 bg-pink-300/[0.08] px-4 text-sm font-semibold text-pink-50 transition hover:border-pink-200/40 hover:bg-pink-300/[0.12] disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-pink-200/25 bg-pink-300/[0.09] px-4 text-sm font-semibold text-pink-50 transition hover:border-pink-200/45 hover:bg-pink-300/[0.14] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Command className="h-4 w-4" />
             Filter
@@ -3984,8 +4013,8 @@ function OrdersSection({
           )}
         </div>
       </section>
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(360px,430px)_minmax(0,1fr)] xl:items-start">
-        <section className="aev-admin-orders-queue min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-3 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto">
+      <div className="grid min-w-0 gap-0 overflow-hidden rounded-[1.35rem] border border-pink-200/16 bg-[#050917]/92 shadow-[0_0_70px_rgba(34,211,238,0.08),inset_0_1px_0_rgba(255,255,255,0.04)] xl:grid-cols-[minmax(360px,430px)_minmax(0,1fr)] xl:items-start">
+        <section className="aev-admin-orders-queue min-w-0 border-b border-white/10 bg-black/18 p-3 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r">
           <div className="mb-3 flex items-center justify-between gap-3 px-1">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
@@ -4004,8 +4033,12 @@ function OrdersSection({
             onToggleDetails={onToggleDetails}
             canEditStatus={canEditStatus}
           />
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-xs text-white/42">
+            <span>{visibleOrders.length > 0 ? `Showing 1 to ${visibleOrders.length} of ${orders.length}` : `Showing 0 of ${orders.length}`}</span>
+            <span className="font-semibold text-pink-100/70">{pendingCount} pending</span>
+          </div>
         </section>
-        <div className="min-w-0 xl:sticky xl:top-6">
+        <div className="min-w-0">
           {selectedOrder ? (
             <OrderDetails
               key={orderReferenceKey(selectedOrder)}
@@ -4040,25 +4073,28 @@ function OrderMetricCard({
 }) {
   const toneClass =
     tone === "amber"
-      ? "text-amber-100 border-amber-200/18 bg-amber-200/[0.055]"
+      ? "text-amber-100 border-amber-200/22 bg-[radial-gradient(circle_at_18%_12%,rgba(251,191,36,0.18),transparent_38%),rgba(251,191,36,0.045)]"
       : tone === "rose"
-        ? "text-rose-100 border-rose-200/18 bg-rose-200/[0.055]"
+        ? "text-rose-100 border-rose-200/22 bg-[radial-gradient(circle_at_18%_12%,rgba(251,113,133,0.18),transparent_38%),rgba(251,113,133,0.045)]"
         : tone === "green"
-          ? "text-emerald-100 border-emerald-200/18 bg-emerald-200/[0.055]"
+          ? "text-emerald-100 border-emerald-200/22 bg-[radial-gradient(circle_at_18%_12%,rgba(94,240,174,0.16),transparent_38%),rgba(16,185,129,0.045)]"
           : tone === "violet"
-            ? "text-violet-100 border-violet-200/18 bg-violet-200/[0.055]"
-            : "text-cyan-100 border-cyan-200/18 bg-cyan-200/[0.055]";
+            ? "text-violet-100 border-violet-200/24 bg-[radial-gradient(circle_at_18%_12%,rgba(177,140,255,0.18),transparent_38%),rgba(139,92,246,0.045)]"
+            : tone === "pink"
+              ? "text-pink-100 border-pink-200/24 bg-[radial-gradient(circle_at_18%_12%,rgba(255,119,200,0.18),transparent_38%),rgba(255,119,200,0.045)]"
+              : "text-cyan-100 border-cyan-200/22 bg-[radial-gradient(circle_at_18%_12%,rgba(103,247,243,0.16),transparent_38%),rgba(6,182,212,0.045)]";
 
   return (
-    <article className={`aev-admin-metric-card min-w-0 rounded-2xl border p-4 ${toneClass}`}>
+    <article className={`aev-admin-metric-card relative min-h-[92px] min-w-0 overflow-hidden rounded-2xl border p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${toneClass}`}>
+      <span className="pointer-events-none absolute inset-x-3 top-0 h-px bg-current/25" />
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-current/20 bg-current/[0.08]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-current/[0.11] shadow-[0_0_22px_currentColor]">
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-medium text-white/58">{label}</p>
-          <p className="mt-1 break-words text-xl font-semibold text-white">{value}</p>
-          <p className="mt-1 text-xs text-emerald-100/70">{detail}</p>
+          <p className="text-[11px] font-medium text-white/62">{label}</p>
+          <p className="mt-1 break-words text-xl font-semibold leading-none text-white">{value}</p>
+          <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-white/48">{detail}</p>
         </div>
       </div>
     </article>
@@ -11707,6 +11743,7 @@ function OrderCard({
 }) {
   const reference = orderReferenceKey(order);
   const city = order.deliveryArea || order.customer.cityArea;
+  const firstItem = order.items[0];
 
   return (
     <button
@@ -11714,35 +11751,39 @@ function OrderCard({
       onClick={onToggleDetails}
       data-admin-sound="primary"
       data-admin-hover-sound="true"
-      className={`aev-admin-order-card group w-full min-w-0 overflow-hidden rounded-2xl border bg-black/26 p-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition ${
+      className={`aev-admin-order-card group w-full min-w-0 overflow-hidden rounded-xl border bg-[#070d1b]/86 p-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition ${
         isSelected
-          ? "border-pink-200/55 bg-pink-300/[0.075] shadow-[0_0_34px_rgba(255,119,200,0.18),inset_0_1px_0_rgba(255,255,255,0.08)]"
+          ? "border-pink-200/60 bg-pink-300/[0.085] shadow-[0_0_36px_rgba(255,119,200,0.24),inset_0_1px_0_rgba(255,255,255,0.08)]"
           : "border-white/10 hover:border-cyan-200/35 hover:bg-cyan-200/[0.045]"
       }`}
     >
-      <div className="grid min-w-0 grid-cols-[58px_minmax(0,1fr)] gap-3">
-        <ProductThumb src={orderProductImage(order, products)} label={mainItemSummary(order)} />
+      <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-3">
+        <ProductThumb
+          src={orderProductImage(order, products)}
+          label={mainItemSummary(order)}
+          className="!h-16 !w-16"
+        />
         <div className="min-w-0">
           <div className="flex min-w-0 items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">{reference}</p>
-              <p className="mt-1 truncate text-xs text-white/52">
+              <p className="truncate text-sm font-semibold leading-5 text-white">{reference}</p>
+              <p className="mt-0.5 truncate text-xs text-white/58">
                 {order.customer.fullName || "Customer not provided"}
               </p>
             </div>
             <StatusBadge status={order.status} />
           </div>
 
-          <div className="mt-3 grid min-w-0 grid-cols-2 gap-x-3 gap-y-1 text-[11px] leading-5 text-white/48">
+          <div className="mt-2 grid min-w-0 grid-cols-2 gap-x-3 gap-y-1 text-[11px] leading-5 text-white/48">
             <span className="truncate">{order.customer.phone || "No phone"}</span>
             <span className="truncate text-right">{order.paymentDetails.paymentMethod || "No payment"}</span>
-            <span className="truncate">{city || "No city"}</span>
+            <span className="truncate">{city || firstItem?.color || "No city"}</span>
             <span className="truncate text-right font-semibold text-pink-100">
               {formatCurrency(orderTotal(order))}
             </span>
           </div>
 
-          <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-white/10 pt-2">
+          <div className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t border-white/10 pt-2">
             <span className="truncate text-[11px] text-white/42">{formatDate(order.createdAt)}</span>
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${
               order.status === "Delivered"
@@ -11962,8 +12003,8 @@ function OrderDetails({
     : undefined;
 
   return (
-    <section className="aev-admin-detail-panel min-w-0 rounded-[1.35rem] border border-cyan-200/20 bg-[#050b18]/95 p-3 shadow-[0_0_48px_rgba(34,211,238,0.10),inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-4">
-      <div className="rounded-[1.1rem] border border-white/10 bg-white/[0.04] p-4">
+    <section className="aev-admin-detail-panel min-w-0 border-0 bg-transparent p-3 sm:p-4">
+      <div className="rounded-[1.1rem] border border-cyan-200/14 bg-[linear-gradient(135deg,rgba(103,247,243,0.055),rgba(255,119,200,0.04)),rgba(5,11,24,0.92)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div className="flex min-w-0 flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/65">
@@ -11977,10 +12018,12 @@ function OrderDetails({
               {order.archivedAt && <TinyBadge label="Archived" tone="slate" />}
               {order.isTestOrder && <TinyBadge label="Test" tone="amber" />}
             </div>
-            <p className="mt-2 text-sm text-white/50">Order placed {formatDate(order.createdAt)}</p>
+            <p className="mt-2 text-sm text-white/50">
+              Order placed {formatRelativeOrderAge(order.createdAt)} - {formatDate(order.createdAt)}
+            </p>
           </div>
           <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(140px,1fr)_minmax(180px,220px)]">
-            <div className="rounded-2xl border border-white/10 bg-black/24 p-3">
+            <div className="rounded-2xl border border-white/10 bg-black/28 p-3">
               <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">Order Total</p>
               <p className="mt-1 text-2xl font-semibold text-white">{formatCurrency(orderTotal(order))}</p>
             </div>
@@ -12002,8 +12045,8 @@ function OrderDetails({
         </div>
       </div>
 
-      <div className="mt-4 grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_224px]">
-        <div className="min-w-0 space-y-4">
+      <div className="mt-3 grid min-w-0 gap-3 2xl:grid-cols-[minmax(0,1fr)_310px]">
+        <div className="min-w-0 space-y-3">
           <div className="grid min-w-0 gap-4 xl:grid-cols-3">
             <OrderInfoPanel
               icon={Users}
@@ -12023,7 +12066,6 @@ function OrderDetails({
                   <a href={whatsappHref} target="_blank" rel="noreferrer" className={whatsappHref ? orderActionClass("green") : orderActionClass("disabled")}>
                     <MessageSquare className="h-3.5 w-3.5" /> WhatsApp
                   </a>
-                  <button type="button" disabled className={orderActionClass("disabled")}>Message not connected</button>
                 </div>
               }
             />
@@ -12056,29 +12098,44 @@ function OrderDetails({
 
           <ItemsPanel order={order} products={products} />
 
-          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
-            <section className="rounded-2xl border border-white/10 bg-black/22 p-4">
+          <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+            <section className="rounded-2xl border border-pink-200/14 bg-pink-300/[0.035] p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-white">Order Notes</h3>
-                <button type="button" disabled className={orderActionClass("disabled")}>Create Note not connected</button>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-pink-200/20 bg-pink-300/[0.09] text-pink-100">
+                    <Pencil className="h-4 w-4" />
+                  </span>
+                  <h3 className="text-sm font-semibold text-white">Order Notes</h3>
+                </div>
+                <button type="button" disabled title="Dedicated note creation is not connected yet." className={orderActionClass("disabled")}>
+                  Create Note
+                </button>
               </div>
               <p className="mt-5 text-sm leading-6 text-white/52">
                 {order.adminInternalNote || order.customerConfirmationNote || "No notes added yet."}
               </p>
             </section>
             <section className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.045] p-4">
-              <h3 className="text-sm font-semibold text-white">Support History</h3>
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
-                <p className="text-xs font-semibold text-violet-100">System</p>
-                <p className="mt-1 text-sm text-white/58">Order has been placed via {order.orderSource || "checkout"}.</p>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-violet-200/20 bg-violet-300/[0.09] text-violet-100">
+                  <MessageSquare className="h-4 w-4" />
+                </span>
+                <h3 className="text-sm font-semibold text-white">Support History</h3>
               </div>
-              <button type="button" disabled className={`${orderActionClass("disabled")} mt-3 w-full justify-center`}>
-                View all history not connected
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-violet-100">System</p>
+                  <TinyBadge label="Order Created" tone="slate" />
+                </div>
+                <p className="mt-2 text-sm text-white/58">Order has been placed via {order.orderSource || "checkout"}.</p>
+              </div>
+              <button type="button" disabled title="Support conversation linking is not connected yet." className={`${orderActionClass("disabled")} mt-3 w-full justify-center`}>
+                View all history
               </button>
             </section>
           </div>
 
-          <form onSubmit={handleOperationsSubmit} className="rounded-2xl border border-cyan-200/18 bg-cyan-200/[0.045] p-4">
+          <form data-orders-operations onSubmit={handleOperationsSubmit} className="rounded-2xl border border-cyan-200/18 bg-[linear-gradient(135deg,rgba(103,247,243,0.055),rgba(177,140,255,0.035)),rgba(3,7,18,0.40)] p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-white">Operations Controls</h3>
@@ -12110,19 +12167,42 @@ function OrderDetails({
           </form>
         </div>
 
-        <aside className="min-w-0 space-y-4">
+        <aside className="min-w-0 space-y-3">
           <OrderTimelinePanel order={order} />
           <section className="rounded-2xl border border-pink-200/15 bg-pink-300/[0.045] p-4">
-            <h3 className="text-sm font-semibold text-white">Quick Actions</h3>
-            <div className="mt-4 grid gap-2">
-              <button type="button" onClick={confirmOrder} disabled={!canEditStatus || order.status === "Confirmed"} className={orderActionClass("green")}>Confirm Order</button>
-              <button type="button" disabled className={orderActionClass("disabled")}>Hold Order not connected</button>
-              <button type="button" onClick={cancelOrder} disabled={!canEditStatus || order.status === "Cancelled"} className={orderActionClass("rose")}>Cancel Order</button>
-              <button type="button" onClick={markDelivered} disabled={!canEditStatus || order.status === "Delivered"} className={orderActionClass("cyan")}>Mark Delivered</button>
-              <button type="button" disabled className={orderActionClass("disabled")}>Assign Courier in form</button>
-              <button type="button" onClick={() => copyValue("summary", buildOrderSummary(order))} className={orderActionClass("cyan")}>Print Invoice data copy</button>
-              <a href={contactHref} className={contactHref ? orderActionClass("pink") : orderActionClass("disabled")}>Contact Customer</a>
-              <button type="button" disabled className={orderActionClass("disabled")}>Create Note not connected</button>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-white">Quick Actions</h3>
+              <span className="h-px flex-1 bg-gradient-to-r from-pink-200/20 to-transparent" />
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button type="button" onClick={confirmOrder} disabled={!canEditStatus || order.status === "Confirmed"} className={orderActionClass("green")}>
+                <Check className="h-3.5 w-3.5" /> Confirm Order
+              </button>
+              <button type="button" disabled title="Hold status is not connected to the order backend yet." className={orderActionClass("amber")}>
+                <Wallet className="h-3.5 w-3.5" /> Hold Order
+              </button>
+              <button type="button" onClick={cancelOrder} disabled={!canEditStatus || order.status === "Cancelled"} className={orderActionClass("rose")}>
+                <X className="h-3.5 w-3.5" /> Cancel Order
+              </button>
+              <button type="button" onClick={markDelivered} disabled={!canEditStatus || order.status === "Delivered"} className={orderActionClass("cyan")}>
+                <PackageCheck className="h-3.5 w-3.5" /> Mark Delivered
+              </button>
+              <button
+                type="button"
+                onClick={() => document.querySelector("[data-orders-operations]")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className={orderActionClass("violet")}
+              >
+                <Send className="h-3.5 w-3.5" /> Assign Courier
+              </button>
+              <button type="button" disabled title="Invoice printing requires an invoice template route." className={orderActionClass("disabled")}>
+                <Copy className="h-3.5 w-3.5" /> Print Invoice
+              </button>
+              <a href={contactHref} className={contactHref ? orderActionClass("pink") : orderActionClass("disabled")}>
+                <Phone className="h-3.5 w-3.5" /> Contact Customer
+              </a>
+              <button type="button" disabled title="Dedicated note creation is not connected yet." className={orderActionClass("disabled")}>
+                <Pencil className="h-3.5 w-3.5" /> Create Note
+              </button>
             </div>
             {copiedKey && (
               <p className="mt-3 rounded-xl border border-emerald-200/20 bg-emerald-300/[0.08] px-3 py-2 text-xs font-semibold text-emerald-100">
@@ -12140,15 +12220,17 @@ function OrderDetails({
   );
 }
 
-function orderActionClass(tone: "cyan" | "green" | "rose" | "pink" | "disabled") {
+function orderActionClass(tone: "cyan" | "green" | "rose" | "pink" | "amber" | "violet" | "disabled") {
   const base =
-    "inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition";
+    "inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-45";
   if (tone === "disabled") {
     return `${base} cursor-not-allowed border-white/8 bg-white/[0.035] text-white/32`;
   }
   if (tone === "green") return `${base} border-emerald-200/25 bg-emerald-300/[0.10] text-emerald-50 hover:border-emerald-200/45`;
   if (tone === "rose") return `${base} border-rose-200/25 bg-rose-300/[0.10] text-rose-50 hover:border-rose-200/45`;
   if (tone === "pink") return `${base} border-pink-200/25 bg-pink-300/[0.10] text-pink-50 hover:border-pink-200/45`;
+  if (tone === "amber") return `${base} border-amber-200/25 bg-amber-300/[0.10] text-amber-50 hover:border-amber-200/45`;
+  if (tone === "violet") return `${base} border-violet-200/25 bg-violet-300/[0.10] text-violet-50 hover:border-violet-200/45`;
   return `${base} border-cyan-200/25 bg-cyan-300/[0.10] text-cyan-50 hover:border-cyan-200/45`;
 }
 
@@ -12164,7 +12246,7 @@ function OrderInfoPanel({
   footer?: ReactNode;
 }) {
   return (
-    <section className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
+    <section className="min-w-0 rounded-2xl border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div className="flex items-center gap-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-200/18 bg-cyan-200/[0.08] text-cyan-100">
           <Icon className="h-4 w-4" />
@@ -12208,19 +12290,24 @@ function OrderTimelinePanel({ order }: { order: StoredOrder }) {
   ];
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/22 p-4">
-      <h3 className="text-sm font-semibold text-white">Order Timeline</h3>
-      <div className="mt-4 space-y-3">
-        {steps.map((step) => (
-          <div key={step.label} className="grid grid-cols-[18px_minmax(0,1fr)] gap-3">
-            <span className={`mt-1 h-3 w-3 rounded-full border ${
+    <section className="rounded-2xl border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Order Timeline</p>
+      <div className="mt-4 space-y-0">
+        {steps.map((step, index) => (
+          <div key={step.label} className="relative grid grid-cols-[18px_minmax(0,1fr)] gap-3 pb-4 last:pb-0">
+            {index < steps.length - 1 && (
+              <span className={`absolute left-[5px] top-4 h-[calc(100%-0.55rem)] w-px ${
+                step.active ? "bg-cyan-200/34" : "bg-white/10"
+              }`} />
+            )}
+            <span className={`relative z-10 mt-1 h-3 w-3 rounded-full border ${
               step.active
                 ? "border-cyan-100 bg-cyan-300 shadow-[0_0_16px_rgba(103,247,243,0.72)]"
-                : "border-white/18 bg-white/[0.04]"
+                : "border-white/18 bg-[#12182a]"
             }`} />
             <div className="min-w-0">
               <p className={step.active ? "text-sm font-semibold text-white" : "text-sm text-white/42"}>{step.label}</p>
-              <p className="mt-1 break-words text-xs text-white/38">{step.detail || "Inactive"}</p>
+              <p className="mt-1 break-words text-xs text-white/38">{step.detail || "Awaiting signal"}</p>
             </div>
           </div>
         ))}
@@ -12231,9 +12318,9 @@ function OrderTimelinePanel({ order }: { order: StoredOrder }) {
 
 function ItemsPanel({ order, products = [] }: { order: StoredOrder; products?: AdminProduct[] }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/22 p-4">
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/24 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h4 className="text-sm font-semibold text-white">Items</h4>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/38">Ordered Items</p>
         <p className="text-xs uppercase tracking-[0.16em] text-white/35">
           {order.totals.totalItems ?? order.items.length} total
         </p>
@@ -12251,39 +12338,40 @@ function ItemsPanel({ order, products = [] }: { order: StoredOrder; products?: A
                 key={`${item.id ?? item.name ?? "item"}-${index}`}
                 className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
               >
-                <div className="grid min-w-0 gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(260px,1fr)_minmax(84px,0.35fr)_minmax(110px,0.4fr)_minmax(110px,0.4fr)] 2xl:items-start">
-                  <div className="grid min-w-0 grid-cols-[58px_minmax(0,1fr)] gap-3">
-                    <ProductThumb src={productImageBySlug(item.slug || item.productId || "", products)} label={item.name ?? "Unnamed item"} />
+                <div className="grid min-w-0 gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(310px,1fr)_minmax(84px,0.3fr)_minmax(110px,0.34fr)_minmax(110px,0.34fr)] 2xl:items-center">
+                  <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-3">
+                    <ProductThumb
+                      src={productImageBySlug(item.slug || item.productId || "", products)}
+                      label={item.name ?? "Unnamed item"}
+                      className="!h-16 !w-16"
+                    />
                     <div className="min-w-0">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-white/35">
-                        Product
-                      </p>
                       <p className="mt-1 whitespace-normal break-words text-sm font-semibold leading-6 text-white [overflow-wrap:break-word]">
                         {item.name ?? "Unnamed item"}
                       </p>
                       <p className="mt-1 whitespace-normal break-words text-xs leading-5 text-white/48 [overflow-wrap:break-word]">
                         {itemVariantSummary(item) || "No variant recorded"}
                       </p>
+                      {(item.size || item.color || item.absorbency) && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {item.size && (
+                            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
+                              Size: {item.size}
+                            </span>
+                          )}
+                          {item.color && (
+                            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
+                              Color: {item.color}
+                            </span>
+                          )}
+                          {item.absorbency && (
+                            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
+                              Absorbency: {item.absorbency}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {(item.size || item.color || item.absorbency) && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {item.size && (
-                          <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
-                            Size: {item.size}
-                          </span>
-                        )}
-                        {item.color && (
-                          <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
-                            Color: {item.color}
-                          </span>
-                        )}
-                        {item.absorbency && (
-                          <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-white/55">
-                            Absorbency: {item.absorbency}
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
                   <DetailLine label="Quantity" value={String(quantity)} />
                   <DetailLine label="Unit price" value={formatCurrency(unitPrice)} />
