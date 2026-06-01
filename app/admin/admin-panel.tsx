@@ -9783,7 +9783,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   }
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="mt-4 max-w-full overflow-hidden rounded-[1.4rem] border border-cyan-200/10 bg-[#030816]/72 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)] sm:p-4">
       <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-4 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-5">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-80">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
@@ -9795,7 +9795,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white">Customers Intelligence Hub</h2>
               <span className="rounded-full border border-cyan-200/30 bg-cyan-300/[0.09] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100 shadow-[0_0_18px_rgba(103,247,243,0.18)]">
-                CUSTOMERS HUB V2 ACTIVE
+                CUSTOMERS HUB V3 FIXED
               </span>
               <span className="aev-admin-chip border-emerald-200/24 bg-emerald-300/[0.08] text-emerald-100">
                 <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
@@ -9870,15 +9870,15 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
         </div>
       )}
 
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_520px]">
-          <div className="min-w-0 space-y-4">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(285px,0.7fr)]">
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+      <div className="space-y-3">
+          <div className="min-w-0">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(285px,0.7fr)]">
+              <section className="aev-admin-control-panel rounded-[1.1rem] border p-3">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader title="Customer Segments" />
                   <button type="button" className="aev-admin-mini-action text-pink-100">View all segments <ArrowLeft className="h-3 w-3 rotate-180" /></button>
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                   {segments.map((segment) => {
                     const Icon = segment.icon;
                     return (
@@ -9898,17 +9898,19 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                   })}
                 </div>
               </section>
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+              <section className="aev-admin-control-panel rounded-[1.1rem] border p-3">
                 <SectionHeader title="Quick Actions" />
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
-                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[74px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
-                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[74px]"><Download className="h-4 w-4" />Export Segment</button>
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[66px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
+                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[66px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
+                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[66px]"><Download className="h-4 w-4" />Export Segment</button>
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[66px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
                 </div>
               </section>
             </div>
 
+            <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
+              <div className="min-w-0 space-y-3">
             <section className="aev-admin-orders-filter rounded-[1.1rem] border border-pink-200/18 bg-[#070b1a]/82 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <div className="grid gap-2 xl:grid-cols-[minmax(260px,1fr)_150px_130px_130px_170px_auto]">
                 <label className="relative min-w-0">
@@ -10063,6 +10065,8 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </section>
             </aside>
           )}
+            </div>
+          </div>
       </div>
     </div>
   );
