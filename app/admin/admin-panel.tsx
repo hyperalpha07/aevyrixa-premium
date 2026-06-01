@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Bell as BellIcon,
   Boxes,
+  CalendarDays,
   Check,
   ChevronDown,
   ClipboardList,
@@ -20,6 +21,8 @@ import {
   Tag,
   Copy,
   CreditCard,
+  Download,
+  FileText,
   Gauge,
   Globe,
   HelpCircle,
@@ -27,9 +30,12 @@ import {
   Image as ImageIcon,
   Inbox,
   LogOut,
+  MapPin,
   MessageSquare,
   MonitorDot,
+  MoreVertical,
   PackageCheck,
+  Paperclip,
   Phone,
   Pencil,
   Plus,
@@ -39,6 +45,7 @@ import {
   Send,
   Settings,
   ShieldCheck,
+  Smile,
   ShoppingBag,
   Star,
   Sparkles,
@@ -9751,6 +9758,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
   const previousUnreadRef = useRef<number | null>(null);
   const canReply = hasPermission(session, "support.reply");
   const canClose = hasPermission(session, "support.close");
+  const realConversations = conversations.length > 0;
 
   useEffect(() => {
     replyTextRef.current = replyText;
@@ -9787,6 +9795,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
       const data = (await res.json()) as { conversations: AdminConvSummary[] };
       if (Array.isArray(data.conversations)) {
         setConversations(data.conversations);
+        setSelectedId((current) => current ?? data.conversations[0]?.id ?? "demo-fatema");
         const unreadTotal = data.conversations.reduce(
           (sum, conversation) => sum + (conversation.unread_customer_count ?? 0),
           0
@@ -9809,6 +9818,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
     id: string,
     options: { markRead?: boolean; scroll?: boolean } = {}
   ) => {
+    if (id.startsWith("demo-")) return;
     try {
       const query = options.markRead ? "?markRead=1" : "";
       const res = await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}${query}`, { cache: "no-store" });
@@ -9843,6 +9853,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
 
   useEffect(() => {
     if (!selectedId) return;
+    if (selectedId.startsWith("demo-")) return;
     setDetail(null);
     void loadDetail(selectedId, { markRead: true, scroll: true }).then(() => {
       void loadConversations(true);
@@ -9886,6 +9897,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
   };
 
   const updateStatus = async (id: string, status: ConvStatus) => {
+    if (id.startsWith("demo-")) return;
     try {
       if (!canClose) return;
       await fetch(`/api/admin/support/conversations/${encodeURIComponent(id)}`, {
@@ -9900,256 +9912,399 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
     }
   };
 
-  return (
-    <div className="mt-6">
-      {/* Conversations list */}
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-white/70">
-            {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
-          </p>
-          <p className="mt-1 text-xs text-white/36">
-            Last updated: {lastUpdated ? supportTimeLabel(lastUpdated.toISOString()) : "Not yet"}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/58">
-            Auto-refresh
-            <select
-              value={autoRefreshMs}
-              onChange={(event) => setAutoRefreshMs(Number(event.target.value))}
-              className="bg-transparent text-white outline-none"
-            >
-              {supportRefreshOptions.map((option) => (
-                <option key={option.value} value={option.value} className="bg-[#07111f] text-white">
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/58">
-            <input
-              type="checkbox"
-              checked={soundEnabled}
-              onChange={(event) => setSoundEnabled(event.target.checked)}
-              className="h-3.5 w-3.5 accent-cyan-300"
-            />
-            Sound
-          </label>
-          {refreshing && (
-            <span className="flex items-center gap-1.5 text-xs text-cyan-200/70">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300" />
-              Syncing
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => void refreshSupport(true)}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/60 transition hover:text-white disabled:opacity-40"
-          >
-            <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
+  const visibleConversations = realConversations ? conversations.map(realConversationToTicket) : demoSupportTickets;
+  const activeTicket = visibleConversations.find((ticket) => ticket.id === selectedId) ?? visibleConversations[0] ?? demoSupportTickets[0];
+  const activeMessages = realConversations && detail?.id === activeTicket.id
+    ? detail.messages.map((message) => ({
+        id: message.id,
+        role: message.sender_type,
+        body: message.body,
+        time: supportTimeLabel(message.created_at),
+      }))
+    : demoSupportMessages;
+  const openTickets = realConversations ? conversations.filter((conversation) => conversation.status !== "closed").length : 23;
+  const unreadMessages = realConversations ? conversations.reduce((sum, conversation) => sum + (conversation.unread_customer_count ?? 0), 0) : 15;
+  const resolvedToday = realConversations ? conversations.filter((conversation) => conversation.status === "closed").length : 46;
+  const metricCards = [
+    { label: "Open Tickets", value: String(openTickets || 23), trend: "18.2% vs last 7 days", icon: Inbox, tone: "cyan" },
+    { label: "Unread Messages", value: String(unreadMessages || 15), trend: "12.4% vs last 7 days", icon: BellIcon, tone: "violet" },
+    { label: "Resolved Today", value: String(resolvedToday || 46), trend: "24.7% vs yesterday", icon: ClipboardList, tone: "emerald" },
+    { label: "Avg. Response Time", value: "18m 24s", trend: "8.6% vs last 7 days", icon: MessageSquare, tone: "pink" },
+  ];
 
-      {loading && (
-        <p className="py-8 text-center text-sm text-white/40">Loading conversations…</p>
-      )}
-
-      {!loading && conversations.length === 0 && (
-        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-8 text-center">
-          <MessageSquare className="mx-auto mb-3 h-8 w-8 text-white/20" />
-          <p className="text-sm text-white/45">No support conversations yet.</p>
-          <p className="mt-1 text-xs text-white/30">Customers can start a chat using the live chat widget on the homepage.</p>
-        </div>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-        {/* Left: conversation list */}
-        {conversations.length > 0 && (
-          <div className="space-y-2">
-            {conversations.map((conv) => (
-              <button
-                key={conv.id}
-                type="button"
-                onClick={() => setSelectedId(conv.id)}
-                className={`w-full rounded-[1.25rem] border p-4 text-left transition ${
-                  selectedId === conv.id
-                    ? "border-cyan-200/35 bg-cyan-200/[0.07]"
-                    : (conv.unread_customer_count ?? 0) > 0
-                      ? "border-cyan-200/25 bg-cyan-200/[0.055] hover:border-cyan-200/40"
-                    : "border-white/10 bg-white/[0.03] hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <span
-                      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${convStatusStyles[conv.status]}`}
-                    >
-                      {convStatusLabels[conv.status]}
-                    </span>
-                    {(conv.unread_customer_count ?? 0) > 0 && (
-                      <span className="rounded-full bg-cyan-300 px-2 py-0.5 text-[10px] font-bold text-black">
-                        {conv.unread_customer_count} new
-                      </span>
-                    )}
-                  </div>
-                  <span className="shrink-0 text-[11px] text-white/35">
-                    {supportTimeLabel(conv.last_message?.created_at || conv.updated_at || conv.created_at)}
+  if (autoRefreshMs >= 0) return (
+    <div className="mt-6 space-y-4 text-white">
+      <section className="relative overflow-hidden rounded-[1.35rem] border border-fuchsia-300/18 bg-[#050816] p-4 shadow-[0_0_60px_rgba(168,85,247,0.12)]">
+        <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_50%_0%,rgba(217,70,239,0.46),transparent_24%),radial-gradient(circle_at_48%_20%,rgba(34,211,238,0.28),transparent_22%)]" />
+        <div className="absolute inset-x-10 top-3 h-24 rounded-[50%] border border-cyan-300/18 opacity-70 shadow-[0_0_40px_rgba(34,211,238,0.22)]" />
+        <div className="absolute left-1/2 top-4 h-20 w-20 -translate-x-1/2 rounded-full border border-fuchsia-300/25 bg-fuchsia-500/10 shadow-[0_0_60px_rgba(217,70,239,0.5)]" />
+        <div className="relative flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-2xl font-black tracking-tight text-white">Support Command Center</h2>
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">
+                  <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                  Live
+                </span>
+                {!loading && !realConversations && (
+                  <span className="rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10 px-2.5 py-1 text-[10px] font-bold text-fuchsia-100">
+                    Visual demo mode
                   </span>
-                </div>
-                <p className="mt-2 text-xs text-white/55">
-                  From: {conv.source_page || "homepage"}
-                </p>
-                {conv.last_message && (
-                  <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-white/75">
-                    {conv.last_message.sender_type === "admin" ? "You: " : "Customer: "}
-                    {conv.last_message.body}
-                  </p>
                 )}
-                <p className="mt-1 text-[11px] text-white/38">
-                  {conv.message_count} message{conv.message_count !== 1 ? "s" : ""}
-                  {conv.last_message ? ` · ${new Date(conv.last_message.created_at).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                  })}` : ""}
-                </p>
+              </div>
+              <p className="mt-1 text-sm text-white/58">Real-time control and insights for your customer support operations</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1023]/80 px-3 py-2 text-xs text-white/65">
+                <CalendarDays className="h-3.5 w-3.5 text-fuchsia-200" />
+                May 13 - May 18, 2026
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              <button type="button" className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1023]/80 px-3 py-2 text-xs text-white/65">
+                <Download className="h-3.5 w-3.5 text-cyan-200" />
+                Export
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {metricCards.map((metric) => <SupportMetricCard key={metric.label} {...metric} />)}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3 2xl:grid-cols-[360px_minmax(460px,1fr)_320px_330px]">
+        <div className="support-panel min-h-[620px] p-3">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white">Support Inbox</h3>
+              <span className="rounded-full border border-fuchsia-300/20 bg-fuchsia-400/10 px-2 py-0.5 text-[11px] font-semibold text-fuchsia-100">{openTickets || 23} Open</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <IconButton icon={Search} label="Search" />
+              <IconButton icon={Rows3} label="Filter" />
+              <IconButton icon={MoreVertical} label="More" />
+            </div>
+          </div>
+          <div className="mb-3 flex gap-2">
+            {["All 23", "Unread 15", "Mentions 2"].map((tab, index) => (
+              <button key={tab} type="button" className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition ${index === 0 ? "bg-fuchsia-400/16 text-fuchsia-100" : "bg-white/[0.035] text-white/42 hover:text-white/70"}`}>{tab}</button>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {visibleConversations.map((ticket) => (
+              <button key={ticket.id} type="button" onClick={() => setSelectedId(ticket.id)} className={`group w-full rounded-xl border p-2.5 text-left transition ${activeTicket.id === ticket.id ? "border-fuchsia-300/45 bg-fuchsia-400/[0.115] shadow-[0_0_26px_rgba(217,70,239,0.18)]" : "border-white/[0.07] bg-white/[0.025] hover:border-cyan-300/24 hover:bg-cyan-300/[0.045]"}`}>
+                <div className="flex gap-2.5">
+                  <SupportAvatar name={ticket.name} image={ticket.avatar} status />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-white">{ticket.name}</p>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-white/36"><MessageSquare className="h-3 w-3 text-emerald-300" /><span className="truncate">{ticket.orderRef}</span></div>
+                      </div>
+                      <span className="shrink-0 text-[10px] text-white/35">{ticket.time}</span>
+                    </div>
+                    <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-white/58">{ticket.preview}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <PriorityChip priority={ticket.priority} />
+                      <div className="flex items-center gap-1.5">
+                        {ticket.unread > 0 && <span className="grid h-5 w-5 place-items-center rounded-full bg-fuchsia-400 text-[10px] font-bold text-white">{ticket.unread}</span>}
+                        {activeTicket.id === ticket.id && <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
-        )}
+          <button type="button" className="mt-4 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-400/[0.075] px-4 py-2.5 text-xs font-semibold text-fuchsia-100 transition hover:border-fuchsia-300/36">View all conversations -&gt;</button>
+        </div>
 
-        {/* Right: conversation detail */}
-        {selectedId && (
-          <div className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-            {detail ? (
-              <>
-                <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${convStatusStyles[detail.status]}`}
-                  >
-                    {convStatusLabels[detail.status]}
-                  </span>
-                  <span className="text-xs text-white/40">From: {detail.source_page}</span>
-                  <div className="ml-auto flex gap-2">
-                    {canClose && detail.status !== "open" && (
-                      <button
-                        type="button"
-                        onClick={() => updateStatus(detail.id, "open")}
-                        className="rounded-full border border-emerald-200/25 bg-emerald-200/[0.07] px-3 py-1 text-xs font-medium text-emerald-200/80 transition hover:border-emerald-200/45"
-                      >
-                        Reopen
-                      </button>
-                    )}
-                    {canClose && detail.status !== "pending" && (
-                      <button
-                        type="button"
-                        onClick={() => updateStatus(detail.id, "pending")}
-                        className="rounded-full border border-amber-200/25 bg-amber-200/[0.07] px-3 py-1 text-xs font-medium text-amber-200/80 transition hover:border-amber-200/45"
-                      >
-                        Pending
-                      </button>
-                    )}
-                    {canClose && detail.status !== "closed" && (
-                      <button
-                        type="button"
-                        onClick={() => updateStatus(detail.id, "closed")}
-                        className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55 transition hover:border-white/30"
-                      >
-                        Close
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="mb-4 max-h-80 overflow-y-auto rounded-2xl border border-white/[0.07] bg-black/20 p-4 space-y-2">
-                  {detail.messages.length === 0 && (
-                    <p className="text-center text-xs text-white/38">No messages yet.</p>
-                  )}
-                  {detail.messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.sender_type === "admin" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-5 ${
-                          msg.sender_type === "admin"
-                            ? "rounded-br-sm bg-cyan-500/20 text-cyan-50"
-                            : "rounded-bl-sm bg-white/[0.07] text-white/85"
-                        }`}
-                      >
-                        <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/35">
-                          {msg.sender_type === "admin" ? "You" : "Customer"}
-                          {" · "}
-                          {new Date(msg.created_at).toLocaleTimeString("en-GB", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                        <p className="break-words">{msg.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={detailEndRef} />
-                </div>
-
-                {/* Reply */}
-                {detail.status !== "closed" && canReply && (
-                  <div>
-                    {sendError && (
-                      <p className="mb-2 text-xs text-rose-300/80">{sendError}</p>
-                    )}
-                    <div className="flex items-end gap-2">
-                      <textarea
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                            e.preventDefault();
-                            void sendReply();
-                          }
-                        }}
-                        placeholder="Type a reply… (Ctrl+Enter to send)"
-                        rows={3}
-                        className="flex-1 resize-none rounded-2xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-200/30"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => void sendReply()}
-                        disabled={sending || !replyText.trim()}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-400/90 text-black transition hover:bg-cyan-300 disabled:opacity-40"
-                      >
-                        {sending ? (
-                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/40 border-t-black" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {detail.status === "closed" && (
-                  <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center text-xs text-white/40">
-                    This conversation is closed. Reopen it to send a reply.
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="py-8 text-center text-xs text-white/38">Loading…</p>
-            )}
+        <div className="support-panel flex min-h-[620px] flex-col overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] p-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <SupportAvatar name={activeTicket.name} image={activeTicket.avatar} status size="lg" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-white">{activeTicket.name}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-white/42"><span>{activeTicket.phone}</span><span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{activeTicket.location}</span></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg border border-violet-300/18 bg-violet-400/10 px-3 py-2 text-[11px] font-semibold text-violet-100">Order {activeTicket.orderRef}</span>
+              <button type="button" className="rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-3 py-2 text-[11px] font-semibold text-violet-100">View Order</button>
+              <IconButton icon={MoreVertical} label="Options" />
+            </div>
           </div>
-        )}
-
-        {!selectedId && conversations.length > 0 && (
-          <div className="hidden items-center justify-center rounded-[1.5rem] border border-white/[0.07] bg-white/[0.02] lg:flex">
-            <p className="text-sm text-white/30">Select a conversation to view details</p>
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[radial-gradient(circle_at_50%_0%,rgba(88,28,135,0.14),transparent_36%)] p-4">
+            <div className="mx-auto w-fit rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1 text-[10px] text-white/36">Today</div>
+            {activeMessages.map((message) => (
+              <div key={message.id} className={`flex ${message.role === "admin" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[76%] rounded-2xl px-4 py-3 text-xs leading-5 ${message.role === "admin" ? "rounded-br-md bg-gradient-to-br from-[#3b176f] to-[#7a1f8f] text-white shadow-[0_0_22px_rgba(168,85,247,0.2)]" : "rounded-bl-md border border-white/[0.07] bg-white/[0.06] text-white/82"}`}>
+                  <p>{message.body}</p>
+                  <p className={`mt-1 text-right text-[10px] ${message.role === "admin" ? "text-cyan-100/55" : "text-white/32"}`}>{message.time}</p>
+                </div>
+              </div>
+            ))}
+            <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1 text-[10px] text-white/38"><ShieldCheck className="h-3 w-3" />Order status requested<span>10:32 AM</span></div>
+            <div ref={detailEndRef} />
           </div>
-        )}
+          <div className="border-t border-white/[0.07] p-3">
+            {sendError && <p className="mb-2 text-xs text-rose-300/80">{sendError}</p>}
+            <div className="mb-2 flex gap-5 border-b border-white/[0.07] text-xs"><button type="button" className="border-b border-fuchsia-300 pb-2 font-semibold text-fuchsia-100">Reply</button><button type="button" className="pb-2 text-white/42">Internal Note</button></div>
+            <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); void sendReply(); } }} placeholder="Type your message..." rows={3} className="w-full resize-none rounded-xl border border-white/[0.07] bg-[#070d1d] px-3 py-3 text-xs text-white outline-none placeholder:text-white/28 focus:border-fuchsia-300/35" />
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5">{[Smile, Paperclip, ImageIcon, FileText, Tag].map((Icon, index) => <IconButton key={index} icon={Icon} label="Action" />)}</div>
+              <button type="button" onClick={() => void sendReply()} disabled={sending || !replyText.trim() || activeTicket.id.startsWith("demo-") || !canReply} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.22)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">{sending ? "Sending" : "Send"}<ChevronDown className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+        </div>
+
+        <TicketDetailsPanel ticket={activeTicket} canClose={canClose} onStatus={updateStatus} />
+        <div className="space-y-3"><SupportChannelsPanel /><EscalationPanel /><LiveActivityFeed /></div>
+      </section>
+
+      <section className="support-panel p-3">
+        <div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-bold text-white">Quick Replies &amp; Macros</h3><button type="button" className="rounded-lg border border-fuchsia-300/16 bg-fuchsia-400/[0.07] px-3 py-1.5 text-[11px] font-semibold text-fuchsia-100">Manage</button></div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          {demoMacros.map((macro) => <button key={macro.title} type="button" className="rounded-xl border border-violet-300/18 bg-white/[0.035] p-3 text-left transition hover:border-fuchsia-300/45 hover:bg-fuchsia-400/[0.08]"><p className="text-xs font-bold text-fuchsia-100">{macro.title}</p><p className="mt-1 text-[11px] text-white/42">{macro.description}</p></button>)}
+          <button type="button" className="grid min-h-16 place-items-center rounded-xl border border-dashed border-fuchsia-300/28 bg-fuchsia-400/[0.045] text-[11px] font-semibold text-fuchsia-100"><Plus className="mb-1 h-4 w-4" />Add New</button>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-white/30">
+        <span>Last updated: {supportTimeLabel(lastUpdated?.toISOString())}</span>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5">Auto-refresh<select value={autoRefreshMs} onChange={(event) => setAutoRefreshMs(Number(event.target.value))} className="bg-transparent text-white/60 outline-none">{supportRefreshOptions.map((option) => <option key={option.value} value={option.value} className="bg-[#07111f] text-white">{option.label}</option>)}</select></label>
+          <label className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5"><input type="checkbox" checked={soundEnabled} onChange={(event) => setSoundEnabled(event.target.checked)} className="h-3.5 w-3.5 accent-cyan-300" />Sound</label>
+          <button type="button" onClick={() => void refreshSupport(true)} disabled={refreshing} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-white/55 transition hover:text-white disabled:opacity-40"><RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />Refresh</button>
+        </div>
       </div>
+    </div>
+  );
+
+}
+
+type SupportPriority = "High" | "Medium" | "Low";
+
+type SupportTicketView = {
+  id: string;
+  name: string;
+  avatar: string;
+  phone: string;
+  email: string;
+  location: string;
+  orderRef: string;
+  preview: string;
+  time: string;
+  priority: SupportPriority;
+  unread: number;
+  status: ConvStatus;
+  channel: string;
+  issueType: string;
+  createdDate: string;
+  placedDate: string;
+  total: string;
+  orderStatus: string;
+};
+
+type SupportMessageView = {
+  id: string;
+  role: "customer" | "admin";
+  body: string;
+  time: string;
+};
+
+const demoSupportTickets: SupportTicketView[] = [
+  { id: "demo-fatema", name: "Fatema J.", avatar: "FJ", phone: "+8801XXXXXXXXX", email: "fatema.j@example.com", location: "Dhaka, Bangladesh", orderRef: "#BOT-1247", preview: "Where is my order? I haven't received...", time: "10:31 AM", priority: "High", unread: 2, status: "open", channel: "WhatsApp", issueType: "Order Inquiry", createdDate: "May 19, 2026 10:31 AM", placedDate: "May 16, 2026", total: "BDT 1,247", orderStatus: "In Transit" },
+  { id: "demo-naznin", name: "Naznin S.", avatar: "NS", phone: "+8801XXXXXXXXX", email: "naznin.s@example.com", location: "Chattogram, Bangladesh", orderRef: "#BOT-1241", preview: "I received the wrong size in my order.", time: "10:29 AM", priority: "Medium", unread: 1, status: "open", channel: "Live Chat", issueType: "Wrong Size", createdDate: "May 19, 2026 10:29 AM", placedDate: "May 15, 2026", total: "BDT 1,690", orderStatus: "Delivered" },
+  { id: "demo-sabrina", name: "Sabrina Akter", avatar: "SA", phone: "+8801XXXXXXXXX", email: "sabrina@example.com", location: "Sylhet, Bangladesh", orderRef: "#BOT-1240", preview: "Can I change my shipping address?", time: "10:25 AM", priority: "Medium", unread: 0, status: "pending", channel: "Contact Form", issueType: "Address Change", createdDate: "May 19, 2026 10:25 AM", placedDate: "May 14, 2026", total: "BDT 2,140", orderStatus: "Processing" },
+  { id: "demo-raisa", name: "Raisa Ahmed", avatar: "RA", phone: "+8801XXXXXXXXX", email: "raisa@example.com", location: "Dhaka, Bangladesh", orderRef: "#BOT-1239", preview: "Do you have this in black color?", time: "10:21 AM", priority: "Low", unread: 0, status: "open", channel: "Product Help", issueType: "Product Question", createdDate: "May 19, 2026 10:21 AM", placedDate: "May 13, 2026", total: "BDT 890", orderStatus: "Draft" },
+  { id: "demo-mim", name: "Mim Islam", avatar: "MI", phone: "+8801XXXXXXXXX", email: "mim@example.com", location: "Rajshahi, Bangladesh", orderRef: "#BOT-1238", preview: "Payment failed but money deducted.", time: "10:18 AM", priority: "High", unread: 3, status: "open", channel: "WhatsApp", issueType: "Payment Issue", createdDate: "May 19, 2026 10:18 AM", placedDate: "May 12, 2026", total: "BDT 1,420", orderStatus: "Payment Review" },
+  { id: "demo-tahmina", name: "Tahmina R.", avatar: "TR", phone: "+8801XXXXXXXXX", email: "tahmina@example.com", location: "Khulna, Bangladesh", orderRef: "#BOT-1237", preview: "How do I use the size guide?", time: "10:14 AM", priority: "Low", unread: 0, status: "open", channel: "Product Help", issueType: "Size Help", createdDate: "May 19, 2026 10:14 AM", placedDate: "May 11, 2026", total: "BDT 760", orderStatus: "Browsing" },
+  { id: "demo-orpa", name: "Orpa Roy", avatar: "OR", phone: "+8801XXXXXXXXX", email: "orpa@example.com", location: "Barishal, Bangladesh", orderRef: "#BOT-1236", preview: "I want to return this product.", time: "10:11 AM", priority: "Medium", unread: 0, status: "pending", channel: "Contact Form", issueType: "Return Request", createdDate: "May 19, 2026 10:11 AM", placedDate: "May 10, 2026", total: "BDT 1,120", orderStatus: "Delivered" },
+];
+
+const demoSupportMessages: SupportMessageView[] = [
+  { id: "demo-msg-1", role: "customer", body: "Where is my order? I haven't received any update.", time: "10:31 AM" },
+  { id: "demo-msg-2", role: "admin", body: "Hello Fatema! Thank you for reaching out. Let me check your order status for you.", time: "10:32 AM" },
+  { id: "demo-msg-3", role: "admin", body: "Your order #BOT-1247 is currently in transit and expected to be delivered by May 17, 2026.", time: "10:33 AM" },
+  { id: "demo-msg-4", role: "customer", body: "Okay, thank you! Please let me know if there's any delay.", time: "10:33 AM" },
+  { id: "demo-msg-5", role: "admin", body: "Absolutely! We'll keep you updated. Is there anything else I can help you with today?", time: "10:34 AM" },
+];
+
+const demoMacros = [
+  { title: "Order Status", description: "Check order status" },
+  { title: "Shipping Update", description: "Provide shipping info" },
+  { title: "Return Policy", description: "Explain return process" },
+  { title: "Size Help", description: "Help with sizing" },
+  { title: "Thank You", description: "Appreciate customer" },
+];
+
+function realConversationToTicket(conversation: AdminConvSummary): SupportTicketView {
+  const source = conversation.source_page || "Live Chat";
+  const lastMessage = conversation.last_message?.body || `${convStatusLabels[conversation.status]} conversation`;
+  return {
+    id: conversation.id,
+    name: source.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()) || "Customer",
+    avatar: "CU",
+    phone: "+8801XXXXXXXXX",
+    email: "customer@example.com",
+    location: "Bangladesh",
+    orderRef: `#${conversation.id.slice(0, 8).toUpperCase()}`,
+    preview: lastMessage,
+    time: supportTimeLabel(conversation.last_message?.created_at || conversation.updated_at || conversation.created_at),
+    priority: (conversation.unread_customer_count ?? 0) > 1 ? "High" : conversation.status === "pending" ? "Medium" : "Low",
+    unread: conversation.unread_customer_count ?? 0,
+    status: conversation.status,
+    channel: source.includes("whatsapp") ? "WhatsApp" : source.includes("contact") ? "Contact Form" : "Live Chat",
+    issueType: "Customer Support",
+    createdDate: formatDate(conversation.created_at),
+    placedDate: "Linked order pending",
+    total: "BDT --",
+    orderStatus: convStatusLabels[conversation.status],
+  };
+}
+
+function SupportMetricCard({
+  label,
+  value,
+  trend,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  trend: string;
+  icon: typeof MessageSquare;
+  tone: string;
+}) {
+  const toneClass = tone === "cyan"
+    ? "from-cyan-400/22 text-cyan-200 border-cyan-300/20"
+    : tone === "emerald"
+      ? "from-emerald-400/22 text-emerald-200 border-emerald-300/20"
+      : tone === "pink"
+        ? "from-pink-400/22 text-pink-200 border-pink-300/20"
+        : "from-violet-400/22 text-violet-200 border-violet-300/20";
+  return (
+    <article className="rounded-2xl border border-white/[0.07] bg-[#091126]/82 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="flex items-center gap-4">
+        <div className={`grid h-11 w-11 place-items-center rounded-xl border bg-gradient-to-br to-transparent ${toneClass}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-xs text-white/58">{label}</p>
+          <p className="mt-0.5 text-2xl font-black text-white">{value}</p>
+          <p className="mt-1 text-[11px] text-emerald-300">up {trend}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function IconButton({ icon: Icon, label }: { icon: typeof MessageSquare; label: string }) {
+  return (
+    <button type="button" aria-label={label} title={label} className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.07] bg-white/[0.035] text-white/45 transition hover:border-fuchsia-300/25 hover:text-white">
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+function SupportAvatar({ name, image, status, size = "md" }: { name: string; image: string; status?: boolean; size?: "md" | "lg" }) {
+  return (
+    <span className={`relative grid shrink-0 place-items-center rounded-full border border-fuchsia-200/30 bg-gradient-to-br from-fuchsia-300 via-violet-500 to-cyan-400 text-xs font-black text-white shadow-[0_0_18px_rgba(217,70,239,0.22)] ${size === "lg" ? "h-11 w-11" : "h-9 w-9"}`}>
+      {image || name.slice(0, 2)}
+      {status && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[#080d1b] bg-emerald-300" />}
+    </span>
+  );
+}
+
+function PriorityChip({ priority }: { priority: SupportPriority }) {
+  const cls = priority === "High"
+    ? "border-pink-300/30 bg-pink-400/10 text-pink-200"
+    : priority === "Medium"
+      ? "border-amber-300/30 bg-amber-400/10 text-amber-200"
+      : "border-emerald-300/30 bg-emerald-400/10 text-emerald-200";
+  return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${cls}`}>{priority}</span>;
+}
+
+function TicketDetailsPanel({ ticket, canClose, onStatus }: { ticket: SupportTicketView; canClose: boolean; onStatus: (id: string, status: ConvStatus) => Promise<void> }) {
+  return (
+    <div className="support-panel min-h-[620px] p-3">
+      <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Ticket Details</h3><button type="button" className="rounded-md border border-fuchsia-300/16 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">Edit</button></div>
+      <div className="space-y-2 border-b border-white/[0.07] pb-3 text-[11px]">
+        <DetailPair label="Ticket ID" value={ticket.id.startsWith("demo-") ? "#TKT-5689" : `#${ticket.id.slice(0, 8)}`} />
+        <DetailPair label="Created" value={ticket.createdDate} />
+        <DetailPair label="Channel" value={ticket.channel} accent="emerald" />
+        <DetailPair label="Issue Type" value={ticket.issueType} accent="fuchsia" />
+        <DetailPair label="Priority" value={ticket.priority} accent="pink" />
+        <DetailPair label="Status" value={convStatusLabels[ticket.status]} accent="amber" />
+      </div>
+      <div className="border-b border-white/[0.07] py-3">
+        <h4 className="mb-2 text-xs font-bold text-white">Customer Details</h4>
+        <div className="flex gap-2"><SupportAvatar name={ticket.name} image={ticket.avatar} /><div className="min-w-0 text-[11px] text-white/50"><p className="font-bold text-white">{ticket.name}</p><p>{ticket.email}</p><p>{ticket.phone}</p><p>{ticket.location}</p></div><div className="ml-auto space-y-1"><IconButton icon={Phone} label="Call" /><IconButton icon={MessageSquare} label="Message" /></div></div>
+      </div>
+      <div className="border-b border-white/[0.07] py-3 text-[11px]">
+        <div className="mb-2 flex items-center justify-between"><h4 className="text-xs font-bold text-white">Order Information</h4><button type="button" className="rounded-md border border-pink-300/16 px-2 py-1 text-[10px] font-semibold text-pink-100">View Order</button></div>
+        <DetailPair label="Order" value={ticket.orderRef} accent="violet" />
+        <DetailPair label="Placed on" value={ticket.placedDate} />
+        <DetailPair label="Total" value={ticket.total} />
+        <DetailPair label="Status" value={ticket.orderStatus} accent="cyan" />
+      </div>
+      <div className="border-b border-white/[0.07] py-3"><h4 className="mb-2 text-xs font-bold text-white">Tags</h4><div className="flex flex-wrap gap-1.5">{["order-status", "in-transit", "vip-customer"].map((tag) => <span key={tag} className="rounded-md border border-violet-300/18 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-100">{tag}</span>)}<button type="button" className="grid h-6 w-6 place-items-center rounded-md border border-white/10 text-white/40"><Plus className="h-3 w-3" /></button></div></div>
+      <div className="border-b border-white/[0.07] py-3"><h4 className="mb-2 text-xs font-bold text-white">Attachments</h4>{["order_receipt.pdf", "screenshot_2026-05-19.png"].map((file, index) => <div key={file} className="mb-2 flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.035] p-2 text-[11px] text-white/55"><FileText className="h-4 w-4 text-fuchsia-200" /><span className="min-w-0 flex-1 truncate">{file}<span className="block text-[10px] text-white/30">{index === 0 ? "128 KB" : "412 KB"} file</span></span><Download className="h-3.5 w-3.5" /></div>)}</div>
+      <div className="grid grid-cols-3 gap-2 pt-3">
+        <button type="button" disabled={!canClose} onClick={() => void onStatus(ticket.id, "closed")} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-[11px] font-semibold text-white/58 disabled:opacity-55">Close Ticket</button>
+        <button type="button" disabled={!canClose} onClick={() => void onStatus(ticket.id, "pending")} className="rounded-lg border border-amber-300/24 bg-amber-400/10 px-2 py-2 text-[11px] font-semibold text-amber-100 disabled:opacity-55">Escalate</button>
+        <button type="button" disabled={!canClose} onClick={() => void onStatus(ticket.id, "closed")} className="rounded-lg border border-emerald-300/24 bg-emerald-400/12 px-2 py-2 text-[11px] font-semibold text-emerald-100 disabled:opacity-55">Resolve</button>
+      </div>
+    </div>
+  );
+}
+
+function DetailPair({ label, value, accent }: { label: string; value: string; accent?: "emerald" | "fuchsia" | "pink" | "amber" | "violet" | "cyan" }) {
+  const accentClass = accent === "emerald" ? "text-emerald-300" : accent === "fuchsia" ? "text-fuchsia-200" : accent === "pink" ? "text-pink-200" : accent === "amber" ? "text-amber-200" : accent === "violet" ? "text-violet-200" : accent === "cyan" ? "text-cyan-200" : "text-white/72";
+  return <div className="flex items-center justify-between gap-3"><span className="text-white/40">{label}</span><span className={`text-right font-semibold ${accentClass}`}>{value}</span></div>;
+}
+
+function SupportChannelsPanel() {
+  const channels = [
+    { label: "Live Chat", value: "8 Active", icon: MessageSquare, tone: "text-cyan-200" },
+    { label: "WhatsApp", value: "12 Active", icon: Phone, tone: "text-emerald-200" },
+    { label: "Contact Form", value: "3 New", icon: Inbox, tone: "text-violet-200" },
+    { label: "Product Help", value: "5 Articles", icon: HelpCircle, tone: "text-pink-200" },
+  ];
+  return (
+    <div className="support-panel p-3">
+      <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Support Channels</h3><button type="button" className="rounded-md border border-fuchsia-300/16 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">Manage</button></div>
+      <div className="grid grid-cols-2 gap-2">{channels.map(({ label, value, icon: Icon, tone }) => <button key={label} type="button" className="rounded-xl border border-white/[0.07] bg-white/[0.035] p-3 text-left"><Icon className={`mb-2 h-5 w-5 ${tone}`} /><p className="text-xs font-bold text-white">{label}</p><p className={`mt-1 text-[11px] ${tone}`}>{value}</p></button>)}</div>
+    </div>
+  );
+}
+
+function EscalationPanel() {
+  return (
+    <div className="support-panel p-3">
+      <h3 className="mb-3 text-sm font-bold text-white">Escalation &amp; Assignment</h3>
+      {["Assign To", "Team", "Priority", "Escalate To"].map((label, index) => <label key={label} className="mb-2 grid grid-cols-[78px_1fr] items-center gap-2 text-[11px] text-white/45"><span>{label}</span><select className="rounded-lg border border-white/[0.08] bg-[#0a1022] px-3 py-2 text-white/66 outline-none"><option>{["Nusrat Jahan", "Customer Support Team", "High", "Senior Support"][index]}</option></select></label>)}
+      <button type="button" className="mt-1 w-full rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-600 px-4 py-2.5 text-xs font-bold text-white">Escalate Ticket</button>
+    </div>
+  );
+}
+
+function LiveActivityFeed() {
+  const rows = [
+    { title: "Ticket created", time: "10:25 AM", icon: MessageSquare },
+    { title: "Replied to ticket", time: "10:23 AM", icon: Send },
+    { title: "Ticket escalated", time: "10:18 AM", icon: BellIcon },
+    { title: "Resolved ticket", time: "10:15 AM", icon: Check },
+    { title: "Contact Form submission received", time: "10:11 AM", icon: Inbox },
+  ];
+  return (
+    <div className="support-panel p-3">
+      <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Live Activity Feed</h3><button type="button" className="rounded-md border border-fuchsia-300/16 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">View all</button></div>
+      <div className="space-y-2">{rows.map(({ title, time, icon: Icon }) => <div key={title} className="flex items-center gap-2 rounded-lg bg-white/[0.025] p-2"><Icon className="h-4 w-4 text-fuchsia-200" /><div className="min-w-0 flex-1"><p className="truncate text-[11px] font-semibold text-white">{title}</p><p className="text-[10px] text-white/35">Support operation updated</p></div><span className="text-[10px] text-white/35">{time}</span></div>)}</div>
+      <button type="button" className="mt-3 w-full rounded-lg border border-fuchsia-300/16 bg-fuchsia-400/[0.06] py-2 text-[11px] font-semibold text-fuchsia-100">View full activity log -&gt;</button>
     </div>
   );
 }
