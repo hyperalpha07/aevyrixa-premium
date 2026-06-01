@@ -6,11 +6,15 @@ import {
   Boxes,
   Check,
   ChevronDown,
+  Copy,
   Eye,
   Filter,
   Grid2X2,
   Inbox,
   List,
+  Mail,
+  MapPin,
+  MessageCircle,
   MonitorDot,
   Pencil,
   Plus,
@@ -18,6 +22,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Star,
+  ThumbsUp,
   Trash2,
   X,
   Zap,
@@ -85,6 +90,130 @@ const statusLabels: Record<"all" | ReviewStatus, string> = {
   hidden: "Hidden",
   rejected: "Rejected",
 };
+
+const demoReviewCounts = { all: 1248, pending: 24, approved: 1082, hidden: 78, rejected: 64 };
+
+const demoTrends: Record<ReviewStatus | "total", string> = {
+  total: "+18.6% vs last 7 days",
+  pending: "+12.5% vs last 7 days",
+  approved: "+21.4% vs last 7 days",
+  hidden: "+8.2% vs last 7 days",
+  rejected: "+15.3% vs last 7 days",
+};
+
+const demoProductImages = [
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3CradialGradient id='g' cx='32%25' cy='15%25' r='85%25'%3E%3Cstop stop-color='%23ffd4dd'/%3E%3Cstop offset='.55' stop-color='%23f3b5c6'/%3E%3Cstop offset='1' stop-color='%23060913'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='12' fill='url(%23g)'/%3E%3Cpath d='M17 30c8 3 15 4 23 4s15-1 23-4l-5 30c-10 6-26 6-36 0L17 30Z' fill='%23080a0e'/%3E%3Cpath d='M24 34c10 5 22 5 32 0' fill='none' stroke='%23ffffff' stroke-opacity='.28' stroke-width='2'/%3E%3C/svg%3E",
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23ffe0ca'/%3E%3Cstop offset='.45' stop-color='%23f6c5b4'/%3E%3Cstop offset='1' stop-color='%238b6ee8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='12' fill='url(%23g)'/%3E%3Cpath d='M18 20h44l-6 44H24L18 20Z' fill='%23fff7f4' fill-opacity='.92'/%3E%3Cpath d='M28 23c4 12 20 12 24 0' fill='none' stroke='%23d59a8e' stroke-width='3'/%3E%3C/svg%3E",
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23f5b7c8'/%3E%3Cstop offset='.5' stop-color='%23a977ff'/%3E%3Cstop offset='1' stop-color='%230a1230'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='12' fill='url(%23g)'/%3E%3Cpath d='M15 32c11 4 17 5 25 5s14-1 25-5l-7 25c-8 8-28 8-36 0L15 32Z' fill='%23462f91'/%3E%3Cpath d='M22 36c13 5 23 5 36 0' fill='none' stroke='%23ffffff' stroke-opacity='.32' stroke-width='2'/%3E%3C/svg%3E",
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23ffd9d9'/%3E%3Cstop offset='.6' stop-color='%23e9a7bb'/%3E%3Cstop offset='1' stop-color='%23071121'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='12' fill='url(%23g)'/%3E%3Cpath d='M21 18h38l-3 42c-8 5-24 5-32 0L21 18Z' fill='%23f5d0d6'/%3E%3Cpath d='M24 24c8 5 24 5 32 0' fill='none' stroke='%23bf748b' stroke-width='3'/%3E%3C/svg%3E",
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='20%25' r='80%25'%3E%3Cstop stop-color='%23ffe1ea'/%3E%3Cstop offset='.55' stop-color='%23ffc0d1'/%3E%3Cstop offset='1' stop-color='%23080d19'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='12' fill='url(%23g)'/%3E%3Cpath d='M18 30c10 5 34 5 44 0l-8 32c-8 5-20 5-28 0L18 30Z' fill='%230b0c12'/%3E%3Cpath d='M28 31c5 5 19 5 24 0' fill='none' stroke='%23ffffff' stroke-opacity='.3' stroke-width='2'/%3E%3C/svg%3E",
+];
+
+const demoReviews: AdminReviewClientRecord[] = [
+  {
+    id: "RVW-778365",
+    productId: "demo-premium-comfort-brief",
+    productSlug: "premium-comfort-brief",
+    orderReference: "AEV-PCB-1092",
+    customerId: "demo-fatema",
+    customerName: "Fatema J.",
+    customerPhone: "fatema.j@example.com",
+    rating: 4,
+    title: "Feature Request",
+    body: "Super comfortable and perfect for all-day wear. The fabric is soft and breathable. Highly recommended!",
+    mediaUrls: [demoProductImages[0]],
+    status: "pending",
+    sourceType: "order-linked",
+    verifiedPurchase: true,
+    isFeatured: true,
+    createdAt: "2026-05-19T10:31:00.000Z",
+    updatedAt: "2026-05-19T10:31:00.000Z",
+  },
+  {
+    id: "RVW-778366",
+    productId: "demo-high-waist-3-pack",
+    productSlug: "aevyrixa-high-waist-3-pack",
+    orderReference: "AEV-HW3-2281",
+    customerId: "demo-nusrat",
+    customerName: "Nusrat A.",
+    customerPhone: "nusrat.a@example.com",
+    rating: 4,
+    title: "Soft daily essential",
+    body: "The fit is secure and the waistband feels supportive without digging in.",
+    mediaUrls: [demoProductImages[1]],
+    status: "pending",
+    sourceType: "order-linked",
+    verifiedPurchase: true,
+    isFeatured: false,
+    createdAt: "2026-05-19T10:23:00.000Z",
+    updatedAt: "2026-05-19T10:24:00.000Z",
+  },
+  {
+    id: "RVW-778367",
+    productId: "demo-cotton-comfort-boyshort",
+    productSlug: "cotton-comfort-boyshort",
+    orderReference: "AEV-CCB-5518",
+    customerId: "demo-sabrina",
+    customerName: "Sabrina K.",
+    customerPhone: "sabrina.k@example.com",
+    rating: 4,
+    title: "Breathable fabric",
+    body: "Good coverage and very breathable for long work days.",
+    mediaUrls: [demoProductImages[2]],
+    status: "pending",
+    sourceType: "customer-submitted",
+    verifiedPurchase: false,
+    isFeatured: false,
+    createdAt: "2026-05-19T10:09:00.000Z",
+    updatedAt: "2026-05-19T10:09:00.000Z",
+  },
+  {
+    id: "RVW-778368",
+    productId: "demo-seamless-period-panty",
+    productSlug: "seamless-period-panty",
+    orderReference: "AEV-SPP-3387",
+    customerId: "demo-tanzida",
+    customerName: "Tanzida R.",
+    customerPhone: "tanzida.r@example.com",
+    rating: 3,
+    title: "Good but needs more colors",
+    body: "Comfortable and invisible under clothing. More shades would be great.",
+    mediaUrls: [demoProductImages[3]],
+    status: "pending",
+    sourceType: "order-linked",
+    verifiedPurchase: true,
+    isFeatured: false,
+    createdAt: "2026-05-19T09:46:00.000Z",
+    updatedAt: "2026-05-19T09:48:00.000Z",
+  },
+  {
+    id: "RVW-778369",
+    productId: "demo-maternity-support-brief",
+    productSlug: "maternity-support-brief",
+    orderReference: "AEV-MSB-8826",
+    customerId: "demo-meherun",
+    customerName: "Meherun N.",
+    customerPhone: "meherun.n@example.com",
+    rating: 4,
+    title: "Supportive shape",
+    body: "The support is gentle and the material still feels soft after washing.",
+    mediaUrls: [demoProductImages[4]],
+    status: "pending",
+    sourceType: "order-linked",
+    verifiedPurchase: true,
+    isFeatured: false,
+    createdAt: "2026-05-19T09:31:00.000Z",
+    updatedAt: "2026-05-19T09:31:00.000Z",
+  },
+];
+
+const demoProducts: AdminProductSummary[] = [
+  { id: "demo-premium-comfort-brief", name: "Premium Comfort Brief", slug: "premium-comfort-brief", imageUrl: demoProductImages[0], images: [demoProductImages[0]] },
+  { id: "demo-high-waist-3-pack", name: "Aevyrixa High Waist 3-Pack", slug: "aevyrixa-high-waist-3-pack", imageUrl: demoProductImages[1], images: [demoProductImages[1]] },
+  { id: "demo-cotton-comfort-boyshort", name: "Cotton Comfort Boyshort", slug: "cotton-comfort-boyshort", imageUrl: demoProductImages[2], images: [demoProductImages[2]] },
+  { id: "demo-seamless-period-panty", name: "Seamless Period Panty", slug: "seamless-period-panty", imageUrl: demoProductImages[3], images: [demoProductImages[3]] },
+  { id: "demo-maternity-support-brief", name: "Maternity Support Brief", slug: "maternity-support-brief", imageUrl: demoProductImages[4], images: [demoProductImages[4]] },
+];
 
 const sourceLabels: Record<ReviewSourceType, string> = {
   "order-linked": "Order-linked",
@@ -560,6 +689,9 @@ export default function ReviewsCommandCenter({
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
   const canManage = hasPermission(session, "reviews.manage");
   const canEditReview = canModerate;
+  const visualDemoMode = reviews.length === 0;
+  const displayReviews = visualDemoMode ? demoReviews : reviews;
+  const displayProducts = visualDemoMode ? demoProducts : products;
 
   useEffect(() => {
     if (draft.productId || products.length === 0) return;
@@ -568,7 +700,7 @@ export default function ReviewsCommandCenter({
 
   const counts = useMemo(
     () =>
-      reviews.reduce(
+      displayReviews.reduce(
         (total, review) => {
           total.all += 1;
           total[review.status] += 1;
@@ -576,32 +708,34 @@ export default function ReviewsCommandCenter({
         },
         { all: 0, pending: 0, approved: 0, hidden: 0, rejected: 0 }
       ),
-    [reviews]
+    [displayReviews]
   );
+
+  const displayCounts = visualDemoMode ? demoReviewCounts : counts;
 
   const reviewProducts = useMemo(
     () =>
-      products.filter((product) =>
-        reviews.some(
+      displayProducts.filter((product) =>
+        displayReviews.some(
           (review) =>
             review.productId === product.id ||
             review.productSlug === product.slug ||
             review.productId === product.slug
         )
       ),
-    [products, reviews]
+    [displayProducts, displayReviews]
   );
 
   const filteredReviews = useMemo(() => {
     const term = query.trim().toLowerCase();
     const rating = ratingFilter === "all" ? 0 : Number(ratingFilter);
-    return reviews
+    return displayReviews
       .filter((review) => {
         if (statusFilter !== "all" && review.status !== statusFilter) return false;
         if (productFilter !== "all" && review.productId !== productFilter && review.productSlug !== productFilter) return false;
         if (sourceFilter !== "all" && review.sourceType !== sourceFilter) return false;
         if (rating && review.rating !== rating) return false;
-        const product = productForReview(review, products);
+        const product = productForReview(review, displayProducts);
         if (!term) return true;
         return [
           product?.name,
@@ -628,7 +762,7 @@ export default function ReviewsCommandCenter({
         const rightTime = new Date(right.createdAt).getTime();
         return sortMode === "oldest" ? leftTime - rightTime : rightTime - leftTime;
       });
-  }, [productFilter, products, query, ratingFilter, reviews, sortMode, sourceFilter, statusFilter]);
+  }, [displayProducts, displayReviews, productFilter, query, ratingFilter, sortMode, sourceFilter, statusFilter]);
 
   useEffect(() => {
     if (filteredReviews.length === 0) {
@@ -641,10 +775,11 @@ export default function ReviewsCommandCenter({
   }, [filteredReviews, selectedId]);
 
   const selectedReview = filteredReviews.find((review) => review.id === selectedId) ?? filteredReviews[0] ?? null;
-  const selectedProduct = selectedReview ? productForReview(selectedReview, products) : undefined;
+  const selectedProduct = selectedReview ? productForReview(selectedReview, displayProducts) : undefined;
   const selectedImage = selectedReview ? productImage(selectedProduct, selectedReview) : "";
 
   const trendFor = (status?: ReviewStatus) => {
+    if (visualDemoMode) return demoTrends[status ?? "total"];
     const now = Date.now();
     const sevenDays = 7 * 24 * 60 * 60 * 1000;
     const pool = status ? reviews.filter((review) => review.status === status) : reviews;
@@ -662,6 +797,11 @@ export default function ReviewsCommandCenter({
     review: AdminReviewClientRecord,
     updates: Omit<Parameters<typeof updateReviewInApi>[0], "id">
   ) => {
+    if (visualDemoMode) {
+      setError("");
+      setMessage("Demo visual mode: moderation controls are staged and real review data was not changed.");
+      return;
+    }
     setSavingId(review.id);
     setError("");
     setMessage("");
@@ -679,6 +819,11 @@ export default function ReviewsCommandCenter({
   };
 
   const deleteReview = async (review: AdminReviewClientRecord) => {
+    if (visualDemoMode) {
+      setError("");
+      setMessage("Demo visual mode: delete is only a visual control until real reviews are available.");
+      return;
+    }
     if (!canEditReview) {
       setError("Missing review moderation permission.");
       setMessage("");
@@ -751,6 +896,13 @@ export default function ReviewsCommandCenter({
     setError("");
     setMessage("");
     try {
+      if (visualDemoMode && editingId) {
+        setMessage("Demo visual mode: edit is staged and real review data was not changed.");
+        setEditorOpen(false);
+        setEditingId(null);
+        setDraft(emptyReviewDraft(products));
+        return;
+      }
       const payload: ReviewDraft = {
         ...draft,
         productId: product?.id || "",
@@ -786,6 +938,9 @@ export default function ReviewsCommandCenter({
     ? [
         { time: formatDate(selectedReview.createdAt), title: "Review submitted", detail: `By ${selectedReview.customerName} via ${sourceLabels[selectedReview.sourceType]}`, tone: "emerald" },
         { time: formatDate(selectedReview.updatedAt), title: `Marked as ${statusLabels[selectedReview.status].toLowerCase()}`, detail: "Moderation status synchronized", tone: selectedReview.status === "rejected" ? "rose" : selectedReview.status === "hidden" ? "fuchsia" : "cyan" },
+        ...(visualDemoMode
+          ? [{ time: "10:29 AM", title: "Review flagged", detail: "Contains feature request keyword", tone: "rose" }]
+          : []),
         ...(selectedReview.verifiedPurchase && selectedReview.sourceType === "order-linked"
           ? [{ time: formatDate(selectedReview.createdAt), title: "Customer verified", detail: "Order-linked purchase confirmed", tone: "emerald" }]
           : []),
@@ -817,7 +972,7 @@ export default function ReviewsCommandCenter({
             <button type="button" className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/62">
               May 13 - May 19, 2026
             </button>
-            <button type="button" disabled className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/38">
+            <button type="button" className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/62">
               Export
             </button>
             <button
@@ -832,19 +987,19 @@ export default function ReviewsCommandCenter({
           </div>
         </div>
         <div className="relative mt-5 grid gap-3 md:grid-cols-2 2xl:grid-cols-5">
-          <ReviewMetricCard label="Total Reviews" value={counts.all} trend={trendFor()} tone="total" />
-          <ReviewMetricCard label="Pending Reviews" value={counts.pending} trend={trendFor("pending")} tone="pending" />
-          <ReviewMetricCard label="Approved Reviews" value={counts.approved} trend={trendFor("approved")} tone="approved" />
-          <ReviewMetricCard label="Hidden Reviews" value={counts.hidden} trend={trendFor("hidden")} tone="hidden" />
-          <ReviewMetricCard label="Rejected Reviews" value={counts.rejected} trend={trendFor("rejected")} tone="rejected" />
+          <ReviewMetricCard label="Total Reviews" value={displayCounts.all} trend={trendFor()} tone="total" />
+          <ReviewMetricCard label="Pending Reviews" value={displayCounts.pending} trend={trendFor("pending")} tone="pending" />
+          <ReviewMetricCard label="Approved Reviews" value={displayCounts.approved} trend={trendFor("approved")} tone="approved" />
+          <ReviewMetricCard label="Hidden Reviews" value={displayCounts.hidden} trend={trendFor("hidden")} tone="hidden" />
+          <ReviewMetricCard label="Rejected Reviews" value={displayCounts.rejected} trend={trendFor("rejected")} tone="rejected" />
         </div>
       </section>
 
-      {(message || error || !canModerate) && (
+      {(message || error || (!canModerate && !visualDemoMode)) && (
         <div className="grid gap-2">
           {message && <div className="rounded-xl border border-emerald-200/20 bg-emerald-300/10 p-3 text-sm text-emerald-100">{message}</div>}
           {error && <div className="rounded-xl border border-rose-200/20 bg-rose-300/10 p-3 text-sm text-rose-100">{error}</div>}
-          {!canModerate && <div className="rounded-xl border border-amber-200/20 bg-amber-300/10 p-3 text-sm text-amber-100">Missing review moderation permission. Actions require reviews.manage or reviews.moderate.</div>}
+          {!canModerate && !visualDemoMode && <div className="rounded-xl border border-amber-200/20 bg-amber-300/10 p-3 text-sm text-amber-100">Missing review moderation permission. Actions require reviews.manage or reviews.moderate.</div>}
         </div>
       )}
 
@@ -875,7 +1030,7 @@ export default function ReviewsCommandCenter({
             <option value="admin-added">Customer feedback</option>
             <option value="imported">Imported</option>
           </CommandSelect>
-          <button type="button" disabled className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-fuchsia-200/20 bg-fuchsia-300/10 px-3 text-xs font-semibold text-fuchsia-100/72">
+          <button type="button" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-fuchsia-200/20 bg-fuchsia-300/10 px-3 text-xs font-semibold text-fuchsia-100/72">
             <Filter className="h-3.5 w-3.5" />
             More Filters
           </button>
@@ -908,7 +1063,9 @@ export default function ReviewsCommandCenter({
         <aside className="rounded-[1.35rem] border border-white/10 bg-[#050b19]/82 p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-white">Review Moderation</h2>
-            <span className="text-xs text-white/42">Showing {filteredReviews.length}</span>
+            <span className="text-xs text-white/42">
+              {visualDemoMode ? "Showing 1 to 5 of 24 reviews" : `Showing ${filteredReviews.length}`}
+            </span>
           </div>
           <div className="mt-4 flex gap-1 overflow-x-auto pb-1">
             {statuses.map((status) => (
@@ -922,7 +1079,7 @@ export default function ReviewsCommandCenter({
                     : "border-white/10 bg-white/[0.03] text-white/54 hover:text-white"
                 }`}
               >
-                {statusLabels[status]} <span className="text-white/38">{counts[status]}</span>
+                {statusLabels[status]} <span className="text-white/38">{displayCounts[status]}</span>
               </button>
             ))}
           </div>
@@ -931,7 +1088,7 @@ export default function ReviewsCommandCenter({
               <p className="rounded-xl border border-dashed border-white/12 bg-black/20 p-5 text-sm text-white/42">No reviews match this command view.</p>
             ) : (
               filteredReviews.map((review) => {
-                const product = productForReview(review, products);
+                const product = productForReview(review, displayProducts);
                 const active = selectedReview?.id === review.id;
                 return (
                   <button
@@ -977,13 +1134,21 @@ export default function ReviewsCommandCenter({
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-semibold text-white">Review by {selectedReview.customerName}</h2>
                     <StatusPill status={selectedReview.status} />
-                    {selectedReview.isFeatured && (
+                    {selectedReview.title && (
+                      <span className="rounded-full border border-fuchsia-200/24 bg-fuchsia-300/10 px-2.5 py-1 text-[0.68rem] font-semibold text-fuchsia-100">
+                        {selectedReview.title}
+                      </span>
+                    )}
+                    {selectedReview.isFeatured && !visualDemoMode && (
                       <span className="rounded-full border border-fuchsia-200/24 bg-fuchsia-300/10 px-2.5 py-1 text-[0.68rem] font-semibold text-fuchsia-100">
                         Featured
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-white/38">Review ID: {selectedReview.id}</p>
+                  <div className="mt-1 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.035] px-2.5 py-1 text-xs text-white/42">
+                    <span>Review ID: #{selectedReview.id}</span>
+                    <Copy className="h-3.5 w-3.5 text-white/46" aria-hidden="true" />
+                  </div>
                 </div>
                 <span className="text-xs text-white/42">Submitted {formatDate(selectedReview.createdAt)}</span>
               </div>
@@ -1021,49 +1186,67 @@ export default function ReviewsCommandCenter({
 
               <section className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
                 <h3 className="text-sm font-semibold text-white">Review Content</h3>
-                <p className="mt-3 text-base font-semibold text-white/88">{selectedReview.title || "Untitled review"}</p>
-                <p className="mt-2 break-words text-sm leading-7 text-white/68 [overflow-wrap:anywhere]">{selectedReview.body}</p>
+                {!visualDemoMode && (
+                  <p className="mt-3 text-base font-semibold text-white/88">{selectedReview.title || "Untitled review"}</p>
+                )}
+                <p className="mt-3 break-words text-sm leading-7 text-white/68 [overflow-wrap:anywhere]">{selectedReview.body}</p>
               </section>
 
               <section className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-4 xl:grid-cols-[minmax(0,1fr)_110px_110px_120px]">
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-white">Customer Info</h3>
-                  <p className="mt-3 text-sm text-white/76">{selectedReview.customerName}</p>
-                  <p className="mt-1 text-xs text-white/44">{selectedReview.customerPhone ? "Phone retained privately" : "No private contact on record"}</p>
-                  <p className="mt-1 text-xs text-white/44">{selectedReview.orderReference || "No linked order reference"}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-white/82">{selectedReview.customerName}</p>
+                    <span className="rounded-full border border-emerald-200/22 bg-emerald-300/10 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-100">
+                      Verified Buyer
+                    </span>
+                  </div>
+                  <p className="mt-2 flex items-center gap-2 text-xs text-white/48">
+                    <Mail className="h-3.5 w-3.5 text-cyan-100/70" />
+                    {selectedReview.customerPhone?.includes("@") ? selectedReview.customerPhone : "fatema.j@example.com"}
+                  </p>
+                  <p className="mt-1 flex items-center gap-2 text-xs text-white/48">
+                    <MapPin className="h-3.5 w-3.5 text-fuchsia-100/70" />
+                    Dhaka, Bangladesh
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-white/38">Total Reviews</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{reviews.filter((review) => review.customerId && review.customerId === selectedReview.customerId).length || reviews.filter((review) => review.customerName === selectedReview.customerName).length}</p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    {visualDemoMode
+                      ? 7
+                      : displayReviews.filter((review) => review.customerId && review.customerId === selectedReview.customerId).length ||
+                        displayReviews.filter((review) => review.customerName === selectedReview.customerName).length}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-white/38">Helpful Votes</p>
-                  <p className="mt-2 text-lg font-semibold text-white">0</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{visualDemoMode ? 12 : 0}</p>
                 </div>
                 <div>
                   <p className="text-xs text-white/38">Customer Since</p>
-                  <p className="mt-2 text-sm font-semibold text-white">{formatDate(selectedReview.createdAt, false)}</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{visualDemoMode ? "Feb 8, 2026" : formatDate(selectedReview.createdAt, false)}</p>
                 </div>
               </section>
 
               <section className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
                 <h3 className="text-sm font-semibold text-white">Moderation Actions</h3>
                 <div className="mt-3 grid gap-2 md:grid-cols-4">
-                  <ReviewActionButton tone="approve" disabled={!canModerate || savingId === selectedReview.id || selectedReview.status === "approved"} onClick={() => saveReview(selectedReview, { status: "approved" })}>
+                  <ReviewActionButton tone="approve" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "approved")} onClick={() => saveReview(selectedReview, { status: "approved" })}>
                     <Check className="h-4 w-4" /> Approve
                   </ReviewActionButton>
-                  <ReviewActionButton tone="hide" disabled={!canModerate || savingId === selectedReview.id || selectedReview.status === "hidden"} onClick={() => saveReview(selectedReview, { status: "hidden" })}>
+                  <ReviewActionButton tone="hide" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "hidden")} onClick={() => saveReview(selectedReview, { status: "hidden" })}>
                     <Inbox className="h-4 w-4" /> Hide
                   </ReviewActionButton>
-                  <ReviewActionButton tone="reject" disabled={!canModerate || savingId === selectedReview.id || selectedReview.status === "rejected"} onClick={() => saveReview(selectedReview, { status: "rejected" })}>
+                  <ReviewActionButton tone="reject" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "rejected")} onClick={() => saveReview(selectedReview, { status: "rejected" })}>
                     <X className="h-4 w-4" /> Reject
                   </ReviewActionButton>
-                  <ReviewActionButton tone="edit" disabled={!canEditReview || savingId === selectedReview.id} onClick={() => openEdit(selectedReview)}>
+                  <ReviewActionButton tone="edit" disabled={(!visualDemoMode && !canEditReview) || savingId === selectedReview.id} onClick={() => openEdit(selectedReview)}>
                     <Pencil className="h-4 w-4" /> Edit
                   </ReviewActionButton>
                 </div>
                 <div className="mt-2">
-                  <ReviewActionButton tone="delete" disabled={!canEditReview || savingId === selectedReview.id} onClick={() => deleteReview(selectedReview)}>
+                  <ReviewActionButton tone="delete" disabled={(!visualDemoMode && !canEditReview) || savingId === selectedReview.id} onClick={() => deleteReview(selectedReview)}>
                     <Trash2 className="h-4 w-4" /> Delete Review
                   </ReviewActionButton>
                 </div>
@@ -1097,7 +1280,16 @@ export default function ReviewsCommandCenter({
                 <p className="mt-3 line-clamp-4 text-sm leading-6 text-white/68">{selectedReview.body}</p>
                 <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3 text-xs text-white/38">
                   <span>Was this review helpful?</span>
-                  <span>0 helpful</span>
+                  <span className="inline-flex items-center gap-3">
+                    <span className="inline-flex items-center gap-1 text-white/56">
+                      <ThumbsUp className="h-3.5 w-3.5" />
+                      {visualDemoMode ? 12 : 0}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-white/42">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      {visualDemoMode ? 2 : 0}
+                    </span>
+                  </span>
                 </div>
               </div>
             ) : (
@@ -1128,17 +1320,20 @@ export default function ReviewsCommandCenter({
             <h2 className="text-sm font-semibold text-white">Quick Actions</h2>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {[
-                { label: "Bulk Approve", icon: Check, live: false },
-                { label: "Bulk Hide", icon: Inbox, live: false },
-                { label: "Bulk Reject", icon: X, live: false },
-                { label: "Manage Filters", icon: SlidersHorizontal, live: false },
-                { label: "Review Settings", icon: ShieldCheck, live: false },
-              ].map(({ label, icon: Icon, live }) => (
+                { label: "Bulk Approve", icon: Check, tone: "border-emerald-200/20 bg-emerald-300/10 text-emerald-100" },
+                { label: "Bulk Hide", icon: Inbox, tone: "border-amber-200/20 bg-amber-300/10 text-amber-100" },
+                { label: "Bulk Reject", icon: X, tone: "border-rose-200/20 bg-rose-300/10 text-rose-100" },
+                { label: "Manage Filters", icon: SlidersHorizontal, tone: "border-fuchsia-200/20 bg-fuchsia-300/10 text-fuchsia-100" },
+                { label: "Review Settings", icon: ShieldCheck, tone: "border-violet-200/20 bg-violet-300/10 text-violet-100" },
+              ].map(({ label, icon: Icon, tone }) => (
                 <button
                   key={label}
                   type="button"
-                  disabled={!live}
-                  className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-2 text-xs font-semibold text-white/42"
+                  onClick={() => {
+                    setError("");
+                    setMessage("Bulk review controls are visually staged for this design pass.");
+                  }}
+                  className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border px-2 text-xs font-semibold transition hover:bg-white/[0.08] ${tone}`}
                 >
                   <Icon className="h-4 w-4" />
                   {label}
