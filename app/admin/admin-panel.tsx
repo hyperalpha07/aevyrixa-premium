@@ -9269,6 +9269,18 @@ type AdminCustomerClientRecord = {
   savedAddressesCount: number;
 };
 
+type CustomerHubRecord = AdminCustomerClientRecord & {
+  avatarTone: string;
+  segment: "VIP" | "Loyal" | "New" | "Inactive" | "At Risk";
+  valueTier: "High Value" | "Repeat Buyer" | "Potential" | "At Risk";
+  badges: string[];
+  address: string;
+  area: string;
+  recentOrders: Array<{ name: string; date: string; amount: number; status: string; tone: string }>;
+  supportHistory: Array<{ date: string; title: string; status: "Resolved" | "Open" }>;
+  activity: Array<{ title: string; detail: string; time: string; icon: typeof ShoppingBag; tone: string }>;
+};
+
 const convStatusLabels: Record<ConvStatus, string> = {
   open: "Open",
   pending: "Pending",
@@ -9654,6 +9666,11 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   const canViewCustomers = hasPermission(session, "customers.view");
   const [customers, setCustomers] = useState<AdminCustomerClientRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [segmentFilter, setSegmentFilter] = useState("All Segments");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [tagFilter, setTagFilter] = useState("All Tags");
+  const [sortFilter, setSortFilter] = useState("Recent Activity");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("demo-fatema-jannat");
   const [loading, setLoading] = useState(canViewCustomers);
   const [error, setError] = useState(canViewCustomers ? "" : blockedPermissionMessage);
 
@@ -9675,35 +9692,179 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
       .finally(() => setLoading(false));
   }, [canViewCustomers]);
 
-  const visibleCustomers = customers.filter((customer) => {
+  const usesDemoCustomers = customers.length <= 1;
+  const hubCustomers = useMemo(
+    () => (usesDemoCustomers ? demoCustomerHubRecords : buildCustomerHubRecords(customers)),
+    [customers, usesDemoCustomers]
+  );
+  const selectedCustomer = hubCustomers.find((customer) => customer.id === selectedCustomerId) ?? hubCustomers[0];
+  const activeAccounts = hubCustomers.filter((customer) => customer.isActive).length;
+  const repeatBuyers = hubCustomers.filter((customer) => customer.orderCount > 1).length;
+  const totalSpent = selectedCustomer?.totalSpent ?? 0;
+  const averageOrderValue = selectedCustomer && selectedCustomer.orderCount > 0 ? Math.round(totalSpent / selectedCustomer.orderCount) : 0;
+
+  useEffect(() => {
+    if (!hubCustomers.some((customer) => customer.id === selectedCustomerId)) {
+      setSelectedCustomerId(hubCustomers[0]?.id ?? "demo-fatema-jannat");
+    }
+  }, [hubCustomers, selectedCustomerId]);
+
+  const visibleCustomers = hubCustomers.filter((customer) => {
     const query = searchTerm.trim().toLowerCase();
-    if (!query) return true;
-    return [customer.fullName, customer.phone, customer.email]
+    const matchesQuery = !query || [customer.fullName, customer.phone, customer.email, customer.segment, customer.valueTier]
       .filter(Boolean)
       .join(" ")
       .toLowerCase()
       .includes(query);
+    const matchesSegment = segmentFilter === "All Segments" || customer.segment === segmentFilter;
+    const matchesStatus = statusFilter === "All Status" || (statusFilter === "Active" ? customer.isActive : !customer.isActive);
+    const matchesTag = tagFilter === "All Tags" || customer.badges.includes(tagFilter);
+    return matchesQuery && matchesSegment && matchesStatus && matchesTag;
   });
+  const sortedCustomers = [...visibleCustomers].sort((a, b) => {
+    if (sortFilter === "Highest Spend") return b.totalSpent - a.totalSpent;
+    if (sortFilter === "Most Orders") return b.orderCount - a.orderCount;
+    return Date.parse(b.latestOrderAt ?? b.createdAt ?? "") - Date.parse(a.latestOrderAt ?? a.createdAt ?? "");
+  });
+  const customerMetrics = [
+    {
+      label: "Total Customers",
+      value: usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US"),
+      trend: usesDemoCustomers ? "18.6% vs last 7 days" : `${hubCustomers.length.toLocaleString("en-US")} live records`,
+      icon: Users,
+      tone: "pink",
+    },
+    {
+      label: "Active Accounts",
+      value: usesDemoCustomers ? "8,932" : activeAccounts.toLocaleString("en-US"),
+      trend: usesDemoCustomers ? "15.2% vs last 7 days" : `${activeAccounts.toLocaleString("en-US")} currently active`,
+      icon: Users,
+      tone: "cyan",
+    },
+    {
+      label: "Repeat Buyers",
+      value: usesDemoCustomers ? "4,672" : repeatBuyers.toLocaleString("en-US"),
+      trend: usesDemoCustomers ? "22.4% vs last 7 days" : `${repeatBuyers.toLocaleString("en-US")} placed 2+ orders`,
+      icon: RefreshCw,
+      tone: "violet",
+    },
+  ];
+  const segments = [
+    { label: "New Customers", count: usesDemoCustomers ? "1,842" : hubCustomers.filter((customer) => customer.segment === "New").length.toLocaleString("en-US"), trend: "4.8% growth", icon: Sparkles, tone: "cyan" },
+    { label: "Loyal Customers", count: usesDemoCustomers ? "4,672" : hubCustomers.filter((customer) => customer.segment === "Loyal").length.toLocaleString("en-US"), trend: "37.5% retained", icon: ShieldCheck, tone: "violet" },
+    { label: "Inactive Customers", count: usesDemoCustomers ? "1,324" : hubCustomers.filter((customer) => !customer.isActive).length.toLocaleString("en-US"), trend: "10.6% needs care", icon: Inbox, tone: "amber" },
+    { label: "High-Value", count: usesDemoCustomers ? "892" : hubCustomers.filter((customer) => customer.valueTier === "High Value").length.toLocaleString("en-US"), trend: "7.2% VIP pool", icon: Star, tone: "pink" },
+  ];
+
+  function exportVisibleCustomers() {
+    const csv = [
+      ["Name", "Phone", "Email", "Segment", "Orders", "Total Spent", "Last Order"].join(","),
+      ...sortedCustomers.map((customer) =>
+        [
+          customer.fullName,
+          customer.phone,
+          customer.email ?? "",
+          customer.segment,
+          customer.orderCount,
+          customer.totalSpent,
+          formatDate(customer.latestOrderAt),
+        ].map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "aevyrixa-customers-preview.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (!canViewCustomers) {
+    return <div className="mt-6"><NoDataState label={blockedPermissionMessage} /></div>;
+  }
 
   return (
-    <div className="mt-6 space-y-5">
-      <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-end">
-          <label className="relative block min-w-0">
-            <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
-              Search customers
+    <div className="mt-6 space-y-4">
+      <section className="aev-admin-page-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-4 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-80">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
+          <div className="absolute left-1/2 top-3 h-24 w-[520px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.22)]" />
+          <div className="absolute left-1/2 top-7 h-12 w-[310px] -translate-x-1/2 rounded-[100%] border border-pink-300/25 shadow-[0_0_42px_rgba(255,77,184,0.35)]" />
+        </div>
+        <div className="relative z-10 flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 pt-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white">Customers Intelligence Hub</h2>
+              <span className="aev-admin-chip border-emerald-200/24 bg-emerald-300/[0.08] text-emerald-100">
+                <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
+                Live
+              </span>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
+              Deep insights into your customers, behavior, and lifetime value.
+            </p>
+            {usesDemoCustomers && (
+              <p className="mt-2 text-xs font-medium text-cyan-100/68">
+                Admin visual preview is using demo fallback because live customer records are empty or too small.
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="aev-admin-chip aev-admin-chip-muted">
+              <CalendarDays className="h-3.5 w-3.5" />
+              May 13 - May 19, 2026
             </span>
-            <Search className="pointer-events-none absolute bottom-3.5 left-3 h-4 w-4 text-white/35" />
-            <input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Name, phone, or email"
-              className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
-            />
-          </label>
-          <p className="text-sm text-white/45">
-            Showing {visibleCustomers.length} of {customers.length}
-          </p>
+            <button type="button" onClick={exportVisibleCustomers} className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold">
+              <Download className="h-4 w-4" />
+              Export
+            </button>
+          </div>
+        </div>
+        <div className="relative z-10 mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_455px]">
+          <div className="grid gap-3 md:grid-cols-3">
+            {customerMetrics.map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <article key={metric.label} className={`aev-admin-stat-card tone-${metric.tone} min-w-0 rounded-[1.05rem] border p-4`}>
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-white/48">{metric.label}</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{metric.value}</p>
+                      <p className="mt-2 text-xs font-semibold text-emerald-200">↗ {metric.trend}</p>
+                    </div>
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-current/20 bg-current/10">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          {selectedCustomer && (
+            <article className="rounded-[1.25rem] border border-cyan-200/14 bg-[#071024]/82 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_42px_rgba(103,247,243,0.07)]">
+              <div className="flex min-w-0 items-start gap-4">
+                <CustomerAvatar customer={selectedCustomer} size="large" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="truncate text-xl font-semibold text-white">{selectedCustomer.fullName}</h3>
+                    <CustomerBadge label="VIP Customer" tone="amber" />
+                    <CustomerBadge label={selectedCustomer.isActive ? "Active" : "Inactive"} tone={selectedCustomer.isActive ? "green" : "rose"} />
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-white/62 sm:grid-cols-2">
+                    <span className="inline-flex items-center gap-2"><Phone className="h-4 w-4 text-cyan-200/70" />{selectedCustomer.phone}</span>
+                    <span className="inline-flex min-w-0 items-center gap-2"><Send className="h-4 w-4 text-pink-200/70" /><span className="truncate">{selectedCustomer.email ?? "customer@email.local"}</span></span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 md:grid-cols-4">
+                <DetailLine label="Total Orders" value={String(selectedCustomer.orderCount)} />
+                <DetailLine label="Total Spent" value={formatCurrency(totalSpent)} />
+                <DetailLine label="Avg. Order Value" value={formatCurrency(averageOrderValue)} />
+                <DetailLine label="Customer Since" value={formatDate(selectedCustomer.createdAt)} />
+              </div>
+            </article>
+          )}
         </div>
       </section>
 
@@ -9716,28 +9877,447 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
       {loading ? (
         <NoDataState label="Loading customers..." />
       ) : (
-        <div className="grid gap-3">
-          {visibleCustomers.map((customer) => (
-            <article
-              key={customer.id}
-              className="rounded-[1.25rem] border border-white/10 bg-black/24 p-4"
-            >
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <DetailLine label="Customer" value={customer.fullName} />
-                <DetailLine label="Phone" value={customer.phone} />
-                <DetailLine label="Email" value={customer.email} />
-                <DetailLine label="Status" value={customer.isActive ? "Active" : "Inactive"} />
-                <DetailLine label="Orders" value={String(customer.orderCount)} />
-                <DetailLine label="Total spent estimate" value={formatCurrency(customer.totalSpent)} />
-                <DetailLine label="Latest order" value={formatDate(customer.latestOrderAt)} />
-                <DetailLine label="Saved addresses" value={String(customer.savedAddressesCount)} />
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_520px]">
+          <div className="min-w-0 space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(285px,0.7fr)]">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <SectionHeader title="Customer Segments" />
+                  <button type="button" className="aev-admin-mini-action text-pink-100">View all segments <ArrowLeft className="h-3 w-3 rotate-180" /></button>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {segments.map((segment) => {
+                    const Icon = segment.icon;
+                    return (
+                      <article key={segment.label} className={`aev-admin-stat-card tone-${segment.tone} min-w-0 rounded-xl border p-3`}>
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-current/10">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-[11px] text-white/48">{segment.label}</p>
+                            <p className="text-lg font-semibold text-white">{segment.count}</p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-[11px] font-semibold text-emerald-200">↗ {segment.trend}</p>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <SectionHeader title="Quick Actions" />
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
+                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[74px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
+                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[74px]"><Download className="h-4 w-4" />Export Segment</button>
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
+                </div>
+              </section>
+            </div>
+
+            <section className="aev-admin-orders-filter rounded-[1.1rem] border border-pink-200/18 bg-[#070b1a]/82 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <div className="grid gap-2 xl:grid-cols-[minmax(260px,1fr)_150px_130px_130px_170px_auto]">
+                <label className="relative min-w-0">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-200/60" />
+                  <input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search customers by name, email, phone..."
+                    className="h-11 w-full rounded-xl border border-white/10 bg-black/28 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/30 focus:border-pink-200/40"
+                  />
+                </label>
+                <CustomerSelect value={segmentFilter} onChange={setSegmentFilter} options={["All Segments", "VIP", "Loyal", "New", "Inactive", "At Risk"]} />
+                <CustomerSelect value={statusFilter} onChange={setStatusFilter} options={["All Status", "Active", "Inactive"]} />
+                <CustomerSelect value={tagFilter} onChange={setTagFilter} options={["All Tags", "VIP", "Loyal", "Repeat Buyer", "New", "Potential", "At Risk", "Inactive"]} />
+                <CustomerSelect value={sortFilter} onChange={setSortFilter} options={["Recent Activity", "Highest Spend", "Most Orders"]} />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" className="aev-admin-icon-button h-11 w-11" aria-label="Card grid view"><Rows3 className="h-4 w-4" /></button>
+                  <button type="button" className="aev-admin-icon-button h-11 w-11" aria-label="Compact list view"><MoreVertical className="h-4 w-4" /></button>
+                </div>
               </div>
-            </article>
-          ))}
-          {visibleCustomers.length === 0 && <NoDataState label="No customers found." />}
+            </section>
+
+            <section className="aev-admin-control-panel rounded-[1.35rem] border p-3">
+              <div className="grid gap-3 xl:grid-cols-3">
+                {sortedCustomers.slice(0, 9).map((customer) => (
+                  <button
+                    key={customer.id}
+                    type="button"
+                    onClick={() => setSelectedCustomerId(customer.id)}
+                    className={`min-w-0 rounded-2xl border bg-[#070d1b]/86 p-3 text-left transition ${
+                      selectedCustomer?.id === customer.id
+                        ? "border-cyan-200/60 shadow-[0_0_0_1px_rgba(103,247,243,0.16),0_0_32px_rgba(255,77,184,0.20)]"
+                        : "border-white/10 hover:border-cyan-200/28"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <CustomerAvatar customer={customer} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center justify-between gap-2">
+                          <p className="truncate font-semibold text-white">{customer.fullName}</p>
+                          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${customer.isActive ? "bg-emerald-300 shadow-[0_0_14px_rgba(94,240,174,0.8)]" : "bg-rose-300 shadow-[0_0_14px_rgba(255,96,145,0.6)]"}`} />
+                        </div>
+                        <p className="mt-1 text-xs text-white/52">{customer.phone}</p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {customer.badges.slice(0, 3).map((badge) => (
+                            <CustomerBadge key={badge} label={badge} tone={customerBadgeTone(badge)} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/10 pt-3">
+                      <DetailLine label="Orders" value={String(customer.orderCount)} />
+                      <DetailLine label="Spent" value={formatCurrency(customer.totalSpent)} />
+                      <DetailLine label="Last Order" value={formatDate(customer.latestOrderAt)} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {sortedCustomers.length === 0 && <NoDataState label="No customers found." />}
+              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/18 p-3 text-sm text-white/56 sm:flex-row sm:items-center sm:justify-between">
+                <span>Showing 1 to {Math.min(sortedCustomers.length, 9)} of {usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US")} customers</span>
+                <div className="flex items-center gap-2">
+                  {["‹", "1", "2", "3", "...", "1,384", "›"].map((item, index) => (
+                    <button key={`${item}-${index}`} type="button" disabled={index !== 1} className={`min-h-9 min-w-9 rounded-xl border px-3 text-xs font-semibold ${index === 1 ? "border-pink-200/35 bg-pink-300/12 text-pink-50" : "border-white/10 bg-white/[0.035] text-white/42"}`}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {selectedCustomer && (
+            <aside className="min-w-0 space-y-4">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <SectionHeader title="Profile & Address" />
+                  <button type="button" disabled className="aev-admin-mini-action text-white/35" title="Profile editing is staged for later linkup.">Edit</button>
+                </div>
+                <div className="mt-4 space-y-3 text-sm text-white/62">
+                  <p className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-pink-200" />{selectedCustomer.address}</p>
+                  <p className="flex gap-3"><Globe className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />{selectedCustomer.area}</p>
+                  <p className="flex gap-3"><Users className="mt-0.5 h-4 w-4 shrink-0 text-violet-200" />1,000+ Customers in area</p>
+                </div>
+              </section>
+
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <PanelTitleAction title="Recent Orders" href="/admin/orders" label="View all" />
+                <div className="mt-4 space-y-3">
+                  {selectedCustomer.recentOrders.map((order) => (
+                    <div key={`${order.name}-${order.date}`} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-white/[0.025] p-2">
+                      <ProductMiniThumb tone={order.tone} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">{order.name}</p>
+                        <p className="mt-1 text-xs text-white/42">{order.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-white">{formatCurrency(order.amount)}</p>
+                        <CustomerBadge label={order.status} tone="green" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <PanelTitleAction title="Wishlist / Favorites" label="View all" disabled />
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                  {["rose", "violet", "amber"].map((tone) => <ProductMiniThumb key={tone} tone={tone} large />)}
+                  <div className="grid min-h-16 place-items-center rounded-xl border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] text-xs font-semibold text-cyan-100">+12 items</div>
+                </div>
+              </section>
+
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <PanelTitleAction title="Support History" href="/admin/support" label="View all" />
+                <div className="mt-4 space-y-2">
+                  {selectedCustomer.supportHistory.map((item) => (
+                    <div key={`${item.date}-${item.title}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.025] p-2 text-sm">
+                      <div className="min-w-0">
+                        <p className="text-xs text-white/40">{item.date}</p>
+                        <p className="truncate font-medium text-white/78">{item.title}</p>
+                      </div>
+                      <CustomerBadge label={item.status} tone={item.status === "Open" ? "amber" : "green"} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+                <PanelTitleAction title="Account Activity" label="View full log" disabled />
+                <div className="mt-4 space-y-3">
+                  {selectedCustomer.activity.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={`${item.title}-${item.time}`} className="relative grid grid-cols-[34px_minmax(0,1fr)_auto] gap-3">
+                        {index < selectedCustomer.activity.length - 1 && <span className="absolute left-4 top-8 h-full w-px bg-gradient-to-b from-pink-300/40 to-cyan-300/10" />}
+                        <span className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full border ${item.tone}`}>
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white">{item.title}</p>
+                          <p className="mt-1 truncate text-xs text-white/45">{item.detail}</p>
+                        </div>
+                        <p className="text-right text-xs text-white/40">{item.time}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button type="button" disabled className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70" title="Full customer profile is staged for later linkup.">
+                  View Full Profile <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+                </button>
+              </section>
+            </aside>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+const customerActivityTemplate: CustomerHubRecord["activity"] = [
+  { title: "Order placed", detail: "Premium Comfort Box", time: "May 18, 2026 - 10:31 AM", icon: ShoppingBag, tone: "border-emerald-200/30 bg-emerald-300/10 text-emerald-100" },
+  { title: "Review submitted", detail: "★★★★★", time: "May 18, 2026 - 10:45 AM", icon: Star, tone: "border-amber-200/30 bg-amber-300/10 text-amber-100" },
+  { title: "Wishlist updated", detail: "Added 3 new items", time: "May 17, 2026 - 08:22 PM", icon: ShieldCheck, tone: "border-pink-200/30 bg-pink-300/10 text-pink-100" },
+  { title: "Profile updated", detail: "Changed phone number", time: "May 16, 2026 - 02:15 PM", icon: Users, tone: "border-cyan-200/30 bg-cyan-300/10 text-cyan-100" },
+  { title: "Support ticket created", detail: "Size exchange request", time: "May 09, 2026 - 11:03 AM", icon: MessageSquare, tone: "border-cyan-200/30 bg-cyan-300/10 text-cyan-100" },
+  { title: "Account created", detail: "Customer profile opened", time: "Jan 12, 2025 - 07:45 PM", icon: Smile, tone: "border-pink-200/30 bg-pink-300/10 text-pink-100" },
+];
+
+const demoCustomerHubRecords: CustomerHubRecord[] = [
+  {
+    id: "demo-fatema-jannat",
+    fullName: "Fatema Jannat",
+    phone: "+880 1712 345 678",
+    email: "fatema.jannat@gmail.com",
+    isActive: true,
+    createdAt: "2025-01-12T13:45:00.000Z",
+    orderCount: 24,
+    totalSpent: 18450,
+    latestOrderAt: "2026-05-18T10:31:00.000Z",
+    savedAddressesCount: 2,
+    avatarTone: "from-pink-300 via-amber-200 to-cyan-200",
+    segment: "VIP",
+    valueTier: "High Value",
+    badges: ["VIP", "Loyal", "High Value"],
+    address: "House 12, Road 5, Dhanmondi, Dhaka 1205, Bangladesh",
+    area: "Dhaka, Dhaka Division",
+    recentOrders: [
+      { name: "Premium Comfort Box", date: "May 18, 2026", amount: 1490, status: "Delivered", tone: "rose" },
+      { name: "Aevyrixa High Waist Panty", date: "May 10, 2026", amount: 690, status: "Delivered", tone: "violet" },
+      { name: "Organic Cotton Pad (Pack of 6)", date: "May 02, 2026", amount: 450, status: "Delivered", tone: "amber" },
+    ],
+    supportHistory: [
+      { date: "May 09, 2026", title: "Size exchange request", status: "Resolved" },
+      { date: "Apr 27, 2026", title: "Order delay inquiry", status: "Resolved" },
+      { date: "Apr 15, 2026", title: "Product quality question", status: "Resolved" },
+    ],
+    activity: customerActivityTemplate,
+  },
+  {
+    id: "demo-nusrat-islam",
+    fullName: "Nusrat Islam",
+    phone: "+880 1811 234 667",
+    email: "nusrat.islam@gmail.com",
+    isActive: true,
+    createdAt: "2025-03-04T08:00:00.000Z",
+    orderCount: 16,
+    totalSpent: 11250,
+    latestOrderAt: "2026-05-17T09:12:00.000Z",
+    savedAddressesCount: 1,
+    avatarTone: "from-violet-300 via-pink-200 to-rose-300",
+    segment: "Loyal",
+    valueTier: "Repeat Buyer",
+    badges: ["Loyal", "Repeat Buyer"],
+    address: "Flat B4, Sector 7, Uttara, Dhaka 1230, Bangladesh",
+    area: "Uttara, Dhaka",
+    recentOrders: [
+      { name: "Soft Cotton Care Set", date: "May 17, 2026", amount: 1290, status: "Delivered", tone: "violet" },
+      { name: "Daily Comfort Panty", date: "May 01, 2026", amount: 590, status: "Delivered", tone: "rose" },
+      { name: "Night Care Bundle", date: "Apr 20, 2026", amount: 1190, status: "Delivered", tone: "amber" },
+    ],
+    supportHistory: [
+      { date: "May 01, 2026", title: "Delivery address update", status: "Resolved" },
+      { date: "Mar 22, 2026", title: "Size guide question", status: "Resolved" },
+      { date: "Feb 19, 2026", title: "Payment confirmation", status: "Resolved" },
+    ],
+    activity: customerActivityTemplate,
+  },
+  {
+    id: "demo-tahmina-rahman",
+    fullName: "Tahmina Rahman",
+    phone: "+880 1912 345 678",
+    email: "tahmina.rahman@gmail.com",
+    isActive: true,
+    createdAt: "2026-05-01T10:00:00.000Z",
+    orderCount: 3,
+    totalSpent: 2150,
+    latestOrderAt: "2026-05-19T12:04:00.000Z",
+    savedAddressesCount: 1,
+    avatarTone: "from-cyan-200 via-pink-200 to-violet-300",
+    segment: "New",
+    valueTier: "Potential",
+    badges: ["New", "Potential"],
+    address: "Block C, Mirpur 10, Dhaka 1216, Bangladesh",
+    area: "Mirpur, Dhaka",
+    recentOrders: [
+      { name: "Starter Comfort Kit", date: "May 19, 2026", amount: 950, status: "Delivered", tone: "rose" },
+      { name: "Reusable Care Pad", date: "May 11, 2026", amount: 650, status: "Delivered", tone: "violet" },
+      { name: "Travel Care Pouch", date: "May 04, 2026", amount: 550, status: "Delivered", tone: "amber" },
+    ],
+    supportHistory: [
+      { date: "May 11, 2026", title: "First order guidance", status: "Resolved" },
+      { date: "May 04, 2026", title: "Delivery timing question", status: "Resolved" },
+      { date: "May 01, 2026", title: "Account setup help", status: "Resolved" },
+    ],
+    activity: customerActivityTemplate,
+  },
+  ...[
+    ["demo-jannatul-ferdous", "Jannatul Ferdous", "+880 1813 456 789", "VIP", "High Value", 31, 25760, "2026-05-16T08:30:00.000Z"],
+    ["demo-sadia-afrin", "Sadia Afrin", "+880 1510 987 654", "Loyal", "Repeat Buyer", 12, 8900, "2026-05-15T11:20:00.000Z"],
+    ["demo-mariam-akter", "Mariam Akter", "+880 1715 678 910", "Inactive", "At Risk", 2, 980, "2026-04-28T15:00:00.000Z"],
+    ["demo-farhana-ahmed", "Farhana Ahmed", "+880 1618 765 432", "Loyal", "High Value", 22, 16300, "2026-05-14T13:00:00.000Z"],
+    ["demo-bristy-chowdhury", "Bristy Chowdhury", "+880 1920 111 222", "New", "Potential", 1, 450, "2026-05-19T17:45:00.000Z"],
+    ["demo-rokia-sultana", "Rokia Sultana", "+880 1312 333 444", "At Risk", "At Risk", 0, 0, "2026-03-12T09:00:00.000Z"],
+  ].map(([id, fullName, phone, segment, valueTier, orderCount, totalSpent, latestOrderAt], index): CustomerHubRecord => {
+    const supportStatus: "Open" | "Resolved" = index === 2 ? "Open" : "Resolved";
+    return {
+      id: String(id),
+      fullName: String(fullName),
+      phone: String(phone),
+      email: `${String(fullName).toLowerCase().replace(/\s+/g, ".")}@gmail.com`,
+      isActive: segment !== "Inactive" && segment !== "At Risk",
+      createdAt: "2025-02-10T09:00:00.000Z",
+      orderCount: Number(orderCount),
+      totalSpent: Number(totalSpent),
+      latestOrderAt: String(latestOrderAt),
+      savedAddressesCount: index % 2 === 0 ? 2 : 1,
+      avatarTone: index % 2 === 0 ? "from-pink-300 via-violet-300 to-cyan-200" : "from-amber-200 via-pink-300 to-violet-300",
+      segment: segment as CustomerHubRecord["segment"],
+      valueTier: valueTier as CustomerHubRecord["valueTier"],
+      badges: segment === "At Risk" ? ["At Risk"] : segment === "Inactive" ? ["Inactive", "At Risk"] : [String(segment), String(valueTier)],
+      address: index % 2 === 0 ? "Road 8, Banani, Dhaka 1213, Bangladesh" : "Zindabazar, Sylhet 3100, Bangladesh",
+      area: index % 2 === 0 ? "Banani, Dhaka" : "Sylhet Sadar, Sylhet",
+      recentOrders: [
+        { name: "Aevyrixa Comfort Pack", date: "May 14, 2026", amount: 990, status: "Delivered", tone: "rose" },
+        { name: "Soft Support Essential", date: "May 02, 2026", amount: 760, status: "Delivered", tone: "violet" },
+        { name: "Care Wash Pouch", date: "Apr 21, 2026", amount: 390, status: "Delivered", tone: "amber" },
+      ],
+      supportHistory: [
+        { date: "May 04, 2026", title: "Delivery preference", status: "Resolved" },
+        { date: "Apr 18, 2026", title: "Product sizing", status: "Resolved" },
+        { date: "Mar 29, 2026", title: "Reward points inquiry", status: supportStatus },
+      ],
+      activity: customerActivityTemplate,
+    };
+  }),
+];
+
+function buildCustomerHubRecords(customers: AdminCustomerClientRecord[]): CustomerHubRecord[] {
+  return customers.map((customer, index) => {
+    const segment: CustomerHubRecord["segment"] =
+      !customer.isActive ? "Inactive" : customer.totalSpent >= 15000 ? "VIP" : customer.orderCount >= 5 ? "Loyal" : customer.orderCount === 0 ? "At Risk" : "New";
+    const valueTier: CustomerHubRecord["valueTier"] =
+      customer.totalSpent >= 12000 ? "High Value" : customer.orderCount > 1 ? "Repeat Buyer" : customer.isActive ? "Potential" : "At Risk";
+    return {
+      ...customer,
+      email: customer.email || `${customer.fullName.toLowerCase().replace(/\s+/g, ".") || "customer"}@email.local`,
+      avatarTone: index % 3 === 0 ? "from-pink-300 via-amber-200 to-cyan-200" : index % 3 === 1 ? "from-violet-300 via-pink-200 to-rose-300" : "from-cyan-200 via-pink-200 to-violet-300",
+      segment,
+      valueTier,
+      badges: Array.from(new Set([segment, valueTier, customer.orderCount > 1 ? "Repeat Buyer" : "Potential"])).slice(0, 3),
+      address: customer.savedAddressesCount > 0 ? "Saved customer address on file" : "Address pending",
+      area: "Bangladesh customer zone",
+      recentOrders: [
+        { name: "Latest customer order", date: formatDate(customer.latestOrderAt), amount: Math.max(Math.round(customer.totalSpent / Math.max(customer.orderCount, 1)), 0), status: "Delivered", tone: "rose" },
+        { name: "Care essentials bundle", date: "Recent", amount: 790, status: "Delivered", tone: "violet" },
+        { name: "Comfort refill pack", date: "Recent", amount: 450, status: "Delivered", tone: "amber" },
+      ],
+      supportHistory: [
+        { date: "Recent", title: "Customer service profile", status: "Resolved" },
+        { date: "Recent", title: "Delivery preference review", status: "Resolved" },
+        { date: "Recent", title: "Care follow-up", status: "Resolved" },
+      ],
+      activity: customerActivityTemplate,
+    };
+  });
+}
+
+function CustomerAvatar({ customer, size = "normal" }: { customer: CustomerHubRecord; size?: "normal" | "large" }) {
+  const initials = customer.fullName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  return (
+    <span className={`relative grid shrink-0 place-items-center rounded-full border border-white/18 bg-gradient-to-br ${customer.avatarTone} font-bold text-[#071024] shadow-[0_0_28px_rgba(255,77,184,0.18)] ${size === "large" ? "h-20 w-20 text-xl" : "h-12 w-12 text-sm"}`}>
+      {initials}
+      <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-[#071024] bg-emerald-300" />
+    </span>
+  );
+}
+
+function CustomerBadge({ label, tone = "violet" }: { label: string; tone?: "cyan" | "violet" | "amber" | "green" | "rose" }) {
+  const styles = {
+    cyan: "border-cyan-200/25 bg-cyan-300/10 text-cyan-100",
+    violet: "border-violet-200/25 bg-violet-300/10 text-violet-100",
+    amber: "border-amber-200/25 bg-amber-300/10 text-amber-100",
+    green: "border-emerald-200/25 bg-emerald-300/10 text-emerald-100",
+    rose: "border-rose-200/25 bg-rose-300/10 text-rose-100",
+  }[tone];
+  return <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles}`}>{label}</span>;
+}
+
+function customerBadgeTone(label: string): "cyan" | "violet" | "amber" | "green" | "rose" {
+  if (/vip|high/i.test(label)) return "amber";
+  if (/loyal|repeat/i.test(label)) return "violet";
+  if (/new|potential/i.test(label)) return "cyan";
+  if (/risk|inactive/i.test(label)) return "rose";
+  return "green";
+}
+
+function CustomerSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: string[] }) {
+  return (
+    <label className="relative min-w-0">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-11 w-full appearance-none rounded-xl border border-white/10 bg-black/28 px-3 pr-8 text-xs font-semibold text-white/72 outline-none focus:border-cyan-200/35"
+      >
+        {options.map((option) => <option key={option}>{option}</option>)}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/38" />
+    </label>
+  );
+}
+
+function PanelTitleAction({ title, label, href, disabled = false }: { title: string; label: string; href?: string; disabled?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <SectionHeader title={title} />
+      {href && !disabled ? (
+        <Link href={href} className="aev-admin-mini-action text-pink-100">{label} <ArrowLeft className="h-3 w-3 rotate-180" /></Link>
+      ) : (
+        <button type="button" disabled className="aev-admin-mini-action text-white/35" title={`${title} is staged for later linkup.`}>{label} <ArrowLeft className="h-3 w-3 rotate-180" /></button>
+      )}
+    </div>
+  );
+}
+
+function ProductMiniThumb({ tone, large = false }: { tone: string; large?: boolean }) {
+  const gradients: Record<string, string> = {
+    rose: "from-pink-200 via-rose-300 to-[#171126]",
+    violet: "from-violet-200 via-fuchsia-300 to-[#171126]",
+    amber: "from-amber-100 via-pink-200 to-[#221426]",
+  };
+  return (
+    <span className={`relative block overflow-hidden rounded-xl border border-white/12 bg-gradient-to-br ${gradients[tone] ?? gradients.rose} ${large ? "min-h-16" : "h-11 w-11"}`}>
+      <span className="absolute bottom-2 left-1/2 h-5 w-8 -translate-x-1/2 rounded-full bg-black/35 blur-sm" />
+      <span className="absolute left-1/2 top-2 h-7 w-8 -translate-x-1/2 rounded-b-2xl rounded-t-md border border-white/30 bg-black/35" />
+      <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-pink-200" />
+    </span>
   );
 }
 
