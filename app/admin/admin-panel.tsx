@@ -3921,6 +3921,11 @@ function ProductsSection({
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [productFilter, setProductFilter] = useState<ProductFilter>("All");
   const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  const [stockFilter, setStockFilter] = useState<"All Stock" | ProductStockStatus>("All Stock");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    () => products.find((product) => !product.deletedAt)?.id ?? products[0]?.id ?? null
+  );
 
   const productFilterOptions: ProductFilter[] = [
     "All",
@@ -3929,6 +3934,46 @@ function ProductsSection({
     "Out of Stock",
     "Deleted",
   ];
+  const categoryOptions = useMemo(
+    () => [
+      "All Categories",
+      ...Array.from(
+        new Set(
+          products
+            .filter((product) => !product.deletedAt && product.category)
+            .map((product) => product.category)
+        )
+      ).sort(),
+    ],
+    [products]
+  );
+  const liveProducts = useMemo(
+    () => products.filter((product) => !product.deletedAt),
+    [products]
+  );
+  const activeProducts = liveProducts.filter((product) => product.status === "Active");
+  const draftProducts = liveProducts.filter((product) => product.status === "Draft");
+  const lowStockProducts = liveProducts.filter((product) => {
+    const threshold = product.lowStockThreshold ?? 10;
+    return (
+      product.stockStatus === "low_stock" ||
+      (typeof product.stockQuantity === "number" &&
+        product.stockQuantity > 0 &&
+        product.stockQuantity <= threshold)
+    );
+  });
+  const outOfStockProducts = liveProducts.filter(
+    (product) => product.stockStatus === "out_of_stock" || product.stockQuantity === 0
+  );
+  const recentProducts = [...liveProducts]
+    .sort((a, b) => Date.parse(b.updatedAt ?? b.createdAt ?? "") - Date.parse(a.updatedAt ?? a.createdAt ?? ""))
+    .slice(0, 5);
+  const healthAttention = new Set([...lowStockProducts, ...draftProducts].map((product) => product.id));
+  const healthCritical = outOfStockProducts.length;
+  const healthyCount = Math.max(0, liveProducts.length - healthAttention.size - healthCritical);
+  const healthPercent = liveProducts.length
+    ? Math.round((healthyCount / liveProducts.length) * 100)
+    : 0;
 
   const visibleProducts = useMemo(() => {
     const query = productSearchTerm.trim().toLowerCase();
@@ -3945,15 +3990,23 @@ function ProductsSection({
                 product.stockStatus === "out_of_stock"));
 
       if (!matchesFilter) return false;
+      if (categoryFilter !== "All Categories" && product.category !== categoryFilter) return false;
+      if (stockFilter !== "All Stock" && product.stockStatus !== stockFilter) return false;
       return !query || productSearchText(product).includes(query);
     });
-  }, [productFilter, productSearchTerm, products]);
+  }, [categoryFilter, productFilter, productSearchTerm, products, stockFilter]);
   const editingProductId = editingProduct?.id;
   const isEditingExistingProduct = Boolean(
     editingProductId && products.some((product) => product.id === editingProductId)
   );
   const canEditProducts = hasPermission(session, "products.edit");
   const canUploadProductMedia = hasPermission(session, "products.media");
+  const selectedProduct =
+    products.find((product) => product.id === selectedProductId) ??
+    visibleProducts.find((product) => !product.deletedAt) ??
+    liveProducts[0] ??
+    products[0] ??
+    null;
 
   useEffect(() => {
     if (!editingProductId || !isEditingExistingProduct) return;
@@ -3968,6 +4021,11 @@ function ProductsSection({
     return () => window.clearTimeout(scrollTimer);
   }, [editingProductId, isEditingExistingProduct]);
 
+  useEffect(() => {
+    if (selectedProductId && products.some((product) => product.id === selectedProductId)) return;
+    setSelectedProductId(visibleProducts[0]?.id ?? products[0]?.id ?? null);
+  }, [products, selectedProductId, visibleProducts]);
+
   const addProduct = () => {
     if (!canEditProducts) {
       setSaveError(blockedPermissionMessage);
@@ -3976,11 +4034,23 @@ function ProductsSection({
     }
     setProductFilter("All");
     setProductSearchTerm("");
+    setCategoryFilter("All Categories");
+    setStockFilter("All Stock");
     setEditingProduct({
       ...emptyProduct,
       id: `admin-product-${Date.now()}`,
       slug: `new-product-${Date.now()}`,
     });
+  };
+
+  const openEditor = (product: AdminProduct) => {
+    if (!canEditProducts) {
+      setSaveError(blockedPermissionMessage);
+      setStatusMessage(blockedPermissionMessage);
+      return;
+    }
+    setSelectedProductId(product.id);
+    setEditingProduct(product);
   };
 
   const replaceSavedProduct = (
@@ -4114,17 +4184,21 @@ function ProductsSection({
     }
   };
 
-  const toggleStatus = async (productId: string) => {
+  const setProductStatus = async (productId: string, status: ProductStatus) => {
     if (!canEditProducts) {
       setStatusMessage(blockedPermissionMessage);
       return;
     }
     const currentProduct = products.find((product) => product.id === productId);
     if (!currentProduct) return;
+    if (currentProduct.status === status) {
+      setStatusMessage(`Product is already ${status}.`);
+      return;
+    }
 
     const nextProduct: AdminProduct = {
       ...currentProduct,
-      status: currentProduct.status === "Active" ? "Draft" : "Active",
+      status,
     };
 
     setIsSavingProduct(true);
@@ -4148,20 +4222,73 @@ function ProductsSection({
     }
   };
 
+  const toggleStatus = async (productId: string) => {
+    const currentProduct = products.find((product) => product.id === productId);
+    if (!currentProduct) return;
+    await setProductStatus(productId, currentProduct.status === "Active" ? "Draft" : "Active");
+  };
+
+  const exportProductsCsv = () => {
+    const headers = ["name", "slug", "category", "price", "status", "stockStatus", "stockQuantity"];
+    const rows = visibleProducts.map((product) =>
+      [
+        product.name,
+        product.slug,
+        product.category,
+        product.price,
+        product.status,
+        product.stockStatus,
+        product.stockQuantity ?? "",
+      ].map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+    );
+    const blob = new Blob([[headers.join(","), ...rows].join("\n")], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "aevyrixa-products.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setStatusMessage("Visible products exported as CSV.");
+  };
+
   return (
-    <div className="mt-6 space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SectionHeader title="Product catalog" />
-        <button
-          type="button"
-          onClick={addProduct}
-          disabled={!canEditProducts}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-200/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition hover:border-cyan-100/45 hover:bg-cyan-200/15"
-        >
-          <Plus className="h-4 w-4" />
-          Add product
-        </button>
-      </div>
+    <div className="aev-admin-page-stack mt-6 space-y-5">
+      <section className="aev-admin-page-hero overflow-hidden rounded-[1.35rem] border p-5">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_420px] xl:items-center">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="aev-admin-chip">
+                <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
+                Live
+              </span>
+              <span className="aev-admin-chip aev-admin-chip-muted">
+                Catalog systems online
+              </span>
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              Products Command Center
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
+              Manage product catalog, inventory, content, and performance from one cinematic CMS workspace.
+            </p>
+          </div>
+          <div className="aev-admin-orb-stage min-h-[170px] rounded-[1.2rem] border">
+            <div className="aev-admin-orb-core" />
+            <div className="aev-admin-orb-ring ring-one" />
+            <div className="aev-admin-orb-ring ring-two" />
+            <div className="aev-admin-orb-ring ring-three" />
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <ProductMetricCard label="Total Products" value={String(liveProducts.length)} tone="cyan" icon={<Boxes className="h-4 w-4" />} />
+          <ProductMetricCard label="Active Products" value={String(activeProducts.length)} tone="green" icon={<PackageCheck className="h-4 w-4" />} />
+          <ProductMetricCard label="Draft Products" value={String(draftProducts.length)} tone="violet" icon={<Inbox className="h-4 w-4" />} />
+          <ProductMetricCard label="Low Stock" value={String(lowStockProducts.length)} tone="amber" icon={<Gauge className="h-4 w-4" />} />
+          <ProductMetricCard label="Out of Stock" value={String(outOfStockProducts.length)} tone="pink" icon={<X className="h-4 w-4" />} />
+        </div>
+      </section>
 
       {statusMessage && (
         <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
@@ -4169,8 +4296,14 @@ function ProductsSection({
         </div>
       )}
 
-      <section className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3 sm:p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(240px,1fr)_auto] lg:items-end">
+      <section className="aev-admin-control-panel rounded-[1.25rem] border p-3 sm:p-4">
+        <div className="grid gap-3 lg:grid-cols-[190px_minmax(240px,1fr)_170px_170px_auto_auto] lg:items-end">
+          <SelectField
+            label="Category"
+            value={categoryFilter}
+            options={categoryOptions}
+            onChange={setCategoryFilter}
+          />
           <label className="relative block min-w-0">
             <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/40">
               Search products
@@ -4180,37 +4313,53 @@ function ProductsSection({
               type="search"
               value={productSearchTerm}
               onChange={(event) => setProductSearchTerm(event.target.value)}
-              placeholder="Search products by name, slug, category..."
+              placeholder="Search products by name, slug, SKU..."
               className="w-full rounded-2xl border border-white/10 bg-[#08111f] py-3 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
             />
           </label>
-          <div className="flex min-w-0 flex-wrap gap-2">
-            {productFilterOptions.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setProductFilter(option)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  productFilter === option
-                    ? "border-cyan-100/45 bg-cyan-200/15 text-white"
-                    : "border-white/10 bg-white/[0.04] text-white/58 hover:border-cyan-200/25 hover:text-white"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+          <SelectField
+            label="Status"
+            value={productFilter}
+            options={productFilterOptions}
+            onChange={(value) => setProductFilter(value as ProductFilter)}
+          />
+          <SelectField
+            label="Stock"
+            value={stockFilter}
+            options={["All Stock", ...stockStatuses]}
+            onChange={(value) => setStockFilter(value as typeof stockFilter)}
+          />
+          <button
+            type="button"
+            disabled
+            title="Tag filters are not connected yet."
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 text-sm font-semibold text-white/30"
+          >
+            <Tag className="h-4 w-4" />
+            Tags soon
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Advanced filters are not connected yet."
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-4 text-sm font-semibold text-white/30"
+          >
+            <Command className="h-4 w-4" />
+            More soon
+          </button>
         </div>
         <div className="mt-3 flex flex-col gap-2 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <span>
             Showing {visibleProducts.length} of {products.length} products
           </span>
-          {(productSearchTerm || productFilter !== "All") && (
+          {(productSearchTerm || productFilter !== "All" || categoryFilter !== "All Categories" || stockFilter !== "All Stock") && (
             <button
               type="button"
               onClick={() => {
                 setProductSearchTerm("");
                 setProductFilter("All");
+                setCategoryFilter("All Categories");
+                setStockFilter("All Stock");
               }}
               className="w-fit text-cyan-100/75 transition hover:text-cyan-50"
             >
@@ -4221,134 +4370,544 @@ function ProductsSection({
       </section>
 
       {editingProduct && !isEditingExistingProduct && (
-        <ProductEditor
-          key={editingProduct.id}
-          product={editingProduct}
-          onCancel={() => { setEditingProduct(null); setSaveError(null); }}
-          onSave={saveProduct}
-          isSaving={isSavingProduct}
-          saveError={saveError}
-          canUploadMedia={canUploadProductMedia}
-        />
+        <div className="aev-admin-control-panel rounded-[1.35rem] border p-4">
+          <ProductEditor
+            key={editingProduct.id}
+            product={editingProduct}
+            onCancel={() => { setEditingProduct(null); setSaveError(null); }}
+            onSave={saveProduct}
+            isSaving={isSavingProduct}
+            saveError={saveError}
+            canUploadMedia={canUploadProductMedia}
+          />
+        </div>
       )}
 
-      <div className="grid gap-3">
-        {visibleProducts.length === 0 && (
-          <div className="rounded-[1.25rem] border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] p-6 text-center text-sm text-white/58">
-            {productSearchTerm.trim()
-              ? "No products found for this search."
-              : "No products in this filter."}
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="aev-admin-control-panel min-w-0 rounded-[1.35rem] border p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <SectionHeader title="Product Catalog" />
+              <p className="mt-1 text-xs text-white/42">{visibleProducts.length} products in command view</p>
+            </div>
+            <button
+              type="button"
+              onClick={addProduct}
+              disabled={!canEditProducts}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-200/25 bg-cyan-200/10 px-3 text-xs font-semibold text-cyan-50 transition hover:border-cyan-100/45 hover:bg-cyan-200/15 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Plus className="h-4 w-4" />
+              Add Product
+            </button>
           </div>
-        )}
+          {visibleProducts.length === 0 ? (
+            <div className="rounded-[1.25rem] border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] p-6 text-center text-sm text-white/58">
+              {productSearchTerm.trim()
+                ? "No products found for this search."
+                : "No products in this filter."}
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {visibleProducts.map((product) => {
+                const isEditingThisProduct = editingProductId === product.id;
+                const isSelected = selectedProduct?.id === product.id;
 
-        {visibleProducts.map((product) => {
-          const isEditingThisProduct = editingProductId === product.id;
-
-          return (
-            <div key={product.id} className="grid min-w-0 gap-3">
-              <article className="min-w-0 rounded-[1.25rem] border border-white/10 bg-black/24 p-4">
-                <div className="grid min-w-0 gap-4 xl:grid-cols-[1fr_120px_130px_160px] xl:items-center">
-                  <div className="min-w-0">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 className="break-words text-base font-semibold text-white [overflow-wrap:break-word]">
-                        {product.name}
-                      </h3>
-                      <ProductStatusBadge status={product.status} />
-                      {product.deletedAt && (
-                        <span className="inline-flex w-fit items-center rounded-full border border-rose-200/25 bg-rose-200/10 px-3 py-1 text-xs font-semibold text-rose-100">
-                          Deleted
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-3 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
-                      <DetailLine label="Slug" value={product.slug} />
-                      <DetailLine label="Category" value={product.category} />
-                      <DetailLine label="Absorbency" value={product.absorbency} />
-                      <DetailLine label="Stock" value={product.stockStatus.replace(/_/g, " ")} />
-                      <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
-                      {product.deletedAt && (
-                        <DetailLine label="Deleted" value={formatDate(product.deletedAt)} />
-                      )}
-                    </div>
-                  </div>
-                  <DetailLine label="Price" value={product.price || formatCurrency(0)} />
-                  <DetailLine label="Compare-at" value={product.compareAtPrice || "None"} />
-                  <div className="grid gap-2">
-                    {product.deletedAt ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => restoreProduct(product.id)}
-                          disabled={isSavingProduct}
-                          className="rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-2.5 text-sm font-medium text-emerald-50/85 transition hover:border-emerald-100/40 hover:text-white"
-                        >
-                          Restore
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => permanentlyDeleteProduct(product)}
-                          disabled={isSavingProduct}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/20 bg-rose-200/[0.08] px-3 py-2.5 text-sm font-medium text-rose-100/85 transition hover:border-rose-100/40 hover:text-white"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Permanently Delete
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setEditingProduct(product)}
-                          disabled={isSavingProduct || !canEditProducts}
-                          className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
-                            isEditingThisProduct
-                              ? "border-cyan-100/40 bg-cyan-200/12 text-white"
-                              : "border-white/10 bg-white/[0.05] text-white/76 hover:border-cyan-200/30 hover:text-white"
-                          }`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          {isEditingThisProduct ? "Editing" : "Edit"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleStatus(product.id)}
-                          disabled={isSavingProduct || !canEditProducts}
-                          className="rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] px-3 py-2.5 text-sm font-medium text-violet-50/80 transition hover:border-violet-100/35 hover:text-white"
-                        >
-                          {product.status === "Active" ? "Set Draft" : "Set Active"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteProduct(product.id)}
-                          disabled={isSavingProduct || !canEditProducts}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200/15 bg-rose-200/[0.06] px-3 py-2.5 text-sm font-medium text-rose-100/80 transition hover:border-rose-100/35 hover:text-white"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </article>
-              {editingProduct && isEditingThisProduct && !product.deletedAt && (
-                <div ref={inlineEditorRef} className="scroll-mt-6">
-                  <ProductEditor
-                    key={editingProduct.id}
-                    product={editingProduct}
-                    onCancel={() => { setEditingProduct(null); setSaveError(null); }}
-                    onSave={saveProduct}
+                return (
+                  <ProductCommandCard
+                    key={product.id}
+                    product={product}
+                    isSelected={isSelected}
+                    isEditing={isEditingThisProduct}
                     isSaving={isSavingProduct}
-                    saveError={saveError}
-                    canUploadMedia={canUploadProductMedia}
+                    canEdit={canEditProducts}
+                    onSelect={() => setSelectedProductId(product.id)}
+                    onEdit={() => openEditor(product)}
+                    onToggleStatus={() => toggleStatus(product.id)}
+                    onDelete={() => deleteProduct(product.id)}
+                    onRestore={() => restoreProduct(product.id)}
+                    onPermanentDelete={() => permanentlyDeleteProduct(product)}
                   />
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <aside className="grid min-w-0 gap-4 2xl:content-start">
+          <ControlRoomPanel title="Quick Actions">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={addProduct} disabled={!canEditProducts} className="aev-admin-quick-action">
+                <Plus className="h-4 w-4" />
+                Add Product
+              </button>
+              <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Duplicate is not implemented yet.">
+                <Copy className="h-4 w-4" />
+                Duplicate soon
+              </button>
+              <button type="button" onClick={() => selectedProduct && deleteProduct(selectedProduct.id)} disabled={!selectedProduct || isSavingProduct || !canEditProducts} className="aev-admin-quick-action">
+                <Trash2 className="h-4 w-4" />
+                Archive
+              </button>
+              <button type="button" onClick={() => selectedProduct && setProductStatus(selectedProduct.id, "Active")} disabled={!selectedProduct || selectedProduct.status === "Active" || isSavingProduct || !canEditProducts} className="aev-admin-quick-action">
+                <Send className="h-4 w-4" />
+                Publish
+              </button>
+              <button type="button" onClick={() => selectedProduct && setProductStatus(selectedProduct.id, "Draft")} disabled={!selectedProduct || selectedProduct.status === "Draft" || isSavingProduct || !canEditProducts} className="aev-admin-quick-action">
+                <Inbox className="h-4 w-4" />
+                Save Draft
+              </button>
+              <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Bulk upload is not implemented yet.">
+                <Upload className="h-4 w-4" />
+                Bulk soon
+              </button>
+              <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Product import is not implemented yet.">
+                <ArrowLeft className="h-4 w-4" />
+                Import soon
+              </button>
+              <button type="button" onClick={exportProductsCsv} className="aev-admin-quick-action">
+                <Rows3 className="h-4 w-4" />
+                Download
+              </button>
+            </div>
+          </ControlRoomPanel>
+
+          <ControlRoomPanel title="Product Health" badge={`${healthPercent}% healthy`}>
+            <div className="grid gap-3">
+              <div className="rounded-2xl border border-white/10 bg-black/18 p-4">
+                <div className="flex items-center gap-4">
+                  <div className="grid h-20 w-20 place-items-center rounded-full border border-emerald-200/25 bg-emerald-200/[0.08] text-xl font-semibold text-emerald-100 shadow-[0_0_28px_rgba(94,240,174,0.14)]">
+                    {healthPercent}%
+                  </div>
+                  <div className="grid min-w-0 flex-1 grid-cols-3 gap-2 text-center">
+                    <StatusMetric label="Healthy" value={String(healthyCount)} tone="green" />
+                    <StatusMetric label="Attention" value={String(healthAttention.size)} tone="amber" />
+                    <StatusMetric label="Critical" value={String(healthCritical)} tone="amber" />
+                  </div>
                 </div>
+              </div>
+              <ProductHealthList title="Low stock" products={lowStockProducts} emptyLabel="No low stock products." />
+              <ProductHealthList title="Out of stock" products={outOfStockProducts} emptyLabel="No out of stock products." critical />
+              <ProductHealthList title="Draft products" products={draftProducts} emptyLabel="No draft products." />
+            </div>
+          </ControlRoomPanel>
+
+          <ControlRoomPanel title="Recent Product Activity" badge="Derived from product timestamps">
+            <div className="space-y-2">
+              {recentProducts.length === 0 ? (
+                <NoDataState label="No product activity yet." />
+              ) : (
+                recentProducts.map((product) => (
+                  <button
+                    type="button"
+                    key={product.id}
+                    onClick={() => setSelectedProductId(product.id)}
+                    className="aev-admin-activity-row w-full text-left"
+                  >
+                    <span className="aev-admin-activity-dot tone-cyan" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-white/78">{product.name}</span>
+                      <span className="block truncate text-xs text-white/42">
+                        {product.updatedAt ? `Updated ${formatDate(product.updatedAt)}` : product.createdAt ? `Created ${formatDate(product.createdAt)}` : "Recent catalog change"}
+                      </span>
+                    </span>
+                  </button>
+                ))
               )}
             </div>
-          );
-        })}
+          </ControlRoomPanel>
+        </aside>
       </div>
+
+      <ProductCmsWorkspace
+        product={selectedProduct}
+        canEdit={canEditProducts}
+        canUploadMedia={canUploadProductMedia}
+        isSaving={isSavingProduct}
+        onEdit={selectedProduct ? () => openEditor(selectedProduct) : undefined}
+        onDraft={selectedProduct ? () => setProductStatus(selectedProduct.id, "Draft") : undefined}
+        onPublish={selectedProduct ? () => setProductStatus(selectedProduct.id, "Active") : undefined}
+      />
+
+      {editingProduct && isEditingExistingProduct && !editingProduct.deletedAt && (
+        <div ref={inlineEditorRef} className="scroll-mt-6">
+          <ProductEditor
+            key={editingProduct.id}
+            product={editingProduct}
+            onCancel={() => { setEditingProduct(null); setSaveError(null); }}
+            onSave={saveProduct}
+            isSaving={isSavingProduct}
+            saveError={saveError}
+            canUploadMedia={canUploadProductMedia}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+function ProductMetricCard({
+  label,
+  value,
+  tone,
+  icon,
+}: {
+  label: string;
+  value: string;
+  tone: "pink" | "cyan" | "violet" | "green" | "amber";
+  icon: ReactNode;
+}) {
+  return (
+    <div className={`aev-admin-stat-card tone-${tone === "amber" ? "violet" : tone} min-w-0 rounded-[1.05rem] border p-4`}>
+      <div className="flex items-start justify-between gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-xl border border-current/20 bg-current/[0.08]">
+          {icon}
+        </span>
+        <span className="text-[0.65rem] uppercase tracking-[0.18em] text-white/35">Live</span>
+      </div>
+      <p className="mt-3 text-xs text-white/45">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-2 text-[11px] text-emerald-200/70">Real catalog data</p>
+    </div>
+  );
+}
+
+function productPrimaryImage(product: AdminProduct) {
+  return product.imageUrl || product.images?.[0] || product.posterUrl || "";
+}
+
+function ProductCommandCard({
+  product,
+  isSelected,
+  isEditing,
+  isSaving,
+  canEdit,
+  onSelect,
+  onEdit,
+  onToggleStatus,
+  onDelete,
+  onRestore,
+  onPermanentDelete,
+}: {
+  product: AdminProduct;
+  isSelected: boolean;
+  isEditing: boolean;
+  isSaving: boolean;
+  canEdit: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onToggleStatus: () => void;
+  onDelete: () => void;
+  onRestore: () => void;
+  onPermanentDelete: () => void;
+}) {
+  const image = productPrimaryImage(product);
+  const stockLabel = product.stockQuantity ?? product.stockStatus.replace(/_/g, " ");
+  return (
+    <article
+      className={`group min-w-0 rounded-[1.15rem] border bg-black/24 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition ${
+        isSelected ? "border-cyan-200/45 shadow-[0_0_34px_rgba(34,211,238,0.12)]" : "border-white/10 hover:border-fuchsia-200/28"
+      }`}
+    >
+      <button type="button" onClick={onSelect} className="block w-full text-left">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#070b16]">
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={image} alt={product.name} loading="lazy" className="aspect-[1.32/1] w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+          ) : (
+            <div className="grid aspect-[1.32/1] place-items-center text-xs text-white/30">
+              No media
+            </div>
+          )}
+          <span className="absolute left-2 top-2">
+            <ProductStatusBadge status={product.status} />
+          </span>
+          {product.deletedAt && (
+            <span className="absolute right-2 top-2 rounded-full border border-rose-200/25 bg-rose-200/10 px-2 py-1 text-[10px] font-semibold text-rose-100">
+              Deleted
+            </span>
+          )}
+        </div>
+        <div className="mt-3 min-w-0">
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-semibold text-white">{product.name || "Untitled product"}</h3>
+              <p className="mt-1 truncate text-xs text-white/42">{product.category || product.absorbency || "Uncategorized"}</p>
+            </div>
+            <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] text-white/50">
+              ...
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <DetailLine label="SKU / Slug" value={product.slug} />
+            <DetailLine label="Price" value={product.price || formatCurrency(0)} />
+            <DetailLine label="Stock" value={String(stockLabel)} />
+            <DetailLine label="Visual" value={product.visualVariant || product.visualTheme} />
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <ColorSwatchRow product={product} limit={5} />
+            <StatusChip
+              label={product.stockStatus.replace(/_/g, " ")}
+              tone={product.stockStatus === "out_of_stock" ? "pink" : product.stockStatus === "low_stock" ? "amber" : "green"}
+            />
+          </div>
+        </div>
+      </button>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {product.deletedAt ? (
+          <>
+            <button type="button" onClick={onRestore} disabled={isSaving} className="aev-admin-mini-action justify-center text-emerald-100">
+              Restore
+            </button>
+            <button type="button" onClick={onPermanentDelete} disabled={isSaving} className="aev-admin-mini-action col-span-2 justify-center text-rose-100">
+              Delete forever
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={onEdit} disabled={isSaving || !canEdit} className="aev-admin-mini-action justify-center text-cyan-100">
+              <Pencil className="h-3 w-3" />
+              {isEditing ? "Editing" : "Edit"}
+            </button>
+            <button type="button" onClick={onToggleStatus} disabled={isSaving || !canEdit} className="aev-admin-mini-action justify-center text-violet-100">
+              {product.status === "Active" ? "Draft" : "Publish"}
+            </button>
+            <button type="button" onClick={onDelete} disabled={isSaving || !canEdit} className="aev-admin-mini-action justify-center text-rose-100">
+              <Trash2 className="h-3 w-3" />
+              Delete
+            </button>
+          </>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function ColorSwatchRow({ product, limit = 6 }: { product: AdminProduct; limit?: number }) {
+  const options = product.colorOptions.length
+    ? product.colorOptions
+    : product.colors.map((name, index) => ({
+        id: `${product.id}-color-${index}`,
+        name,
+        hex: safeColorHex(name),
+      }));
+  return (
+    <div className="flex min-w-0 items-center gap-1.5">
+      {options.slice(0, limit).map((color) => (
+        <span
+          key={color.id}
+          title={color.name}
+          className="h-4 w-4 rounded-full border border-white/20"
+          style={{ background: color.hex || safeColorHex(color.name) }}
+        />
+      ))}
+      {options.length > limit && <span className="text-[10px] text-white/38">+{options.length - limit}</span>}
+    </div>
+  );
+}
+
+function ProductHealthList({
+  title,
+  products,
+  emptyLabel,
+  critical = false,
+}: {
+  title: string;
+  products: AdminProduct[];
+  emptyLabel: string;
+  critical?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/18 p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{title}</p>
+        <span className={critical ? "text-xs font-semibold text-rose-200" : "text-xs font-semibold text-cyan-100/80"}>
+          {products.length}
+        </span>
+      </div>
+      {products.length === 0 ? (
+        <p className="text-xs text-white/35">{emptyLabel}</p>
+      ) : (
+        <div className="space-y-2">
+          {products.slice(0, 4).map((product) => (
+            <div key={product.id} className="flex min-w-0 items-center gap-2">
+              <ProductThumb src={productPrimaryImage(product)} label={product.name} />
+              <span className="min-w-0 flex-1 truncate text-xs text-white/65">{product.name}</span>
+              <span className="text-[10px] text-white/38">{product.stockQuantity ?? product.stockStatus.replace(/_/g, " ")}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProductCmsWorkspace({
+  product,
+  canEdit,
+  canUploadMedia,
+  isSaving,
+  onEdit,
+  onDraft,
+  onPublish,
+}: {
+  product: AdminProduct | null;
+  canEdit: boolean;
+  canUploadMedia: boolean;
+  isSaving: boolean;
+  onEdit?: () => void;
+  onDraft?: () => void;
+  onPublish?: () => void;
+}) {
+  const gallery = product
+    ? [product.imageUrl, ...(product.images || []), product.posterUrl].filter((url): url is string => Boolean(url))
+    : [];
+  const descriptionGallery = product?.descriptionMedia?.map((item) => item.url).filter(Boolean).slice(0, 4) ?? [];
+  const variantSizes = product?.sizes?.length ? product.sizes : ["Default"];
+  const variantColors = product?.colors?.length ? product.colors : ["Default"];
+  const rows = variantSizes.slice(0, 6).map((size, index) => {
+    const color = variantColors[index % variantColors.length] ?? "Default";
+    return {
+      size,
+      color,
+      sku: `${product?.slug ?? "product"}-${size}-${color}`.toUpperCase().replace(/[^A-Z0-9]+/g, "-"),
+      stock: Math.max(0, (product?.stockQuantity ?? 0) - index * 3),
+      price: product?.price || formatCurrency(0),
+      status: product?.stockStatus === "out_of_stock" ? "Out" : index > 2 ? "Low" : "Active",
+    };
+  });
+
+  return (
+    <section className="aev-admin-cms-preview min-w-0 rounded-[1.35rem] border p-4">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/60">Product Editor / CMS</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <h3 className="truncate text-lg font-semibold text-white">{product?.name ?? "Select a product"}</h3>
+            {product && <ProductStatusBadge status={product.status} />}
+            {product?.slug && <span className="text-xs text-white/38">SKU: {product.slug}</span>}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {product ? (
+            <Link href={`/product/${product.slug}`} target="_blank" className="aev-admin-cms-action">
+              <Globe className="h-3.5 w-3.5" />
+              Preview
+            </Link>
+          ) : (
+            <button type="button" disabled className="aev-admin-cms-action opacity-40">Preview</button>
+          )}
+          <button type="button" onClick={onDraft} disabled={!product || product.status === "Draft" || isSaving || !canEdit} className="aev-admin-cms-action">
+            Save Draft
+          </button>
+          <button type="button" onClick={onPublish} disabled={!product || product.status === "Active" || isSaving || !canEdit} className="aev-admin-cms-action is-primary">
+            Publish
+          </button>
+          <button type="button" disabled className="aev-admin-cms-action opacity-40" title="More menu is not implemented yet.">
+            ...
+          </button>
+        </div>
+      </div>
+
+      <div className="aev-admin-cms-tabs mt-4 grid gap-2 sm:grid-cols-4 xl:grid-cols-7">
+        {["General", "Media", "Variants", "Pricing", "SEO", "Shipping", "Settings"].map((tab) => (
+          <button key={tab} type="button" disabled={tab !== "Media"} className={tab === "Media" ? "is-active" : ""}>
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {!product ? (
+        <NoDataState label="Select a product card to inspect CMS media, colors, variants, and inventory." />
+      ) : (
+        <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr_1.45fr]">
+          <div className="aev-admin-cms-card rounded-2xl border p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Media Gallery</p>
+                <p className="mt-1 text-xs text-white/42">Drag and drop uploads are handled in the live product editor.</p>
+              </div>
+              <button type="button" onClick={onEdit} disabled={!canEdit || !canUploadMedia} className="aev-admin-mini-action text-cyan-100">
+                <Upload className="h-3 w-3" />
+                Upload
+              </button>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {gallery.slice(0, 5).map((image, index) => (
+                <ProductThumb key={`${image}-${index}`} src={image} label={product.name} />
+              ))}
+              <button type="button" onClick={onEdit} disabled={!canEdit || !canUploadMedia} className="grid aspect-square place-items-center rounded-xl border border-dashed border-cyan-200/25 bg-cyan-200/[0.045] text-cyan-100/70">
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-white/38">{gallery.length} files indexed.</p>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="aev-admin-cms-card rounded-2xl border p-3">
+              <p className="text-sm font-semibold text-white">Color Mapping</p>
+              <p className="mt-1 text-xs text-white/42">Color swatches and variants from product CMS data.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <ColorSwatchRow product={product} limit={12} />
+                <button type="button" onClick={onEdit} disabled={!canEdit} className="grid h-8 w-8 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-white/45">
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+            <div className="aev-admin-cms-card rounded-2xl border p-3">
+              <p className="text-sm font-semibold text-white">Description Gallery</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {descriptionGallery.map((image, index) => (
+                  <ProductThumb key={`${image}-${index}`} src={image} label="Description media" />
+                ))}
+                <button type="button" onClick={onEdit} disabled={!canEdit || !canUploadMedia} className="grid aspect-square place-items-center rounded-xl border border-dashed border-white/16 bg-white/[0.035] text-white/45">
+                  <Upload className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="aev-admin-cms-card rounded-2xl border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Variants & Inventory</p>
+                <p className="mt-1 text-xs text-white/42">{rows.length} derived variants from size/color data.</p>
+              </div>
+              <button type="button" onClick={onEdit} disabled={!canEdit} className="aev-admin-mini-action text-pink-100">
+                Manage Inventory
+              </button>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left text-xs">
+                <thead className="text-white/38">
+                  <tr>
+                    <th className="px-3 py-2">Size</th>
+                    <th className="px-3 py-2">Color</th>
+                    <th className="px-3 py-2">SKU</th>
+                    <th className="px-3 py-2">Stock</th>
+                    <th className="px-3 py-2">Price</th>
+                    <th className="px-3 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/8 text-white/62">
+                  {rows.map((row) => (
+                    <tr key={row.sku}>
+                      <td className="px-3 py-2">{row.size}</td>
+                      <td className="px-3 py-2">{row.color}</td>
+                      <td className="px-3 py-2 text-white/38">{row.sku}</td>
+                      <td className="px-3 py-2">{row.stock}</td>
+                      <td className="px-3 py-2">{row.price}</td>
+                      <td className="px-3 py-2">
+                        <StatusChip label={row.status} tone={row.status === "Active" ? "green" : row.status === "Low" ? "amber" : "pink"} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
