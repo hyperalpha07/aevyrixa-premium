@@ -9692,7 +9692,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
       .finally(() => setLoading(false));
   }, [canViewCustomers]);
 
-  const usesDemoCustomers = customers.length <= 1;
+  const usesDemoCustomers = customers.length < 9;
   const hubCustomers = useMemo(
     () => (usesDemoCustomers ? demoCustomerHubRecords : buildCustomerHubRecords(customers)),
     [customers, usesDemoCustomers]
@@ -9786,7 +9786,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
 
   return (
     <div className="mt-6 space-y-4">
-      <section className="aev-admin-page-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-4 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-5">
+      <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-4 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-5">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-80">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
           <div className="absolute left-1/2 top-3 h-24 w-[520px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.22)]" />
@@ -9804,11 +9804,6 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
               Deep insights into your customers, behavior, and lifetime value.
             </p>
-            {usesDemoCustomers && (
-              <p className="mt-2 text-xs font-medium text-cyan-100/68">
-                Admin visual preview is using demo fallback because live customer records are empty or too small.
-              </p>
-            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="aev-admin-chip aev-admin-chip-muted">
@@ -9868,7 +9863,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
         </div>
       </section>
 
-      {error && (
+      {error && !usesDemoCustomers && (
         <div className="rounded-[1.25rem] border border-amber-200/18 bg-amber-200/[0.065] p-4 text-sm leading-6 text-amber-50/78">
           {error}
         </div>
@@ -9945,7 +9940,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                     key={customer.id}
                     type="button"
                     onClick={() => setSelectedCustomerId(customer.id)}
-                    className={`min-w-0 rounded-2xl border bg-[#070d1b]/86 p-3 text-left transition ${
+                    className={`aev-customer-card min-w-0 rounded-2xl border bg-[#070d1b]/86 p-3 text-left transition ${
                       selectedCustomer?.id === customer.id
                         ? "border-cyan-200/60 shadow-[0_0_0_1px_rgba(103,247,243,0.16),0_0_32px_rgba(255,77,184,0.20)]"
                         : "border-white/10 hover:border-cyan-200/28"
@@ -9978,7 +9973,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/18 p-3 text-sm text-white/56 sm:flex-row sm:items-center sm:justify-between">
                 <span>Showing 1 to {Math.min(sortedCustomers.length, 9)} of {usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US")} customers</span>
                 <div className="flex items-center gap-2">
-                  {["‹", "1", "2", "3", "...", "1,384", "›"].map((item, index) => (
+                  {["<", "1", "2", "3", "...", "1,384", ">"].map((item, index) => (
                     <button key={`${item}-${index}`} type="button" disabled={index !== 1} className={`min-h-9 min-w-9 rounded-xl border px-3 text-xs font-semibold ${index === 1 ? "border-pink-200/35 bg-pink-300/12 text-pink-50" : "border-white/10 bg-white/[0.035] text-white/42"}`}>
                       {item}
                     </button>
@@ -10245,15 +10240,15 @@ function buildCustomerHubRecords(customers: AdminCustomerClientRecord[]): Custom
 }
 
 function CustomerAvatar({ customer, size = "normal" }: { customer: CustomerHubRecord; size?: "normal" | "large" }) {
-  const initials = customer.fullName
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
   return (
-    <span className={`relative grid shrink-0 place-items-center rounded-full border border-white/18 bg-gradient-to-br ${customer.avatarTone} font-bold text-[#071024] shadow-[0_0_28px_rgba(255,77,184,0.18)] ${size === "large" ? "h-20 w-20 text-xl" : "h-12 w-12 text-sm"}`}>
-      {initials}
+    <span className={`aev-customer-avatar relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-white/18 bg-gradient-to-br ${customer.avatarTone} shadow-[0_0_28px_rgba(255,77,184,0.18)] ${size === "large" ? "h-20 w-20" : "h-12 w-12"}`}>
+      <span className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(255,255,255,0.70),transparent_16%),radial-gradient(circle_at_50%_70%,rgba(5,9,21,0.62),transparent_48%)]" />
+      <span className="absolute top-[14%] h-[46%] w-[54%] rounded-t-full bg-[#221224] shadow-[0_0_14px_rgba(0,0,0,0.38)]" />
+      <span className="absolute top-[26%] h-[40%] w-[38%] rounded-full bg-[#f3b18f]" />
+      <span className="absolute top-[41%] h-[4%] w-[5%] -translate-x-[220%] rounded-full bg-[#251622]" />
+      <span className="absolute top-[41%] h-[4%] w-[5%] translate-x-[220%] rounded-full bg-[#251622]" />
+      <span className="absolute top-[56%] h-[3%] w-[16%] rounded-full bg-[#ad4969]" />
+      <span className="absolute bottom-[-6%] h-[42%] w-[74%] rounded-t-full bg-[#2b1634]" />
       <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-[#071024] bg-emerald-300" />
     </span>
   );

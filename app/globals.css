@@ -6034,8 +6034,47 @@ button {
 }
 
 .aev-admin-stat-card.tone-pink { color: #ff77c8; }
+.aev-admin-stat-card.tone-cyan { color: #67f7f3; }
 .aev-admin-stat-card.tone-violet { color: #b18cff; }
 .aev-admin-stat-card.tone-green { color: #5ef0ae; }
+.aev-admin-stat-card.tone-amber { color: #ffd28c; }
+
+.aev-customers-hero {
+  background:
+    radial-gradient(ellipse at 50% 4%, rgba(255, 77, 184, 0.22), transparent 24%),
+    radial-gradient(ellipse at 52% 10%, rgba(103, 247, 243, 0.15), transparent 36%),
+    linear-gradient(180deg, rgba(8, 12, 30, 0.92), rgba(5, 9, 22, 0.84)) !important;
+}
+
+.aev-customers-hero::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(103, 247, 243, 0.12) 0 1px, transparent 1px 68px),
+    repeating-linear-gradient(0deg, rgba(255, 119, 200, 0.08) 0 1px, transparent 1px 42px);
+  content: "";
+  inset: 0;
+  opacity: 0.18;
+  pointer-events: none;
+  position: absolute;
+}
+
+.aev-customer-card {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 119, 200, 0.09), transparent 44%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(103, 247, 243, 0.018)),
+    rgba(5, 11, 26, 0.88) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.aev-customer-card:hover {
+  box-shadow:
+    0 0 0 1px rgba(103, 247, 243, 0.12),
+    0 0 34px rgba(103, 247, 243, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.075);
+}
+
+.aev-customer-avatar {
+  isolation: isolate;
+}
 
 .aev-admin-control-panel {
   min-height: 100%;
