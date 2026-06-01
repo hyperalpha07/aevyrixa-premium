@@ -9669,9 +9669,8 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   const [segmentFilter, setSegmentFilter] = useState("All Segments");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [tagFilter, setTagFilter] = useState("All Tags");
-  const [sortFilter, setSortFilter] = useState("Recent Activity");
+  const [sortFilter, setSortFilter] = useState("Sort by Recent Activity");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("demo-fatema-jannat");
-  const [loading, setLoading] = useState(canViewCustomers);
   const [error, setError] = useState(canViewCustomers ? "" : blockedPermissionMessage);
 
   useEffect(() => {
@@ -9688,8 +9687,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
         }
         setCustomers(payload.customers);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Customers could not be loaded."))
-      .finally(() => setLoading(false));
+      .catch((err) => setError(err instanceof Error ? err.message : "Customers could not be loaded."));
   }, [canViewCustomers]);
 
   const usesDemoCustomers = customers.length < 9;
@@ -9796,6 +9794,9 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
           <div className="min-w-0 pt-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white">Customers Intelligence Hub</h2>
+              <span className="rounded-full border border-cyan-200/30 bg-cyan-300/[0.09] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100 shadow-[0_0_18px_rgba(103,247,243,0.18)]">
+                CUSTOMERS HUB V2 ACTIVE
+              </span>
               <span className="aev-admin-chip border-emerald-200/24 bg-emerald-300/[0.08] text-emerald-100">
                 <span className="aev-admin-live-dot h-2 w-2 rounded-full bg-emerald-300" />
                 Live
@@ -9869,10 +9870,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
         </div>
       )}
 
-      {loading ? (
-        <NoDataState label="Loading customers..." />
-      ) : (
-        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_520px]">
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_520px]">
           <div className="min-w-0 space-y-4">
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(285px,0.7fr)]">
               <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
@@ -9925,7 +9923,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 <CustomerSelect value={segmentFilter} onChange={setSegmentFilter} options={["All Segments", "VIP", "Loyal", "New", "Inactive", "At Risk"]} />
                 <CustomerSelect value={statusFilter} onChange={setStatusFilter} options={["All Status", "Active", "Inactive"]} />
                 <CustomerSelect value={tagFilter} onChange={setTagFilter} options={["All Tags", "VIP", "Loyal", "Repeat Buyer", "New", "Potential", "At Risk", "Inactive"]} />
-                <CustomerSelect value={sortFilter} onChange={setSortFilter} options={["Recent Activity", "Highest Spend", "Most Orders"]} />
+                <CustomerSelect value={sortFilter} onChange={setSortFilter} options={["Sort by Recent Activity", "Highest Spend", "Most Orders"]} />
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" className="aev-admin-icon-button h-11 w-11" aria-label="Card grid view"><Rows3 className="h-4 w-4" /></button>
                   <button type="button" className="aev-admin-icon-button h-11 w-11" aria-label="Compact list view"><MoreVertical className="h-4 w-4" /></button>
@@ -10065,8 +10063,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </section>
             </aside>
           )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
