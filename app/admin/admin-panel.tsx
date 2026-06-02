@@ -24,12 +24,16 @@ import {
   CreditCard,
   Download,
   FileText,
+  Folder,
+  FolderOpen,
   Gauge,
   Globe,
+  GripVertical,
   HelpCircle,
   Home,
   Image as ImageIcon,
   Inbox,
+  List,
   LogOut,
   MapPin,
   MessageSquare,
@@ -48,6 +52,7 @@ import {
   ShieldCheck,
   Smile,
   ShoppingBag,
+  SlidersHorizontal,
   Star,
   Sparkles,
   Trash2,
@@ -6681,6 +6686,18 @@ function CategoriesSection({
       homepageMediaSettings: { ...current.homepageMediaSettings, ...updates },
     }));
 
+  return (
+    <CategoriesCommandCenter
+      backendMessage={backendMessage}
+      draft={draft}
+      isSaving={isSaving}
+      onSave={saveCategories}
+      statusMessage={statusMessage}
+      storageMode={storageMode}
+      updateCat={updateCat}
+    />
+  );
+
   const catDefs = [
     { label: "Reusable Period Care", stateKey: "categoryReusablePeriodCare", imgKey: "categoryReusablePeriodCareImageUrl", vidKey: "categoryReusablePeriodCareVideoUrl", modeKey: "categoryReusablePeriodCareMediaMode", altKey: "categoryReusablePeriodCareAltText", titleKey: "categoryReusablePeriodCareTitle", descKey: "categoryReusablePeriodCareDescription", linkKey: "categoryReusablePeriodCareLinkUrl", sortKey: "categoryReusablePeriodCareSortOrder", slug: "reusable" },
     { label: "Comfort Panty", stateKey: "categoryComfortPanty", imgKey: "categoryComfortPantyImageUrl", vidKey: "categoryComfortPantyVideoUrl", modeKey: "categoryComfortPantyMediaMode", altKey: "categoryComfortPantyAltText", titleKey: "categoryComfortPantyTitle", descKey: "categoryComfortPantyDescription", linkKey: "categoryComfortPantyLinkUrl", sortKey: "categoryComfortPantySortOrder", slug: "comfort-panty" },
@@ -6863,6 +6880,346 @@ function CategoriesSection({
           {isSaving ? "Saving..." : "Save categories"}
         </button>
       </div>
+    </form>
+  );
+}
+
+function CategoriesCommandCenter({
+  backendMessage,
+  draft,
+  isSaving,
+  onSave,
+  statusMessage,
+  storageMode,
+  updateCat,
+}: {
+  backendMessage: string;
+  draft: AdminSettings;
+  isSaving: boolean;
+  onSave: (event: FormEvent<HTMLFormElement>) => void;
+  statusMessage: string;
+  storageMode: SettingsStorageMode;
+  updateCat: (updates: Partial<AdminSettings["homepageMediaSettings"]>) => void;
+}) {
+  const hms = draft.homepageMediaSettings;
+  const selectedName = hms.categoryComfortPantyTitle || "Panties";
+  const selectedDescription =
+    hms.categoryComfortPantyDescription || "Comfortable and stylish panties for every day.";
+  const selectedSlug =
+    (hms.categoryComfortPantyLinkUrl || "/collections/panties").split("/").filter(Boolean).pop() ||
+    "panties";
+  const selectedImage = hms.categoryComfortPantyImageUrl;
+  const glassPanel =
+    "rounded-2xl border border-cyan-100/10 bg-[#071126]/85 shadow-[0_0_0_1px_rgba(236,72,153,.04),0_22px_70px_rgba(0,0,0,.36)] backdrop-blur-xl";
+  const visualBase =
+    "relative overflow-hidden bg-[radial-gradient(circle_at_20%_20%,rgba(255,196,224,.95),transparent_28%),radial-gradient(circle_at_70%_30%,rgba(206,92,255,.62),transparent_34%),linear-gradient(135deg,rgba(244,74,168,.78),rgba(13,20,52,.94))]";
+
+  const renderCategoryVisual = (visual: string, className = "") => (
+    <div className={`${visualBase} ${className}`}>
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#030817] via-[#07102a]/70 to-transparent" />
+      {visual === "new" ? (
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="rounded-lg border border-cyan-200/70 bg-cyan-300/10 px-3 py-1 text-lg font-black text-cyan-100 shadow-[0_0_30px_rgba(34,211,238,.75)]">
+            NEW
+          </span>
+        </div>
+      ) : visual === "sale" ? (
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="-rotate-12 rounded-xl border border-pink-200/70 px-4 py-2 text-xl font-black text-pink-100 shadow-[0_0_28px_rgba(236,72,153,.75)]">
+            SALE
+          </span>
+        </div>
+      ) : visual === "heart" ? (
+        <div className="absolute inset-0 grid place-items-center text-pink-200 drop-shadow-[0_0_18px_rgba(236,72,153,.9)]">
+          <Sparkles className="h-14 w-14" />
+        </div>
+      ) : visual === "bag" ? (
+        <ShoppingBag className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-black/80 drop-shadow-[0_0_18px_rgba(255,255,255,.35)]" />
+      ) : visual === "box" ? (
+        <Boxes className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-pink-100/80 drop-shadow-[0_0_18px_rgba(236,72,153,.75)]" />
+      ) : (
+        <div className="absolute left-1/2 top-[48%] h-16 w-24 -translate-x-1/2 -translate-y-1/2 rounded-[45%_45%_18%_18%] bg-gradient-to-br from-pink-100 via-fuchsia-300 to-black shadow-[0_18px_30px_rgba(0,0,0,.45)]" />
+      )}
+      <div className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-white/70 shadow-[0_0_12px_rgba(255,255,255,.9)]" />
+    </div>
+  );
+
+  const metrics = [
+    { label: "Total Categories", value: "28", growth: "+21.7%", icon: ClipboardList, tone: "from-fuchsia-500/25 to-purple-500/10 text-fuchsia-200" },
+    { label: "Active Categories", value: "24", growth: "+14.3%", icon: ShoppingBag, tone: "from-cyan-500/25 to-sky-500/10 text-cyan-200" },
+    { label: "Hidden Categories", value: "3", growth: "+25%", icon: MonitorDot, tone: "from-pink-500/25 to-fuchsia-500/10 text-pink-200" },
+    { label: "Featured Categories", value: "6", growth: "+20.0%", icon: Star, tone: "from-cyan-500/25 to-purple-500/10 text-cyan-200" },
+    { label: "Categories w/ Products", value: "25", growth: "+16.7%", icon: Boxes, tone: "from-blue-500/25 to-cyan-500/10 text-sky-200" },
+    { label: "Total Products in Categories", value: "356", growth: "+18.6%", icon: Tag, tone: "from-blue-500/25 to-violet-500/10 text-blue-200" },
+  ];
+  const tree = [
+    { label: "All Categories", count: 28, depth: 0, open: true },
+    { label: "Women", count: 18, depth: 0, open: true },
+    { label: "Panties", count: 8, depth: 1, selected: true },
+    { label: "Briefs", count: 4, depth: 2 },
+    { label: "Hipsters", count: 4, depth: 2 },
+    { label: "Thongs", count: 4, depth: 2 },
+    { label: "Bras", count: 6, depth: 0 },
+    { label: "Lingerie", count: 4, depth: 0 },
+    { label: "Collections", count: 6, depth: 0 },
+    { label: "Accessories", count: 3, depth: 0 },
+    { label: "New Arrivals", count: 1, depth: 0 },
+  ];
+  const cards = [
+    { title: selectedName, subtitle: "Everyday Comfort", products: "8 Products", image: selectedImage, visual: "panties" },
+    { title: "Bras", subtitle: "Support & Style", products: "6 Products", image: hms.categorySoftSupportBraImageUrl, visual: "bra" },
+    { title: "Lingerie", subtitle: "Confidence & Elegance", products: "4 Products", image: hms.categoryNightwearImageUrl, visual: "lingerie" },
+    { title: "Collections", subtitle: "Curated Sets", products: "6 Products", image: hms.categoryBundlesImageUrl, visual: "box" },
+    { title: "Accessories", subtitle: "Perfect Add-ons", products: "3 Products", image: hms.categoryHygieneEssentialsImageUrl, visual: "bag" },
+    { title: "New Arrivals", subtitle: "Latest & Fresh", products: "1 Product", image: hms.categoryNewArrivalsImageUrl, visual: "new" },
+    { title: "Best Sellers", subtitle: "Customer Favorites", products: "12 Products", image: "", visual: "heart" },
+    { title: "Sale", subtitle: "Limited Time Offers", products: "8 Products", image: "", visual: "sale" },
+  ];
+  const featured = [
+    { title: "Panties", products: "8 Products", visual: "panties" },
+    { title: "Lingerie", products: "4 Products", visual: "lingerie" },
+    { title: "Best Sellers", products: "12 Products", visual: "heart" },
+    { title: "New Arrivals", products: "1 Product", visual: "new" },
+  ];
+
+  return (
+    <form onSubmit={onSave} className="mt-4 space-y-4 text-white">
+      <section className={`${glassPanel} relative overflow-hidden p-4 sm:p-5`}>
+        <div className="pointer-events-none absolute left-1/2 top-0 h-36 w-[34rem] -translate-x-1/2 opacity-80">
+          <div className="absolute inset-x-14 top-5 h-28 rounded-[50%] border border-fuchsia-300/30 shadow-[0_0_48px_rgba(217,70,239,.45)]" />
+          <div className="absolute inset-x-24 top-8 h-20 rounded-[50%] border border-cyan-300/25" />
+          <div className="absolute left-1/2 top-12 h-5 w-32 -translate-x-1/2 rounded-full bg-fuchsia-400/70 blur-xl" />
+          <div className="absolute left-1/2 top-14 h-2 w-2 -translate-x-1/2 rounded-full bg-white shadow-[0_0_35px_12px_rgba(236,72,153,.8)]" />
+        </div>
+        <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-white">Categories Command Center</h1>
+              <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2.5 py-1 text-[0.65rem] font-bold text-emerald-200">
+                Live
+              </span>
+              <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[0.62rem] font-black tracking-[0.16em] text-cyan-100">
+                CATEGORIES COMMAND V1 ACTIVE
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-300/75">
+              Organize, manage, and optimize your product categories and hierarchy.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-slate-200/80">
+              <CalendarDays className="h-3.5 w-3.5 text-pink-200" />
+              May 13 - May 18, 2026
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-xl border border-fuchsia-300/20 bg-fuchsia-300/[0.07] px-3 text-xs font-semibold text-fuchsia-100">
+              <Download className="h-3.5 w-3.5" />
+              Export
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        <div className="relative z-10 mt-5 grid gap-3 xl:grid-cols-6">
+          {metrics.map(({ label, value, growth, icon: Icon, tone }) => (
+            <div key={label} className="rounded-xl border border-white/10 bg-[#091631]/85 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
+              <div className="flex items-start gap-3">
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${tone}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-slate-300/70">{label}</p>
+                  <p className="mt-1 text-2xl font-black text-white">{value}</p>
+                  <p className="mt-1 text-[0.66rem] font-semibold text-emerald-300">
+                    {growth} <span className="font-medium text-slate-400">vs last 7 days</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={`${glassPanel} p-2`}>
+        <div className="flex flex-wrap items-center gap-2">
+          {["All Categories", "Active", "Hidden", "Featured"].map((tab) => (
+            <button key={tab} type="button" className={`h-9 rounded-lg px-4 text-xs font-bold ${tab === "All Categories" ? "border border-fuchsia-300/30 bg-fuchsia-400/18 text-white shadow-[0_0_22px_rgba(236,72,153,.16)]" : "text-slate-400 hover:bg-white/[0.04] hover:text-white"}`}>
+              {tab}
+            </button>
+          ))}
+          <div className="ml-auto flex min-w-0 flex-1 flex-wrap justify-end gap-2">
+            <label className="relative min-w-[16rem] flex-1 xl:max-w-[28rem]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fuchsia-200/70" />
+              <input className="h-9 w-full rounded-lg border border-white/10 bg-[#050c1e]/80 pl-10 pr-3 text-xs text-white outline-none placeholder:text-slate-500 focus:border-fuchsia-300/40" placeholder="Search categories..." />
+            </label>
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-slate-200">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-pink-200" />
+              All Types
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg border border-fuchsia-300/20 bg-fuchsia-400/[0.08] px-3 text-xs font-semibold text-fuchsia-100">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              More Filters
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {(backendMessage || statusMessage) && (
+        <div className={`rounded-2xl border p-3 text-xs leading-5 ${storageMode === "supabase" ? "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-50/70" : "border-amber-200/18 bg-amber-200/[0.05] text-amber-50/70"}`}>
+          {statusMessage || backendMessage}
+        </div>
+      )}
+
+      <div className="grid items-start gap-4 xl:grid-cols-[19rem_minmax(0,1fr)_28rem]">
+        <div className="space-y-4 xl:col-span-2">
+          <div className="grid gap-4 lg:grid-cols-[19rem_minmax(0,1fr)]">
+            <section className={`${glassPanel} min-h-[31.25rem] p-4`}>
+              <h2 className="text-base font-black text-white">Category Hierarchy</h2>
+              <p className="mt-1 text-xs text-slate-400">Drag & drop to reorganize categories</p>
+              <div className="mt-4 space-y-1">
+                {tree.map((item) => {
+                  const FolderIcon = item.open ? FolderOpen : Folder;
+                  return (
+                    <button key={`${item.label}-${item.depth}`} type="button" className={`group flex h-9 w-full items-center gap-2 rounded-lg px-2 text-left text-xs transition ${item.selected ? "border border-fuchsia-300/18 bg-fuchsia-400/18 text-white shadow-[0_0_20px_rgba(236,72,153,.15)]" : "text-slate-300/85 hover:bg-white/[0.04]"}`} style={{ paddingLeft: `${0.5 + item.depth * 1.1}rem` }}>
+                      <GripVertical className="h-3.5 w-3.5 text-slate-500" />
+                      <ChevronDown className={`h-3.5 w-3.5 text-slate-500 ${item.open ? "" : "-rotate-90"}`} />
+                      <FolderIcon className="h-3.5 w-3.5 text-fuchsia-200/70" />
+                      <span className="min-w-0 flex-1 truncate font-semibold">{item.label}</span>
+                      <span className="rounded-md border border-fuchsia-300/14 bg-fuchsia-300/14 px-2 py-0.5 text-[0.68rem] font-bold text-fuchsia-100">{item.count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className={`${glassPanel} min-h-[31.25rem] p-4`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-black text-white">Category Management</h2>
+                  <p className="mt-1 text-xs text-slate-400">Drag cards to reorder &bull; Click to edit &bull; More actions</p>
+                </div>
+                <div className="flex rounded-lg border border-white/10 bg-white/[0.03] p-1">
+                  <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-md bg-fuchsia-400/20 px-3 text-xs font-bold text-fuchsia-100"><Rows3 className="h-3.5 w-3.5" />Grid</button>
+                  <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-bold text-slate-500"><List className="h-3.5 w-3.5" />List</button>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
+                {cards.map((card) => (
+                  <article key={card.title} className="group overflow-hidden rounded-xl border border-white/10 bg-[#07142d] shadow-[0_14px_38px_rgba(0,0,0,.34)]">
+                    <div className="relative h-28">
+                      {card.image ? <img src={card.image} alt="" className="h-full w-full object-cover" /> : renderCategoryVisual(card.visual, "h-full w-full")}
+                      <button type="button" className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/30 text-white/75 backdrop-blur"><MoreVertical className="h-4 w-4" /></button>
+                    </div>
+                    <div className="relative p-3">
+                      <h3 className="text-sm font-black text-white">{card.title}</h3>
+                      <p className="mt-0.5 text-[0.7rem] text-slate-400">{card.subtitle}</p>
+                      <p className="mt-1 text-[0.72rem] font-semibold text-slate-300">{card.products}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2 py-0.5 text-[0.62rem] font-bold text-emerald-200">Active</span>
+                        <Star className="h-4 w-4 fill-amber-300 text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,.75)]" />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <section className={`${glassPanel} p-4`}>
+            <h2 className="text-base font-black text-white">Featured Categories</h2>
+            <p className="mt-1 text-xs text-slate-400">Categories highlighted on storefront</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              {featured.map((item) => (
+                <div key={item.title} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-2.5">
+                  {renderCategoryVisual(item.visual, "h-12 w-16 shrink-0 rounded-lg")}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-black text-white">{item.title}</p>
+                    <p className="mt-1 text-[0.68rem] text-slate-400">{item.products}</p>
+                  </div>
+                  <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" />
+                </div>
+              ))}
+              <button type="button" className="flex min-h-16 items-center justify-center gap-2 rounded-xl border border-dashed border-slate-500/50 bg-white/[0.02] text-xs font-semibold text-slate-300">
+                <Plus className="h-4 w-4" />Add Featured Category
+              </button>
+            </div>
+          </section>
+
+          <section className={`${glassPanel} p-4`}>
+            <div className="grid gap-3 xl:grid-cols-[10rem_repeat(5,minmax(0,1fr))]">
+              <h2 className="text-base font-black text-white">Quick Actions</h2>
+              {[
+                { title: "Create Category", text: "Add new category", icon: Plus },
+                { title: "Duplicate Category", text: "Copy existing category", icon: Copy },
+                { title: "Reorder Categories", text: "Drag & drop mode", icon: Rows3 },
+                { title: "Hide Category", text: "Make category hidden", icon: X },
+                { title: "Publish Changes", text: "Save & update category", icon: Zap, submit: true },
+              ].map(({ title, text, icon: Icon, submit }) => (
+                <button key={title} type={submit ? "submit" : "button"} disabled={submit && isSaving} className="flex items-center gap-3 rounded-xl border border-fuchsia-300/12 bg-fuchsia-400/[0.06] p-3 text-left transition hover:border-fuchsia-300/30 hover:bg-fuchsia-400/[0.1] disabled:opacity-60">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 text-cyan-100"><Icon className="h-5 w-5" /></span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-black text-white">{submit && isSaving ? "Publishing..." : title}</span>
+                    <span className="block truncate text-[0.66rem] text-slate-400">{text}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside className={`${glassPanel} min-h-[44.5rem] overflow-hidden`}>
+          <div className="flex border-b border-white/10 bg-white/[0.02] p-2">
+            <button type="button" className="h-9 rounded-lg border border-fuchsia-300/25 bg-fuchsia-400/20 px-4 text-xs font-black text-white">Category Editor</button>
+            <button type="button" className="h-9 rounded-lg px-4 text-xs font-bold text-slate-500">Quick Actions</button>
+          </div>
+          <div className="space-y-4 p-4">
+            <div className="flex items-center gap-3">
+              {selectedImage ? <img src={selectedImage} alt="" className="h-14 w-16 rounded-xl object-cover" /> : renderCategoryVisual("panties", "h-14 w-16 shrink-0 rounded-xl")}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="truncate text-base font-black text-white">Panties</h2>
+                  <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2 py-0.5 text-[0.62rem] font-bold text-emerald-200">Active</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">ID: CAT-001</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5"><span className="text-[0.68rem] font-semibold text-slate-400">Name</span><input value={selectedName} onChange={(event) => updateCat({ categoryComfortPantyTitle: event.target.value })} className="h-9 w-full rounded-lg border border-white/10 bg-[#050c1e]/80 px-3 text-xs text-white outline-none focus:border-fuchsia-300/40" /></label>
+              <label className="space-y-1.5"><span className="text-[0.68rem] font-semibold text-slate-400">Slug</span><input value={selectedSlug} onChange={(event) => updateCat({ categoryComfortPantyLinkUrl: `/collections/${event.target.value.replace(/^\/+/, "")}` })} className="h-9 w-full rounded-lg border border-white/10 bg-[#050c1e]/80 px-3 text-xs text-white outline-none focus:border-fuchsia-300/40" /></label>
+            </div>
+            <label className="block space-y-1.5">
+              <div className="flex justify-between text-[0.68rem] font-semibold text-slate-400"><span>Short Description</span><span>{selectedDescription.length} / 160</span></div>
+              <textarea value={selectedDescription} onChange={(event) => updateCat({ categoryComfortPantyDescription: event.target.value })} className="h-16 w-full resize-none rounded-lg border border-white/10 bg-[#050c1e]/80 px-3 py-2 text-xs leading-5 text-white outline-none focus:border-fuchsia-300/40" />
+            </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-300">Banner Image</span><button type="button" className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-pink-100"><Upload className="h-4 w-4" /></button></div>
+              {selectedImage ? <img src={selectedImage} alt="" className="h-20 w-full rounded-lg object-cover" /> : renderCategoryVisual("panties", "h-20 w-full rounded-lg")}
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+              <div className="flex items-center justify-between"><h3 className="text-xs font-black text-white">SEO Snippet</h3><button type="button" className="text-xs font-bold text-fuchsia-200">Edit</button></div>
+              <label className="mt-3 block space-y-1"><div className="flex justify-between text-[0.66rem] text-slate-400"><span>Meta Title</span><span>54 / 60</span></div><input value="Panties - Comfortable & Stylish | Aevyrixa Her Care" readOnly className="h-8 w-full rounded-md border border-white/8 bg-[#050c1e]/70 px-2 text-[0.72rem] text-slate-200 outline-none" /></label>
+              <label className="mt-2 block space-y-1"><div className="flex justify-between text-[0.66rem] text-slate-400"><span>Meta Description</span><span>118 / 160</span></div><textarea value="Explore our collection of comfortable and stylish panties designed for everyday confidence and all-day comfort." readOnly className="h-14 w-full resize-none rounded-md border border-white/8 bg-[#050c1e]/70 px-2 py-1.5 text-[0.72rem] leading-4 text-slate-200 outline-none" /></label>
+              <p className="mt-2 text-[0.66rem] text-slate-500">URL Preview</p>
+              <p className="truncate text-xs font-bold text-emerald-300">https://aevyrixa.com/collections/panties</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between"><div><h3 className="text-xs font-black text-white">Assign Products</h3><p className="mt-1 text-xs text-slate-400">8 products assigned</p></div><button type="button" className="rounded-lg border border-fuchsia-300/20 bg-fuchsia-400/10 px-3 py-1.5 text-xs font-bold text-fuchsia-100">Manage</button></div>
+              <div className="grid grid-cols-7 gap-2">
+                {["panties", "violet", "pink", "red", "purple", "peach"].map((thumb, index) => <div key={`${thumb}-${index}`} className="aspect-square overflow-hidden rounded-lg border border-white/10">{renderCategoryVisual(thumb, "h-full w-full")}</div>)}
+                <div className="grid aspect-square place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-sm font-black text-white">+3</div>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5"><span className="text-[0.68rem] font-semibold text-slate-400">Category Status</span><select value={hms.categoryComfortPanty} onChange={(event) => updateCat({ categoryComfortPanty: event.target.value as AdminSettings["homepageMediaSettings"]["categoryComfortPanty"] })} className="h-9 w-full rounded-lg border border-white/10 bg-[#050c1e]/80 px-3 text-xs font-bold text-emerald-300 outline-none focus:border-fuchsia-300/40"><option value="active">Active</option><option value="coming_soon">Coming Soon</option><option value="hidden">Hidden</option></select></label>
+              <label className="space-y-1.5"><span className="text-[0.68rem] font-semibold text-slate-400">Display Order</span><input value={hms.categoryComfortPantySortOrder || "1"} onChange={(event) => updateCat({ categoryComfortPantySortOrder: event.target.value })} className="h-9 w-full rounded-lg border border-white/10 bg-[#050c1e]/80 px-3 text-xs text-white outline-none focus:border-fuchsia-300/40" /></label>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <footer className="relative flex min-h-12 items-center justify-center text-center text-xs text-slate-500">
+        <div><p className="font-semibold text-slate-400">Aevyrixa Her Care Admin Control Room</p><p className="mt-1">&copy; 2026 Aevyrixa. All rights reserved.</p></div>
+        <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex"><span>v2.1.0</span><span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[0.68rem] font-bold text-emerald-200">Auto-refresh ON</span></div>
+      </footer>
     </form>
   );
 }
