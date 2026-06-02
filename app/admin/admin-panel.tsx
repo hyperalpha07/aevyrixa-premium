@@ -9,6 +9,7 @@ import type {
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReviewsCommandCenter from "@/app/admin/reviews-command-center";
+import SettingsCommandSection from "@/app/admin/settings-command-section";
 import {
   ArrowLeft,
   Bell as BellIcon,
@@ -2538,7 +2539,7 @@ export default function AdminPanel({
                 session={session}
               />
             ) : view === "settings" ? (
-              <SettingsSection
+              <SettingsCommandSection
                 settings={settings}
                 storageMode={settingsStorageMode}
                 backendMessage={settingsBackendMessage}
