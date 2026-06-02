@@ -9783,15 +9783,15 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   }
 
   return (
-    <div className="mt-4 max-w-full overflow-hidden rounded-[1.4rem] border border-cyan-200/10 bg-[#030816]/72 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)] sm:p-4">
-      <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-4 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-5">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-80">
+    <div className="aev-customers-hub mt-3 max-w-full overflow-hidden rounded-[1.4rem] border border-cyan-200/10 bg-[#030816]/72 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)]">
+      <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-3 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-4">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 opacity-80">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
-          <div className="absolute left-1/2 top-3 h-24 w-[520px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.22)]" />
-          <div className="absolute left-1/2 top-7 h-12 w-[310px] -translate-x-1/2 rounded-[100%] border border-pink-300/25 shadow-[0_0_42px_rgba(255,77,184,0.35)]" />
+          <div className="absolute left-1/2 top-2 h-20 w-[500px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.22)]" />
+          <div className="absolute left-1/2 top-6 h-10 w-[300px] -translate-x-1/2 rounded-[100%] border border-pink-300/25 shadow-[0_0_42px_rgba(255,77,184,0.35)]" />
         </div>
-        <div className="relative z-10 flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 pt-1">
+        <div className="relative z-10 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white">Customers Intelligence Hub</h2>
               <span className="rounded-full border border-cyan-200/30 bg-cyan-300/[0.09] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100 shadow-[0_0_18px_rgba(103,247,243,0.18)]">
@@ -9802,7 +9802,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 Live
               </span>
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
+            <p className="mt-1.5 max-w-2xl text-sm leading-5 text-white/58">
               Deep insights into your customers, behavior, and lifetime value.
             </p>
           </div>
@@ -9817,19 +9817,19 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
             </button>
           </div>
         </div>
-        <div className="relative z-10 mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_455px]">
+        <div className="relative z-10 mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_455px]">
           <div className="grid gap-3 md:grid-cols-3">
             {customerMetrics.map((metric) => {
               const Icon = metric.icon;
               return (
-                <article key={metric.label} className={`aev-admin-stat-card tone-${metric.tone} min-w-0 rounded-[1.05rem] border p-4`}>
+                <article key={metric.label} className={`aev-admin-stat-card tone-${metric.tone} min-w-0 rounded-[1.05rem] border p-3`}>
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs text-white/48">{metric.label}</p>
                       <p className="mt-2 text-2xl font-semibold text-white">{metric.value}</p>
                       <p className="mt-2 text-xs font-semibold text-emerald-200">↗ {metric.trend}</p>
                     </div>
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-current/20 bg-current/10">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-current/20 bg-current/10">
                       <Icon className="h-5 w-5" />
                     </span>
                   </div>
@@ -9838,8 +9838,8 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
             })}
           </div>
           {selectedCustomer && (
-            <article className="rounded-[1.25rem] border border-cyan-200/14 bg-[#071024]/82 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_42px_rgba(103,247,243,0.07)]">
-              <div className="flex min-w-0 items-start gap-4">
+            <article className="rounded-[1.25rem] border border-cyan-200/14 bg-[#071024]/82 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_42px_rgba(103,247,243,0.07)]">
+              <div className="flex min-w-0 items-start gap-3">
                 <CustomerAvatar customer={selectedCustomer} size="large" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -9847,13 +9847,13 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                     <CustomerBadge label="VIP Customer" tone="amber" />
                     <CustomerBadge label={selectedCustomer.isActive ? "Active" : "Inactive"} tone={selectedCustomer.isActive ? "green" : "rose"} />
                   </div>
-                  <div className="mt-3 grid gap-2 text-sm text-white/62 sm:grid-cols-2">
+                  <div className="mt-2 grid gap-2 text-sm text-white/62 sm:grid-cols-2">
                     <span className="inline-flex items-center gap-2"><Phone className="h-4 w-4 text-cyan-200/70" />{selectedCustomer.phone}</span>
                     <span className="inline-flex min-w-0 items-center gap-2"><Send className="h-4 w-4 text-pink-200/70" /><span className="truncate">{selectedCustomer.email ?? "customer@email.local"}</span></span>
                   </div>
                 </div>
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 md:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-3 border-t border-white/10 pt-3 md:grid-cols-4">
                 <DetailLine label="Total Orders" value={String(selectedCustomer.orderCount)} />
                 <DetailLine label="Total Spent" value={formatCurrency(totalSpent)} />
                 <DetailLine label="Avg. Order Value" value={formatCurrency(averageOrderValue)} />
@@ -9870,21 +9870,21 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="mt-3 space-y-3">
           <div className="min-w-0">
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(285px,0.7fr)]">
-              <section className="aev-admin-control-panel rounded-[1.1rem] border p-3">
+              <section className="aev-admin-control-panel rounded-[1.1rem] border p-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader title="Customer Segments" />
                   <button type="button" className="aev-admin-mini-action text-pink-100">View all segments <ArrowLeft className="h-3 w-3 rotate-180" /></button>
                 </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                   {segments.map((segment) => {
                     const Icon = segment.icon;
                     return (
-                      <article key={segment.label} className={`aev-admin-stat-card tone-${segment.tone} min-w-0 rounded-xl border p-3`}>
+                      <article key={segment.label} className={`aev-admin-stat-card tone-${segment.tone} min-w-0 rounded-xl border p-2.5`}>
                         <div className="flex items-center gap-2">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-current/10">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-current/10">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div className="min-w-0">
@@ -9898,13 +9898,13 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                   })}
                 </div>
               </section>
-              <section className="aev-admin-control-panel rounded-[1.1rem] border p-3">
+              <section className="aev-admin-control-panel rounded-[1.1rem] border p-2.5">
                 <SectionHeader title="Quick Actions" />
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[66px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
-                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[66px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
-                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[66px]"><Download className="h-4 w-4" />Export Segment</button>
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[66px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
+                  <Link href="/admin/orders" className="aev-admin-quick-action"><ShoppingBag className="h-4 w-4" />View Orders</Link>
+                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action"><Download className="h-4 w-4" />Export Segment</button>
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
                 </div>
               </section>
             </div>
@@ -9984,22 +9984,22 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
           </div>
 
           {selectedCustomer && (
-            <aside className="min-w-0 space-y-4">
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+            <aside className="min-w-0 space-y-2.5 xl:pt-[67px]">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader title="Profile & Address" />
                   <button type="button" disabled className="aev-admin-mini-action text-white/35" title="Profile editing is staged for later linkup.">Edit</button>
                 </div>
-                <div className="mt-4 space-y-3 text-sm text-white/62">
+                <div className="mt-3 space-y-2 text-sm text-white/62">
                   <p className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-pink-200" />{selectedCustomer.address}</p>
                   <p className="flex gap-3"><Globe className="mt-0.5 h-4 w-4 shrink-0 text-cyan-200" />{selectedCustomer.area}</p>
                   <p className="flex gap-3"><Users className="mt-0.5 h-4 w-4 shrink-0 text-violet-200" />1,000+ Customers in area</p>
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
                 <PanelTitleAction title="Recent Orders" href="/admin/orders" label="View all" />
-                <div className="mt-4 space-y-3">
+                <div className="mt-3 space-y-2">
                   {selectedCustomer.recentOrders.map((order) => (
                     <div key={`${order.name}-${order.date}`} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-white/[0.025] p-2">
                       <ProductMiniThumb tone={order.tone} />
@@ -10016,17 +10016,17 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
                 <PanelTitleAction title="Wishlist / Favorites" label="View all" disabled />
-                <div className="mt-4 grid grid-cols-4 gap-2">
+                <div className="mt-3 grid grid-cols-4 gap-2">
                   {["rose", "violet", "amber"].map((tone) => <ProductMiniThumb key={tone} tone={tone} large />)}
                   <div className="grid min-h-16 place-items-center rounded-xl border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] text-xs font-semibold text-cyan-100">+12 items</div>
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
                 <PanelTitleAction title="Support History" href="/admin/support" label="View all" />
-                <div className="mt-4 space-y-2">
+                <div className="mt-3 space-y-1.5">
                   {selectedCustomer.supportHistory.map((item) => (
                     <div key={`${item.date}-${item.title}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.025] p-2 text-sm">
                       <div className="min-w-0">
@@ -10039,19 +10039,19 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
                 <PanelTitleAction title="Account Activity" label="View full log" disabled />
-                <div className="mt-4 space-y-3">
+                <div className="mt-3 space-y-2.5">
                   {selectedCustomer.activity.map((item, index) => {
                     const Icon = item.icon;
                     return (
-                      <div key={`${item.title}-${item.time}`} className="relative grid grid-cols-[34px_minmax(0,1fr)_auto] gap-3">
-                        {index < selectedCustomer.activity.length - 1 && <span className="absolute left-4 top-8 h-full w-px bg-gradient-to-b from-pink-300/40 to-cyan-300/10" />}
-                        <span className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full border ${item.tone}`}>
-                          <Icon className="h-4 w-4" />
+                      <div key={`${item.title}-${item.time}`} className="relative grid grid-cols-[30px_minmax(0,1fr)_auto] gap-2.5">
+                        {index < selectedCustomer.activity.length - 1 && <span className="absolute left-[0.9rem] top-7 h-full w-px bg-gradient-to-b from-pink-300/40 to-cyan-300/10" />}
+                        <span className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border ${item.tone}`}>
+                          <Icon className="h-3.5 w-3.5" />
                         </span>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white">{item.title}</p>
+                          <p className="text-[13px] font-semibold text-white">{item.title}</p>
                           <p className="mt-1 truncate text-xs text-white/45">{item.detail}</p>
                         </div>
                         <p className="text-right text-xs text-white/40">{item.time}</p>
@@ -10059,7 +10059,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                     );
                   })}
                 </div>
-                <button type="button" disabled className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70" title="Full customer profile is staged for later linkup.">
+                <button type="button" disabled className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70" title="Full customer profile is staged for later linkup.">
                   View Full Profile <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
                 </button>
               </section>
