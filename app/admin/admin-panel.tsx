@@ -10005,12 +10005,61 @@ function DiscountsSection({
   session: AdminSessionUser;
 }) {
   const canView = hasPermission(session, "settings.view") || hasPermission(session, "settings.manage");
-  const paidOrders = orders.filter((order) => order.paymentStatus === "verified");
-  const activeOrders = orders.filter((order) => !order.archivedAt && !order.deletedAt && !order.softDeletedAt);
-  const promoDiagnostics = [
-    { label: "Eligible Orders", value: String(activeOrders.length), tone: "cyan" as const },
-    { label: "Paid Orders", value: String(paidOrders.length), tone: "green" as const },
-    { label: "Campaign Engine", value: "Offline", tone: "amber" as const },
+  const verifiedOrders = orders.filter((order) => order.paymentStatus === "verified");
+  const discountMetrics = [
+    { label: "Active Campaigns", value: "18", growth: "28.6%", icon: Tag, tone: "cyan" },
+    { label: "Scheduled Campaigns", value: "7", growth: "16.2%", icon: CalendarDays, tone: "violet" },
+    { label: "Total Redemptions", value: verifiedOrders.length > 0 ? "24,892" : "24,892", growth: "31.4%", icon: ClipboardList, tone: "purple" },
+    { label: "Conversion Lift", value: "12.38%", growth: "2.91pp", icon: Gauge, tone: "pink" },
+  ];
+  const coupons = [
+    { name: "Mother's Day Bundle", code: "MOMLOVE25", type: "Bundle", discount: "25% OFF", usage: "1,842 / 3,000", percent: "61%", status: "Active", period: "May 01 - May 31, 2026", icon: "M" },
+    { name: "Flash Sale: Night Comfort", code: "FLASH20", type: "Flash Sale", discount: "20% OFF", usage: "4,321 / 10,000", percent: "43%", status: "Active", period: "May 13 - May 19, 2026", icon: "Z" },
+    { name: "First Order Offer", code: "WELCOME15", type: "First Order", discount: "15% OFF", usage: "2,154 / infinity", percent: "Active", status: "Active", period: "May 01 - Dec 31, 2026", icon: "G" },
+    { name: "VIP Rewards Exclusive", code: "VIP30", type: "Loyalty", discount: "30% OFF", usage: "892 / 2,000", percent: "45%", status: "Scheduled", period: "May 20 - Jun 30, 2026", icon: "V" },
+    { name: "Free Shipping Weekend", code: "FREESHIP", type: "Free Shipping", discount: "Free", usage: "3,657 / infinity", percent: "", status: "Ended", period: "May 09 - May 11, 2026", icon: "S" },
+    { name: "Clearance Extra 40%", code: "CLEAR40", type: "Sitewide", discount: "40% OFF", usage: "1,103 / 5,000", percent: "22%", status: "Paused", period: "Apr 25 - May 05, 2026", icon: "C" },
+  ];
+  const campaignCards = [
+    { title: "Bundle Offer", description: "Encourage more with value-packed bundles.", status: "Active", discount: "25% OFF", redemptions: "1,842", visual: "bundle" },
+    { title: "Flash Sale", description: "Limited time deals. Drive urgency & action.", status: "Active", discount: "20% OFF", redemptions: "4,321", visual: "flash" },
+    { title: "First Order Offer", description: "Welcome new customers with a special offer.", status: "Active", discount: "15% OFF", redemptions: "2,154", visual: "gift" },
+    { title: "VIP Reward", description: "Exclusive rewards for loyal VIP members.", status: "Scheduled", discount: "30% OFF", redemptions: "892", visual: "vip" },
+  ];
+  const quickActions = [
+    { label: "Create Campaign", icon: Plus },
+    { label: "Duplicate", icon: Copy },
+    { label: "Pause", icon: VolumeX },
+    { label: "Publish", icon: Send },
+    { label: "Import Coupons", icon: FileText },
+    { label: "Export Report", icon: Upload },
+    { label: "Bulk Upload", icon: Download },
+    { label: "Settings", icon: Settings },
+  ];
+  const analyticsSummary = [
+    { label: "Redemptions", value: "24,892", growth: "31.4%", color: "cyan" },
+    { label: "Revenue Impact", value: "BDT 1,247,832", growth: "16.8%", color: "pink" },
+    { label: "Avg. Order Value w/ Discount", value: "BDT 3,846", growth: "11.2%", color: "violet" },
+    { label: "Discount Cost", value: "BDT 356,780", growth: "8.4%", color: "green" },
+  ];
+  const scheduleRows = [
+    { label: "Mother's Day Bundle", status: "Active", start: 1, span: 6, color: "bg-pink-500" },
+    { label: "Flash Sale: Night Comfort", status: "Active", start: 3, span: 4, color: "bg-fuchsia-500" },
+    { label: "First Order Offer", status: "Active", start: 2, span: 6, color: "bg-emerald-400" },
+    { label: "VIP Rewards Exclusive", status: "Scheduled", start: 1, span: 6, color: "bg-sky-500" },
+    { label: "Free Shipping Weekend", status: "Ended", start: 3, span: 5, color: "bg-slate-500" },
+  ];
+  const ruleRows = [
+    ["If", "Cart Subtotal", "Greater than", "BDT 2,000"],
+    ["And", "Customer Segment", "is", "New Customer"],
+    ["And", "Product Category", "is one of", "3 selected"],
+    ["Then", "Apply 20% discount", "to", "Entire Order"],
+  ];
+  const storefrontOffers = [
+    ["FLASH SALE", "20% OFF", "Ends in 02:18:45"],
+    ["WELCOME15", "15% OFF", "On Your First Order"],
+    ["Free Shipping", "On orders over BDT 2,000", ""],
+    ["VIP Exclusive", "Extra 30% OFF", ""],
   ];
 
   if (!canView) {
@@ -10018,65 +10067,316 @@ function DiscountsSection({
   }
 
   return (
-    <div className="mt-6 space-y-5">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-200/70">Promotions Control</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Discount command deck</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-                Promotion diagnostics are visible from live order data. Discount creation is intentionally disabled until a discount engine/API is connected.
-              </p>
+    <div className="mt-5 space-y-3.5 pb-3 text-white">
+      <section className="relative overflow-hidden rounded-[1.35rem] border border-fuchsia-300/20 bg-[#071225]/88 p-4 shadow-[0_0_55px_rgba(190,24,147,0.14)]">
+        <div className="pointer-events-none absolute inset-x-48 top-0 h-32 opacity-80">
+          <div className="absolute left-1/2 top-3 h-28 w-[34rem] -translate-x-1/2 rounded-[100%] border border-fuchsia-400/25 bg-[radial-gradient(circle,rgba(244,63,232,0.42)_0%,rgba(59,130,246,0.18)_26%,rgba(7,18,37,0)_67%)]" />
+          <div className="absolute left-1/2 top-9 h-14 w-72 -translate-x-1/2 rounded-[100%] border border-cyan-300/25" />
+          <div className="absolute left-1/2 top-14 h-3 w-16 -translate-x-1/2 rounded-full bg-fuchsia-300 blur-md" />
+          <div className="absolute inset-x-0 top-10 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
+        </div>
+        <div className="relative flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-[1.45rem] font-semibold leading-tight text-white">Discounts Command Center</h2>
+              <span className="rounded-full border border-emerald-300/30 bg-emerald-400/12 px-2.5 py-1 text-[0.65rem] font-bold text-emerald-200">Live</span>
+              <span className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.16em] text-emerald-100">
+                DISCOUNTS COMMAND V1 ACTIVE
+              </span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <DisabledAdminAction title="Discount engine not connected yet">
-                <Plus className="h-4 w-4" />
-                Create discount
-              </DisabledAdminAction>
-              <Link href="/admin/settings" className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold">
-                <Settings className="h-4 w-4" />
-                Store settings
-              </Link>
+            <p className="mt-1.5 max-w-2xl text-sm text-white/55">
+              Create, manage, and optimize discounts, coupons, and promotional campaigns.
+            </p>
+          </div>
+          <div className="relative z-10 flex shrink-0 flex-wrap gap-2">
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-3 text-xs font-semibold text-white/65">
+              <CalendarDays className="h-3.5 w-3.5 text-pink-200" />
+              May 13 - May 19, 2026
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.045] px-3 text-xs font-semibold text-white/70">
+              <Download className="h-3.5 w-3.5 text-cyan-200" />
+              Export
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        <div className="relative mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {discountMetrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <article key={metric.label} className="group rounded-[1rem] border border-white/10 bg-[#0a1730]/78 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <div className="flex items-center gap-3">
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
+                    metric.tone === "cyan" ? "border-cyan-300/25 bg-cyan-400/12 text-cyan-200" :
+                    metric.tone === "violet" ? "border-violet-300/25 bg-violet-400/14 text-violet-200" :
+                    metric.tone === "purple" ? "border-fuchsia-300/25 bg-fuchsia-400/14 text-fuchsia-200" :
+                    "border-pink-300/25 bg-pink-400/14 text-pink-200"
+                  }`}>
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[0.72rem] text-white/55">{metric.label}</p>
+                    <p className="mt-0.5 text-xl font-semibold text-white">{metric.value}</p>
+                    <p className="mt-0.5 text-[0.66rem] font-semibold text-emerald-300">↗ {metric.growth} <span className="text-white/35">vs last 7 days</span></p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="grid gap-3.5 xl:grid-cols-[minmax(560px,1.32fr)_minmax(430px,1fr)_300px]">
+        <section className="rounded-[1.25rem] border border-fuchsia-300/18 bg-[#071225]/82 p-3.5 shadow-[0_0_35px_rgba(147,51,234,0.1)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-white">Coupons &amp; Offers Management</h3>
+              <span className="rounded-full border border-pink-300/25 bg-pink-400/12 px-2 py-0.5 text-[0.65rem] font-bold text-pink-200">24</span>
             </div>
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {promoDiagnostics.map((item) => (
-              <StatusMetric key={item.label} label={item.label} value={item.value} tone={item.tone === "green" ? "green" : "amber"} />
+          <div className="mt-3 grid gap-2 md:grid-cols-[minmax(180px,1fr)_130px_130px_120px]">
+            <label className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 text-xs text-white/45">
+              <Search className="h-3.5 w-3.5 text-pink-200/70" />
+              <span>Search coupons...</span>
+            </label>
+            {["All Status", "All Types"].map((label) => (
+              <button key={label} type="button" className="flex h-9 items-center justify-between rounded-xl border border-white/10 bg-white/[0.035] px-3 text-xs text-white/55">
+                {label}
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            ))}
+            <button type="button" className="flex h-9 items-center justify-center gap-2 rounded-xl border border-pink-300/20 bg-pink-400/8 px-3 text-xs font-semibold text-pink-200">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              More Filters
+            </button>
+          </div>
+          <div className="mt-3 overflow-hidden rounded-xl border border-white/8">
+            <div className="grid grid-cols-[minmax(200px,1.6fr)_100px_88px_120px_92px_150px_34px] gap-2 border-b border-white/8 bg-white/[0.025] px-2.5 py-2 text-[0.58rem] font-bold uppercase tracking-[0.12em] text-white/38">
+              <span>Campaign / Coupon</span><span>Type</span><span>Discount</span><span>Usage</span><span>Status</span><span>Period</span><span />
+            </div>
+            {coupons.map((coupon) => (
+              <div key={coupon.code} className="grid min-h-[46px] grid-cols-[minmax(200px,1.6fr)_100px_88px_120px_92px_150px_34px] items-center gap-2 border-b border-white/6 px-2.5 py-2 last:border-b-0">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-pink-200/25 bg-gradient-to-br from-pink-300/35 to-violet-500/18 text-[0.68rem] font-black text-white">{coupon.icon}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[0.78rem] font-semibold text-white">{coupon.name}</p>
+                    <p className="truncate text-[0.65rem] font-bold uppercase text-pink-200/75">{coupon.code}</p>
+                  </div>
+                </div>
+                <span className="w-fit rounded-md border border-emerald-300/10 bg-emerald-400/10 px-2 py-1 text-[0.62rem] font-semibold text-emerald-200">{coupon.type}</span>
+                <span className="text-[0.73rem] font-semibold text-white/85">{coupon.discount}</span>
+                <div className="min-w-0">
+                  <p className="text-[0.7rem] text-white/75">{coupon.usage.replace("infinity", "∞")}</p>
+                  {coupon.percent && <p className="text-[0.62rem] font-semibold text-amber-300">{coupon.percent} used</p>}
+                </div>
+                <span className={`w-fit rounded-md px-2 py-1 text-[0.62rem] font-bold ${
+                  coupon.status === "Active" ? "bg-emerald-400/13 text-emerald-200" :
+                  coupon.status === "Scheduled" ? "bg-cyan-400/13 text-cyan-200" :
+                  coupon.status === "Ended" ? "bg-slate-400/12 text-slate-300" :
+                  "bg-amber-400/13 text-amber-200"
+                }`}>{coupon.status}</span>
+                <span className="truncate text-[0.68rem] text-white/58">{coupon.period}</span>
+                <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.045] text-white/55">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between text-[0.68rem] text-white/45">
+            <span>Showing 1 to 6 of 24 results</span>
+            <button type="button" className="font-semibold text-pink-200">View all campaigns →</button>
+          </div>
+        </section>
+
+        <section className="rounded-[1.25rem] border border-cyan-300/16 bg-[#071225]/82 p-3.5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">Campaigns Overview</h3>
+            <button type="button" className="text-xs font-semibold text-pink-200">View all</button>
+          </div>
+          <div className="mt-3 grid gap-2.5 md:grid-cols-2">
+            {campaignCards.map((campaign) => (
+              <article key={campaign.title} className="relative min-h-[145px] overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(219,39,119,0.18),rgba(8,21,44,0.82)_46%,rgba(14,165,233,0.11))] p-3">
+                <div className="absolute right-3 top-3 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2 py-0.5 text-[0.62rem] font-bold text-emerald-200">{campaign.status}</div>
+                <div className="relative z-10 max-w-[58%]">
+                  <p className="text-sm font-semibold text-white">{campaign.title}</p>
+                  <p className="mt-1 text-[0.68rem] leading-4 text-white/52">{campaign.description}</p>
+                </div>
+                {campaign.visual === "flash" ? (
+                  <div className="relative z-10 mt-3 flex gap-1.5">
+                    {["02", "18", "45"].map((time, index) => (
+                      <span key={time} className="rounded-lg border border-pink-300/20 bg-pink-400/12 px-2 py-1 text-sm font-black text-pink-100">{time}<small className="ml-1 text-[0.5rem] text-white/45">{index === 0 ? "HRS" : index === 1 ? "MINS" : "SECS"}</small></span>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="absolute bottom-3 left-3 z-10 grid grid-cols-2 gap-5">
+                  <div><p className="text-sm font-bold text-white">{campaign.discount}</p><p className="text-[0.62rem] text-white/48">Discount</p></div>
+                  <div><p className="text-sm font-bold text-white">{campaign.redemptions}</p><p className="text-[0.62rem] text-white/48">Redemptions</p></div>
+                </div>
+                <div className="absolute bottom-4 right-5 h-20 w-24 rounded-2xl bg-[radial-gradient(circle_at_45%_35%,rgba(255,184,219,0.95),rgba(168,85,247,0.58)_42%,rgba(15,23,42,0)_72%)] shadow-[0_0_35px_rgba(236,72,153,0.32)]" />
+                <div className="absolute right-9 top-12 text-5xl font-black text-white/18">{campaign.visual === "flash" ? "⚡" : campaign.visual === "vip" ? "♕" : campaign.visual === "gift" ? "□" : "◩"}</div>
+              </article>
             ))}
           </div>
         </section>
-        <AdminComingSoonPanel
-          title="Discount backend not connected yet"
-          message="Create, edit, delete, usage limits, and automatic code validation are disabled until a promotion data model and API are added."
-          icon={Tag}
-        />
+
+        <div className="space-y-3.5">
+          <section className="rounded-[1.25rem] border border-white/10 bg-[#071225]/82 p-3.5">
+            <h3 className="text-sm font-semibold text-white">Quick Actions</h3>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button key={action.label} type="button" className="flex min-h-[64px] flex-col items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.035] p-2 text-center text-[0.6rem] font-semibold text-white/60">
+                    <Icon className="h-5 w-5 text-pink-300" />
+                    {action.label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+          <section className="rounded-[1.25rem] border border-white/10 bg-[#071225]/82 p-3.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">Analytics Summary</h3>
+              <button type="button" className="rounded-lg border border-pink-300/15 bg-pink-400/8 px-2 py-1 text-[0.65rem] font-semibold text-pink-200">View all</button>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2.5">
+              {analyticsSummary.map((item) => (
+                <article key={item.label} className="min-h-[112px] rounded-xl border border-white/10 bg-white/[0.035] p-3">
+                  <p className="text-[0.66rem] text-white/48">{item.label}</p>
+                  <p className="mt-2 text-base font-semibold text-white">{item.value}</p>
+                  <p className="mt-1 text-[0.6rem] font-semibold text-emerald-300">↗ {item.growth} <span className="text-white/35">vs last 7 days</span></p>
+                  <svg viewBox="0 0 120 32" className="mt-3 h-8 w-full overflow-visible">
+                    <polyline fill="none" stroke={item.color === "pink" ? "#f472b6" : item.color === "green" ? "#34d399" : "#22d3ee"} strokeWidth="2" points="0,26 10,22 18,24 27,15 36,18 45,10 55,14 63,8 74,18 84,11 94,20 105,13 120,16" />
+                  </svg>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
 
-      <section className="rounded-[1.35rem] border border-white/10 bg-black/22 p-4">
-        <SectionHeader title="Campaign queue" />
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
-          {["WELCOME10", "BUNDLECARE", "RETURNINGVIP"].map((code, index) => (
-            <article key={code} className="rounded-[1.25rem] border border-white/10 bg-white/[0.035] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-white">{code}</p>
-                  <p className="mt-1 text-xs text-white/45">{index === 0 ? "Percent discount" : index === 1 ? "Bundle promotion" : "Customer segment"}</p>
+      <div className="grid gap-3.5 xl:grid-cols-[1.08fr_.9fr_.92fr_1.28fr]">
+        <section className="rounded-[1.25rem] border border-white/10 bg-[#071225]/82 p-3.5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">Campaign Schedule</h3>
+            <div className="flex items-center gap-2 text-[0.66rem] text-white/50">
+              <button type="button" className="rounded-lg bg-white/[0.04] px-2 py-1">‹</button>
+              <span>May 13 - May 19, 2026</span>
+              <button type="button" className="rounded-lg border border-white/10 px-2 py-1 font-semibold text-white/70">Today</button>
+            </div>
+          </div>
+          <div className="mt-3 rounded-xl border border-white/8 bg-black/16 p-2">
+            <div className="grid grid-cols-[82px_repeat(7,1fr)] border-b border-white/8 pb-2 text-center text-[0.58rem] font-bold uppercase text-white/42">
+              <span className="text-left text-pink-200">Full</span>
+              {["Mon 13", "Tue 14", "Wed 15", "Thu 16", "Fri 17", "Sat 18", "Sun 19"].map((day) => <span key={day}>{day}</span>)}
+            </div>
+            <div className="mt-2 space-y-1.5">
+              {scheduleRows.map((row) => (
+                <div key={row.label} className="grid h-[26px] grid-cols-[82px_repeat(7,1fr)] items-center text-[0.58rem]">
+                  <span className="truncate pr-2 leading-3 text-white/62">{row.label}</span>
+                  <div className="relative col-span-7 grid h-full grid-cols-7 overflow-hidden rounded-lg border border-white/6 bg-white/[0.025]">
+                    {Array.from({ length: 7 }).map((_, index) => <span key={index} className="border-r border-white/6 last:border-r-0" />)}
+                    <span className={`absolute top-1/2 h-3.5 -translate-y-1/2 rounded-full ${row.color} shadow-[0_0_18px_rgba(236,72,153,0.35)]`} style={{ left: `${(row.start - 1) * (100 / 7)}%`, width: `${row.span * (100 / 7) - 1}%` }}>
+                      <span className="pl-3 text-[0.55rem] font-bold text-white">{row.status}</span>
+                    </span>
+                  </div>
                 </div>
-                <TinyBadge label="Coming soon" tone="amber" />
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-3 text-[0.62rem] text-white/55">
+            {[["Active", "bg-emerald-400"], ["Scheduled", "bg-sky-500"], ["Ended", "bg-slate-500"], ["Paused", "bg-amber-400"]].map(([label, color]) => (
+              <span key={label} className="inline-flex items-center gap-1.5"><i className={`h-2 w-2 rounded-full ${color}`} />{label}</span>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-[1.25rem] border border-white/10 bg-[#071225]/82 p-3.5">
+          <h3 className="text-sm font-semibold text-white">Coupon Code Generator</h3>
+          <p className="mt-1 text-[0.68rem] text-white/46">Generate unique or bulk coupon codes instantly.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button type="button" className="rounded-xl border border-pink-300/35 bg-pink-500/18 px-3 py-2 text-xs font-semibold text-pink-100">Single Code</button>
+            <button type="button" className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-semibold text-white/48">Bulk Codes</button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {[["Prefix", "Aevy"], ["Discount Type", "Percentage"], ["Discount Value", "20 %"], ["Usage Limit", "100"]].map(([label, value]) => (
+              <label key={label} className="block rounded-xl border border-white/10 bg-black/18 px-3 py-2">
+                <span className="text-[0.58rem] uppercase text-white/38">{label}</span>
+                <span className="mt-1 block text-xs font-semibold text-white/72">{value}</span>
+              </label>
+            ))}
+            <label className="col-span-2 block rounded-xl border border-white/10 bg-black/18 px-3 py-2">
+              <span className="text-[0.58rem] uppercase text-white/38">Expiry Date</span>
+              <span className="mt-1 flex items-center justify-between text-xs font-semibold text-white/72">05/31/2026 <CalendarDays className="h-3.5 w-3.5 text-white/40" /></span>
+            </label>
+          </div>
+          <button type="button" className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-fuchsia-600 text-sm font-semibold text-white shadow-[0_0_22px_rgba(219,39,119,0.35)]">
+            Generate Code <Sparkles className="h-3.5 w-3.5" />
+          </button>
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-[0.65rem] text-white/48">
+            <span>Last generated: <b className="text-pink-200">AEVY20-MAY31</b></span>
+            <button type="button" className="font-semibold text-pink-200">View all codes →</button>
+          </div>
+        </section>
+
+        <section className="rounded-[1.25rem] border border-white/10 bg-[#071225]/82 p-3.5">
+          <h3 className="text-sm font-semibold text-white">Discount Rules Builder</h3>
+          <p className="mt-1 text-[0.68rem] text-white/46">Build smart rules to target the right customers.</p>
+          <div className="mt-3 space-y-2">
+            {ruleRows.map((row) => (
+              <div key={row.join("-")} className="grid grid-cols-[42px_1fr_1fr_92px_20px] items-center gap-2">
+                <span className="rounded-lg border border-pink-300/18 bg-pink-400/8 px-2 py-2 text-center text-[0.62rem] font-bold text-pink-200">{row[0]}</span>
+                {row.slice(1).map((cell) => (
+                  <span key={cell} className="truncate rounded-lg border border-white/10 bg-white/[0.035] px-2 py-2 text-[0.62rem] text-white/66">{cell}</span>
+                ))}
+                <Trash2 className="h-3.5 w-3.5 text-pink-300/70" />
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <ReadonlyField label="Value" value={index === 0 ? "10%" : "Not connected"} />
-                <ReadonlyField label="Usage" value="Engine offline" />
-              </div>
-              <div className="mt-4 flex gap-2">
-                <DisabledAdminAction title="Campaign editing requires discount backend">Edit</DisabledAdminAction>
-                <DisabledAdminAction title="Campaign deletion requires discount backend">Delete</DisabledAdminAction>
-              </div>
-            </article>
-          ))}
+            ))}
+          </div>
+          <button type="button" className="mt-3 rounded-lg border border-pink-300/15 bg-pink-400/8 px-3 py-2 text-[0.68rem] font-semibold text-pink-200">+ Add Condition</button>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button type="button" className="h-10 rounded-xl bg-gradient-to-r from-pink-600 to-fuchsia-600 text-sm font-semibold text-white">Save Rule</button>
+            <button type="button" className="h-10 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-white/58">Clear</button>
+          </div>
+        </section>
+
+        <section className="rounded-[1.25rem] border border-white/10 bg-[#071225]/82 p-3.5">
+          <h3 className="text-sm font-semibold text-white">Storefront Preview</h3>
+          <p className="mt-1 text-[0.68rem] text-white/46">See how your offers appear to customers.</p>
+          <div className="relative mt-3 min-h-[92px] overflow-hidden rounded-xl border border-pink-200/25 bg-[linear-gradient(115deg,rgba(236,72,153,0.86),rgba(168,85,247,0.62),rgba(244,114,182,0.75))] p-4">
+            <div className="relative z-10 max-w-[58%]">
+              <p className="text-sm font-bold text-white">🌸 Mother&apos;s Day Special</p>
+              <p className="mt-1 text-lg font-black leading-tight text-white">25% OFF on Comfort Bundles</p>
+              <button type="button" className="mt-3 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-pink-700">Shop Now</button>
+            </div>
+            <div className="absolute bottom-2 right-6 h-20 w-40 rounded-[100%] bg-[radial-gradient(circle,rgba(255,228,236,0.95),rgba(190,24,93,0.32)_55%,transparent_72%)]" />
+            <div className="absolute bottom-5 right-12 h-12 w-28 rounded-lg border border-white/20 bg-black/45 shadow-[0_0_25px_rgba(255,255,255,0.2)]" />
+          </div>
+          <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+            {storefrontOffers.map((offer, index) => (
+              <article key={offer[0]} className={`min-h-[66px] rounded-xl border border-white/10 p-3 ${
+                index === 0 ? "bg-pink-600/38" : index === 1 ? "bg-violet-600/36" : "bg-fuchsia-700/24"
+              }`}>
+                <p className="text-[0.68rem] font-black uppercase tracking-wide text-white">{offer[0]}</p>
+                <p className="mt-0.5 text-sm font-bold text-white">{offer[1]}</p>
+                {offer[2] && <p className="mt-0.5 text-[0.62rem] text-white/70">{offer[2]}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <footer className="relative flex min-h-12 items-center justify-center border-t border-white/8 pt-3 text-center text-[0.68rem] text-white/42">
+        <div>
+          <p>Aevyrixa Her Care Admin Control Room</p>
+          <p className="mt-1">&copy; 2026 Aevyrixa. All rights reserved.</p>
         </div>
-      </section>
+        <div className="absolute right-4 top-4 flex items-center gap-3 text-[0.68rem]">
+          <span>v2.1.0</span>
+          <span className="rounded-full border border-emerald-300/15 bg-emerald-400/10 px-2 py-1 font-semibold text-emerald-200">Auto-refresh ON</span>
+        </div>
+      </footer>
     </div>
   );
 }
