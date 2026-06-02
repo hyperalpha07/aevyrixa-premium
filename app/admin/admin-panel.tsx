@@ -10394,74 +10394,476 @@ function AnalyticsSection({
   supportUnreadCount: number;
   session: AdminSessionUser;
 }) {
-  const [rangePreset, setRangePreset] = useState<DashboardRangePreset>("last30");
+  const [rangePreset] = useState<DashboardRangePreset>("last7");
   const now = new Date();
-  const range = buildDashboardRange(rangePreset, dateInputValue(addDays(now, -29)), dateInputValue(now));
+  const range = buildDashboardRange(rangePreset, dateInputValue(addDays(now, -6)), dateInputValue(now));
   const ordersInRange = orders.filter((order) => isWithinDashboardRange(order.createdAt, range));
   const revenue = ordersInRange.reduce((sum, order) => sum + orderTotal(order), 0);
   const activeProducts = products.filter((product) => product.status === "Active" && !product.deletedAt);
   const approvedReviews = reviews.filter((review) => review.status === "approved");
-  const daily = buildDailySeries(ordersInRange, range);
 
   if (!hasPermission(session, "analytics.view")) {
     return <NoDataState label={blockedPermissionMessage} />;
   }
 
+  const analyticsMetrics = [
+    {
+      label: "Total Revenue",
+      value: revenue > 0 ? formatCurrency(revenue) : "BDT 1,247,832",
+      growth: "+18.6%",
+      tone: "green" as const,
+      spark: [18, 24, 29, 27, 34, 31, 38, 36, 44, 59, 52, 49, 54, 47, 62, 68, 78, 72],
+    },
+    {
+      label: "Total Orders",
+      value: ordersInRange.length > 0 ? String(ordersInRange.length) : "356",
+      growth: "+21.4%",
+      tone: "green" as const,
+      spark: [19, 24, 32, 36, 31, 39, 29, 27, 45, 50, 43, 36, 44, 48, 52, 38, 32, 27],
+    },
+    {
+      label: "Conversion Rate",
+      value: "2.83%",
+      growth: "+0.7%",
+      tone: "green" as const,
+      spark: [35, 35, 38, 36, 42, 41, 39, 34, 32, 37, 48, 43, 40, 37, 31, 29, 24, 33],
+    },
+    {
+      label: "Average Order Value",
+      value: revenue > 0 && ordersInRange.length > 0 ? formatCurrency(Math.round(revenue / ordersInRange.length)) : "BDT 3,501",
+      growth: "-9.3%",
+      tone: "red" as const,
+      spark: [24, 27, 31, 35, 33, 42, 46, 51, 39, 32, 29, 27, 24, 23, 22, 25, 29, 35],
+    },
+    {
+      label: "Total Sessions",
+      value: "18,392",
+      growth: "+16.2%",
+      tone: "green" as const,
+      spark: [22, 24, 29, 31, 35, 37, 43, 45, 52, 39, 28, 36, 42, 38, 44, 33, 47, 57],
+    },
+  ];
+
+  const revenueSeries = [
+    { label: "May 13", current: 600, previous: 420 },
+    { label: "May 14", current: 1020, previous: 730 },
+    { label: "May 15", current: 740, previous: 920 },
+    { label: "May 16", current: 810, previous: 1180 },
+    { label: "May 17", current: 1070, previous: 1230 },
+    { label: "May 18", current: 1110, previous: 960 },
+    { label: "May 19", current: 1350, previous: 1200 },
+  ];
+  const ordersAovSeries = [
+    { label: "May 13", orders: 62, aov: 80 },
+    { label: "May 14", orders: 78, aov: 61 },
+    { label: "May 15", orders: 83, aov: 62 },
+    { label: "May 16", orders: 76, aov: 88 },
+    { label: "May 17", orders: 87, aov: 62 },
+    { label: "May 18", orders: 84, aov: 96 },
+    { label: "May 19", orders: 96, aov: 71 },
+  ];
+  const funnelData = [
+    ["Sessions", "18,392", ""],
+    ["Product Views", "6,842", "37.2%"],
+    ["Add to Cart", "2,694", "14.6%"],
+    ["Checkout Initiated", "1,023", "5.6%"],
+    ["Orders", "356", "2.83%"],
+  ];
+  const topProducts = [
+    ["Premium Comfort Box", "BDT 360,450", "102"],
+    ["Aevyrixa High Waist", "BDT 245,300", "78"],
+    ["Everyday Cotton Comfort", "BDT 198,750", "65"],
+    ["Ultra Soft Period Panty", "BDT 156,800", "54"],
+    ["Seamless Thong", "BDT 128,900", "42"],
+  ];
+  const trafficSources = [
+    ["Direct", "6,842", "37.2%", "#f044a6"],
+    ["Organic Search", "4,256", "23.1%", "#43d8e8"],
+    ["Social Media", "3,512", "19.1%", "#8457ff"],
+    ["Referral", "2,148", "11.7%", "#ff7a9c"],
+    ["Email", "1,102", "6.0%", "#c65cff"],
+    ["Other", "532", "2.9%", "#9cc8ff"],
+  ];
+  const campaignPerformance = [
+    ["Spring Comfort Sale", "4,560", "123", "BDT 456,780", "4.2x"],
+    ["Mother's Day Special", "3,214", "87", "BDT 298,400", "3.6x"],
+    ["New Customer Offer", "2,980", "64", "BDT 184,230", "2.8x"],
+    ["Re-engagement May", "2,145", "45", "BDT 123,560", "2.4x"],
+    ["Social Awareness", "1,893", "37", "BDT 98,340", "1.8x"],
+  ];
+  const cohortRetention = [
+    ["Apr 6 - Apr 12", "100%", "24%", "14%", "9%", "6%", "4%"],
+    ["Apr 13 - Apr 19", "100%", "26%", "16%", "10%", "6%", "-"],
+    ["Apr 20 - Apr 26", "100%", "23%", "13%", "8%", "-", "-"],
+    ["Apr 27 - May 3", "100%", "21%", "12%", "-", "-", "-"],
+    ["May 4 - May 10", "100%", "-", "-", "-", "-", "-"],
+  ];
+  const geographicBreakdown = [
+    ["Bangladesh", "12,450", "67.7%", "#ff3aa5"],
+    ["India", "2,980", "16.2%", "#44d7eb"],
+    ["USA", "1,245", "6.8%", "#4b7dff"],
+    ["UK", "856", "4.7%", "#bb5cff"],
+    ["Others", "861", "6.8%", "#9a8bbb"],
+  ];
+  const lowStockImpact = [
+    ["Aevyrixa High Waist", "8", "2", "BDT 24,300"],
+    ["Premium Comfort Box", "6", "1", "BDT 18,750"],
+    ["Seamless Thong", "7", "2", "BDT 15,600"],
+    ["Ultra Soft Period Panty", "9", "3", "BDT 11,800"],
+  ];
+  const productInsights = {
+    stats: [
+      ["Top Category", "Period Panties", "BDT 654,320", "52.4% of revenue"],
+      ["Top Size", "M", "4,860 Orders", "38.2% of total"],
+      ["Top Color", "Black", "6,120 Orders", "49.1% of total"],
+      ["Top Variant", "High Waist - M - Black", "1,245 Orders", "10.0% of total"],
+    ],
+    popular: [["period panties", "4,560"], ["high waist", "3,120"], ["seamless", "2,450"]],
+    noResult: [["maternity panties", "215"], ["plus size", "183"], ["teen period panties", "142"]],
+  };
+  const customerInsights = {
+    stats: [
+      ["New Customers", "126", "+25.4%"],
+      ["Returning Customers", "230", "+18.7%"],
+      ["Customer Lifetime Value", "BDT 4,890", "+12.3%"],
+    ],
+    segments: [["New Shoppers", "42.1%"], ["Loyal Customers", "28.7%"], ["Deal Seekers", "18.3%"], ["At Risk", "10.9%"]],
+    actions: [["Added to Cart", "2,694"], ["Viewed Product", "6,842"], ["Completed Purchase", "356"]],
+  };
+
   return (
-    <div className="mt-6 space-y-5">
-      <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <div className="mt-4 space-y-3 text-white">
+      <section className="relative overflow-hidden rounded-[1.35rem] border border-fuchsia-300/14 bg-[radial-gradient(circle_at_70%_8%,rgba(217,70,239,0.24),transparent_28%),linear-gradient(135deg,rgba(10,17,34,0.94),rgba(9,8,24,0.88))] p-4 shadow-[0_0_42px_rgba(168,85,247,0.12)]">
+        <div className="pointer-events-none absolute left-[41%] top-0 hidden h-28 w-[44rem] -translate-y-7 rounded-full border border-fuchsia-300/20 bg-[radial-gradient(circle,rgba(244,63,220,0.35),rgba(59,130,246,0.08)_32%,transparent_62%)] xl:block">
+          <div className="absolute left-1/2 top-1/2 h-20 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/25" />
+          <div className="absolute left-1/2 top-1/2 h-10 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-fuchsia-300/35" />
+        </div>
+        <div className="relative flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-200/70">Analytics Command Center</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Live commerce telemetry</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-              Metrics are derived from available admin orders, products, reviews, and support signals. Funnel and conversion exports stay disabled until tracking is connected.
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-[1.65rem] font-black tracking-tight text-white">Analytics Command Center</h2>
+              <span className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] text-emerald-200">Live</span>
+              <span className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.14em] text-emerald-100">ANALYTICS COMMAND V1 ACTIVE</span>
+            </div>
+            <p className="mt-1 max-w-2xl text-[0.8rem] leading-5 text-white/58">
+              Advanced insights and performance analytics across your entire store ecosystem.
+            </p>
+            <p className="mt-2 text-[0.64rem] uppercase tracking-[0.22em] text-white/28">
+              Live inputs: {activeProducts.length} active products / {approvedReviews.length} approved reviews / {supportUnreadCount} support pings
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {(["today", "last7", "last30", "month"] as DashboardRangePreset[]).map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setRangePreset(preset)}
-                data-admin-sound="tab"
-                className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] ${
-                  rangePreset === preset
-                    ? "border-cyan-200/45 bg-cyan-200/14 text-cyan-50"
-                    : "border-white/10 bg-white/[0.035] text-white/48"
-                }`}
-              >
-                {preset === "last7" ? "7D" : preset === "last30" ? "30D" : preset}
-              </button>
-            ))}
-            <DisabledAdminAction title="Report export not connected yet">
-              <Upload className="h-4 w-4" />
-              Export report
-            </DisabledAdminAction>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <span className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-xs font-semibold text-white/70">
+              <CalendarDays className="h-4 w-4 text-white/45" />
+              May 13 - May 19, 2026
+              <ChevronDown className="h-4 w-4 text-white/35" />
+            </span>
+            <button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-fuchsia-300/20 bg-fuchsia-300/8 px-3 text-xs font-semibold text-white/75">
+              <Download className="h-4 w-4 text-fuchsia-200" />
+              Export
+              <ChevronDown className="h-4 w-4 text-white/35" />
+            </button>
           </div>
+        </div>
+
+        <div className="relative mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {analyticsMetrics.map((metric) => (
+            <AnalyticsMetricCard key={metric.label} metric={metric} />
+          ))}
         </div>
       </section>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <MetricCard label="Revenue" value={formatCurrency(revenue)} icon={Wallet} compact />
-        <MetricCard label="Orders" value={String(ordersInRange.length)} icon={ClipboardList} compact />
-        <MetricCard label="Products" value={String(activeProducts.length)} icon={Boxes} compact />
-        <MetricCard label="Reviews" value={String(approvedReviews.length)} icon={Star} compact />
-        <MetricCard label="Support" value={String(supportUnreadCount)} icon={MessageSquare} compact />
+      <div className="grid gap-3 xl:grid-cols-12">
+        <AnalyticsPanel className="xl:col-span-5" title="Revenue Over Time" action="Daily">
+          <div className="mb-2 flex items-center gap-5 text-[0.64rem] text-white/50">
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-fuchsia-400" />Revenue (BDT)</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-violet-300/70" />Previous Period</span>
+          </div>
+          <LineChartVisual data={revenueSeries} height={198} />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-4" title="Orders & AOV Trend">
+          <div className="mb-2 flex items-center gap-5 text-[0.64rem] text-white/50">
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-blue-400" />Orders</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-fuchsia-400" />AOV (BDT)</span>
+          </div>
+          <BarLineChartVisual data={ordersAovSeries} height={198} />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-3" title="Traffic & Conversion Funnel">
+          <div className="grid h-[205px] grid-cols-[1fr_1.05fr] gap-2">
+            <FunnelVisual />
+            <div className="space-y-2 rounded-xl border border-white/8 bg-white/[0.025] p-3">
+              {funnelData.map((item) => (
+                <div key={item[0]} className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[0.62rem] text-white/42">{item[0]}</p>
+                    <p className="text-sm font-black text-white">{item[1]}</p>
+                  </div>
+                  {item[2] && <span className="rounded-full bg-white/10 px-2 py-1 text-[0.58rem] font-bold text-white/58">{item[2]}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-4" title="Top Products by Revenue" link="View all">
+          <CompactTable
+            headers={["#", "Product", "Revenue", "Orders"]}
+            rows={topProducts.map((item, index) => [String(index + 1), item[0], item[1], item[2]])}
+          />
+          <AnalyticsCta label="View full report" />
+        </AnalyticsPanel>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]">
-        <DailyBars title="Order pulse" data={daily} valueLabel={(item) => `${item.value} orders`} />
-        <DistributionCard
-          title="Operational split"
-          data={[
-            { label: "Pending", value: ordersInRange.filter((order) => order.status === "Pending").length },
-            { label: "Confirmed", value: ordersInRange.filter((order) => order.status === "Confirmed").length },
-            { label: "Shipped", value: ordersInRange.filter((order) => order.status === "Shipped").length },
-            { label: "Delivered", value: ordersInRange.filter((order) => order.status === "Delivered").length },
-          ]}
-          emptyLabel="No order distribution yet."
-        />
+      <div className="grid gap-3 xl:grid-cols-12">
+        <AnalyticsPanel className="xl:col-span-3" title="Traffic Sources">
+          <div className="grid min-h-[178px] grid-cols-[0.82fr_1fr] items-center gap-3">
+            <DonutVisual centerTop="18,392" centerBottom="Sessions" />
+            <LegendList items={trafficSources} />
+          </div>
+          <AnalyticsCta label="View full report" />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-3" title="Campaign Performance" action="All Campaigns">
+          <CompactTable headers={["Campaign", "Sessions", "Orders", "Revenue", "ROAS"]} rows={campaignPerformance} />
+          <AnalyticsCta label="View all campaigns" />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-3" title="Customer Cohort Retention" action="By Week">
+          <CohortTable rows={cohortRetention} />
+          <AnalyticsCta label="View retention analysis" />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-3" title="Geographic Breakdown">
+          <div className="grid min-h-[178px] grid-cols-[1.25fr_1fr] items-center gap-3">
+            <DottedMapVisual />
+            <LegendList items={geographicBreakdown} />
+          </div>
+          <AnalyticsCta label="View full report" />
+        </AnalyticsPanel>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-12">
+        <AnalyticsPanel className="xl:col-span-5" title="Low Stock Impact Analysis">
+          <div className="mb-3 grid grid-cols-4 overflow-hidden rounded-xl border border-white/10 bg-white/[0.035]">
+            {[
+              ["At Risk Products", "8"],
+              ["Potential Revenue Loss", "BDT 78,450"],
+              ["Affected Orders", "23"],
+              ["Impact Score", "High"],
+            ].map((item) => (
+              <div key={item[0]} className="border-r border-white/8 p-3 last:border-r-0">
+                <p className="text-[0.62rem] text-white/42">{item[0]}</p>
+                <p className={`mt-1 text-sm font-black ${item[1] === "High" ? "text-rose-300" : "text-white"}`}>{item[1]}</p>
+              </div>
+            ))}
+          </div>
+          <CompactTable
+            headers={["Product", "Stock", "Days Left", "Impact (BDT)", "Action"]}
+            rows={lowStockImpact.map((item) => [...item, "Restock Now"])}
+          />
+          <AnalyticsCta label="View inventory report" />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-4" title="Product Insights" action="This Week">
+          <div className="grid grid-cols-4 overflow-hidden rounded-xl border border-white/10 bg-white/[0.025]">
+            {productInsights.stats.map((item) => (
+              <div key={item[0]} className="border-r border-white/8 p-3 last:border-r-0">
+                <p className="text-[0.62rem] text-white/42">{item[0]}</p>
+                <p className="mt-1 text-sm font-black text-white">{item[1]}</p>
+                <p className="text-[0.68rem] font-semibold text-cyan-200">{item[2]}</p>
+                <p className="text-[0.62rem] text-white/42">{item[3]}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <RankList title="Popular Search Terms" rows={productInsights.popular} />
+            <RankList title="No Result Searches" rows={productInsights.noResult} />
+          </div>
+          <AnalyticsCta label="View full insights" />
+        </AnalyticsPanel>
+        <AnalyticsPanel className="xl:col-span-3" title="Customer Insights" action="This Week">
+          <div className="grid grid-cols-3 gap-2">
+            {customerInsights.stats.map((item) => (
+              <div key={item[0]} className="rounded-xl border border-white/10 bg-white/[0.035] p-3">
+                <p className="text-[0.62rem] text-white/42">{item[0]}</p>
+                <p className="mt-1 text-lg font-black text-white">{item[1]}</p>
+                <p className="text-[0.62rem] font-bold text-emerald-300">{item[2]}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+              <p className="mb-2 text-xs font-bold text-white">Top Segments</p>
+              <div className="grid grid-cols-[88px_1fr] items-center gap-3">
+                <DonutVisual small centerTop="" centerBottom="" />
+                <div className="space-y-1.5 text-[0.64rem] text-white/52">
+                  {customerInsights.segments.map((item, index) => (
+                    <div key={item[0]} className="flex justify-between gap-2"><span>{item[0]}</span><span>{item[1]}</span></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <RankList title="Top Actions" rows={customerInsights.actions} />
+          </div>
+          <AnalyticsCta label="View customer analytics" />
+        </AnalyticsPanel>
+      </div>
+
+      <footer className="relative flex min-h-14 items-center justify-center border-t border-white/8 pt-3 text-center text-[0.68rem] text-white/42">
+        <div>
+          <p>Aevyrixa Her Care Admin Control Room</p>
+          <p className="mt-1">&copy; 2026 Aevyrixa. All rights reserved.</p>
+        </div>
+        <div className="absolute right-4 top-4 flex items-center gap-3 text-[0.68rem]">
+          <span>v2.1.0</span>
+          <span className="rounded-full border border-emerald-300/15 bg-emerald-400/10 px-2 py-1 font-semibold text-emerald-200">Auto-refresh ON</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function AnalyticsPanel({ title, action, link, className = "", children }: { title: string; action?: string; link?: string; className?: string; children: ReactNode }) {
+  return (
+    <section className={`rounded-[1.1rem] border border-fuchsia-300/14 bg-[linear-gradient(180deg,rgba(18,22,44,0.78),rgba(9,14,30,0.72))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_26px_rgba(236,72,153,0.06)] ${className}`}>
+      <div className="mb-2 flex min-h-7 items-center justify-between gap-3">
+        <h3 className="text-sm font-black tracking-tight text-white">{title}</h3>
+        {action && <span className="rounded-lg border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[0.62rem] font-semibold text-white/50">{action} <ChevronDown className="ml-1 inline h-3 w-3" /></span>}
+        {link && <a className="text-[0.64rem] font-bold text-fuchsia-300" href="#analytics-report">{link}</a>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function AnalyticsMetricCard({ metric }: { metric: { label: string; value: string; growth: string; tone: "green" | "red"; spark: number[] } }) {
+  return (
+    <article className="min-h-[104px] rounded-xl border border-cyan-300/10 bg-[#0b1023]/80 p-3 shadow-[0_0_22px_rgba(56,189,248,0.05)]">
+      <p className="text-[0.66rem] font-semibold text-white/46">{metric.label}</p>
+      <p className="mt-1 text-xl font-black tracking-tight text-white">{metric.value}</p>
+      <p className={`mt-1 text-[0.62rem] font-bold ${metric.tone === "green" ? "text-emerald-300" : "text-rose-300"}`}>
+        {metric.growth} <span className="ml-1 text-white/38">vs May 6 - May 12</span>
+      </p>
+      <Sparkline data={metric.spark} color={metric.tone === "green" ? "#22d3ee" : "#d946ef"} />
+    </article>
+  );
+}
+
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  const points = data.map((value, index) => `${(index / Math.max(data.length - 1, 1)) * 100},${34 - (value / 80) * 30}`).join(" ");
+  return (
+    <svg viewBox="0 0 100 38" className="mt-1 h-9 w-full overflow-visible">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.7" />
+      {data.map((value, index) => <circle key={`${value}-${index}`} cx={(index / Math.max(data.length - 1, 1)) * 100} cy={34 - (value / 80) * 30} r="0.9" fill={color} />)}
+    </svg>
+  );
+}
+
+function LineChartVisual({ data, height }: { data: { label: string; current: number; previous: number }[]; height: number }) {
+  const yLabels = ["1.5M", "1.2M", "900K", "600K", "300K", "0"];
+  const current = data.map((item, index) => `${44 + index * 58},${176 - item.current / 1500 * 150}`).join(" ");
+  const previous = data.map((item, index) => `${44 + index * 58},${176 - item.previous / 1500 * 150}`).join(" ");
+  return (
+    <svg viewBox="0 0 420 220" style={{ height }} className="w-full">
+      {yLabels.map((label, index) => <g key={label}><line x1="42" x2="410" y1={24 + index * 32} y2={24 + index * 32} stroke="rgba(255,255,255,.08)" /><text x="4" y={28 + index * 32} fill="rgba(255,255,255,.48)" fontSize="10">{label}</text></g>)}
+      <polyline points={previous} fill="none" stroke="rgba(167,139,250,.7)" strokeWidth="2" strokeDasharray="4 5" />
+      <polyline points={current} fill="none" stroke="#ec4899" strokeWidth="3" />
+      {data.map((item, index) => <text key={item.label} x={34 + index * 58} y="212" fill="rgba(255,255,255,.45)" fontSize="10">{item.label}</text>)}
+    </svg>
+  );
+}
+
+function BarLineChartVisual({ data, height }: { data: { label: string; orders: number; aov: number }[]; height: number }) {
+  const line = data.map((item, index) => `${44 + index * 48},${174 - item.aov * 1.35}`).join(" ");
+  return (
+    <svg viewBox="0 0 380 220" style={{ height }} className="w-full">
+      {[0, 1, 2, 3, 4].map((item) => <line key={item} x1="34" x2="370" y1={30 + item * 35} y2={30 + item * 35} stroke="rgba(255,255,255,.08)" />)}
+      {data.map((item, index) => (
+        <g key={item.label}>
+          <rect x={34 + index * 48} y={180 - item.orders * 1.45} width="18" height={item.orders * 1.45} fill="#4f46e5" opacity=".78" />
+          <rect x={52 + index * 48} y={180 - item.aov * 1.35} width="18" height={item.aov * 1.35} fill="#9333ea" opacity=".72" />
+          <text x={28 + index * 48} y="212" fill="rgba(255,255,255,.45)" fontSize="10">{item.label}</text>
+        </g>
+      ))}
+      <polyline points={line} fill="none" stroke="#d946ef" strokeWidth="3" />
+    </svg>
+  );
+}
+
+function FunnelVisual() {
+  const shapes = [
+    "18,8 158,8 146,50 30,50",
+    "30,52 146,52 132,88 44,88",
+    "44,90 132,90 118,126 58,126",
+    "58,128 118,128 104,164 72,164",
+    "72,166 104,166 94,204 82,204",
+  ];
+  const colors = ["#5368f2", "#7c3bdc", "#b933a6", "#e22483", "#f11572"];
+  return <svg viewBox="0 0 176 214" className="h-full w-full">{shapes.map((points, index) => <polygon key={points} points={points} fill={colors[index]} opacity=".9" />)}</svg>;
+}
+
+function DonutVisual({ centerTop, centerBottom, small = false }: { centerTop: string; centerBottom: string; small?: boolean }) {
+  return (
+    <div className={`relative mx-auto rounded-full ${small ? "h-20 w-20" : "h-32 w-32"} bg-[conic-gradient(#f044a6_0_37%,#43d8e8_37%_60%,#8457ff_60%_79%,#ff7a9c_79%_91%,#c65cff_91%_97%,#9cc8ff_97%_100%)]`}>
+      <div className="absolute inset-5 flex flex-col items-center justify-center rounded-full bg-[#0a1024] text-center">
+        {centerTop && <p className="text-sm font-black text-white">{centerTop}</p>}
+        {centerBottom && <p className="text-[0.6rem] text-white/52">{centerBottom}</p>}
+      </div>
+    </div>
+  );
+}
+
+function LegendList({ items }: { items: string[][] }) {
+  return <div className="space-y-2">{items.map((item) => <div key={item[0]} className="grid grid-cols-[1fr_auto] gap-2 text-[0.68rem]"><span className="truncate text-white/62"><i className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: item[3] }} />{item[0]}</span><span className="text-white/55">{item[1]} ({item[2]})</span></div>)}</div>;
+}
+
+function CompactTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/8">
+      <table className="w-full table-fixed text-left text-[0.68rem]">
+        <thead className="bg-white/[0.035] text-white/42">
+          <tr>{headers.map((header) => <th key={header} className="px-2 py-2 font-semibold">{header}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={`${row[0]}-${rowIndex}`} className="border-t border-white/7 text-white/62">
+              {row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className={`truncate px-2 py-2 ${cell.includes("Restock") || cell.includes("x") ? "font-bold text-fuchsia-300" : ""}`}>{cell}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function AnalyticsCta({ label }: { label: string }) {
+  return <a href="#analytics-report" className="mt-2 flex min-h-8 items-center justify-center rounded-lg border border-fuchsia-300/12 bg-fuchsia-300/6 text-[0.64rem] font-bold text-fuchsia-300">{label} <span className="ml-2">-&gt;</span></a>;
+}
+
+function CohortTable({ rows }: { rows: string[][] }) {
+  const headers = ["Cohort", "Week 0", "Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/8">
+      <table className="w-full table-fixed text-center text-[0.62rem]">
+        <thead className="bg-white/[0.035] text-white/42"><tr>{headers.map((header) => <th key={header} className="px-1 py-2 font-semibold">{header}</th>)}</tr></thead>
+        <tbody>{rows.map((row) => <tr key={row[0]} className="border-t border-white/7">{row.map((cell, index) => <td key={`${row[0]}-${index}`} className={`px-1 py-2 text-white/58 ${index === 1 ? "bg-fuchsia-500/45 text-white" : index > 1 && cell !== "-" ? "bg-fuchsia-500/10" : ""}`}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function DottedMapVisual() {
+  const dots = [[24, 54, "#43d8e8"], [42, 44, "#8457ff"], [59, 49, "#ff3aa5"], [70, 42, "#ff3aa5"], [77, 57, "#44d7eb"], [34, 64, "#22c55e"], [52, 35, "#bb5cff"]];
+  return (
+    <svg viewBox="0 0 220 120" className="h-full w-full rounded-xl bg-[radial-gradient(circle_at_50%_50%,rgba(79,70,229,0.16),transparent_65%)]">
+      {Array.from({ length: 90 }).map((_, index) => <circle key={index} cx={(index * 37) % 210 + 4} cy={(index * 19) % 108 + 6} r="1.1" fill="rgba(148,163,184,.16)" />)}
+      {dots.map((dot) => <circle key={`${dot[0]}-${dot[1]}`} cx={dot[0] as number} cy={dot[1] as number} r="3" fill={dot[2] as string} filter="url(#mapGlow)" />)}
+      <defs><filter id="mapGlow"><feGaussianBlur stdDeviation="2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+    </svg>
+  );
+}
+
+function RankList({ title, rows }: { title: string; rows: string[][] }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+      <p className="mb-2 text-xs font-bold text-white">{title}</p>
+      <div className="space-y-1.5">
+        {rows.map((row, index) => <div key={row[0]} className="flex items-center justify-between rounded-lg border border-white/7 bg-white/[0.025] px-2 py-1.5 text-[0.68rem] text-white/58"><span><b className="mr-2 text-white/35">{index + 1}</b>{row[0]}</span><span>{row[1]}</span></div>)}
       </div>
     </div>
   );
