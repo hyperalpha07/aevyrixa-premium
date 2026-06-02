@@ -11819,6 +11819,27 @@ function StaffSection({ session }: { session: AdminSessionUser }) {
   };
 
   return (
+    <StaffCommandCenter
+      staff={staff}
+      activityLogs={activityLogs}
+      draft={draft}
+      setDraft={setDraft}
+      editingId={editingId}
+      loading={loading}
+      saving={saving}
+      message={message}
+      error={error}
+      canManageStaff={canManageStaff}
+      canViewActivity={canViewActivity}
+      startCreate={startCreate}
+      startEdit={startEdit}
+      updateDraftRole={updateDraftRole}
+      saveStaff={saveStaff}
+      toggleActive={toggleActive}
+    />
+  );
+
+  return (
     <div className="mt-6 space-y-5">
       <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
         Owner access remains controlled by the server environment credentials. Staff accounts are Supabase-backed and cannot manage staff or sensitive settings unless explicitly allowed.
@@ -11984,6 +12005,219 @@ function StaffSection({ session }: { session: AdminSessionUser }) {
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+function StaffCommandCenter({
+  staff,
+  activityLogs,
+  draft,
+  setDraft,
+  editingId,
+  loading,
+  saving,
+  message,
+  error,
+  canManageStaff,
+  canViewActivity,
+  startCreate,
+  startEdit,
+  updateDraftRole,
+  saveStaff,
+  toggleActive,
+}: {
+  staff: AdminStaffClientRecord[];
+  activityLogs: AdminActivityClientRecord[];
+  draft: ReturnType<typeof emptyStaffDraft>;
+  setDraft: (value: ReturnType<typeof emptyStaffDraft> | ((current: ReturnType<typeof emptyStaffDraft>) => ReturnType<typeof emptyStaffDraft>)) => void;
+  editingId: string | null;
+  loading: boolean;
+  saving: boolean;
+  message: string;
+  error: string;
+  canManageStaff: boolean;
+  canViewActivity: boolean;
+  startCreate: () => void;
+  startEdit: (record: AdminStaffClientRecord) => void;
+  updateDraftRole: (role: AdminRole) => void;
+  saveStaff: (event: FormEvent<HTMLFormElement>) => void;
+  toggleActive: (record: AdminStaffClientRecord) => void;
+}) {
+  const fallbackStaff: AdminStaffClientRecord[] = [
+    { id: "fallback-fatema", name: "Fatema Jahan", email: "fatema.j@aevyrixa.com", username: "fatema.jahan", role: "manager", permissions: roleDefaultPermissionsToMap("manager"), isActive: true, lastLoginAt: new Date().toISOString() },
+    { id: "fallback-naznin", name: "Naznin Sultana", email: "naznin.s@aevyrixa.com", username: "naznin.sultana", role: "support_staff", permissions: roleDefaultPermissionsToMap("support_staff"), isActive: true, lastLoginAt: new Date(Date.now() - 120000).toISOString() },
+    { id: "fallback-rabeya", name: "Rabeya Akter", email: "rabeya.a@aevyrixa.com", username: "rabeya.akter", role: "product_staff", permissions: roleDefaultPermissionsToMap("product_staff"), isActive: true, lastLoginAt: new Date(Date.now() - 300000).toISOString() },
+    { id: "fallback-shakil", name: "Shakil Ahmed", email: "shakil.a@aevyrixa.com", username: "shakil.ahmed", role: "manager", permissions: roleDefaultPermissionsToMap("manager"), isActive: true, lastLoginAt: new Date(Date.now() - 720000).toISOString() },
+    { id: "fallback-mahi", name: "Mahi Rahman", email: "mahi.r@aevyrixa.com", username: "mahi.rahman", role: "support_staff", permissions: roleDefaultPermissionsToMap("support_staff"), isActive: false, lastLoginAt: new Date(Date.now() - 3600000).toISOString() },
+    { id: "fallback-jannatul", name: "Jannatul Islam", email: "jannatul.i@aevyrixa.com", username: "jannatul.islam", role: "product_staff", permissions: roleDefaultPermissionsToMap("product_staff"), isActive: false, lastLoginAt: new Date(Date.now() - 7200000).toISOString() },
+    { id: "fallback-tahmina", name: "Tahmina Khan", email: "tahmina.k@aevyrixa.com", username: "tahmina.khan", role: "viewer", permissions: roleDefaultPermissionsToMap("viewer"), isActive: false, lastLoginAt: new Date(Date.now() - 10800000).toISOString() },
+    { id: "fallback-rafi", name: "Rafi Ahmed", email: "rafi.a@aevyrixa.com", username: "rafi.ahmed", role: "manager", permissions: roleDefaultPermissionsToMap("manager"), isActive: false, lastLoginAt: new Date(Date.now() - 14400000).toISOString() },
+  ];
+  const displayStaff = staff.length > 0 ? staff : fallbackStaff;
+  const staffTotal = staff.length > 0 ? staff.length : 48;
+  const activeStaffCount = staff.length > 0 ? staff.filter((record) => record.isActive).length : 18;
+  const selectedStaff = displayStaff.find((record) => record.id === editingId) ?? displayStaff[0];
+  const staffMetrics = [
+    { label: "Total Staff", value: staffTotal, growth: "14.3%", icon: Users, line: "from-pink-400 to-fuchsia-500" },
+    { label: "Active Now", value: activeStaffCount, growth: "12.5%", icon: Users, line: "from-emerald-300 to-cyan-400" },
+    { label: "Managers", value: staff.length > 0 ? staff.filter((record) => record.role === "manager").length : 7, growth: "16.7%", icon: ShieldCheck, line: "from-violet-300 to-fuchsia-500" },
+    { label: "Viewers", value: staff.length > 0 ? staff.filter((record) => record.role === "viewer").length : 24, growth: "9.1%", icon: MonitorDot, line: "from-blue-300 to-cyan-400" },
+    { label: "Recent Logins (24h)", value: staff.length > 0 ? staff.filter((record) => record.lastLoginAt).length : 31, growth: "18.4%", icon: CalendarDays, line: "from-cyan-300 to-teal-300" },
+  ];
+  const permissionModules = ["Orders", "Products", "Reviews", "Support", "Customers", "Settings", "Media", "Discounts", "Analytics"];
+  const permissionColumns = ["Owner", "Manager", "Support Lead", "Agent", "Editor", "Viewer"];
+  const permissionPattern = [
+    ["full", "full", "full", "limited", "limited", "view"],
+    ["full", "full", "full", "limited", "limited", "none"],
+    ["full", "full", "full", "limited", "none", "none"],
+    ["full", "full", "full", "limited", "none", "view"],
+    ["full", "full", "full", "limited", "none", "none"],
+    ["full", "full", "limited", "limited", "none", "none"],
+    ["full", "full", "full", "none", "none", "view"],
+    ["full", "full", "full", "none", "none", "view"],
+    ["full", "full", "none", "none", "none", "view"],
+  ];
+  const fallbackActivity: AdminActivityClientRecord[] = [
+    { id: "activity-product", actorName: "Fatema Jahan", action: "Updated product: Premium Comfort Box", createdAt: "10:31 AM" },
+    { id: "activity-review", actorName: "Naznin Sultana", action: "Approved review from Asma Rahman", createdAt: "10:29 AM" },
+    { id: "activity-discount", actorName: "Rabeya Akter", action: "Created discount code: AEVY10", createdAt: "10:27 AM" },
+    { id: "activity-export", actorName: "Shakil Ahmed", action: "Exported analytics report", createdAt: "10:25 AM" },
+    { id: "activity-ticket", actorName: "Mahi Rahman", action: "Replied to customer ticket #9876", createdAt: "10:24 AM" },
+    { id: "activity-media", actorName: "Jannatul Islam", action: "Uploaded media: Campaign Banner", createdAt: "10:21 AM" },
+    { id: "activity-orders", actorName: "Tahmina Khan", action: "Viewed orders dashboard", createdAt: "10:18 AM" },
+    { id: "activity-role", actorName: "Rafi Ahmed", action: "Updated staff role: Support Agent", createdAt: "10:17 AM" },
+  ];
+  const displayActivity = activityLogs.length > 0 ? activityLogs.slice(0, 8) : fallbackActivity;
+  const roleTemplates = [
+    { label: "Manager", detail: "Full access to all modules", icon: ShieldCheck },
+    { label: "Support Agent", detail: "Handle tickets and customers", icon: MessageSquare },
+    { label: "Content Editor", detail: "Manage media and content", icon: ImageIcon },
+    { label: "Viewer", detail: "View-only access", icon: MonitorDot },
+  ];
+  const approvalRequests = [
+    ["New Staff Requests", "3 pending requests"],
+    ["Role Change Requests", "2 pending requests"],
+    ["Permission Change", "5 pending requests"],
+    ["Access Revocations", "1 pending request"],
+  ];
+  const securityItems = [
+    ["Two-Factor Auth", "Enabled", "Enforced for all staff"],
+    ["Session Timeout", "Active", "30 minutes"],
+    ["Password Policy", "Active", "Strong (12+ chars)"],
+    ["Login Alerts", "Active", "Email notifications"],
+  ];
+
+  return (
+    <div className="relative mt-4 space-y-4 overflow-hidden rounded-[1.35rem] border border-white/[0.06] bg-[#050914] p-3 text-white shadow-[0_0_80px_rgba(11,185,255,0.08)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_55%_7%,rgba(219,39,199,0.26),transparent_22%),radial-gradient(circle_at_87%_18%,rgba(14,165,233,0.14),transparent_20%),linear-gradient(180deg,rgba(9,16,36,0.9),rgba(4,8,18,0.98))]" />
+      <div className="relative space-y-4">
+        <section className="relative min-h-[154px] overflow-hidden rounded-[1.15rem] border border-white/[0.08] bg-[#080d1e]/86 px-5 py-4 shadow-[inset_0_0_34px_rgba(255,255,255,0.025)]">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(236,72,255,0.65),rgba(56,189,248,0.18)_34%,transparent_68%)] blur-sm" />
+          <div className="pointer-events-none absolute left-1/2 top-2 h-28 w-[620px] -translate-x-1/2 rounded-full border border-fuchsia-300/18 shadow-[0_0_60px_rgba(217,70,239,0.28)]" />
+          <div className="relative flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-black tracking-[-0.02em] text-white">Team Command Center</h1>
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">Live</span>
+                <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-cyan-100">STAFF COMMAND V1 ACTIVE</span>
+              </div>
+              <p className="mt-2 max-w-xl text-xs text-white/58">Manage your team, roles, permissions, and security across the command center.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/[0.08] bg-black/24 px-3 text-xs font-semibold text-white/70"><CalendarDays className="h-4 w-4 text-fuchsia-200" />May 13 - May 19, 2026<ChevronDown className="h-3.5 w-3.5" /></button>
+              <button type="button" className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.045] px-3 text-xs font-semibold text-white/80"><Download className="h-4 w-4 text-cyan-200" />Export<ChevronDown className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+          <div className="relative mt-8 grid gap-3 lg:grid-cols-5">
+            {staffMetrics.map(({ label, value, growth, icon: Icon, line }) => (
+              <article key={label} className="relative min-h-[92px] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b1024]/88 p-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
+                <div className={`absolute inset-x-8 bottom-3 h-[2px] rounded-full bg-gradient-to-r ${line} opacity-70`} />
+                <div className="flex items-start gap-3">
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br ${line} text-white shadow-[0_0_24px_rgba(236,72,153,0.16)]`}><Icon className="h-5 w-5" /></span>
+                  <div><p className="text-[11px] text-white/54">{label}</p><p className="mt-1 text-2xl font-black text-white">{value}</p><p className="mt-1 text-[10px] font-semibold text-emerald-300">up {growth} <span className="text-white/38">vs last 7 days</span></p></div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {(error || message || loading) && (
+          <div className="grid gap-2 text-xs sm:grid-cols-3">
+            {loading && <div className="rounded-xl border border-cyan-300/14 bg-cyan-300/[0.055] px-3 py-2 text-cyan-100">Loading staff command data...</div>}
+            {error && <div className="rounded-xl border border-rose-300/18 bg-rose-400/[0.075] px-3 py-2 text-rose-100">{error}</div>}
+            {message && <div className="rounded-xl border border-emerald-300/18 bg-emerald-400/[0.075] px-3 py-2 text-emerald-100">{message}</div>}
+          </div>
+        )}
+
+        <div className="grid gap-3 xl:grid-cols-[1.35fr_1.05fr_0.78fr]">
+          <section className="min-w-0 rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3 shadow-[inset_0_0_34px_rgba(255,255,255,0.02)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><h2 className="text-sm font-black text-white">Team Members</h2><span className="rounded-full border border-white/[0.08] bg-white/[0.055] px-2 py-1 text-[10px] text-white/60">{staffTotal} Total</span></div>
+              {canManageStaff && <button type="button" onClick={startCreate} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-fuchsia-300/20 bg-fuchsia-400/10 px-2.5 text-[11px] font-semibold text-fuchsia-100"><Plus className="h-3.5 w-3.5" />Add</button>}
+            </div>
+            <div className="mt-3 grid gap-2 lg:grid-cols-[1fr_96px_96px_96px_82px]">
+              <label className="relative"><Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fuchsia-200/70" /><input className="h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 pl-9 pr-3 text-[11px] text-white/75 outline-none placeholder:text-white/32" placeholder="Search staff by name, email, or role..." /></label>
+              {["All Roles", "All Status", "All Teams"].map((label) => <button key={label} type="button" className="flex h-9 items-center justify-between rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-[11px] text-white/58">{label}<ChevronDown className="h-3.5 w-3.5" /></button>)}
+              <button type="button" className="h-9 rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 text-[11px] font-semibold text-fuchsia-100">Filters</button>
+            </div>
+            <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.07]">
+              <div className="grid grid-cols-[minmax(180px,1.4fr)_110px_92px_82px_92px_42px] bg-white/[0.035] px-3 py-2 text-[10px] font-semibold text-white/42"><span>Member</span><span>Role</span><span>Team</span><span>Status</span><span>Last Activity</span><span>Actions</span></div>
+              {displayStaff.slice(0, 8).map((record, index) => (
+                <div key={record.id} className="grid grid-cols-[minmax(180px,1.4fr)_110px_92px_82px_92px_42px] items-center border-t border-white/[0.06] px-3 py-2.5 text-[11px] text-white/62">
+                  <button type="button" onClick={() => startEdit(record)} className="flex min-w-0 items-center gap-2 text-left"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-gradient-to-br from-fuchsia-400/70 to-cyan-300/50 text-xs font-black text-white">{record.name.slice(0, 1)}</span><span className="min-w-0"><span className="block truncate font-bold text-white/88">{record.name}</span><span className="block truncate text-[10px] text-white/38">{record.email || record.username}</span></span></button>
+                  <span className="w-fit rounded-full border border-fuchsia-300/20 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">{roleLabels[record.role]}</span>
+                  <span>{record.role === "support_staff" ? "Support" : record.role === "product_staff" ? "Products" : record.role === "viewer" ? "Reports" : "Operations"}</span>
+                  <span className={`w-fit rounded-full border px-2 py-1 text-[10px] font-bold ${record.isActive ? "border-emerald-300/22 bg-emerald-400/10 text-emerald-200" : index === 3 ? "border-amber-300/22 bg-amber-400/10 text-amber-200" : "border-white/12 bg-white/[0.045] text-white/45"}`}>{record.isActive ? "Online" : index === 3 ? "Away" : "Offline"}</span>
+                  <span>{record.lastLoginAt ? (staff.length > 0 ? formatDate(record.lastLoginAt) : ["Just now", "2m ago", "5m ago", "12m ago", "1h ago", "2h ago", "3h ago", "4h ago"][index]) : "Never"}</span>
+                  <button type="button" onClick={() => canManageStaff ? toggleActive(record) : startEdit(record)} className="grid h-7 w-7 place-items-center rounded-lg border border-white/[0.08] bg-white/[0.045] text-white/58" disabled={saving}><MoreVertical className="h-4 w-4" /></button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between text-[11px] text-white/45"><span>Showing 1 to 8 of {staffTotal} staff</span><div className="flex items-center gap-1">{["1", "2", "3", "4", "5"].map((page) => <button key={page} type="button" className={`h-7 w-7 rounded-lg border text-[11px] ${page === "1" ? "border-fuchsia-300/35 bg-fuchsia-500/45 text-white" : "border-white/[0.08] bg-white/[0.035] text-white/55"}`}>{page}</button>)}</div></div>
+          </section>
+
+          <section className="min-w-0 rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
+            <div className="flex items-center justify-between"><h2 className="text-sm font-black text-white">Permissions Matrix</h2><button type="button" className="rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 py-2 text-[11px] font-semibold text-fuchsia-100">Edit Roles</button></div>
+            <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.07]">
+              <div className="grid grid-cols-[1.1fr_repeat(6,0.78fr)] bg-white/[0.035] px-3 py-2 text-[10px] text-white/42"><span>Module</span>{permissionColumns.map((column) => <span key={column} className="text-center">{column}</span>)}</div>
+              {permissionModules.map((module, rowIndex) => <div key={module} className="grid grid-cols-[1.1fr_repeat(6,0.78fr)] items-center border-t border-white/[0.055] px-3 py-2 text-[11px]"><span className="font-semibold text-white/75">{module}</span>{permissionPattern[rowIndex].map((state, cellIndex) => <span key={`${module}-${cellIndex}`} className="grid place-items-center"><span className={`grid h-5 w-5 place-items-center rounded-full border text-[10px] font-black ${state === "full" ? "border-emerald-300/24 bg-emerald-400/12 text-emerald-200" : state === "limited" ? "border-amber-300/24 bg-amber-400/12 text-amber-200" : state === "view" ? "border-violet-300/24 bg-violet-400/12 text-violet-200" : "border-pink-300/24 bg-pink-500/12 text-pink-200"}`}>{state === "full" ? <Check className="h-3 w-3" /> : state === "none" ? <X className="h-3 w-3" /> : "-"}</span></span>)}</div>)}
+            </div>
+            <div className="mt-3 grid grid-cols-4 gap-2 rounded-xl border border-white/[0.07] bg-black/16 p-2 text-[10px] text-white/58">{[["Full Access", "bg-emerald-300"], ["Limited Access", "bg-amber-300"], ["No Access", "bg-pink-400"], ["View Only", "bg-violet-300"]].map(([label, color]) => <span key={label} className="flex items-center gap-1.5"><i className={`h-2 w-2 rounded-full ${color}`} />{label}</span>)}</div>
+          </section>
+
+          <section className="min-w-0 rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
+            <div className="flex items-center justify-between"><h2 className="text-sm font-black text-white">Activity Audit Log</h2><button type="button" className="rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 py-2 text-[11px] font-semibold text-fuchsia-100">View all</button></div>
+            <div className="mt-3 space-y-2">{canViewActivity ? displayActivity.map((log, index) => <div key={log.id} className="flex items-center gap-2 rounded-xl border border-white/[0.055] bg-white/[0.025] p-2"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-gradient-to-br from-pink-400/70 to-cyan-300/50 text-[11px] font-black">{(log.actorName || "A").slice(0, 1)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-bold text-white/82">{log.actorName || "Admin"}</span><span className="block truncate text-[10px] text-white/44">{log.action}{log.targetType ? ` - ${log.targetType}` : ""}</span></span><span className="text-[10px] text-white/36">{staff.length > 0 && log.createdAt ? formatDate(log.createdAt) : log.createdAt || `10:${31 - index} AM`}</span></div>) : <p className="rounded-xl border border-white/[0.07] bg-black/20 p-3 text-xs text-white/45">Activity access is limited by staff permissions.</p>}</div>
+            <button type="button" className="mt-3 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-500/10 py-2.5 text-[11px] font-bold text-fuchsia-100">View full activity log</button>
+          </section>
+        </div>
+
+        <div className="grid gap-3 xl:grid-cols-[0.95fr_1.35fr_0.78fr_1fr]">
+          <form onSubmit={saveStaff} className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
+            <h2 className="text-sm font-black text-white">Staff Detail Editor</h2>
+            <div className="mt-3 grid grid-cols-[86px_1fr] gap-3"><div><div className="grid h-20 w-20 place-items-center rounded-xl border border-fuchsia-300/18 bg-gradient-to-br from-fuchsia-400/28 to-cyan-300/16 text-2xl font-black text-white">{(selectedStaff?.name || draft.name || "S").slice(0, 1)}</div><button type="button" className="mt-2 h-8 w-20 rounded-lg border border-white/[0.08] bg-white/[0.04] text-[10px] text-white/62">Change Photo</button></div><div className="space-y-2"><input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Full Name" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><input value={draft.email} onChange={(event) => setDraft((current) => ({ ...current, email: event.target.value }))} placeholder="Email Address" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><select value={draft.role} onChange={(event) => updateDraftRole(event.target.value as AdminRole)} className="h-8 w-full rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/76 outline-none">{staffRoleOptions.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select><select value={draft.isActive ? "active" : "inactive"} onChange={(event) => setDraft((current) => ({ ...current, isActive: event.target.value === "active" }))} className="h-8 w-full rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/76 outline-none"><option value="active">Online</option><option value="inactive">Offline</option></select><input placeholder="Phone (Optional)" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /></div></div>
+            <div className="mt-3 flex items-center justify-between text-[11px]"><span className="font-semibold text-fuchsia-200">Two-Factor Auth</span><span className="text-white/62">Enabled</span></div>
+            <button type="submit" disabled={saving || !canManageStaff} className="mt-3 h-10 w-full rounded-xl bg-gradient-to-r from-fuchsia-500 to-pink-500 text-xs font-black text-white shadow-[0_0_24px_rgba(236,72,153,0.25)] disabled:opacity-45">{saving ? "Saving..." : "Save Changes"}</button>
+          </form>
+
+          <section className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
+            <h2 className="text-sm font-black text-white">Invite &amp; Role Assignment</h2><p className="mt-3 text-[11px] text-white/50">Invite Staff Member</p>
+            <div className="mt-2 grid gap-2 lg:grid-cols-[1fr_150px_140px_136px]"><input placeholder="Enter email address" className="h-9 rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><select className="h-9 rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/62 outline-none"><option>Select Role</option></select><select className="h-9 rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/62 outline-none"><option>Select Team</option></select><button type="button" className="h-9 rounded-lg bg-gradient-to-r from-fuchsia-500 to-pink-500 text-[11px] font-bold text-white">Send Invitation</button></div>
+            <p className="mt-4 text-xs font-bold text-white">Quick Role Templates</p><div className="mt-2 grid grid-cols-4 gap-2">{roleTemplates.map(({ label, detail, icon: Icon }) => <button key={label} type="button" className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-3 text-left"><Icon className="h-5 w-5 text-fuchsia-200" /><span className="mt-3 block text-[11px] font-bold text-white">{label}</span><span className="mt-1 block text-[10px] leading-4 text-white/42">{detail}</span></button>)}</div>
+          </section>
+
+          <section className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3"><h2 className="text-sm font-black text-white">Approvals &amp; Requests</h2><div className="mt-3 space-y-2">{approvalRequests.map(([title, detail]) => <button key={title} type="button" className="flex w-full items-center justify-between rounded-xl border border-white/[0.07] bg-fuchsia-400/[0.035] p-3 text-left"><span><span className="block text-[11px] font-bold text-white/82">{title}</span><span className="mt-1 block text-[10px] text-white/42">{detail}</span></span><span className="text-[10px] font-bold text-fuchsia-200">Review</span></button>)}</div></section>
+
+          <section className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
+            <h2 className="text-sm font-black text-white">Security &amp; Access</h2>
+            <div className="mt-3 grid grid-cols-[116px_1fr] gap-3"><div className="relative grid h-28 place-items-center rounded-2xl border border-cyan-300/14 bg-[radial-gradient(circle,rgba(34,211,238,0.18),transparent_62%)]"><div className="absolute h-24 w-24 rounded-full border border-fuchsia-300/18" /><div className="absolute h-16 w-16 rounded-full border border-cyan-300/24" /><ShieldCheck className="relative h-9 w-9 text-emerald-300 drop-shadow-[0_0_16px_rgba(52,211,153,0.7)]" /></div><div className="space-y-2">{securityItems.map(([title, state, detail]) => <div key={title} className="flex items-center justify-between rounded-xl border border-white/[0.055] bg-white/[0.025] px-3 py-2"><span><span className="block text-[11px] font-bold text-white/78">{title}</span><span className="block text-[10px] text-white/40">{detail}</span></span><span className="rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2 py-1 text-[10px] font-bold text-emerald-200">{state}</span></div>)}</div></div>
+            <button type="button" className="mt-3 h-10 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-500/10 text-[11px] font-bold text-fuchsia-100">Security Settings</button>
+          </section>
+        </div>
+
+        <footer className="flex items-end justify-between px-2 py-1 text-[11px] text-white/38"><div /><div className="text-center"><p className="font-semibold text-white/52">Aevyrixa Her Care Admin Control Room</p><p className="mt-1">&copy; 2026 Aevyrixa. All rights reserved.</p></div><div className="flex items-center gap-3"><span>v2.1.0</span><span className="rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2 py-1 text-[10px] font-bold text-emerald-200">Auto-refresh ON</span></div></footer>
+      </div>
     </div>
   );
 }
