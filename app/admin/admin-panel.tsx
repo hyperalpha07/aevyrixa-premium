@@ -9700,6 +9700,12 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   const repeatBuyers = hubCustomers.filter((customer) => customer.orderCount > 1).length;
   const totalSpent = selectedCustomer?.totalSpent ?? 0;
   const averageOrderValue = selectedCustomer && selectedCustomer.orderCount > 0 ? Math.round(totalSpent / selectedCustomer.orderCount) : 0;
+  const selectedCustomerStats = selectedCustomer ? [
+    { label: "Total Orders", value: String(selectedCustomer.orderCount) },
+    { label: "Total Spent", value: formatCurrency(totalSpent) },
+    { label: "Avg. Order Value", value: formatCurrency(averageOrderValue) },
+    { label: "Customer Since", value: formatDate(selectedCustomer.createdAt) },
+  ] : [];
 
   useEffect(() => {
     if (!hubCustomers.some((customer) => customer.id === selectedCustomerId)) {
@@ -9785,7 +9791,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   return (
     <div className="aev-customers-hub mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#030816]/76 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)]">
       <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.25rem] border border-pink-200/18 p-3 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-4">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-36 opacity-90">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-90">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
           <div className="absolute left-1/2 top-3 h-24 w-[560px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.25)]" />
           <div className="absolute left-1/2 top-7 h-14 w-[360px] -translate-x-1/2 rounded-[100%] border border-pink-300/25 shadow-[0_0_42px_rgba(255,77,184,0.38)]" />
@@ -9818,7 +9824,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
             </button>
           </div>
         </div>
-        <div className="relative z-10 mt-10 grid gap-3 xl:grid-cols-[minmax(0,1fr)_545px]">
+        <div className="relative z-10 mt-8 grid gap-3 xl:grid-cols-[minmax(0,1fr)_545px]">
           <div className="grid gap-3 md:grid-cols-3">
             {customerMetrics.map((metric) => {
               const Icon = metric.icon;
@@ -9854,11 +9860,10 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 md:grid-cols-4">
-                <DetailLine label="Total Orders" value={String(selectedCustomer.orderCount)} />
-                <DetailLine label="Total Spent" value={formatCurrency(totalSpent)} />
-                <DetailLine label="Avg. Order Value" value={formatCurrency(averageOrderValue)} />
-                <DetailLine label="Customer Since" value={formatDate(selectedCustomer.createdAt)} />
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 md:grid-cols-4">
+                {selectedCustomerStats.map((stat) => (
+                  <DetailLine key={stat.label} label={stat.label} value={stat.value} />
+                ))}
               </div>
             </article>
           )}
@@ -9901,17 +9906,15 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </section>
               <section className="aev-admin-control-panel rounded-[1.05rem] border p-3">
                 <SectionHeader title="Quick Actions" />
-                <div className="mt-3 grid grid-cols-4 gap-2">
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px] flex-col text-[11px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
-                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[74px] flex-col text-[11px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
-                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[74px] flex-col text-[11px]"><Download className="h-4 w-4" />Export Segment</button>
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px] flex-col text-[11px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[54px] justify-start px-3 text-[11px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
+                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
+                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><Download className="h-4 w-4" />Export Segment</button>
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[54px] justify-start px-3 text-[11px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
                 </div>
               </section>
             </div>
 
-            <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
-              <div className="min-w-0 space-y-3">
             <section className="aev-admin-orders-filter rounded-[1.05rem] border border-pink-200/18 bg-[#070b1a]/82 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <div className="grid gap-2 xl:grid-cols-[minmax(250px,1fr)_140px_120px_120px_165px_auto]">
                 <label className="relative min-w-0">
@@ -9934,9 +9937,10 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </div>
             </section>
 
+            <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1.65fr)_minmax(420px,0.95fr)] 2xl:grid-cols-[minmax(0,1.62fr)_minmax(500px,0.98fr)]">
             <section className="aev-admin-control-panel rounded-[1.2rem] border p-3">
               <div className="grid gap-3 xl:grid-cols-3">
-                {sortedCustomers.slice(0, 6).map((customer) => (
+                {sortedCustomers.slice(0, 9).map((customer) => (
                   <button
                     key={customer.id}
                     type="button"
@@ -9972,7 +9976,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </div>
               {sortedCustomers.length === 0 && <NoDataState label="No customers found." />}
               <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/18 p-3 text-sm text-white/56 sm:flex-row sm:items-center sm:justify-between">
-                <span>Showing 1 to {Math.min(sortedCustomers.length, 6)} of {usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US")} customers</span>
+                <span>Showing 1 to {Math.min(sortedCustomers.length, 9)} of {usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US")} customers</span>
                 <div className="flex items-center gap-2">
                   {["<", "1", "2", "3", "...", "1,384", ">"].map((item, index) => (
                     <button key={`${item}-${index}`} type="button" disabled={index !== 1} className={`min-h-9 min-w-9 rounded-xl border px-3 text-xs font-semibold ${index === 1 ? "border-pink-200/35 bg-pink-300/12 text-pink-50" : "border-white/10 bg-white/[0.035] text-white/42"}`}>
@@ -9982,10 +9986,31 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </div>
             </section>
-          </div>
 
           {selectedCustomer && (
-            <aside className="min-w-0 space-y-3">
+            <aside className="grid min-w-0 auto-rows-min grid-cols-1 gap-3 lg:grid-cols-2">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border border-cyan-200/16 bg-[#071024]/86 p-3.5 shadow-[0_0_42px_rgba(103,247,243,0.08)] lg:col-span-2">
+                <div className="flex min-w-0 items-start gap-3">
+                  <CustomerAvatar customer={selectedCustomer} size="large" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-lg font-semibold text-white">{selectedCustomer.fullName}</h3>
+                      <CustomerBadge label="VIP Customer" tone="amber" />
+                      <CustomerBadge label={selectedCustomer.isActive ? "Active" : "Inactive"} tone={selectedCustomer.isActive ? "green" : "rose"} />
+                    </div>
+                    <div className="mt-2 grid gap-1.5 text-xs text-white/58 sm:grid-cols-2">
+                      <span className="inline-flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-cyan-200/70" />{selectedCustomer.phone}</span>
+                      <span className="inline-flex min-w-0 items-center gap-2"><Send className="h-3.5 w-3.5 text-pink-200/70" /><span className="truncate">{selectedCustomer.email ?? "customer@email.local"}</span></span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 sm:grid-cols-4">
+                  {selectedCustomerStats.map((stat) => (
+                    <DetailLine key={stat.label} label={stat.label} value={stat.value} />
+                  ))}
+                </div>
+              </section>
+
               <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader title="Profile & Address" />
@@ -10025,6 +10050,30 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
+              <section className="aev-admin-control-panel row-span-3 rounded-[1.15rem] border p-3">
+                <PanelTitleAction title="Account Activity" label="View full log" disabled />
+                <div className="mt-3 space-y-3">
+                  {selectedCustomer.activity.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={`${item.title}-${item.time}`} className="relative grid grid-cols-[30px_minmax(0,1fr)] gap-2.5">
+                        {index < selectedCustomer.activity.length - 1 && <span className="absolute left-[0.9rem] top-7 h-full w-px bg-gradient-to-b from-pink-300/40 to-cyan-300/10" />}
+                        <span className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border ${item.tone}`}>
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-[13px] font-semibold text-white">{item.title}</p>
+                            <p className="shrink-0 text-right text-[10px] text-white/38">{item.time}</p>
+                          </div>
+                          <p className="mt-1 truncate text-xs text-white/45">{item.detail}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
               <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <PanelTitleAction title="Support History" href="/admin/support" label="View all" />
                 <div className="mt-3 space-y-1.5">
@@ -10040,27 +10089,8 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
-                <PanelTitleAction title="Account Activity" label="View full log" disabled />
-                <div className="mt-3 space-y-2.5">
-                  {selectedCustomer.activity.map((item, index) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={`${item.title}-${item.time}`} className="relative grid grid-cols-[30px_minmax(0,1fr)_auto] gap-2.5">
-                        {index < selectedCustomer.activity.length - 1 && <span className="absolute left-[0.9rem] top-7 h-full w-px bg-gradient-to-b from-pink-300/40 to-cyan-300/10" />}
-                        <span className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border ${item.tone}`}>
-                          <Icon className="h-3.5 w-3.5" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-[13px] font-semibold text-white">{item.title}</p>
-                          <p className="mt-1 truncate text-xs text-white/45">{item.detail}</p>
-                        </div>
-                        <p className="text-right text-xs text-white/40">{item.time}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button type="button" disabled className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70" title="Full customer profile is staged for later linkup.">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border p-2.5">
+                <button type="button" disabled className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70" title="Full customer profile is staged for later linkup.">
                   View Full Profile <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
                 </button>
               </section>
@@ -10071,8 +10101,9 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
       </div>
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 pt-3 text-xs text-white/40">
         <span />
-        <p className="text-center">Aevyrixa Her Care Admin Control Room<br />2026 Aevyrixa. All rights reserved.</p>
-        <div className="justify-self-end">
+        <p className="text-center">Aevyrixa Her Care Admin Control Room<br />&copy; 2026 Aevyrixa. All rights reserved.</p>
+        <div className="flex items-center gap-2 justify-self-end">
+          <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[11px] font-semibold text-white/45">v3.0</span>
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-300/[0.07] px-3 py-1 text-[11px] font-semibold text-emerald-100">
             <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(94,240,174,0.8)]" />
             Auto-refresh ON
