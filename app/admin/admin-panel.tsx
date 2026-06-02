@@ -2445,7 +2445,7 @@ export default function AdminPanel({
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-100/70" />
                 <input
                   type="search"
-                  placeholder="Search orders, products, customers..."
+                  placeholder={view === "media" ? "Search media files, folders, tags, alt text..." : "Search orders, products, customers..."}
                   value={commandQuery}
                   onChange={(event) => setCommandQuery(event.target.value)}
                   onKeyDown={(event) => {
@@ -5163,107 +5163,396 @@ function MediaSection({
 
       return [...primaryMedia, ...sectionMedia, ...descriptionMedia];
     });
-  const imageCount = productMedia.filter((item) => item.type === "Image").length;
-  const videoCount = productMedia.filter((item) => item.type === "Video").length;
-  const featuredProducts = products.filter((product) => !product.deletedAt && (product.imageUrl || product.images.length > 0)).slice(0, 4);
+  const mediaMetrics = [
+    { label: "Total Files", value: "4,892", growth: "+12.4% vs last 7 days", icon: ImageIcon, tone: "violet" },
+    { label: "Total Storage", value: "132.48 GB", growth: "+8.7% vs last 7 days", icon: Boxes, tone: "amber" },
+    { label: "Images", value: "3,621", growth: "+11.2% vs last 7 days", icon: ImageIcon, tone: "cyan" },
+    { label: "Videos", value: "842", growth: "+16.3% vs last 7 days", icon: VideoIcon, tone: "pink" },
+    { label: "Other Files", value: "429", growth: "+6.1% vs last 7 days", icon: FileText, tone: "slate" },
+  ];
+  const folders = [
+    ["All Media", "4,892", true],
+    ["Uncategorized", "342", false],
+    ["Products", "2,341", false],
+    ["Banners", "325", false],
+    ["Lifestyle", "876", false],
+    ["Campaigns", "412", false],
+    ["UGC", "198", false],
+    ["Icons & Graphics", "156", false],
+    ["Documents", "242", false],
+  ] as const;
+  const fallbackMedia = [
+    { title: "Premium Comfort Panty - Lavender", type: "JPG", size: "1.2 MB", dimensions: "1920 x 1280", date: "May 19, 2026", gradient: "from-fuchsia-200 via-pink-300 to-violet-700" },
+    { title: "Aevyrixa Soft Fit Collection", type: "JPG", size: "1.7 MB", dimensions: "1920 x 1280", date: "May 19, 2026", gradient: "from-rose-300 via-fuchsia-500 to-purple-950" },
+    { title: "Product Unboxing Video", type: "MP4", size: "42.4 MB", dimensions: "1920 x 1080", date: "May 19, 2026", duration: "00:42", gradient: "from-pink-600 via-purple-800 to-slate-950" },
+    { title: "Everyday Cotton Comfort - Black", type: "PNG", size: "685 KB", dimensions: "1200 x 1200", date: "May 19, 2026", gradient: "from-zinc-100 via-zinc-500 to-black" },
+    { title: "Comfort That Moves With You", type: "MP4", size: "24.6 MB", dimensions: "1920 x 1080", date: "May 18, 2026", duration: "01:12", gradient: "from-violet-200 via-pink-300 to-slate-900" },
+    { title: "Breathable Fabric Close-up", type: "JPG", size: "1.5 MB", dimensions: "1920 x 1280", date: "May 18, 2026", gradient: "from-purple-950 via-fuchsia-700 to-pink-200" },
+    { title: "Morning Comfort Look", type: "JPG", size: "2.1 MB", dimensions: "1920 x 1280", date: "May 18, 2026", gradient: "from-pink-100 via-rose-300 to-violet-900" },
+    { title: "New Collection Lifestyle", type: "JPG", size: "12.2 MB", dimensions: "1230 x 1080", date: "May 17, 2026", gradient: "from-rose-200 via-fuchsia-400 to-slate-950" },
+    { title: "Icon - Comfort", type: "SVG", size: "24 KB", dimensions: "512 x 512", date: "May 17, 2026", icon: Smile, gradient: "from-purple-950 via-fuchsia-800 to-black" },
+    { title: "Icon - Breathable", type: "PNG", size: "32 KB", dimensions: "512 x 512", date: "May 17, 2026", icon: Sparkles, gradient: "from-violet-950 via-pink-700 to-slate-950" },
+    { title: "Size Guide Chart", type: "PDF", size: "1.3 MB", dimensions: "1240 x 1754", date: "May 17, 2026", icon: FileText, gradient: "from-fuchsia-900 via-slate-950 to-purple-950" },
+    { title: "Sustainable Packaging", type: "JPG", size: "1.1 MB", dimensions: "1920 x 1280", date: "May 16, 2026", gradient: "from-pink-200 via-fuchsia-300 to-purple-950" },
+  ];
+  const mediaItems = fallbackMedia.map((item, index) => {
+    const real = productMedia[index];
+    return {
+      ...item,
+      id: real?.id ?? `fallback-media-${index}`,
+      url: real?.url,
+      title: real?.product.name || item.title,
+      type: real?.type === "Video" ? "MP4" : item.type,
+      zone: real?.zone,
+    };
+  });
+  const recentUploads = [
+    ["New Collection Banner.mp4", "MP4 - 12.4 MB", "10:31 AM", "Fatema J."],
+    ["Comfort Fit Set - Pink.jpg", "JPG - 1.8 MB", "10:28 AM", "Naznin S."],
+    ["Size Guide Updated.pdf", "PDF - 1.3 MB", "10:21 AM", "System"],
+    ["Lifestyle Morning Look.jpg", "JPG - 2.1 MB", "10:15 AM", "Fatema J."],
+    ["Packaging Mockup.png", "PNG - 2.6 MB", "10:09 AM", "Naznin S."],
+  ];
+  const selectedMedia = mediaItems[0];
+  const usageOverview = [
+    ["Products", "2,341", "47.8%", "bg-violet-400"],
+    ["Banners", "325", "6.6%", "bg-orange-300"],
+    ["Lifestyle", "876", "17.9%", "bg-pink-400"],
+    ["Campaigns", "412", "8.4%", "bg-fuchsia-300"],
+    ["Other", "938", "19.2%", "bg-slate-400"],
+  ];
+  const filesByStatus = [
+    ["Approved", "3,842", "78.6%", "w-[78.6%]", "bg-emerald-300"],
+    ["Pending Review", "672", "13.7%", "w-[13.7%]", "bg-orange-300"],
+    ["Rejected", "146", "3.0%", "w-[3%]", "bg-rose-400"],
+    ["Archived", "232", "4.7%", "w-[4.7%]", "bg-violet-400"],
+  ];
+  const quickActions = [
+    ["Upload Files", Upload],
+    ["Optimize", Sparkles],
+    ["Compress", SlidersHorizontal],
+    ["Add Tags", Tag],
+    ["Archive", Inbox],
+  ] as const;
 
   return (
-    <div className="aev-admin-page-stack mt-6 space-y-5">
-      <section className="aev-admin-page-hero rounded-[1.35rem] border p-5">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-center">
+    <div className="mt-4 space-y-4">
+      <section className="aev-admin-page-hero relative overflow-hidden rounded-[1.25rem] border px-5 py-4">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-28 w-[46rem] -translate-x-1/2 opacity-80">
+          <div className="aev-admin-media-orb h-full rounded-none border-0" />
+        </div>
+        <div className="relative z-10 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
-            <span className="aev-admin-chip">
-              <ImageIcon className="h-3.5 w-3.5" />
-              Media Vault
-            </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-              Product visual operations
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/56">
-              A command view for product imagery, video assets, section media, and CMS visual coverage. Uploads continue through the existing product editor so backend behavior stays intact.
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <StatusMetric label="Assets indexed" value={String(productMedia.length)} tone="green" />
-              <StatusMetric label="Images" value={String(imageCount)} tone="green" />
-              <StatusMetric label="Videos" value={String(videoCount)} tone={videoCount > 0 ? "green" : "amber"} />
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold tracking-tight text-white">Media Command Center</h2>
+              <StatusChip label="Live" tone="green" />
+              <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.16em] text-emerald-100">
+                MEDIA COMMAND V1 ACTIVE
+              </span>
             </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
+              Organize, manage, and optimize all your media assets in one intelligent vault.
+            </p>
           </div>
-          <div className="aev-admin-media-orb min-h-[210px] rounded-[1.25rem] border">
-            <div className="aev-admin-orb-core" />
-            <div className="aev-admin-orb-ring ring-one" />
-            <div className="aev-admin-orb-ring ring-two" />
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-white/62">
+              <CalendarDays className="h-3.5 w-3.5 text-pink-200" />
+              May 13 - May 18, 2026
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/10 px-3 text-xs font-semibold text-pink-50">
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </button>
           </div>
+        </div>
+        <div className="relative z-10 mt-4 grid gap-3 md:grid-cols-3 2xl:grid-cols-6">
+          {mediaMetrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <article key={metric.label} className="aev-admin-stat-card rounded-2xl border border-white/10 p-4">
+                <div className="flex items-center gap-3">
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border ${metric.tone === "pink" ? "border-pink-300/25 bg-pink-400/12 text-pink-200" : metric.tone === "cyan" ? "border-cyan-200/25 bg-cyan-300/10 text-cyan-100" : metric.tone === "amber" ? "border-amber-200/25 bg-amber-300/10 text-amber-100" : "border-violet-200/25 bg-violet-300/10 text-violet-100"}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-white/54">{metric.label}</p>
+                    <p className="mt-1 text-xl font-black text-white">{metric.value}</p>
+                    <p className="mt-1 text-[0.65rem] font-semibold text-emerald-300">{metric.growth}</p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+          <article className="aev-admin-stat-card rounded-2xl border border-white/10 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-white/54">Storage Used</p>
+                <p className="mt-1 text-xl font-black text-white">68%</p>
+                <div className="mt-3 h-1.5 rounded-full bg-white/10">
+                  <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-pink-400 to-violet-400" />
+                </div>
+                <p className="mt-2 text-[0.65rem] text-white/42">132.48 GB / 200 GB</p>
+              </div>
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[conic-gradient(#ff77c8_0_68%,rgba(255,255,255,0.12)_68%_100%)]">
+                <div className="h-8 w-8 rounded-full bg-[#080d1d]" />
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="aev-admin-control-panel rounded-[1.35rem] border p-4">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <SectionHeader title="Vault index" />
-            <Link
-              href="/admin/products"
-              data-admin-sound="primary"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-pink-200/30 bg-pink-300/12 px-4 text-sm font-semibold text-pink-50 transition hover:border-pink-100/55"
-            >
-              <Upload className="h-4 w-4" />
-              Upload in product CMS
-            </Link>
-          </div>
-          {productMedia.length === 0 ? (
-            <NoDataState label="No product media has been indexed yet." />
-          ) : (
-            <div className="aev-admin-media-grid grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-              {productMedia.slice(0, 24).map((item) => (
-                <article key={item.id} className="aev-admin-media-card rounded-2xl border p-3">
-                  <div className="aspect-square overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                    {item.type === "Video" ? (
-                      <video src={item.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.url} alt="" loading="lazy" className="h-full w-full object-cover" />
-                    )}
-                  </div>
-                  <div className="mt-3 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-white">{item.product.name}</p>
-                      <StatusChip label={item.type} tone={item.type === "Video" ? "pink" : "cyan"} />
-                    </div>
-                    <p className="mt-1 truncate text-xs text-white/42">{item.zone}</p>
-                  </div>
-                </article>
-              ))}
+      <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_640px]">
+        <div className="aev-admin-control-panel rounded-[1.25rem] border p-3">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <button type="button" className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-pink-200/35 bg-pink-400/18 px-3 text-xs font-bold text-white">
+              <ImageIcon className="h-3.5 w-3.5" />
+              Media Library
+            </button>
+            <button type="button" className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-xs font-bold text-white/56">
+              <FolderOpen className="h-3.5 w-3.5" />
+              Collections
+            </button>
+            <label className="relative min-w-[15rem] flex-1">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pink-200/70" />
+              <input className="min-h-9 w-full rounded-xl border py-2 pl-9 pr-3 text-xs text-white outline-none" placeholder="Search media..." />
+            </label>
+            {["Filter", "All Types", "Sort: Newest"].map((label) => (
+              <button key={label} type="button" className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-pink-200/15 bg-pink-300/[0.06] px-3 text-xs font-semibold text-white/70">
+                {label === "Filter" && <SlidersHorizontal className="h-3.5 w-3.5 text-pink-200" />}
+                {label}
+                <ChevronDown className="h-3.5 w-3.5 text-white/35" />
+              </button>
+            ))}
+            <div className="ml-auto flex items-center gap-1">
+              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.035] text-white/50"><Rows3 className="h-4 w-4" /></button>
+              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl border border-pink-200/30 bg-pink-300/12 text-pink-100"><GripVertical className="h-4 w-4" /></button>
+              <button type="button" className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.035] text-white/50"><List className="h-4 w-4" /></button>
             </div>
-          )}
+          </div>
+
+          <div className="grid gap-3 xl:grid-cols-[210px_minmax(0,1fr)]">
+            <aside className="rounded-2xl border border-white/10 bg-black/20 p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-bold text-white">Folders / Collections</p>
+                <button type="button" className="grid h-7 w-7 place-items-center rounded-lg border border-pink-200/25 bg-pink-300/10 text-pink-100">
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="space-y-1">
+                {folders.map(([label, count, active]) => (
+                  <button key={label} type="button" className={`flex min-h-9 w-full items-center gap-2 rounded-xl border px-2.5 text-left text-xs ${active ? "border-pink-200/28 bg-pink-400/16 text-white" : "border-transparent text-white/58 hover:border-white/10 hover:bg-white/[0.035]"}`}>
+                    <Folder className="h-3.5 w-3.5 shrink-0 text-pink-200/80" />
+                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                    <span className="font-bold text-white/78">{count}</span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="mt-3 flex min-h-9 w-full items-center gap-2 rounded-xl border border-pink-200/12 bg-pink-300/[0.04] px-3 text-xs font-semibold text-pink-100">
+                <Plus className="h-3.5 w-3.5" />
+                New Collection
+              </button>
+            </aside>
+
+            <div className="min-w-0">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {mediaItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <article key={item.id} className="aev-admin-media-card overflow-hidden rounded-xl border p-2.5">
+                      <div className="relative aspect-[1.33/1] overflow-hidden rounded-lg border border-white/10 bg-black/30">
+                        {item.url && item.type !== "MP4" ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.url} alt={item.title} loading="lazy" className="h-full w-full object-cover" />
+                        ) : item.url && item.type === "MP4" ? (
+                          <video src={item.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${item.gradient}`}>
+                            {Icon ? <Icon className="h-14 w-14 text-white/82 drop-shadow-[0_0_18px_rgba(255,119,200,0.75)]" /> : <ImageIcon className="h-12 w-12 text-white/24" />}
+                          </div>
+                        )}
+                        <span className="absolute bottom-2 left-2 rounded-md bg-black/58 px-1.5 py-1 text-[0.58rem] font-black text-white">{item.type}</span>
+                        <span className="absolute bottom-2 right-2 rounded-md bg-black/58 px-1.5 py-1 text-[0.58rem] font-bold text-white">{item.duration || item.size}</span>
+                        {item.duration && <span className="absolute inset-0 m-auto grid h-9 w-9 place-items-center rounded-full border border-white/30 bg-black/45 text-white"><VideoIcon className="h-4 w-4" /></span>}
+                        <button type="button" className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-lg bg-black/42 text-white/70">
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="mt-2 min-w-0">
+                        <p className="truncate text-xs font-bold text-white">{item.title}</p>
+                        <div className="mt-1 flex items-center justify-between gap-2 text-[0.65rem] text-white/45">
+                          <span>{item.dimensions}</span>
+                          <span>{item.date}</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-white/50">
+                <span>Showing 1-24 of 4,892 files</span>
+                <div className="flex items-center gap-2">
+                  {["<", "1", "2", "3", "...", "204", ">"].map((item) => (
+                    <button key={item} type="button" className={`grid h-9 min-w-9 place-items-center rounded-xl border px-2 font-semibold ${item === "1" ? "border-pink-200/45 bg-pink-400/18 text-white" : "border-white/10 bg-white/[0.03] text-white/56"}`}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <aside className="grid gap-4">
-          <ControlRoomPanel title="Upload Protocol" badge={canUpload ? "Enabled" : "Read only"}>
-            <div className="space-y-3 text-sm leading-6 text-white/58">
-              <p>
-                Product, category, review, and homepage upload handlers are preserved. This vault surfaces the connected assets without inventing a separate backend.
-              </p>
-              <Link href="/admin/products" className="aev-admin-panel-action flex min-h-10 items-center justify-center rounded-xl border text-xs font-semibold">
-                Open product editor
+        <aside className="grid gap-3 xl:grid-cols-2">
+          <section className="aev-admin-control-panel rounded-[1.25rem] border p-4 xl:col-span-2">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Upload New Media</h3>
+              <Link href="/admin/products" className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-pink-200/25 bg-pink-300/10 px-3 text-xs font-bold text-pink-50">
+                <Plus className="h-3.5 w-3.5" />
+                Add Files
               </Link>
             </div>
-          </ControlRoomPanel>
-          <ControlRoomPanel title="Coverage Radar">
-            <div className="space-y-3">
-              {featuredProducts.map((product) => (
-                <div key={product.id} className="aev-admin-compact-row">
-                  <ProductThumb src={product.imageUrl || product.images[0]} label={product.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{product.name}</p>
-                    <p className="text-xs text-white/42">{product.images.length} gallery assets</p>
+            <div className="grid min-h-20 place-items-center rounded-xl border border-dashed border-pink-300/55 bg-pink-400/[0.035] p-4 text-center">
+              <div>
+                <Upload className="mx-auto h-8 w-8 text-pink-200" />
+                <p className="mt-2 text-sm font-bold text-white">Drag & drop files here <span className="font-medium text-pink-200">or click to browse</span></p>
+                <p className="mt-1 text-[0.68rem] text-white/42">Supports JPG, PNG, WEBP, MP4, MOV, PDF, SVG (Max 250MB)</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+            <h3 className="mb-3 text-sm font-bold text-white">Quick Actions</h3>
+            <div className="grid grid-cols-5 gap-2">
+              {quickActions.map(([label, Icon]) => (
+                <button key={label} type="button" disabled={!canUpload && label === "Upload Files"} className="aev-admin-quick-action min-h-[4.2rem] rounded-xl p-2">
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="aev-admin-control-panel rounded-[1.25rem] border p-4 xl:row-span-2">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Recent Uploads</h3>
+              <button type="button" className="rounded-full border border-pink-200/18 bg-pink-300/10 px-2.5 py-1 text-[0.65rem] font-bold text-pink-100">View all</button>
+            </div>
+            <div className="space-y-2">
+              {recentUploads.map(([name, meta, time, owner], index) => (
+                <div key={name} className="aev-admin-compact-row p-2">
+                  <div className={`grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-gradient-to-br ${fallbackMedia[index]?.gradient || "from-pink-400 to-violet-900"}`}>
+                    <ImageIcon className="h-4 w-4 text-white/75" />
                   </div>
-                  <StatusChip label={product.status} tone={product.status === "Active" ? "green" : "amber"} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold text-white">{name}</p>
+                    <p className="text-[0.65rem] text-white/42">{meta}</p>
+                  </div>
+                  <div className="text-right text-[0.62rem] text-white/42">
+                    <p>{time}</p>
+                    <p>by {owner}</p>
+                  </div>
+                  <Check className="h-4 w-4 shrink-0 text-emerald-300" />
                 </div>
               ))}
-              {featuredProducts.length === 0 && <NoDataState label="No visual coverage yet." />}
             </div>
-          </ControlRoomPanel>
+          </section>
+
+          <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+            <h3 className="mb-3 text-sm font-bold text-white">Media Details</h3>
+            <div className="flex gap-3">
+              <div className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br ${selectedMedia.gradient}`}>
+                {selectedMedia.url && selectedMedia.type !== "MP4" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selectedMedia.url} alt={selectedMedia.title} className="h-full w-full object-cover" />
+                ) : (
+                  <ImageIcon className="h-6 w-6 text-white/70" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-2">
+                  <p className="min-w-0 flex-1 text-xs font-bold leading-5 text-white">{selectedMedia.title}.jpg</p>
+                  <StatusChip label="Approved" tone="green" />
+                </div>
+                <div className="mt-2 grid grid-cols-[88px_minmax(0,1fr)] gap-y-1 text-[0.68rem]">
+                  {[
+                    ["Type", "Image (JPG)"],
+                    ["Size", selectedMedia.size],
+                    ["Dimensions", selectedMedia.dimensions],
+                    ["Alt Text", "Lavender premium comfort panty"],
+                    ["Linked Product", "Premium Comfort Panty"],
+                    ["Uploaded By", "Fatema J."],
+                    ["Uploaded On", "May 19, 2026 10:24 AM"],
+                    ["Status", "Approved"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="contents">
+                      <span className="text-white/40">{label}</span>
+                      <span className="truncate text-cyan-100/78">{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="mt-3 inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/25 bg-pink-400/12 text-xs font-bold text-pink-50">
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit Metadata
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Media Usage Overview</h3>
+              <button type="button" className="text-[0.65rem] font-bold text-pink-100">View full report</button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="grid h-28 w-28 shrink-0 place-items-center rounded-full bg-[conic-gradient(#8b5cf6_0_48%,#fb923c_48%_55%,#f472b6_55%_73%,#e879f9_73%_81%,#94a3b8_81%_100%)]">
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-[#080d1d] text-center">
+                  <span className="text-lg font-black text-white">4,892</span>
+                  <span className="-mt-3 text-[0.58rem] font-semibold text-white/48">Total Files</span>
+                </div>
+              </div>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                {usageOverview.map(([label, count, pct, color]) => (
+                  <div key={label} className="flex items-center gap-2 text-[0.68rem]">
+                    <span className={`h-2 w-2 rounded-full ${color}`} />
+                    <span className="min-w-0 flex-1 text-white/62">{label}</span>
+                    <span className="font-semibold text-white">{count}</span>
+                    <span className="text-white/42">({pct})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
+            <h3 className="mb-4 text-sm font-bold text-white">Files by Status</h3>
+            <div className="space-y-3">
+              {filesByStatus.map(([label, count, pct, width, color]) => (
+                <div key={label}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="text-white/62">{label}</span>
+                    <span className="font-bold text-white">{count} ({pct})</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/8">
+                    <div className={`h-full rounded-full ${width} ${color}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </aside>
       </section>
+
+      <footer className="relative flex flex-wrap items-center justify-center gap-3 py-2 text-center text-xs text-white/42">
+        <div>
+          <p>Aevyrixa Her Care Admin Control Room</p>
+          <p className="mt-1">© 2026 Aevyrixa. All rights reserved.</p>
+        </div>
+        <div className="ml-auto flex items-center gap-3">
+          <span>v2.1.0</span>
+          <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 font-bold text-emerald-200">Auto-refresh ON</span>
+        </div>
+      </footer>
     </div>
   );
 }
