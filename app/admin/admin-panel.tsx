@@ -9783,12 +9783,13 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   }
 
   return (
-    <div className="aev-customers-hub mt-3 max-w-full overflow-hidden rounded-[1.4rem] border border-cyan-200/10 bg-[#030816]/72 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)]">
-      <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.35rem] border border-pink-200/18 p-3 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-4">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 opacity-80">
+    <div className="aev-customers-hub mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#030816]/76 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)]">
+      <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.25rem] border border-pink-200/18 p-3 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-4">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-36 opacity-90">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
-          <div className="absolute left-1/2 top-2 h-20 w-[500px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.22)]" />
-          <div className="absolute left-1/2 top-6 h-10 w-[300px] -translate-x-1/2 rounded-[100%] border border-pink-300/25 shadow-[0_0_42px_rgba(255,77,184,0.35)]" />
+          <div className="absolute left-1/2 top-3 h-24 w-[560px] -translate-x-1/2 rounded-[100%] border border-cyan-200/20 shadow-[0_0_58px_rgba(103,247,243,0.25)]" />
+          <div className="absolute left-1/2 top-7 h-14 w-[360px] -translate-x-1/2 rounded-[100%] border border-pink-300/25 shadow-[0_0_42px_rgba(255,77,184,0.38)]" />
+          <div className="absolute left-1/2 top-11 h-4 w-4 -translate-x-1/2 rounded-full bg-pink-200 shadow-[0_0_32px_rgba(255,77,184,0.95)]" />
         </div>
         <div className="relative z-10 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
@@ -9811,25 +9812,25 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               <CalendarDays className="h-3.5 w-3.5" />
               May 13 - May 19, 2026
             </span>
-            <button type="button" onClick={exportVisibleCustomers} className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold">
-              <Download className="h-4 w-4" />
+            <button type="button" onClick={exportVisibleCustomers} className="aev-admin-utility-link inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold">
+              <Download className="h-3.5 w-3.5" />
               Export
             </button>
           </div>
         </div>
-        <div className="relative z-10 mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_455px]">
+        <div className="relative z-10 mt-10 grid gap-3 xl:grid-cols-[minmax(0,1fr)_545px]">
           <div className="grid gap-3 md:grid-cols-3">
             {customerMetrics.map((metric) => {
               const Icon = metric.icon;
               return (
-                <article key={metric.label} className={`aev-admin-stat-card tone-${metric.tone} min-w-0 rounded-[1.05rem] border p-3`}>
-                  <div className="flex min-w-0 items-start justify-between gap-3">
+                <article key={metric.label} className={`aev-admin-stat-card tone-${metric.tone} min-w-0 rounded-[1rem] border p-3`}>
+                  <div className="flex min-w-0 items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs text-white/48">{metric.label}</p>
-                      <p className="mt-2 text-2xl font-semibold text-white">{metric.value}</p>
+                      <p className="text-[11px] text-white/48">{metric.label}</p>
+                      <p className="mt-1.5 text-2xl font-semibold text-white">{metric.value}</p>
                       <p className="mt-2 text-xs font-semibold text-emerald-200">↗ {metric.trend}</p>
                     </div>
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-current/20 bg-current/10">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-current/20 bg-current/10 shadow-[0_0_24px_currentColor]">
                       <Icon className="h-5 w-5" />
                     </span>
                   </div>
@@ -9838,8 +9839,8 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
             })}
           </div>
           {selectedCustomer && (
-            <article className="rounded-[1.25rem] border border-cyan-200/14 bg-[#071024]/82 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_42px_rgba(103,247,243,0.07)]">
-              <div className="flex min-w-0 items-start gap-3">
+            <article className="rounded-[1.05rem] border border-cyan-200/14 bg-[#071024]/84 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_42px_rgba(103,247,243,0.07)]">
+              <div className="flex min-w-0 items-start gap-4">
                 <CustomerAvatar customer={selectedCustomer} size="large" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -9853,7 +9854,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                   </div>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-3 border-t border-white/10 pt-3 md:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 md:grid-cols-4">
                 <DetailLine label="Total Orders" value={String(selectedCustomer.orderCount)} />
                 <DetailLine label="Total Spent" value={formatCurrency(totalSpent)} />
                 <DetailLine label="Avg. Order Value" value={formatCurrency(averageOrderValue)} />
@@ -9872,13 +9873,13 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
 
       <div className="mt-3 space-y-3">
           <div className="min-w-0">
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(285px,0.7fr)]">
-              <section className="aev-admin-control-panel rounded-[1.1rem] border p-2.5">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_388px]">
+              <section className="aev-admin-control-panel rounded-[1.05rem] border p-3">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader title="Customer Segments" />
                   <button type="button" className="aev-admin-mini-action text-pink-100">View all segments <ArrowLeft className="h-3 w-3 rotate-180" /></button>
                 </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                   {segments.map((segment) => {
                     const Icon = segment.icon;
                     return (
@@ -9888,7 +9889,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                             <Icon className="h-4 w-4" />
                           </span>
                           <div className="min-w-0">
-                            <p className="truncate text-[11px] text-white/48">{segment.label}</p>
+                            <p className="truncate text-[10px] text-white/48">{segment.label}</p>
                             <p className="text-lg font-semibold text-white">{segment.count}</p>
                           </div>
                         </div>
@@ -9898,28 +9899,28 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                   })}
                 </div>
               </section>
-              <section className="aev-admin-control-panel rounded-[1.1rem] border p-2.5">
+              <section className="aev-admin-control-panel rounded-[1.05rem] border p-3">
                 <SectionHeader title="Quick Actions" />
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
-                  <Link href="/admin/orders" className="aev-admin-quick-action"><ShoppingBag className="h-4 w-4" />View Orders</Link>
-                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action"><Download className="h-4 w-4" />Export Segment</button>
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px] flex-col text-[11px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
+                  <Link href="/admin/orders" className="aev-admin-quick-action min-h-[74px] flex-col text-[11px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
+                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[74px] flex-col text-[11px]"><Download className="h-4 w-4" />Export Segment</button>
+                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[74px] flex-col text-[11px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
                 </div>
               </section>
             </div>
 
             <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
               <div className="min-w-0 space-y-3">
-            <section className="aev-admin-orders-filter rounded-[1.1rem] border border-pink-200/18 bg-[#070b1a]/82 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-              <div className="grid gap-2 xl:grid-cols-[minmax(260px,1fr)_150px_130px_130px_170px_auto]">
+            <section className="aev-admin-orders-filter rounded-[1.05rem] border border-pink-200/18 bg-[#070b1a]/82 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <div className="grid gap-2 xl:grid-cols-[minmax(250px,1fr)_140px_120px_120px_165px_auto]">
                 <label className="relative min-w-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-200/60" />
                   <input
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search customers by name, email, phone..."
-                    className="h-11 w-full rounded-xl border border-white/10 bg-black/28 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/30 focus:border-pink-200/40"
+                    className="h-10 w-full rounded-xl border border-white/10 bg-black/28 pl-10 pr-4 text-xs text-white outline-none placeholder:text-white/30 focus:border-pink-200/40"
                   />
                 </label>
                 <CustomerSelect value={segmentFilter} onChange={setSegmentFilter} options={["All Segments", "VIP", "Loyal", "New", "Inactive", "At Risk"]} />
@@ -9927,22 +9928,22 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 <CustomerSelect value={tagFilter} onChange={setTagFilter} options={["All Tags", "VIP", "Loyal", "Repeat Buyer", "New", "Potential", "At Risk", "Inactive"]} />
                 <CustomerSelect value={sortFilter} onChange={setSortFilter} options={["Sort by Recent Activity", "Highest Spend", "Most Orders"]} />
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" className="aev-admin-icon-button h-11 w-11" aria-label="Card grid view"><Rows3 className="h-4 w-4" /></button>
-                  <button type="button" className="aev-admin-icon-button h-11 w-11" aria-label="Compact list view"><MoreVertical className="h-4 w-4" /></button>
+                  <button type="button" className="aev-admin-icon-button h-10 w-10" aria-label="Card grid view"><Rows3 className="h-4 w-4" /></button>
+                  <button type="button" className="aev-admin-icon-button h-10 w-10" aria-label="Compact list view"><MoreVertical className="h-4 w-4" /></button>
                 </div>
               </div>
             </section>
 
-            <section className="aev-admin-control-panel rounded-[1.35rem] border p-3">
+            <section className="aev-admin-control-panel rounded-[1.2rem] border p-3">
               <div className="grid gap-3 xl:grid-cols-3">
-                {sortedCustomers.slice(0, 9).map((customer) => (
+                {sortedCustomers.slice(0, 6).map((customer) => (
                   <button
                     key={customer.id}
                     type="button"
                     onClick={() => setSelectedCustomerId(customer.id)}
-                    className={`aev-customer-card min-w-0 rounded-2xl border bg-[#070d1b]/86 p-3 text-left transition ${
+                    className={`aev-customer-card min-w-0 rounded-2xl border bg-[#070d1b]/88 p-3 text-left transition ${
                       selectedCustomer?.id === customer.id
-                        ? "border-cyan-200/60 shadow-[0_0_0_1px_rgba(103,247,243,0.16),0_0_32px_rgba(255,77,184,0.20)]"
+                        ? "border-cyan-200/70 shadow-[0_0_0_1px_rgba(103,247,243,0.18),0_0_30px_rgba(255,77,184,0.24)]"
                         : "border-white/10 hover:border-cyan-200/28"
                     }`}
                   >
@@ -9950,7 +9951,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                       <CustomerAvatar customer={customer} />
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center justify-between gap-2">
-                          <p className="truncate font-semibold text-white">{customer.fullName}</p>
+                          <p className="truncate text-sm font-semibold text-white">{customer.fullName}</p>
                           <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${customer.isActive ? "bg-emerald-300 shadow-[0_0_14px_rgba(94,240,174,0.8)]" : "bg-rose-300 shadow-[0_0_14px_rgba(255,96,145,0.6)]"}`} />
                         </div>
                         <p className="mt-1 text-xs text-white/52">{customer.phone}</p>
@@ -9971,7 +9972,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </div>
               {sortedCustomers.length === 0 && <NoDataState label="No customers found." />}
               <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/18 p-3 text-sm text-white/56 sm:flex-row sm:items-center sm:justify-between">
-                <span>Showing 1 to {Math.min(sortedCustomers.length, 9)} of {usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US")} customers</span>
+                <span>Showing 1 to {Math.min(sortedCustomers.length, 6)} of {usesDemoCustomers ? "12,458" : hubCustomers.length.toLocaleString("en-US")} customers</span>
                 <div className="flex items-center gap-2">
                   {["<", "1", "2", "3", "...", "1,384", ">"].map((item, index) => (
                     <button key={`${item}-${index}`} type="button" disabled={index !== 1} className={`min-h-9 min-w-9 rounded-xl border px-3 text-xs font-semibold ${index === 1 ? "border-pink-200/35 bg-pink-300/12 text-pink-50" : "border-white/10 bg-white/[0.035] text-white/42"}`}>
@@ -9984,8 +9985,8 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
           </div>
 
           {selectedCustomer && (
-            <aside className="min-w-0 space-y-2.5 xl:pt-[67px]">
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
+            <aside className="min-w-0 space-y-3">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <div className="flex items-center justify-between gap-3">
                   <SectionHeader title="Profile & Address" />
                   <button type="button" disabled className="aev-admin-mini-action text-white/35" title="Profile editing is staged for later linkup.">Edit</button>
@@ -9997,7 +9998,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <PanelTitleAction title="Recent Orders" href="/admin/orders" label="View all" />
                 <div className="mt-3 space-y-2">
                   {selectedCustomer.recentOrders.map((order) => (
@@ -10016,7 +10017,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <PanelTitleAction title="Wishlist / Favorites" label="View all" disabled />
                 <div className="mt-3 grid grid-cols-4 gap-2">
                   {["rose", "violet", "amber"].map((tone) => <ProductMiniThumb key={tone} tone={tone} large />)}
@@ -10024,7 +10025,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <PanelTitleAction title="Support History" href="/admin/support" label="View all" />
                 <div className="mt-3 space-y-1.5">
                   {selectedCustomer.supportHistory.map((item) => (
@@ -10039,7 +10040,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
                 </div>
               </section>
 
-              <section className="aev-admin-control-panel rounded-[1.25rem] border p-3">
+              <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
                 <PanelTitleAction title="Account Activity" label="View full log" disabled />
                 <div className="mt-3 space-y-2.5">
                   {selectedCustomer.activity.map((item, index) => {
@@ -10067,6 +10068,16 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
           )}
             </div>
           </div>
+      </div>
+      <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 pt-3 text-xs text-white/40">
+        <span />
+        <p className="text-center">Aevyrixa Her Care Admin Control Room<br />2026 Aevyrixa. All rights reserved.</p>
+        <div className="justify-self-end">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-300/[0.07] px-3 py-1 text-[11px] font-semibold text-emerald-100">
+            <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(94,240,174,0.8)]" />
+            Auto-refresh ON
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -10280,7 +10291,7 @@ function CustomerSelect({ value, onChange, options }: { value: string; onChange:
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full appearance-none rounded-xl border border-white/10 bg-black/28 px-3 pr-8 text-xs font-semibold text-white/72 outline-none focus:border-cyan-200/35"
+        className="h-10 w-full appearance-none rounded-xl border border-white/10 bg-black/28 px-3 pr-8 text-xs font-semibold text-white/72 outline-none focus:border-cyan-200/35"
       >
         {options.map((option) => <option key={option}>{option}</option>)}
       </select>
