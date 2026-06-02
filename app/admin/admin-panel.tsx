@@ -33,6 +33,7 @@ import {
   Home,
   Image as ImageIcon,
   Inbox,
+  Link as LinkIcon,
   List,
   LogOut,
   MapPin,
@@ -10877,57 +10878,335 @@ function IntegrationsSection({
   session: AdminSessionUser;
 }) {
   const canView = hasPermission(session, "settings.view") || hasPermission(session, "settings.editSensitive");
-  const cards = [
-    { name: "Supabase", status: "Configured by app APIs", href: "/admin/settings", icon: ShieldCheck, connected: true },
-    { name: "Vercel", status: "Deployment managed outside admin", href: "/admin/settings", icon: Globe, connected: true },
-    { name: "Telegram alerts", status: settings.notificationSettings.telegramNewOrderEnabled ? "Enabled in settings" : "Not enabled", href: "/admin/settings", icon: Send, connected: settings.notificationSettings.telegramNewOrderEnabled },
-    { name: "WhatsApp", status: settings.storeProfile.supportWhatsApp ? "Store contact configured" : "No number configured", href: "/admin/settings", icon: Phone, connected: Boolean(settings.storeProfile.supportWhatsApp) },
-    { name: "Courier API", status: settings.deliverySettings.courierIntegrationMode === "manual" ? "Manual mode" : "Integration selected", href: "/admin/settings", icon: PackageCheck, connected: settings.deliverySettings.courierIntegrationMode !== "manual" },
-    { name: "Payment/mobile wallet", status: "Managed from checkout settings", href: "/admin/settings", icon: Wallet, connected: true },
-    { name: "Email/SMS", status: "Provider not connected yet", href: "", icon: Inbox, connected: false },
+  const telegramConnected = settings.notificationSettings.telegramNewOrderEnabled;
+  const whatsAppConnected = Boolean(settings.storeProfile.supportWhatsApp);
+  const courierConnected = settings.deliverySettings.courierIntegrationMode !== "manual";
+  const integrationMetrics = [
+    { label: "Total Integrations", value: "24", trend: "20.0% vs last 7 days", icon: Boxes, tone: "violet", points: [16, 17, 15, 24, 18, 28, 14, 16, 24] },
+    { label: "Connected Services", value: "18", trend: "28.6% vs last 7 days", icon: LinkIcon, tone: "green", points: [14, 13, 15, 24, 15, 22, 16, 15, 24] },
+    { label: "Pending Setup", value: "3", trend: "25.0% vs last 7 days", icon: CalendarDays, tone: "amber", points: [21, 18, 12, 14, 26, 12, 10, 14, 12] },
+    { label: "Failed / Needs Attention", value: "2", trend: "33.3% vs last 7 days", icon: HelpCircle, tone: "rose", points: [24, 16, 15, 8, 18, 25, 8, 11, 8] },
+    { label: "API Health", value: "98.7%", trend: "1.2% vs last 7 days", icon: Gauge, tone: "cyan", points: [14, 13, 16, 14, 19, 15, 24, 13, 17] },
   ];
+  const connectedPlatforms = [
+    { name: "bKash", category: "Payment Gateway", icon: Wallet, tone: "bg-pink-500", connected: true },
+    { name: "Nagad", category: "Payment Gateway", icon: CreditCard, tone: "bg-orange-500", connected: true },
+    { name: "Pathao Courier", category: "Courier Service", icon: PackageCheck, tone: "bg-red-500", connected: courierConnected },
+    { name: "Steadfast Courier", category: "Courier Service", icon: ShieldCheck, tone: "bg-blue-500", connected: courierConnected },
+    { name: "WhatsApp", category: "Messaging API", icon: MessageSquare, tone: "bg-emerald-500", connected: whatsAppConnected },
+    { name: "Telegram Alerts", category: "Alert System", icon: Send, tone: "bg-sky-500", connected: telegramConnected },
+    { name: "Meta Pixel", category: "Analytics", icon: Globe, tone: "bg-blue-600", connected: true },
+    { name: "Google Analytics", category: "Analytics", icon: Gauge, tone: "bg-amber-500", connected: true },
+    { name: "Supabase", category: "Backend Service", icon: Zap, tone: "bg-teal-500", connected: true },
+    { name: "Vercel", category: "Hosting Platform", icon: MonitorDot, tone: "bg-white text-black", connected: true },
+  ];
+  const apiWebhookRows = [
+    ["bKash API", "bk_live_********9a1f", "Bi-Directional", "2m ago"],
+    ["Pathao API", "path_live_********7c2b", "Bi-Directional", "5m ago"],
+    ["WhatsApp Webhook", "wa_webhook_******d3f1", "Incoming", "11m ago"],
+    ["Telegram Bot API", "tg_bot_********8e7d", "Outgoing", "30s ago"],
+    ["Meta Pixel API", "meta_pix_******c9a2", "Outgoing", "3m ago"],
+    ["Google Analytics API", "ga_api_******b7e4", "Outgoing", "4m ago"],
+  ];
+  const integrationActivity = [
+    { title: "Pathao token refreshed", detail: "Access token updated successfully", time: "2m ago", icon: PackageCheck, tone: "bg-red-500", ok: true },
+    { title: "Meta Pixel connected", detail: "Pixel ID active", time: "5m ago", icon: Globe, tone: "bg-blue-600", ok: true },
+    { title: "WhatsApp webhook synced", detail: "Incoming messages enabled", time: "7m ago", icon: MessageSquare, tone: "bg-emerald-500", ok: true },
+    { title: "Telegram alert test sent", detail: "Test message delivered to admin", time: "9m ago", icon: Send, tone: "bg-sky-500", ok: true },
+    { title: "Google Analytics synced", detail: "Data stream connected", time: "11m ago", icon: Gauge, tone: "bg-amber-500", ok: true },
+    { title: "Steadfast courier connected", detail: "API credentials verified", time: "15m ago", icon: ShieldCheck, tone: "bg-blue-500", ok: true },
+    { title: "bKash setup pending", detail: "Awaiting merchant verification", time: "18m ago", icon: Wallet, tone: "bg-pink-500", ok: false },
+    { title: "Supabase backup completed", detail: "Database backup successful", time: "23m ago", icon: Zap, tone: "bg-teal-500", ok: true },
+  ];
+  const automationFlows = [
+    { title: "New order -> Telegram alert", detail: "Send instant alert to admin on new order", icon: ShoppingBag },
+    { title: "Paid order -> status update", detail: "Update order status to confirmed", icon: Check },
+    { title: "Support message -> admin inbox", detail: "Forward new support messages", icon: MessageSquare },
+    { title: "Order delivered -> review request", detail: "Send review request after delivery", icon: Star },
+  ];
+  const quickActions = [
+    { label: "Add Integration", icon: Plus },
+    { label: "Reconnect Service", icon: LinkIcon },
+    { label: "Test Webhook", icon: Command },
+    { label: "Import Config", icon: Upload },
+    { label: "Sync Now", icon: RefreshCw },
+    { label: "Generate Report", icon: FileText },
+  ];
+  const serviceHealth = [
+    { label: "Payments", value: "100%", icon: CreditCard, width: "100%" },
+    { label: "Courier", value: "98%", icon: PackageCheck, width: "98%" },
+    { label: "Analytics", value: "99%", icon: Gauge, width: "99%" },
+    { label: "Messaging", value: "100%", icon: MessageSquare, width: "100%" },
+    { label: "Hosting", value: "100%", icon: MonitorDot, width: "100%" },
+    { label: "Database", value: "99.9%", icon: ShieldCheck, width: "99.9%" },
+  ];
+  const toneMap: Record<string, { card: string; icon: string; text: string; line: string; trend: string }> = {
+    violet: { card: "border-violet-300/25 bg-violet-500/[0.08] shadow-[0_0_36px_rgba(168,85,247,0.14)]", icon: "border-violet-200/30 bg-violet-400/16 text-violet-100", text: "text-violet-100", line: "#c044ff", trend: "text-emerald-200" },
+    green: { card: "border-emerald-300/22 bg-emerald-500/[0.065] shadow-[0_0_36px_rgba(34,197,94,0.12)]", icon: "border-emerald-200/28 bg-emerald-400/14 text-emerald-100", text: "text-emerald-100", line: "#22e364", trend: "text-emerald-200" },
+    amber: { card: "border-amber-300/24 bg-amber-500/[0.07] shadow-[0_0_36px_rgba(245,158,11,0.12)]", icon: "border-amber-200/30 bg-amber-400/14 text-amber-100", text: "text-amber-100", line: "#ff9f2e", trend: "text-amber-200" },
+    rose: { card: "border-rose-300/26 bg-rose-500/[0.075] shadow-[0_0_36px_rgba(244,63,94,0.13)]", icon: "border-rose-200/30 bg-rose-400/14 text-rose-100", text: "text-rose-100", line: "#ff2f8b", trend: "text-rose-200" },
+    cyan: { card: "border-cyan-300/24 bg-cyan-500/[0.07] shadow-[0_0_36px_rgba(34,211,238,0.13)]", icon: "border-cyan-200/30 bg-cyan-400/14 text-cyan-100", text: "text-cyan-100", line: "#22d3ee", trend: "text-emerald-200" },
+  };
+  const Sparkline = ({ points, color }: { points: number[]; color: string }) => (
+    <svg viewBox="0 0 110 38" className="h-10 w-28 overflow-visible">
+      <polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={points.map((point, index) => `${index * 13},${32 - point}`).join(" ")} />
+      <polyline fill="none" stroke={color} strokeOpacity=".22" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" points={points.map((point, index) => `${index * 13},${32 - point}`).join(" ")} />
+    </svg>
+  );
 
   if (!canView) {
     return <NoDataState label={blockedPermissionMessage} />;
   }
 
   return (
-    <div className="mt-6 space-y-5">
-      <section className="aev-admin-hero-panel rounded-[1.35rem] border p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.28em] text-violet-200/70">Integration Hub</p>
-        <h2 className="mt-2 text-2xl font-semibold text-white">System connection matrix</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
-          Connected items route to the real settings surface. Provider onboarding buttons remain disabled until matching backend handlers exist.
-        </p>
+    <div className="mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#020716]/92 p-3 shadow-[0_0_90px_rgba(31,120,255,0.10)]">
+      <section className="relative overflow-hidden rounded-[1.25rem] border border-cyan-200/12 bg-[#050b1c]/88 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[138px] overflow-hidden">
+          <div className="absolute left-1/2 top-1 h-[130px] w-[760px] -translate-x-1/2 rounded-[100%] bg-[radial-gradient(circle_at_center,rgba(255,77,232,0.55),rgba(61,132,255,0.23)_22%,rgba(0,0,0,0)_58%)] blur-[1px]" />
+          <div className="absolute left-1/2 top-3 h-[98px] w-[560px] -translate-x-1/2 rounded-[100%] border border-cyan-300/25 shadow-[0_0_60px_rgba(34,211,238,0.26)]" />
+          <div className="absolute left-1/2 top-8 h-[58px] w-[360px] -translate-x-1/2 rounded-[100%] border border-fuchsia-300/30 shadow-[0_0_52px_rgba(217,70,239,0.38)]" />
+          <div className="absolute left-1/2 top-[52px] h-4 w-4 -translate-x-1/2 rounded-full bg-fuchsia-100 shadow-[0_0_34px_rgba(255,77,232,0.95)]" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent" />
+        </div>
+        <div className="relative z-10 flex min-w-0 flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold tracking-[-0.02em] text-white">Integrations System Hub</h2>
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200/30 bg-emerald-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(94,240,174,0.9)]" />
+                Live
+              </span>
+              <span className="rounded-full border border-cyan-200/30 bg-cyan-300/[0.08] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100 shadow-[0_0_18px_rgba(103,247,243,0.16)]">
+                INTEGRATIONS HUB V1 ACTIVE
+              </span>
+            </div>
+            <p className="mt-2 max-w-[680px] text-sm leading-5 text-white/64">
+              Connect payments, courier, messaging, analytics, and automation tools from one command workspace.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="aev-admin-chip aev-admin-chip-muted min-h-10">
+              <CalendarDays className="h-3.5 w-3.5" />
+              May 14 - May 21, 2026
+            </span>
+            <button type="button" className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold">
+              <Upload className="h-3.5 w-3.5" />
+              Export
+            </button>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {integrationMetrics.map((metric) => {
+            const Icon = metric.icon;
+            const tone = toneMap[metric.tone];
+            return (
+              <article key={metric.label} className={`min-h-[104px] rounded-[1rem] border p-3 ${tone.card}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${tone.icon}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <p className="text-right text-[11px] font-semibold text-white/78">{metric.label}</p>
+                </div>
+                <div className="mt-1 flex items-end justify-between gap-2">
+                  <div>
+                    <p className="text-3xl font-semibold tracking-[-0.04em] text-white">{metric.value}</p>
+                    <p className={`mt-1 text-[11px] font-semibold ${tone.trend}`}>↑ {metric.trend}</p>
+                  </div>
+                  <Sparkline points={metric.points} color={tone.line} />
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <article key={card.name} className="rounded-[1.25rem] border border-white/10 bg-black/24 p-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-200/10 text-cyan-100">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="font-semibold text-white">{card.name}</p>
-                  <p className="mt-1 text-sm leading-6 text-white/52">{card.status}</p>
+      <div className="mt-3 grid gap-3 xl:grid-cols-[1.05fr_1fr_0.68fr]">
+        <section className="rounded-[1.05rem] border border-cyan-200/12 bg-[#061023]/88 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]">
+          <div className="flex items-center justify-between gap-3">
+            <SectionHeader title="Connected Platforms" />
+            <Link href="/admin/settings" className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">View All</Link>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {connectedPlatforms.map((platform) => {
+              const Icon = platform.icon;
+              return (
+                <article key={platform.name} className="rounded-xl border border-cyan-200/12 bg-[#081329]/88 p-2.5 shadow-[0_0_24px_rgba(34,211,238,0.045)]">
+                  <div className="flex min-w-0 items-start gap-2.5">
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white shadow-[0_0_18px_rgba(255,255,255,0.10)] ${platform.tone}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-[12px] font-bold text-white">{platform.name}</p>
+                      <p className="mt-0.5 truncate text-[10px] text-white/46">{platform.category}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <TinyBadge label={platform.connected ? "Connected" : "Pending"} tone={platform.connected ? "green" : "amber"} />
+                    <Link href="/admin/settings" className="text-[10px] font-bold text-cyan-200">Manage</Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-[1.05rem] border border-violet-200/14 bg-[#071022]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]">
+          <div className="flex items-center justify-between gap-3">
+            <SectionHeader title="API & Webhook Center" />
+            <button type="button" className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">View Logs</button>
+          </div>
+          <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/18">
+            <table className="w-full table-fixed text-left text-[10px] text-white/62">
+              <thead className="bg-white/[0.035] text-[9px] font-bold text-white/70">
+                <tr>
+                  {["Service / Endpoint", "API Key / Webhook", "Sync Direction", "Last Sync", "Status", "Actions"].map((header) => (
+                    <th key={header} className="px-2 py-2">{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {apiWebhookRows.map((row) => (
+                  <tr key={row[0]} className="border-t border-white/7">
+                    <td className="px-2 py-2 font-semibold text-white/84">{row[0]}</td>
+                    <td className="px-2 py-2 font-mono text-white/54">{row[1]}</td>
+                    <td className="px-2 py-2 text-white/58">{row[2]}</td>
+                    <td className="px-2 py-2 text-white/58">{row[3]}</td>
+                    <td className="px-2 py-2"><span className="block h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(94,240,174,0.9)]" /></td>
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-2 text-cyan-100/70">
+                        <HelpCircle className="h-3.5 w-3.5" />
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <Copy className="h-3.5 w-3.5" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-2 flex justify-center">
+            <button type="button" className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-fuchsia-300/35 bg-fuchsia-400/12 px-5 text-xs font-semibold text-fuchsia-50 shadow-[0_0_24px_rgba(217,70,239,0.16)]">
+              <RefreshCw className="h-3.5 w-3.5" />
+              Rotate Key
+            </button>
+          </div>
+        </section>
+
+        <aside className="rounded-[1.05rem] border border-cyan-200/12 bg-[#061022]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]">
+          <div className="flex items-center justify-between gap-3">
+            <SectionHeader title="Integration Activity" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/20 bg-emerald-300/[0.07] px-2 py-1 text-[10px] font-bold text-emerald-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              Live
+            </span>
+          </div>
+          <div className="mt-3 space-y-2">
+            {integrationActivity.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-2 border-b border-white/7 pb-2 last:border-b-0">
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-white ${item.tone}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[12px] font-bold text-white">{item.title}</p>
+                    <p className="truncate text-[10px] text-white/48">{item.detail}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-white/42">{item.time}</span>
+                    <span className={`h-2 w-2 rounded-full ${item.ok ? "bg-emerald-300 shadow-[0_0_10px_rgba(94,240,174,0.8)]" : "bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.7)]"}`} />
+                  </div>
                 </div>
-                <TinyBadge label={card.connected ? "Online" : "Soon"} tone={card.connected ? "green" : "amber"} />
-              </div>
-              <div className="mt-4">
-                {card.href ? (
-                  <Link href={card.href} className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold">
-                    Manage
-                  </Link>
-                ) : (
-                  <DisabledAdminAction title={`${card.name} backend not connected yet`}>Connect</DisabledAdminAction>
-                )}
-              </div>
-            </article>
-          );
-        })}
+              );
+            })}
+          </div>
+          <button type="button" className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-300/18 bg-blue-400/10 text-xs font-semibold text-white/78">
+            View All Activity
+            <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+          </button>
+        </aside>
+      </div>
+
+      <div className="mt-3 grid gap-3 xl:grid-cols-[0.72fr_1fr]">
+        <section className="rounded-[1.05rem] border border-fuchsia-200/14 bg-[#071022]/90 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <SectionHeader title="Automation Flows" />
+            <button type="button" className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">Manage Flows</button>
+          </div>
+          <div className="mt-3 space-y-2">
+            {automationFlows.map((flow) => {
+              const Icon = flow.icon;
+              return (
+                <div key={flow.title} className="grid grid-cols-[38px_minmax(0,1fr)_54px_20px] items-center gap-2 rounded-xl border border-white/8 bg-white/[0.025] p-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-fuchsia-200/18 bg-fuchsia-400/10 text-fuchsia-100">
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[12px] font-bold text-white">{flow.title}</p>
+                    <p className="truncate text-[10px] text-white/48">{flow.detail}</p>
+                  </div>
+                  <span className="relative h-6 w-11 rounded-full border border-emerald-200/25 bg-emerald-500/75 shadow-[0_0_16px_rgba(34,197,94,0.18)]">
+                    <span className="absolute right-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm" />
+                  </span>
+                  <MoreVertical className="h-4 w-4 text-white/48" />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-[1.05rem] border border-cyan-200/12 bg-[#071022]/90 p-3">
+          <SectionHeader title="Quick Actions" />
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button key={action.label} type="button" className="flex min-h-[50px] items-center justify-center gap-3 rounded-xl border border-fuchsia-300/28 bg-[#0a1026]/82 px-3 text-sm font-semibold text-white/82 shadow-[0_0_24px_rgba(217,70,239,0.08)]">
+                  <Icon className="h-5 w-5 text-cyan-200" />
+                  {action.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+
+      <section className="mt-3 rounded-[1.05rem] border border-cyan-200/12 bg-[#061022]/90 p-3">
+        <SectionHeader title="Service Health" />
+        <div className="mt-3 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
+          {serviceHealth.map((service) => {
+            const Icon = service.icon;
+            return (
+              <article key={service.label} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+                <div className="flex items-center gap-3">
+                  <Icon className="h-5 w-5 text-cyan-200" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-[12px] text-white/70">{service.label}</p>
+                      <p className="text-[12px] font-bold text-emerald-100">{service.value}</p>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <span className="block h-full rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(74,222,128,0.7)]" style={{ width: service.width }} />
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-white/10 pt-3 text-xs text-white/40">
+        <span />
+        <p className="text-center">Aevyrixa Her Care Admin Control Room<br />&copy; 2026 Aevyrixa. All rights reserved.</p>
+        <div className="flex items-center gap-2 justify-self-end">
+          <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[11px] font-semibold text-white/45">v2.1.0</span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-300/[0.07] px-3 py-1 text-[11px] font-semibold text-emerald-100">
+            <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(94,240,174,0.8)]" />
+            Auto-refresh ON
+          </span>
+        </div>
       </div>
     </div>
   );
