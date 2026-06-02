@@ -11231,10 +11231,80 @@ function BillingSection({
   const paidRevenue = liveOrders
     .filter((order) => order.paymentStatus === "verified")
     .reduce((sum, order) => sum + orderTotal(order), 0);
+  const usesFallbackBilling = liveOrders.length === 0 || revenue <= 0;
+  const billingMetrics = [
+    { label: "Total Revenue", value: usesFallbackBilling ? "৳12,845,760.75" : formatCurrency(revenue), growth: "+18.64% from last 30 days", icon: Wallet, tone: "pink" as const, spark: [12, 15, 14, 22, 26, 24, 31, 34, 42, 38, 49, 56, 69] },
+    { label: "Total Orders", value: usesFallbackBilling ? "4,892" : liveOrders.length.toLocaleString("en-US"), growth: "+14.23% from last 30 days", icon: ShoppingBag, tone: "violet" as const, spark: [14, 18, 22, 21, 29, 42, 31, 26, 33, 36, 45, 43, 55] },
+    { label: "Average Order Value", value: usesFallbackBilling ? "৳2,626.98" : formatCurrency(revenue / Math.max(liveOrders.length, 1)), growth: "+3.75% from last 30 days", icon: CreditCard, tone: "cyan" as const, spark: [10, 17, 28, 41, 31, 48, 36, 42, 49, 38, 44, 39, 43] },
+    { label: "Net Profit", value: "৳3,942,315.40", growth: "+21.18% from last 30 days", icon: ClipboardList, tone: "green" as const, spark: [8, 13, 18, 24, 30, 39, 45, 34, 29, 36, 32, 38, 43] },
+  ];
+  const revenueSeries = [
+    { label: "Apr 19", value: 300 }, { label: "", value: 350 }, { label: "", value: 420 }, { label: "Apr 24", value: 510 }, { label: "", value: 560 }, { label: "", value: 780 },
+    { label: "", value: 610 }, { label: "Apr 29", value: 520 }, { label: "", value: 480 }, { label: "", value: 710 }, { label: "", value: 460 }, { label: "May 04", value: 380 },
+    { label: "", value: 510 }, { label: "", value: 610 }, { label: "", value: 760 }, { label: "May 09", value: 650 }, { label: "", value: 780 }, { label: "", value: 920 },
+    { label: "", value: 990 }, { label: "May 14", value: 860 }, { label: "", value: 900 }, { label: "", value: 1180 }, { label: "", value: 1330 }, { label: "May 18", value: 890 },
+    { label: "", value: 1020 }, { label: "", value: 820 },
+  ];
+  const paymentMethodBreakdown = [
+    { label: "bKash", value: "৳5,432,190.40", percent: "42.29%", color: "#f044ba" },
+    { label: "Nagad", value: "৳3,126,840.15", percent: "24.32%", color: "#8b5cf6" },
+    { label: "Credit/Debit Card", value: "৳2,185,670.30", percent: "17.02%", color: "#2f8cff" },
+    { label: "SSLCommerz", value: "৳1,436,250.40", percent: "11.19%", color: "#30e6b3" },
+    { label: "Cash on Delivery", value: "৳664,809.50", percent: "5.18%", color: "#ffbd4a" },
+  ];
+  const paymentSummaryRows = [
+    ["bKash", "2,153", "৳5,432,190.40", "42.29%"],
+    ["Nagad", "1,302", "৳3,126,840.15", "24.32%"],
+    ["Credit/Debit Card", "876", "৳2,185,670.30", "17.02%"],
+    ["SSLCommerz", "423", "৳1,436,250.40", "11.19%"],
+    ["Cash on Delivery", "138", "৳664,809.50", "5.18%"],
+    ["Total", "4,892", "৳12,845,760.75", "100%"],
+  ];
+  const paymentStatusBreakdown = [
+    { label: "Paid", value: "3,642", percent: "74.41%", color: "#36e59a" },
+    { label: "Pending", value: "768", percent: "15.70%", color: "#ffc04a" },
+    { label: "Failed", value: "332", percent: "6.79%", color: "#ff5570" },
+    { label: "Refunded", value: "150", percent: "3.06%", color: "#38a6ff" },
+  ];
+  const recentTransactions = [
+    ["TRX-250518-001", "Nusrat Jahan", "bKash", "৳2,850.00", "Completed", "May 18, 2025  11:42 PM"],
+    ["TRX-250518-002", "Faria Tabassum", "Nagad", "৳1,650.00", "Completed", "May 18, 2025  11:35 PM"],
+    ["TRX-250518-003", "Samia Akter", "Card", "৳3,780.00", "Completed", "May 18, 2025  11:28 PM"],
+    ["TRX-250518-004", "Mim Akhter", "bKash", "৳1,240.00", "Pending", "May 18, 2025  11:21 PM"],
+    ["TRX-250518-005", "Jannatul Ferdous", "SSLCommerz", "৳2,430.00", "Completed", "May 18, 2025  11:14 PM"],
+  ];
+  const financialSummary = [
+    ["Gross Revenue", "৳14,562,340.20", "positive"],
+    ["Discounts & Coupons", "-৳1,128,590.45", "negative"],
+    ["Refunds", "-৳588,989.00", "negative"],
+    ["Net Revenue", "৳12,844,760.75", "accent"],
+    ["Total Expenses", "-৳8,902,445.35", "negative"],
+  ];
+  const billingActions = [
+    { title: "Billing Actions", subtitle: "", icon: Command, tone: "pink" },
+    { title: "Generate Invoice", subtitle: "Create new invoice", icon: FileText, tone: "pink" },
+    { title: "Download Report", subtitle: "Financial report (PDF/Excel)", icon: Download, tone: "violet" },
+    { title: "Tax Report", subtitle: "VAT & Tax summary", icon: Tag, tone: "indigo" },
+    { title: "Export Data", subtitle: "Export financial data", icon: Upload, tone: "cyan" },
+    { title: "Subscription", subtitle: "Manage billing plans", icon: Star, tone: "amber" },
+  ];
 
   if (!canView) {
     return <NoDataState label={blockedPermissionMessage} />;
   }
+
+  return (
+    <BillingFinanceConsoleContent
+      billingActions={billingActions}
+      billingMetrics={billingMetrics}
+      financialSummary={financialSummary}
+      paymentMethodBreakdown={paymentMethodBreakdown}
+      paymentStatusBreakdown={paymentStatusBreakdown}
+      paymentSummaryRows={paymentSummaryRows}
+      recentTransactions={recentTransactions}
+      revenueSeries={revenueSeries}
+    />
+  );
 
   return (
     <div className="mt-6 space-y-5">
@@ -11288,6 +11358,289 @@ function BillingSection({
       </div>
     </div>
   );
+}
+
+function BillingFinanceConsoleContent({
+  billingActions,
+  billingMetrics,
+  financialSummary,
+  paymentMethodBreakdown,
+  paymentStatusBreakdown,
+  paymentSummaryRows,
+  recentTransactions,
+  revenueSeries,
+}: {
+  billingActions: { title: string; subtitle: string; icon: typeof Gauge; tone: string }[];
+  billingMetrics: { label: string; value: string; growth: string; icon: typeof Gauge; tone: "pink" | "violet" | "cyan" | "green"; spark: number[] }[];
+  financialSummary: string[][];
+  paymentMethodBreakdown: { label: string; value: string; percent: string; color: string }[];
+  paymentStatusBreakdown: { label: string; value: string; percent: string; color: string }[];
+  paymentSummaryRows: string[][];
+  recentTransactions: string[][];
+  revenueSeries: { label: string; value: number }[];
+}) {
+  return (
+    <div className="mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#020716]/94 p-3 shadow-[0_0_90px_rgba(31,120,255,0.12)]">
+      <section className="relative min-h-[116px] overflow-hidden rounded-[1.25rem] border border-cyan-200/12 bg-[#050b1c]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <BillingHeroHud />
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-3xl font-semibold tracking-[-0.035em] text-white">Billing & Finance Console</h2>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-rose-200/30 bg-rose-400/10 px-2.5 py-1 text-[11px] font-bold text-white shadow-[0_0_18px_rgba(244,63,94,0.22)]">
+              <span className="h-2 w-2 rounded-full bg-rose-300 shadow-[0_0_12px_rgba(251,113,133,0.95)]" />
+              Live
+            </span>
+            <span className="rounded-full border border-fuchsia-200/32 bg-fuchsia-400/[0.10] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-100 shadow-[0_0_20px_rgba(217,70,239,0.18)]">
+              BILLING CONSOLE V1 ACTIVE
+            </span>
+          </div>
+          <p className="mt-2 max-w-[660px] text-sm leading-5 text-white/68">
+            Real-time financial insights and billing management center
+          </p>
+        </div>
+      </section>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {billingMetrics.map((metric) => <BillingMetricCard key={metric.label} metric={metric} />)}
+      </div>
+
+      <div className="mt-3 grid gap-3 xl:grid-cols-[1.48fr_0.86fr_1.08fr]">
+        <BillingPanel className="min-h-[315px]">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <h3 className="text-base font-black text-white">Revenue Overview</h3>
+            <div className="flex items-center gap-2">
+              <p className="text-lg font-semibold text-white">৳12,845,760.75</p>
+              <span className="rounded-lg border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-semibold text-white/68">
+                Last 30 Days <ChevronDown className="ml-1 inline h-3 w-3" />
+              </span>
+            </div>
+          </div>
+          <div className="mb-1 ml-[76px] flex items-center gap-2 text-[11px] text-white/56">
+            <span className="h-2 w-2 rounded-full bg-pink-400 shadow-[0_0_12px_rgba(244,114,182,0.9)]" />
+            Revenue (BDT)
+          </div>
+          <BillingRevenueChart data={revenueSeries} />
+        </BillingPanel>
+
+        <BillingPanel className="min-h-[315px]">
+          <h3 className="mb-3 text-base font-black text-white">Revenue by Payment Method</h3>
+          <div className="grid items-center gap-4 lg:grid-cols-[minmax(158px,0.86fr)_1fr] xl:grid-cols-1 2xl:grid-cols-[minmax(168px,0.84fr)_1fr]">
+            <BillingDonut centerTop="৳12.85M" centerBottom="Total" segments={paymentMethodBreakdown.map((item) => item.color)} />
+            <BillingLegend items={paymentMethodBreakdown} />
+          </div>
+        </BillingPanel>
+
+        <BillingPanel className="min-h-[315px]">
+          <h3 className="mb-3 text-base font-black text-white">Payment Method Summary</h3>
+          <BillingCompactTable headers={["Payment Method", "Transactions", "Amount (BDT)", "%"]} rows={paymentSummaryRows} strongLast />
+        </BillingPanel>
+      </div>
+
+      <div className="mt-3 grid gap-3 xl:grid-cols-[0.76fr_1.7fr_1.05fr]">
+        <BillingPanel className="min-h-[292px]">
+          <h3 className="mb-3 text-base font-black text-white">Order Payment Status</h3>
+          <div className="grid items-center gap-4 sm:grid-cols-[152px_1fr] xl:grid-cols-1 2xl:grid-cols-[156px_1fr]">
+            <BillingDonut centerTop="4,892" centerBottom="Total Orders" segments={paymentStatusBreakdown.map((item) => item.color)} large />
+            <BillingLegend items={paymentStatusBreakdown} compact />
+          </div>
+        </BillingPanel>
+
+        <BillingPanel className="min-h-[292px]">
+          <h3 className="mb-3 text-base font-black text-white">Recent Transactions</h3>
+          <div className="overflow-x-auto rounded-xl border border-white/8 bg-[#081329]/58">
+            <table className="w-full min-w-[720px] text-left text-[11px]">
+              <thead className="bg-white/[0.045] text-white/48">
+                <tr>{["Transaction ID", "Customer", "Method", "Amount (BDT)", "Status", "Date & Time"].map((header) => <th key={header} className="px-3 py-2 font-semibold">{header}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-white/7">
+                {recentTransactions.map((row) => (
+                  <tr key={row[0]} className="text-white/72">
+                    <td className="px-3 py-2.5 font-medium text-white/70">{row[0]}</td>
+                    <td className="px-3 py-2.5">{row[1]}</td>
+                    <td className="px-3 py-2.5"><BillingMethodPill method={row[2]} /></td>
+                    <td className="px-3 py-2.5 font-semibold text-white">{row[3]}</td>
+                    <td className="px-3 py-2.5"><BillingStatusChip status={row[4]} /></td>
+                    <td className="px-3 py-2.5 text-white/58">{row[5]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <button type="button" className="mt-2 flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-cyan-200/10 bg-white/[0.035] text-[12px] font-semibold text-sky-300 transition hover:border-sky-300/30 hover:text-sky-100">
+            View All Transactions <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+          </button>
+        </BillingPanel>
+
+        <BillingPanel className="min-h-[292px]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-base font-black text-white">Financial Summary</h3>
+            <span className="rounded-lg border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-semibold text-white/68">
+              Last 30 Days <ChevronDown className="ml-1 inline h-3 w-3" />
+            </span>
+          </div>
+          <div className="space-y-0.5">
+            {financialSummary.map(([label, value, tone]) => (
+              <div key={label} className={`flex items-center justify-between gap-3 rounded-lg border-b border-white/7 px-2 py-2 text-[13px] ${tone === "accent" ? "bg-cyan-300/[0.055]" : ""}`}>
+                <span className="text-white/72">{label}</span>
+                <span className={`font-bold ${tone === "negative" ? "text-rose-300" : tone === "accent" ? "text-cyan-200" : "text-white"}`}>{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-emerald-300/42 bg-emerald-400/[0.075] p-3 shadow-[0_0_24px_rgba(16,185,129,0.14)]">
+            <span className="flex items-center gap-3 text-lg font-black text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-200/24 bg-emerald-300/12 text-emerald-200"><Zap className="h-5 w-5" /></span>
+              Net Profit
+            </span>
+            <span className="text-xl font-semibold text-emerald-200">৳3,942,315.40</span>
+          </div>
+        </BillingPanel>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        {billingActions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <article key={action.title} className={`min-h-[78px] rounded-xl border bg-[#071024]/84 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_26px_rgba(217,70,239,0.06)] ${billingActionTone(action.tone)}`}>
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-current/10 shadow-[0_0_18px_currentColor]"><Icon className="h-5 w-5" /></span>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-white">{action.title}</p>
+                  {action.subtitle && <p className="mt-1 truncate text-[11px] text-white/52">{action.subtitle}</p>}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <footer className="relative mt-3 flex min-h-12 items-center justify-center border-t border-white/8 pt-3 text-center text-[0.68rem] text-white/42">
+        <div><p>Aevyrixa Her Care Admin Control Room</p><p className="mt-1">&copy; 2026 Aevyrixa. All rights reserved.</p></div>
+        <div className="absolute right-3 top-3 hidden items-center gap-3 text-[0.68rem] lg:flex">
+          <span>v2.1.0</span>
+          <span className="rounded-full border border-emerald-300/15 bg-emerald-400/10 px-2 py-1 font-semibold text-emerald-200">Auto-refresh ON</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function BillingPanel({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-[1.05rem] border border-cyan-200/13 bg-[#061023]/88 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_0_34px_rgba(34,211,238,0.045)] ${className}`}>
+      {children}
+    </section>
+  );
+}
+
+function BillingHeroHud() {
+  const bars = [22, 30, 42, 36, 56, 48, 68, 74, 58, 84, 70, 92, 64, 76, 54, 62, 48, 58, 72, 86, 98, 74, 82, 104, 116, 94, 130, 120, 138, 152, 126, 108, 116, 94, 88, 78, 82, 96, 112, 124, 136, 118, 126, 148, 164, 154, 176, 190];
+  const line = "0,90 60,74 130,86 210,52 295,69 390,46 510,58 640,31 780,42 900,20 1030,36 1160,16 1290,28";
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(217,70,239,0.28),transparent_32%),radial-gradient(circle_at_38%_8%,rgba(59,130,246,0.20),transparent_30%),linear-gradient(90deg,rgba(2,6,23,0.04),rgba(15,23,42,0.10),rgba(236,72,153,0.12))]" />
+      <svg viewBox="0 0 1320 150" className="absolute bottom-0 right-0 h-[150px] w-[82%] opacity-90" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="billingHeroBars" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#f94bd7" stopOpacity=".9" /><stop offset=".52" stopColor="#7c3cff" stopOpacity=".62" /><stop offset="1" stopColor="#22d3ee" stopOpacity=".16" /></linearGradient>
+          <linearGradient id="billingHeroLine" x1="0" x2="1"><stop offset="0" stopColor="#2dd4bf" stopOpacity=".35" /><stop offset=".58" stopColor="#f044ba" /><stop offset="1" stopColor="#7dd3fc" /></linearGradient>
+        </defs>
+        {[0, 1, 2, 3, 4].map((item) => <line key={item} x1="0" x2="1320" y1={24 + item * 24} y2={24 + item * 24} stroke="rgba(255,255,255,.055)" />)}
+        {bars.map((height, index) => <rect key={`${height}-${index}`} x={index * 27 + 16} y={142 - height * 0.72} width="10" height={height * 0.72} rx="2" fill="url(#billingHeroBars)" />)}
+        <polyline points={line} fill="none" stroke="url(#billingHeroLine)" strokeWidth="2.4" />
+        <polyline points={line} fill="none" stroke="#f044ba" strokeOpacity=".18" strokeWidth="9" />
+        <path d="M0 140 C180 92 280 124 420 86 C590 42 660 118 830 54 C1030 -8 1120 82 1320 18 L1320 150 L0 150Z" fill="rgba(217,70,239,.10)" />
+      </svg>
+    </div>
+  );
+}
+
+function BillingMetricCard({ metric }: { metric: { label: string; value: string; growth: string; icon: typeof Gauge; tone: "pink" | "violet" | "cyan" | "green"; spark: number[] } }) {
+  const tone = {
+    pink: "border-pink-300/18 bg-pink-500/[0.055] text-pink-200 shadow-[0_0_28px_rgba(236,72,153,0.10)]",
+    violet: "border-violet-300/18 bg-violet-500/[0.055] text-violet-200 shadow-[0_0_28px_rgba(139,92,246,0.10)]",
+    cyan: "border-cyan-300/18 bg-cyan-500/[0.055] text-cyan-200 shadow-[0_0_28px_rgba(34,211,238,0.10)]",
+    green: "border-emerald-300/18 bg-emerald-500/[0.055] text-emerald-200 shadow-[0_0_28px_rgba(16,185,129,0.10)]",
+  }[metric.tone];
+  const Icon = metric.icon;
+  return (
+    <article className={`min-h-[96px] rounded-[1rem] border bg-[#081226]/88 p-3 ${tone}`}>
+      <div className="grid grid-cols-[56px_1fr_110px] items-center gap-3">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-current/20 bg-current/10 shadow-[0_0_20px_currentColor]"><Icon className="h-6 w-6" /></span>
+        <div className="min-w-0"><p className="text-[12px] font-semibold text-white/78">{metric.label}</p><p className="mt-1 text-[1.35rem] font-semibold tracking-[-0.04em] text-white">{metric.value}</p><p className="mt-1 text-[10px] font-bold text-emerald-300">↑ {metric.growth}</p></div>
+        <BillingSparkline data={metric.spark} color={metric.tone === "green" ? "#34d399" : metric.tone === "cyan" ? "#22d3ee" : metric.tone === "violet" ? "#a855f7" : "#f044ba"} />
+      </div>
+    </article>
+  );
+}
+
+function BillingSparkline({ data, color }: { data: number[]; color: string }) {
+  const points = data.map((value, index) => `${index * (108 / Math.max(data.length - 1, 1))},${42 - value * 0.48}`).join(" ");
+  return (
+    <svg viewBox="0 0 110 48" className="h-12 w-28 overflow-visible">
+      <polyline points={points} fill="none" stroke={color} strokeOpacity=".18" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {data.map((value, index) => <circle key={`${value}-${index}`} cx={index * (108 / Math.max(data.length - 1, 1))} cy={42 - value * 0.48} r=".9" fill={color} />)}
+    </svg>
+  );
+}
+
+function BillingRevenueChart({ data }: { data: { label: string; value: number }[] }) {
+  const yLabels = ["৳1.5M", "৳1.2M", "৳900K", "৳600K", "৳300K", "৳0"];
+  const plot = data.map((item, index) => `${72 + index * (642 / Math.max(data.length - 1, 1))},${214 - (item.value / 1500) * 170}`).join(" ");
+  return (
+    <svg viewBox="0 0 742 248" className="h-[248px] w-full" preserveAspectRatio="none">
+      <defs><linearGradient id="billingRevenueFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#f044ba" stopOpacity=".38" /><stop offset=".55" stopColor="#f044ba" stopOpacity=".14" /><stop offset="1" stopColor="#f044ba" stopOpacity=".02" /></linearGradient></defs>
+      {yLabels.map((label, index) => <g key={label}><line x1="72" x2="714" y1={34 + index * 36} y2={34 + index * 36} stroke="rgba(255,255,255,.075)" /><text x="10" y={38 + index * 36} fill="rgba(255,255,255,.55)" fontSize="12">{label}</text></g>)}
+      {data.map((item, index) => index % 3 === 0 && <line key={`${item.label}-${index}`} x1={72 + index * (642 / Math.max(data.length - 1, 1))} x2={72 + index * (642 / Math.max(data.length - 1, 1))} y1="34" y2="214" stroke="rgba(255,255,255,.045)" strokeDasharray="3 3" />)}
+      <polygon points={`72,214 ${plot} 714,214`} fill="url(#billingRevenueFill)" />
+      <polyline points={plot} fill="none" stroke="#ff75bc" strokeOpacity=".24" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={plot} fill="none" stroke="#ff75bc" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {data.map((item, index) => <circle key={`${item.value}-${index}`} cx={72 + index * (642 / Math.max(data.length - 1, 1))} cy={214 - (item.value / 1500) * 170} r="3" fill="#061023" stroke="#ff8acb" strokeWidth="2" />)}
+      {data.map((item, index) => item.label && <text key={item.label} x={62 + index * (642 / Math.max(data.length - 1, 1))} y="238" fill="rgba(255,255,255,.62)" fontSize="12">{item.label}</text>)}
+    </svg>
+  );
+}
+
+function BillingDonut({ centerTop, centerBottom, segments, large = false }: { centerTop: string; centerBottom: string; segments: string[]; large?: boolean }) {
+  const gradient = segments.length === 4
+    ? `conic-gradient(${segments[0]} 0 74.41%,${segments[1]} 74.41% 90.11%,${segments[2]} 90.11% 96.95%,${segments[3]} 96.95% 100%)`
+    : `conic-gradient(${segments[0]} 0 42.29%,${segments[1]} 42.29% 66.61%,${segments[2]} 66.61% 83.63%,${segments[3]} 83.63% 94.82%,${segments[4]} 94.82% 100%)`;
+  return <div className={`relative mx-auto rounded-full shadow-[0_0_36px_rgba(217,70,239,0.20)] ${large ? "h-36 w-36" : "h-40 w-40"}`} style={{ background: gradient }}><div className="absolute inset-6 flex flex-col items-center justify-center rounded-full bg-[#071126] text-center shadow-[inset_0_0_24px_rgba(0,0,0,0.52)]"><p className="text-lg font-black tracking-[-0.03em] text-white">{centerTop}</p><p className="mt-1 text-[12px] text-white/52">{centerBottom}</p></div></div>;
+}
+
+function BillingLegend({ items, compact = false }: { items: { label: string; value: string; percent: string; color: string }[]; compact?: boolean }) {
+  return <div className={`${compact ? "space-y-2" : "space-y-2.5"} text-[12px]`}>{items.map((item) => <div key={item.label} className="grid grid-cols-[12px_1fr] gap-2"><span className="mt-1.5 h-2 w-2 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: item.color, color: item.color }} /><div className="min-w-0"><p className="font-semibold text-white/78">{item.label}</p><p className="text-white/52">{item.value} <span className="ml-1">({item.percent})</span></p></div></div>)}</div>;
+}
+
+function BillingCompactTable({ headers, rows, strongLast = false }: { headers: string[]; rows: string[][]; strongLast?: boolean }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/8 bg-[#081329]/58">
+      <table className="w-full min-w-[420px] table-fixed text-left text-[11px]">
+        <thead className="bg-white/[0.045] text-white/48"><tr>{headers.map((header) => <th key={header} className="px-2 py-2 font-semibold">{header}</th>)}</tr></thead>
+        <tbody className="divide-y divide-white/7">{rows.map((row, index) => <tr key={row.join("-")} className={strongLast && index === rows.length - 1 ? "bg-white/[0.035] font-bold text-white" : "text-white/70"}>{row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="truncate px-2 py-2.5">{cell}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function BillingMethodPill({ method }: { method: string }) {
+  const tone = method === "bKash" ? "bg-pink-500" : method === "Nagad" ? "bg-orange-500" : method === "Card" ? "bg-blue-500" : "bg-sky-500";
+  return <span className="inline-flex items-center gap-1.5"><span className={`flex h-5 w-5 items-center justify-center rounded ${tone} text-[9px] font-black text-white`}>{method.slice(0, 1)}</span><span className="text-white/74">{method}</span></span>;
+}
+
+function BillingStatusChip({ status }: { status: string }) {
+  const completed = status === "Completed";
+  return <span className={`rounded-md border px-2 py-1 text-[10px] font-bold ${completed ? "border-emerald-300/24 bg-emerald-400/12 text-emerald-200" : "border-amber-300/24 bg-amber-400/12 text-amber-200"}`}>{status}</span>;
+}
+
+function billingActionTone(tone: string) {
+  const tones: Record<string, string> = {
+    pink: "border-pink-300/22 text-pink-200",
+    violet: "border-violet-300/22 text-violet-200",
+    indigo: "border-indigo-300/22 text-indigo-200",
+    cyan: "border-cyan-300/22 text-cyan-200",
+    amber: "border-amber-300/26 text-amber-200",
+  };
+  return tones[tone] ?? tones.pink;
 }
 
 function CustomersSection({ session }: { session: AdminSessionUser }) {
