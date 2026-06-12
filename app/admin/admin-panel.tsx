@@ -10,7 +10,14 @@ import type {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReviewsCommandCenter from "@/app/admin/reviews-command-center";
 import SettingsCommandSection from "@/app/admin/settings-command-section";
-import { AdminConfirmModal } from "@/app/admin/components";
+import {
+  AdminActionMenu,
+  AdminButton,
+  AdminConfirmModal,
+  AdminDrawer,
+  AdminToastProvider,
+  useAdminToast,
+} from "@/app/admin/components";
 import {
   ArrowLeft,
   Bell as BellIcon,
@@ -2351,6 +2358,7 @@ export default function AdminPanel({
   }
 
   return (
+    <AdminToastProvider>
     <main className="aev-admin-control-room min-h-screen overflow-x-hidden text-white">
       <ControlRoomBackground />
 
@@ -2595,6 +2603,7 @@ export default function AdminPanel({
         </section>
       </div>
     </main>
+    </AdminToastProvider>
   );
 }
 
@@ -4136,6 +4145,9 @@ function ProductsSection({
   const [productSearchTerm, setProductSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [stockFilter, setStockFilter] = useState<"All Stock" | ProductStockStatus>("All Stock");
+  const [productCmsWorkflow, setProductCmsWorkflow] = useState<
+    "media" | "color" | "inventory" | "general" | "pricing" | "seo" | "shipping" | "settings" | null
+  >(null);
   const [productDeleteTarget, setProductDeleteTarget] = useState<AdminProduct | null>(null);
   const [productPermanentDeleteTarget, setProductPermanentDeleteTarget] = useState<AdminProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
@@ -4222,6 +4234,33 @@ function ProductsSection({
     liveProducts[0] ??
     products[0] ??
     null;
+  const selectedProductGallery = selectedProduct
+    ? [selectedProduct.imageUrl, ...(selectedProduct.images || []), selectedProduct.posterUrl]
+        .filter((url): url is string => Boolean(url))
+    : [];
+  const selectedProductColors = selectedProduct
+    ? selectedProduct.colorOptions.length
+      ? selectedProduct.colorOptions
+      : selectedProduct.colors.map((name, index) => ({
+          id: `${selectedProduct.id}-color-${index}`,
+          name,
+          hex: safeColorHex(name),
+        }))
+    : [];
+  const selectedProductVariantRows = selectedProduct
+    ? (selectedProduct.sizes.length ? selectedProduct.sizes : ["Default"]).slice(0, 8).map((size, index) => {
+        const colors = selectedProduct.colors.length ? selectedProduct.colors : ["Default"];
+        const color = colors[index % colors.length] ?? "Default";
+        return {
+          size,
+          color,
+          sku: `${selectedProduct.slug || "product"}-${size}-${color}`.toUpperCase().replace(/[^A-Z0-9]+/g, "-"),
+          stock: Math.max(0, (selectedProduct.stockQuantity ?? 0) - index * 3),
+          price: selectedProduct.price || formatCurrency(0),
+          status: selectedProduct.stockStatus === "out_of_stock" ? "Out" : index > 2 ? "Low" : "Active",
+        };
+      })
+    : [];
 
   useEffect(() => {
     if (!editingProductId || !isEditingExistingProduct) return;
@@ -4513,6 +4552,87 @@ function ProductsSection({
         onCancel={() => !isSavingProduct && setProductPermanentDeleteTarget(null)}
         onConfirm={confirmPermanentlyDeleteProduct}
       />
+      <StagedWorkflowDrawer
+        open={Boolean(productCmsWorkflow && selectedProduct)}
+        title={
+          productCmsWorkflow === "media"
+            ? "Product Media Upload"
+            : productCmsWorkflow === "color"
+              ? "Product Color Mapping"
+              : productCmsWorkflow === "inventory"
+                ? "Product Variants & Inventory"
+                : `Product ${productCmsWorkflow ? productCmsWorkflow[0].toUpperCase() + productCmsWorkflow.slice(1) : "CMS"}`
+        }
+        subtitle={selectedProduct ? selectedProduct.name : undefined}
+        width={productCmsWorkflow === "inventory" ? "xl" : "lg"}
+        footerLabel={productCmsWorkflow === "media" ? "Stage upload" : productCmsWorkflow === "inventory" ? "Stage inventory update" : "Stage save"}
+        onClose={() => setProductCmsWorkflow(null)}
+      >
+        {selectedProduct && productCmsWorkflow === "media" && (
+          <>
+            <div className="rounded-2xl border border-dashed border-cyan-200/28 bg-cyan-200/[0.045] p-5 text-center">
+              <Upload className="mx-auto h-8 w-8 text-cyan-100" />
+              <p className="mt-2 text-sm font-semibold text-white">Drop product media here or browse files</p>
+              <p className="mt-1 text-xs text-white/45">Media upload backend connection pending.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {selectedProductGallery.length > 0 ? selectedProductGallery.map((image, index) => (
+                <ProductThumb key={`${image}-${index}`} src={image} label={selectedProduct.name} />
+              )) : (
+                <p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-white/45 sm:col-span-3">
+                  No existing product images indexed.
+                </p>
+              )}
+            </div>
+          </>
+        )}
+        {selectedProduct && productCmsWorkflow === "color" && (
+          <>
+            <div className="flex flex-wrap gap-2">
+              {selectedProductColors.length > 0 ? selectedProductColors.map((color) => (
+                <span key={color.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/72">
+                  <span className="h-4 w-4 rounded-full border border-white/20" style={{ background: color.hex || safeColorHex(color.name) }} />
+                  {color.name}
+                </span>
+              )) : <span className="text-sm text-white/45">No color swatches mapped yet.</span>}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_120px_auto]">
+              <input placeholder="Color name" className="h-11 rounded-xl border border-white/10 bg-black/24 px-3 text-sm text-white outline-none placeholder:text-white/30" />
+              <input placeholder="#FF4DB8" className="h-11 rounded-xl border border-white/10 bg-black/24 px-3 text-sm text-white outline-none placeholder:text-white/30" />
+              <AdminButton variant="outline" onClick={() => setProductCmsWorkflow("color")}>Add color</AdminButton>
+            </div>
+          </>
+        )}
+        {selectedProduct && productCmsWorkflow === "inventory" && (
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/18">
+            <table className="w-full min-w-[680px] text-left text-xs">
+              <thead className="bg-white/[0.035] text-white/42">
+                <tr>{["Size", "Color", "SKU", "Stock", "Price", "Status"].map((header) => <th key={header} className="px-3 py-2">{header}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-white/8 text-white/68">
+                {selectedProductVariantRows.map((row) => (
+                  <tr key={row.sku}>
+                    <td className="px-3 py-2">{row.size}</td>
+                    <td className="px-3 py-2">{row.color}</td>
+                    <td className="px-3 py-2 text-white/38">{row.sku}</td>
+                    <td className="px-3 py-2"><input defaultValue={row.stock} className="h-8 w-20 rounded-lg border border-white/10 bg-black/24 px-2 text-white outline-none" /></td>
+                    <td className="px-3 py-2"><input defaultValue={row.price} className="h-8 w-28 rounded-lg border border-white/10 bg-black/24 px-2 text-white outline-none" /></td>
+                    <td className="px-3 py-2"><StatusChip label={row.status} tone={row.status === "Active" ? "green" : row.status === "Low" ? "amber" : "pink"} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="p-3 text-xs text-amber-100/78">Inventory persistence pending.</p>
+          </div>
+        )}
+        {selectedProduct && productCmsWorkflow && !["media", "color", "inventory"].includes(productCmsWorkflow) && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextField label="Selected product" value={selectedProduct.name} onChange={() => undefined} />
+            <TextField label="Section" value={productCmsWorkflow} onChange={() => undefined} />
+            <TextAreaField label="Staged notes" value="" onChange={() => undefined} placeholder="Backend/API connection pending for this CMS section." tall />
+          </div>
+        )}
+      </StagedWorkflowDrawer>
       <section className="aev-admin-page-hero overflow-hidden rounded-[1.35rem] border p-5">
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_420px] xl:items-center">
           <div className="min-w-0">
@@ -4784,6 +4904,7 @@ function ProductsSection({
         onEdit={selectedProduct ? () => openEditor(selectedProduct) : undefined}
         onDraft={selectedProduct ? () => setProductStatus(selectedProduct.id, "Draft") : undefined}
         onPublish={selectedProduct ? () => setProductStatus(selectedProduct.id, "Active") : undefined}
+        onWorkflow={(workflow) => setProductCmsWorkflow(workflow)}
       />
 
       {editingProduct && isEditingExistingProduct && !editingProduct.deletedAt && (
@@ -5007,6 +5128,7 @@ function ProductCmsWorkspace({
   onEdit,
   onDraft,
   onPublish,
+  onWorkflow,
 }: {
   product: AdminProduct | null;
   canEdit: boolean;
@@ -5015,6 +5137,7 @@ function ProductCmsWorkspace({
   onEdit?: () => void;
   onDraft?: () => void;
   onPublish?: () => void;
+  onWorkflow: (workflow: "media" | "color" | "inventory" | "general" | "pricing" | "seo" | "shipping" | "settings") => void;
 }) {
   const gallery = product
     ? [product.imageUrl, ...(product.images || []), product.posterUrl].filter((url): url is string => Boolean(url))
@@ -5068,7 +5191,16 @@ function ProductCmsWorkspace({
 
       <div className="aev-admin-cms-tabs mt-4 grid gap-2 sm:grid-cols-4 xl:grid-cols-7">
         {["General", "Media", "Variants", "Pricing", "SEO", "Shipping", "Settings"].map((tab) => (
-          <button key={tab} type="button" disabled={tab !== "Media"} className={tab === "Media" ? "is-active" : ""}>
+          <button
+            key={tab}
+            type="button"
+            disabled={!product}
+            onClick={() => {
+              const workflow = tab === "Media" ? "media" : tab === "Variants" ? "inventory" : tab.toLowerCase() as "general" | "pricing" | "seo" | "shipping" | "settings";
+              onWorkflow(workflow);
+            }}
+            className={tab === "Media" ? "is-active" : ""}
+          >
             {tab}
           </button>
         ))}
@@ -5084,7 +5216,7 @@ function ProductCmsWorkspace({
                 <p className="text-sm font-semibold text-white">Media Gallery</p>
                 <p className="mt-1 text-xs text-white/42">Drag and drop uploads are handled in the live product editor.</p>
               </div>
-              <button type="button" onClick={onEdit} disabled={!canEdit || !canUploadMedia} className="aev-admin-mini-action text-cyan-100">
+              <button type="button" onClick={() => onWorkflow("media")} disabled={!canEdit || !canUploadMedia} className="aev-admin-mini-action text-cyan-100">
                 <Upload className="h-3 w-3" />
                 Upload
               </button>
@@ -5093,7 +5225,7 @@ function ProductCmsWorkspace({
               {gallery.slice(0, 5).map((image, index) => (
                 <ProductThumb key={`${image}-${index}`} src={image} label={product.name} />
               ))}
-              <button type="button" onClick={onEdit} disabled={!canEdit || !canUploadMedia} className="grid aspect-square place-items-center rounded-xl border border-dashed border-cyan-200/25 bg-cyan-200/[0.045] text-cyan-100/70">
+              <button type="button" onClick={() => onWorkflow("media")} disabled={!canEdit || !canUploadMedia} className="grid aspect-square place-items-center rounded-xl border border-dashed border-cyan-200/25 bg-cyan-200/[0.045] text-cyan-100/70">
                 <Plus className="h-4 w-4" />
               </button>
             </div>
@@ -5106,7 +5238,7 @@ function ProductCmsWorkspace({
               <p className="mt-1 text-xs text-white/42">Color swatches and variants from product CMS data.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <ColorSwatchRow product={product} limit={12} />
-                <button type="button" onClick={onEdit} disabled={!canEdit} className="grid h-8 w-8 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-white/45">
+                <button type="button" onClick={() => onWorkflow("color")} disabled={!canEdit} className="grid h-8 w-8 place-items-center rounded-full border border-white/12 bg-white/[0.04] text-white/45">
                   <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -5117,7 +5249,7 @@ function ProductCmsWorkspace({
                 {descriptionGallery.map((image, index) => (
                   <ProductThumb key={`${image}-${index}`} src={image} label="Description media" />
                 ))}
-                <button type="button" onClick={onEdit} disabled={!canEdit || !canUploadMedia} className="grid aspect-square place-items-center rounded-xl border border-dashed border-white/16 bg-white/[0.035] text-white/45">
+                <button type="button" onClick={() => onWorkflow("media")} disabled={!canEdit || !canUploadMedia} className="grid aspect-square place-items-center rounded-xl border border-dashed border-white/16 bg-white/[0.035] text-white/45">
                   <Upload className="h-4 w-4" />
                 </button>
               </div>
@@ -5130,7 +5262,7 @@ function ProductCmsWorkspace({
                 <p className="text-sm font-semibold text-white">Variants & Inventory</p>
                 <p className="mt-1 text-xs text-white/42">{rows.length} derived variants from size/color data.</p>
               </div>
-              <button type="button" onClick={onEdit} disabled={!canEdit} className="aev-admin-mini-action text-pink-100">
+              <button type="button" onClick={() => onWorkflow("inventory")} disabled={!canEdit} className="aev-admin-mini-action text-pink-100">
                 Manage Inventory
               </button>
             </div>
@@ -5177,6 +5309,9 @@ function MediaSection({
   session: AdminSessionUser;
 }) {
   const canUpload = hasPermission(session, "products.media");
+  const { toast } = useAdminToast();
+  const [mediaWorkflow, setMediaWorkflow] = useState<"upload" | "metadata" | "collection" | "preview" | null>(null);
+  const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
   const productMedia = products
     .filter((product) => !product.deletedAt)
     .flatMap((product) => {
@@ -5262,6 +5397,7 @@ function MediaSection({
     ["Packaging Mockup.png", "PNG - 2.6 MB", "10:09 AM", "Naznin S."],
   ];
   const selectedMedia = mediaItems[0];
+  const activeMedia = mediaItems.find((item) => item.id === activeMediaId) ?? selectedMedia;
   const usageOverview = [
     ["Products", "2,341", "47.8%", "bg-violet-400"],
     ["Banners", "325", "6.6%", "bg-orange-300"],
@@ -5283,8 +5419,74 @@ function MediaSection({
     ["Archive", Inbox],
   ] as const;
 
+  const openMediaWorkflow = (workflow: typeof mediaWorkflow, mediaId?: string) => {
+    if (mediaId) setActiveMediaId(mediaId);
+    setMediaWorkflow(workflow);
+  };
+  const showMediaPending = (title: string) => {
+    toast({ title, description: BACKEND_PENDING_MESSAGE, type: "warning" });
+  };
+
   return (
     <div className="mt-4 space-y-4">
+      <StagedWorkflowDrawer
+        open={mediaWorkflow === "upload"}
+        title="Media Upload"
+        subtitle="Add files to the media library"
+        width="lg"
+        footerLabel="Stage upload"
+        onClose={() => setMediaWorkflow(null)}
+      >
+        <div className="rounded-2xl border border-dashed border-pink-300/45 bg-pink-400/[0.04] p-6 text-center">
+          <Upload className="mx-auto h-9 w-9 text-pink-100" />
+          <p className="mt-2 text-sm font-semibold text-white">Drop files here or browse files</p>
+          <p className="mt-1 text-xs text-white/45">JPG, PNG, WEBP, MP4, MOV, PDF, SVG. Upload API wiring is pending.</p>
+        </div>
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={mediaWorkflow === "metadata"}
+        title="Media Metadata"
+        subtitle={activeMedia?.title}
+        width="lg"
+        footerLabel="Stage metadata"
+        onClose={() => setMediaWorkflow(null)}
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <TextField label="Title" value={activeMedia?.title ?? ""} onChange={() => undefined} />
+          <TextField label="Type" value={activeMedia?.type ?? ""} onChange={() => undefined} />
+          <TextField label="Usage zone" value={activeMedia?.zone ?? "Unassigned"} onChange={() => undefined} />
+          <TextField label="Alt text" value="" onChange={() => undefined} placeholder="Add accessible media description" />
+        </div>
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={mediaWorkflow === "collection"}
+        title="New Collection"
+        subtitle="Organize media into a staged collection"
+        footerLabel="Stage collection"
+        onClose={() => setMediaWorkflow(null)}
+      >
+        <TextField label="Collection name" value="" onChange={() => undefined} placeholder="Campaign, Products, Lifestyle..." />
+        <TextAreaField label="Description" value="" onChange={() => undefined} placeholder="Internal collection notes" />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={mediaWorkflow === "preview"}
+        title="Media Preview"
+        subtitle={activeMedia?.title}
+        width="lg"
+        footerLabel="Copy URL"
+        onClose={() => setMediaWorkflow(null)}
+      >
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+          {activeMedia?.url && activeMedia.type !== "MP4" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={activeMedia.url} alt={activeMedia.title} className="max-h-[22rem] w-full object-contain" />
+          ) : activeMedia?.url ? (
+            <video src={activeMedia.url} controls className="max-h-[22rem] w-full" />
+          ) : (
+            <div className="grid min-h-48 place-items-center text-sm text-white/45">Preview placeholder</div>
+          )}
+        </div>
+      </StagedWorkflowDrawer>
       <section className="aev-admin-page-hero relative overflow-hidden rounded-[1.25rem] border px-5 py-4">
         <div className="pointer-events-none absolute left-1/2 top-0 h-28 w-[46rem] -translate-x-1/2 opacity-80">
           <div className="aev-admin-media-orb h-full rounded-none border-0" />
@@ -5383,7 +5585,7 @@ function MediaSection({
             <aside className="rounded-2xl border border-white/10 bg-black/20 p-3">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-bold text-white">Folders / Collections</p>
-                <button type="button" className="grid h-7 w-7 place-items-center rounded-lg border border-pink-200/25 bg-pink-300/10 text-pink-100">
+                <button type="button" onClick={() => openMediaWorkflow("collection")} className="grid h-7 w-7 place-items-center rounded-lg border border-pink-200/25 bg-pink-300/10 text-pink-100">
                   <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -5396,7 +5598,7 @@ function MediaSection({
                   </button>
                 ))}
               </div>
-              <button type="button" className="mt-3 flex min-h-9 w-full items-center gap-2 rounded-xl border border-pink-200/12 bg-pink-300/[0.04] px-3 text-xs font-semibold text-pink-100">
+              <button type="button" onClick={() => openMediaWorkflow("collection")} className="mt-3 flex min-h-9 w-full items-center gap-2 rounded-xl border border-pink-200/12 bg-pink-300/[0.04] px-3 text-xs font-semibold text-pink-100">
                 <Plus className="h-3.5 w-3.5" />
                 New Collection
               </button>
@@ -5422,9 +5624,17 @@ function MediaSection({
                         <span className="absolute bottom-2 left-2 rounded-md bg-black/58 px-1.5 py-1 text-[0.58rem] font-black text-white">{item.type}</span>
                         <span className="absolute bottom-2 right-2 rounded-md bg-black/58 px-1.5 py-1 text-[0.58rem] font-bold text-white">{item.duration || item.size}</span>
                         {item.duration && <span className="absolute inset-0 m-auto grid h-9 w-9 place-items-center rounded-full border border-white/30 bg-black/45 text-white"><VideoIcon className="h-4 w-4" /></span>}
-                        <button type="button" className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-lg bg-black/42 text-white/70">
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="absolute right-2 top-2">
+                          <AdminActionMenu
+                            actions={[
+                              { label: "Preview", onClick: () => openMediaWorkflow("preview", item.id) },
+                              { label: "Edit Metadata", onClick: () => openMediaWorkflow("metadata", item.id) },
+                              { label: "Copy URL", onClick: () => showMediaPending("Copy URL pending") },
+                              { label: "Archive", danger: true, onClick: () => showMediaPending("Archive pending") },
+                            ]}
+                            triggerLabel={`Open actions for ${item.title}`}
+                          />
+                        </div>
                       </div>
                       <div className="mt-2 min-w-0">
                         <p className="truncate text-xs font-bold text-white">{item.title}</p>
@@ -5455,25 +5665,31 @@ function MediaSection({
           <section className="aev-admin-control-panel rounded-[1.25rem] border p-4 xl:col-span-2">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Upload New Media</h3>
-              <Link href="/admin/products" className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-pink-200/25 bg-pink-300/10 px-3 text-xs font-bold text-pink-50">
+              <button type="button" onClick={() => openMediaWorkflow("upload")} className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-pink-200/25 bg-pink-300/10 px-3 text-xs font-bold text-pink-50">
                 <Plus className="h-3.5 w-3.5" />
                 Add Files
-              </Link>
+              </button>
             </div>
-            <div className="grid min-h-20 place-items-center rounded-xl border border-dashed border-pink-300/55 bg-pink-400/[0.035] p-4 text-center">
+            <button type="button" onClick={() => openMediaWorkflow("upload")} className="grid min-h-20 w-full place-items-center rounded-xl border border-dashed border-pink-300/55 bg-pink-400/[0.035] p-4 text-center">
               <div>
                 <Upload className="mx-auto h-8 w-8 text-pink-200" />
                 <p className="mt-2 text-sm font-bold text-white">Drag & drop files here <span className="font-medium text-pink-200">or click to browse</span></p>
                 <p className="mt-1 text-[0.68rem] text-white/42">Supports JPG, PNG, WEBP, MP4, MOV, PDF, SVG (Max 250MB)</p>
               </div>
-            </div>
+            </button>
           </section>
 
           <section className="aev-admin-control-panel rounded-[1.25rem] border p-4">
             <h3 className="mb-3 text-sm font-bold text-white">Quick Actions</h3>
             <div className="grid grid-cols-5 gap-2">
               {quickActions.map(([label, Icon]) => (
-                <button key={label} type="button" disabled={!canUpload && label === "Upload Files"} className="aev-admin-quick-action min-h-[4.2rem] rounded-xl p-2">
+                <button
+                  key={label}
+                  type="button"
+                  disabled={!canUpload && label === "Upload Files"}
+                  onClick={() => label === "Upload Files" ? openMediaWorkflow("upload") : showMediaPending(`${label} pending`)}
+                  className="aev-admin-quick-action min-h-[4.2rem] rounded-xl p-2"
+                >
                   <Icon className="h-4 w-4" />
                   <span>{label}</span>
                 </button>
@@ -7238,6 +7454,12 @@ function CategoriesCommandCenter({
   storageMode: SettingsStorageMode;
   updateCat: (updates: Partial<AdminSettings["homepageMediaSettings"]>) => void;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const { toast } = useAdminToast();
+  const [categoryWorkflow, setCategoryWorkflow] = useState<
+    "create" | "duplicate" | "reorder" | "banner" | "seo" | "assign" | null
+  >(null);
+  const [categoryConfirm, setCategoryConfirm] = useState<"hide" | "publish" | null>(null);
   const hms = draft.homepageMediaSettings;
   const selectedName = hms.categoryComfortPantyTitle || "Panties";
   const selectedDescription =
@@ -7320,7 +7542,107 @@ function CategoriesCommandCenter({
   ];
 
   return (
-    <form onSubmit={onSave} className="mt-4 space-y-4 text-white">
+    <form ref={formRef} onSubmit={onSave} className="mt-4 space-y-4 text-white">
+      <AdminConfirmModal
+        open={categoryConfirm === "hide"}
+        title="Hide category?"
+        description="This staged action will hide the selected category once backend persistence is wired."
+        confirmLabel="Hide Category"
+        variant="warning"
+        onCancel={() => setCategoryConfirm(null)}
+        onConfirm={() => {
+          setCategoryConfirm(null);
+          toast({ title: "Hide category pending", description: BACKEND_PENDING_MESSAGE, type: "warning" });
+        }}
+      />
+      <AdminConfirmModal
+        open={categoryConfirm === "publish"}
+        title="Publish category changes?"
+        description="Review staged category updates before saving them."
+        confirmLabel="Publish Changes"
+        variant="info"
+        loading={isSaving}
+        onCancel={() => setCategoryConfirm(null)}
+        onConfirm={() => {
+          setCategoryConfirm(null);
+          formRef.current?.requestSubmit();
+        }}
+      />
+      <StagedWorkflowDrawer
+        open={categoryWorkflow === "create"}
+        title="Create Category"
+        subtitle="Stage a new category"
+        footerLabel="Stage category"
+        onClose={() => setCategoryWorkflow(null)}
+      >
+        <TextField label="Category name" value="" onChange={() => undefined} placeholder="New category" />
+        <TextField label="Slug" value="" onChange={() => undefined} placeholder="/collections/new-category" />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={categoryWorkflow === "duplicate"}
+        title="Duplicate Category"
+        subtitle={selectedName}
+        footerLabel="Stage duplicate"
+        onClose={() => setCategoryWorkflow(null)}
+      >
+        <TextField label="New category name" value={`${selectedName} Copy`} onChange={() => undefined} />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={categoryWorkflow === "reorder"}
+        title="Reorder Categories"
+        subtitle="Staged drag and drop mode"
+        footerLabel="Stage order"
+        onClose={() => setCategoryWorkflow(null)}
+      >
+        <div className="space-y-2">
+          {tree.slice(0, 7).map((item) => (
+            <div key={item.label} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/72">
+              <GripVertical className="h-4 w-4 text-white/35" />
+              <span className="flex-1">{item.label}</span>
+              <span className="text-xs text-white/38">{item.count} products</span>
+            </div>
+          ))}
+        </div>
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={categoryWorkflow === "banner"}
+        title="Category Banner Upload"
+        subtitle={selectedName}
+        footerLabel="Stage banner"
+        onClose={() => setCategoryWorkflow(null)}
+      >
+        <div className="rounded-2xl border border-dashed border-fuchsia-300/35 bg-fuchsia-400/[0.04] p-5 text-center">
+          <Upload className="mx-auto h-8 w-8 text-fuchsia-100" />
+          <p className="mt-2 text-sm font-semibold text-white">Drop banner image here</p>
+        </div>
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={categoryWorkflow === "seo"}
+        title="Category SEO"
+        subtitle={selectedName}
+        footerLabel="Stage SEO"
+        onClose={() => setCategoryWorkflow(null)}
+      >
+        <TextField label="Meta title" value="Panties - Comfortable & Stylish | Aevyrixa Her Care" onChange={() => undefined} />
+        <TextAreaField label="Meta description" value="Explore our collection of comfortable and stylish panties designed for everyday confidence and all-day comfort." onChange={() => undefined} />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer
+        open={categoryWorkflow === "assign"}
+        title="Assign Products"
+        subtitle={selectedName}
+        width="lg"
+        footerLabel="Stage assignments"
+        onClose={() => setCategoryWorkflow(null)}
+      >
+        <div className="grid gap-2">
+          {["Soft Support Bra", "Comfort Panty", "Reusable Period Care", "Nightwear Bundle"].map((name) => (
+            <label key={name} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/72">
+              <input type="checkbox" defaultChecked className="accent-fuchsia-300" />
+              {name}
+            </label>
+          ))}
+        </div>
+      </StagedWorkflowDrawer>
       <section className={`${glassPanel} relative overflow-hidden p-4 sm:p-5`}>
         <div className="pointer-events-none absolute left-1/2 top-0 h-36 w-[34rem] -translate-x-1/2 opacity-80">
           <div className="absolute inset-x-14 top-5 h-28 rounded-[50%] border border-fuchsia-300/30 shadow-[0_0_48px_rgba(217,70,239,.45)]" />
@@ -7445,7 +7767,17 @@ function CategoriesCommandCenter({
                   <article key={card.title} className="group overflow-hidden rounded-xl border border-white/10 bg-[#07142d] shadow-[0_14px_38px_rgba(0,0,0,.34)]">
                     <div className="relative h-28">
                       {card.image ? <img src={card.image} alt="" className="h-full w-full object-cover" /> : renderCategoryVisual(card.visual, "h-full w-full")}
-                      <button type="button" className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/30 text-white/75 backdrop-blur"><MoreVertical className="h-4 w-4" /></button>
+                      <div className="absolute right-2 top-2">
+                        <AdminActionMenu
+                          actions={[
+                            { label: "Edit SEO", onClick: () => setCategoryWorkflow("seo") },
+                            { label: "Banner Upload", onClick: () => setCategoryWorkflow("banner") },
+                            { label: "Assign Products", onClick: () => setCategoryWorkflow("assign") },
+                            { label: "Hide Category", danger: true, onClick: () => setCategoryConfirm("hide") },
+                          ]}
+                          triggerLabel={`Open actions for ${card.title}`}
+                        />
+                      </div>
                     </div>
                     <div className="relative p-3">
                       <h3 className="text-sm font-black text-white">{card.title}</h3>
@@ -7476,7 +7808,7 @@ function CategoriesCommandCenter({
                   <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" />
                 </div>
               ))}
-              <button type="button" className="flex min-h-16 items-center justify-center gap-2 rounded-xl border border-dashed border-slate-500/50 bg-white/[0.02] text-xs font-semibold text-slate-300">
+              <button type="button" onClick={() => setCategoryWorkflow("assign")} className="flex min-h-16 items-center justify-center gap-2 rounded-xl border border-dashed border-slate-500/50 bg-white/[0.02] text-xs font-semibold text-slate-300">
                 <Plus className="h-4 w-4" />Add Featured Category
               </button>
             </div>
@@ -7492,7 +7824,19 @@ function CategoriesCommandCenter({
                 { title: "Hide Category", text: "Make category hidden", icon: X },
                 { title: "Publish Changes", text: "Save & update category", icon: Zap, submit: true },
               ].map(({ title, text, icon: Icon, submit }) => (
-                <button key={title} type={submit ? "submit" : "button"} disabled={submit && isSaving} className="flex items-center gap-3 rounded-xl border border-fuchsia-300/12 bg-fuchsia-400/[0.06] p-3 text-left transition hover:border-fuchsia-300/30 hover:bg-fuchsia-400/[0.1] disabled:opacity-60">
+                <button
+                  key={title}
+                  type="button"
+                  disabled={submit && isSaving}
+                  onClick={() => {
+                    if (title === "Create Category") setCategoryWorkflow("create");
+                    else if (title === "Duplicate Category") setCategoryWorkflow("duplicate");
+                    else if (title === "Reorder Categories") setCategoryWorkflow("reorder");
+                    else if (title === "Hide Category") setCategoryConfirm("hide");
+                    else setCategoryConfirm("publish");
+                  }}
+                  className="flex items-center gap-3 rounded-xl border border-fuchsia-300/12 bg-fuchsia-400/[0.06] p-3 text-left transition hover:border-fuchsia-300/30 hover:bg-fuchsia-400/[0.1] disabled:opacity-60"
+                >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 text-cyan-100"><Icon className="h-5 w-5" /></span>
                   <span className="min-w-0">
                     <span className="block truncate text-xs font-black text-white">{submit && isSaving ? "Publishing..." : title}</span>
@@ -7529,18 +7873,18 @@ function CategoriesCommandCenter({
               <textarea value={selectedDescription} onChange={(event) => updateCat({ categoryComfortPantyDescription: event.target.value })} className="h-16 w-full resize-none rounded-lg border border-white/10 bg-[#050c1e]/80 px-3 py-2 text-xs leading-5 text-white outline-none focus:border-fuchsia-300/40" />
             </label>
             <div className="space-y-2">
-              <div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-300">Banner Image</span><button type="button" className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-pink-100"><Upload className="h-4 w-4" /></button></div>
+              <div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-300">Banner Image</span><button type="button" onClick={() => setCategoryWorkflow("banner")} className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-pink-100"><Upload className="h-4 w-4" /></button></div>
               {selectedImage ? <img src={selectedImage} alt="" className="h-20 w-full rounded-lg object-cover" /> : renderCategoryVisual("panties", "h-20 w-full rounded-lg")}
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
-              <div className="flex items-center justify-between"><h3 className="text-xs font-black text-white">SEO Snippet</h3><button type="button" className="text-xs font-bold text-fuchsia-200">Edit</button></div>
+              <div className="flex items-center justify-between"><h3 className="text-xs font-black text-white">SEO Snippet</h3><button type="button" onClick={() => setCategoryWorkflow("seo")} className="text-xs font-bold text-fuchsia-200">Edit</button></div>
               <label className="mt-3 block space-y-1"><div className="flex justify-between text-[0.66rem] text-slate-400"><span>Meta Title</span><span>54 / 60</span></div><input value="Panties - Comfortable & Stylish | Aevyrixa Her Care" readOnly className="h-8 w-full rounded-md border border-white/8 bg-[#050c1e]/70 px-2 text-[0.72rem] text-slate-200 outline-none" /></label>
               <label className="mt-2 block space-y-1"><div className="flex justify-between text-[0.66rem] text-slate-400"><span>Meta Description</span><span>118 / 160</span></div><textarea value="Explore our collection of comfortable and stylish panties designed for everyday confidence and all-day comfort." readOnly className="h-14 w-full resize-none rounded-md border border-white/8 bg-[#050c1e]/70 px-2 py-1.5 text-[0.72rem] leading-4 text-slate-200 outline-none" /></label>
               <p className="mt-2 text-[0.66rem] text-slate-500">URL Preview</p>
               <p className="truncate text-xs font-bold text-emerald-300">https://aevyrixa.com/collections/panties</p>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between"><div><h3 className="text-xs font-black text-white">Assign Products</h3><p className="mt-1 text-xs text-slate-400">8 products assigned</p></div><button type="button" className="rounded-lg border border-fuchsia-300/20 bg-fuchsia-400/10 px-3 py-1.5 text-xs font-bold text-fuchsia-100">Manage</button></div>
+              <div className="flex items-center justify-between"><div><h3 className="text-xs font-black text-white">Assign Products</h3><p className="mt-1 text-xs text-slate-400">8 products assigned</p></div><button type="button" onClick={() => setCategoryWorkflow("assign")} className="rounded-lg border border-fuchsia-300/20 bg-fuchsia-400/10 px-3 py-1.5 text-xs font-bold text-fuchsia-100">Manage</button></div>
               <div className="grid grid-cols-7 gap-2">
                 {["panties", "violet", "pink", "red", "purple", "peach"].map((thumb, index) => <div key={`${thumb}-${index}`} className="aspect-square overflow-hidden rounded-lg border border-white/10">{renderCategoryVisual(thumb, "h-full w-full")}</div>)}
                 <div className="grid aspect-square place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-sm font-black text-white">+3</div>
@@ -10046,6 +10390,68 @@ function DisabledAdminAction({
   );
 }
 
+const BACKEND_PENDING_MESSAGE = "This workflow needs backend connection in the next phase.";
+
+function BackendPendingNotice({ label = "Backend/API connection pending" }: { label?: string }) {
+  return (
+    <div className="rounded-2xl border border-amber-200/24 bg-amber-300/[0.08] p-3 text-sm leading-6 text-amber-50/82">
+      {label}
+    </div>
+  );
+}
+
+function StagedWorkflowDrawer({
+  children,
+  footerLabel = "Stage action",
+  onClose,
+  open,
+  subtitle,
+  title,
+  width = "md",
+}: {
+  children: ReactNode;
+  footerLabel?: string;
+  onClose: () => void;
+  open: boolean;
+  subtitle?: string;
+  title: string;
+  width?: "sm" | "md" | "lg" | "xl" | "full";
+}) {
+  const { toast } = useAdminToast();
+
+  return (
+    <AdminDrawer
+      open={open}
+      title={title}
+      subtitle={subtitle}
+      width={width}
+      onClose={onClose}
+      footer={
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <AdminButton variant="ghost" onClick={onClose}>Close</AdminButton>
+          <AdminButton
+            variant="neon"
+            onClick={() =>
+              toast({
+                title: "Backend connection pending",
+                description: BACKEND_PENDING_MESSAGE,
+                type: "warning",
+              })
+            }
+          >
+            {footerLabel}
+          </AdminButton>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <BackendPendingNotice />
+        {children}
+      </div>
+    </AdminDrawer>
+  );
+}
+
 function DiscountsSection({
   orders,
   session,
@@ -10980,6 +11386,36 @@ function IntegrationsSection({
     { label: "Sync Now", icon: RefreshCw },
     { label: "Generate Report", icon: FileText },
   ];
+  const { toast } = useAdminToast();
+  const [integrationWorkflow, setIntegrationWorkflow] = useState<"detail" | "logs" | "add" | "reconnect" | "test" | "report" | "flows" | null>(null);
+  const [integrationConfirm, setIntegrationConfirm] = useState<"rotate" | null>(null);
+  const [selectedIntegration, setSelectedIntegration] = useState(connectedPlatforms[0]?.name ?? "Integration");
+  const openIntegrationWorkflow = (
+    workflow: NonNullable<typeof integrationWorkflow>,
+    integrationName = selectedIntegration
+  ) => {
+    setSelectedIntegration(integrationName);
+    setIntegrationWorkflow(workflow);
+  };
+  const handleIntegrationQuickAction = (label: string) => {
+    if (label === "Add Integration") {
+      openIntegrationWorkflow("add", "New Integration");
+      return;
+    }
+    if (label === "Reconnect Service") {
+      openIntegrationWorkflow("reconnect");
+      return;
+    }
+    if (label === "Test Webhook") {
+      openIntegrationWorkflow("test");
+      return;
+    }
+    if (label === "Generate Report") {
+      openIntegrationWorkflow("report");
+      return;
+    }
+    toast({ title: label, description: BACKEND_PENDING_MESSAGE, type: "warning" });
+  };
   const serviceHealth = [
     { label: "Payments", value: "100%", icon: CreditCard, width: "100%" },
     { label: "Courier", value: "98%", icon: PackageCheck, width: "98%" },
@@ -11008,6 +11444,95 @@ function IntegrationsSection({
 
   return (
     <div className="mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#020716]/92 p-3 shadow-[0_0_90px_rgba(31,120,255,0.10)]">
+      <AdminConfirmModal
+        confirmLabel="Rotate key"
+        description={`Rotate credentials for ${selectedIntegration}. Existing webhook clients may stop working until the new key is deployed.`}
+        onCancel={() => setIntegrationConfirm(null)}
+        onConfirm={() => {
+          toast({ title: "Key rotation staged", description: BACKEND_PENDING_MESSAGE, type: "warning" });
+        }}
+        open={integrationConfirm === "rotate"}
+        requireText="ROTATE"
+        variant="danger"
+        title="Rotate integration key?"
+      />
+      <StagedWorkflowDrawer
+        footerLabel={integrationWorkflow === "test" ? "Run webhook test" : "Stage workflow"}
+        onClose={() => setIntegrationWorkflow(null)}
+        open={integrationWorkflow !== null}
+        subtitle={selectedIntegration}
+        title={
+          integrationWorkflow === "detail"
+            ? "Integration Details"
+            : integrationWorkflow === "logs"
+              ? "Integration Logs"
+              : integrationWorkflow === "add"
+                ? "Add Integration"
+                : integrationWorkflow === "reconnect"
+                  ? "Reconnect Service"
+                  : integrationWorkflow === "test"
+                    ? "Test Webhook"
+                    : integrationWorkflow === "flows"
+                      ? "Automation Flows"
+                      : "Integration Report"
+        }
+        width="lg"
+      >
+        {integrationWorkflow === "detail" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Integration settings backend connection pending" />
+            <DetailLine label="Platform" value={selectedIntegration} />
+            <TextField label="Webhook URL" value="https://example.com/webhook" onChange={() => undefined} />
+            <SelectField label="Status" value="Connected" options={["Connected", "Pending", "Disabled"]} onChange={() => undefined} />
+          </div>
+        )}
+        {integrationWorkflow === "logs" && (
+          <div className="space-y-2">
+            <BackendPendingNotice label="Integration log backend connection pending" />
+            {integrationActivity.slice(0, 5).map((item) => (
+              <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+                <p className="text-sm font-semibold text-white">{item.title}</p>
+                <p className="mt-1 text-xs text-white/55">{item.detail} · {item.time}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {integrationWorkflow === "add" && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <BackendPendingNotice label="Add integration backend connection pending" />
+            <TextField label="Provider name" value="" onChange={() => undefined} placeholder="Payment, courier, analytics..." />
+            <TextField label="API key" value="" onChange={() => undefined} placeholder="Paste key after backend wiring" />
+            <TextAreaField label="Setup notes" value="" onChange={() => undefined} placeholder="Callback URLs, scopes, and owners" />
+          </div>
+        )}
+        {integrationWorkflow === "reconnect" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Reconnect backend connection pending" />
+            <DetailLine label="Service" value={selectedIntegration} />
+            <TextField label="Credential owner" value={session.displayName || session.username} onChange={() => undefined} />
+          </div>
+        )}
+        {integrationWorkflow === "test" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Webhook test backend connection pending" />
+            <TextField label="Endpoint" value="/api/webhooks/test" onChange={() => undefined} />
+            <TextAreaField label="Payload preview" value={'{ "event": "test" }'} onChange={() => undefined} />
+          </div>
+        )}
+        {integrationWorkflow === "flows" && (
+          <div className="space-y-2">
+            <BackendPendingNotice label="Automation persistence pending" />
+            {automationFlows.map((flow) => <DetailLine key={flow.title} label={flow.title} value={flow.detail} />)}
+          </div>
+        )}
+        {integrationWorkflow === "report" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Report generation backend connection pending" />
+            <SelectField label="Report range" value="Last 7 days" options={["Last 7 days", "Last 30 days", "Quarter to date"]} onChange={() => undefined} />
+            <TextAreaField label="Included systems" value={connectedPlatforms.map((platform) => platform.name).join("\n")} onChange={() => undefined} />
+          </div>
+        )}
+      </StagedWorkflowDrawer>
       <section className="relative overflow-hidden rounded-[1.25rem] border border-cyan-200/12 bg-[#050b1c]/88 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[138px] overflow-hidden">
           <div className="absolute left-1/2 top-1 h-[130px] w-[760px] -translate-x-1/2 rounded-[100%] bg-[radial-gradient(circle_at_center,rgba(255,77,232,0.55),rgba(61,132,255,0.23)_22%,rgba(0,0,0,0)_58%)] blur-[1px]" />
@@ -11037,7 +11562,7 @@ function IntegrationsSection({
               <CalendarDays className="h-3.5 w-3.5" />
               May 14 - May 21, 2026
             </span>
-            <button type="button" className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold">
+            <button type="button" onClick={() => openIntegrationWorkflow("report", "Integration Export")} className="aev-admin-utility-link inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold">
               <Upload className="h-3.5 w-3.5" />
               Export
             </button>
@@ -11073,7 +11598,7 @@ function IntegrationsSection({
         <section className="rounded-[1.05rem] border border-cyan-200/12 bg-[#061023]/88 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]">
           <div className="flex items-center justify-between gap-3">
             <SectionHeader title="Connected Platforms" />
-            <Link href="/admin/settings" className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">View All</Link>
+            <button type="button" onClick={() => openIntegrationWorkflow("detail", "All Integrations")} className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">View All</button>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {connectedPlatforms.map((platform) => {
@@ -11091,7 +11616,7 @@ function IntegrationsSection({
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <TinyBadge label={platform.connected ? "Connected" : "Pending"} tone={platform.connected ? "green" : "amber"} />
-                    <Link href="/admin/settings" className="text-[10px] font-bold text-cyan-200">Manage</Link>
+                    <button type="button" onClick={() => openIntegrationWorkflow("detail", platform.name)} className="text-[10px] font-bold text-cyan-200">Manage</button>
                   </div>
                 </article>
               );
@@ -11102,7 +11627,7 @@ function IntegrationsSection({
         <section className="rounded-[1.05rem] border border-violet-200/14 bg-[#071022]/90 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.045)]">
           <div className="flex items-center justify-between gap-3">
             <SectionHeader title="API & Webhook Center" />
-            <button type="button" className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">View Logs</button>
+            <button type="button" onClick={() => openIntegrationWorkflow("logs", "Webhook Center")} className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">View Logs</button>
           </div>
           <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/18">
             <table className="w-full table-fixed text-left text-[10px] text-white/62">
@@ -11123,9 +11648,9 @@ function IntegrationsSection({
                     <td className="px-2 py-2"><span className="block h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(94,240,174,0.9)]" /></td>
                     <td className="px-2 py-2">
                       <div className="flex items-center gap-2 text-cyan-100/70">
-                        <HelpCircle className="h-3.5 w-3.5" />
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        <Copy className="h-3.5 w-3.5" />
+                        <button type="button" onClick={() => openIntegrationWorkflow("logs", row[0])} title="View logs"><HelpCircle className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => openIntegrationWorkflow("test", row[0])} title="Test webhook"><RefreshCw className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => toast({ title: "API key copied", description: BACKEND_PENDING_MESSAGE, type: "warning" })} title="Copy URL"><Copy className="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
                   </tr>
@@ -11134,7 +11659,7 @@ function IntegrationsSection({
             </table>
           </div>
           <div className="mt-2 flex justify-center">
-            <button type="button" className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-fuchsia-300/35 bg-fuchsia-400/12 px-5 text-xs font-semibold text-fuchsia-50 shadow-[0_0_24px_rgba(217,70,239,0.16)]">
+            <button type="button" onClick={() => setIntegrationConfirm("rotate")} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-fuchsia-300/35 bg-fuchsia-400/12 px-5 text-xs font-semibold text-fuchsia-50 shadow-[0_0_24px_rgba(217,70,239,0.16)]">
               <RefreshCw className="h-3.5 w-3.5" />
               Rotate Key
             </button>
@@ -11169,7 +11694,7 @@ function IntegrationsSection({
               );
             })}
           </div>
-          <button type="button" className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-300/18 bg-blue-400/10 text-xs font-semibold text-white/78">
+          <button type="button" onClick={() => openIntegrationWorkflow("logs", "Integration Activity")} className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-blue-300/18 bg-blue-400/10 text-xs font-semibold text-white/78">
             View All Activity
             <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
           </button>
@@ -11180,7 +11705,7 @@ function IntegrationsSection({
         <section className="rounded-[1.05rem] border border-fuchsia-200/14 bg-[#071022]/90 p-3">
           <div className="flex items-center justify-between gap-3">
             <SectionHeader title="Automation Flows" />
-            <button type="button" className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">Manage Flows</button>
+            <button type="button" onClick={() => openIntegrationWorkflow("flows", "Automation Flows")} className="rounded-lg border border-violet-200/18 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-white/80">Manage Flows</button>
           </div>
           <div className="mt-3 space-y-2">
             {automationFlows.map((flow) => {
@@ -11210,7 +11735,7 @@ function IntegrationsSection({
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
-                <button key={action.label} type="button" className="flex min-h-[50px] items-center justify-center gap-3 rounded-xl border border-fuchsia-300/28 bg-[#0a1026]/82 px-3 text-sm font-semibold text-white/82 shadow-[0_0_24px_rgba(217,70,239,0.08)]">
+                <button key={action.label} type="button" onClick={() => handleIntegrationQuickAction(action.label)} className="flex min-h-[50px] items-center justify-center gap-3 rounded-xl border border-fuchsia-300/28 bg-[#0a1026]/82 px-3 text-sm font-semibold text-white/82 shadow-[0_0_24px_rgba(217,70,239,0.08)]">
                   <Icon className="h-5 w-5 text-cyan-200" />
                   {action.label}
                 </button>
@@ -11428,8 +11953,106 @@ function BillingFinanceConsoleContent({
   recentTransactions: string[][];
   revenueSeries: { label: string; value: number }[];
 }) {
+  const { toast } = useAdminToast();
+  const [billingWorkflow, setBillingWorkflow] = useState<"invoice" | "report" | "tax" | "subscription" | "transactions" | "actions" | null>(null);
+  const [billingExportConfirmOpen, setBillingExportConfirmOpen] = useState(false);
+  const openBillingAction = (title: string) => {
+    if (title === "Generate Invoice") {
+      setBillingWorkflow("invoice");
+      return;
+    }
+    if (title === "Download Report") {
+      setBillingWorkflow("report");
+      return;
+    }
+    if (title === "Tax Report") {
+      setBillingWorkflow("tax");
+      return;
+    }
+    if (title === "Export Data") {
+      setBillingExportConfirmOpen(true);
+      return;
+    }
+    if (title === "Subscription") {
+      setBillingWorkflow("subscription");
+      return;
+    }
+    setBillingWorkflow("actions");
+  };
+
   return (
     <div className="mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#020716]/94 p-3 shadow-[0_0_90px_rgba(31,120,255,0.12)]">
+      <AdminConfirmModal
+        confirmLabel="Confirm export"
+        description="Financial exports can include sensitive payment and customer transaction data."
+        onCancel={() => setBillingExportConfirmOpen(false)}
+        onConfirm={() => {
+          toast({ title: "Financial export staged", description: BACKEND_PENDING_MESSAGE, type: "warning" });
+        }}
+        open={billingExportConfirmOpen}
+        variant="danger"
+        title="Export financial data?"
+      />
+      <StagedWorkflowDrawer
+        footerLabel={billingWorkflow === "invoice" ? "Generate invoice" : "Stage action"}
+        onClose={() => setBillingWorkflow(null)}
+        open={billingWorkflow !== null}
+        subtitle="Billing & Finance Console"
+        title={
+          billingWorkflow === "invoice"
+            ? "Invoice Generator"
+            : billingWorkflow === "report"
+              ? "Report Export"
+              : billingWorkflow === "tax"
+                ? "Tax Report"
+                : billingWorkflow === "subscription"
+                  ? "Subscription"
+                  : billingWorkflow === "transactions"
+                    ? "All Transactions"
+                    : "Billing Actions"
+        }
+        width="lg"
+      >
+        {billingWorkflow === "invoice" && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <BackendPendingNotice label="Invoice generation backend connection pending" />
+            <TextField label="Customer or order ID" value="" onChange={() => undefined} placeholder="TRX or order reference" />
+            <SelectField label="Invoice type" value="Customer invoice" options={["Customer invoice", "Refund invoice", "Tax invoice"]} onChange={() => undefined} />
+          </div>
+        )}
+        {billingWorkflow === "report" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Report export backend connection pending" />
+            <SelectField label="Format" value="PDF" options={["PDF", "Excel", "CSV"]} onChange={() => undefined} />
+            <SelectField label="Period" value="Last 30 days" options={["Last 30 days", "Quarter to date", "Year to date"]} onChange={() => undefined} />
+          </div>
+        )}
+        {billingWorkflow === "tax" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Tax report backend connection pending" />
+            {financialSummary.map(([label, value]) => <DetailLine key={label} label={label} value={value} />)}
+          </div>
+        )}
+        {billingWorkflow === "subscription" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Billing plan backend connection pending" />
+            <DetailLine label="Current plan" value="Admin Premium" />
+            <DetailLine label="Renewal" value="Backend connection pending" />
+          </div>
+        )}
+        {billingWorkflow === "transactions" && (
+          <div className="space-y-2">
+            <BackendPendingNotice label="Full transactions backend connection pending" />
+            {recentTransactions.map((row) => <DetailLine key={row[0]} label={`${row[0]} · ${row[1]}`} value={`${row[2]} · ${row[3]} · ${row[4]}`} />)}
+          </div>
+        )}
+        {billingWorkflow === "actions" && (
+          <div className="space-y-3">
+            <BackendPendingNotice label="Billing action backend connection pending" />
+            <TextAreaField label="Action notes" value="" onChange={() => undefined} placeholder="Capture the intended finance action before backend wiring." />
+          </div>
+        )}
+      </StagedWorkflowDrawer>
       <section className="relative min-h-[116px] overflow-hidden rounded-[1.25rem] border border-cyan-200/12 bg-[#050b1c]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         <BillingHeroHud />
         <div className="relative z-10">
@@ -11515,7 +12138,7 @@ function BillingFinanceConsoleContent({
               </tbody>
             </table>
           </div>
-          <button type="button" className="mt-2 flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-cyan-200/10 bg-white/[0.035] text-[12px] font-semibold text-sky-300 transition hover:border-sky-300/30 hover:text-sky-100">
+          <button type="button" onClick={() => setBillingWorkflow("transactions")} className="mt-2 flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-cyan-200/10 bg-white/[0.035] text-[12px] font-semibold text-sky-300 transition hover:border-sky-300/30 hover:text-sky-100">
             View All Transactions <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
           </button>
         </BillingPanel>
@@ -11549,7 +12172,7 @@ function BillingFinanceConsoleContent({
         {billingActions.map((action) => {
           const Icon = action.icon;
           return (
-            <article key={action.title} className={`min-h-[78px] rounded-xl border bg-[#071024]/84 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_26px_rgba(217,70,239,0.06)] ${billingActionTone(action.tone)}`}>
+            <button key={action.title} type="button" onClick={() => openBillingAction(action.title)} className={`min-h-[78px] rounded-xl border bg-[#071024]/84 p-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_26px_rgba(217,70,239,0.06)] ${billingActionTone(action.tone)}`}>
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-current/10 shadow-[0_0_18px_currentColor]"><Icon className="h-5 w-5" /></span>
                 <div className="min-w-0">
@@ -11557,7 +12180,7 @@ function BillingFinanceConsoleContent({
                   {action.subtitle && <p className="mt-1 truncate text-[11px] text-white/52">{action.subtitle}</p>}
                 </div>
               </div>
-            </article>
+            </button>
           );
         })}
       </div>
@@ -11701,6 +12324,10 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
   const [tagFilter, setTagFilter] = useState("All Tags");
   const [sortFilter, setSortFilter] = useState("Sort by Recent Activity");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("demo-fatema-jannat");
+  const [customerWorkflow, setCustomerWorkflow] = useState<
+    "profile" | "message" | "note" | "edit" | "wishlist" | "activity" | null
+  >(null);
+  const [customerExportConfirmOpen, setCustomerExportConfirmOpen] = useState(false);
   const [error, setError] = useState(canViewCustomers ? "" : blockedPermissionMessage);
 
   useEffect(() => {
@@ -11820,6 +12447,67 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
 
   return (
     <div className="aev-customers-hub mt-3 max-w-full overflow-hidden rounded-[1.35rem] border border-cyan-200/10 bg-[#030816]/76 p-3 shadow-[0_0_80px_rgba(31,120,255,0.10)]">
+      <AdminConfirmModal
+        open={customerExportConfirmOpen}
+        title="Export customer PII?"
+        description="This CSV includes customer names, phone numbers, email addresses, and order metadata."
+        confirmLabel="Export CSV"
+        variant="warning"
+        impactItems={["Customer PII leaves the admin panel.", "Use only for approved operations.", "Handle the file according to privacy policy."]}
+        onCancel={() => setCustomerExportConfirmOpen(false)}
+        onConfirm={() => {
+          setCustomerExportConfirmOpen(false);
+          exportVisibleCustomers();
+        }}
+      />
+      <StagedWorkflowDrawer
+        open={customerWorkflow === "profile"}
+        title="Customer Full Profile"
+        subtitle={selectedCustomer?.fullName}
+        width="lg"
+        footerLabel="Backend pending"
+        onClose={() => setCustomerWorkflow(null)}
+      >
+        {selectedCustomer && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <DetailLine label="Name" value={selectedCustomer.fullName} />
+            <DetailLine label="Phone" value={selectedCustomer.phone} />
+            <DetailLine label="Email" value={selectedCustomer.email} />
+            <DetailLine label="Address" value={selectedCustomer.address} />
+            <DetailLine label="Segment" value={selectedCustomer.segment} />
+            <DetailLine label="Lifetime value" value={formatCurrency(selectedCustomer.totalSpent)} />
+          </div>
+        )}
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer open={customerWorkflow === "message"} title="Message Customer" subtitle={selectedCustomer?.fullName} footerLabel="Stage message" onClose={() => setCustomerWorkflow(null)}>
+        <TextAreaField label="Message" value="" onChange={() => undefined} placeholder="Write a customer message..." tall />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer open={customerWorkflow === "note"} title="Add Customer Note" subtitle={selectedCustomer?.fullName} footerLabel="Stage note" onClose={() => setCustomerWorkflow(null)}>
+        <TextAreaField label="Internal note" value="" onChange={() => undefined} placeholder="Add an internal customer note..." tall />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer open={customerWorkflow === "edit"} title="Edit Customer Profile" subtitle={selectedCustomer?.fullName} footerLabel="Stage profile update" onClose={() => setCustomerWorkflow(null)}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <TextField label="Name" value={selectedCustomer?.fullName ?? ""} onChange={() => undefined} />
+          <TextField label="Phone" value={selectedCustomer?.phone ?? ""} onChange={() => undefined} />
+          <TextField label="Email" value={selectedCustomer?.email ?? ""} onChange={() => undefined} />
+          <TextField label="Segment" value={selectedCustomer?.segment ?? ""} onChange={() => undefined} />
+        </div>
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer open={customerWorkflow === "wishlist"} title="Wishlist" subtitle={selectedCustomer?.fullName} width="lg" footerLabel="Backend pending" onClose={() => setCustomerWorkflow(null)}>
+        <div className="grid grid-cols-4 gap-2">
+          {["rose", "violet", "amber", "rose"].map((tone, index) => <ProductMiniThumb key={`${tone}-${index}`} tone={tone} large />)}
+        </div>
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer open={customerWorkflow === "activity"} title="Activity Log" subtitle={selectedCustomer?.fullName} width="lg" footerLabel="Backend pending" onClose={() => setCustomerWorkflow(null)}>
+        <div className="space-y-2">
+          {selectedCustomer?.activity.map((item) => (
+            <div key={`${item.title}-${item.time}`} className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70">
+              <p className="font-semibold text-white">{item.title}</p>
+              <p className="mt-1 text-xs text-white/45">{item.detail} - {item.time}</p>
+            </div>
+          ))}
+        </div>
+      </StagedWorkflowDrawer>
       <section className="aev-admin-page-hero aev-customers-hero relative min-w-0 overflow-hidden rounded-[1.25rem] border border-pink-200/18 p-3 shadow-[0_0_70px_rgba(255,77,184,0.10)] sm:p-4">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-90">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(255,42,214,0.42),transparent_10%),radial-gradient(circle_at_52%_18%,rgba(103,247,243,0.23),transparent_28%),linear-gradient(90deg,transparent,rgba(103,247,243,0.10),transparent)]" />
@@ -11848,7 +12536,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               <CalendarDays className="h-3.5 w-3.5" />
               May 13 - May 19, 2026
             </span>
-            <button type="button" onClick={exportVisibleCustomers} className="aev-admin-utility-link inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold">
+            <button type="button" onClick={() => setCustomerExportConfirmOpen(true)} className="aev-admin-utility-link inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold">
               <Download className="h-3.5 w-3.5" />
               Export
             </button>
@@ -11937,10 +12625,10 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               <section className="aev-admin-control-panel rounded-[1.05rem] border p-3">
                 <SectionHeader title="Quick Actions" />
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[54px] justify-start px-3 text-[11px]" title="Messaging workflow is staged for later linkup."><MessageSquare className="h-4 w-4" />Message Customer</button>
+                  <button type="button" onClick={() => setCustomerWorkflow("message")} className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><MessageSquare className="h-4 w-4" />Message Customer</button>
                   <Link href="/admin/orders" className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><ShoppingBag className="h-4 w-4" />View Orders</Link>
-                  <button type="button" onClick={exportVisibleCustomers} className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><Download className="h-4 w-4" />Export Segment</button>
-                  <button type="button" disabled className="aev-admin-quick-action is-disabled min-h-[54px] justify-start px-3 text-[11px]" title="Customer notes are staged for later linkup."><Plus className="h-4 w-4" />Add Note</button>
+                  <button type="button" onClick={() => setCustomerExportConfirmOpen(true)} className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><Download className="h-4 w-4" />Export Segment</button>
+                  <button type="button" onClick={() => setCustomerWorkflow("note")} className="aev-admin-quick-action min-h-[54px] justify-start px-3 text-[11px]"><Plus className="h-4 w-4" />Add Note</button>
                 </div>
               </section>
             </div>
@@ -12073,7 +12761,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </section>
 
               <section className="aev-admin-control-panel rounded-[1.15rem] border p-3">
-                <PanelTitleAction title="Wishlist / Favorites" label="View all" disabled />
+                <PanelTitleAction title="Wishlist / Favorites" label="View all" onClick={() => setCustomerWorkflow("wishlist")} />
                 <div className="mt-3 grid grid-cols-4 gap-2">
                   {["rose", "violet", "amber"].map((tone) => <ProductMiniThumb key={tone} tone={tone} large />)}
                   <div className="grid min-h-16 place-items-center rounded-xl border border-dashed border-cyan-200/20 bg-cyan-200/[0.035] text-xs font-semibold text-cyan-100">+12 items</div>
@@ -12081,7 +12769,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </section>
 
               <section className="aev-admin-control-panel row-span-3 rounded-[1.15rem] border p-3">
-                <PanelTitleAction title="Account Activity" label="View full log" disabled />
+                <PanelTitleAction title="Account Activity" label="View full log" onClick={() => setCustomerWorkflow("activity")} />
                 <div className="mt-3 space-y-3">
                   {selectedCustomer.activity.map((item, index) => {
                     const Icon = item.icon;
@@ -12120,7 +12808,7 @@ function CustomersSection({ session }: { session: AdminSessionUser }) {
               </section>
 
               <section className="aev-admin-control-panel rounded-[1.15rem] border p-2.5">
-                <button type="button" disabled className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70" title="Full customer profile is staged for later linkup.">
+                <button type="button" onClick={() => setCustomerWorkflow("profile")} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-pink-200/20 bg-pink-300/[0.07] text-sm font-semibold text-pink-100/70">
                   View Full Profile <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
                 </button>
               </section>
@@ -12361,12 +13049,14 @@ function CustomerSelect({ value, onChange, options }: { value: string; onChange:
   );
 }
 
-function PanelTitleAction({ title, label, href, disabled = false }: { title: string; label: string; href?: string; disabled?: boolean }) {
+function PanelTitleAction({ title, label, href, onClick, disabled = false }: { title: string; label: string; href?: string; onClick?: () => void; disabled?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <SectionHeader title={title} />
       {href && !disabled ? (
         <Link href={href} className="aev-admin-mini-action text-pink-100">{label} <ArrowLeft className="h-3 w-3 rotate-180" /></Link>
+      ) : onClick && !disabled ? (
+        <button type="button" onClick={onClick} className="aev-admin-mini-action text-pink-100">{label} <ArrowLeft className="h-3 w-3 rotate-180" /></button>
       ) : (
         <button type="button" disabled className="aev-admin-mini-action text-white/35" title={`${title} is staged for later linkup.`}>{label} <ArrowLeft className="h-3 w-3 rotate-180" /></button>
       )}
@@ -12401,6 +13091,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
   const [autoRefreshMs, setAutoRefreshMs] = useState(30000);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [supportWorkflow, setSupportWorkflow] = useState<"order" | "note" | "attachment" | "macro" | "escalation" | null>(null);
   const detailEndRef = useRef<HTMLDivElement>(null);
   const replyTextRef = useRef("");
   const previousUnreadRef = useRef<number | null>(null);
@@ -12582,6 +13273,13 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
 
   if (autoRefreshMs >= 0) return (
     <div className="mt-6 space-y-4 text-white">
+      <StagedWorkflowDrawer open={Boolean(supportWorkflow)} title={supportWorkflow === "order" ? "Linked Order" : supportWorkflow === "note" ? "Internal Note" : supportWorkflow === "attachment" ? "Attachment Upload" : supportWorkflow === "macro" ? "Macro Manager" : "Escalation"} subtitle={activeTicket.name} width="lg" footerLabel="Stage action" onClose={() => setSupportWorkflow(null)}>
+        {supportWorkflow === "order" && <div className="grid gap-3 sm:grid-cols-2"><DetailLine label="Order" value={activeTicket.orderRef} /><DetailLine label="Status" value={activeTicket.orderStatus} /><DetailLine label="Total" value={activeTicket.total} /><DetailLine label="Placed" value={activeTicket.placedDate} /></div>}
+        {supportWorkflow === "note" && <TextAreaField label="Internal support note" value="" onChange={() => undefined} tall />}
+        {supportWorkflow === "attachment" && <div className="rounded-2xl border border-dashed border-fuchsia-300/35 bg-fuchsia-400/[0.04] p-5 text-center"><Paperclip className="mx-auto h-8 w-8 text-fuchsia-100" /><p className="mt-2 text-sm font-semibold text-white">Upload attachment</p></div>}
+        {supportWorkflow === "macro" && <div className="grid gap-2">{demoMacros.map((macro) => <div key={macro.title} className="rounded-xl border border-white/10 bg-white/[0.035] p-3"><p className="text-sm font-semibold text-white">{macro.title}</p><p className="text-xs text-white/45">{macro.description}</p></div>)}</div>}
+        {supportWorkflow === "escalation" && <div className="grid gap-3"><SelectField label="Escalate to" value="Senior Support" options={["Senior Support", "Manager", "Operations"]} onChange={() => undefined} /><TextAreaField label="Reason" value="" onChange={() => undefined} /></div>}
+      </StagedWorkflowDrawer>
       <section className="relative overflow-hidden rounded-[1.35rem] border border-fuchsia-300/18 bg-[#050816] p-4 shadow-[0_0_60px_rgba(168,85,247,0.12)]">
         <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_50%_0%,rgba(217,70,239,0.46),transparent_24%),radial-gradient(circle_at_48%_20%,rgba(34,211,238,0.28),transparent_22%)]" />
         <div className="absolute inset-x-10 top-3 h-24 rounded-[50%] border border-cyan-300/18 opacity-70 shadow-[0_0_40px_rgba(34,211,238,0.22)]" />
@@ -12680,7 +13378,7 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-lg border border-violet-300/18 bg-violet-400/10 px-3 py-2 text-[11px] font-semibold text-violet-100">Order {activeTicket.orderRef}</span>
-              <button type="button" className="rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-3 py-2 text-[11px] font-semibold text-violet-100">View Order</button>
+              <button type="button" onClick={() => setSupportWorkflow("order")} className="rounded-lg border border-violet-300/16 bg-violet-400/[0.07] px-3 py-2 text-[11px] font-semibold text-violet-100">View Order</button>
               <IconButton icon={MoreVertical} label="Options" />
             </div>
           </div>
@@ -12699,24 +13397,24 @@ function SupportSection({ session }: { session: AdminSessionUser }) {
           </div>
           <div className="border-t border-white/[0.07] p-3">
             {sendError && <p className="mb-2 text-xs text-rose-300/80">{sendError}</p>}
-            <div className="mb-2 flex gap-5 border-b border-white/[0.07] text-xs"><button type="button" className="border-b border-fuchsia-300 pb-2 font-semibold text-fuchsia-100">Reply</button><button type="button" className="pb-2 text-white/42">Internal Note</button></div>
+            <div className="mb-2 flex gap-5 border-b border-white/[0.07] text-xs"><button type="button" className="border-b border-fuchsia-300 pb-2 font-semibold text-fuchsia-100">Reply</button><button type="button" onClick={() => setSupportWorkflow("note")} className="pb-2 text-white/42">Internal Note</button></div>
             <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); void sendReply(); } }} placeholder="Type your message..." rows={3} className="w-full resize-none rounded-xl border border-white/[0.07] bg-[#070d1d] px-3 py-3 text-xs text-white outline-none placeholder:text-white/28 focus:border-fuchsia-300/35" />
             <div className="mt-2 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">{[Smile, Paperclip, ImageIcon, FileText, Tag].map((Icon, index) => <IconButton key={index} icon={Icon} label="Action" />)}</div>
+              <div className="flex items-center gap-1.5">{[Smile, Paperclip, ImageIcon, FileText, Tag].map((Icon, index) => <IconButton key={index} icon={Icon} label="Action" onClick={index === 1 || index === 2 || index === 3 ? () => setSupportWorkflow("attachment") : undefined} />)}</div>
               <button type="button" onClick={() => void sendReply()} disabled={sending || !replyText.trim() || activeTicket.id.startsWith("demo-") || !canReply} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-600 px-4 py-2 text-xs font-semibold text-white shadow-[0_0_24px_rgba(217,70,239,0.22)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">{sending ? "Sending" : "Send"}<ChevronDown className="h-3.5 w-3.5" /></button>
             </div>
           </div>
         </div>
 
-        <TicketDetailsPanel ticket={activeTicket} canClose={canClose} onStatus={updateStatus} />
-        <div className="space-y-3"><SupportChannelsPanel /><EscalationPanel /><LiveActivityFeed /></div>
+        <TicketDetailsPanel ticket={activeTicket} canClose={canClose} onStatus={updateStatus} onWorkflow={setSupportWorkflow} />
+        <div className="space-y-3"><SupportChannelsPanel onWorkflow={setSupportWorkflow} /><EscalationPanel onWorkflow={setSupportWorkflow} /><LiveActivityFeed /></div>
       </section>
 
       <section className="support-panel p-3">
-        <div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-bold text-white">Quick Replies &amp; Macros</h3><button type="button" className="rounded-lg border border-fuchsia-300/16 bg-fuchsia-400/[0.07] px-3 py-1.5 text-[11px] font-semibold text-fuchsia-100">Manage</button></div>
+        <div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-bold text-white">Quick Replies &amp; Macros</h3><button type="button" onClick={() => setSupportWorkflow("macro")} className="rounded-lg border border-fuchsia-300/16 bg-fuchsia-400/[0.07] px-3 py-1.5 text-[11px] font-semibold text-fuchsia-100">Manage</button></div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
           {demoMacros.map((macro) => <button key={macro.title} type="button" className="rounded-xl border border-violet-300/18 bg-white/[0.035] p-3 text-left transition hover:border-fuchsia-300/45 hover:bg-fuchsia-400/[0.08]"><p className="text-xs font-bold text-fuchsia-100">{macro.title}</p><p className="mt-1 text-[11px] text-white/42">{macro.description}</p></button>)}
-          <button type="button" className="grid min-h-16 place-items-center rounded-xl border border-dashed border-fuchsia-300/28 bg-fuchsia-400/[0.045] text-[11px] font-semibold text-fuchsia-100"><Plus className="mb-1 h-4 w-4" />Add New</button>
+          <button type="button" onClick={() => setSupportWorkflow("macro")} className="grid min-h-16 place-items-center rounded-xl border border-dashed border-fuchsia-300/28 bg-fuchsia-400/[0.045] text-[11px] font-semibold text-fuchsia-100"><Plus className="mb-1 h-4 w-4" />Add New</button>
         </div>
       </section>
 
@@ -12850,9 +13548,9 @@ function SupportMetricCard({
   );
 }
 
-function IconButton({ icon: Icon, label }: { icon: typeof MessageSquare; label: string }) {
+function IconButton({ icon: Icon, label, onClick }: { icon: typeof MessageSquare; label: string; onClick?: () => void }) {
   return (
-    <button type="button" aria-label={label} title={label} className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.07] bg-white/[0.035] text-white/45 transition hover:border-fuchsia-300/25 hover:text-white">
+    <button type="button" aria-label={label} title={label} onClick={onClick} className="grid h-8 w-8 place-items-center rounded-lg border border-white/[0.07] bg-white/[0.035] text-white/45 transition hover:border-fuchsia-300/25 hover:text-white">
       <Icon className="h-3.5 w-3.5" />
     </button>
   );
@@ -12876,7 +13574,7 @@ function PriorityChip({ priority }: { priority: SupportPriority }) {
   return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${cls}`}>{priority}</span>;
 }
 
-function TicketDetailsPanel({ ticket, canClose, onStatus }: { ticket: SupportTicketView; canClose: boolean; onStatus: (id: string, status: ConvStatus) => Promise<void> }) {
+function TicketDetailsPanel({ ticket, canClose, onStatus, onWorkflow }: { ticket: SupportTicketView; canClose: boolean; onStatus: (id: string, status: ConvStatus) => Promise<void>; onWorkflow: (workflow: "order" | "note" | "attachment" | "macro" | "escalation") => void }) {
   return (
     <div className="support-panel min-h-[620px] p-3">
       <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Ticket Details</h3><button type="button" className="rounded-md border border-fuchsia-300/16 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">Edit</button></div>
@@ -12893,17 +13591,17 @@ function TicketDetailsPanel({ ticket, canClose, onStatus }: { ticket: SupportTic
         <div className="flex gap-2"><SupportAvatar name={ticket.name} image={ticket.avatar} /><div className="min-w-0 text-[11px] text-white/50"><p className="font-bold text-white">{ticket.name}</p><p>{ticket.email}</p><p>{ticket.phone}</p><p>{ticket.location}</p></div><div className="ml-auto space-y-1"><IconButton icon={Phone} label="Call" /><IconButton icon={MessageSquare} label="Message" /></div></div>
       </div>
       <div className="border-b border-white/[0.07] py-3 text-[11px]">
-        <div className="mb-2 flex items-center justify-between"><h4 className="text-xs font-bold text-white">Order Information</h4><button type="button" className="rounded-md border border-pink-300/16 px-2 py-1 text-[10px] font-semibold text-pink-100">View Order</button></div>
+        <div className="mb-2 flex items-center justify-between"><h4 className="text-xs font-bold text-white">Order Information</h4><button type="button" onClick={() => onWorkflow("order")} className="rounded-md border border-pink-300/16 px-2 py-1 text-[10px] font-semibold text-pink-100">View Order</button></div>
         <DetailPair label="Order" value={ticket.orderRef} accent="violet" />
         <DetailPair label="Placed on" value={ticket.placedDate} />
         <DetailPair label="Total" value={ticket.total} />
         <DetailPair label="Status" value={ticket.orderStatus} accent="cyan" />
       </div>
       <div className="border-b border-white/[0.07] py-3"><h4 className="mb-2 text-xs font-bold text-white">Tags</h4><div className="flex flex-wrap gap-1.5">{["order-status", "in-transit", "vip-customer"].map((tag) => <span key={tag} className="rounded-md border border-violet-300/18 bg-violet-400/10 px-2 py-1 text-[10px] text-violet-100">{tag}</span>)}<button type="button" className="grid h-6 w-6 place-items-center rounded-md border border-white/10 text-white/40"><Plus className="h-3 w-3" /></button></div></div>
-      <div className="border-b border-white/[0.07] py-3"><h4 className="mb-2 text-xs font-bold text-white">Attachments</h4>{["order_receipt.pdf", "screenshot_2026-05-19.png"].map((file, index) => <div key={file} className="mb-2 flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.035] p-2 text-[11px] text-white/55"><FileText className="h-4 w-4 text-fuchsia-200" /><span className="min-w-0 flex-1 truncate">{file}<span className="block text-[10px] text-white/30">{index === 0 ? "128 KB" : "412 KB"} file</span></span><Download className="h-3.5 w-3.5" /></div>)}</div>
+      <div className="border-b border-white/[0.07] py-3"><h4 className="mb-2 text-xs font-bold text-white">Attachments</h4>{["order_receipt.pdf", "screenshot_2026-05-19.png"].map((file, index) => <button type="button" onClick={() => onWorkflow("attachment")} key={file} className="mb-2 flex w-full items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.035] p-2 text-left text-[11px] text-white/55"><FileText className="h-4 w-4 text-fuchsia-200" /><span className="min-w-0 flex-1 truncate">{file}<span className="block text-[10px] text-white/30">{index === 0 ? "128 KB" : "412 KB"} file</span></span><Download className="h-3.5 w-3.5" /></button>)}</div>
       <div className="grid grid-cols-3 gap-2 pt-3">
         <button type="button" disabled={!canClose} onClick={() => void onStatus(ticket.id, "closed")} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2 text-[11px] font-semibold text-white/58 disabled:opacity-55">Close Ticket</button>
-        <button type="button" disabled={!canClose} onClick={() => void onStatus(ticket.id, "pending")} className="rounded-lg border border-amber-300/24 bg-amber-400/10 px-2 py-2 text-[11px] font-semibold text-amber-100 disabled:opacity-55">Escalate</button>
+        <button type="button" disabled={!canClose} onClick={() => onWorkflow("escalation")} className="rounded-lg border border-amber-300/24 bg-amber-400/10 px-2 py-2 text-[11px] font-semibold text-amber-100 disabled:opacity-55">Escalate</button>
         <button type="button" disabled={!canClose} onClick={() => void onStatus(ticket.id, "closed")} className="rounded-lg border border-emerald-300/24 bg-emerald-400/12 px-2 py-2 text-[11px] font-semibold text-emerald-100 disabled:opacity-55">Resolve</button>
       </div>
     </div>
@@ -12915,7 +13613,7 @@ function DetailPair({ label, value, accent }: { label: string; value: string; ac
   return <div className="flex items-center justify-between gap-3"><span className="text-white/40">{label}</span><span className={`text-right font-semibold ${accentClass}`}>{value}</span></div>;
 }
 
-function SupportChannelsPanel() {
+function SupportChannelsPanel({ onWorkflow }: { onWorkflow: (workflow: "order" | "note" | "attachment" | "macro" | "escalation") => void }) {
   const channels = [
     { label: "Live Chat", value: "8 Active", icon: MessageSquare, tone: "text-cyan-200" },
     { label: "WhatsApp", value: "12 Active", icon: Phone, tone: "text-emerald-200" },
@@ -12924,18 +13622,18 @@ function SupportChannelsPanel() {
   ];
   return (
     <div className="support-panel p-3">
-      <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Support Channels</h3><button type="button" className="rounded-md border border-fuchsia-300/16 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">Manage</button></div>
+      <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold text-white">Support Channels</h3><button type="button" onClick={() => onWorkflow("macro")} className="rounded-md border border-fuchsia-300/16 bg-fuchsia-400/10 px-2 py-1 text-[10px] font-semibold text-fuchsia-100">Manage</button></div>
       <div className="grid grid-cols-2 gap-2">{channels.map(({ label, value, icon: Icon, tone }) => <button key={label} type="button" className="rounded-xl border border-white/[0.07] bg-white/[0.035] p-3 text-left"><Icon className={`mb-2 h-5 w-5 ${tone}`} /><p className="text-xs font-bold text-white">{label}</p><p className={`mt-1 text-[11px] ${tone}`}>{value}</p></button>)}</div>
     </div>
   );
 }
 
-function EscalationPanel() {
+function EscalationPanel({ onWorkflow }: { onWorkflow: (workflow: "order" | "note" | "attachment" | "macro" | "escalation") => void }) {
   return (
     <div className="support-panel p-3">
       <h3 className="mb-3 text-sm font-bold text-white">Escalation &amp; Assignment</h3>
       {["Assign To", "Team", "Priority", "Escalate To"].map((label, index) => <label key={label} className="mb-2 grid grid-cols-[78px_1fr] items-center gap-2 text-[11px] text-white/45"><span>{label}</span><select className="rounded-lg border border-white/[0.08] bg-[#0a1022] px-3 py-2 text-white/66 outline-none"><option>{["Nusrat Jahan", "Customer Support Team", "High", "Senior Support"][index]}</option></select></label>)}
-      <button type="button" className="mt-1 w-full rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-600 px-4 py-2.5 text-xs font-bold text-white">Escalate Ticket</button>
+      <button type="button" onClick={() => onWorkflow("escalation")} className="mt-1 w-full rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-600 px-4 py-2.5 text-xs font-bold text-white">Escalate Ticket</button>
     </div>
   );
 }
@@ -14111,6 +14809,8 @@ function StaffCommandCenter({
   const staffTotal = staff.length > 0 ? staff.length : 48;
   const activeStaffCount = staff.length > 0 ? staff.filter((record) => record.isActive).length : 18;
   const selectedStaff = displayStaff.find((record) => record.id === editingId) ?? displayStaff[0];
+  const [staffWorkflow, setStaffWorkflow] = useState<"roles" | "security" | "photo" | "activity" | "invitation" | null>(null);
+  const { toast } = useAdminToast();
   const staffMetrics = [
     { label: "Total Staff", value: staffTotal, growth: "14.3%", icon: Users, line: "from-pink-400 to-fuchsia-500" },
     { label: "Active Now", value: activeStaffCount, growth: "12.5%", icon: Users, line: "from-emerald-300 to-cyan-400" },
@@ -14163,6 +14863,15 @@ function StaffCommandCenter({
 
   return (
     <div className="relative mt-4 space-y-4 overflow-hidden rounded-[1.35rem] border border-white/[0.06] bg-[#050914] p-3 text-white shadow-[0_0_80px_rgba(11,185,255,0.08)]">
+      <StagedWorkflowDrawer open={Boolean(staffWorkflow)} title={staffWorkflow === "roles" ? "Role Permission Drawer" : staffWorkflow === "security" ? "Security Settings" : staffWorkflow === "photo" ? "Staff Photo Upload" : staffWorkflow === "activity" ? "Staff Activity" : "Send Invitation"} subtitle={selectedStaff?.name} width={staffWorkflow === "roles" ? "xl" : "lg"} footerLabel="Stage action" onClose={() => setStaffWorkflow(null)}>
+        <div className="space-y-3">
+          {staffWorkflow === "roles" && permissionModules.map((module) => <div key={module} className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70">{module} permissions staged.</div>)}
+          {staffWorkflow === "activity" && displayActivity.map((log) => <div key={log.id} className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70">{log.actorName || "Admin"} - {log.action}</div>)}
+          {staffWorkflow === "photo" && <div className="rounded-2xl border border-dashed border-fuchsia-300/35 bg-fuchsia-400/[0.04] p-5 text-center"><Upload className="mx-auto h-8 w-8 text-fuchsia-100" /><p className="mt-2 text-sm font-semibold text-white">Upload staff photo</p></div>}
+          {staffWorkflow === "security" && <><label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70"><input type="checkbox" defaultChecked className="accent-cyan-300" />Require 2FA</label><label className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm text-white/70"><input type="checkbox" className="accent-cyan-300" />Force password reset</label></>}
+          {staffWorkflow === "invitation" && <><TextField label="Email address" value="" onChange={() => undefined} placeholder="staff@example.com" /><SelectField label="Role" value="viewer" options={staffRoleOptions} onChange={() => undefined} /></>}
+        </div>
+      </StagedWorkflowDrawer>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_55%_7%,rgba(219,39,199,0.26),transparent_22%),radial-gradient(circle_at_87%_18%,rgba(14,165,233,0.14),transparent_20%),linear-gradient(180deg,rgba(9,16,36,0.9),rgba(4,8,18,0.98))]" />
       <div className="relative space-y-4">
         <section className="relative min-h-[154px] overflow-hidden rounded-[1.15rem] border border-white/[0.08] bg-[#080d1e]/86 px-5 py-4 shadow-[inset_0_0_34px_rgba(255,255,255,0.025)]">
@@ -14223,7 +14932,14 @@ function StaffCommandCenter({
                   <span>{record.role === "support_staff" ? "Support" : record.role === "product_staff" ? "Products" : record.role === "viewer" ? "Reports" : "Operations"}</span>
                   <span className={`w-fit rounded-full border px-2 py-1 text-[10px] font-bold ${record.isActive ? "border-emerald-300/22 bg-emerald-400/10 text-emerald-200" : index === 3 ? "border-amber-300/22 bg-amber-400/10 text-amber-200" : "border-white/12 bg-white/[0.045] text-white/45"}`}>{record.isActive ? "Online" : index === 3 ? "Away" : "Offline"}</span>
                   <span>{record.lastLoginAt ? (staff.length > 0 ? formatDate(record.lastLoginAt) : ["Just now", "2m ago", "5m ago", "12m ago", "1h ago", "2h ago", "3h ago", "4h ago"][index]) : "Never"}</span>
-                  <button type="button" onClick={() => canManageStaff ? toggleActive(record) : startEdit(record)} className="grid h-7 w-7 place-items-center rounded-lg border border-white/[0.08] bg-white/[0.045] text-white/58" disabled={saving}><MoreVertical className="h-4 w-4" /></button>
+                  <AdminActionMenu
+                    actions={[
+                      { label: "Edit", onClick: () => startEdit(record) },
+                      { label: record.isActive ? "Toggle Inactive" : "Toggle Active", onClick: () => canManageStaff ? toggleActive(record) : startEdit(record), disabled: saving },
+                      { label: "View Activity", onClick: () => { startEdit(record); setStaffWorkflow("activity"); } },
+                    ]}
+                    triggerLabel={`Open actions for ${record.name}`}
+                  />
                 </div>
               ))}
             </div>
@@ -14231,7 +14947,7 @@ function StaffCommandCenter({
           </section>
 
           <section className="min-w-0 rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
-            <div className="flex items-center justify-between"><h2 className="text-sm font-black text-white">Permissions Matrix</h2><button type="button" className="rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 py-2 text-[11px] font-semibold text-fuchsia-100">Edit Roles</button></div>
+            <div className="flex items-center justify-between"><h2 className="text-sm font-black text-white">Permissions Matrix</h2><button type="button" onClick={() => setStaffWorkflow("roles")} className="rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 py-2 text-[11px] font-semibold text-fuchsia-100">Edit Roles</button></div>
             <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.07]">
               <div className="grid grid-cols-[1.1fr_repeat(6,0.78fr)] bg-white/[0.035] px-3 py-2 text-[10px] text-white/42"><span>Module</span>{permissionColumns.map((column) => <span key={column} className="text-center">{column}</span>)}</div>
               {permissionModules.map((module, rowIndex) => <div key={module} className="grid grid-cols-[1.1fr_repeat(6,0.78fr)] items-center border-t border-white/[0.055] px-3 py-2 text-[11px]"><span className="font-semibold text-white/75">{module}</span>{permissionPattern[rowIndex].map((state, cellIndex) => <span key={`${module}-${cellIndex}`} className="grid place-items-center"><span className={`grid h-5 w-5 place-items-center rounded-full border text-[10px] font-black ${state === "full" ? "border-emerald-300/24 bg-emerald-400/12 text-emerald-200" : state === "limited" ? "border-amber-300/24 bg-amber-400/12 text-amber-200" : state === "view" ? "border-violet-300/24 bg-violet-400/12 text-violet-200" : "border-pink-300/24 bg-pink-500/12 text-pink-200"}`}>{state === "full" ? <Check className="h-3 w-3" /> : state === "none" ? <X className="h-3 w-3" /> : "-"}</span></span>)}</div>)}
@@ -14240,23 +14956,23 @@ function StaffCommandCenter({
           </section>
 
           <section className="min-w-0 rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
-            <div className="flex items-center justify-between"><h2 className="text-sm font-black text-white">Activity Audit Log</h2><button type="button" className="rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 py-2 text-[11px] font-semibold text-fuchsia-100">View all</button></div>
+            <div className="flex items-center justify-between"><h2 className="text-sm font-black text-white">Activity Audit Log</h2><button type="button" onClick={() => setStaffWorkflow("activity")} className="rounded-lg border border-fuchsia-300/18 bg-fuchsia-400/10 px-3 py-2 text-[11px] font-semibold text-fuchsia-100">View all</button></div>
             <div className="mt-3 space-y-2">{canViewActivity ? displayActivity.map((log, index) => <div key={log.id} className="flex items-center gap-2 rounded-xl border border-white/[0.055] bg-white/[0.025] p-2"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 bg-gradient-to-br from-pink-400/70 to-cyan-300/50 text-[11px] font-black">{(log.actorName || "A").slice(0, 1)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-bold text-white/82">{log.actorName || "Admin"}</span><span className="block truncate text-[10px] text-white/44">{log.action}{log.targetType ? ` - ${log.targetType}` : ""}</span></span><span className="text-[10px] text-white/36">{staff.length > 0 && log.createdAt ? formatDate(log.createdAt) : log.createdAt || `10:${31 - index} AM`}</span></div>) : <p className="rounded-xl border border-white/[0.07] bg-black/20 p-3 text-xs text-white/45">Activity access is limited by staff permissions.</p>}</div>
-            <button type="button" className="mt-3 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-500/10 py-2.5 text-[11px] font-bold text-fuchsia-100">View full activity log</button>
+            <button type="button" onClick={() => setStaffWorkflow("activity")} className="mt-3 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-500/10 py-2.5 text-[11px] font-bold text-fuchsia-100">View full activity log</button>
           </section>
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[0.95fr_1.35fr_0.78fr_1fr]">
           <form onSubmit={saveStaff} className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
             <h2 className="text-sm font-black text-white">Staff Detail Editor</h2>
-            <div className="mt-3 grid grid-cols-[86px_1fr] gap-3"><div><div className="grid h-20 w-20 place-items-center rounded-xl border border-fuchsia-300/18 bg-gradient-to-br from-fuchsia-400/28 to-cyan-300/16 text-2xl font-black text-white">{(selectedStaff?.name || draft.name || "S").slice(0, 1)}</div><button type="button" className="mt-2 h-8 w-20 rounded-lg border border-white/[0.08] bg-white/[0.04] text-[10px] text-white/62">Change Photo</button></div><div className="space-y-2"><input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Full Name" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><input value={draft.email} onChange={(event) => setDraft((current) => ({ ...current, email: event.target.value }))} placeholder="Email Address" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><select value={draft.role} onChange={(event) => updateDraftRole(event.target.value as AdminRole)} className="h-8 w-full rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/76 outline-none">{staffRoleOptions.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select><select value={draft.isActive ? "active" : "inactive"} onChange={(event) => setDraft((current) => ({ ...current, isActive: event.target.value === "active" }))} className="h-8 w-full rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/76 outline-none"><option value="active">Online</option><option value="inactive">Offline</option></select><input placeholder="Phone (Optional)" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /></div></div>
+            <div className="mt-3 grid grid-cols-[86px_1fr] gap-3"><div><div className="grid h-20 w-20 place-items-center rounded-xl border border-fuchsia-300/18 bg-gradient-to-br from-fuchsia-400/28 to-cyan-300/16 text-2xl font-black text-white">{(selectedStaff?.name || draft.name || "S").slice(0, 1)}</div><button type="button" onClick={() => setStaffWorkflow("photo")} className="mt-2 h-8 w-20 rounded-lg border border-white/[0.08] bg-white/[0.04] text-[10px] text-white/62">Change Photo</button></div><div className="space-y-2"><input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Full Name" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><input value={draft.email} onChange={(event) => setDraft((current) => ({ ...current, email: event.target.value }))} placeholder="Email Address" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><select value={draft.role} onChange={(event) => updateDraftRole(event.target.value as AdminRole)} className="h-8 w-full rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/76 outline-none">{staffRoleOptions.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</select><select value={draft.isActive ? "active" : "inactive"} onChange={(event) => setDraft((current) => ({ ...current, isActive: event.target.value === "active" }))} className="h-8 w-full rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/76 outline-none"><option value="active">Online</option><option value="inactive">Offline</option></select><input placeholder="Phone (Optional)" className="h-8 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /></div></div>
             <div className="mt-3 flex items-center justify-between text-[11px]"><span className="font-semibold text-fuchsia-200">Two-Factor Auth</span><span className="text-white/62">Enabled</span></div>
             <button type="submit" disabled={saving || !canManageStaff} className="mt-3 h-10 w-full rounded-xl bg-gradient-to-r from-fuchsia-500 to-pink-500 text-xs font-black text-white shadow-[0_0_24px_rgba(236,72,153,0.25)] disabled:opacity-45">{saving ? "Saving..." : "Save Changes"}</button>
           </form>
 
           <section className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
             <h2 className="text-sm font-black text-white">Invite &amp; Role Assignment</h2><p className="mt-3 text-[11px] text-white/50">Invite Staff Member</p>
-            <div className="mt-2 grid gap-2 lg:grid-cols-[1fr_150px_140px_136px]"><input placeholder="Enter email address" className="h-9 rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><select className="h-9 rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/62 outline-none"><option>Select Role</option></select><select className="h-9 rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/62 outline-none"><option>Select Team</option></select><button type="button" className="h-9 rounded-lg bg-gradient-to-r from-fuchsia-500 to-pink-500 text-[11px] font-bold text-white">Send Invitation</button></div>
+            <div className="mt-2 grid gap-2 lg:grid-cols-[1fr_150px_140px_136px]"><input placeholder="Enter email address" className="h-9 rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] text-white outline-none placeholder:text-white/32" /><select className="h-9 rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/62 outline-none"><option>Select Role</option></select><select className="h-9 rounded-lg border border-white/[0.08] bg-[#090f20] px-3 text-[11px] text-white/62 outline-none"><option>Select Team</option></select><button type="button" onClick={() => { setStaffWorkflow("invitation"); toast({ title: "Invitation backend pending", description: BACKEND_PENDING_MESSAGE, type: "warning" }); }} className="h-9 rounded-lg bg-gradient-to-r from-fuchsia-500 to-pink-500 text-[11px] font-bold text-white">Send Invitation</button></div>
             <p className="mt-4 text-xs font-bold text-white">Quick Role Templates</p><div className="mt-2 grid grid-cols-4 gap-2">{roleTemplates.map(({ label, detail, icon: Icon }) => <button key={label} type="button" className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-3 text-left"><Icon className="h-5 w-5 text-fuchsia-200" /><span className="mt-3 block text-[11px] font-bold text-white">{label}</span><span className="mt-1 block text-[10px] leading-4 text-white/42">{detail}</span></button>)}</div>
           </section>
 
@@ -14265,7 +14981,7 @@ function StaffCommandCenter({
           <section className="rounded-[1.1rem] border border-white/[0.08] bg-[#080d1d]/90 p-3">
             <h2 className="text-sm font-black text-white">Security &amp; Access</h2>
             <div className="mt-3 grid grid-cols-[116px_1fr] gap-3"><div className="relative grid h-28 place-items-center rounded-2xl border border-cyan-300/14 bg-[radial-gradient(circle,rgba(34,211,238,0.18),transparent_62%)]"><div className="absolute h-24 w-24 rounded-full border border-fuchsia-300/18" /><div className="absolute h-16 w-16 rounded-full border border-cyan-300/24" /><ShieldCheck className="relative h-9 w-9 text-emerald-300 drop-shadow-[0_0_16px_rgba(52,211,153,0.7)]" /></div><div className="space-y-2">{securityItems.map(([title, state, detail]) => <div key={title} className="flex items-center justify-between rounded-xl border border-white/[0.055] bg-white/[0.025] px-3 py-2"><span><span className="block text-[11px] font-bold text-white/78">{title}</span><span className="block text-[10px] text-white/40">{detail}</span></span><span className="rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2 py-1 text-[10px] font-bold text-emerald-200">{state}</span></div>)}</div></div>
-            <button type="button" className="mt-3 h-10 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-500/10 text-[11px] font-bold text-fuchsia-100">Security Settings</button>
+            <button type="button" onClick={() => setStaffWorkflow("security")} className="mt-3 h-10 w-full rounded-xl border border-fuchsia-300/18 bg-fuchsia-500/10 text-[11px] font-bold text-fuchsia-100">Security Settings</button>
           </section>
         </div>
 
@@ -14630,12 +15346,14 @@ function TextAreaField({
   label,
   value,
   onChange,
+  placeholder,
   tall,
   helper,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
   tall?: boolean;
   helper?: string;
 }) {
@@ -14647,6 +15365,7 @@ function TextAreaField({
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
         rows={tall ? 6 : 3}
         className="w-full min-w-0 resize-y rounded-2xl border border-white/10 bg-black/24 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/40"
       />
@@ -14984,6 +15703,8 @@ function OrderDetails({
   const [operationsMessage, setOperationsMessage] = useState("");
   const [isSavingOperations, setIsSavingOperations] = useState(false);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [orderWorkflow, setOrderWorkflow] = useState<"note" | "invoice" | null>(null);
+  const [statusConfirmTarget, setStatusConfirmTarget] = useState<OrderStatus | null>(null);
   const reference = orderReferenceKey(order);
   const selectedCourierOption = courierChoice;
   const canEditStatus = hasPermission(session, "orders.editStatus");
@@ -15054,7 +15775,11 @@ function OrderDetails({
     onStatusChange(reference, status);
     setOperationsMessage(`Status updated to ${status}.`);
   };
-  const confirmOrder = () => updateStatusFromCockpit("Confirmed");
+  const requestStatusChange = (status: OrderStatus) => {
+    if (!canEditStatus || status === order.status) return;
+    setStatusConfirmTarget(status);
+  };
+  const confirmOrder = () => requestStatusChange("Confirmed");
   const cancelOrder = () => setCancelConfirmOpen(true);
   const confirmCancelOrder = ({ reason }: { reason: string; confirmationText: string }) => {
     setOperationField("cancelledReason", reason);
@@ -15062,7 +15787,7 @@ function OrderDetails({
     setOperationsMessage("Status updated to Cancelled. Reason staged in operations notes.");
     setCancelConfirmOpen(false);
   };
-  const markDelivered = () => updateStatusFromCockpit("Delivered");
+  const markDelivered = () => requestStatusChange("Delivered");
   const contactHref = order.customer.phone ? `tel:${order.customer.phone}` : undefined;
   const whatsappHref = order.customer.phone
     ? `https://wa.me/${order.customer.phone.replace(/\D/g, "")}`
@@ -15082,6 +15807,41 @@ function OrderDetails({
         onCancel={() => setCancelConfirmOpen(false)}
         onConfirm={confirmCancelOrder}
       />
+      <AdminConfirmModal
+        open={Boolean(statusConfirmTarget)}
+        title={`Update order status to ${statusConfirmTarget ?? ""}?`}
+        description="Confirm sensitive order status changes before they are applied."
+        confirmLabel="Update Status"
+        variant="warning"
+        impactItems={["Order status changes immediately in the admin view.", "Backend persistence runs through the existing order status handler."]}
+        onCancel={() => setStatusConfirmTarget(null)}
+        onConfirm={() => {
+          if (statusConfirmTarget) updateStatusFromCockpit(statusConfirmTarget);
+          setStatusConfirmTarget(null);
+        }}
+      />
+      <StagedWorkflowDrawer open={orderWorkflow === "note"} title="Order Note" subtitle={reference} footerLabel="Stage note" onClose={() => setOrderWorkflow(null)}>
+        <TextAreaField label="Internal order note" value={operationsDraft.adminInternalNote} onChange={(value) => setOperationField("adminInternalNote", value)} tall />
+      </StagedWorkflowDrawer>
+      <StagedWorkflowDrawer open={orderWorkflow === "invoice"} title="Invoice Preview" subtitle={reference} width="lg" footerLabel="Backend pending" onClose={() => setOrderWorkflow(null)}>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">Invoice for {reference}</p>
+              <p className="mt-1 text-xs text-white/45">{order.customer.fullName || "Customer not provided"}</p>
+            </div>
+            <p className="text-lg font-semibold text-white">{formatCurrency(orderTotal(order))}</p>
+          </div>
+          <div className="mt-4 space-y-2 text-sm text-white/68">
+            {order.items.map((item, index) => (
+              <div key={`${item.name}-${index}`} className="flex justify-between gap-3">
+                <span>{item.name || "Order item"} x {item.quantity ?? 1}</span>
+                <span>{formatCurrency((item.price ?? 0) * (item.quantity ?? 1))}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </StagedWorkflowDrawer>
       <div className="rounded-[1.1rem] border border-cyan-200/14 bg-[linear-gradient(135deg,rgba(103,247,243,0.055),rgba(255,119,200,0.04)),rgba(5,11,24,0.92)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div className="flex min-w-0 flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
           <div className="min-w-0">
@@ -15109,7 +15869,7 @@ function OrderDetails({
               <span className="mb-2 block text-[11px] uppercase tracking-[0.16em] text-white/40">Update Status</span>
               <select
                 value={order.status}
-                onChange={(event) => updateStatusFromCockpit(event.target.value as OrderStatus)}
+                onChange={(event) => requestStatusChange(event.target.value as OrderStatus)}
                 disabled={!canEditStatus}
                 className="min-h-12 w-full appearance-none rounded-2xl border border-pink-200/22 bg-pink-300/[0.08] px-3 py-3 pr-9 text-sm font-semibold text-white outline-none transition focus:border-cyan-200/40 disabled:cursor-not-allowed disabled:opacity-45"
               >
@@ -15185,7 +15945,7 @@ function OrderDetails({
                   </span>
                   <h3 className="text-sm font-semibold text-white">Order Notes</h3>
                 </div>
-                <button type="button" disabled title="Dedicated note creation is not connected yet." className={orderActionClass("disabled")}>
+                <button type="button" onClick={() => setOrderWorkflow("note")} className={orderActionClass("cyan")}>
                   Create Note
                 </button>
               </div>
@@ -15207,7 +15967,7 @@ function OrderDetails({
                 </div>
                 <p className="mt-2 text-sm text-white/58">Order has been placed via {order.orderSource || "checkout"}.</p>
               </div>
-              <button type="button" disabled title="Support conversation linking is not connected yet." className={`${orderActionClass("disabled")} mt-3 w-full justify-center`}>
+              <button type="button" onClick={() => setOrderWorkflow("note")} className={`${orderActionClass("violet")} mt-3 w-full justify-center`}>
                 View all history
               </button>
             </section>
@@ -15256,7 +16016,7 @@ function OrderDetails({
               <button type="button" onClick={confirmOrder} disabled={!canEditStatus || order.status === "Confirmed"} className={orderActionClass("green")}>
                 <Check className="h-3.5 w-3.5" /> Confirm Order
               </button>
-              <button type="button" disabled title="Hold status is not connected to the order backend yet." className={orderActionClass("amber")}>
+              <button type="button" onClick={() => requestStatusChange("Pending")} disabled={!canEditStatus || order.status === "Pending"} className={orderActionClass("amber")}>
                 <Wallet className="h-3.5 w-3.5" /> Hold Order
               </button>
               <button type="button" onClick={cancelOrder} disabled={!canEditStatus || order.status === "Cancelled"} className={orderActionClass("rose")}>
@@ -15272,13 +16032,13 @@ function OrderDetails({
               >
                 <Send className="h-3.5 w-3.5" /> Assign Courier
               </button>
-              <button type="button" disabled title="Invoice printing requires an invoice template route." className={orderActionClass("disabled")}>
+              <button type="button" onClick={() => setOrderWorkflow("invoice")} className={orderActionClass("cyan")}>
                 <Copy className="h-3.5 w-3.5" /> Print Invoice
               </button>
               <a href={contactHref} className={contactHref ? orderActionClass("pink") : orderActionClass("disabled")}>
                 <Phone className="h-3.5 w-3.5" /> Contact Customer
               </a>
-              <button type="button" disabled title="Dedicated note creation is not connected yet." className={orderActionClass("disabled")}>
+              <button type="button" onClick={() => setOrderWorkflow("note")} className={orderActionClass("violet")}>
                 <Pencil className="h-3.5 w-3.5" /> Create Note
               </button>
             </div>

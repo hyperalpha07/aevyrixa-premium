@@ -27,6 +27,12 @@ import {
   hasPermission,
   type AdminSessionUser,
 } from "@/app/lib/admin-permissions";
+import {
+  AdminButton,
+  AdminConfirmModal,
+  AdminDrawer,
+  useAdminToast,
+} from "@/app/admin/components";
 
 type SettingsStorageMode =
   | "supabase"
@@ -55,6 +61,7 @@ const inputClass =
   "h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-[11px] font-medium text-white/78 outline-none transition placeholder:text-white/25 focus:border-fuchsia-300/40";
 const selectClass =
   "h-9 w-full rounded-lg border border-white/[0.08] bg-[#080f20] px-3 text-[11px] font-medium text-white/78 outline-none focus:border-fuchsia-300/40";
+const backendPendingMessage = "This workflow needs backend connection in the next phase.";
 
 export default function SettingsCommandSection({
   settings,
@@ -66,6 +73,9 @@ export default function SettingsCommandSection({
   const [draft, setDraft] = useState(settings);
   const [statusMessage, setStatusMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [settingsWorkflow, setSettingsWorkflow] = useState<"templates" | "theme" | "audit" | "webhooks" | "billing" | "integration" | null>(null);
+  const [regenerateConfirmOpen, setRegenerateConfirmOpen] = useState(false);
+  const { toast } = useAdminToast();
 
   useEffect(() => {
     setDraft(settings);
@@ -152,6 +162,90 @@ export default function SettingsCommandSection({
 
   return (
     <form onSubmit={saveSettings} className="mt-3">
+      <AdminConfirmModal
+        confirmLabel="Regenerate key"
+        description="Regenerating the API key is sensitive and will require dependent services to be updated."
+        onCancel={() => setRegenerateConfirmOpen(false)}
+        onConfirm={() => {
+          toast({ title: "API key regeneration staged", description: backendPendingMessage, type: "warning" });
+        }}
+        open={regenerateConfirmOpen}
+        requireText="REGENERATE"
+        variant="danger"
+        title="Regenerate API key?"
+      />
+      <AdminDrawer
+        footer={
+          <AdminButton
+            onClick={() => toast({ title: "Settings workflow staged", description: backendPendingMessage, type: "warning" })}
+            size="sm"
+            variant="primary"
+          >
+            Stage workflow
+          </AdminButton>
+        }
+        onClose={() => setSettingsWorkflow(null)}
+        open={settingsWorkflow !== null}
+        subtitle="Backend/API connection pending"
+        title={
+          settingsWorkflow === "templates"
+            ? "Notification Templates"
+            : settingsWorkflow === "theme"
+              ? "Theme Customization"
+              : settingsWorkflow === "audit"
+                ? "Audit Log"
+                : settingsWorkflow === "webhooks"
+                  ? "Webhooks"
+                  : settingsWorkflow === "billing"
+                    ? "Billing"
+                    : "Integration Setup"
+        }
+        width="lg"
+      >
+        <div className="rounded-2xl border border-amber-300/25 bg-amber-400/10 p-3 text-xs leading-5 text-amber-100">
+          Backend/API connection pending
+        </div>
+        {settingsWorkflow === "templates" && (
+          <div className="mt-3 space-y-2">
+            {["New order", "Status update", "Low stock", "Customer message"].map((item) => (
+              <div key={item} className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-sm font-semibold text-white">{item} template</div>
+            ))}
+          </div>
+        )}
+        {settingsWorkflow === "theme" && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <FormLabel label="Primary color"><input className={inputClass} value={primaryColor} onChange={() => undefined} /></FormLabel>
+            <FormLabel label="Layout"><select className={selectClass} value="Control Room" onChange={() => undefined}><option>Control Room</option></select></FormLabel>
+          </div>
+        )}
+        {settingsWorkflow === "audit" && (
+          <div className="mt-3 space-y-2">
+            {["Settings viewed", "Notification setting updated", "API key copy requested"].map((item) => (
+              <div key={item} className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-xs text-white/65">{item}</div>
+            ))}
+          </div>
+        )}
+        {settingsWorkflow === "webhooks" && (
+          <div className="mt-3 space-y-2">
+            {["Order Created", "Order Updated", "Customer Created"].map((item) => (
+              <FormLabel key={item} label={item}><input className={inputClass} value={`https://aevyrixa.com/webhook/${item.toLowerCase().replaceAll(" ", "-")}`} onChange={() => undefined} /></FormLabel>
+            ))}
+          </div>
+        )}
+        {settingsWorkflow === "billing" && (
+          <div className="mt-3 space-y-2">
+            {["Current plan: Aevyrixa Pro", "Next renewal: May 20, 2026", "Payment method: **** 4242"].map((item) => (
+              <div key={item} className="rounded-xl border border-white/10 bg-white/[0.035] p-3 text-xs text-white/65">{item}</div>
+            ))}
+          </div>
+        )}
+        {settingsWorkflow === "integration" && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <FormLabel label="Service"><input className={inputClass} value="New service" onChange={() => undefined} /></FormLabel>
+            <FormLabel label="Credential owner"><input className={inputClass} value={session.displayName || session.username} onChange={() => undefined} /></FormLabel>
+          </div>
+        )}
+      </AdminDrawer>
       <div className="relative overflow-hidden rounded-[1.4rem] border border-fuchsia-300/[0.12] bg-[#030713] p-3 shadow-[0_0_80px_rgba(8,47,73,0.18)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_10%,rgba(236,72,153,0.16),transparent_24%),radial-gradient(circle_at_15%_0%,rgba(34,211,238,0.12),transparent_24%)]" />
         <div className="relative space-y-3">
@@ -229,25 +323,27 @@ export default function SettingsCommandSection({
             <ThemePanel
               draft={draft}
               primaryColor={primaryColor}
+              onOpenWorkflow={setSettingsWorkflow}
               updateAppearanceSettings={updateAppearanceSettings}
               updateAdvancedSettings={updateAdvancedSettings}
             />
             <NotificationsPanel
               draft={draft}
               lowStockAlertsEnabled={lowStockAlertsEnabled}
+              onOpenWorkflow={setSettingsWorkflow}
               updateOrderSettings={updateOrderSettings}
               updateNotificationSettings={updateNotificationSettings}
             />
           </div>
 
           <div className="grid gap-3 2xl:grid-cols-[1.18fr_0.82fr_1fr]">
-            <SecurityPanel />
+            <SecurityPanel onOpenWorkflow={setSettingsWorkflow} />
             <div className="space-y-3">
-              <IntegrationsOverviewPanel />
-              <ApiWebhooksPanel />
+              <IntegrationsOverviewPanel onOpenWorkflow={setSettingsWorkflow} />
+              <ApiWebhooksPanel onOpenWorkflow={setSettingsWorkflow} onRegenerate={() => setRegenerateConfirmOpen(true)} />
             </div>
             <div className="space-y-3">
-              <BillingPanel />
+              <BillingPanel onOpenWorkflow={setSettingsWorkflow} />
               <SystemHealthPanel />
             </div>
           </div>
@@ -346,11 +442,13 @@ function StoreSettingsPanel({
 function ThemePanel({
   draft,
   primaryColor,
+  onOpenWorkflow,
   updateAppearanceSettings,
   updateAdvancedSettings,
 }: {
   draft: AdminSettings;
   primaryColor: string;
+  onOpenWorkflow: (workflow: "templates" | "theme" | "audit" | "webhooks" | "billing" | "integration") => void;
   updateAppearanceSettings: (updates: Partial<AdminSettings["appearanceSettings"]>) => void;
   updateAdvancedSettings: (updates: Partial<AdminSettings["advancedSettings"]>) => void;
 }) {
@@ -395,7 +493,7 @@ function ThemePanel({
         </div>
         <div className="space-y-2">
           <HudRadar />
-          <button type="button" className="h-10 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">
+          <button type="button" onClick={() => onOpenWorkflow("theme")} className="h-10 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">
             Customize Theme
           </button>
         </div>
@@ -407,11 +505,13 @@ function ThemePanel({
 function NotificationsPanel({
   draft,
   lowStockAlertsEnabled,
+  onOpenWorkflow,
   updateOrderSettings,
   updateNotificationSettings,
 }: {
   draft: AdminSettings;
   lowStockAlertsEnabled: boolean;
+  onOpenWorkflow: (workflow: "templates" | "theme" | "audit" | "webhooks" | "billing" | "integration") => void;
   updateOrderSettings: (updates: Partial<AdminSettings["orderSettings"]>) => void;
   updateNotificationSettings: (updates: Partial<AdminSettings["notificationSettings"]>) => void;
 }) {
@@ -438,14 +538,14 @@ function NotificationsPanel({
           </div>
         ))}
       </div>
-      <button type="button" className="mt-3 h-9 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">
+      <button type="button" onClick={() => onOpenWorkflow("templates")} className="mt-3 h-9 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">
         Manage Templates
       </button>
     </section>
   );
 }
 
-function SecurityPanel() {
+function SecurityPanel({ onOpenWorkflow }: { onOpenWorkflow: (workflow: "templates" | "theme" | "audit" | "webhooks" | "billing" | "integration") => void }) {
   return (
     <section className={`${glassPanel} p-3`}>
       <PanelTitle title="Security & Permissions" subtitle="Manage access control and security settings." />
@@ -482,14 +582,14 @@ function SecurityPanel() {
               <span className="text-white/42">{value}</span>
             </div>
           ))}
-          <button type="button" className="h-9 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">View Audit Log</button>
+          <button type="button" onClick={() => onOpenWorkflow("audit")} className="h-9 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">View Audit Log</button>
         </div>
       </div>
     </section>
   );
 }
 
-function IntegrationsOverviewPanel() {
+function IntegrationsOverviewPanel({ onOpenWorkflow }: { onOpenWorkflow: (workflow: "templates" | "theme" | "audit" | "webhooks" | "billing" | "integration") => void }) {
   return (
     <section className={`${glassPanel} p-3`}>
       <PanelTitle title="Integrations Overview" subtitle="Connected Services" action={<Link href="/admin/integrations" className="text-[10px] font-black text-fuchsia-200">View All -&gt;</Link>} />
@@ -511,7 +611,7 @@ function IntegrationsOverviewPanel() {
             <span className="mt-2 inline-flex rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2 py-0.5 text-[8px] font-black text-emerald-200">Connected</span>
           </div>
         ))}
-        <button type="button" className="grid min-h-[82px] place-items-center rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/8 text-center text-[10px] font-black text-fuchsia-100">
+        <button type="button" onClick={() => onOpenWorkflow("integration")} className="grid min-h-[82px] place-items-center rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/8 text-center text-[10px] font-black text-fuchsia-100">
           <span><Plus className="mx-auto mb-1 h-4 w-4" />Add Integration<br /><span className="font-medium text-white/35">Connect new service</span></span>
         </button>
       </div>
@@ -519,7 +619,13 @@ function IntegrationsOverviewPanel() {
   );
 }
 
-function ApiWebhooksPanel() {
+function ApiWebhooksPanel({
+  onOpenWorkflow,
+  onRegenerate,
+}: {
+  onOpenWorkflow: (workflow: "templates" | "theme" | "audit" | "webhooks" | "billing" | "integration") => void;
+  onRegenerate: () => void;
+}) {
   return (
     <section className={`${glassPanel} p-3`}>
       <PanelTitle title="API & Webhooks" action={<span className="rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2 py-1 text-[9px] font-black text-emerald-200">Active</span>} />
@@ -529,8 +635,8 @@ function ApiWebhooksPanel() {
           <div className="grid grid-cols-[1fr_32px_32px_92px] gap-2">
             <input className={inputClass} value="sk_live_xxxxxxxxxxxxxxxxxxxx" readOnly />
             <button type="button" className="grid place-items-center rounded-lg border border-white/[0.07] bg-white/[0.025] text-white/45"><Copy className="h-3.5 w-3.5" /></button>
-            <button type="button" className="grid place-items-center rounded-lg border border-white/[0.07] bg-white/[0.025] text-white/45"><RefreshCw className="h-3.5 w-3.5" /></button>
-            <button type="button" className="rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">Regenerate</button>
+            <button type="button" onClick={onRegenerate} className="grid place-items-center rounded-lg border border-white/[0.07] bg-white/[0.025] text-white/45"><RefreshCw className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={onRegenerate} className="rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">Regenerate</button>
           </div>
         </div>
         <p className="pt-1 text-[10px] font-black text-white/70">Webhook Endpoints</p>
@@ -545,13 +651,13 @@ function ApiWebhooksPanel() {
             <span className="rounded-full border border-emerald-300/18 bg-emerald-400/10 px-2 py-0.5 text-center text-[8px] font-black text-emerald-200">Active</span>
           </div>
         ))}
-        <button type="button" className="h-8 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">Manage Webhooks</button>
+        <button type="button" onClick={() => onOpenWorkflow("webhooks")} className="h-8 w-full rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 text-[10px] font-black text-fuchsia-100">Manage Webhooks</button>
       </div>
     </section>
   );
 }
 
-function BillingPanel() {
+function BillingPanel({ onOpenWorkflow }: { onOpenWorkflow: (workflow: "templates" | "theme" | "audit" | "webhooks" | "billing" | "integration") => void }) {
   return (
     <section className={`${glassPanel} p-3`}>
       <PanelTitle title="Billing & Subscription" />
@@ -560,7 +666,7 @@ function BillingPanel() {
           <p className="text-[9px] uppercase tracking-[0.12em] text-white/35">Current Plan</p>
           <div className="mt-2 flex items-center justify-between gap-2">
             <span><span className="block text-sm font-black text-fuchsia-100">Aevyrixa Pro</span><span className="text-[10px] text-white/45">Premium Plan</span></span>
-            <button type="button" className="h-8 rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 px-3 text-[9px] font-black text-fuchsia-100">Manage Plan</button>
+            <button type="button" onClick={() => onOpenWorkflow("billing")} className="h-8 rounded-lg border border-fuchsia-300/14 bg-fuchsia-500/10 px-3 text-[9px] font-black text-fuchsia-100">Manage Plan</button>
           </div>
           <p className="mt-4 text-xl font-black text-white">BDT 12,990 <span className="text-[10px] font-medium text-white/38">/ month</span></p>
           <p className="mt-1 text-[10px] text-white/42">Renews on May 20, 2026</p>
@@ -568,7 +674,7 @@ function BillingPanel() {
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[11px] font-black text-white">Invoices</p>
-            <button type="button" className="text-[9px] font-black text-fuchsia-200">View All -&gt;</button>
+            <button type="button" onClick={() => onOpenWorkflow("billing")} className="text-[9px] font-black text-fuchsia-200">View All -&gt;</button>
           </div>
           {["#INV-2026-05", "#INV-2026-04", "#INV-2026-03", "#INV-2026-02", "#INV-2026-01"].map((invoice, index) => (
             <div key={invoice} className="grid grid-cols-[1fr_62px_64px_36px] gap-1 py-1 text-[9px] text-white/42">

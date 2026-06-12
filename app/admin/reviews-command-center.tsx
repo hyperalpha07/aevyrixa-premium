@@ -27,7 +27,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { AdminConfirmModal } from "@/app/admin/components";
+import { AdminConfirmModal, useAdminToast } from "@/app/admin/components";
 import { hasPermission, type AdminSessionUser } from "@/app/lib/admin-permissions";
 
 type ReviewStatus = "pending" | "approved" | "rejected" | "hidden";
@@ -686,6 +686,11 @@ export default function ReviewsCommandCenter({
   const [error, setError] = useState("");
   const [draftError, setDraftError] = useState("");
   const [reviewDeleteTarget, setReviewDeleteTarget] = useState<AdminReviewClientRecord | null>(null);
+  const [reviewStatusConfirm, setReviewStatusConfirm] = useState<{
+    review: AdminReviewClientRecord;
+    status: ReviewStatus;
+  } | null>(null);
+  const { toast } = useAdminToast();
 
   const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
@@ -834,6 +839,14 @@ export default function ReviewsCommandCenter({
     setReviewDeleteTarget(review);
   };
 
+  const requestReviewStatus = (review: AdminReviewClientRecord, status: ReviewStatus) => {
+    if (status === "hidden" || status === "rejected") {
+      setReviewStatusConfirm({ review, status });
+      return;
+    }
+    void saveReview(review, { status });
+  };
+
   const confirmDeleteReview = async () => {
     if (!reviewDeleteTarget) return;
     const review = reviewDeleteTarget;
@@ -975,6 +988,20 @@ export default function ReviewsCommandCenter({
         onCancel={() => !savingId && setReviewDeleteTarget(null)}
         onConfirm={confirmDeleteReview}
       />
+      <AdminConfirmModal
+        open={Boolean(reviewStatusConfirm)}
+        title={`${reviewStatusConfirm?.status === "hidden" ? "Hide" : "Reject"} review?`}
+        description={reviewStatusConfirm ? `Confirm moderation action for ${reviewStatusConfirm.review.customerName}.` : undefined}
+        confirmLabel={reviewStatusConfirm?.status === "hidden" ? "Hide Review" : "Reject Review"}
+        variant={reviewStatusConfirm?.status === "hidden" ? "warning" : "danger"}
+        reasonRequired={reviewStatusConfirm?.status === "rejected"}
+        reasonLabel="Moderation reason"
+        onCancel={() => setReviewStatusConfirm(null)}
+        onConfirm={() => {
+          if (reviewStatusConfirm) void saveReview(reviewStatusConfirm.review, { status: reviewStatusConfirm.status });
+          setReviewStatusConfirm(null);
+        }}
+      />
       <section className="relative overflow-hidden rounded-[1.5rem] border border-fuchsia-200/16 bg-[#050b19]/88 p-5 shadow-[0_0_90px_rgba(118,54,255,0.16)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,255,0.24),transparent_28%),radial-gradient(circle_at_65%_10%,rgba(34,211,238,0.18),transparent_24%),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[length:auto,auto,42px_42px,42px_42px]" />
         <div className="absolute left-1/2 top-2 h-28 w-[34rem] -translate-x-1/2 rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10 blur-sm" />
@@ -995,7 +1022,11 @@ export default function ReviewsCommandCenter({
             <button type="button" className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/62">
               May 13 - May 19, 2026
             </button>
-            <button type="button" className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/62">
+            <button
+              type="button"
+              onClick={() => toast({ title: "Review export pending", description: "This workflow needs backend connection in the next phase.", type: "warning" })}
+              className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/62"
+            >
               Export
             </button>
             <button
@@ -1255,13 +1286,13 @@ export default function ReviewsCommandCenter({
               <section className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
                 <h3 className="text-sm font-semibold text-white">Moderation Actions</h3>
                 <div className="mt-3 grid gap-2 md:grid-cols-4">
-                  <ReviewActionButton tone="approve" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "approved")} onClick={() => saveReview(selectedReview, { status: "approved" })}>
+                  <ReviewActionButton tone="approve" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "approved")} onClick={() => requestReviewStatus(selectedReview, "approved")}>
                     <Check className="h-4 w-4" /> Approve
                   </ReviewActionButton>
-                  <ReviewActionButton tone="hide" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "hidden")} onClick={() => saveReview(selectedReview, { status: "hidden" })}>
+                  <ReviewActionButton tone="hide" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "hidden")} onClick={() => requestReviewStatus(selectedReview, "hidden")}>
                     <Inbox className="h-4 w-4" /> Hide
                   </ReviewActionButton>
-                  <ReviewActionButton tone="reject" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "rejected")} onClick={() => saveReview(selectedReview, { status: "rejected" })}>
+                  <ReviewActionButton tone="reject" disabled={(!visualDemoMode && !canModerate) || savingId === selectedReview.id || (!visualDemoMode && selectedReview.status === "rejected")} onClick={() => requestReviewStatus(selectedReview, "rejected")}>
                     <X className="h-4 w-4" /> Reject
                   </ReviewActionButton>
                   <ReviewActionButton tone="edit" disabled={(!visualDemoMode && !canEditReview) || savingId === selectedReview.id} onClick={() => openEdit(selectedReview)}>
@@ -1323,7 +1354,13 @@ export default function ReviewsCommandCenter({
           <section className="rounded-[1.35rem] border border-white/10 bg-[#050b19]/84 p-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white">Moderation Activity</h2>
-              <button type="button" disabled className="rounded-full border border-fuchsia-200/18 bg-fuchsia-300/10 px-2.5 py-1 text-[0.68rem] font-semibold text-fuchsia-100/58">View All</button>
+              <button
+                type="button"
+                onClick={() => toast({ title: "Moderation activity pending", description: "This workflow needs backend connection in the next phase.", type: "warning" })}
+                className="rounded-full border border-fuchsia-200/18 bg-fuchsia-300/10 px-2.5 py-1 text-[0.68rem] font-semibold text-fuchsia-100/80"
+              >
+                View All
+              </button>
             </div>
             <div className="mt-3 space-y-3">
               {activityItems.map((item, index) => (
@@ -1354,7 +1391,8 @@ export default function ReviewsCommandCenter({
                   type="button"
                   onClick={() => {
                     setError("");
-                    setMessage("Bulk review controls are visually staged for this design pass.");
+                    toast({ title: `${label} pending`, description: "This workflow needs backend connection in the next phase.", type: "warning" });
+                    setMessage("Bulk review controls are staged until backend connection is added.");
                   }}
                   className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border px-2 text-xs font-semibold transition hover:bg-white/[0.08] ${tone}`}
                 >
