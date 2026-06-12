@@ -10,6 +10,7 @@ import type {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReviewsCommandCenter from "@/app/admin/reviews-command-center";
 import SettingsCommandSection from "@/app/admin/settings-command-section";
+import { AdminConfirmModal } from "@/app/admin/components";
 import {
   ArrowLeft,
   Bell as BellIcon,
@@ -3912,6 +3913,7 @@ function OrdersSection({
               <ClipboardList className="h-4 w-4 text-pink-100/80" />
               {dateInputValue(new Date())}
             </span>
+            {/* TODO(admin-safety): add PII export guard, owner approval where needed, and audit logging before expanding CSV exports. */}
             <button
               type="button"
               onClick={() => exportOrdersCsv(visibleOrders)}
@@ -4134,6 +4136,8 @@ function ProductsSection({
   const [productSearchTerm, setProductSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [stockFilter, setStockFilter] = useState<"All Stock" | ProductStockStatus>("All Stock");
+  const [productDeleteTarget, setProductDeleteTarget] = useState<AdminProduct | null>(null);
+  const [productPermanentDeleteTarget, setProductPermanentDeleteTarget] = useState<AdminProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
     () => products.find((product) => !product.deletedAt)?.id ?? products[0]?.id ?? null
   );
@@ -4311,12 +4315,19 @@ function ProductsSection({
     }
   };
 
-  const deleteProduct = async (productId: string) => {
+  const deleteProduct = (productId: string) => {
     if (!canEditProducts) {
       setStatusMessage(blockedPermissionMessage);
       return;
     }
-    if (!window.confirm("Delete this product and move it to Deleted/Trash?")) return;
+    const product = products.find((item) => item.id === productId);
+    if (!product) return;
+    setProductDeleteTarget(product);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!productDeleteTarget) return;
+    const productId = productDeleteTarget.id;
 
     setIsSavingProduct(true);
     setStatusMessage("");
@@ -4329,6 +4340,7 @@ function ProductsSection({
         )
       );
       setEditingProduct((current) => (current?.id === productId ? null : current));
+      setProductDeleteTarget(null);
       setStatusMessage("Product moved to Deleted.");
     } catch (error) {
       console.error("Failed to delete backend product:", error);
@@ -4371,10 +4383,12 @@ function ProductsSection({
       setStatusMessage(blockedPermissionMessage);
       return;
     }
-    const confirmation = window.prompt(
-      `Permanently delete "${product.name}" from Supabase? Type DELETE to confirm.`
-    );
-    if (confirmation !== "DELETE") return;
+    setProductPermanentDeleteTarget(product);
+  };
+
+  const confirmPermanentlyDeleteProduct = async () => {
+    if (!productPermanentDeleteTarget) return;
+    const product = productPermanentDeleteTarget;
 
     setIsSavingProduct(true);
     setStatusMessage("");
@@ -4382,6 +4396,7 @@ function ProductsSection({
     try {
       await permanentlyDeleteProductInApi(product.id);
       onSaveProducts(products.filter((item) => item.id !== product.id));
+      setProductPermanentDeleteTarget(null);
       setStatusMessage("Product permanently deleted.");
     } catch (error) {
       console.error("Failed to permanently delete backend product:", error);
@@ -4440,6 +4455,7 @@ function ProductsSection({
   };
 
   const exportProductsCsv = () => {
+    // TODO(admin-safety): route product export through the shared export guard and audit logging.
     const headers = ["name", "slug", "category", "price", "status", "stockStatus", "stockQuantity"];
     const rows = visibleProducts.map((product) =>
       [
@@ -4466,6 +4482,37 @@ function ProductsSection({
 
   return (
     <div className="aev-admin-page-stack mt-6 space-y-5">
+      <AdminConfirmModal
+        open={Boolean(productDeleteTarget)}
+        title="Move product to Deleted?"
+        description={
+          productDeleteTarget
+            ? `This will archive "${productDeleteTarget.name}" into Deleted/Trash. It can be restored later.`
+            : undefined
+        }
+        confirmLabel="Move to Deleted"
+        variant="warning"
+        impactItems={["Product leaves active catalog views.", "Existing order history is retained.", "Product can still be restored from Deleted."]}
+        loading={isSavingProduct}
+        onCancel={() => !isSavingProduct && setProductDeleteTarget(null)}
+        onConfirm={confirmDeleteProduct}
+      />
+      <AdminConfirmModal
+        open={Boolean(productPermanentDeleteTarget)}
+        title="Permanently delete product?"
+        description={
+          productPermanentDeleteTarget
+            ? `This permanently removes "${productPermanentDeleteTarget.name}" from the backend. This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Permanently Delete"
+        variant="danger"
+        requireText="DELETE"
+        impactItems={["Product record is permanently removed.", "Deleted catalog recovery will no longer be available.", "Use only for confirmed cleanup."]}
+        loading={isSavingProduct}
+        onCancel={() => !isSavingProduct && setProductPermanentDeleteTarget(null)}
+        onConfirm={confirmPermanentlyDeleteProduct}
+      />
       <section className="aev-admin-page-hero overflow-hidden rounded-[1.35rem] border p-5">
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_420px] xl:items-center">
           <div className="min-w-0">
@@ -8071,6 +8118,7 @@ function SettingsSection({
                   <h4 className="text-sm font-semibold text-white">
                     Courier Integration
                   </h4>
+                  {/* TODO(admin-safety): add API key rotation guard and owner approval before enabling live courier credentials. */}
                   <p className="mt-2 text-sm leading-6 text-white/58">
                     Manual mode is active by default. Courier API settings are prepared for future server-side integration; do not store API keys here.
                   </p>
@@ -11219,6 +11267,7 @@ function BillingSection({
   orders: StoredOrder[];
   session: AdminSessionUser;
 }) {
+  // TODO(admin-safety): add billing finance guard, owner approval, and audit logging before wiring finance exports/actions.
   const canView = hasPermission(session, "analytics.view") || hasPermission(session, "orders.view");
   const liveOrders = orders.filter((order) => !order.archivedAt && !order.deletedAt && !order.softDeletedAt);
   const revenue = liveOrders.reduce((sum, order) => sum + orderTotal(order), 0);
@@ -13029,6 +13078,7 @@ function ReviewsSection({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [draftSubmitError, setDraftSubmitError] = useState("");
+  const [reviewDeleteTarget, setReviewDeleteTarget] = useState<AdminReviewClientRecord | null>(null);
   const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
   const canManage = hasPermission(session, "reviews.manage");
@@ -13196,13 +13246,18 @@ function ReviewsSection({
     });
   };
 
-  const deleteReview = async (review: AdminReviewClientRecord) => {
+  const deleteReview = (review: AdminReviewClientRecord) => {
     if (!canEditReview) {
       setError("Missing review moderation permission.");
       setMessage("");
       return;
     }
-    if (!window.confirm("Delete this review permanently?")) return;
+    setReviewDeleteTarget(review);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewDeleteTarget) return;
+    const review = reviewDeleteTarget;
     setSavingId(review.id);
     setError("");
     setMessage("");
@@ -13214,6 +13269,7 @@ function ReviewsSection({
         setEditingId(null);
         setDraft(emptyReviewDraft(products));
       }
+      setReviewDeleteTarget(null);
       setMessage("Review deleted.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review could not be deleted.");
@@ -13274,6 +13330,21 @@ function ReviewsSection({
 
   return (
     <div className="mt-6 space-y-5">
+      <AdminConfirmModal
+        open={Boolean(reviewDeleteTarget)}
+        title="Delete review permanently?"
+        description={
+          reviewDeleteTarget
+            ? `This will permanently delete the review from ${reviewDeleteTarget.customerName}.`
+            : undefined
+        }
+        confirmLabel="Delete Review"
+        variant="danger"
+        impactItems={["Review is removed from moderation queues.", "Public display eligibility is revoked.", "This action cannot be undone."]}
+        loading={Boolean(reviewDeleteTarget && savingId === reviewDeleteTarget.id)}
+        onCancel={() => !savingId && setReviewDeleteTarget(null)}
+        onConfirm={confirmDeleteReview}
+      />
       <div className="rounded-[1.25rem] border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-6 text-cyan-50/76">
         Reviews are private until approved. Admin-added or imported reviews are labeled as customer feedback only; verified purchase is reserved for order-linked account reviews.
       </div>
@@ -13674,6 +13745,7 @@ function ReviewsSection({
 }
 
 function StaffSection({ session }: { session: AdminSessionUser }) {
+  // TODO(admin-safety): route staff role changes and permission changes through owner approval and audit logging.
   const [staff, setStaff] = useState<AdminStaffClientRecord[]>([]);
   const [activityLogs, setActivityLogs] = useState<AdminActivityClientRecord[]>([]);
   const [draft, setDraft] = useState<ReturnType<typeof emptyStaffDraft>>(emptyStaffDraft);
@@ -14911,6 +14983,7 @@ function OrderDetails({
   );
   const [operationsMessage, setOperationsMessage] = useState("");
   const [isSavingOperations, setIsSavingOperations] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
   const reference = orderReferenceKey(order);
   const selectedCourierOption = courierChoice;
   const canEditStatus = hasPermission(session, "orders.editStatus");
@@ -14982,8 +15055,12 @@ function OrderDetails({
     setOperationsMessage(`Status updated to ${status}.`);
   };
   const confirmOrder = () => updateStatusFromCockpit("Confirmed");
-  const cancelOrder = () => {
-    if (window.confirm(`Cancel order ${reference}?`)) updateStatusFromCockpit("Cancelled");
+  const cancelOrder = () => setCancelConfirmOpen(true);
+  const confirmCancelOrder = ({ reason }: { reason: string; confirmationText: string }) => {
+    setOperationField("cancelledReason", reason);
+    updateStatusFromCockpit("Cancelled");
+    setOperationsMessage("Status updated to Cancelled. Reason staged in operations notes.");
+    setCancelConfirmOpen(false);
   };
   const markDelivered = () => updateStatusFromCockpit("Delivered");
   const contactHref = order.customer.phone ? `tel:${order.customer.phone}` : undefined;
@@ -14993,6 +15070,18 @@ function OrderDetails({
 
   return (
     <section className="aev-admin-detail-panel min-w-0 border-0 bg-transparent p-3 sm:p-4">
+      <AdminConfirmModal
+        open={cancelConfirmOpen}
+        title={`Cancel order ${reference}?`}
+        description="Cancelling an order changes the operational status and should include a clear admin reason."
+        confirmLabel="Cancel Order"
+        variant="danger"
+        reasonRequired
+        reasonLabel="Cancellation reason"
+        impactItems={["Order status changes to Cancelled.", "The reason is staged in the order operations form.", "Customer follow-up may be required."]}
+        onCancel={() => setCancelConfirmOpen(false)}
+        onConfirm={confirmCancelOrder}
+      />
       <div className="rounded-[1.1rem] border border-cyan-200/14 bg-[linear-gradient(135deg,rgba(103,247,243,0.055),rgba(255,119,200,0.04)),rgba(5,11,24,0.92)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div className="flex min-w-0 flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
           <div className="min-w-0">

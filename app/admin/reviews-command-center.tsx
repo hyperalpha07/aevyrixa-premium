@@ -27,6 +27,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { AdminConfirmModal } from "@/app/admin/components";
 import { hasPermission, type AdminSessionUser } from "@/app/lib/admin-permissions";
 
 type ReviewStatus = "pending" | "approved" | "rejected" | "hidden";
@@ -684,6 +685,7 @@ export default function ReviewsCommandCenter({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [draftError, setDraftError] = useState("");
+  const [reviewDeleteTarget, setReviewDeleteTarget] = useState<AdminReviewClientRecord | null>(null);
 
   const canModerate = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.moderate");
   const canFeature = hasPermission(session, "reviews.manage") || hasPermission(session, "reviews.feature");
@@ -818,7 +820,7 @@ export default function ReviewsCommandCenter({
     }
   };
 
-  const deleteReview = async (review: AdminReviewClientRecord) => {
+  const deleteReview = (review: AdminReviewClientRecord) => {
     if (visualDemoMode) {
       setError("");
       setMessage("Demo visual mode: delete is only a visual control until real reviews are available.");
@@ -829,7 +831,12 @@ export default function ReviewsCommandCenter({
       setMessage("");
       return;
     }
-    if (!window.confirm("Delete this review permanently?")) return;
+    setReviewDeleteTarget(review);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewDeleteTarget) return;
+    const review = reviewDeleteTarget;
     setSavingId(review.id);
     setError("");
     setMessage("");
@@ -838,6 +845,7 @@ export default function ReviewsCommandCenter({
       const refreshedReviews = await readReviewsFromApi();
       setReviews(refreshedReviews ?? ((current) => current.filter((item) => item.id !== review.id)));
       setSelectedId(null);
+      setReviewDeleteTarget(null);
       setMessage("Review deleted.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review could not be deleted.");
@@ -952,6 +960,21 @@ export default function ReviewsCommandCenter({
 
   return (
     <div className="mt-6 space-y-4">
+      <AdminConfirmModal
+        open={Boolean(reviewDeleteTarget)}
+        title="Delete review permanently?"
+        description={
+          reviewDeleteTarget
+            ? `This will permanently delete the review from ${reviewDeleteTarget.customerName}.`
+            : undefined
+        }
+        confirmLabel="Delete Review"
+        variant="danger"
+        impactItems={["Review is removed from moderation queues.", "Public display eligibility is revoked.", "This action cannot be undone."]}
+        loading={Boolean(reviewDeleteTarget && savingId === reviewDeleteTarget.id)}
+        onCancel={() => !savingId && setReviewDeleteTarget(null)}
+        onConfirm={confirmDeleteReview}
+      />
       <section className="relative overflow-hidden rounded-[1.5rem] border border-fuchsia-200/16 bg-[#050b19]/88 p-5 shadow-[0_0_90px_rgba(118,54,255,0.16)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,255,0.24),transparent_28%),radial-gradient(circle_at_65%_10%,rgba(34,211,238,0.18),transparent_24%),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[length:auto,auto,42px_42px,42px_42px]" />
         <div className="absolute left-1/2 top-2 h-28 w-[34rem] -translate-x-1/2 rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10 blur-sm" />

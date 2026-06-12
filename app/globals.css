@@ -1,5 +1,76 @@
 @import "tailwindcss";
 
+@keyframes admin-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes admin-float-soft {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -0.35rem, 0);
+  }
+}
+
+.admin-glow-border {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 0 0 1px rgba(255, 255, 255, 0.025),
+    0 18px 58px rgba(0, 0, 0, 0.34),
+    0 0 32px rgba(236, 72, 153, 0.08);
+}
+
+.admin-hud-grid {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(236, 72, 153, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 75% 12%, rgba(34, 211, 238, 0.13), transparent 28%);
+  background-size: 42px 42px, 42px 42px, 100% 100%;
+}
+
+.admin-shimmer {
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+  background-size: 200% 100%;
+  animation: admin-shimmer 1.4s ease-in-out infinite;
+}
+
+.admin-float-soft {
+  animation: admin-float-soft 12s ease-in-out infinite;
+}
+
+.admin-pressable {
+  transform: translateZ(0);
+}
+
+.admin-pressable:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-shimmer,
+  .admin-float-soft {
+    animation: none;
+  }
+}
+
 .support-panel {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
