@@ -129,9 +129,18 @@ function mapStaff(row: StaffRow): AdminStaffRecord {
   };
 }
 
-function mapActivity(row: ActivityRow): StaffActivityLog {
+function mapActivity(row: ActivityRow, index = 0): StaffActivityLog {
+  const fallbackId = [
+    row.actor_name || row.staff_id || "Owner",
+    row.action || "activity",
+    row.target_type || "target",
+    row.target_id || "none",
+    row.created_at || "unknown-date",
+    index,
+  ].join("-");
+
   return {
-    id: row.id ?? "",
+    id: row.id || fallbackId,
     staffId: row.staff_id ?? undefined,
     actorName: row.actor_name ?? undefined,
     action: row.action ?? "",

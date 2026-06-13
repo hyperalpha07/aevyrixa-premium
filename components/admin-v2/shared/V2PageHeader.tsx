@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import type { ReactNode } from "react";
 import { V2Breadcrumbs } from "@/components/admin-v2/shared/V2Breadcrumbs";
+import { AdminV2Reveal } from "@/components/admin-v2/motion/AdminV2Reveal";
 
 type V2PageHeaderProps = {
   title: string;
@@ -11,7 +12,7 @@ type V2PageHeaderProps = {
 
 export function V2PageHeader({ title, description, actions, breadcrumbs }: V2PageHeaderProps) {
   return (
-    <Box sx={{ mb: 3 }}>
+    <AdminV2Reveal sx={{ mb: 3 }}>
       {breadcrumbs ? <V2Breadcrumbs items={breadcrumbs} /> : null}
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ alignItems: { md: "center" }, justifyContent: "space-between" }}>
         <Box>
@@ -24,6 +25,6 @@ export function V2PageHeader({ title, description, actions, breadcrumbs }: V2Pag
         </Box>
         {actions}
       </Stack>
-    </Box>
+    </AdminV2Reveal>
   );
 }

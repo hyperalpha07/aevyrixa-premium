@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import type { AdminSessionUser } from "@/app/lib/admin-permissions";
 import { adminV2Routes } from "@/configs/admin-v2/routes";
 import { canAccessAdminV2Module } from "@/lib/admin-v2/permissions";
+import { useAdminV2Motion } from "@/components/admin-v2/motion";
 
 type AdminV2CommandPaletteProps = {
   open: boolean;
@@ -26,6 +27,7 @@ type AdminV2CommandPaletteProps = {
 
 export function AdminV2CommandPalette({ open, onClose, session }: AdminV2CommandPaletteProps) {
   const router = useRouter();
+  const { startRouteProgress } = useAdminV2Motion();
   const [query, setQuery] = useState("");
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -40,7 +42,16 @@ export function AdminV2CommandPalette({ open, onClose, session }: AdminV2Command
   }, [query, session]);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{
+        backdrop: { sx: { backdropFilter: "blur(2px)", backgroundColor: "rgba(15, 23, 42, 0.34)" } },
+        paper: { sx: { animation: "admin-v2-reveal 200ms cubic-bezier(0.16, 1, 0.3, 1) both" } },
+      }}
+    >
       <DialogContent sx={{ p: 2 }}>
         <TextField
           autoFocus
@@ -63,6 +74,7 @@ export function AdminV2CommandPalette({ open, onClose, session }: AdminV2Command
             <ListItemButton
               key={route.path}
               onClick={() => {
+                startRouteProgress();
                 router.push(route.path);
                 onClose();
                 setQuery("");

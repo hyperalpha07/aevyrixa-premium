@@ -1,16 +1,31 @@
 import { Box, Stack, Typography } from "@mui/material";
 import type { LucideIcon } from "lucide-react";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { AdminV2AnimatedNumber } from "@/components/admin-v2/motion/AdminV2AnimatedNumber";
 
 type V2MetricCardProps = {
   label: string;
   value: string;
+  animatedValue?: number;
+  prefix?: string;
+  suffix?: string;
+  decimals?: number;
   helper?: string;
   icon: LucideIcon;
   tone?: "primary" | "success" | "warning" | "info" | "error";
 };
 
-export function V2MetricCard({ label, value, helper, icon: Icon, tone = "primary" }: V2MetricCardProps) {
+export function V2MetricCard({
+  label,
+  value,
+  animatedValue,
+  prefix,
+  suffix,
+  decimals,
+  helper,
+  icon: Icon,
+  tone = "primary",
+}: V2MetricCardProps) {
   return (
     <V2Card>
       <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -19,7 +34,11 @@ export function V2MetricCard({ label, value, helper, icon: Icon, tone = "primary
             {label}
           </Typography>
           <Typography variant="h5" sx={{ mt: 0.75 }}>
-            {value}
+            {typeof animatedValue === "number" ? (
+              <AdminV2AnimatedNumber value={animatedValue} prefix={prefix} suffix={suffix} decimals={decimals} />
+            ) : (
+              value
+            )}
           </Typography>
           {helper ? (
             <Typography variant="caption" color="text.secondary">
@@ -35,9 +54,9 @@ export function V2MetricCard({ label, value, helper, icon: Icon, tone = "primary
             display: "grid",
             placeItems: "center",
             color: `${tone}.main`,
-            bgcolor: `${tone}.main`,
-            backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? `${theme.palette[tone].main}22` : `${theme.palette[tone].main}14`,
+            bgcolor: "transparent",
+            backgroundColor: "color-mix(in srgb, currentColor 14%, transparent)",
+            animation: "admin-v2-reveal 220ms cubic-bezier(0.16, 1, 0.3, 1) both",
           }}
         >
           <Icon size={21} />

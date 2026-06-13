@@ -9,6 +9,11 @@ import { AdminV2Footer } from "@/components/admin-v2/layouts/AdminV2Footer";
 import { AdminV2Sidebar } from "@/components/admin-v2/navigation/AdminV2Sidebar";
 import { AdminV2ThemeProvider, useAdminV2Theme } from "@/components/admin-v2/theme/AdminV2ThemeProvider";
 import { AdminV2Topbar } from "@/components/admin-v2/layouts/AdminV2Topbar";
+import {
+  AdminV2AmbientBackground,
+  AdminV2MotionProvider,
+  AdminV2PageTransition,
+} from "@/components/admin-v2/motion";
 import type { AdminV2DashboardData } from "@/lib/admin-v2/types";
 
 const expandedWidth = 278;
@@ -31,13 +36,14 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
     (dashboardData?.orders.pending ?? 0) + (dashboardData?.reviews.pending ?? 0) + (dashboardData?.support.open ?? 0);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", position: "relative" }}>
+      <AdminV2AmbientBackground />
       <Box
         component="aside"
         sx={{
           display: { xs: "none", lg: "block" },
           width: sidebarWidth,
-          transition: "width 180ms ease",
+          transition: "width 220ms cubic-bezier(0.2, 0, 0, 1)",
           flexShrink: 0,
           borderRight: "1px solid",
           borderColor: navigationStyle === "bordered" ? "divider" : "transparent",
@@ -45,6 +51,7 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
           position: "sticky",
           top: 0,
           height: "100vh",
+          zIndex: 2,
         }}
       >
         <AdminV2Sidebar session={session} collapsed={collapsed} />
@@ -55,12 +62,18 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
         sx={{ display: { xs: "block", lg: "none" } }}
         slotProps={{
           root: { keepMounted: true },
-          paper: { sx: { width: expandedWidth } },
+          backdrop: {
+            sx: {
+              backdropFilter: "blur(2px)",
+              backgroundColor: "rgba(15, 23, 42, 0.34)",
+            },
+          },
+          paper: { sx: { width: expandedWidth, transition: "transform 260ms cubic-bezier(0.2, 0, 0, 1)" } },
         }}
       >
         <AdminV2Sidebar session={session} collapsed={false} onNavigate={() => setMobileOpen(false)} />
       </Drawer>
-      <Box sx={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}>
         <AdminV2Topbar
           session={session}
           onOpenMobileNav={() => setMobileOpen(true)}
@@ -80,7 +93,7 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
             py: { xs: 2.5, lg: 4 },
           }}
         >
-          {children}
+          <AdminV2PageTransition>{children}</AdminV2PageTransition>
         </Box>
         <AdminV2Footer />
       </Box>
@@ -97,7 +110,9 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
 export function AdminV2Shell(props: AdminV2ShellProps) {
   return (
     <AdminV2ThemeProvider>
-      <AdminV2ShellContent {...props} />
+      <AdminV2MotionProvider>
+        <AdminV2ShellContent {...props} />
+      </AdminV2MotionProvider>
     </AdminV2ThemeProvider>
   );
 }

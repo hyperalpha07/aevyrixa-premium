@@ -10,16 +10,19 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import type { AdminSessionUser } from "@/app/lib/admin-permissions";
 import { AdminV2Logo } from "@/components/admin-v2/layouts/AdminV2Logo";
 import { adminV2Navigation, type AdminV2NavigationItem } from "@/configs/admin-v2/navigation";
 import { canAccessAdminV2Module } from "@/lib/admin-v2/permissions";
+import { useAdminV2Motion } from "@/components/admin-v2/motion";
+import { adminV2Motion, adminV2Transition } from "@/components/admin-v2/motion/motion-config";
 
 type AdminV2SidebarProps = {
   session: AdminSessionUser;
@@ -39,6 +42,10 @@ function isActive(pathname: string, item: AdminV2NavigationItem) {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
+function childActive(pathname: string, item: AdminV2NavigationItem): boolean {
+  return isActive(pathname, item) || Boolean(item.children?.some((child) => childActive(pathname, child)));
+}
+
 function SidebarItem({
   item,
   session,
@@ -53,20 +60,36 @@ function SidebarItem({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { startRouteProgress, reducedMotion } = useAdminV2Motion();
   const visibleChildren = item.children?.filter((child) => itemVisible(session, child)) ?? [];
   const hasChildren = visibleChildren.length > 0;
-  const active = isActive(pathname, item) || visibleChildren.some((child) => isActive(pathname, child));
+  const active = isActive(pathname, item) || visibleChildren.some((child) => childActive(pathname, child));
   const [open, setOpen] = useState(active);
   const Icon = item.icon;
+  const navigates = Boolean(item.href && (!hasChildren || collapsed));
+  const tooltipTitle = hasChildren
+    ? `${item.label}: ${visibleChildren.map((child) => child.label).join(", ")}`
+    : item.label;
+
+  useEffect(() => {
+    if (active) setOpen(true);
+  }, [active]);
 
   const button = (
     <ListItemButton
-      component={item.href && !hasChildren ? Link : "button"}
-      href={item.href && !hasChildren ? item.href : undefined}
+      component={navigates ? Link : "button"}
+      href={navigates ? item.href : undefined}
       onClick={() => {
+        if (navigates) {
+          startRouteProgress();
+          onNavigate?.();
+          return;
+        }
         if (hasChildren) setOpen((current) => !current);
-        if (!hasChildren) onNavigate?.();
       }}
+      aria-current={isActive(pathname, item) ? "page" : undefined}
+      aria-expanded={hasChildren && !collapsed ? open : undefined}
+      aria-label={collapsed ? tooltipTitle : undefined}
       selected={active}
       sx={{
         minHeight: 42,
@@ -75,6 +98,15 @@ function SidebarItem({
         pl: collapsed ? 1.25 : 1.5 + depth * 2,
         justifyContent: collapsed ? "center" : "flex-start",
         mb: 0.5,
+        transition: adminV2Transition(["background-color", "color", "transform"], adminV2Motion.duration.micro),
+        "&:hover": {
+          transform: reducedMotion ? "none" : "translate3d(2px, 0, 0)",
+        },
+        "&.Mui-focusVisible": {
+          outline: "2px solid",
+          outlineColor: "primary.main",
+          outlineOffset: 2,
+        },
         "&.Mui-selected": {
           color: "primary.main",
           bgcolor: (theme) => (theme.palette.mode === "dark" ? "primary.main" : "primary.main"),
@@ -95,7 +127,15 @@ function SidebarItem({
             slotProps={{ primary: { variant: "body2", sx: { fontWeight: active ? 700 : 600 } } }}
           />
           {item.badge ? <Chip size="small" label={item.badge} color="primary" /> : null}
-          {hasChildren ? (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />) : null}
+          {hasChildren ? (
+            <ChevronRight
+              size={16}
+              style={{
+                transform: open ? "rotate(90deg)" : "rotate(0deg)",
+                transition: reducedMotion ? "none" : "transform 160ms cubic-bezier(0.2, 0, 0, 1)",
+              }}
+            />
+          ) : null}
         </>
       ) : null}
     </ListItemButton>
@@ -103,9 +143,15 @@ function SidebarItem({
 
   return (
     <>
-      {button}
+      {collapsed ? (
+        <Tooltip title={tooltipTitle} placement="right" enterDelay={250}>
+          <span>{button}</span>
+        </Tooltip>
+      ) : (
+        button
+      )}
       {hasChildren && !collapsed ? (
-        <Collapse in={open} timeout="auto" unmountOnExit>
+        <Collapse in={open} timeout={reducedMotion ? 0 : 180} unmountOnExit>
           <List disablePadding>
             {visibleChildren.map((child) => (
               <SidebarItem
@@ -150,7 +196,11 @@ export function AdminV2Sidebar({ session, collapsed, onNavigate }: AdminV2Sideba
               >
                 {section.heading}
               </Typography>
-            ) : null}
+            ) : (
+              <Tooltip title={section.heading} placement="right">
+                <Divider sx={{ mx: 1, my: 1.25 }} />
+              </Tooltip>
+            )}
             <List disablePadding>
               {section.items.map((item) => (
                 <SidebarItem
