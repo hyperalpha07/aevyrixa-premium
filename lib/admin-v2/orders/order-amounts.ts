@@ -1,5 +1,9 @@
 import { SITE_CURRENCY, formatCurrency } from "@/app/lib/currency";
 import type { OrderRecord } from "@/app/lib/order-types";
+import {
+  calculateAdminV2PayableTotal,
+  hasAdminV2TotalMismatch,
+} from "@/lib/admin-v2/orders/order-financials";
 
 export type AdminV2OrderAmounts = {
   subtotal: number | null;
@@ -23,17 +27,13 @@ function cleanAmount(value: unknown) {
   return amount === null ? null : Math.max(0, amount);
 }
 
-function isClose(a: number, b: number) {
-  return Math.abs(a - b) <= 1;
-}
-
 export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts {
   const subtotal = cleanAmount(order.totals?.subtotal);
   const deliveryCharge = cleanAmount(order.deliveryCharge);
   const storedTotal = cleanAmount(order.totalAmount);
   const discount = null;
   const checkoutTotal =
-    subtotal === null ? storedTotal : subtotal + (deliveryCharge ?? 0);
+    calculateAdminV2PayableTotal({ subtotal, discount, deliveryCharge }) ?? storedTotal;
 
   let total = storedTotal;
   let discrepancy: string | null = null;
@@ -42,7 +42,7 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
     subtotal !== null &&
     storedTotal !== null &&
     checkoutTotal !== null &&
-    !isClose(checkoutTotal, storedTotal)
+    hasAdminV2TotalMismatch(storedTotal, checkoutTotal)
   ) {
     discrepancy =
       "Stored order total differs from checkout payable calculation. Admin V2 displays checkout payable while preserving the stored total for audit.";
@@ -51,10 +51,9 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
     total = checkoutTotal;
   }
 
-  const paidAmount = order.paymentStatus === "verified" ? total : null;
-  const dueAmount =
-    total !== null && paidAmount !== null ? Math.max(0, total - paidAmount) : null;
-  const refundAmount = order.paymentStatus === "refunded" ? total : null;
+  const paidAmount = null;
+  const dueAmount = null;
+  const refundAmount = null;
 
   return {
     subtotal,

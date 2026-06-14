@@ -53,9 +53,13 @@ Discovered fields:
 - Discount/coupon discount: no dedicated persisted field was found in the current order schema, checkout payload, order types, or admin mapper.
 - Paid amount, due amount, refund amount: no dedicated persisted amount fields were found.
 
-Checkout displays total payable as product subtotal plus selected delivery charge. Order creation currently persists `totalAmount` from `input.totals.subtotal`, while `deliveryCharge` is stored separately. Existing rows can therefore show `subtotal = 12`, `delivery_charge = 80`, and `total = 12`.
+Checkout displays total payable as product subtotal minus discount plus selected delivery charge. No dedicated discount field exists in the current payload/schema, so the current persisted calculation is `subtotal + deliveryCharge`.
 
-Admin V2 no longer treats that difference as a discount. It displays `Discount` as `Not provided` unless a real field exists, and uses checkout payable (`subtotal + deliveryCharge`) as the visible total when it conflicts with the stored total. The stored total remains on the order record and is noted in the UI when a mismatch exists. In development, Admin V2 logs a non-sensitive consistency warning.
+The write-path bug was in `app/lib/order-store.ts`: `buildOrder()` previously set `totalAmount` to `input.totals.subtotal`, dropping `input.deliveryCharge` before `orderToSupabaseInsertPayload()` wrote `orders.total`. New orders now calculate `totalAmount` through `calculateAdminV2PayableTotal({ subtotal, discount: null, deliveryCharge })`.
+
+Canonical total going forward: `orders.total` / `OrderRecord.totalAmount` stores the checkout payable total. `orders.subtotal` / `OrderRecord.totals.subtotal` remains the item subtotal, and `orders.delivery_charge` / `OrderRecord.deliveryCharge` remains the delivery fee.
+
+Historical rows are not overwritten or backfilled. Admin V2 displays `Discount` as `Not provided` unless a real field exists, and uses checkout payable (`subtotal + deliveryCharge`) as the visible total only when it conflicts with the stored total. The concise mismatch banner appears only for real stored-total/payable-total differences and disappears automatically for consistent rows. In development, Admin V2 logs a non-sensitive consistency warning.
 
 ## Real Status Values
 
@@ -118,6 +122,14 @@ Payment fields:
 - payment reference
 - payment note
 
+Payment display rules:
+
+- Payment status uses real `payment_status` when present.
+- If `payment_status` is missing and `payment_method` is definitely `Cash on Delivery`, Admin V2 displays `Pay on Delivery`.
+- Otherwise missing payment status displays `Not provided`.
+- Verification uses only `payment_verification_status`.
+- Paid, due, and refund amounts display `Not provided` because there are no dedicated stored amount fields.
+
 Delivery fields:
 
 - courier name
@@ -142,6 +154,10 @@ Item fields:
 - variant
 - quantity
 - line total when present in JSON; otherwise Admin V2 calculates `price * quantity` for display
+
+Variant display is normalized in the Admin V2 presentation layer only. If `items[].variant` is a combined legacy value such as `S / Black / Moderate` and separate selected size/color fields are present, Admin V2 removes only matching size and color tokens and displays `Moderate` as the variant. The raw stored JSON is unchanged. If size/color are unavailable, the original variant string is preserved. If no variant remains, Admin V2 displays an em dash.
+
+Delivery note display is also presentation-only. Delivery zone is shown in Delivery Details from `delivery_zone`. Admin V2 does not synthesize delivery notes from zone or area, and it suppresses legacy note tokens like `Zone: Inside Dhaka`. A real delivery note displays in Order Notes; otherwise it displays `Not provided`.
 
 ## Product Image Mapping
 
@@ -201,6 +217,9 @@ Permissions are enforced in the existing API:
 - Cancel order with required reason where state allows. Invalid transitions are blocked in the UI and by `PATCH /api/orders/[orderRef]`.
 - Save internal note to the existing `adminInternalNote` field.
 - Print browser order summary from real order data. It does not show fake tax/VAT or fake invoice numbers.
+- Back from detail returns to `/admin-v2/orders` and preserves current filter query parameters when the detail page was opened from a filtered list.
+- Refresh calls `router.refresh()` with loading feedback and keeps the current route/query.
+- Detail/list action clicks stop unrelated table navigation.
 - CSV export of the filtered result set, with confirmation before including customer PII.
 
 ## Actions Staged For Later Phases

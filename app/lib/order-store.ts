@@ -5,6 +5,7 @@ import {
   paymentVerificationStatuses,
   proofReceivedStatuses,
 } from "@/app/lib/order-types";
+import { calculateAdminV2PayableTotal } from "@/lib/admin-v2/orders/order-financials";
 import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import { warnAdminV2OrderAmountDiscrepancy } from "@/lib/admin-v2/orders/order-amounts";
 import type {
@@ -97,6 +98,12 @@ function createOrderReference() {
 function buildOrder(input: OrderSubmissionInput): OrderRecord {
   const orderReference = input.orderReference?.trim() || createOrderReference();
   const createdAt = new Date().toISOString();
+  const payableTotal =
+    calculateAdminV2PayableTotal({
+      subtotal: input.totals.subtotal,
+      discount: null,
+      deliveryCharge: input.deliveryCharge,
+    }) ?? input.totals.subtotal;
 
   return {
     orderId: orderReference,
@@ -106,7 +113,7 @@ function buildOrder(input: OrderSubmissionInput): OrderRecord {
     paymentDetails: input.paymentDetails,
     items: input.items,
     totals: input.totals,
-    totalAmount: input.totals.subtotal,
+    totalAmount: payableTotal,
     status: "Pending",
     createdAt,
     deliveryCharge: input.deliveryCharge,

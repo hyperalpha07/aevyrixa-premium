@@ -8,6 +8,8 @@ import type { ReactNode } from "react";
 import type { OrderRecord } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { normalizeAdminV2OrderItems, type AdminV2OrderItem } from "@/lib/admin-v2/orders/order-items";
+import { getAdminV2DeliveryNote } from "@/lib/admin-v2/orders/order-notes";
+import { getAdminV2PaymentLabels } from "@/lib/admin-v2/orders/order-payment";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { AdminV2OrderStatusChip } from "@/components/admin-v2/views/orders/AdminV2OrderStatusChip";
 import { formatDateTime, statusLabel } from "@/components/admin-v2/views/orders/utils";
@@ -65,22 +67,23 @@ export function AdminV2OrderCustomerCard({ order }: { order: OrderRecord }) {
 
 export function AdminV2OrderPaymentCard({ order }: { order: OrderRecord }) {
   const amounts = getAdminV2OrderAmounts(order);
+  const payment = getAdminV2PaymentLabels(order);
 
   return (
     <V2Card>
       <SectionTitle icon={CreditCard}>Payment Details</SectionTitle>
       <Stack spacing={1.25}>
-        <DetailLine label="Method" value={order.paymentDetails.paymentMethod} />
-        <DetailLine label="Payment status" chip={<AdminV2OrderStatusChip value={order.paymentStatus} />} />
-        <DetailLine label="Verification" value={order.paymentVerificationStatus} />
-        <DetailLine label="Provider / wallet" value={order.paymentDetails.walletProvider} />
-        <DetailLine label="Transaction/reference" value={order.paymentReference || order.paymentDetails.transactionReference} />
+        <DetailLine label="Method" value={payment.method} />
+        <DetailLine label="Payment status" value={payment.status} />
+        <DetailLine label="Verification" value={payment.verification} />
+        <DetailLine label="Provider / wallet" value={payment.provider} />
+        <DetailLine label="Transaction/reference" value={payment.transactionReference} />
         <DetailLine label="Subtotal" value={formatAdminV2Amount(amounts.subtotal)} />
         <DetailLine label="Discount" value={formatAdminV2Amount(amounts.discount)} />
         <DetailLine label="Delivery charge" value={formatAdminV2Amount(amounts.deliveryCharge)} />
         <DetailLine label="Total payable" value={formatAdminV2Amount(amounts.total)} />
-        <DetailLine label="Paid" value={formatAdminV2Amount(amounts.paidAmount)} />
-        <DetailLine label="Due" value={formatAdminV2Amount(amounts.dueAmount)} />
+        <DetailLine label="Paid" value={formatAdminV2Amount(payment.paidAmount)} />
+        <DetailLine label="Due" value={formatAdminV2Amount(payment.dueAmount)} />
         {amounts.discrepancy ? (
           <Typography variant="caption" color="warning.main" sx={{ display: "block", lineHeight: 1.5 }}>
             Stored total: {formatAdminV2Amount(amounts.storedTotal)}. Displayed total follows checkout subtotal plus delivery.
@@ -231,13 +234,15 @@ export function AdminV2OrderTimeline({ order }: { order: OrderRecord }) {
 }
 
 export function AdminV2OrderNotes({ order }: { order: OrderRecord }) {
+  const deliveryNote = getAdminV2DeliveryNote(order);
+
   return (
     <V2Card>
       <SectionTitle icon={Package}>Order Notes</SectionTitle>
       <Stack spacing={1.25}>
         <DetailLine label="Internal note" value={order.adminInternalNote} />
         <DetailLine label="Customer confirmation" value={order.customerConfirmationNote} />
-        <DetailLine label="Delivery note" value={order.deliveryNote || order.customer.deliveryNote} />
+        <DetailLine label="Delivery note" value={deliveryNote} />
         <DetailLine label="Payment note" value={order.paymentNote} />
         <DetailLine label="Cancelled reason" value={order.cancelledReason} />
         <Typography variant="caption" color="text.secondary">

@@ -416,11 +416,6 @@ export default function CheckoutPage() {
       ? form.transactionReference.trim()
       : undefined;
 
-    const zoneNote = form.deliveryZone ? `Zone: ${form.deliveryZone}` : "";
-    const combinedDeliveryNote = [zoneNote, form.deliveryNote.trim()]
-      .filter(Boolean)
-      .join(" | ");
-
     const orderPayload = {
       customer: {
         fullName: form.fullName.trim(),
@@ -429,7 +424,7 @@ export default function CheckoutPage() {
         cityArea: form.cityArea.trim(),
         address: form.address.trim(),
         sizeFitNote: form.sizeFitNote.trim(),
-        deliveryNote: combinedDeliveryNote,
+        deliveryNote: form.deliveryNote.trim(),
       },
       paymentDetails: {
         paymentMethod: form.paymentMethod,

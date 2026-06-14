@@ -6,7 +6,9 @@ Phase 2.1 finalizes the existing Admin V2 Orders list and detail experience with
 
 ## Amount Calculation
 
-The suspicious amount issue was real. Checkout displays payable amount as product subtotal plus selected delivery charge, but the current order creation path stores `totalAmount` as `input.totals.subtotal` and stores delivery separately in `deliveryCharge`.
+The suspicious amount issue was real. Checkout displays payable amount as product subtotal plus selected delivery charge, but the order creation path stored `totalAmount` as `input.totals.subtotal` and stored delivery separately in `deliveryCharge`.
+
+The write-path fix is in `app/lib/order-store.ts`: `buildOrder()` now persists `totalAmount` from the canonical payable calculation, `subtotal - discount + deliveryCharge`. No persisted discount field exists yet, so current new orders use `subtotal + deliveryCharge`. The Supabase `orders.total` field is canonical going forward for payable total.
 
 Admin V2 now uses `lib/admin-v2/orders/order-amounts.ts`:
 
@@ -14,18 +16,28 @@ Admin V2 now uses `lib/admin-v2/orders/order-amounts.ts`:
 - `discount`: `null` because no real discount/coupon field exists.
 - `deliveryCharge`: `order.deliveryCharge` when present.
 - `total`: checkout payable `subtotal + deliveryCharge` when that conflicts with stored `order.totalAmount`.
-- `paidAmount`: inferred only for verified payments.
-- `dueAmount`: inferred only when paid amount is known.
-- `refundAmount`: inferred only for refunded payments.
+- `paidAmount`: `null` because no real stored paid amount field exists.
+- `dueAmount`: `null` because no real stored due amount field exists.
+- `refundAmount`: `null` because no real stored refund amount field exists.
 - `currency`: `SITE_CURRENCY` (`BDT`).
 
-Stored totals are not overwritten. When stored total conflicts with checkout payable, detail UI documents the stored total and development logs emit a non-sensitive consistency warning.
+Stored historical totals are not overwritten. When stored total conflicts with checkout payable, detail UI shows a concise owner/admin warning and development logs emit a non-sensitive consistency warning. Consistent records show no warning.
 
 ## Item Normalization
 
 `lib/admin-v2/orders/order-items.ts` normalizes item display fields: product name, product slug, product ID, image, SKU, variant, size, color, quantity, unit price, and line total.
 
 Variant, size, and color are rendered as separate columns/fields. Missing values display an em dash and no longer fall back to each other.
+
+Legacy combined variants such as `S / Black / Moderate` are normalized only for Admin V2 display. Matching selected size and color tokens are removed, preserving legitimate remaining variant names. If selected size/color are unavailable, the stored variant string is displayed unchanged.
+
+## Delivery Zone And Notes
+
+Delivery zone is displayed only in Delivery Details from `deliveryZone`. Admin V2 does not generate a delivery note from zone or area. `Zone: Inside Dhaka` legacy note tokens are suppressed in Order Notes; a real stored delivery-note value is shown, otherwise `Not provided` is shown.
+
+## COD Payment Mapping
+
+COD orders do not imply completed payment. Payment status displays the real stored `paymentStatus` when available. If it is missing and the method is definitely `Cash on Delivery`, Admin V2 displays `Pay on Delivery`. Verification displays only `paymentVerificationStatus`. Provider, reference, paid, due, and refund values are not fabricated.
 
 ## Images
 
@@ -68,6 +80,14 @@ Printing hides the Admin V2 shell and prints the summary on a white layout.
 - Mobile item display switches to labeled cards.
 - List pagination clamps after filter changes so empty pages are avoided.
 - Action menus stop event propagation and do not trigger row navigation.
+
+## Action QA Result
+
+- Back: routes to `/admin-v2/orders` and preserves filter query parameters when available.
+- Add Note: opens the Admin V2 dialog, saves only the existing `adminInternalNote` field, and states that note history/authors/timestamps are not connected.
+- Print Invoice: uses normalized totals and item variant fields, prints a clean order summary, and excludes fake tax/VAT/invoice numbers.
+- Refresh: calls `router.refresh()` with loading feedback and preserves the current route/query.
+- Update Status: calls `PATCH /api/orders/[orderRef]`, shows only valid next transitions, requires cancellation reason, rejects invalid transitions in UI and API, refreshes after API success, and preserves permission checks.
 
 ## Remaining Backend Gaps
 

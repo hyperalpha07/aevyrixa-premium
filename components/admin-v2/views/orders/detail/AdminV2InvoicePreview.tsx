@@ -4,11 +4,13 @@ import { Box, Divider, GlobalStyles, Stack, Table, TableBody, TableCell, TableHe
 import type { OrderRecord } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { normalizeAdminV2OrderItems } from "@/lib/admin-v2/orders/order-items";
-import { formatDateTime, statusLabel } from "@/components/admin-v2/views/orders/utils";
+import { getAdminV2PaymentLabels } from "@/lib/admin-v2/orders/order-payment";
+import { formatDateTime } from "@/components/admin-v2/views/orders/utils";
 
 export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
   const amounts = getAdminV2OrderAmounts(order);
   const items = normalizeAdminV2OrderItems(order.items);
+  const payment = getAdminV2PaymentLabels(order);
 
   return (
     <>
@@ -66,9 +68,9 @@ export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle2">Payment</Typography>
-          <Typography variant="body2">{order.paymentDetails.paymentMethod}</Typography>
-          <Typography variant="body2">Status: {statusLabel(order.paymentStatus)}</Typography>
-          <Typography variant="body2">Reference: {order.paymentReference || order.paymentDetails.transactionReference || "Not provided"}</Typography>
+          <Typography variant="body2">{payment.method}</Typography>
+          <Typography variant="body2">Status: {payment.status}</Typography>
+          <Typography variant="body2">Reference: {payment.transactionReference}</Typography>
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle2">Delivery</Typography>
@@ -92,7 +94,7 @@ export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
           {items.map((item) => (
             <TableRow key={item.key}>
               <TableCell>{item.productName}</TableCell>
-              <TableCell>{[item.variant, item.size, item.color].filter(Boolean).join(" / ") || "Not provided"}</TableCell>
+              <TableCell>{item.variant || "Not provided"}</TableCell>
               <TableCell align="right">{item.quantity}</TableCell>
               <TableCell align="right">{formatAdminV2Amount(item.unitPrice)}</TableCell>
               <TableCell align="right">{formatAdminV2Amount(item.lineTotal)}</TableCell>

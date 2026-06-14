@@ -16,7 +16,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MoreVertical, NotebookPen, Printer, RefreshCcw, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import type { OrderRecord } from "@/app/lib/order-types";
@@ -61,6 +61,7 @@ export function AdminV2OrdersTable({
   onCancelClick,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [menuOrder, setMenuOrder] = useState<OrderRecord | null>(null);
 
@@ -73,6 +74,11 @@ export function AdminV2OrdersTable({
   const closeMenu = () => {
     setAnchor(null);
     setMenuOrder(null);
+  };
+
+  const detailHref = (order: OrderRecord) => {
+    const query = searchParams.toString();
+    return `/admin-v2/orders/${encodeURIComponent(order.orderReference)}${query ? `?${query}` : ""}`;
   };
 
   if (orders.length === 0) {
@@ -98,9 +104,9 @@ export function AdminV2OrdersTable({
                 key={order.orderReference}
                 hover
                 tabIndex={0}
-                onClick={() => router.push(`/admin-v2/orders/${encodeURIComponent(order.orderReference)}`)}
+                onClick={() => router.push(detailHref(order))}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") router.push(`/admin-v2/orders/${encodeURIComponent(order.orderReference)}`);
+                  if (event.key === "Enter") router.push(detailHref(order));
                 }}
                 sx={{ cursor: "pointer" }}
               >
@@ -120,7 +126,7 @@ export function AdminV2OrdersTable({
                     }}
                     onClick={(event) => {
                       event.stopPropagation();
-                      router.push(`/admin-v2/orders/${encodeURIComponent(order.orderReference)}`);
+                      router.push(detailHref(order));
                     }}
                   >
                     {order.orderReference}
@@ -166,7 +172,7 @@ export function AdminV2OrdersTable({
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={closeMenu}>
         <MenuItem
           onClick={() => {
-            if (menuOrder) router.push(`/admin-v2/orders/${encodeURIComponent(menuOrder.orderReference)}`);
+            if (menuOrder) router.push(detailHref(menuOrder));
             closeMenu();
           }}
         >

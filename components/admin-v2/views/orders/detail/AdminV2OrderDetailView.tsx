@@ -2,7 +2,7 @@
 
 import { Alert, Box, Chip, DialogActions, Snackbar, Stack, TextField, Typography } from "@mui/material";
 import { ArrowLeft, NotebookPen, Printer, RefreshCcw, ShieldAlert, SquarePen } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
@@ -46,6 +46,7 @@ async function patchOrder(orderRef: string, payload: Record<string, unknown>) {
 
 export function AdminV2OrderDetailView({ order, permissions }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<Toast | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -58,6 +59,9 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
 
   const refresh = () => startTransition(() => router.refresh());
   const amounts = getAdminV2OrderAmounts(order);
+  const backHref = searchParams.toString()
+    ? `/admin-v2/orders?${searchParams.toString()}`
+    : "/admin-v2/orders";
 
   const saveStatus = async () => {
     if (!nextStatus) return;
@@ -116,7 +120,7 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
         ]}
         actions={
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-            <V2Button href="/admin-v2/orders" variant="text" startIcon={<ArrowLeft size={16} />}>Back</V2Button>
+            <V2Button href={backHref} variant="text" startIcon={<ArrowLeft size={16} />}>Back</V2Button>
             <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} onClick={() => setNotesOpen(true)}>Add Note</V2Button>
             <V2Button variant="outlined" startIcon={<Printer size={16} />} onClick={() => setInvoiceOpen(true)}>Print Invoice</V2Button>
             <V2Button variant="outlined" startIcon={<RefreshCcw size={16} />} loading={isPending} onClick={refresh}>Refresh</V2Button>

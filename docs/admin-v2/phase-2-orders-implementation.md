@@ -63,6 +63,8 @@ URL query parameters are synchronized for safe filter state:
 
 Phase 2.1 added server-side transition validation in `PATCH /api/orders/[orderRef]`, so invalid status transitions are rejected even if a caller bypasses the Admin V2 UI.
 
+The order detail Back action returns to `/admin-v2/orders` and preserves the list query parameters when available. Refresh reloads route data with short loading feedback and does not reset navigation.
+
 ## Unsupported Backend Features
 
 - Persistent note history.
@@ -87,7 +89,9 @@ The invoice preview is browser-printable and uses only real order fields:
 - delivery fee
 - total payable using checkout logic when stored total conflicts with subtotal plus delivery
 - payment method
-- payment status
+- payment status from real `payment_status`, or `Pay on Delivery` only for COD records without a stored payment status
+
+The print layout uses normalized item variant/size/color data and excludes the Admin V2 shell during print. It does not show fake VAT, tax, or invoice numbers.
 
 It is labeled as an order summary and does not imply tax data or a generated invoice number.
 
@@ -96,6 +100,7 @@ It is labeled as an order summary and does not imply tax data or a generated inv
 - Local pagination is limited to the backend's current 100-row Supabase list query.
 - Status history uses current order fields and clearly labels that detailed event history is not stored.
 - Notes persistence is limited to `adminInternalNote`.
+- Add Note is honest about this limitation: it saves only the existing single internal note field and does not simulate note history.
 - Customer deep links are not added from the order detail because Admin V2 customer detail behavior is still scaffolded.
 
 ## Recommended Next Improvements
