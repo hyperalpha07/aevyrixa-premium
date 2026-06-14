@@ -9,6 +9,7 @@ import { createOrder, listOrders } from "@/app/lib/order-store";
 import { getStoreSettings } from "@/app/lib/settings-store";
 import { getProductBySlug } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
+import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import {
   paymentMethods,
   paymentTypes,
@@ -110,7 +111,7 @@ function validateOrderPayload(payload: unknown): {
       slug: text(item.slug),
       name: text(item.name),
       price: numberValue(item.price),
-      image: text(item.image),
+      image: normalizeAdminV2ImageSrc(text(item.image)),
       visualTheme: optionalText(item.visualTheme) as OrderCartItem["visualTheme"],
       visualVariant: optionalText(item.visualVariant),
       stockStatus: optionalText(item.stockStatus) as OrderCartItem["stockStatus"],

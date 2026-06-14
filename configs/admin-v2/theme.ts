@@ -5,7 +5,10 @@ export type AdminV2ContentWidth = "compact" | "wide";
 export type AdminV2NavigationStyle = "default" | "bordered";
 
 export const adminV2ThemeStorageKey = "aevyrixa.adminV2.theme";
+export const adminV2ModeStorageKey = "aevyrixa.adminV2.theme.mode";
+export const adminV2ColorSchemeStorageKey = "aevyrixa.adminV2.theme.colorScheme";
 export const adminV2ColorSchemeAttribute = "data-admin-v2-color-scheme";
+export const adminV2ColorSchemeSelector = `[${adminV2ColorSchemeAttribute}="%s"]`;
 export const adminV2DefaultColorScheme = "light";
 
 export const adminV2Brand = {

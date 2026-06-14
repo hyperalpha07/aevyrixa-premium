@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/app/components/cart/cart-context";
 import CartDrawer from "@/app/components/cart/cart-drawer";
 import AnalyticsScripts from "@/app/components/analytics-scripts";
 import WhatsAppWidget from "@/app/components/whatsapp-widget";
+import {
+  adminV2ColorSchemeSelector,
+  adminV2ColorSchemeStorageKey,
+  adminV2DefaultThemeSettings,
+  adminV2ModeStorageKey,
+} from "@/configs/admin-v2/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,6 +71,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <InitColorSchemeScript
+          attribute={adminV2ColorSchemeSelector}
+          defaultMode={adminV2DefaultThemeSettings.mode}
+          modeStorageKey={adminV2ModeStorageKey}
+          colorSchemeStorageKey={adminV2ColorSchemeStorageKey}
+        />
         <CartProvider>
           {children}
           <CartDrawer />

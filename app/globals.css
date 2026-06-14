@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
-html[data-admin-v2-color-scheme="light"] body {
+html[data-admin-v2-color-scheme="light"] body:has([data-admin-v2-root]) {
   background: #f7f4fb;
   color-scheme: light;
 }
 
-html[data-admin-v2-color-scheme="dark"] body {
+html[data-admin-v2-color-scheme="dark"] body:has([data-admin-v2-root]) {
   background: #0b1020;
   color-scheme: dark;
 }

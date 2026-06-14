@@ -4,6 +4,7 @@ import {
   createAdminSessionToken,
   getAdminCredentials,
 } from "@/app/lib/admin-auth";
+import { safeAdminNextPath } from "@/app/lib/admin-login";
 import { normalizePermissions } from "@/app/lib/admin-permissions";
 import { authenticateStaff } from "@/app/lib/admin-staff";
 import { NextResponse } from "next/server";
@@ -22,6 +23,56 @@ function passwordText(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
+async function parseLoginRequest(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+  const requestUrl = new URL(request.url);
+
+  if (contentType.includes("application/json")) {
+    let payload: unknown;
+
+    try {
+      payload = await request.json();
+    } catch {
+      return { errors: ["Invalid JSON body."] };
+    }
+
+    if (!isRecord(payload)) return { errors: ["Invalid login payload."] };
+
+    return {
+      username: text(payload.username),
+      password: passwordText(payload.password),
+      next: safeAdminNextPath(payload.next ?? requestUrl.searchParams.get("next")),
+    };
+  }
+
+  if (
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data")
+  ) {
+    let formData: FormData;
+
+    try {
+      formData = await request.formData();
+    } catch {
+      return { errors: ["Invalid form body."] };
+    }
+
+    return {
+      username: text(formData.get("username")),
+      password: passwordText(formData.get("password")),
+      next: safeAdminNextPath(formData.get("next") ?? requestUrl.searchParams.get("next")),
+    };
+  }
+
+  return { errors: ["Unsupported login request content type."] };
+}
+
+function loginSuccessResponse(body: Record<string, unknown>, token: string) {
+  const response = NextResponse.json(body);
+  response.cookies.set(ADMIN_SESSION_COOKIE, token, adminSessionCookieOptions());
+  return response;
+}
+
 export async function POST(request: Request) {
   const credentials = getAdminCredentials();
   if (!credentials) {
@@ -35,16 +86,16 @@ export async function POST(request: Request) {
     );
   }
 
-  let payload: unknown;
+  const parsed = await parseLoginRequest(request);
+  if ("errors" in parsed) return Response.json({ errors: parsed.errors }, { status: 400 });
 
-  try {
-    payload = await request.json();
-  } catch {
-    return Response.json({ errors: ["Invalid JSON body."] }, { status: 400 });
+  const { username, password, next } = parsed;
+  if (!username || !password) {
+    return Response.json(
+      { errors: ["Username and password are required."] },
+      { status: 400 }
+    );
   }
-
-  const username = isRecord(payload) ? text(payload.username) : "";
-  const password = isRecord(payload) ? passwordText(payload.password) : "";
 
   if (username !== credentials.username || password !== credentials.password) {
     const staff = await authenticateStaff(username, password).catch((error) => {
@@ -72,13 +123,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = NextResponse.json({
+    return loginSuccessResponse({
       ok: true,
       userType: "staff",
       role: staff.role,
-    });
-    response.cookies.set(ADMIN_SESSION_COOKIE, token, adminSessionCookieOptions());
-    return response;
+      next,
+    }, token);
   }
 
   const token = createAdminSessionToken({
@@ -95,10 +145,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const response = NextResponse.json({
+  return loginSuccessResponse({
     ok: true,
     isDevelopmentFallback: credentials.isDevelopmentFallback,
-  });
-  response.cookies.set(ADMIN_SESSION_COOKIE, token, adminSessionCookieOptions());
-  return response;
+    next,
+  }, token);
 }

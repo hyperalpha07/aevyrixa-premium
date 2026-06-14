@@ -4,16 +4,18 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import {
   CssBaseline,
   ScopedCssBaseline,
-  ThemeProvider,
-  createTheme,
   useMediaQuery,
 } from "@mui/material";
 import type { PaletteMode } from "@mui/material";
+import { ThemeProvider, createTheme, useColorScheme } from "@mui/material/styles";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import type { ComponentProps, ComponentType, Dispatch, SetStateAction } from "react";
 import {
   adminV2Brand,
-  adminV2ColorSchemeAttribute,
+  adminV2ColorSchemeSelector,
+  adminV2ColorSchemeStorageKey,
   adminV2DefaultThemeSettings,
+  adminV2ModeStorageKey,
   adminV2ThemeStorageKey,
   type AdminV2ContentWidth,
   type AdminV2NavigationStyle,
@@ -29,6 +31,7 @@ type AdminV2ThemeSettings = {
 };
 
 type AdminV2StoredThemeSettings = Omit<AdminV2ThemeSettings, "resolvedMode">;
+type AdminV2StoredThemePreferences = Omit<AdminV2StoredThemeSettings, "mode">;
 
 type AdminV2ThemeContextValue = AdminV2ThemeSettings & {
   setMode: (mode: AdminV2ThemeMode) => void;
@@ -38,6 +41,9 @@ type AdminV2ThemeContextValue = AdminV2ThemeSettings & {
 };
 
 const AdminV2ThemeContext = createContext<AdminV2ThemeContextValue | null>(null);
+const AdminV2MuiThemeProvider = ThemeProvider as ComponentType<
+  ComponentProps<typeof ThemeProvider> & { forceThemeRerender?: boolean }
+>;
 
 export function useAdminV2Theme() {
   const context = useContext(AdminV2ThemeContext);
@@ -45,15 +51,16 @@ export function useAdminV2Theme() {
   return context;
 }
 
-function readStoredSettings(): AdminV2StoredThemeSettings {
+function isAdminV2ThemeMode(value: unknown): value is AdminV2ThemeMode {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+function readStoredPreferences(): AdminV2StoredThemePreferences {
   try {
     const raw = window.localStorage.getItem(adminV2ThemeStorageKey);
     if (!raw) return adminV2DefaultThemeSettings;
     const parsed = JSON.parse(raw) as Partial<AdminV2StoredThemeSettings>;
     return {
-      mode: parsed.mode === "light" || parsed.mode === "dark" || parsed.mode === "system"
-        ? parsed.mode
-        : adminV2DefaultThemeSettings.mode,
       borderRadius: typeof parsed.borderRadius === "number" ? parsed.borderRadius : adminV2DefaultThemeSettings.borderRadius,
       contentWidth: parsed.contentWidth === "compact" || parsed.contentWidth === "wide"
         ? parsed.contentWidth
@@ -67,14 +74,89 @@ function readStoredSettings(): AdminV2StoredThemeSettings {
   }
 }
 
+function readLegacyStoredMode(): AdminV2ThemeMode | null {
+  try {
+    const mode = window.localStorage.getItem(adminV2ModeStorageKey);
+    if (isAdminV2ThemeMode(mode)) return null;
+
+    const raw = window.localStorage.getItem(adminV2ThemeStorageKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<AdminV2StoredThemeSettings>;
+    return isAdminV2ThemeMode(parsed.mode) ? parsed.mode : null;
+  } catch {
+    return null;
+  }
+}
+
+type AdminV2ThemeControllerProps = {
+  children: React.ReactNode;
+  hasLoadedStoredSettings: boolean;
+  settings: AdminV2StoredThemePreferences;
+  setSettings: Dispatch<SetStateAction<AdminV2StoredThemePreferences>>;
+};
+
+function AdminV2ThemeController({
+  children,
+  hasLoadedStoredSettings,
+  settings,
+  setSettings,
+}: AdminV2ThemeControllerProps) {
+  const { mode: muiMode, setMode: setMuiMode, systemMode } = useColorScheme();
+
+  useEffect(() => {
+    if (!hasLoadedStoredSettings) return;
+    const legacyMode = readLegacyStoredMode();
+    if (legacyMode) setMuiMode(legacyMode);
+  }, [hasLoadedStoredSettings, setMuiMode]);
+
+  const mode = (muiMode ?? adminV2DefaultThemeSettings.mode) as AdminV2ThemeMode;
+  const resolvedMode: PaletteMode = mode === "system" ? systemMode ?? "light" : mode;
+
+  const value = useMemo<AdminV2ThemeContextValue>(
+    () => ({
+      ...settings,
+      mode,
+      resolvedMode,
+      setMode: (nextMode) => setMuiMode(nextMode),
+      setBorderRadius: (borderRadius) => setSettings((current) => ({ ...current, borderRadius })),
+      setContentWidth: (contentWidth) => setSettings((current) => ({ ...current, contentWidth })),
+      setNavigationStyle: (navigationStyle) => setSettings((current) => ({ ...current, navigationStyle })),
+    }),
+    [mode, resolvedMode, setMuiMode, settings]
+  );
+
+  useEffect(() => {
+    window.localStorage.setItem(`${adminV2ColorSchemeStorageKey}-light`, "light");
+    window.localStorage.setItem(`${adminV2ColorSchemeStorageKey}-dark`, "dark");
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedStoredSettings || isAdminV2ThemeMode(muiMode)) return;
+    setMuiMode(adminV2DefaultThemeSettings.mode);
+  }, [hasLoadedStoredSettings, muiMode, setMuiMode]);
+
+  return (
+    <AdminV2ThemeContext.Provider value={value}>
+      <ScopedCssBaseline
+        enableColorScheme
+        className="admin-v2-theme-transition"
+        sx={{ minHeight: "100vh", bgcolor: "background.default" }}
+      >
+        <CssBaseline />
+        {children}
+      </ScopedCssBaseline>
+    </AdminV2ThemeContext.Provider>
+  );
+}
+
 export function AdminV2ThemeProvider({ children }: { children: React.ReactNode }) {
-  const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const [settings, setSettings] = useState<AdminV2StoredThemeSettings>(adminV2DefaultThemeSettings);
+  const [settings, setSettings] = useState<AdminV2StoredThemePreferences>(adminV2DefaultThemeSettings);
   const [hasLoadedStoredSettings, setHasLoadedStoredSettings] = useState(false);
 
   useEffect(() => {
-    setSettings(readStoredSettings());
+    setSettings(readStoredPreferences());
     setHasLoadedStoredSettings(true);
   }, []);
 
@@ -83,28 +165,37 @@ export function AdminV2ThemeProvider({ children }: { children: React.ReactNode }
     window.localStorage.setItem(adminV2ThemeStorageKey, JSON.stringify(settings));
   }, [hasLoadedStoredSettings, settings]);
 
-  const resolvedMode: PaletteMode = settings.mode === "system" ? (prefersDark ? "dark" : "light") : settings.mode;
-
-  useEffect(() => {
-    document.documentElement.setAttribute(adminV2ColorSchemeAttribute, resolvedMode);
-    document.documentElement.style.colorScheme = resolvedMode;
-  }, [resolvedMode]);
-
   const theme = useMemo(
     () =>
       createTheme({
-        palette: {
-          mode: resolvedMode,
-          primary: { main: adminV2Brand.primary },
-          secondary: { main: adminV2Brand.secondary },
-          success: { main: adminV2Brand.success },
-          warning: { main: adminV2Brand.warning },
-          error: { main: adminV2Brand.error },
-          info: { main: adminV2Brand.info },
-          background:
-            resolvedMode === "dark"
-              ? { default: adminV2Brand.darkBackground, paper: adminV2Brand.darkSurface }
-              : { default: adminV2Brand.lightBackground, paper: adminV2Brand.lightSurface },
+        cssVariables: {
+          colorSchemeSelector: adminV2ColorSchemeSelector,
+        },
+        colorSchemes: {
+          light: {
+            palette: {
+              mode: "light",
+              primary: { main: adminV2Brand.primary },
+              secondary: { main: adminV2Brand.secondary },
+              success: { main: adminV2Brand.success },
+              warning: { main: adminV2Brand.warning },
+              error: { main: adminV2Brand.error },
+              info: { main: adminV2Brand.info },
+              background: { default: adminV2Brand.lightBackground, paper: adminV2Brand.lightSurface },
+            },
+          },
+          dark: {
+            palette: {
+              mode: "dark",
+              primary: { main: adminV2Brand.primary },
+              secondary: { main: adminV2Brand.secondary },
+              success: { main: adminV2Brand.success },
+              warning: { main: adminV2Brand.warning },
+              error: { main: adminV2Brand.error },
+              info: { main: adminV2Brand.info },
+              background: { default: adminV2Brand.darkBackground, paper: adminV2Brand.darkSurface },
+            },
+          },
         },
         shape: { borderRadius: settings.borderRadius },
         typography: {
@@ -117,18 +208,18 @@ export function AdminV2ThemeProvider({ children }: { children: React.ReactNode }
         components: {
           MuiCard: {
             styleOverrides: {
-              root: {
-                borderRadius: settings.borderRadius,
+              root: ({ theme }) => ({
+                borderRadius: theme.shape.borderRadius,
                 boxShadow:
-                  resolvedMode === "dark"
+                  theme.palette.mode === "dark"
                     ? "0 18px 50px rgba(0,0,0,0.24)"
                     : "0 10px 30px rgba(28,20,54,0.08)",
-              },
+              }),
             },
           },
           MuiButton: {
             defaultProps: { disableElevation: true },
-            styleOverrides: { root: { borderRadius: Math.max(8, settings.borderRadius - 2) } },
+            styleOverrides: { root: ({ theme }) => ({ borderRadius: Math.max(8, Number(theme.shape.borderRadius) - 2) }) },
           },
           MuiPaper: {
             styleOverrides: { root: { backgroundImage: "none" } },
@@ -138,35 +229,28 @@ export function AdminV2ThemeProvider({ children }: { children: React.ReactNode }
           },
         },
       }),
-    [prefersReducedMotion, resolvedMode, settings.borderRadius]
-  );
-
-  const value = useMemo<AdminV2ThemeContextValue>(
-    () => ({
-      ...settings,
-      resolvedMode,
-      setMode: (mode) => setSettings((current) => ({ ...current, mode })),
-      setBorderRadius: (borderRadius) => setSettings((current) => ({ ...current, borderRadius })),
-      setContentWidth: (contentWidth) => setSettings((current) => ({ ...current, contentWidth })),
-      setNavigationStyle: (navigationStyle) => setSettings((current) => ({ ...current, navigationStyle })),
-    }),
-    [resolvedMode, settings]
+    [prefersReducedMotion, settings.borderRadius]
   );
 
   return (
     <AppRouterCacheProvider>
-      <ThemeProvider theme={theme}>
-        <AdminV2ThemeContext.Provider value={value}>
-          <ScopedCssBaseline
-            enableColorScheme
-            className="admin-v2-theme-transition"
-            sx={{ minHeight: "100vh", bgcolor: "background.default" }}
-          >
-            <CssBaseline />
-            {children}
-          </ScopedCssBaseline>
-        </AdminV2ThemeContext.Provider>
-      </ThemeProvider>
+      <AdminV2MuiThemeProvider
+        theme={theme}
+        defaultMode={adminV2DefaultThemeSettings.mode}
+        modeStorageKey={adminV2ModeStorageKey}
+        colorSchemeStorageKey={adminV2ColorSchemeStorageKey}
+        disableTransitionOnChange
+        forceThemeRerender
+        noSsr
+      >
+        <AdminV2ThemeController
+          hasLoadedStoredSettings={hasLoadedStoredSettings}
+          settings={settings}
+          setSettings={setSettings}
+        >
+          {children}
+        </AdminV2ThemeController>
+      </AdminV2MuiThemeProvider>
     </AppRouterCacheProvider>
   );
 }

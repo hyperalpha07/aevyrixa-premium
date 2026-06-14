@@ -77,7 +77,6 @@ export type OrderCartItem = Pick<
   | "slug"
   | "name"
   | "price"
-  | "image"
   | "visualTheme"
   | "visualVariant"
   | "stockStatus"
@@ -86,7 +85,9 @@ export type OrderCartItem = Pick<
   | "absorbency"
   | "variant"
   | "quantity"
->;
+> & {
+  image?: string | null;
+};
 
 export type OrderTotals = {
   totalItems: number;

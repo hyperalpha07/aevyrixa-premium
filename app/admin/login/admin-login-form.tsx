@@ -19,7 +19,7 @@ function apiErrorMessage(payload: unknown) {
   return "Login failed.";
 }
 
-export default function AdminLoginForm() {
+export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -35,19 +35,25 @@ export default function AdminLoginForm() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, next: nextPath }),
       });
       const payload = (await response.json().catch(() => null)) as unknown;
 
       if (!response.ok) {
-        setError(apiErrorMessage(payload));
+        if (response.status === 401) {
+          setError("Invalid username or password.");
+        } else if (response.status === 404) {
+          setError("Login service is unavailable. Please restart the server or contact support.");
+        } else {
+          setError(apiErrorMessage(payload));
+        }
         return;
       }
 
-      router.replace("/admin");
+      router.replace(isRecord(payload) && typeof payload.next === "string" ? payload.next : nextPath);
       router.refresh();
     } catch {
-      setError("Login failed. Please try again.");
+      setError("Server or network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

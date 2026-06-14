@@ -5,6 +5,7 @@ import {
   paymentVerificationStatuses,
   proofReceivedStatuses,
 } from "@/app/lib/order-types";
+import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import type {
   OrderCartItem,
   OrderRecord,
@@ -161,7 +162,7 @@ function normalizeItems(value: unknown): OrderCartItem[] {
     slug: textValue(item.slug) ?? "",
     name: textValue(item.name) ?? "",
     price: numberValue(item.price) ?? 0,
-    image: textValue(item.image) ?? "",
+    image: normalizeAdminV2ImageSrc(textValue(item.image)) ?? null,
     visualTheme: textValue(item.visualTheme) as OrderCartItem["visualTheme"],
     visualVariant: textValue(item.visualVariant),
     stockStatus: textValue(item.stockStatus) as OrderCartItem["stockStatus"],
