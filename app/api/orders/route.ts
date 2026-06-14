@@ -108,6 +108,7 @@ function validateOrderPayload(payload: unknown): {
     .map((item) => ({
       id: text(item.id),
       productId: optionalText(item.productId),
+      sku: optionalText(item.sku),
       slug: text(item.slug),
       name: text(item.name),
       price: numberValue(item.price),
@@ -120,6 +121,7 @@ function validateOrderPayload(payload: unknown): {
       absorbency: optionalText(item.absorbency),
       variant: optionalText(item.variant),
       quantity: numberValue(item.quantity),
+      lineTotal: optionalNumber(item.lineTotal),
     }))
     .filter((item) => item.id && item.name && item.quantity > 0);
 

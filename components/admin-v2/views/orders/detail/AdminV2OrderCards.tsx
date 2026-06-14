@@ -1,19 +1,47 @@
 "use client";
 
-import { Avatar, Box, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { Avatar, Box, Chip, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import Image from "next/image";
+import { CreditCard, MapPin, Package, PackageCheck, UserRound } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import type { OrderRecord } from "@/app/lib/order-types";
-import { formatCurrency } from "@/app/lib/currency";
-import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
+import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
+import { normalizeAdminV2OrderItems, type AdminV2OrderItem } from "@/lib/admin-v2/orders/order-items";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { AdminV2OrderStatusChip } from "@/components/admin-v2/views/orders/AdminV2OrderStatusChip";
-import { formatDateTime, itemVariant, statusLabel } from "@/components/admin-v2/views/orders/utils";
+import { formatDateTime, statusLabel } from "@/components/admin-v2/views/orders/utils";
 
-function DetailLine({ label, value }: { label: string; value?: string | number | null }) {
+const missing = "Not provided";
+
+function SectionTitle({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
-    <Stack direction="row" spacing={2} sx={{ justifyContent: "space-between", gap: 2 }}>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
-      <Typography variant="body2" sx={{ textAlign: "right", fontWeight: 600 }}>{value || "Not provided"}</Typography>
+    <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
+      <Icon size={18} />
+      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>{children}</Typography>
+    </Stack>
+  );
+}
+
+function DetailLine({ label, value, chip }: { label: string; value?: string | number | null; chip?: ReactNode }) {
+  const displayValue = value === 0 || value ? value : missing;
+  return (
+    <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 0.35, sm: 2 }} sx={{ justifyContent: "space-between", gap: 2 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ minWidth: { sm: 132 }, flexShrink: 0 }}>{label}</Typography>
+      {chip ?? (
+        <Typography
+          variant="body2"
+          sx={{
+            textAlign: { sm: "right" },
+            fontWeight: displayValue === missing ? 500 : 650,
+            color: displayValue === missing ? "text.disabled" : "text.primary",
+            overflowWrap: "anywhere",
+            lineHeight: 1.55,
+          }}
+        >
+          {displayValue}
+        </Typography>
+      )}
     </Stack>
   );
 }
@@ -21,7 +49,7 @@ function DetailLine({ label, value }: { label: string; value?: string | number |
 export function AdminV2OrderCustomerCard({ order }: { order: OrderRecord }) {
   return (
     <V2Card>
-      <Typography variant="h6" sx={{ mb: 2 }}>Customer Information</Typography>
+      <SectionTitle icon={UserRound}>Customer Information</SectionTitle>
       <Stack spacing={1.25}>
         <DetailLine label="Name" value={order.customer.fullName} />
         <DetailLine label="Phone" value={order.customer.phone} />
@@ -36,25 +64,28 @@ export function AdminV2OrderCustomerCard({ order }: { order: OrderRecord }) {
 }
 
 export function AdminV2OrderPaymentCard({ order }: { order: OrderRecord }) {
-  const delivery = order.deliveryCharge ?? 0;
-  const discount = Math.max(0, order.totals.subtotal + delivery - order.totalAmount);
+  const amounts = getAdminV2OrderAmounts(order);
 
   return (
     <V2Card>
-      <Typography variant="h6" sx={{ mb: 2 }}>Payment Details</Typography>
+      <SectionTitle icon={CreditCard}>Payment Details</SectionTitle>
       <Stack spacing={1.25}>
         <DetailLine label="Method" value={order.paymentDetails.paymentMethod} />
-        <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-          <Typography variant="body2" color="text.secondary">Payment status</Typography>
-          <AdminV2OrderStatusChip value={order.paymentStatus} />
-        </Stack>
+        <DetailLine label="Payment status" chip={<AdminV2OrderStatusChip value={order.paymentStatus} />} />
         <DetailLine label="Verification" value={order.paymentVerificationStatus} />
-        <DetailLine label="Wallet provider" value={order.paymentDetails.walletProvider} />
+        <DetailLine label="Provider / wallet" value={order.paymentDetails.walletProvider} />
         <DetailLine label="Transaction/reference" value={order.paymentReference || order.paymentDetails.transactionReference} />
-        <DetailLine label="Subtotal" value={formatCurrency(order.totals.subtotal)} />
-        <DetailLine label="Discount" value={discount ? formatCurrency(discount) : "Not provided"} />
-        <DetailLine label="Delivery charge" value={formatCurrency(delivery)} />
-        <DetailLine label="Total" value={formatCurrency(order.totalAmount)} />
+        <DetailLine label="Subtotal" value={formatAdminV2Amount(amounts.subtotal)} />
+        <DetailLine label="Discount" value={formatAdminV2Amount(amounts.discount)} />
+        <DetailLine label="Delivery charge" value={formatAdminV2Amount(amounts.deliveryCharge)} />
+        <DetailLine label="Total payable" value={formatAdminV2Amount(amounts.total)} />
+        <DetailLine label="Paid" value={formatAdminV2Amount(amounts.paidAmount)} />
+        <DetailLine label="Due" value={formatAdminV2Amount(amounts.dueAmount)} />
+        {amounts.discrepancy ? (
+          <Typography variant="caption" color="warning.main" sx={{ display: "block", lineHeight: 1.5 }}>
+            Stored total: {formatAdminV2Amount(amounts.storedTotal)}. Displayed total follows checkout subtotal plus delivery.
+          </Typography>
+        ) : null}
       </Stack>
     </V2Card>
   );
@@ -63,18 +94,15 @@ export function AdminV2OrderPaymentCard({ order }: { order: OrderRecord }) {
 export function AdminV2OrderDeliveryCard({ order }: { order: OrderRecord }) {
   return (
     <V2Card>
-      <Typography variant="h6" sx={{ mb: 2 }}>Delivery Details</Typography>
+      <SectionTitle icon={MapPin}>Delivery Details</SectionTitle>
       <Stack spacing={1.25}>
-        <DetailLine label="Method" value="Manual fulfillment" />
-        <DetailLine label="Courier" value={order.courierName || "Courier not assigned"} />
+        <DetailLine label="Method" value="Not provided" />
+        <DetailLine label="Courier" value={order.courierName} />
         <DetailLine label="Tracking ID" value={order.trackingId} />
-        <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-          <Typography variant="body2" color="text.secondary">Delivery status</Typography>
-          <AdminV2OrderStatusChip value={order.deliveryStatus} />
-        </Stack>
+        <DetailLine label="Delivery status" chip={<AdminV2OrderStatusChip value={order.deliveryStatus} />} />
         <DetailLine label="Zone" value={order.deliveryZone} />
         <DetailLine label="Area" value={order.deliveryArea} />
-        <DetailLine label="Delivery fee" value={typeof order.deliveryCharge === "number" ? formatCurrency(order.deliveryCharge) : "Not provided"} />
+        <DetailLine label="Fee" value={formatAdminV2Amount(getAdminV2OrderAmounts(order).deliveryCharge)} />
         <DetailLine label="Recipient phone" value={order.customer.phone} />
         <DetailLine label="Address" value={order.customer.address} />
       </Stack>
@@ -82,54 +110,92 @@ export function AdminV2OrderDeliveryCard({ order }: { order: OrderRecord }) {
   );
 }
 
+function ProductVisual({ item }: { item: AdminV2OrderItem }) {
+  if (item.image) {
+    return (
+      <Box sx={{ width: 48, height: 48, position: "relative", borderRadius: 1.5, overflow: "hidden", bgcolor: "action.hover", flexShrink: 0 }}>
+        <Image src={item.image} alt={`${item.productName} product image`} fill sizes="48px" style={{ objectFit: "cover" }} />
+      </Box>
+    );
+  }
+
+  return (
+    <Avatar variant="rounded" sx={{ width: 48, height: 48, bgcolor: "action.hover", color: "text.secondary", border: "1px solid", borderColor: "divider" }}>
+      <Package size={22} />
+    </Avatar>
+  );
+}
+
+function dash(value: string | number | null | undefined) {
+  return value === 0 || value ? value : "\u2014";
+}
+
 export function AdminV2OrderItemsTable({ order }: { order: OrderRecord }) {
+  const items = normalizeAdminV2OrderItems(order.items);
+
   return (
     <V2Card>
-      <Typography variant="h6" sx={{ mb: 2 }}>Ordered Items</Typography>
-      <Box sx={{ overflowX: "auto" }}>
+      <SectionTitle icon={PackageCheck}>Ordered Items</SectionTitle>
+      <Box sx={{ overflowX: "auto", display: { xs: "none", sm: "block" } }}>
         <Table size="small" aria-label="Ordered items">
           <TableHead>
             <TableRow>
               <TableCell>Product</TableCell>
               <TableCell>Variant</TableCell>
-              <TableCell>SKU</TableCell>
+              <TableCell>Size</TableCell>
+              <TableCell>Color</TableCell>
+              <TableCell sx={{ display: { sm: "none", md: "table-cell" } }}>SKU</TableCell>
               <TableCell align="right">Qty</TableCell>
               <TableCell align="right">Unit Price</TableCell>
               <TableCell align="right">Line Total</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {order.items.map((item) => {
-              const imageSrc = normalizeAdminV2ImageSrc(item.image);
-
-              return (
-                <TableRow key={`${item.id}-${item.name}-${itemVariant(item)}`}>
+            {items.map((item) => (
+                <TableRow key={item.key} hover>
                   <TableCell>
                     <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", minWidth: 220 }}>
-                      {imageSrc ? (
-                        <Box sx={{ width: 44, height: 44, position: "relative", borderRadius: 1.5, overflow: "hidden", bgcolor: "action.hover", flexShrink: 0 }}>
-                          <Image src={imageSrc} alt={item.name || "Product image"} fill sizes="44px" style={{ objectFit: "cover" }} />
-                        </Box>
-                      ) : (
-                        <Avatar variant="rounded" sx={{ width: 44, height: 44, bgcolor: "action.hover", color: "text.secondary", fontWeight: 700 }}>{(item.name || "P").charAt(0).toUpperCase()}</Avatar>
-                      )}
+                      <ProductVisual item={item} />
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{item.name || "Product"}</Typography>
-                        <Typography variant="caption" color="text.secondary">{item.slug || item.productId || "No product reference"}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{item.productName}</Typography>
+                        <Typography variant="caption" color="text.secondary">{item.productSlug || item.productId || "No product reference"}</Typography>
                       </Box>
                     </Stack>
                   </TableCell>
-                  <TableCell>{itemVariant(item) || "Not provided"}</TableCell>
-                  <TableCell>{item.productId || item.id || "Not provided"}</TableCell>
+                  <TableCell>{dash(item.variant)}</TableCell>
+                  <TableCell>{dash(item.size)}</TableCell>
+                  <TableCell>{dash(item.color)}</TableCell>
+                  <TableCell sx={{ display: { sm: "none", md: "table-cell" } }}>{dash(item.sku)}</TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
-                  <TableCell align="right">{formatCurrency(item.price)}</TableCell>
-                  <TableCell align="right">{formatCurrency(item.price * item.quantity)}</TableCell>
+                  <TableCell align="right">{formatAdminV2Amount(item.unitPrice)}</TableCell>
+                  <TableCell align="right">{formatAdminV2Amount(item.lineTotal)}</TableCell>
                 </TableRow>
-              );
-            })}
+              ))}
           </TableBody>
         </Table>
       </Box>
+      <Stack spacing={1.5} sx={{ display: { xs: "flex", sm: "none" } }}>
+        {items.map((item) => (
+          <Box key={item.key} sx={{ p: 1.5, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
+            <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", mb: 1.25 }}>
+              <ProductVisual item={item} />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 750, overflowWrap: "anywhere" }}>{item.productName}</Typography>
+                <Typography variant="caption" color="text.secondary">{item.productSlug || item.productId || "No product reference"}</Typography>
+              </Box>
+            </Stack>
+            <Grid container spacing={1}>
+              <Grid size={6}><DetailLine label="Variant" value={dash(item.variant)} /></Grid>
+              <Grid size={6}><DetailLine label="Size" value={dash(item.size)} /></Grid>
+              <Grid size={6}><DetailLine label="Color" value={dash(item.color)} /></Grid>
+              <Grid size={6}><DetailLine label="SKU" value={dash(item.sku)} /></Grid>
+              <Grid size={6}><DetailLine label="Qty" value={item.quantity} /></Grid>
+              <Grid size={6}><DetailLine label="Unit" value={formatAdminV2Amount(item.unitPrice)} /></Grid>
+              <Grid size={12}><DetailLine label="Line total" value={formatAdminV2Amount(item.lineTotal)} /></Grid>
+            </Grid>
+          </Box>
+        ))}
+      </Stack>
     </V2Card>
   );
 }
@@ -138,16 +204,16 @@ export function AdminV2OrderTimeline({ order }: { order: OrderRecord }) {
   const entries = [
     { label: "Order Placed", active: Boolean(order.createdAt), detail: formatDateTime(order.createdAt) },
     { label: "Payment Confirmed", active: order.paymentStatus === "verified", detail: statusLabel(order.paymentStatus) },
-    { label: "Order Confirmed", active: order.status === "Confirmed" || order.status === "Shipped" || order.status === "Delivered", detail: order.status },
+    { label: "Order Confirmed", active: order.status === "Confirmed", detail: order.status },
     { label: "Courier Assigned", active: Boolean(order.courierName || order.trackingId), detail: order.courierName || order.trackingId },
-    { label: "Out for Delivery", active: order.status === "Shipped" || order.deliveryStatus === "in_transit" || order.deliveryStatus === "dispatched", detail: statusLabel(order.deliveryStatus) },
+    { label: "Out for Delivery", active: order.deliveryStatus === "in_transit" || order.deliveryStatus === "dispatched", detail: statusLabel(order.deliveryStatus) },
     { label: "Delivered", active: order.status === "Delivered" || order.deliveryStatus === "delivered", detail: order.status === "Delivered" ? "Completed" : statusLabel(order.deliveryStatus) },
     { label: "Cancelled", active: order.status === "Cancelled", detail: order.cancelledReason || "Cancelled" },
-  ].filter((entry) => entry.active || entry.label === "Order Placed");
+  ].filter((entry) => entry.active);
 
   return (
     <V2Card>
-      <Typography variant="h6" sx={{ mb: 2 }}>Order Timeline</Typography>
+      <SectionTitle icon={PackageCheck}>Order Timeline</SectionTitle>
       <Stack spacing={1.5}>
         {entries.map((entry) => (
           <Stack key={entry.label} direction="row" spacing={1.5}>
@@ -158,9 +224,7 @@ export function AdminV2OrderTimeline({ order }: { order: OrderRecord }) {
             </Box>
           </Stack>
         ))}
-        <Typography variant="caption" color="text.secondary">
-          Detailed event history is not yet stored.
-        </Typography>
+        <Chip size="small" label="Detailed event history is not yet stored." variant="outlined" sx={{ alignSelf: "flex-start" }} />
       </Stack>
     </V2Card>
   );
@@ -169,7 +233,7 @@ export function AdminV2OrderTimeline({ order }: { order: OrderRecord }) {
 export function AdminV2OrderNotes({ order }: { order: OrderRecord }) {
   return (
     <V2Card>
-      <Typography variant="h6" sx={{ mb: 2 }}>Order Notes</Typography>
+      <SectionTitle icon={Package}>Order Notes</SectionTitle>
       <Stack spacing={1.25}>
         <DetailLine label="Internal note" value={order.adminInternalNote} />
         <DetailLine label="Customer confirmation" value={order.customerConfirmationNote} />
@@ -177,7 +241,7 @@ export function AdminV2OrderNotes({ order }: { order: OrderRecord }) {
         <DetailLine label="Payment note" value={order.paymentNote} />
         <DetailLine label="Cancelled reason" value={order.cancelledReason} />
         <Typography variant="caption" color="text.secondary">
-          Notes history and author timestamps require backend note persistence.
+          Full note history, authors, and note timestamps are not yet stored.
         </Typography>
       </Stack>
     </V2Card>

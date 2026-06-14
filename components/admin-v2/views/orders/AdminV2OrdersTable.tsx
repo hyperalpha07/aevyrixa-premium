@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { MoreVertical, NotebookPen, Printer, RefreshCcw, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import type { OrderRecord } from "@/app/lib/order-types";
-import { formatCurrency } from "@/app/lib/currency";
+import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { AdminV2OrderStatusChip } from "@/components/admin-v2/views/orders/AdminV2OrderStatusChip";
@@ -138,7 +138,7 @@ export function AdminV2OrdersTable({
                 <TableCell><AdminV2OrderStatusChip value={order.paymentStatus} /></TableCell>
                 <TableCell><AdminV2OrderStatusChip value={order.status} /></TableCell>
                 <TableCell><AdminV2OrderStatusChip value={order.deliveryStatus} /></TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap", fontWeight: 700 }}>{formatCurrency(order.totalAmount)}</TableCell>
+                <TableCell sx={{ whiteSpace: "nowrap", fontWeight: 700 }}>{formatAdminV2Amount(getAdminV2OrderAmounts(order).total)}</TableCell>
                 <TableCell onClick={(event) => event.stopPropagation()}>
                   <IconButton aria-label={`Actions for ${order.orderReference}`} onClick={(event) => openMenu(event, order)}>
                     <MoreVertical size={18} />

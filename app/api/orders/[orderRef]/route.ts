@@ -5,7 +5,8 @@ import {
 } from "@/app/lib/admin-auth";
 import { hasPermission } from "@/app/lib/admin-permissions";
 import { logStaffActivity } from "@/app/lib/admin-staff";
-import { updateOrderOperations } from "@/app/lib/order-store";
+import { getOrderByReference, updateOrderOperations } from "@/app/lib/order-store";
+import { validNextAdminV2OrderStatuses } from "@/lib/admin-v2/orders/order-status-transitions";
 import {
   deliveryStatuses,
   orderSources,
@@ -210,6 +211,29 @@ export async function PATCH(
   }
 
   try {
+    if ("status" in updates) {
+      const existing = await getOrderByReference(orderRef);
+      if (!existing.order) {
+        return Response.json(
+          { errors: ["Order was not found."], storageMode: existing.storageMode },
+          { status: 404 }
+        );
+      }
+      const currentStatus = existing.order.status;
+      if (!validNextAdminV2OrderStatuses(currentStatus).includes(updates.status as OrderStatus)) {
+        return Response.json(
+          { errors: ["Order status transition is not valid for the current order state."] },
+          { status: 409 }
+        );
+      }
+      if (updates.status === "Cancelled" && !updates.cancelledReason?.trim()) {
+        return Response.json(
+          { errors: ["Cancellation reason is required."] },
+          { status: 400 }
+        );
+      }
+    }
+
     const result = await updateOrderOperations(orderRef, updates);
 
     if (!result.order) {

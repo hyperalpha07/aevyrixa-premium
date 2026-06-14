@@ -61,11 +61,14 @@ URL query parameters are synchronized for safe filter state:
 - Save an internal note to the existing single note field.
 - Open and print a real order invoice/order summary.
 
+Phase 2.1 added server-side transition validation in `PATCH /api/orders/[orderRef]`, so invalid status transitions are rejected even if a caller bypasses the Admin V2 UI.
+
 ## Unsupported Backend Features
 
 - Persistent note history.
 - Detailed lifecycle event table.
-- Last-updated timestamp in the normalized order type.
+- Dedicated discount/coupon fields.
+- Dedicated paid, due, and refunded amount fields.
 - Server-side export job or audit-specific export endpoint.
 - Server-side pagination and filtering.
 - PDF invoice creation.
@@ -79,14 +82,14 @@ The invoice preview is browser-printable and uses only real order fields:
 - order date
 - customer details
 - item list
-- subtotal
-- discount when derivable
+- product subtotal
+- discount only when a real persisted field becomes available; current backend displays `Not provided`
 - delivery fee
-- total
+- total payable using checkout logic when stored total conflicts with subtotal plus delivery
 - payment method
 - payment status
 
-It is labeled as an order invoice and does not imply tax data.
+It is labeled as an order summary and does not imply tax data or a generated invoice number.
 
 ## Known Limitations
 
@@ -98,7 +101,6 @@ It is labeled as an order invoice and does not imply tax data.
 ## Recommended Next Improvements
 
 - Add server-side order pagination, search, and filters to `listOrdersFromSupabase`.
-- Expose `updated_at` in `OrderRecord`.
 - Add an `order_notes` table/API for durable note history with author and timestamps.
 - Add an `order_events` table/API for lifecycle timeline.
 - Add audited server-side CSV export.

@@ -90,6 +90,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
   const [statusOrder, setStatusOrder] = useState<OrderRecord | null>(null);
   const [nextStatus, setNextStatus] = useState<OrderStatus | "">("");
   const [reason, setReason] = useState("");
+  const [mutationPending, setMutationPending] = useState(false);
 
   const filteredOrders = useMemo(() => filterOrders(orders, filters), [orders, filters]);
   const metrics = useMemo(() => summaryForOrders(orders), [orders]);
@@ -108,6 +109,11 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
     const next = params.toString() ? `${pathname}?${params.toString()}` : pathname;
     router.replace(next, { scroll: false });
   }, [filters, page, pathname, router]);
+
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(filteredOrders.length / rowsPerPage) - 1);
+    if (page > maxPage) setPage(maxPage);
+  }, [filteredOrders.length, page, rowsPerPage]);
 
   const updateFilters = (next: AdminV2OrderFilters) => {
     setFilters(next);
@@ -142,6 +148,10 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
 
   const saveStatus = async () => {
     if (!statusOrder || !nextStatus) return;
+    if (!validNextOrderStatuses(statusOrder.status).includes(nextStatus)) {
+      setToast({ message: "That status transition is not valid for the current order state.", severity: "warning" });
+      return;
+    }
     const needsReason = isSensitiveOrderTransition(statusOrder.status, nextStatus);
     if (needsReason && !reason.trim()) {
       setToast({ message: "A reason is required for this status change.", severity: "warning" });
@@ -149,6 +159,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
     }
 
     try {
+      setMutationPending(true);
       await patchOrder(statusOrder.orderReference, {
         status: nextStatus,
         ...(nextStatus === "Cancelled" ? { cancelledReason: reason.trim() } : {}),
@@ -158,12 +169,15 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
       refresh();
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Order status update failed.", severity: "error" });
+    } finally {
+      setMutationPending(false);
     }
   };
 
   const saveNote = async () => {
     if (!notesOrder || !note.trim()) return;
     try {
+      setMutationPending(true);
       await patchOrder(notesOrder.orderReference, { adminInternalNote: note.trim() });
       setToast({ message: "Internal note saved to the existing order note field.", severity: "success" });
       setNotesOrder(null);
@@ -171,6 +185,8 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
       refresh();
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Note update failed.", severity: "error" });
+    } finally {
+      setMutationPending(false);
     }
   };
 
@@ -278,7 +294,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
             </Alert>
             <DialogActions sx={{ px: 0, pb: 0 }}>
               <V2Button onClick={() => setStatusOrder(null)}>Cancel</V2Button>
-              <V2Button variant="contained" disabled={!permissions.canEditStatus || !nextStatus} onClick={saveStatus}>
+              <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !nextStatus} onClick={saveStatus}>
                 Save status
               </V2Button>
             </DialogActions>
@@ -289,12 +305,12 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
       <V2Dialog title="Order notes" open={Boolean(notesOrder)} onClose={() => setNotesOrder(null)}>
         <Stack spacing={2}>
           <Alert severity="info">
-            Full note history is not stored yet. This saves to the existing single admin internal note field.
+            Order note persistence is connected to the existing single internal note field. Note history, authors, and note timestamps are not stored yet.
           </Alert>
           <TextField fullWidth multiline minRows={4} label="Internal note" value={note} onChange={(event) => setNote(event.target.value)} />
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setNotesOrder(null)}>Close</V2Button>
-            <V2Button variant="contained" disabled={!permissions.canEditStatus || !note.trim()} onClick={saveNote}>
+            <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !note.trim()} onClick={saveNote}>
               Save note
             </V2Button>
           </DialogActions>

@@ -40,7 +40,22 @@ The detail page uses `OrderRecord` from `app/lib/order-types.ts`:
 - `createdAt`
 - optional courier, tracking, payment, delivery, note, source, archive, deletion, and cancellation fields
 
-`updated_at` exists in the Supabase row mapper input but is not currently exposed on `OrderRecord`, so Admin V2 does not display a last-updated timestamp.
+`updated_at` is exposed as `updatedAt` when the Supabase row provides it. Admin V2 displays it only when present.
+
+## Amount Mapping
+
+Discovered fields:
+
+- Item subtotal/product subtotal: `orders.subtotal` mapped to `order.totals.subtotal`.
+- Delivery charge: `orders.delivery_charge` mapped to `order.deliveryCharge`.
+- Stored total: `orders.total` or legacy `total_amount` mapped to `order.totalAmount`.
+- Currency: app constant `SITE_CURRENCY`, currently `BDT`.
+- Discount/coupon discount: no dedicated persisted field was found in the current order schema, checkout payload, order types, or admin mapper.
+- Paid amount, due amount, refund amount: no dedicated persisted amount fields were found.
+
+Checkout displays total payable as product subtotal plus selected delivery charge. Order creation currently persists `totalAmount` from `input.totals.subtotal`, while `deliveryCharge` is stored separately. Existing rows can therefore show `subtotal = 12`, `delivery_charge = 80`, and `total = 12`.
+
+Admin V2 no longer treats that difference as a discount. It displays `Discount` as `Not provided` unless a real field exists, and uses checkout payable (`subtotal + deliveryCharge`) as the visible total when it conflicts with the stored total. The stored total remains on the order record and is noted in the UI when a mismatch exists. In development, Admin V2 logs a non-sensitive consistency warning.
 
 ## Real Status Values
 
@@ -116,6 +131,7 @@ Delivery fields:
 Item fields:
 
 - product ID
+- SKU when present in JSON
 - slug
 - name
 - price
@@ -125,6 +141,7 @@ Item fields:
 - absorbency
 - variant
 - quantity
+- line total when present in JSON; otherwise Admin V2 calculates `price * quantity` for display
 
 ## Product Image Mapping
 
@@ -134,7 +151,7 @@ The bad Admin V2 crash was caused by old/public cart payloads that put the produ
 
 Valid image values are preserved when they are root-relative paths, absolute `http`/`https` URLs, or path-like product-media object paths that can be converted to the existing Supabase public storage URL. Plain labels, color/theme slugs, malformed URLs, unsafe protocols, and empty strings become `null`.
 
-When an order record genuinely has no valid product image, Admin V2 renders a neutral rounded product avatar using the item initial. It does not substitute fake product photography and does not pass the missing or invalid value to `next/image`.
+When an order record genuinely has no valid product image, Admin V2 renders a neutral rounded product avatar with a package icon. It does not substitute fake product photography and does not pass the missing or invalid value to `next/image`.
 
 Known no-image cases:
 
@@ -144,7 +161,8 @@ Known no-image cases:
 ## Fields Unavailable In Current Backend
 
 - Full order event history with per-event timestamps.
-- Last-updated timestamp in `OrderRecord`.
+- Dedicated discount/coupon fields.
+- Dedicated paid, due, and refunded amount fields.
 - Persistent multi-note history with author and created timestamp.
 - Tax fields.
 - PDF invoice generation.
@@ -180,9 +198,9 @@ Permissions are enforced in the existing API:
 - Local pagination over the loaded result set.
 - View real order detail.
 - Update valid next order status.
-- Cancel order with required reason where state allows.
+- Cancel order with required reason where state allows. Invalid transitions are blocked in the UI and by `PATCH /api/orders/[orderRef]`.
 - Save internal note to the existing `adminInternalNote` field.
-- Print browser invoice/order summary from real order data.
+- Print browser order summary from real order data. It does not show fake tax/VAT or fake invoice numbers.
 - CSV export of the filtered result set, with confirmation before including customer PII.
 
 ## Actions Staged For Later Phases

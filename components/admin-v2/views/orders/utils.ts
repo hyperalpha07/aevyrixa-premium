@@ -5,6 +5,11 @@ import type {
   OrderStatus,
   PaymentStatus,
 } from "@/app/lib/order-types";
+import { getAdminV2OrderAmounts } from "@/lib/admin-v2/orders/order-amounts";
+import {
+  isSensitiveAdminV2OrderTransition,
+  validNextAdminV2OrderStatuses,
+} from "@/lib/admin-v2/orders/order-status-transitions";
 
 export const orderSortOptions = [
   { label: "Newest first", value: "newest" },
@@ -65,7 +70,7 @@ export function formatDateOnly(value?: string) {
 }
 
 export function itemVariant(item: OrderCartItem) {
-  return [item.variant, item.size, item.color, item.absorbency].filter(Boolean).join(" / ");
+  return item.variant || item.absorbency || "";
 }
 
 export function itemCount(order: OrderRecord) {
@@ -93,7 +98,7 @@ export function summaryForOrders(orders: OrderRecord[]) {
     cancelled: orders.filter((order) => order.status === "Cancelled").length,
     revenue: orders
       .filter((order) => !isCancelled(order) && !order.isTestOrder)
-      .reduce((sum, order) => sum + (Number.isFinite(order.totalAmount) ? order.totalAmount : 0), 0),
+      .reduce((sum, order) => sum + (getAdminV2OrderAmounts(order).total ?? 0), 0),
   };
 }
 
@@ -126,8 +131,8 @@ export function filterOrders(orders: OrderRecord[], filters: AdminV2OrderFilters
   });
 
   return filtered.sort((a, b) => {
-    if (filters.sort === "highest") return b.totalAmount - a.totalAmount;
-    if (filters.sort === "lowest") return a.totalAmount - b.totalAmount;
+    if (filters.sort === "highest") return (getAdminV2OrderAmounts(b).total ?? 0) - (getAdminV2OrderAmounts(a).total ?? 0);
+    if (filters.sort === "lowest") return (getAdminV2OrderAmounts(a).total ?? 0) - (getAdminV2OrderAmounts(b).total ?? 0);
     const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     return filters.sort === "oldest" ? aTime - bTime : bTime - aTime;
@@ -170,9 +175,9 @@ export function orderCsvRows(orders: OrderRecord[], includePii: boolean) {
     order.paymentStatus ?? "",
     order.deliveryStatus ?? "",
     String(itemCount(order)),
-    String(order.totals.subtotal),
-    String(order.deliveryCharge ?? ""),
-    String(order.totalAmount),
+    String(getAdminV2OrderAmounts(order).subtotal ?? ""),
+    String(getAdminV2OrderAmounts(order).deliveryCharge ?? ""),
+    String(getAdminV2OrderAmounts(order).total ?? ""),
     ...(includePii
       ? [
           order.customer.fullName,
@@ -191,16 +196,9 @@ export function orderCsvRows(orders: OrderRecord[], includePii: boolean) {
 export type StatusChipKind = OrderStatus | PaymentStatus | DeliveryStatus | "Not provided" | string;
 
 export function validNextOrderStatuses(status: OrderStatus): OrderStatus[] {
-  if (status === "Pending") return ["Confirmed", "Cancelled"];
-  if (status === "Confirmed") return ["Shipped", "Pending", "Cancelled"];
-  if (status === "Shipped") return ["Delivered", "Confirmed", "Cancelled"];
-  if (status === "Delivered") return ["Shipped"];
-  return [];
+  return validNextAdminV2OrderStatuses(status);
 }
 
 export function isSensitiveOrderTransition(current: OrderStatus, next: OrderStatus) {
-  if (next === "Cancelled") return true;
-  if (current === "Delivered" && next !== "Delivered") return true;
-  if (current === "Shipped" && next === "Pending") return true;
-  return false;
+  return isSensitiveAdminV2OrderTransition(current, next);
 }

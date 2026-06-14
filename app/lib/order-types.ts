@@ -87,6 +87,8 @@ export type OrderCartItem = Pick<
   | "quantity"
 > & {
   image?: string | null;
+  sku?: string;
+  lineTotal?: number;
 };
 
 export type OrderTotals = {
@@ -105,6 +107,7 @@ export type OrderRecord = {
   totalAmount: number;
   status: OrderStatus;
   createdAt: string;
+  updatedAt?: string;
   courierName?: string;
   trackingId?: string;
   deliveryStatus?: DeliveryStatus;

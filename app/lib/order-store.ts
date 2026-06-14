@@ -6,6 +6,7 @@ import {
   proofReceivedStatuses,
 } from "@/app/lib/order-types";
 import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
+import { warnAdminV2OrderAmountDiscrepancy } from "@/lib/admin-v2/orders/order-amounts";
 import type {
   OrderCartItem,
   OrderRecord,
@@ -159,6 +160,7 @@ function normalizeItems(value: unknown): OrderCartItem[] {
   return value.filter(isRecord).map((item) => ({
     id: textValue(item.id) ?? "",
     productId: textValue(item.productId),
+    sku: textValue(item.sku),
     slug: textValue(item.slug) ?? "",
     name: textValue(item.name) ?? "",
     price: numberValue(item.price) ?? 0,
@@ -171,6 +173,7 @@ function normalizeItems(value: unknown): OrderCartItem[] {
     absorbency: textValue(item.absorbency),
     variant: textValue(item.variant),
     quantity: numberValue(item.quantity) ?? 0,
+    lineTotal: numberValue(item.lineTotal),
   }));
 }
 
@@ -492,7 +495,7 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
   const total = numberValue(row.total) ?? numberValue(row.total_amount) ?? subtotal;
   const orderReference = row.order_ref ?? row.order_reference ?? row.order_id ?? "";
 
-  return {
+  const order: OrderRecord = {
     orderId: orderReference,
     orderReference,
     customerId: row.customer_id ?? undefined,
@@ -535,6 +538,7 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     totalAmount: total,
     status: normalizeStatus(row.status),
     createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? undefined,
     courierName: row.courier_name ?? undefined,
     trackingId: row.tracking_id ?? undefined,
     deliveryStatus: normalizeDeliveryStatus(row.delivery_status),
@@ -566,6 +570,9 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     softDeletedAt: row.soft_deleted_at ?? undefined,
     cancelledReason: row.cancelled_reason ?? undefined,
   };
+
+  warnAdminV2OrderAmountDiscrepancy(order);
+  return order;
 }
 
 export async function createOrder(
