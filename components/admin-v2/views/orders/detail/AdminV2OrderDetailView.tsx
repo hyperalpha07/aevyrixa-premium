@@ -3,10 +3,11 @@
 import { Alert, Box, Chip, DialogActions, Snackbar, Stack, TextField, Typography } from "@mui/material";
 import { ArrowLeft, NotebookPen, Printer, RefreshCcw, ShieldAlert, SquarePen } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
-import type { OrderRecord, OrderStatus } from "@/app/lib/order-types";
+import { useEffect, useState, useTransition } from "react";
+import type { OrderEventRecord, OrderInvoiceRecord, OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
+import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { V2Dialog } from "@/components/admin-v2/forms/V2Dialog";
 import { V2Select } from "@/components/admin-v2/forms/V2Select";
@@ -44,6 +45,38 @@ async function patchOrder(orderRef: string, payload: Record<string, unknown>) {
   return result;
 }
 
+async function fetchOrderNotes(orderRef: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/notes`, { cache: "no-store" });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Notes could not be loaded.");
+  return (result.notes ?? []) as OrderNoteRecord[];
+}
+
+async function postOrderNote(orderRef: string, noteBody: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/notes`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ noteBody, noteType: "internal" }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Note could not be saved.");
+  return result.note as OrderNoteRecord;
+}
+
+async function fetchOrderEvents(orderRef: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/events`, { cache: "no-store" });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Events could not be loaded.");
+  return (result.events ?? []) as OrderEventRecord[];
+}
+
+async function issueInvoice(orderRef: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/invoices`, { method: "POST" });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Invoice could not be issued.");
+  return result.invoice as OrderInvoiceRecord;
+}
+
 export function AdminV2OrderDetailView({ order, permissions }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,8 +86,13 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
   const [nextStatus, setNextStatus] = useState<OrderStatus | "">("");
   const [reason, setReason] = useState("");
   const [notesOpen, setNotesOpen] = useState(false);
-  const [note, setNote] = useState(order.adminInternalNote ?? "");
+  const [note, setNote] = useState("");
+  const [notes, setNotes] = useState<OrderNoteRecord[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [events, setEvents] = useState<OrderEventRecord[]>([]);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [issuedInvoice, setIssuedInvoice] = useState<OrderInvoiceRecord | null>(null);
   const [mutationPending, setMutationPending] = useState(false);
 
   const refresh = () => startTransition(() => router.refresh());
@@ -95,9 +133,11 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
     if (!note.trim()) return;
     try {
       setMutationPending(true);
-      await patchOrder(order.orderReference, { adminInternalNote: note.trim() });
+      await postOrderNote(order.orderReference, note.trim());
+      setNotes(await fetchOrderNotes(order.orderReference));
+      setEvents(await fetchOrderEvents(order.orderReference));
       setToast({ message: "Internal note saved.", severity: "success" });
-      setNotesOpen(false);
+      setNote("");
       refresh();
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Note update failed.", severity: "error" });
@@ -106,7 +146,46 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
     }
   };
 
+  const openNotes = async () => {
+    setNotesOpen(true);
+    setNotesLoading(true);
+    try {
+      setNotes(await fetchOrderNotes(order.orderReference));
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : "Notes could not be loaded.", severity: "error" });
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const openInvoice = async () => {
+    try {
+      setMutationPending(true);
+      setIssuedInvoice(await issueInvoice(order.orderReference));
+      setInvoiceOpen(true);
+      setEvents(await fetchOrderEvents(order.orderReference));
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : "Invoice could not be issued.", severity: "error" });
+    } finally {
+      setMutationPending(false);
+    }
+  };
+
   const canCancel = order.status !== "Cancelled" && order.status !== "Delivered";
+
+  useEffect(() => {
+    let active = true;
+    fetchOrderEvents(order.orderReference)
+      .then((next) => {
+        if (active) setEvents(next);
+      })
+      .catch((error) => {
+        if (active) setEventsError(error instanceof Error ? error.message : "Events could not be loaded.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [order.orderReference]);
 
   return (
     <>
@@ -121,8 +200,8 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
         actions={
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
             <V2Button href={backHref} variant="text" startIcon={<ArrowLeft size={16} />}>Back</V2Button>
-            <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} onClick={() => setNotesOpen(true)}>Add Note</V2Button>
-            <V2Button variant="outlined" startIcon={<Printer size={16} />} onClick={() => setInvoiceOpen(true)}>Print Invoice</V2Button>
+            <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} onClick={openNotes}>Add Note</V2Button>
+            <V2Button variant="outlined" startIcon={<Printer size={16} />} loading={mutationPending} onClick={openInvoice}>Print Invoice</V2Button>
             <V2Button variant="outlined" startIcon={<RefreshCcw size={16} />} loading={isPending} onClick={refresh}>Refresh</V2Button>
             <V2Button variant="contained" startIcon={<SquarePen size={16} />} disabled={!permissions.canEditStatus} onClick={() => { setNextStatus(""); setReason(""); setStatusOpen(true); }}>Update Status</V2Button>
           </Stack>
@@ -141,6 +220,30 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
           </Alert>
         ) : null}
         <AdminV2OrderOverviewGrid order={order} />
+        <Box>
+          <Typography variant="h6" sx={{ mb: 1 }}>Timeline</Typography>
+          {eventsError ? <Alert severity="warning">{eventsError}</Alert> : null}
+          <Stack spacing={1}>
+            <V2Card sx={{ p: 2 }}>
+              <Typography variant="body2">Order created</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {formatDateTime(order.createdAt)} - Detailed history before Phase 2.2 was not stored.
+              </Typography>
+            </V2Card>
+            {events.map((event) => (
+              <V2Card key={event.id} sx={{ p: 2 }}>
+                <Typography variant="body2">
+                  {event.eventType.replaceAll("_", " ")}
+                  {event.fromStatus && event.toStatus ? `: ${event.fromStatus} -> ${event.toStatus}` : ""}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {event.actorName} - {formatDateTime(event.createdAt)}
+                  {event.reason ? ` - ${event.reason}` : ""}
+                </Typography>
+              </V2Card>
+            ))}
+          </Stack>
+        </Box>
       </Stack>
 
       <V2Dialog title="Update order status" open={statusOpen} onClose={() => setStatusOpen(false)}>
@@ -177,9 +280,16 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
 
       <V2Dialog title="Order notes" open={notesOpen} onClose={() => setNotesOpen(false)}>
         <Stack spacing={2}>
-          <Alert severity="info">
-            Order note persistence is connected to the existing single internal note field. Note history, author, and note timestamps are not stored yet.
-          </Alert>
+          {notesLoading ? <Alert severity="info">Loading note history...</Alert> : null}
+          {!notesLoading && notes.length === 0 ? <Alert severity="info">No note history has been stored for this order yet.</Alert> : null}
+          {notes.map((item) => (
+            <V2Card key={item.id} sx={{ p: 2 }}>
+              <Typography variant="body2">{item.noteBody}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {item.createdByName} - {formatDateTime(item.createdAt)} - {item.noteType}
+              </Typography>
+            </V2Card>
+          ))}
           <TextField fullWidth multiline minRows={4} label="Internal note" value={note} onChange={(event) => setNote(event.target.value)} />
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setNotesOpen(false)}>Close</V2Button>
@@ -190,6 +300,11 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
 
       <V2Dialog title="Order Invoice" open={invoiceOpen} onClose={() => setInvoiceOpen(false)} maxWidth="md">
         <Stack spacing={2}>
+          {issuedInvoice ? (
+            <Alert severity="success">
+              Issued invoice {issuedInvoice.invoiceNumber} on {formatDateTime(issuedInvoice.issuedAt)}.
+            </Alert>
+          ) : null}
           <Box sx={{ maxHeight: "70vh", overflow: "auto" }}>
             <AdminV2InvoicePreview order={order} />
           </Box>

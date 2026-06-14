@@ -4,7 +4,7 @@ import { Alert, Box, DialogActions, DialogContentText, Snackbar, Stack, TextFiel
 import { Download, RefreshCcw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import type { OrderRecord, OrderStatus } from "@/app/lib/order-types";
+import type { OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { V2Dialog } from "@/components/admin-v2/forms/V2Dialog";
@@ -18,7 +18,7 @@ import { AdminV2InvoicePreview } from "@/components/admin-v2/views/orders/detail
 import {
   activeFilterCount,
   emptyOrderFilters,
-  filterOrders,
+  formatDateTime,
   orderCsvRows,
   validNextOrderStatuses,
   isSensitiveOrderTransition,
@@ -32,6 +32,10 @@ type Props = {
   available: boolean;
   storageMode: string;
   limitation: string | null;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
   permissions: {
     canExport: boolean;
     canEditStatus: boolean;
@@ -73,30 +77,58 @@ async function patchOrder(orderRef: string, payload: Record<string, unknown>) {
   return result;
 }
 
-export function AdminV2OrdersView({ orders, available, storageMode, limitation, permissions }: Props) {
+async function fetchOrderNotes(orderRef: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/notes`, { cache: "no-store" });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Notes could not be loaded.");
+  return (result.notes ?? []) as OrderNoteRecord[];
+}
+
+async function postOrderNote(orderRef: string, noteBody: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/notes`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ noteBody, noteType: "internal" }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Note could not be saved.");
+  return result.note as OrderNoteRecord;
+}
+
+export function AdminV2OrdersView({
+  orders,
+  available,
+  storageMode,
+  limitation,
+  totalCount,
+  page: serverPage,
+  pageSize,
+  permissions,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<AdminV2OrderFilters>(() => readFilters(searchParams));
-  const [page, setPage] = useState(Number(searchParams.get("page") || 1) - 1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(Math.max(0, serverPage - 1));
+  const [rowsPerPage, setRowsPerPage] = useState(pageSize);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [isPending, startTransition] = useTransition();
   const [exportConfirm, setExportConfirm] = useState(false);
   const [invoiceOrder, setInvoiceOrder] = useState<OrderRecord | null>(null);
   const [notesOrder, setNotesOrder] = useState<OrderRecord | null>(null);
+  const [notes, setNotes] = useState<OrderNoteRecord[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [statusOrder, setStatusOrder] = useState<OrderRecord | null>(null);
   const [nextStatus, setNextStatus] = useState<OrderStatus | "">("");
   const [reason, setReason] = useState("");
   const [mutationPending, setMutationPending] = useState(false);
 
-  const filteredOrders = useMemo(() => filterOrders(orders, filters), [orders, filters]);
   const metrics = useMemo(() => summaryForOrders(orders), [orders]);
-  const visibleOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   const filtered = activeFilterCount(filters) > 0;
-  const includesPii = filteredOrders.some(hasPii);
+  const includesPii = orders.some(hasPii);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -106,14 +138,10 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
       params.set(key, value);
     });
     if (page > 0) params.set("page", String(page + 1));
+    if (rowsPerPage !== 10) params.set("pageSize", String(rowsPerPage));
     const next = params.toString() ? `${pathname}?${params.toString()}` : pathname;
     router.replace(next, { scroll: false });
-  }, [filters, page, pathname, router]);
-
-  useEffect(() => {
-    const maxPage = Math.max(0, Math.ceil(filteredOrders.length / rowsPerPage) - 1);
-    if (page > maxPage) setPage(maxPage);
-  }, [filteredOrders.length, page, rowsPerPage]);
+  }, [filters, page, pathname, router, rowsPerPage]);
 
   const updateFilters = (next: AdminV2OrderFilters) => {
     setFilters(next);
@@ -126,7 +154,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
 
   const exportCsv = (includePii: boolean) => {
     try {
-      const csv = orderCsvRows(filteredOrders, includePii);
+      const csv = orderCsvRows(orders, includePii);
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -178,15 +206,30 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
     if (!notesOrder || !note.trim()) return;
     try {
       setMutationPending(true);
-      await patchOrder(notesOrder.orderReference, { adminInternalNote: note.trim() });
-      setToast({ message: "Internal note saved to the existing order note field.", severity: "success" });
-      setNotesOrder(null);
+      await postOrderNote(notesOrder.orderReference, note.trim());
+      setNotes(await fetchOrderNotes(notesOrder.orderReference));
+      setToast({ message: "Internal note saved to note history.", severity: "success" });
       setNote("");
       refresh();
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Note update failed.", severity: "error" });
     } finally {
       setMutationPending(false);
+    }
+  };
+
+  const openNotes = async (order: OrderRecord) => {
+    setNotesOrder(order);
+    setNote("");
+    setNotes([]);
+    setNotesError(null);
+    setNotesLoading(true);
+    try {
+      setNotes(await fetchOrderNotes(order.orderReference));
+    } catch (error) {
+      setNotesError(error instanceof Error ? error.message : "Notes could not be loaded.");
+    } finally {
+      setNotesLoading(false);
     }
   };
 
@@ -201,7 +244,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
             <V2Button
               variant="outlined"
               startIcon={<Download size={16} />}
-              disabled={!permissions.canExport || filteredOrders.length === 0}
+          disabled={!permissions.canExport || orders.length === 0}
               onClick={() => {
                 if (includesPii) setExportConfirm(true);
                 else exportCsv(false);
@@ -230,10 +273,10 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
           onDrawerClose={() => setDrawerOpen(false)}
         />
         <AdminV2OrdersTable
-          orders={visibleOrders}
+          orders={orders}
           page={page}
           rowsPerPage={rowsPerPage}
-          total={filteredOrders.length}
+          total={totalCount}
           filtered={filtered}
           canEditStatus={permissions.canEditStatus}
           onPageChange={setPage}
@@ -243,8 +286,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
           }}
           onStatusClick={(order) => openStatus(order)}
           onNotesClick={(order) => {
-            setNotesOrder(order);
-            setNote(order.adminInternalNote ?? "");
+            void openNotes(order);
           }}
           onInvoiceClick={setInvoiceOrder}
           onCancelClick={(order) => openStatus(order, "Cancelled")}
@@ -253,7 +295,7 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
 
       <V2Dialog title="Export filtered orders?" open={exportConfirm} onClose={() => setExportConfirm(false)}>
         <DialogContentText>
-          This export is limited to the currently filtered real orders. Customer PII is available in this result set.
+          This export is limited to the currently loaded server page. Customer PII is available in this result set.
         </DialogContentText>
         <DialogActions sx={{ px: 0, pb: 0 }}>
           <V2Button onClick={() => { setExportConfirm(false); exportCsv(false); }}>Export without PII</V2Button>
@@ -304,9 +346,19 @@ export function AdminV2OrdersView({ orders, available, storageMode, limitation, 
 
       <V2Dialog title="Order notes" open={Boolean(notesOrder)} onClose={() => setNotesOrder(null)}>
         <Stack spacing={2}>
-          <Alert severity="info">
-            Order note persistence is connected to the existing single internal note field. Note history, authors, and note timestamps are not stored yet.
-          </Alert>
+          {notesLoading ? <Alert severity="info">Loading note history...</Alert> : null}
+          {notesError ? <Alert severity="error">{notesError}</Alert> : null}
+          {!notesLoading && !notesError && notes.length === 0 ? (
+            <Alert severity="info">No note history has been stored for this order yet.</Alert>
+          ) : null}
+          {notes.map((item) => (
+            <V2Card key={item.id} sx={{ p: 2 }}>
+              <Typography variant="body2">{item.noteBody}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {item.createdByName} - {formatDateTime(item.createdAt)} - {item.noteType}
+              </Typography>
+            </V2Card>
+          ))}
           <TextField fullWidth multiline minRows={4} label="Internal note" value={note} onChange={(event) => setNote(event.target.value)} />
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setNotesOrder(null)}>Close</V2Button>

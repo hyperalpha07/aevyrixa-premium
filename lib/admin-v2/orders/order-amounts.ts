@@ -31,7 +31,7 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
   const subtotal = cleanAmount(order.totals?.subtotal);
   const deliveryCharge = cleanAmount(order.deliveryCharge);
   const storedTotal = cleanAmount(order.totalAmount);
-  const discount = null;
+  const discount = cleanAmount(order.discountAmount) ?? 0;
   const checkoutTotal =
     calculateAdminV2PayableTotal({ subtotal, discount, deliveryCharge }) ?? storedTotal;
 
@@ -51,9 +51,9 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
     total = checkoutTotal;
   }
 
-  const paidAmount = null;
-  const dueAmount = null;
-  const refundAmount = null;
+  const paidAmount = cleanAmount(order.paidAmount);
+  const dueAmount = cleanAmount(order.dueAmount);
+  const refundAmount = cleanAmount(order.refundedAmount);
 
   return {
     subtotal,
@@ -63,7 +63,7 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
     paidAmount,
     dueAmount,
     refundAmount,
-    currency: SITE_CURRENCY,
+    currency: order.currencyCode || SITE_CURRENCY,
     storedTotal,
     discrepancy,
   };

@@ -4,6 +4,10 @@ import {
   calculateAdminV2PayableTotal,
   hasAdminV2TotalMismatch,
 } from "../lib/admin-v2/orders/order-financials.ts";
+import { createOrderInvoiceSnapshot, createDeterministicInvoiceNumber } from "../lib/admin-v2/orders/order-invoices.ts";
+import { parseAdminV2OrderQuery } from "../lib/admin-v2/orders/order-query.ts";
+import { validateAdminV2OrderNote } from "../lib/admin-v2/orders/order-note-validation.ts";
+import { eventTypeForStatusChange, sanitizeOrderEventMetadata } from "../lib/admin-v2/orders/order-events.ts";
 import { normalizeAdminV2ItemVariant } from "../lib/admin-v2/orders/order-variant.ts";
 import { getAdminV2DeliveryNote } from "../lib/admin-v2/orders/order-notes.ts";
 import { getAdminV2PaymentLabels } from "../lib/admin-v2/orders/order-payment.ts";
@@ -99,4 +103,42 @@ test("status transition helpers expose valid next states and sensitive transitio
   assert.equal(validNextAdminV2OrderStatuses("Pending").includes("Delivered"), false);
   assert.equal(isSensitiveAdminV2OrderTransition("Pending", "Cancelled"), true);
   assert.equal(isSensitiveAdminV2OrderTransition("Pending", "Confirmed"), false);
+});
+
+test("note validation rejects empty notes and invalid types", () => {
+  assert.deepEqual(validateAdminV2OrderNote({ noteBody: "   ", noteType: "internal" }).errors, [
+    "Note body is required.",
+  ]);
+  assert.equal(validateAdminV2OrderNote({ noteBody: "Real note", noteType: "payment" }).noteType, "payment");
+  assert.equal(validateAdminV2OrderNote({ noteBody: "Real note", noteType: "fake" }).errors[0], "Note type is invalid.");
+});
+
+test("event helpers map status transitions and strip sensitive metadata", () => {
+  assert.equal(eventTypeForStatusChange("Confirmed"), "order_confirmed");
+  assert.equal(eventTypeForStatusChange("Cancelled"), "order_cancelled");
+  assert.deepEqual(sanitizeOrderEventMetadata({ token: "x", fields: ["status"] }), { fields: ["status"] });
+});
+
+test("server-side order query parser caps and sanitizes filters", () => {
+  const query = parseAdminV2OrderQuery(
+    new URLSearchParams("q=abc&status=Delivered&payment=Cash+on+Delivery&page=2&pageSize=500&sort=highest")
+  );
+  assert.equal(query.q, "abc");
+  assert.equal(query.status, "Delivered");
+  assert.equal(query.page, 2);
+  assert.equal(query.pageSize, 50);
+  assert.equal(query.sort, "highest");
+});
+
+test("invoice number is deterministic and snapshot uses normalized totals", () => {
+  const invoiceNumber = createDeterministicInvoiceNumber("AEV-1", "2026-06-14T00:00:00.000Z");
+  assert.equal(invoiceNumber, "AEV-INV-20260614-AEV-1");
+  const snapshot = createOrderInvoiceSnapshot({ ...baseOrder, deliveryCharge: 80 } as never);
+  assert.equal((snapshot.totals as { total: number }).total, 92);
+});
+
+test("financial audit detection flags stored total differences without mutation", () => {
+  const calculated = calculateAdminV2PayableTotal({ subtotal: 100, deliveryCharge: 20 });
+  assert.equal(calculated, 120);
+  assert.equal(hasAdminV2TotalMismatch(100, calculated), true);
 });

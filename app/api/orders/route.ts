@@ -5,7 +5,8 @@ import {
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { getCustomerFromRequest } from "@/app/api/account/_utils";
 import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
-import { createOrder, listOrders } from "@/app/lib/order-store";
+import { createOrder, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
+import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
 import { getProductBySlug } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
@@ -197,7 +198,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await listOrders();
+    const result = await queryOrders(parseAdminV2OrderQuery(new URL(request.url).searchParams));
     return Response.json(result);
   } catch (error) {
     console.error("Failed to list orders:", error);
@@ -256,6 +257,14 @@ export async function POST(request: Request) {
         : input;
 
     const result = await createOrder(orderInput);
+
+    await recordOrderEvent({
+      orderRef: result.order.orderReference,
+      eventType: "order_created",
+      toStatus: result.order.status,
+      actor: null,
+      metadata: { source: "checkout" },
+    }).catch(() => null);
 
     try {
       const notificationResult = await notifyNewOrder(result.order);

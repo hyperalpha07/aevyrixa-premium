@@ -8,21 +8,29 @@ Admin V2 reads orders through `app/lib/order-store.ts`. Real orders come from th
 
 ## Reused Endpoints And Store Functions
 
-- `GET /api/orders`: existing admin-protected order list endpoint using `listOrders()`.
-- `PATCH /api/orders/[orderRef]`: existing admin-protected order operations endpoint using `updateOrderOperations()`.
+- `GET /api/orders`: admin-protected server-side query endpoint using `queryOrders()`.
+- `PATCH /api/orders/[orderRef]`: admin-protected order operations endpoint. Status transitions use the atomic status/event RPC after the Phase 2.2 migration.
+- `GET /api/orders/[orderRef]/notes` and `POST /api/orders/[orderRef]/notes`: durable order notes.
+- `GET /api/orders/[orderRef]/events`: durable timeline events.
+- `GET /api/orders/[orderRef]/invoices` and `POST /api/orders/[orderRef]/invoices`: persistent invoice records.
 - `getOrderByReference(orderRef)`: reused directly in the Admin V2 server route for detail loading.
-- `listOrders()`: reused directly in the Admin V2 server route for list loading.
+- `queryOrders(query)`: reused directly in the Admin V2 server route for list loading.
 
 ## Order List Response Shape
 
 `GET /api/orders` returns:
 
-- `orders: OrderRecord[]`
+- `rows: OrderRecord[]`
+- `totalCount`
+- `page`
+- `pageSize`
+- `totalPages`
+- `appliedFilters`
 - `storageMode: "supabase" | "demo-memory"`
 
 Admin V2 displays only `storageMode === "supabase"` records that are not archived, deleted, or soft-deleted.
 
-The current Supabase query returns `select=*`, ordered by `created_at.desc`, limited to 100 rows. Server-side filters and cursor pagination are not implemented yet.
+The Supabase query supports server-side search, filters, sort, count, and range pagination. Page size is capped by the parser.
 
 ## Order Detail Shape
 
@@ -60,6 +68,14 @@ The write-path bug was in `app/lib/order-store.ts`: `buildOrder()` previously se
 Canonical total going forward: `orders.total` / `OrderRecord.totalAmount` stores the checkout payable total. `orders.subtotal` / `OrderRecord.totals.subtotal` remains the item subtotal, and `orders.delivery_charge` / `OrderRecord.deliveryCharge` remains the delivery fee.
 
 Historical rows are not overwritten or backfilled. Admin V2 displays `Discount` as `Not provided` unless a real field exists, and uses checkout payable (`subtotal + deliveryCharge`) as the visible total only when it conflicts with the stored total. The concise mismatch banner appears only for real stored-total/payable-total differences and disappears automatically for consistent rows. In development, Admin V2 logs a non-sensitive consistency warning.
+
+Phase 2.2 adds explicit `discount_amount`, `paid_amount`, `due_amount`, `refunded_amount`, `currency_code`, and `payment_verified_at` fields. Existing `subtotal`, `total`, and `delivery_charge` remain canonical for subtotal, payable total, and delivery amount.
+
+## Durable Phase 2.2 Tables
+
+- `order_notes`: one row per real note, keyed by `order_ref`, with type, actor, timestamps, and optional soft delete.
+- `order_events`: append-only order timeline, keyed by `order_ref`.
+- `invoices`: issued invoice records, keyed by `order_ref`, with a stable JSON snapshot and unique invoice number.
 
 ## Real Status Values
 
