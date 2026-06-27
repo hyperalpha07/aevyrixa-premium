@@ -16,7 +16,8 @@ import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import { getAdminV2OrderAmounts, warnAdminV2OrderAmountDiscrepancy } from "@/lib/admin-v2/orders/order-amounts";
 import { adminV2OrderTotalPages, type AdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { eventTypeForStatusChange, sanitizeOrderEventMetadata } from "@/lib/admin-v2/orders/order-events";
-import { createDeterministicInvoiceNumber, createOrderInvoiceSnapshot } from "@/lib/admin-v2/orders/order-invoices";
+import { createOrderInvoiceSnapshot } from "@/lib/admin-v2/orders/order-invoices";
+import type { AdminSessionUser } from "@/app/lib/admin-permissions";
 import type {
   OrderCartItem,
   OrderRecord,
@@ -29,6 +30,56 @@ import type {
 
 const demoOrders: OrderRecord[] = [];
 const SUPABASE_ORDERS_TABLE = "orders";
+const SUPABASE_ORDER_SELECT_COLUMNS = [
+  "id",
+  "order_ref",
+  "customer_id",
+  "customer_name",
+  "customer_phone",
+  "customer_email",
+  "city_area",
+  "delivery_address",
+  "size_fit_note",
+  "delivery_note",
+  "items",
+  "subtotal",
+  "total",
+  "discount_amount",
+  "paid_amount",
+  "due_amount",
+  "refunded_amount",
+  "currency_code",
+  "payment_method",
+  "wallet_provider",
+  "payment_type",
+  "receiver_number",
+  "sender_number",
+  "transaction_id",
+  "status",
+  "courier_name",
+  "tracking_id",
+  "delivery_status",
+  "delivery_charge",
+  "delivery_area",
+  "delivery_zone",
+  "assigned_staff",
+  "customer_confirmation_note",
+  "payment_status",
+  "payment_verified_at",
+  "payment_verification_status",
+  "payment_reference",
+  "payment_note",
+  "refund_exchange_request",
+  "size_issue_report",
+  "proof_received",
+  "admin_internal_note",
+  "order_source",
+  "archived_at",
+  "cancelled_reason",
+  "created_at",
+  "updated_at",
+] as const;
+const SUPABASE_ORDER_SELECT = SUPABASE_ORDER_SELECT_COLUMNS.join(",");
 
 type SupabaseOrderRow = {
   id?: string;
@@ -100,6 +151,7 @@ type SupabaseOrderNoteRow = {
   note_type?: string | null;
   created_by_admin_id?: string | null;
   created_by_name?: string | null;
+  actor_source?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   deleted_at?: string | null;
@@ -115,6 +167,7 @@ type SupabaseOrderEventRow = {
   metadata?: unknown;
   actor_admin_id?: string | null;
   actor_name?: string | null;
+  actor_source?: string | null;
   created_at?: string | null;
 };
 
@@ -124,7 +177,9 @@ type SupabaseInvoiceRow = {
   order_ref?: string | null;
   status?: string | null;
   issued_at?: string | null;
+  issued_by_admin_id?: string | null;
   issued_by?: string | null;
+  actor_source?: string | null;
   subtotal_amount?: number | string | null;
   discount_amount?: number | string | null;
   delivery_amount?: number | string | null;
@@ -203,8 +258,49 @@ function nullableText(value: string | undefined) {
   return value && value.trim() ? value.trim() : null;
 }
 
-function safeActorName(actor?: { displayName?: string; username?: string } | null) {
-  return actor?.displayName || actor?.username || "Owner";
+type TrustedAdminActor = {
+  adminId: string;
+  name: string;
+  source: "admin";
+};
+
+export class AdminV2ActorIdentityError extends Error {
+  code = "ACTOR_IDENTITY_REQUIRED";
+  status = 403;
+
+  constructor(message = "Your admin identity could not be verified.") {
+    super(message);
+    this.name = "AdminV2ActorIdentityError";
+  }
+}
+
+function cleanActorValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function isForbiddenActorName(value: string) {
+  return value.toLowerCase() === "owner";
+}
+
+export function resolveTrustedAdminActor(actor?: AdminSessionUser | null): TrustedAdminActor {
+  if (!actor) throw new AdminV2ActorIdentityError();
+
+  const username = cleanActorValue(actor.username);
+  const displayName = cleanActorValue(actor.displayName);
+  const staffId = cleanActorValue(actor.staffId);
+  const adminId =
+    actor.userType === "staff" && staffId
+      ? staffId
+      : username
+        ? `${actor.userType}:${username}`
+        : "";
+  const nameCandidates =
+    actor.userType === "staff" ? [displayName, username, staffId] : [username, displayName];
+  const name = nameCandidates.find((item) => item && !isForbiddenActorName(item)) ?? "";
+
+  if (!adminId || !name) throw new AdminV2ActorIdentityError();
+
+  return { adminId, name, source: "admin" };
 }
 
 function normalizeStatus(value: unknown): OrderStatus {
@@ -305,10 +401,62 @@ function storageUnavailableError(feature: string) {
   return new Error(`${feature} requires Supabase order storage.`);
 }
 
+export class OrderStoreError extends Error {
+  status: number;
+  code: string;
+  operation: string;
+  details: string | null;
+  hint: string | null;
+
+  constructor(input: {
+    operation: string;
+    status: number;
+    code?: string;
+    message: string;
+    details?: string | null;
+    hint?: string | null;
+  }) {
+    super(input.message);
+    this.name = "OrderStoreError";
+    this.status = input.status;
+    this.code = input.code ?? "ORDER_STORE_ERROR";
+    this.operation = input.operation;
+    this.details = input.details ?? null;
+    this.hint = input.hint ?? null;
+  }
+}
+
+function parseSupabaseErrorBody(detail: string) {
+  if (!detail) return null;
+
+  try {
+    const parsed = JSON.parse(detail) as unknown;
+    if (!isRecord(parsed)) return null;
+
+    return {
+      code: textValue(parsed.code),
+      message: textValue(parsed.message),
+      details: textValue(parsed.details),
+      hint: textValue(parsed.hint),
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function supabaseError(response: Response, action: string) {
   const detail = await response.text().catch(() => "");
-  const suffix = detail ? ` ${detail.slice(0, 240)}` : "";
-  return new Error(`Supabase ${action} failed with ${response.status}.${suffix}`);
+  const parsed = parseSupabaseErrorBody(detail);
+  const message = parsed?.message ?? `Supabase ${action} failed with ${response.status}.`;
+
+  return new OrderStoreError({
+    operation: action,
+    status: response.status,
+    code: parsed?.code ?? `SUPABASE_HTTP_${response.status}`,
+    message,
+    details: parsed?.details ?? (detail ? detail.slice(0, 240) : null),
+    hint: parsed?.hint ?? null,
+  });
 }
 
 function orderToSupabaseInsertPayload(order: OrderRecord, includeOperationDefaults = true) {
@@ -400,7 +548,9 @@ async function saveOrderToSupabase(order: OrderRecord) {
 // TODO: Add cursor/offset pagination when order volume requires it.
 async function listOrdersFromSupabase(limit = 100) {
   const response = await fetch(
-    supabaseEndpoint(`${SUPABASE_ORDERS_TABLE}?select=*&order=created_at.desc&limit=${limit}`),
+    supabaseEndpoint(
+      `${SUPABASE_ORDERS_TABLE}?select=${SUPABASE_ORDER_SELECT}&order=created_at.desc&limit=${limit}`
+    ),
     {
       headers: supabaseHeaders(),
       cache: "no-store",
@@ -420,8 +570,7 @@ function appendFilter(params: string[], key: string, operator: string, value: st
 }
 
 async function queryOrdersFromSupabase(query: AdminV2OrderQuery) {
-  const params = ["select=*"];
-  const visibility = ["archived_at.is.null", "deleted_at.is.null", "soft_deleted_at.is.null"];
+  const params = [`select=${SUPABASE_ORDER_SELECT}`, "archived_at=is.null"];
 
   if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.payment !== "all") appendFilter(params, "payment_method", "eq", query.payment);
@@ -437,8 +586,6 @@ async function queryOrdersFromSupabase(query: AdminV2OrderQuery) {
       `or=(order_ref.ilike.${encoded},customer_name.ilike.${encoded},customer_phone.ilike.${encoded},customer_email.ilike.${encoded})`
     );
   }
-
-  params.push(`and=(${visibility.join(",")})`);
 
   if (query.sort === "oldest") params.push("order=created_at.asc");
   else if (query.sort === "highest") params.push("order=total.desc.nullslast");
@@ -477,7 +624,7 @@ async function getOrderByReferenceFromSupabase(orderRef: string) {
     supabaseEndpoint(
       `${SUPABASE_ORDERS_TABLE}?order_ref=eq.${encodeURIComponent(
         orderRef
-      )}&select=*&limit=1`
+      )}&select=${SUPABASE_ORDER_SELECT}&limit=1`
     ),
     {
       headers: supabaseHeaders(),
@@ -623,8 +770,9 @@ async function updateOrderStatusWithEventInSupabase(input: {
   status: OrderStatus;
   cancelledReason?: string;
   previousStatus?: OrderStatus;
-  actor?: { staffId?: string; displayName?: string; username?: string } | null;
+  actor?: AdminSessionUser | null;
 }) {
+  const actor = resolveTrustedAdminActor(input.actor);
   const response = await fetch(supabaseEndpoint("rpc/admin_v2_update_order_status_with_event"), {
     method: "POST",
     headers: { ...supabaseHeaders(), prefer: "return=representation" },
@@ -632,9 +780,11 @@ async function updateOrderStatusWithEventInSupabase(input: {
       p_order_ref: input.orderRef,
       p_to_status: input.status,
       p_reason: input.cancelledReason ?? null,
-      p_actor_admin_id: input.actor?.staffId ?? null,
-      p_actor_name: safeActorName(input.actor),
+      p_actor_admin_id: actor.adminId,
+      p_actor_name: actor.name,
       p_metadata: { fields: ["status", ...(input.cancelledReason ? ["cancelledReason"] : [])] },
+      p_actor_source: actor.source,
+      p_sensitive_authorization_reason: input.cancelledReason ?? null,
     }),
   });
 
@@ -753,7 +903,7 @@ function mapOrderNote(row: SupabaseOrderNoteRow): OrderNoteRecord {
     noteBody: row.note_body ?? "",
     noteType: (row.note_type ?? "internal") as OrderNoteType,
     createdByAdminId: row.created_by_admin_id ?? undefined,
-    createdByName: row.created_by_name ?? "Owner",
+    createdByName: row.created_by_name ?? "Not provided",
     createdAt: row.created_at ?? "",
     updatedAt: row.updated_at ?? row.created_at ?? "",
     deletedAt: row.deleted_at ?? undefined,
@@ -770,7 +920,7 @@ function mapOrderEvent(row: SupabaseOrderEventRow): OrderEventRecord {
     reason: row.reason ?? undefined,
     metadata: isRecord(row.metadata) ? row.metadata : {},
     actorAdminId: row.actor_admin_id ?? undefined,
-    actorName: row.actor_name ?? "Owner",
+    actorName: row.actor_name ?? "Not provided",
     createdAt: row.created_at ?? "",
   };
 }
@@ -782,6 +932,7 @@ function mapInvoice(row: SupabaseInvoiceRow): OrderInvoiceRecord {
     orderReference: row.order_ref ?? "",
     status: row.status === "void" ? "void" : "issued",
     issuedAt: row.issued_at ?? row.created_at ?? "",
+    issuedByAdminId: row.issued_by_admin_id ?? undefined,
     issuedBy: row.issued_by ?? undefined,
     subtotalAmount: numberValue(row.subtotal_amount) ?? 0,
     discountAmount: numberValue(row.discount_amount) ?? 0,
@@ -907,7 +1058,7 @@ export async function updateOrderStatusWithEvent(input: {
   status: OrderStatus;
   cancelledReason?: string;
   previousStatus?: OrderStatus;
-  actor?: { staffId?: string; displayName?: string; username?: string } | null;
+  actor?: AdminSessionUser | null;
 }) {
   const storageMode = getStorageMode();
 
@@ -942,10 +1093,11 @@ export async function addOrderNote(input: {
   orderRef: string;
   noteBody: string;
   noteType: OrderNoteType;
-  actor?: { staffId?: string; displayName?: string; username?: string } | null;
+  actor?: AdminSessionUser | null;
 }) {
   if (getStorageMode() !== "supabase") throw storageUnavailableError("Order notes");
 
+  const actor = resolveTrustedAdminActor(input.actor);
   const now = new Date().toISOString();
   const response = await fetch(supabaseEndpoint("order_notes?select=*"), {
     method: "POST",
@@ -954,8 +1106,10 @@ export async function addOrderNote(input: {
       order_ref: input.orderRef,
       note_body: input.noteBody,
       note_type: input.noteType,
-      created_by_admin_id: input.actor?.staffId ?? null,
-      created_by_name: safeActorName(input.actor),
+      metadata: {},
+      created_by_admin_id: actor.adminId,
+      created_by_name: actor.name,
+      actor_source: actor.source,
       created_at: now,
       updated_at: now,
     }),
@@ -981,10 +1135,11 @@ export async function recordOrderEvent(input: {
   toStatus?: OrderStatus;
   reason?: string;
   metadata?: Record<string, unknown>;
-  actor?: { staffId?: string; displayName?: string; username?: string } | null;
+  actor?: AdminSessionUser | null;
 }) {
   if (getStorageMode() !== "supabase") return null;
 
+  const actor = resolveTrustedAdminActor(input.actor);
   const response = await fetch(supabaseEndpoint("order_events?select=*"), {
     method: "POST",
     headers: { ...supabaseHeaders(), prefer: "return=representation" },
@@ -995,8 +1150,9 @@ export async function recordOrderEvent(input: {
       to_status: input.toStatus ?? null,
       reason: nullableText(input.reason),
       metadata: sanitizeOrderEventMetadata(input.metadata),
-      actor_admin_id: input.actor?.staffId ?? null,
-      actor_name: safeActorName(input.actor),
+      actor_admin_id: actor.adminId,
+      actor_name: actor.name,
+      actor_source: actor.source,
     }),
   });
 
@@ -1030,16 +1186,48 @@ export async function listOrderInvoices(orderRef: string) {
 
 export async function issueOrderInvoice(input: {
   order: OrderRecord;
-  actor?: { staffId?: string; displayName?: string; username?: string } | null;
+  actor?: AdminSessionUser | null;
 }) {
   if (getStorageMode() !== "supabase") throw storageUnavailableError("Order invoices");
 
   const existing = await listOrderInvoices(input.order.orderReference);
-  if (existing[0]) return existing[0];
+  const existingIssued = existing.find((invoice) => invoice.status === "issued");
+  if (existingIssued) return existingIssued;
 
+  const actor = resolveTrustedAdminActor(input.actor);
   const issuedAt = new Date().toISOString();
   const amounts = getAdminV2OrderAmounts(input.order);
-  const invoiceNumber = createDeterministicInvoiceNumber(input.order.orderReference, issuedAt);
+  if (
+    amounts.subtotal === null ||
+    amounts.discount === null ||
+    amounts.deliveryCharge === null ||
+    amounts.total === null
+  ) {
+    throw new OrderStoreError({
+      operation: "invoice financial snapshot",
+      status: 422,
+      code: "INVOICE_FINANCIAL_SNAPSHOT_INCOMPLETE",
+      message: "Invoice financial snapshot is incomplete.",
+      details: [
+        amounts.subtotal === null ? "subtotal" : null,
+        amounts.discount === null ? "discount" : null,
+        amounts.deliveryCharge === null ? "deliveryCharge" : null,
+        amounts.total === null ? "total" : null,
+      ].filter(Boolean).join(", "),
+    });
+  }
+
+  const numberResponse = await fetch(supabaseEndpoint("rpc/admin_v2_next_invoice_number"), {
+    method: "POST",
+    headers: supabaseHeaders(),
+    body: JSON.stringify({
+      p_order_ref: input.order.orderReference,
+      p_issued_at: issuedAt,
+    }),
+  });
+
+  if (!numberResponse.ok) throw await supabaseError(numberResponse, "invoice number generation");
+  const invoiceNumber = (await numberResponse.json()) as string;
   const response = await fetch(supabaseEndpoint("invoices?select=*"), {
     method: "POST",
     headers: { ...supabaseHeaders(), prefer: "return=representation" },
@@ -1048,11 +1236,13 @@ export async function issueOrderInvoice(input: {
       order_ref: input.order.orderReference,
       status: "issued",
       issued_at: issuedAt,
-      issued_by: safeActorName(input.actor),
-      subtotal_amount: amounts.subtotal ?? 0,
-      discount_amount: amounts.discount ?? 0,
-      delivery_amount: amounts.deliveryCharge ?? 0,
-      total_amount: amounts.total ?? 0,
+      issued_by_admin_id: actor.adminId,
+      issued_by: actor.name,
+      actor_source: actor.source,
+      subtotal_amount: amounts.subtotal,
+      discount_amount: amounts.discount,
+      delivery_amount: amounts.deliveryCharge,
+      total_amount: amounts.total,
       currency_code: amounts.currency,
       snapshot: createOrderInvoiceSnapshot(input.order),
     }),
@@ -1060,7 +1250,8 @@ export async function issueOrderInvoice(input: {
 
   if (response.status === 409) {
     const invoices = await listOrderInvoices(input.order.orderReference);
-    if (invoices[0]) return invoices[0];
+    const invoice = invoices.find((item) => item.status === "issued");
+    if (invoice) return invoice;
   }
 
   if (!response.ok) throw await supabaseError(response, "invoice insert");

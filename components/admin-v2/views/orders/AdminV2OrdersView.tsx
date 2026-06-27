@@ -4,7 +4,7 @@ import { Alert, Box, DialogActions, DialogContentText, Snackbar, Stack, TextFiel
 import { Download, RefreshCcw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import type { OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
+import type { OrderInvoiceRecord, OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { V2Dialog } from "@/components/admin-v2/forms/V2Dialog";
@@ -95,6 +95,13 @@ async function postOrderNote(orderRef: string, noteBody: string) {
   return result.note as OrderNoteRecord;
 }
 
+async function issueInvoice(orderRef: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/invoices`, { method: "POST" });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Invoice could not be issued.");
+  return result.invoice as OrderInvoiceRecord;
+}
+
 export function AdminV2OrdersView({
   orders,
   available,
@@ -116,6 +123,7 @@ export function AdminV2OrdersView({
   const [isPending, startTransition] = useTransition();
   const [exportConfirm, setExportConfirm] = useState(false);
   const [invoiceOrder, setInvoiceOrder] = useState<OrderRecord | null>(null);
+  const [issuedInvoice, setIssuedInvoice] = useState<OrderInvoiceRecord | null>(null);
   const [notesOrder, setNotesOrder] = useState<OrderRecord | null>(null);
   const [notes, setNotes] = useState<OrderNoteRecord[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
@@ -210,6 +218,7 @@ export function AdminV2OrdersView({
       setNotes(await fetchOrderNotes(notesOrder.orderReference));
       setToast({ message: "Internal note saved to note history.", severity: "success" });
       setNote("");
+      setNotesOrder(null);
       refresh();
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Note update failed.", severity: "error" });
@@ -230,6 +239,34 @@ export function AdminV2OrdersView({
       setNotesError(error instanceof Error ? error.message : "Notes could not be loaded.");
     } finally {
       setNotesLoading(false);
+    }
+  };
+
+  const openInvoice = async (order: OrderRecord) => {
+    if (mutationPending) return;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.title = "Preparing invoice";
+      printWindow.document.body.innerHTML = "<p style=\"font-family: Arial, sans-serif; padding: 24px;\">Preparing invoice...</p>";
+    }
+
+    try {
+      setMutationPending(true);
+      setIssuedInvoice(null);
+      const invoice = await issueInvoice(order.orderReference);
+      setIssuedInvoice(invoice);
+      if (printWindow) {
+        printWindow.location.href = `/admin-v2/orders/${encodeURIComponent(order.orderReference)}/invoice`;
+      } else {
+        setInvoiceOrder(order);
+      }
+    } catch (error) {
+      printWindow?.close();
+      setInvoiceOrder(null);
+      setIssuedInvoice(null);
+      setToast({ message: error instanceof Error ? error.message : "Invoice could not be issued.", severity: "error" });
+    } finally {
+      setMutationPending(false);
     }
   };
 
@@ -279,6 +316,7 @@ export function AdminV2OrdersView({
           total={totalCount}
           filtered={filtered}
           canEditStatus={permissions.canEditStatus}
+          invoicePending={mutationPending}
           onPageChange={setPage}
           onRowsPerPageChange={(size) => {
             setRowsPerPage(size);
@@ -288,7 +326,9 @@ export function AdminV2OrdersView({
           onNotesClick={(order) => {
             void openNotes(order);
           }}
-          onInvoiceClick={setInvoiceOrder}
+          onInvoiceClick={(order) => {
+            void openInvoice(order);
+          }}
           onCancelClick={(order) => openStatus(order, "Cancelled")}
         />
       </Stack>
@@ -363,21 +403,36 @@ export function AdminV2OrdersView({
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setNotesOrder(null)}>Close</V2Button>
             <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !note.trim()} onClick={saveNote}>
-              Save note
+              {mutationPending ? "Saving..." : "Save note"}
             </V2Button>
           </DialogActions>
         </Stack>
       </V2Dialog>
 
-      <V2Dialog title="Order Invoice" open={Boolean(invoiceOrder)} onClose={() => setInvoiceOrder(null)} maxWidth="md">
+      <V2Dialog
+        title="Order Invoice"
+        open={Boolean(invoiceOrder)}
+        onClose={() => {
+          setInvoiceOrder(null);
+          setIssuedInvoice(null);
+        }}
+        maxWidth="md"
+      >
         {invoiceOrder ? (
           <Stack spacing={2}>
             <Box sx={{ maxHeight: "70vh", overflow: "auto" }}>
-              <AdminV2InvoicePreview order={invoiceOrder} />
+              <AdminV2InvoicePreview order={invoiceOrder} invoice={issuedInvoice} />
             </Box>
             <DialogActions sx={{ px: 0, pb: 0 }}>
-              <V2Button onClick={() => setInvoiceOrder(null)}>Close</V2Button>
-              <V2Button variant="contained" onClick={() => window.print()}>
+              <V2Button
+                onClick={() => {
+                  setInvoiceOrder(null);
+                  setIssuedInvoice(null);
+                }}
+              >
+                Close
+              </V2Button>
+              <V2Button variant="contained" disabled={!issuedInvoice} onClick={() => window.print()}>
                 Print
               </V2Button>
             </DialogActions>

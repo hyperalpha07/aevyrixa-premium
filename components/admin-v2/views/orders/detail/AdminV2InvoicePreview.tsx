@@ -1,13 +1,13 @@
 "use client";
 
 import { Box, Divider, GlobalStyles, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import type { OrderRecord } from "@/app/lib/order-types";
+import type { OrderInvoiceRecord, OrderRecord } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { normalizeAdminV2OrderItems } from "@/lib/admin-v2/orders/order-items";
 import { getAdminV2PaymentLabels } from "@/lib/admin-v2/orders/order-payment";
 import { formatDateTime } from "@/components/admin-v2/views/orders/utils";
 
-export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
+export function AdminV2InvoicePreview({ order, invoice }: { order: OrderRecord; invoice?: OrderInvoiceRecord | null }) {
   const amounts = getAdminV2OrderAmounts(order);
   const items = normalizeAdminV2OrderItems(order.items);
   const payment = getAdminV2PaymentLabels(order);
@@ -26,7 +26,10 @@ export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
               minHeight: "100% !important",
               zIndex: "9999 !important",
               overflow: "visible !important",
+              padding: "18mm !important",
             },
+            ".admin-v2-print-invoice-card": { breakInside: "avoid !important", pageBreakInside: "avoid !important" },
+            "@page": { size: "A4", margin: "12mm" },
           },
         }}
       />
@@ -44,21 +47,32 @@ export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
             color: "#111827",
             border: 0,
             borderRadius: 0,
+            boxShadow: "none",
           },
         }}
       >
       <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, mb: 3 }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800 }}>Aevyrixa Her Care</Typography>
-          <Typography variant="body2" color="text.secondary">Order Summary</Typography>
+          <Typography variant="body2" color="text.secondary">Invoice</Typography>
         </Box>
         <Box sx={{ textAlign: "right" }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>{order.orderReference}</Typography>
-          <Typography variant="caption" color="text.secondary">{formatDateTime(order.createdAt)}</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            {invoice?.invoiceNumber ?? "Invoice pending"}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Issued {invoice?.issuedAt ? formatDateTime(invoice.issuedAt) : "Not provided"}
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            Order {order.orderReference}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Ordered {formatDateTime(order.createdAt)}
+          </Typography>
         </Box>
       </Stack>
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={3} sx={{ mb: 3 }}>
+      <Stack className="admin-v2-print-invoice-card" direction={{ xs: "column", sm: "row" }} spacing={3} sx={{ mb: 3 }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle2">Customer</Typography>
           <Typography variant="body2">{order.customer.fullName || "Not provided"}</Typography>
@@ -80,7 +94,7 @@ export function AdminV2InvoicePreview({ order }: { order: OrderRecord }) {
         </Box>
       </Stack>
 
-      <Table size="small">
+      <Table className="admin-v2-print-invoice-card" size="small">
         <TableHead>
           <TableRow>
             <TableCell>Item</TableCell>

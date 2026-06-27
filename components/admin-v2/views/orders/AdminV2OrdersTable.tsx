@@ -34,6 +34,7 @@ type Props = {
   total: number;
   filtered: boolean;
   canEditStatus: boolean;
+  invoicePending?: boolean;
   onPageChange: (page: number) => void;
   onRowsPerPageChange: (size: number) => void;
   onStatusClick: (order: OrderRecord) => void;
@@ -53,6 +54,7 @@ export function AdminV2OrdersTable({
   total,
   filtered,
   canEditStatus,
+  invoicePending = false,
   onPageChange,
   onRowsPerPageChange,
   onStatusClick,
@@ -187,7 +189,7 @@ export function AdminV2OrdersTable({
         >
           <RefreshCcw size={16} />&nbsp; Update Status
         </MenuItem>
-        <Tooltip title="Notes persist to the existing admin internal note field only. Full note history is pending backend support.">
+        <Tooltip title="Add an internal note to this order history.">
           <span>
             <MenuItem
               onClick={() => {
@@ -200,12 +202,13 @@ export function AdminV2OrdersTable({
           </span>
         </Tooltip>
         <MenuItem
+          disabled={invoicePending}
           onClick={() => {
             if (menuOrder) onInvoiceClick(menuOrder);
             closeMenu();
           }}
         >
-          <Printer size={16} />&nbsp; Print Invoice
+          <Printer size={16} />&nbsp; {invoicePending ? "Preparing invoice..." : "Print Invoice"}
         </MenuItem>
         <Tooltip title={menuOrder && !canCancel(menuOrder) ? `Cancel is unavailable for ${statusLabel(menuOrder.status)} orders.` : ""}>
           <span>

@@ -188,6 +188,7 @@ export type OrderInvoiceRecord = {
   orderReference: string;
   status: OrderInvoiceStatus;
   issuedAt: string;
+  issuedByAdminId?: string;
   issuedBy?: string;
   subtotalAmount: number;
   discountAmount: number;

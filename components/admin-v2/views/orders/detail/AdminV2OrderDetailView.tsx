@@ -1,22 +1,30 @@
 "use client";
 
-import { Alert, Box, Chip, DialogActions, Snackbar, Stack, TextField, Typography } from "@mui/material";
-import { ArrowLeft, NotebookPen, Printer, RefreshCcw, ShieldAlert, SquarePen } from "lucide-react";
+import { Alert, Box, Breadcrumbs, Chip, DialogActions, Divider, Snackbar, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { ArrowLeft, CircleDollarSign, Clock3, NotebookPen, Printer, RefreshCcw, ShieldAlert, Sparkles, SquarePen, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import type { OrderEventRecord, OrderInvoiceRecord, OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
-import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { V2Dialog } from "@/components/admin-v2/forms/V2Dialog";
 import { V2Select } from "@/components/admin-v2/forms/V2Select";
 import { AdminV2OrderStatusChip } from "@/components/admin-v2/views/orders/AdminV2OrderStatusChip";
 import { AdminV2InvoicePreview } from "@/components/admin-v2/views/orders/detail/AdminV2InvoicePreview";
-import { AdminV2OrderOverviewGrid } from "@/components/admin-v2/views/orders/detail/AdminV2OrderCards";
+import {
+  AdminV2ActivityTimeline,
+  AdminV2OrderFinancialMeta,
+  AdminV2OrderItemsTable,
+  AdminV2OrderNotes,
+  AdminV2OrderOverviewGrid,
+  AdminV2OrderProgress,
+} from "@/components/admin-v2/views/orders/detail/AdminV2OrderCards";
 import {
   formatDateTime,
   isSensitiveOrderTransition,
+  itemCount,
   validNextOrderStatuses,
 } from "@/components/admin-v2/views/orders/utils";
 
@@ -77,7 +85,7 @@ async function issueInvoice(orderRef: string) {
   return result.invoice as OrderInvoiceRecord;
 }
 
-export function AdminV2OrderDetailView({ order, permissions }: Props) {
+export function AdminV2OrderDetailView({ order, storageMode, permissions }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -138,6 +146,7 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
       setEvents(await fetchOrderEvents(order.orderReference));
       setToast({ message: "Internal note saved.", severity: "success" });
       setNote("");
+      setNotesOpen(false);
       refresh();
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Note update failed.", severity: "error" });
@@ -159,12 +168,25 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
   };
 
   const openInvoice = async () => {
+    if (mutationPending) return;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.title = "Preparing invoice";
+      printWindow.document.body.innerHTML = "<p style=\"font-family: Arial, sans-serif; padding: 24px;\">Preparing invoice...</p>";
+    }
+
     try {
       setMutationPending(true);
-      setIssuedInvoice(await issueInvoice(order.orderReference));
-      setInvoiceOpen(true);
+      const invoice = await issueInvoice(order.orderReference);
+      setIssuedInvoice(invoice);
+      if (printWindow) {
+        printWindow.location.href = `/admin-v2/orders/${encodeURIComponent(order.orderReference)}/invoice`;
+      } else {
+        setInvoiceOpen(true);
+      }
       setEvents(await fetchOrderEvents(order.orderReference));
     } catch (error) {
+      printWindow?.close();
       setToast({ message: error instanceof Error ? error.message : "Invoice could not be issued.", severity: "error" });
     } finally {
       setMutationPending(false);
@@ -175,6 +197,17 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
 
   useEffect(() => {
     let active = true;
+    setNotesLoading(true);
+    fetchOrderNotes(order.orderReference)
+      .then((next) => {
+        if (active) setNotes(next);
+      })
+      .catch(() => {
+        if (active) setNotes([]);
+      })
+      .finally(() => {
+        if (active) setNotesLoading(false);
+      });
     fetchOrderEvents(order.orderReference)
       .then((next) => {
         if (active) setEvents(next);
@@ -189,59 +222,189 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
 
   return (
     <>
-      <V2PageHeader
-        title={order.orderReference}
-        description={`Created ${formatDateTime(order.createdAt)}. Total payable ${formatAdminV2Amount(amounts.total)}.`}
-        breadcrumbs={[
-          { label: "Admin V2", href: "/admin-v2/dashboard" },
-          { label: "Orders", href: "/admin-v2/orders" },
-          { label: order.orderReference },
-        ]}
-        actions={
-          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-            <V2Button href={backHref} variant="text" startIcon={<ArrowLeft size={16} />}>Back</V2Button>
-            <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} onClick={openNotes}>Add Note</V2Button>
-            <V2Button variant="outlined" startIcon={<Printer size={16} />} loading={mutationPending} onClick={openInvoice}>Print Invoice</V2Button>
-            <V2Button variant="outlined" startIcon={<RefreshCcw size={16} />} loading={isPending} onClick={refresh}>Refresh</V2Button>
-            <V2Button variant="contained" startIcon={<SquarePen size={16} />} disabled={!permissions.canEditStatus} onClick={() => { setNextStatus(""); setReason(""); setStatusOpen(true); }}>Update Status</V2Button>
-          </Stack>
-        }
-      />
+      <Stack
+        spacing={2.5}
+        sx={{
+          position: "relative",
+          "&::before": {
+            content: '""',
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            background:
+              "radial-gradient(circle at 78% 8%, rgba(255,79,184,0.13), transparent 28%), radial-gradient(circle at 12% 28%, rgba(6,182,212,0.09), transparent 26%)",
+            zIndex: -1,
+          },
+        }}
+      >
+        <V2Card
+          sx={{
+            p: 0,
+            overflow: "hidden",
+            borderColor: "rgba(157,47,255,0.2)",
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(250,246,255,0.92) 58%, rgba(240,253,255,0.86))",
+            boxShadow: "0 24px 70px rgba(58,34,105,0.13)",
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(circle at 18% 0%, rgba(157,47,255,0.16), transparent 32%), radial-gradient(circle at 86% 24%, rgba(255,79,184,0.12), transparent 28%)",
+              pointerEvents: "none",
+            },
+            "& .MuiCardContent-root": { p: { xs: 2.25, md: 3 } },
+          }}
+        >
+          <Stack spacing={2.25} sx={{ position: "relative" }}>
+            <Breadcrumbs aria-label="Order detail breadcrumb" sx={{ color: "text.secondary", fontSize: 13 }}>
+              <Typography component={Link} href="/admin-v2/dashboard" color="inherit" sx={{ textDecoration: "none", "&:hover": { color: "primary.main" } }}>
+                Admin V2
+              </Typography>
+              <Typography component={Link} href="/admin-v2/orders" color="inherit" sx={{ textDecoration: "none", "&:hover": { color: "primary.main" } }}>
+                Orders
+              </Typography>
+              <Typography color="text.primary" sx={{ fontWeight: 750 }}>{order.orderReference}</Typography>
+            </Breadcrumbs>
 
-      <Stack spacing={3}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap" }}>
-          <AdminV2OrderStatusChip value={order.status} />
-          <Chip size="small" label={`Created ${formatDateTime(order.createdAt)}`} variant="outlined" />
-          {order.updatedAt ? <Chip size="small" label={`Updated ${formatDateTime(order.updatedAt)}`} variant="outlined" /> : null}
-        </Stack>
+            <Stack direction={{ xs: "column", lg: "row" }} spacing={2.5} sx={{ justifyContent: "space-between", alignItems: { lg: "flex-start" } }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", flexWrap: "wrap", mb: 1 }}>
+                  <Chip
+                    size="small"
+                    icon={<Sparkles size={14} />}
+                    label="Order command"
+                    variant="outlined"
+                    sx={{ bgcolor: "rgba(157,47,255,0.06)", fontWeight: 750 }}
+                  />
+                  <AdminV2OrderStatusChip value={order.status} />
+                </Stack>
+                <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 0, overflowWrap: "anywhere" }}>
+                  {order.orderReference}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, maxWidth: 760 }}>
+                  {order.customer.fullName || "Customer not provided"} - {itemCount(order)} item{itemCount(order) === 1 ? "" : "s"} - {order.paymentDetails.paymentMethod || "Payment method not provided"}
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
+                  <Chip size="small" icon={<Clock3 size={14} />} label={`Created ${formatDateTime(order.createdAt)}`} variant="outlined" />
+                  {order.updatedAt ? <Chip size="small" label={`Updated ${formatDateTime(order.updatedAt)}`} variant="outlined" /> : null}
+                  <Chip size="small" label={`Delivery ${order.deliveryStatus ? order.deliveryStatus.replaceAll("_", " ") : "not provided"}`} variant="outlined" />
+                </Stack>
+              </Box>
+
+              <Stack spacing={1.6} sx={{ width: { xs: "100%", lg: 390 } }}>
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: "1px solid rgba(157,47,255,0.16)",
+                    bgcolor: "rgba(255,255,255,0.72)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                  }}
+                >
+                  <Stack direction="row" spacing={1.2} sx={{ alignItems: "center", justifyContent: "space-between" }}>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                      <CircleDollarSign size={20} color="#9d2fff" />
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850, textTransform: "uppercase" }}>
+                        Canonical payable
+                      </Typography>
+                    </Stack>
+                    <Typography variant="h5" color="primary.main" sx={{ fontWeight: 950 }}>
+                      {formatAdminV2Amount(amounts.total)}
+                    </Typography>
+                  </Stack>
+                  <Divider sx={{ my: 1.4 }} />
+                  <Stack direction="row" spacing={1.5} sx={{ justifyContent: "space-between" }}>
+                    <Typography variant="caption" color="text.secondary">Phone</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 750, overflowWrap: "anywhere" }}>{order.customer.phone || "Not provided"}</Typography>
+                  </Stack>
+                </Box>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, justifyContent: { lg: "flex-end" } }}>
+                  <V2Button href={backHref} variant="text" startIcon={<ArrowLeft size={16} />} aria-label="Back to orders">Back</V2Button>
+                  <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} onClick={openNotes}>Add Note</V2Button>
+                  <Tooltip title="Issue or open the existing invoice print route">
+                    <span>
+                      <V2Button variant="outlined" startIcon={<Printer size={16} />} loading={mutationPending} onClick={openInvoice}>
+                        {mutationPending ? "Preparing..." : "Print Invoice"}
+                      </V2Button>
+                    </span>
+                  </Tooltip>
+                  <V2Button variant="outlined" startIcon={<RefreshCcw size={16} />} loading={isPending} onClick={refresh}>Refresh</V2Button>
+                  <V2Button variant="contained" startIcon={<SquarePen size={16} />} disabled={!permissions.canEditStatus} onClick={() => { setNextStatus(""); setReason(""); setStatusOpen(true); }}>Update Status</V2Button>
+                </Stack>
+              </Stack>
+            </Stack>
+          </Stack>
+        </V2Card>
+
         {amounts.discrepancy ? (
-          <Alert severity="warning" variant="outlined">
-            Stored total differs from checkout payable. Admin V2 displays subtotal plus delivery as the payable total.
+          <Alert
+            severity="warning"
+            variant="outlined"
+            icon={<TriangleAlert size={19} />}
+            sx={{
+              alignItems: "flex-start",
+              borderColor: "rgba(245,158,11,0.34)",
+              bgcolor: "rgba(255,251,235,0.78)",
+              "& .MuiAlert-message": { width: "100%" },
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 850 }}>
+              Stored total differs from checkout payable.
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Admin V2 displays subtotal plus delivery as the payable total while preserving the stored total for audit.
+            </Typography>
+            <Box component="details" sx={{ mt: 0.75 }}>
+              <Typography component="summary" variant="caption" sx={{ cursor: "pointer", fontWeight: 750 }}>
+                View stored-total details
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Stored total {formatAdminV2Amount(amounts.storedTotal)}. Displayed payable {formatAdminV2Amount(amounts.total)}.
+              </Typography>
+            </Box>
           </Alert>
         ) : null}
+
         <AdminV2OrderOverviewGrid order={order} />
-        <Box>
-          <Typography variant="h6" sx={{ mb: 1 }}>Timeline</Typography>
-          {eventsError ? <Alert severity="warning">{eventsError}</Alert> : null}
-          <Stack spacing={1}>
-            <V2Card sx={{ p: 2 }}>
-              <Typography variant="body2">Order created</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {formatDateTime(order.createdAt)} - Detailed history before Phase 2.2 was not stored.
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 7fr) minmax(300px, 3fr)" },
+            gap: 2.5,
+            alignItems: "start",
+          }}
+        >
+          <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+            <AdminV2OrderItemsTable order={order} />
+            <AdminV2OrderFinancialMeta order={order} />
+            <AdminV2ActivityTimeline order={order} events={events} error={eventsError} />
+          </Stack>
+          <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+            <AdminV2OrderProgress order={order} />
+            <AdminV2OrderNotes order={order} notes={notes} loading={notesLoading} />
+            <V2Card
+              sx={{
+                borderColor: "rgba(6,182,212,0.16)",
+                bgcolor: "rgba(255,255,255,0.78)",
+                "& .MuiCardContent-root": { p: 2 },
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850, textTransform: "uppercase" }}>
+                Order meta
               </Typography>
+              <Stack spacing={0.8} sx={{ mt: 1 }}>
+                <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2 }}>
+                  <Typography variant="caption" color="text.secondary">Storage</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 750 }}>{storageMode}</Typography>
+                </Stack>
+                <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2 }}>
+                  <Typography variant="caption" color="text.secondary">Order ID</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 750, overflowWrap: "anywhere", textAlign: "right" }}>{order.orderId}</Typography>
+                </Stack>
+              </Stack>
             </V2Card>
-            {events.map((event) => (
-              <V2Card key={event.id} sx={{ p: 2 }}>
-                <Typography variant="body2">
-                  {event.eventType.replaceAll("_", " ")}
-                  {event.fromStatus && event.toStatus ? `: ${event.fromStatus} -> ${event.toStatus}` : ""}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {event.actorName} - {formatDateTime(event.createdAt)}
-                  {event.reason ? ` - ${event.reason}` : ""}
-                </Typography>
-              </V2Card>
-            ))}
           </Stack>
         </Box>
       </Stack>
@@ -293,7 +456,9 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
           <TextField fullWidth multiline minRows={4} label="Internal note" value={note} onChange={(event) => setNote(event.target.value)} />
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setNotesOpen(false)}>Close</V2Button>
-            <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !note.trim()} onClick={saveNote}>Save note</V2Button>
+            <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !note.trim()} onClick={saveNote}>
+              {mutationPending ? "Saving..." : "Save note"}
+            </V2Button>
           </DialogActions>
         </Stack>
       </V2Dialog>
@@ -306,7 +471,7 @@ export function AdminV2OrderDetailView({ order, permissions }: Props) {
             </Alert>
           ) : null}
           <Box sx={{ maxHeight: "70vh", overflow: "auto" }}>
-            <AdminV2InvoicePreview order={order} />
+            <AdminV2InvoicePreview order={order} invoice={issuedInvoice} />
           </Box>
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setInvoiceOpen(false)}>Close</V2Button>

@@ -5,7 +5,7 @@ import {
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { getCustomerFromRequest } from "@/app/api/account/_utils";
 import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
-import { createOrder, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
+import { createOrder, OrderStoreError, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
 import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
 import { getProductBySlug } from "@/app/lib/product-store";
@@ -201,9 +201,28 @@ export async function GET(request: Request) {
     const result = await queryOrders(parseAdminV2OrderQuery(new URL(request.url).searchParams));
     return Response.json(result);
   } catch (error) {
-    console.error("Failed to list orders:", error);
+    if (error instanceof OrderStoreError) {
+      console.error("[api:orders] failed to list orders", {
+        operation: error.operation,
+        status: error.status,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+    } else {
+      console.error("[api:orders] failed to list orders", {
+        operation: "order query",
+        code: "ORDER_BACKEND_UNKNOWN",
+        message: error instanceof Error ? error.message : "Unknown order backend error.",
+      });
+    }
+
     return Response.json(
-      { orders: [], error: "Unable to load backend orders." },
+      {
+        error: "Unable to load backend orders.",
+        code: error instanceof OrderStoreError ? error.code : "ORDER_BACKEND_UNKNOWN",
+      },
       { status: 500 }
     );
   }
