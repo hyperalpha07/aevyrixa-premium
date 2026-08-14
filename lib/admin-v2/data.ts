@@ -26,7 +26,8 @@ export async function getAdminV2DashboardData(): Promise<AdminV2DashboardData> {
       : [];
 
   const productPayload = productsResult.status === "fulfilled" ? productsResult.value : null;
-  const products = productPayload?.products ?? [];
+  const products =
+    productPayload?.storageMode === "supabase" ? productPayload.products : [];
 
   const reviews = reviewsResult.status === "fulfilled" && reviewsResult.value ? reviewsResult.value : [];
   const customers =
@@ -48,12 +49,13 @@ export async function getAdminV2DashboardData(): Promise<AdminV2DashboardData> {
       source: orderPayload?.storageMode ?? "unavailable",
     },
     products: {
-      available: Boolean(productPayload),
+      available: productPayload?.storageMode === "supabase",
       count: products.length,
       active: products.filter((product) => product.status === "active").length,
       draft: products.filter((product) => product.status === "draft").length,
       lowStock: products.filter((product) => product.stockStatus === "low_stock" || product.stockStatus === "out_of_stock").length,
-      source: productPayload?.storageMode ?? "unavailable",
+      source:
+        productPayload?.storageMode === "supabase" ? "supabase" : "unavailable",
       items: products,
     },
     reviews: {

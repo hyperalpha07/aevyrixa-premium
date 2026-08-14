@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { AdminSessionUser } from "@/app/lib/admin-permissions";
+import { roleLabels } from "@/app/lib/admin-permissions";
 import { AdminV2Logo } from "@/components/admin-v2/layouts/AdminV2Logo";
 import { adminV2Navigation, type AdminV2NavigationItem } from "@/configs/admin-v2/navigation";
 import { canAccessAdminV2Module } from "@/lib/admin-v2/permissions";
@@ -186,8 +187,8 @@ export function AdminV2Sidebar({ session, collapsed, onNavigate }: AdminV2Sideba
       </Box>
       <Divider />
       <Box sx={{ px: collapsed ? 1 : 1.5, py: 1.5, overflowY: "auto", overflowX: "hidden", flex: 1 }}>
-        {sections.map((section) => (
-          <Box key={section.heading} sx={{ mb: 2 }}>
+        {sections.map((section, sectionIndex) => (
+          <Box key={section.heading} sx={{ mb: sectionIndex === sections.length - 1 ? 0 : 1.5 }}>
             {!collapsed ? (
               <Typography
                 variant="caption"
@@ -214,6 +215,66 @@ export function AdminV2Sidebar({ session, collapsed, onNavigate }: AdminV2Sideba
             </List>
           </Box>
         ))}
+      </Box>
+      <Box
+        sx={{
+          flexShrink: 0,
+          borderTop: "1px solid",
+          borderColor: "divider",
+          px: collapsed ? 1.25 : 2,
+          py: 1.5,
+          bgcolor: "background.paper",
+        }}
+      >
+        {collapsed ? (
+          <Tooltip title={`${session.displayName} · ${roleLabels[session.role] ?? "Admin"}`} placement="right">
+            <Box
+              aria-label={`${session.displayName}, ${roleLabels[session.role] ?? "Admin"}`}
+              sx={{
+                width: 36,
+                height: 36,
+                mx: "auto",
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "50%",
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              {session.displayName.slice(0, 1).toUpperCase()}
+            </Box>
+          </Tooltip>
+        ) : (
+          <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", minWidth: 0 }}>
+            <Box
+              aria-hidden="true"
+              sx={{
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "50%",
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              {session.displayName.slice(0, 1).toUpperCase()}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>
+                {session.displayName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                {roleLabels[session.role] ?? "Admin"} · Signed in
+              </Typography>
+            </Box>
+          </Stack>
+        )}
       </Box>
     </Stack>
   );

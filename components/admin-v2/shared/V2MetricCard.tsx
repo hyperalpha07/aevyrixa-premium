@@ -1,4 +1,5 @@
 import { Box, Stack, Typography } from "@mui/material";
+import type { CardProps } from "@mui/material";
 import type { LucideIcon } from "lucide-react";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { AdminV2AnimatedNumber } from "@/components/admin-v2/motion/AdminV2AnimatedNumber";
@@ -13,6 +14,7 @@ type V2MetricCardProps = {
   helper?: string;
   icon: LucideIcon;
   tone?: "primary" | "success" | "warning" | "info" | "error";
+  sx?: CardProps["sx"];
 };
 
 export function V2MetricCard({
@@ -25,9 +27,10 @@ export function V2MetricCard({
   helper,
   icon: Icon,
   tone = "primary",
+  sx,
 }: V2MetricCardProps) {
   return (
-    <V2Card>
+    <V2Card sx={sx}>
       <Stack direction="row" spacing={2} sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
         <Box>
           <Typography variant="body2" color="text.secondary">
