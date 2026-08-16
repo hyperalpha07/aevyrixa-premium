@@ -1,6 +1,6 @@
 "use client";
 
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import {
   CssBaseline,
   ScopedCssBaseline,
@@ -241,7 +241,6 @@ export function AdminV2ThemeProvider({ children }: { children: React.ReactNode }
         colorSchemeStorageKey={adminV2ColorSchemeStorageKey}
         disableTransitionOnChange
         forceThemeRerender
-        noSsr
       >
         <AdminV2ThemeController
           hasLoadedStoredSettings={hasLoadedStoredSettings}
