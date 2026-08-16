@@ -210,9 +210,11 @@ export function AdminV2DashboardView({ data }: { data: AdminV2DashboardData }) {
               </Stack>
 
               {data.products.available && !productsEmpty ? (
-                <Stack spacing={1.5} divider={<Divider flexItem />}>
+                <Stack spacing={1.5}>
                   <SummaryRow label="Active" value={data.products.active} color="success" />
+                  <Divider flexItem />
                   <SummaryRow label="Draft" value={data.products.draft} />
+                  <Divider flexItem />
                   <SummaryRow
                     label="Low or out of stock"
                     value={data.products.lowStock}
@@ -242,17 +244,19 @@ export function AdminV2DashboardView({ data }: { data: AdminV2DashboardData }) {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
                 Customer feedback and conversations that may need attention.
               </Typography>
-              <Stack spacing={1.5} divider={<Divider flexItem />}>
+              <Stack spacing={1.5}>
                 <SummaryRow
                   label="Reviews"
                   value={data.reviews.available ? data.reviews.count : "Unavailable"}
                   color={data.reviews.available ? "info" : "default"}
                 />
+                <Divider flexItem />
                 <SummaryRow
                   label="Pending reviews"
                   value={data.reviews.available ? data.reviews.pending : "Unavailable"}
                   color={data.reviews.pending ? "warning" : "default"}
                 />
+                <Divider flexItem />
                 <SummaryRow
                   label="Open support"
                   value={data.support.available ? data.support.open : "Unavailable"}

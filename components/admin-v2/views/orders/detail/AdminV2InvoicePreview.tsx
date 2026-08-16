@@ -6,6 +6,7 @@ import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orde
 import { normalizeAdminV2OrderItems } from "@/lib/admin-v2/orders/order-items";
 import { getAdminV2PaymentLabels } from "@/lib/admin-v2/orders/order-payment";
 import { formatDateTime } from "@/components/admin-v2/views/orders/utils";
+import { brandName } from "@/configs/brand/noromi";
 
 export function AdminV2InvoicePreview({ order, invoice }: { order: OrderRecord; invoice?: OrderInvoiceRecord | null }) {
   const amounts = getAdminV2OrderAmounts(order);
@@ -53,7 +54,7 @@ export function AdminV2InvoicePreview({ order, invoice }: { order: OrderRecord; 
       >
       <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, mb: 3 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>Aevyrixa Her Care</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 800 }}>{brandName}</Typography>
           <Typography variant="body2" color="text.secondary">Invoice</Typography>
         </Box>
         <Box sx={{ textAlign: "right" }}>

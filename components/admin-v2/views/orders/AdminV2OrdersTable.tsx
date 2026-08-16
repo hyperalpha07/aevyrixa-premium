@@ -26,6 +26,7 @@ import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { AdminV2OrderStatusChip } from "@/components/admin-v2/views/orders/AdminV2OrderStatusChip";
 import { AdminV2OrdersEmptyState } from "@/components/admin-v2/views/orders/AdminV2OrdersEmptyState";
 import { formatDateTime, itemCount, statusLabel } from "@/components/admin-v2/views/orders/utils";
+import { brandName } from "@/configs/brand/noromi";
 
 type Props = {
   orders: OrderRecord[];
@@ -90,7 +91,7 @@ export function AdminV2OrdersTable({
   return (
     <V2Card sx={{ p: 0 }}>
       <TableContainer sx={{ overflowX: "auto" }}>
-        <Table size="small" stickyHeader aria-label="Real Aevyrixa orders">
+        <Table size="small" stickyHeader aria-label={`Real ${brandName} orders`}>
           <TableHead>
             <TableRow>
               {["Order Reference", "Customer", "Date", "Items", "Payment Method", "Payment Status", "Order Status", "Delivery Status", "Total", "Actions"].map((column) => (

@@ -15,6 +15,7 @@ import { AdminV2OrdersFilters } from "@/components/admin-v2/views/orders/AdminV2
 import { AdminV2OrdersTable } from "@/components/admin-v2/views/orders/AdminV2OrdersTable";
 import { AdminV2OrdersErrorState } from "@/components/admin-v2/views/orders/AdminV2OrdersErrorState";
 import { AdminV2InvoicePreview } from "@/components/admin-v2/views/orders/detail/AdminV2InvoicePreview";
+import { brandShortName } from "@/configs/brand/noromi";
 import {
   activeFilterCount,
   emptyOrderFilters,
@@ -167,7 +168,7 @@ export function AdminV2OrdersView({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `aevyrixa-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `${brandShortName.toLowerCase()}-orders-${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
       setToast({ message: "Filtered real orders exported.", severity: "success" });
