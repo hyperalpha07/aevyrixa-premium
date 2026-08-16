@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -189,12 +190,17 @@ function StoryVisual({
   media,
   fallback,
   alt,
+  forceBrandVisual = false,
 }: {
   media: SectionMedia;
   fallback: React.ReactNode;
   alt: string;
+  forceBrandVisual?: boolean;
 }) {
-  const hasUploaded = (media.mode === "image" && media.imageUrl) || (media.mode === "video" && media.videoUrl);
+  const hasUploaded =
+    !forceBrandVisual &&
+    ((media.mode === "image" && media.imageUrl) ||
+      (media.mode === "video" && media.videoUrl));
 
   return (
     <div className="aev-story-media aev-home-art-block relative isolate min-w-0 overflow-hidden">
@@ -366,14 +372,16 @@ export default async function Home() {
             </div>
             <StoryVisual
               media={heroMedia}
+              forceBrandVisual
               alt={`${brandName} hero media`}
               fallback={
-                <UploadedMedia
-                  imageUrl={noromiAssets.heroBanner}
-                  videoUrl=""
-                  mode="image"
+                <Image
+                  fill
+                  preload
+                  sizes="(max-width: 1023px) calc(100vw - 2rem), 52vw"
+                  src={noromiAssets.heroBanner}
                   alt={`${brandName} premium period essentials`}
-                  className="h-full w-full object-cover"
+                  className="aev-home-hero-image object-cover"
                 />
               }
             />
@@ -399,7 +407,7 @@ export default async function Home() {
       ) : null}
 
       {hms.showTrustStrip ? (
-        <section className="px-4 pb-3 sm:px-6 sm:pb-7" aria-label="Store trust points">
+        <section className="aev-home-trust-section px-4 pb-3 sm:px-6 sm:pb-7" aria-label="Store trust points">
           <div className="aev-trust-row mx-auto grid max-w-7xl grid-cols-3 gap-2 overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#120C22]/76 p-2 sm:gap-3 sm:p-3">
             {trustItems.map(({ label, icon: Icon }) => (
               <article key={label} className="flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-[1rem] border border-white/[0.07] bg-white/[0.035] px-1.5 py-2.5 text-center sm:flex-row sm:justify-start sm:px-4">

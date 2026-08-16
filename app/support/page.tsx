@@ -3,13 +3,14 @@ import InfoPageShell from "@/app/components/info-page-shell";
 import LiveChatWidget from "@/app/components/live-chat-widget";
 import SupportActionPanel from "@/app/components/support-action-panel";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Support — 3-Day Hygiene-Safe Support",
+  title: { absolute: `Support | ${brandName}` },
   description:
-    "Contact Aevyrixa Her Care support for order concerns, size questions, or product issues. 3-Day Hygiene-Safe Support with personal team review for every eligible request.",
+    "Contact Noromi Care support for order concerns, size questions, or product issues.",
 };
 
 export default async function SupportPage() {
@@ -70,7 +71,7 @@ export default async function SupportPage() {
         },
         {
           title: "Review Process",
-          copy: `All support, exchange, or refund requests are individually reviewed by the ${settings.brandDisplayName} team. Our team will contact you on the phone number provided to confirm details and guide next steps. Review typically takes 1–3 working days after your request is received.`,
+          copy: `All support, exchange, or refund requests are individually reviewed by the ${brandName} team. Our team will contact you on the phone number provided to confirm details and guide next steps. Review typically takes 1–3 working days after your request is received.`,
         },
         {
           title: "Used Product Policy",

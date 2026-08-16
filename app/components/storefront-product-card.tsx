@@ -448,7 +448,7 @@ export default function StorefrontProductCard({
             </h3>
           </Link>
           {product.shortDescription && (
-            <p className="mt-1 line-clamp-1 text-[0.7rem] leading-4 text-[#D8CBE8]/68 sm:mt-1.5 sm:line-clamp-2 sm:text-sm sm:leading-6">
+            <p className="aev-product-card-description mt-1 line-clamp-1 text-[0.7rem] leading-4 text-[#D8CBE8]/68 sm:mt-1.5 sm:line-clamp-2 sm:text-sm sm:leading-6">
               {product.shortDescription}
             </p>
           )}

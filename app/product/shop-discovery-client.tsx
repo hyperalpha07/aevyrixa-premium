@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -31,7 +32,7 @@ import type {
   StorefrontSettings,
 } from "@/app/lib/storefront-settings";
 import type { ReviewSummary } from "@/app/lib/review-types";
-import { brandName } from "@/configs/brand/noromi";
+import { brandName, noromiAssets } from "@/configs/brand/noromi";
 import {
   emptyShopQueryFilters,
   parseShopSignal,
@@ -293,18 +294,12 @@ export default function ShopDiscoveryClient({
   const secondaryCta = hms.shopHeroSecondaryCtaText || "Track Order";
   const secondaryCtaLink = hms.shopHeroSecondaryCtaLink || "/track-order";
   const heroEyebrow = safeShopCopy(hms.shopHeroEyebrow || `${brandName} SHOP`);
-  const heroMediaUrl = hms.shopHeroMediaUrl || "";
-  const heroMediaAlt = safeShopCopy(hms.shopHeroMediaAlt || brandName);
-  const heroMediaType = hms.shopHeroMediaType || "auto";
+  const heroMediaUrl = noromiAssets.logoMark;
+  const heroMediaAlt = `${brandName} floral emblem`;
   const heroBadge1 = hms.shopHeroBadge1 ? safeShopCopy(hms.shopHeroBadge1) : "";
   const heroBadge2 = hms.shopHeroBadge2 ? safeShopCopy(hms.shopHeroBadge2) : "";
   const heroCaption = hms.shopHeroCaption || "";
-  const heroMediaFit = hms.shopHeroMediaFit || "contain";
-  const heroMediaPosition = hms.shopHeroMediaPosition || "center";
-  const effectiveFit: "contain" | "cover" = heroMediaFit === "cover" ? "cover" : "contain";
-  const isHeroVideo =
-    heroMediaType === "video" ||
-    (heroMediaType === "auto" && /\.(mp4|webm|ogg)(\?|$)/i.test(heroMediaUrl));
+  const heroMediaPosition = "center";
   const trustCards = [
     {
       icon: PackageCheck,
@@ -489,37 +484,24 @@ export default function ShopDiscoveryClient({
               {/* Mobile compact hero media — hidden on lg+ */}
               {heroMediaUrl && (
                 <div className="aev-shop-hero-media relative mt-3 h-36 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden">
-                  {effectiveFit === "contain" && !isHeroVideo && (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: `url(${heroMediaUrl})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        filter: "blur(20px) brightness(0.28)",
-                        transform: "scale(1.1)",
-                      }}
-                    />
-                  )}
-                  {isHeroVideo ? (
-                    <video
-                      src={heroMediaUrl}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="absolute inset-0 h-full w-full"
-                      style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
-                    />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={heroMediaUrl}
-                      alt={heroMediaAlt}
-                      className="absolute inset-0 h-full w-full"
-                      style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
-                    />
-                  )}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url(${heroMediaUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      filter: "blur(20px) brightness(0.28)",
+                      transform: "scale(1.1)",
+                    }}
+                  />
+                  <Image
+                    fill
+                    src={heroMediaUrl}
+                    alt={heroMediaAlt}
+                    sizes="(max-width: 1023px) calc(100vw - 1.5rem), 20rem"
+                    className="object-contain p-2"
+                    style={{ objectPosition: heroMediaPosition }}
+                  />
                 </div>
               )}
 
@@ -572,37 +554,24 @@ export default function ShopDiscoveryClient({
 
             {heroMediaUrl ? (
               <>
-                {effectiveFit === "contain" && !isHeroVideo && (
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      backgroundImage: `url(${heroMediaUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      filter: "blur(28px) brightness(0.28)",
-                      transform: "scale(1.12)",
-                    }}
-                  />
-                )}
-                {isHeroVideo ? (
-                  <video
-                    src={heroMediaUrl}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 h-full w-full"
-                    style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={heroMediaUrl}
-                    alt={heroMediaAlt}
-                    className="absolute inset-0 h-full w-full"
-                    style={{ objectFit: effectiveFit, objectPosition: heroMediaPosition }}
-                  />
-                )}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${heroMediaUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    filter: "blur(28px) brightness(0.28)",
+                    transform: "scale(1.12)",
+                  }}
+                />
+                <Image
+                  fill
+                  src={heroMediaUrl}
+                  alt={heroMediaAlt}
+                  sizes="22rem"
+                  className="object-contain p-8"
+                  style={{ objectPosition: heroMediaPosition }}
+                />
               </>
             ) : (
               /* Default brand trust visual when no media is set */
