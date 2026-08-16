@@ -5479,6 +5479,260 @@ button {
   }
 }
 
+/* Public storefront mobile refinement: compact, product-first, and touch-friendly. */
+@media (max-width: 639px) {
+  .aev-home-hero {
+    padding: 0.85rem 1rem 1.15rem;
+  }
+
+  .aev-home-hero-grid {
+    gap: 0.9rem;
+  }
+
+  .aev-home-hero-copy > .aev-story-eyebrow {
+    max-width: 100%;
+    padding: 0.42rem 0.75rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    overflow-wrap: anywhere;
+  }
+
+  .aev-home-hero-copy > h1 {
+    max-width: 100%;
+    margin-top: 0.75rem;
+    font-size: clamp(1.9rem, 9vw, 2.2rem);
+    line-height: 1.02;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .aev-home-hero-description {
+    display: -webkit-box;
+    margin-top: 0.7rem;
+    overflow: hidden;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .aev-home-hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+  }
+
+  .aev-home-hero-actions > a {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding-inline: 0.8rem;
+    text-align: center;
+  }
+
+  .aev-home-hero-stats {
+    margin-top: 0.85rem;
+  }
+
+  .aev-home-hero .aev-story-media,
+  .aev-home-hero .aev-story-media .aev-motion-panel > .relative {
+    min-height: min(12.25rem, 50vw);
+    border-radius: 1.1rem;
+  }
+
+  .aev-home-marquee {
+    display: none;
+  }
+
+  .aev-home-featured-section {
+    padding-top: 1.55rem;
+    padding-bottom: 2rem;
+  }
+
+  .aev-home-featured-header {
+    gap: 0.8rem;
+  }
+
+  .aev-home-featured-header .aev-story-copy {
+    display: -webkit-box;
+    overflow: hidden;
+    line-height: 1.5;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .aev-home-featured-header > a {
+    min-height: 2.6rem;
+    padding-inline: 1rem;
+  }
+
+  .aev-featured-products-grid {
+    margin-top: 1rem;
+  }
+
+  .aev-v2-shop-hero {
+    padding: 0.5rem 0.75rem 0.35rem;
+  }
+
+  .aev-v2-shop-hero .aev-v2-hero-main {
+    min-height: 0;
+    padding: 0.85rem;
+    border-radius: 0.9rem;
+  }
+
+  .aev-v2-shop-hero .aev-v2-hero-main > div:first-child {
+    margin-bottom: 0.55rem;
+  }
+
+  .aev-v2-shop-hero .aev-v2-hero-main h1 {
+    max-width: 100%;
+    font-size: clamp(1.35rem, 6.7vw, 1.65rem);
+    line-height: 1.05;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .aev-v2-shop-hero .aev-v2-hero-main > p {
+    display: -webkit-box;
+    margin-top: 0.6rem;
+    overflow: hidden;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .aev-shop-hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.8rem;
+  }
+
+  .aev-shop-hero-actions > a {
+    min-width: 0;
+    padding-inline: 0.7rem;
+    text-align: center;
+  }
+
+  .aev-shop-hero-media {
+    height: min(8.5rem, 35vw);
+    margin-top: 0.75rem;
+  }
+
+  .aev-shop-hero-trust {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+  }
+
+  .aev-shop-hero-trust > div {
+    min-width: 0;
+    justify-content: center;
+    padding: 0.42rem 0.35rem;
+  }
+
+  .aev-shop-hero-trust span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aev-v2-ticker {
+    padding-block: 0.35rem;
+  }
+
+  .aev-v2-flow-finder {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .aev-v2-flow-finder > div {
+    gap: 0.5rem;
+  }
+
+  .aev-v2-flow-chips {
+    display: flex;
+    max-width: 100%;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+  }
+
+  .aev-v2-flow-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .aev-v2-flow-chips > button {
+    min-height: 2.2rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .aev-shop-products-section .aev-v2-sort-bar {
+    margin-bottom: 0.8rem;
+    padding-block: 0.65rem;
+  }
+
+  .aev-shop-products-grid {
+    gap: 0.65rem;
+  }
+
+  .aev-v2-product-card {
+    border-radius: 0.85rem;
+    padding: 0.35rem;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 0 18px rgba(255, 77, 184, 0.05);
+  }
+
+  .aev-v2-product-card .aev-product-image-frame,
+  .aev-v2-product-card .aev-product-image-frame > div {
+    border-radius: 0.72rem;
+  }
+
+  .aev-v2-product-card .aev-product-image-frame > div,
+  .aev-featured-products-grid .aev-product-image-frame > div {
+    aspect-ratio: 1 / 1.03;
+  }
+
+  .aev-v2-product-card .aev-quick-view-trigger {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+
+  .aev-v2-product-card > div:last-child {
+    padding: 0.55rem 0.4rem 0.5rem;
+  }
+
+  .aev-v2-product-card h3 {
+    min-height: 2.15rem;
+    margin-top: 0.55rem;
+    font-size: 0.86rem;
+    line-height: 1.25;
+  }
+
+  .aev-v2-product-card h3 + p,
+  .aev-v2-product-card > div:last-child > div:nth-child(2) {
+    display: none;
+  }
+
+  .aev-v2-product-card .aev-v2-card-body-action {
+    padding-top: 0.65rem;
+  }
+
+  .aev-v2-product-card .aev-card-cta {
+    min-height: 2.65rem;
+    border-radius: 0.65rem;
+    font-size: 0.68rem;
+    box-shadow: 0 9px 24px rgba(255, 77, 184, 0.22);
+  }
+
+  .aev-v2-product-card .aev-v2-card-wish {
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 0.65rem;
+  }
+}
+
 .aev-trust-reason-row {
   opacity: 0;
   transform: translateY(14px);
