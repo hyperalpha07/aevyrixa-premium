@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Aevyrixa Her Care",
+  title: { absolute: `Privacy Policy | ${brandName}` },
   description:
-    "Aevyrixa Her Care privacy policy. Customer information is used only to process orders, provide support, and improve the experience. No customer data is sold.",
+    "Noromi Care privacy policy. Customer information is used only to process orders, provide support, and improve the experience.",
 };
 
 export default async function PrivacyPolicyPage() {
@@ -17,8 +18,8 @@ export default async function PrivacyPolicyPage() {
     <InfoPageShell
       settings={settings}
       eyebrow="Privacy Policy"
-      title="Simple privacy standards for an early-stage Her Care store."
-      intro={`${settings.brandDisplayName} uses customer information only to process orders, provide support, and improve the customer experience.`}
+      title="Simple privacy standards for the Noromi Care store."
+      intro={`${brandName} uses customer information only to process orders, provide support, and improve the customer experience.`}
       sections={[
         {
           title: "Information we collect",
@@ -34,7 +35,7 @@ export default async function PrivacyPolicyPage() {
         },
         {
           title: "No selling customer data",
-          copy: `${settings.brandDisplayName} does not sell customer data. Customer details are handled for store operations and support only.`,
+          copy: `${brandName} does not sell customer data. Customer details are handled for store operations and support only.`,
         },
         {
           title: "Future updates",

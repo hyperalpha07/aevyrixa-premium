@@ -10,7 +10,7 @@ export default function VideoReadyPanel({
   mp4Src,
   webmSrc,
   posterSrc,
-  label = "Aevyrixa Care Experience",
+  label = "Noromi Care Experience",
   className = "",
 }: VideoReadyPanelProps) {
   const hasVideo = Boolean(mp4Src || webmSrc);

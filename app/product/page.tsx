@@ -11,23 +11,24 @@ import {
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import ShopDiscoveryClient from "@/app/product/shop-discovery-client";
 import { listReviewSummaries } from "@/app/lib/review-store";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
-  title: "Shop - Women's Comfort & Reusable Care Essentials",
+  title: { absolute: `Shop ${brandName} - Period Essentials` },
   description:
-    "Explore Aevyrixa Her Care's collection of reusable period care, comfort essentials, and hygiene products. 3-Day Hygiene-Safe Support, BDT pricing, discreet Bangladesh delivery.",
+    "Explore Noromi Care period care, comfort essentials, and hygiene products with discreet Bangladesh delivery.",
   openGraph: {
-    title: "Shop Aevyrixa Her Care - Women's Comfort & Reusable Care",
+    title: `Shop ${brandName} - Period Essentials`,
     description:
       "Reusable period care, comfort essentials, and hygiene products with discreet Bangladesh delivery and hygiene-safe support.",
     url: "https://www.aevyrixa.com/product",
     type: "website",
   },
   twitter: {
-    title: "Shop Aevyrixa Her Care - Women's Comfort & Reusable Care",
+    title: `Shop ${brandName} - Period Essentials`,
     description:
       "Reusable period care, comfort essentials, and hygiene products with discreet Bangladesh delivery and hygiene-safe support.",
   },

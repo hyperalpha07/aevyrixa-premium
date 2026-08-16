@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions — Aevyrixa Her Care",
+  title: { absolute: `Terms & Conditions | ${brandName}` },
   description:
-    "Terms and conditions for browsing and ordering from Aevyrixa Her Care. Transparent terms for website use, order confirmation, delivery, payment, and hygiene-sensitive product handling.",
+    "Terms and conditions for browsing and ordering from Noromi Care, including delivery, payment, and hygiene-sensitive product handling.",
 };
 
 export default async function TermsPage() {
@@ -17,7 +18,7 @@ export default async function TermsPage() {
     <InfoPageShell
       settings={settings}
       eyebrow="Terms"
-      title={`Clear terms for browsing and ordering from ${settings.brandDisplayName}.`}
+      title={`Clear terms for browsing and ordering from ${brandName}.`}
       intro="These terms keep the early-stage customer experience transparent while product, order, and backend systems continue to develop."
       sections={[
         {
@@ -26,7 +27,7 @@ export default async function TermsPage() {
         },
         {
           title: "Order confirmation",
-          copy: `Submitting checkout details creates an order request. The ${settings.brandDisplayName} team confirms product, size, payment, and delivery details before dispatch.`,
+          copy: `Submitting checkout details creates an order request. The ${brandName} team confirms product, size, payment, and delivery details before dispatch.`,
         },
         {
           title: "Product availability",
@@ -50,7 +51,7 @@ export default async function TermsPage() {
         },
         {
           title: "Policy changes",
-          copy: `${settings.brandDisplayName} may update website content and policies as operations mature.`,
+          copy: `${brandName} may update website content and policies as operations mature.`,
         },
       ]}
     />

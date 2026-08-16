@@ -97,7 +97,7 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
             {isRegister ? "Create Account" : "Login"}
           </h2>
           <p className="mt-1 text-sm text-[#9C91AA]">
-            {isRegister ? "Join the Her Care community." : "Login to your Her Care account."}
+            {isRegister ? "Join the Noromi Care community." : "Login to your Noromi Care account."}
           </p>
           {isRegister && (
             <>

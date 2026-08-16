@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { brandName, noromiAssets } from "@/configs/brand/noromi";
 
 export default function AevIntroScreen({
   enabled = true,
-  brand = "Aevyrixa Her Care",
-  logoSrc = "/logo.jpg",
+  brand = brandName,
+  logoSrc = noromiAssets.logoMark,
 }: {
   enabled?: boolean;
   brand?: string;
@@ -87,7 +88,7 @@ export default function AevIntroScreen({
 
   if (!visible) return null;
 
-  const title = brand.trim() || "Aevyrixa Her Care";
+  const title = brand.trim() || brandName;
 
   return (
     <div

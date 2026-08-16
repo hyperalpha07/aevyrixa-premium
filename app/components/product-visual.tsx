@@ -38,7 +38,7 @@ const themeClasses: Record<
 
 export default function ProductVisual({
   visualTheme = "blush-violet",
-  label = "Her Care",
+  label = "Noromi Care",
   compact = false,
   className = "",
 }: ProductVisualProps) {

@@ -11,6 +11,7 @@ import {
   defaultStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import { brandName, brandTagline, noromiAssets } from "@/configs/brand/noromi";
 
 type SiteHeaderProps = {
   active?: "home" | "shop" | "product" | "track" | "cart" | "account";
@@ -94,8 +95,8 @@ export default function SiteHeader({
         <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="aev-site-logo-mark flex-shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)] transition group-hover:border-[#FF4DB8]/40">
             <Image
-              src="/logo.jpg"
-              alt="Aevyrixa Logo"
+              src={noromiAssets.logoMark}
+              alt={`${brandName} logo`}
               width={42}
               height={42}
               sizes="42px"
@@ -105,10 +106,10 @@ export default function SiteHeader({
 
           <div className="min-w-0 max-w-[130px] min-[390px]:max-w-[160px] min-[430px]:max-w-[200px] sm:max-w-none md:max-w-[180px] lg:max-w-none">
             <p className="truncate text-xs font-bold tracking-[0.1em] text-white min-[390px]:tracking-[0.14em] min-[430px]:text-sm min-[430px]:tracking-[0.18em] sm:text-base sm:tracking-[0.22em] lg:text-lg">
-              {settings.brandDisplayName}
+              {brandName}
             </p>
             <p className="hidden text-[8.5px] uppercase tracking-[0.3em] text-[#FF4DB8]/70 min-[430px]:block sm:text-[9px] sm:tracking-[0.35em]">
-              {settings.brandTagline}
+              {brandTagline}
             </p>
           </div>
         </Link>

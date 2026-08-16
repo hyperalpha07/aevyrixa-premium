@@ -5,13 +5,21 @@ import type {
 } from "@/app/lib/product-types";
 import { SITE_CURRENCY } from "@/app/lib/currency";
 import { extractProductCmsContent } from "@/app/lib/product-content";
+import { brandName } from "@/configs/brand/noromi";
+
+function publicBrandText(value: string) {
+  return value
+    .replace(/Aevyrixa Her Care/gi, brandName)
+    .replace(/\bAevyrixa\b(?![.@:/_-])/gi, brandName)
+    .replace(/\bHer Care\b/gi, brandName);
+}
 
 export const fallbackProductCopy = {
   category: "Reusable Period Care",
   shortDescription:
-    "Premium reusable Her Care comfort with a discreet, polished fit.",
+    `Premium reusable ${brandName} comfort with a discreet, polished fit.`,
   description:
-    "A refined reusable Her Care essential designed for comfort, discretion, and a simple care routine.",
+    `A refined reusable ${brandName} essential designed for comfort, discretion, and a simple care routine.`,
   absorbency: "Moderate",
   visualTheme: "blush-violet" as ProductVisualTheme,
   benefits: [
@@ -91,10 +99,12 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
   return {
     ...product,
     slug: cleanText(product.slug),
-    name: cleanText(product.name) || "Aevyrixa Her Care Essential",
+    name: publicBrandText(cleanText(product.name)) || `${brandName} Essential`,
     shortDescription:
-      cleanText(product.shortDescription) || fallbackProductCopy.shortDescription,
-    description: cleanText(product.description) || fallbackProductCopy.description,
+      publicBrandText(cleanText(product.shortDescription)) || fallbackProductCopy.shortDescription,
+    description: publicBrandText(cleanText(product.description)) || fallbackProductCopy.description,
+    seoTitle: publicBrandText(cleanText(product.seoTitle)),
+    seoDescription: publicBrandText(cleanText(product.seoDescription)),
     category: cleanText(product.category) || fallbackProductCopy.category,
     currency: SITE_CURRENCY,
     price: typeof product.price === "number" && Number.isFinite(product.price)

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shipping Policy — Discreet Delivery Across Bangladesh",
+  title: { absolute: `Shipping Policy | ${brandName}` },
   description:
-    "Aevyrixa Her Care ships discreetly across Bangladesh. Estimated delivery 2–7 working days. Inside Dhaka and outside Dhaka delivery charges. Privacy packaging on all orders.",
+    "Noromi Care ships discreetly across Bangladesh with privacy packaging and clear delivery charges.",
 };
 
 export default async function ShippingPolicyPage() {

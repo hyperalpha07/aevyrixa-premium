@@ -28,6 +28,7 @@ import {
   type PaymentMethod,
   type PaymentType,
 } from "@/app/lib/order-types";
+import { brandName } from "@/configs/brand/noromi";
 
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
 const CHECKOUT_DRAFT_KEY = "aevyrixa-checkout-form-draft";
@@ -497,7 +498,7 @@ export default function CheckoutPage() {
       <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 pb-24 pt-10 sm:px-6 md:pt-16">
         <div className="mb-8 w-full max-w-3xl min-w-0 md:mb-10">
           <p className="text-xs uppercase tracking-[0.32em] text-[#31E6D4]/70 sm:text-sm sm:tracking-[0.42em]">
-            {adminSettings.brandShortName} Checkout
+            {brandName} Checkout
           </p>
           <h1 className="mt-4 max-w-full break-words text-2xl font-semibold leading-tight text-white [overflow-wrap:anywhere] min-[390px]:text-3xl sm:text-4xl md:text-5xl">
             Complete Your Order
@@ -794,7 +795,7 @@ export default function CheckoutPage() {
                             </button>
                           </div>
                           <p className="mt-4 text-sm leading-6 text-white/72">
-                            Send Money to this verified {adminSettings.brandShortName} receiver number,
+                            Send Money to this verified {brandName} receiver number,
                             then enter your sender number and transaction ID
                             below.
                           </p>
@@ -1149,7 +1150,7 @@ function EmptyCheckoutState() {
         <ShieldCheck className="h-6 w-6 text-[#31E6D4]" />
       </div>
       <h2 className="mt-5 break-words text-2xl font-semibold text-white [overflow-wrap:anywhere]">
-        Your checkout is ready when your Her Care essentials are selected.
+        Your checkout is ready when your Noromi Care essentials are selected.
       </h2>
       <p className="mx-auto mt-3 max-w-xl break-words text-sm leading-7 text-white/60 [overflow-wrap:anywhere]">
         Add a reusable period care product to your cart before sharing delivery
@@ -1160,7 +1161,7 @@ function EmptyCheckoutState() {
         href="/product"
         className="mt-7 inline-flex w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
       >
-        Shop Her Care
+        Shop Noromi Care
       </Link>
     </div>
   );
@@ -1210,7 +1211,7 @@ function ConfirmationPanel({
         Order Received
       </p>
       <h2 className="mt-3 text-3xl font-semibold text-white">
-        Thank you, {order.customerName}. Your Her Care order is in review.
+        Thank you, {order.customerName}. Your Noromi Care order is in review.
       </h2>
       <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/68">
         We have received your order request. Our team will confirm delivery and
@@ -1218,7 +1219,7 @@ function ConfirmationPanel({
       </p>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/68">
         {settings.orderConfirmationMessage ||
-          `Need help? Contact ${settings.brandShortName} support with your order reference.`}
+          `Need help? Contact ${brandName} support with your order reference.`}
       </p>
       <div className="mx-auto mt-6 max-w-2xl rounded-[1.5rem] border border-[#00D4C6]/25 bg-black/25 p-5 text-left">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#31E6D4]/70">

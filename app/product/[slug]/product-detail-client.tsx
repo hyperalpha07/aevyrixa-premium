@@ -43,6 +43,7 @@ import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products"
 import type { ProductCatalogItem } from "@/app/lib/product-types";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
+import { brandName } from "@/configs/brand/noromi";
 import type { PublicProductReview } from "@/app/lib/review-types";
 import {
   extractProductCmsContent,
@@ -542,7 +543,7 @@ export default function ProductDetailClient({
       : benefits.slice(0, 4).map((benefit, index) => ({
           title: ["Comfort", "Packaging", "Care", "Guidance"][index] || "Comfort point",
           body: benefit,
-          badge: ["Daily routine", "Discreet", "Reusable", "Clear info"][index] || "Her Care",
+          badge: ["Daily routine", "Discreet", "Reusable", "Clear info"][index] || brandName,
           iconKey: "sparkles",
         }));
   const carePanels = [
@@ -560,7 +561,7 @@ export default function ProductDetailClient({
     },
   ];
   const productTicker = (
-    <section className="aev-product-ticker aev-product-ticker-after-hero relative z-[2]" aria-label="Aevyrixa service highlights">
+    <section className="aev-product-ticker aev-product-ticker-after-hero relative z-[2]" aria-label="Noromi Care service highlights">
       <div className="aev-product-ticker-track">
         {[0, 1].map((group) => (
           <div className="aev-product-ticker-group" key={group}>
@@ -588,7 +589,7 @@ export default function ProductDetailClient({
 
       <section className="aev-bloom-hero relative z-[2] mx-auto grid box-border w-full max-w-[82rem] items-start gap-5 px-4 pb-8 pt-8 sm:gap-7 sm:px-7 sm:pb-10 sm:pt-10 lg:grid-cols-[minmax(0,36rem)_minmax(0,38rem)] lg:gap-8 lg:px-12 lg:pb-10 lg:pt-12">
         <div className="pointer-events-none absolute left-[-1rem] top-1/2 hidden -translate-y-1/2 whitespace-nowrap font-serif text-[12vw] font-light leading-[0.85] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.035)] lg:block">
-          Aevyrixa
+          {brandName}
         </div>
 
         <div className="aev-product-info-card relative z-[1] order-2 min-w-0 overflow-hidden rounded-[2px_42px_2px_42px] border border-[#FF4DB8]/12 bg-[#0D0918]/82 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-6 lg:order-2 lg:p-7">
@@ -822,7 +823,7 @@ export default function ProductDetailClient({
             <div className="pointer-events-none absolute bottom-0 right-0 z-[3] h-16 w-16 border-b border-r border-[#FF4DB8]/35" />
             <div className="absolute bottom-5 left-0 right-0 z-[3] flex justify-between gap-3 px-5">
               <span className="rounded-sm border border-[#FF4DB8]/14 bg-[#080611]/75 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#FF4DB8]/70 backdrop-blur">
-                {displayProduct.category || "Aevyrixa Her Care"}
+                {displayProduct.category || brandName}
               </span>
               <span className="rounded-sm border border-[#00D4C6]/14 bg-[#080611]/75 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#31E6D4]/70 backdrop-blur">
                 {displayProduct.absorbency}
@@ -919,7 +920,7 @@ export default function ProductDetailClient({
                   <div className="sm:pr-8">
                     <h3 className="font-serif text-lg text-white sm:text-xl">{card.title}</h3>
                     <span className="mt-2 inline-flex rounded-sm border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FFB3D1]">
-                      {card.badge || "Her Care"}
+                      {card.badge || brandName}
                     </span>
                   </div>
                   <p className="text-sm leading-7 text-[#D8CBE8]/82">{card.body}</p>

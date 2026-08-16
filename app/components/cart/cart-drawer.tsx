@@ -12,6 +12,7 @@ import {
   fetchStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import { brandName } from "@/configs/brand/noromi";
 
 export default function CartDrawer() {
   const {
@@ -84,7 +85,7 @@ export default function CartDrawer() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.3em] text-[#31E6D4]/70">
-                  {settings.brandShortName} Cart
+                  {brandName} Cart
                 </p>
                 <h2 className="mt-1 text-lg font-semibold text-white">
                   Your Cart
@@ -116,8 +117,8 @@ export default function CartDrawer() {
                 </h3>
 
                 <p className="mt-3 max-w-xs text-sm leading-7 text-white/60">
-                  Add premium Her Care products to your cart and build a more
-                  comfortable reusable routine with {settings.brandShortName}.
+                  Add premium Noromi Care products to your cart and build a more
+                  comfortable reusable routine with {brandName}.
                 </p>
 
                 <Link
@@ -139,7 +140,7 @@ export default function CartDrawer() {
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0B0F1A]">
                         <ProductVisual
                           visualTheme={item.visualTheme}
-                          label={item.absorbency || "Her Care"}
+                          label={item.absorbency || "Noromi Care"}
                           compact
                         />
                       </div>

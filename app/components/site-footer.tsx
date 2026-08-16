@@ -9,9 +9,10 @@ import {
   fetchStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import { brandName, brandTagline, noromiAssets } from "@/configs/brand/noromi";
 
 const defaultShopLinks = [
-  { label: "Her Care Collection", href: "/product" },
+  { label: "Noromi Care Collection", href: "/product" },
 ];
 
 const supportLinks = [
@@ -54,7 +55,6 @@ export default function SiteFooter({
     socialLinks,
     supportEmail,
     supportPhone,
-    brandShortName,
     footerDescription,
     shopFooterCategories,
     storeProfile,
@@ -82,7 +82,7 @@ export default function SiteFooter({
 
       {/* Premium brand statement */}
       <div className="aev-footer-brand aev-glass aev-intent-card aev-intent-delivery relative mx-auto mb-7 max-w-7xl overflow-hidden p-5 pb-7 sm:mb-9 sm:p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.38em] text-[#FF4DB8]/55">Her Care by Aevyrixa</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.38em] text-[#FF4DB8]/55">{brandName}</p>
         <p className="mt-3 max-w-2xl text-2xl font-semibold leading-snug tracking-tight text-white/80 sm:text-3xl">
           Premium women&apos;s care, delivered discreetly across Bangladesh.
         </p>
@@ -102,8 +102,8 @@ export default function SiteFooter({
           <div className="flex items-center gap-3">
             <div className="shrink-0 overflow-hidden rounded-xl border border-[#FF4DB8]/24 bg-[#1B1230] p-1 shadow-[0_0_24px_rgba(255,64,184,0.10)]">
               <Image
-                src="/logo.jpg"
-                alt="Aevyrixa Logo"
+                src={noromiAssets.logoMark}
+                alt={`${brandName} logo`}
                 width={42}
                 height={42}
                 sizes="42px"
@@ -112,10 +112,10 @@ export default function SiteFooter({
             </div>
             <div className="min-w-0">
               <p className="truncate text-lg font-bold tracking-[0.22em] text-white">
-                {brandShortName}
+                {brandName}
               </p>
               <p className="text-[0.64rem] font-semibold uppercase tracking-[0.3em] text-[#FF4DB8]/65">
-                Her Care
+                {brandTagline}
               </p>
             </div>
           </div>
@@ -232,7 +232,7 @@ export default function SiteFooter({
       {/* Bottom bar */}
       <div className="relative mx-auto mt-8 max-w-7xl border-t border-white/[0.07] pt-5 sm:mt-10 sm:pt-6">
         <div className="flex flex-col gap-3 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
-          <p>Copyright 2026 {brandShortName}. All rights reserved.</p>
+          <p>Copyright 2026 {brandName}. All rights reserved.</p>
           {storeProfile.showFooterLegalLinks && (
             <div className="flex flex-wrap gap-4">
               {policyLinks.map((link) => (

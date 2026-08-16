@@ -31,6 +31,7 @@ import type {
   StorefrontSettings,
 } from "@/app/lib/storefront-settings";
 import type { ReviewSummary } from "@/app/lib/review-types";
+import { brandName } from "@/configs/brand/noromi";
 import {
   emptyShopQueryFilters,
   parseShopSignal,
@@ -76,6 +77,8 @@ function normalized(value: string | undefined) {
 
 function safeShopCopy(value: string) {
   return value
+    .replace(/Aevyrixa Her Care/gi, brandName)
+    .replace(/\bAevyrixa\b/gi, brandName)
     .replace(/5-Day Hygiene Support/gi, "3-Day Hygiene-Safe Support")
     .replace(/100%\s*guaranteed/gi, "Carefully supported")
     .replace(/2yr Guaranteed reusable lifespan/gi, "Reusable care, made for repeat wear")
@@ -289,9 +292,9 @@ export default function ShopDiscoveryClient({
   const primaryCtaLink = hms.shopHeroPrimaryCtaLink || "#shop-products";
   const secondaryCta = hms.shopHeroSecondaryCtaText || "Track Order";
   const secondaryCtaLink = hms.shopHeroSecondaryCtaLink || "/track-order";
-  const heroEyebrow = hms.shopHeroEyebrow || "AEVYRIXA HER CARE SHOP";
+  const heroEyebrow = safeShopCopy(hms.shopHeroEyebrow || `${brandName} SHOP`);
   const heroMediaUrl = hms.shopHeroMediaUrl || "";
-  const heroMediaAlt = hms.shopHeroMediaAlt || "Aevyrixa Her Care";
+  const heroMediaAlt = safeShopCopy(hms.shopHeroMediaAlt || brandName);
   const heroMediaType = hms.shopHeroMediaType || "auto";
   const heroBadge1 = hms.shopHeroBadge1 ? safeShopCopy(hms.shopHeroBadge1) : "";
   const heroBadge2 = hms.shopHeroBadge2 ? safeShopCopy(hms.shopHeroBadge2) : "";
@@ -467,7 +470,7 @@ export default function ShopDiscoveryClient({
                 {heroSubtitle}
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="aev-shop-hero-actions mt-5 flex flex-wrap gap-2">
                 <Link
                   href={primaryCtaLink}
                   className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 text-xs font-bold text-white sm:min-h-11 sm:px-6"
@@ -485,7 +488,7 @@ export default function ShopDiscoveryClient({
 
               {/* Mobile compact hero media — hidden on lg+ */}
               {heroMediaUrl && (
-                <div className="relative mt-3 h-36 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden">
+                <div className="aev-shop-hero-media relative mt-3 h-36 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0E0A1C] lg:hidden">
                   {effectiveFit === "contain" && !isHeroVideo && (
                     <div
                       className="absolute inset-0"
@@ -521,7 +524,7 @@ export default function ShopDiscoveryClient({
               )}
 
               {/* Mobile compact trust chips — hidden on lg+ */}
-              <div className="mt-2.5 flex flex-wrap gap-1.5 lg:hidden">
+              <div className="aev-shop-hero-trust mt-2.5 flex flex-wrap gap-1.5 lg:hidden">
                 {trustCards.map((card) => {
                   const TrustIcon = card.icon;
                   return (
@@ -627,7 +630,7 @@ export default function ShopDiscoveryClient({
                   })}
                 </div>
                 <p className="relative mt-auto pt-3 text-center text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">
-                  Aevyrixa Her Care
+                  {brandName}
                 </p>
               </div>
             )}
@@ -815,18 +818,22 @@ export default function ShopDiscoveryClient({
             <div className="aev-panel px-5 py-16 text-center">
               <Sparkles className="mx-auto h-8 w-8 text-[#FF4DB8]/55" />
               <h3 className="mt-4 text-xl font-semibold text-white">
-                No matching products
+                {products.length === 0 ? "Our collection is being prepared" : "No matching products"}
               </h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-[#D8CBE8]/72">
-                No exact match is available for this filter right now. Clear filters to view the full Aevyrixa collection.
+                {products.length === 0
+                  ? "New Noromi Care essentials will appear here as soon as they are ready."
+                  : "No exact match is available for this filter right now. Clear filters to view the full Noromi Care collection."}
               </p>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="aev-button-secondary mt-6 rounded-full px-5 py-3 text-sm font-semibold"
-              >
-                View all products
-              </button>
+              {products.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="aev-button-secondary mt-6 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  View all products
+                </button>
+              ) : null}
             </div>
           ) : (
             <div className="aev-shop-products-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">

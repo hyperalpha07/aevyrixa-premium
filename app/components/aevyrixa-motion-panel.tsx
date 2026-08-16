@@ -31,7 +31,7 @@ export default function AevyrixaMotionPanel({
   webmSrc,
   posterSrc,
   eyebrow = "Motion System",
-  title = "Aevyrixa Care Motion",
+  title = "Noromi Care Motion",
   copy = "Cinematic care layers with soft glow, discreet structure, and lightweight coded motion.",
   labels = ["Comfort Knit", "Absorbent Core", "Protective Layer"],
   className = "",

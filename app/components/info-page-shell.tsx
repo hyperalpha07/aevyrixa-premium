@@ -18,7 +18,7 @@ export default function InfoPageShell({
   intro,
   sections,
   topContent,
-  ctaLabel = "Shop Her Care",
+  ctaLabel = "Shop Noromi Care",
   ctaHref = "/product",
   settings = defaultStorefrontSettings,
 }: {
