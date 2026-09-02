@@ -5,6 +5,10 @@ import type {
 } from "@/app/lib/product-types";
 import { SITE_CURRENCY } from "@/app/lib/currency";
 import { extractProductCmsContent } from "@/app/lib/product-content";
+import {
+  filterPublicProductImageUrls,
+  isPublicProductImageAllowed,
+} from "@/app/lib/public-product-media-safety";
 import { brandName } from "@/configs/brand/noromi";
 
 function publicBrandText(value: string) {
@@ -95,6 +99,13 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
   const absorbencyOptions = cleanTextArray(product.absorbencyOptions);
   const colors = cleanTextArray(product.colors);
   const cms = extractProductCmsContent(product.media, colors);
+  const safeGalleryImages = filterPublicProductImageUrls(product.images);
+  const safePrimaryImage = [product.primaryImageUrl, product.imageUrl].find(
+    isPublicProductImageAllowed
+  ) ?? safeGalleryImages[0];
+  const safePosterUrl = isPublicProductImageAllowed(product.posterUrl)
+    ? product.posterUrl
+    : undefined;
 
   return {
     ...product,
@@ -119,6 +130,10 @@ export function publicProduct(product: ProductCatalogItem): ProductCatalogItem {
     visual: visualTheme,
     visualTheme,
     visualVariant: cleanText(product.visualVariant) || visualTheme,
+    imageUrl: safePrimaryImage,
+    primaryImageUrl: safePrimaryImage,
+    posterUrl: safePosterUrl,
+    images: safeGalleryImages,
     benefits: cleanTextArray(product.benefits),
     care: cleanTextArray(product.care),
     sectionMedia: product.sectionMedia ?? cms.sectionMedia,
