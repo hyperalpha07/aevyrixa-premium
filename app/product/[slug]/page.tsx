@@ -13,6 +13,13 @@ export const fetchCache = "force-no-store";
 const SITE_URL = "https://www.aevyrixa.com";
 const OG_FALLBACK_IMAGE = `${SITE_URL}${noromiAssets.coverBannerWide}`;
 
+function withBrandSuffix(value: string) {
+  const title = value.trim();
+  return title.toLocaleLowerCase().endsWith(brandName.toLocaleLowerCase())
+    ? title
+    : `${title} | ${brandName}`;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -27,10 +34,7 @@ export async function generateMetadata({
 
   const displayProduct = publicProduct(product);
 
-  const title =
-    displayProduct.seoTitle
-      ? `${displayProduct.seoTitle} | ${brandName}`
-      : `${displayProduct.name} | ${brandName}`;
+  const title = withBrandSuffix(displayProduct.seoTitle || displayProduct.name);
   const description =
     displayProduct.seoDescription || displayProduct.shortDescription || `Shop ${displayProduct.name} from ${brandName}.`;
   const productUrl = `${SITE_URL}/product/${product.slug}`;

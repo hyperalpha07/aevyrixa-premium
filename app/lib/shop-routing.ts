@@ -1,4 +1,5 @@
 import type { ProductCatalogItem } from "@/app/lib/product-types";
+import { brandName } from "@/configs/brand/noromi";
 
 export type ShopSignalFilter =
   | "all"
@@ -37,12 +38,12 @@ const homeCtaFallbacks: Record<string, string> = {
   layerComfort: "/product?category=Reusable%20Period%20Care",
   careMotion: "/product?category=Reusable%20Period%20Care",
   designedDay: "/product?category=Comfort%20Panty",
-  findCare: "/product?collection=Her%20Care",
+  findCare: "/product?collection=Noromi%20Care",
   findCareFlowDays: "/product?signal=Heavy%20Flow",
   findCareDailyComfort: "/product?category=Comfort%20Panty",
   findCareGentleSupport: "/product?category=Soft%20Support%20Bra",
-  finalPrimary: "/product?collection=Her%20Care",
-  finalSecondary: "/product?collection=Her%20Care",
+  finalPrimary: "/product?collection=Noromi%20Care",
+  finalSecondary: "/product?collection=Noromi%20Care",
 };
 
 const categoryAliases: Record<string, string[]> = {
@@ -195,18 +196,19 @@ export function shopSignalLabel(signal: ShopSignalFilter) {
 
 export function shopContextCopy(filters: ShopQueryFilters) {
   if (filters.category) {
+    const category = publicShopText(filters.category);
     return {
-      eyebrow: "HER CARE COLLECTION",
-      heading: filters.category,
+      eyebrow: `${brandName.toUpperCase()} COLLECTION`,
+      heading: category,
       copy: "Products matched to this care category.",
-      chip: filters.category,
+      chip: category,
     };
   }
 
   if (filters.signal !== "all") {
     const label = shopSignalLabel(filters.signal);
     return {
-      eyebrow: "HER CARE PICKS",
+      eyebrow: `${brandName.toUpperCase()} PICKS`,
       heading:
         filters.signal === "new"
           ? "New Arrivals"
@@ -219,18 +221,26 @@ export function shopContextCopy(filters: ShopQueryFilters) {
   }
 
   if (filters.collection) {
+    const collection = publicShopText(filters.collection);
     return {
-      eyebrow: "HER CARE COLLECTION",
-      heading: filters.collection,
-      copy: "Browse the current Aevyrixa care selection.",
-      chip: filters.collection,
+      eyebrow: `${brandName.toUpperCase()} COLLECTION`,
+      heading: collection,
+      copy: `Browse the current ${brandName} care selection.`,
+      chip: collection,
     };
   }
 
   return {
     eyebrow: "",
-    heading: "Her Care Collection",
+    heading: `${brandName} Collection`,
     copy: "Premium reusable care essentials with clear BDT pricing and discreet Bangladesh delivery.",
     chip: "",
   };
+}
+
+function publicShopText(value: string) {
+  return value
+    .replace(/Aevyrixa Her Care/gi, brandName)
+    .replace(/\bAevyrixa\b/gi, brandName)
+    .replace(/\bHer Care\b/gi, brandName);
 }

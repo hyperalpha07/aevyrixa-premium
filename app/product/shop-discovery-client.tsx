@@ -80,6 +80,7 @@ function safeShopCopy(value: string) {
   return value
     .replace(/Aevyrixa Her Care/gi, brandName)
     .replace(/\bAevyrixa\b/gi, brandName)
+    .replace(/\bHer Care\b/gi, brandName)
     .replace(/5-Day Hygiene Support/gi, "3-Day Hygiene-Safe Support")
     .replace(/100%\s*guaranteed/gi, "Carefully supported")
     .replace(/2yr Guaranteed reusable lifespan/gi, "Reusable care, made for repeat wear")
@@ -271,7 +272,7 @@ export default function ShopDiscoveryClient({
     signal !== "all" ? shopSignalLabel(signal) : "",
     stock === "in_stock" ? "In stock" : stock === "out_of_stock" ? "Out of stock" : "",
     query ? `Search: ${query}` : "",
-    collection && !category && signal === "all" ? collection : "",
+    collection && !category && signal === "all" ? safeShopCopy(collection) : "",
   ].filter(Boolean);
   const safeAnnouncementItems = [
     "Discreet Packaging",

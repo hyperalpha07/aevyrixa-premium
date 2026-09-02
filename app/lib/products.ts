@@ -1,5 +1,6 @@
 import type { ProductCatalogItem, ProductVisualTheme } from "@/app/lib/product-types";
 import { formatCurrency, SITE_CURRENCY } from "@/app/lib/currency";
+import { brandName } from "@/configs/brand/noromi";
 
 export type { ProductCatalogItem, ProductVisualTheme } from "@/app/lib/product-types";
 
@@ -31,7 +32,7 @@ export const products: Product[] = [
   {
     id: "aev-her-care-everyday-comfort",
     slug: "everyday-comfort",
-    name: "Aevyrixa Her Care Period Panty - Everyday Comfort",
+    name: `${brandName} Period Panty - Everyday Comfort`,
     shortDescription:
       "Soft reusable period underwear for lighter routine days with a smooth, discreet fit.",
     description:
@@ -48,7 +49,7 @@ export const products: Product[] = [
       "Smooth low-profile shape for everyday outfits",
       "Soft stretch waistband for flexible comfort",
       "Reusable design made for simple cycle routines",
-      "Discreet finish with a premium Her Care look",
+      `Discreet finish with a premium ${brandName} look`,
     ],
     care: [
       "Rinse with cold water after wear",
@@ -56,19 +57,19 @@ export const products: Product[] = [
       "Use mild detergent and avoid bleach or fabric softener",
       "Air dry fully before storing or wearing again",
     ],
-    seoTitle: "Aevyrixa Her Care Everyday Comfort Period Panty",
+    seoTitle: "Everyday Comfort Reusable Period Panty",
     seoDescription:
-      "Shop Aevyrixa Her Care Everyday Comfort reusable period panty for light-flow days, discreet comfort, and simple care.",
+      `Shop ${brandName} Everyday Comfort reusable period panty for light-flow days, discreet comfort, and simple care.`,
     visualTheme: "blush-violet",
   },
   {
     id: "aev-her-care-heavy-flow-support",
     slug: "heavy-flow-support",
-    name: "Aevyrixa Her Care Period Panty - Heavy Flow Support",
+    name: `${brandName} Period Panty - Heavy Flow Support`,
     shortDescription:
       "A supportive reusable panty for heavier routine days with secure coverage and soft structure.",
     description:
-      "Heavy Flow Support brings a more anchored Her Care feel for days when you want extra coverage. The design focuses on comfort, discretion, and reusable protection without a bulky look.",
+      `${brandName} Heavy Flow Support brings a more anchored feel for days when you want extra coverage. The design focuses on comfort, discretion, and reusable protection without a bulky look.`,
     price: "BDT 1,450",
     compareAtPrice: "BDT 1,800",
     numericPrice: 1450,
@@ -89,15 +90,15 @@ export const products: Product[] = [
       "Do not use bleach, fabric softener, or high heat",
       "Air dry in a ventilated space before reuse",
     ],
-    seoTitle: "Aevyrixa Her Care Heavy Flow Support Period Panty",
+    seoTitle: "Heavy Flow Support Reusable Period Panty",
     seoDescription:
-      "Explore Aevyrixa Her Care Heavy Flow Support reusable period panty with secure comfort and discreet reusable coverage.",
+      `Explore ${brandName} Heavy Flow Support reusable period panty with secure comfort and discreet reusable coverage.`,
     visualTheme: "cyan-night",
   },
   {
     id: "aev-her-care-night-comfort",
     slug: "night-comfort",
-    name: "Aevyrixa Her Care Period Panty - Night Comfort",
+    name: `${brandName} Period Panty - Night Comfort`,
     shortDescription:
       "Extended comfort for sleep, travel, and long wear moments with a soft secure feel.",
     description:
@@ -122,9 +123,9 @@ export const products: Product[] = [
       "Avoid ironing, dry cleaning, bleach, and fabric softener",
       "Air dry completely; do not tumble dry on high heat",
     ],
-    seoTitle: "Aevyrixa Her Care Night Comfort Period Panty",
+    seoTitle: "Night Comfort Reusable Period Panty",
     seoDescription:
-      "Shop Aevyrixa Her Care Night Comfort reusable period panty for overnight routines, soft coverage, and reusable care.",
+      `Shop ${brandName} Night Comfort reusable period panty for overnight routines, soft coverage, and reusable care.`,
     visualTheme: "rose-gold",
   },
 ];

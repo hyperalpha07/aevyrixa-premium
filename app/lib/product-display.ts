@@ -25,7 +25,7 @@ export const fallbackProductCopy = {
   benefits: [
     "Soft comfort-first fit for routine wear",
     "Reusable design made for simple cycle care",
-    "Discreet finish with a premium Her Care look",
+    `Discreet finish with a premium ${brandName} look`,
   ],
   care: [
     "Rinse with cold water after wear",
