@@ -169,6 +169,7 @@ test("implemented Admin V2 route metadata includes contextual invoice", () => {
   assert.equal(findAdminV2Route("orderDetail")?.implemented, true);
   assert.equal(findAdminV2Route("orderInvoice")?.implemented, true);
   assert.equal(findAdminV2Route("products")?.implemented, true);
+  assert.equal(findAdminV2Route("productDetail")?.implemented, true);
   assert.equal(findAdminV2Route("productNew")?.implemented, false);
   assert.equal(findAdminV2Route("categories")?.implemented, false);
   assert.equal(findAdminV2Route("inventory")?.implemented, false);

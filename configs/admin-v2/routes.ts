@@ -55,7 +55,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Order Invoice", path: "/admin-v2/orders/[orderRef]/invoice", module: "orderInvoice", description: "Issued invoice print view", implemented: true },
   { title: "Products", path: "/admin-v2/products", module: "products", description: "Read-only product catalog", implemented: true },
   { title: "New Product", path: "/admin-v2/products/new", module: "productNew", description: "Product creation", implemented: false },
-  { title: "Product Detail", path: "/admin-v2/products/[productId]", module: "productDetail", description: "Product edit workflow", implemented: false },
+  { title: "Product Detail", path: "/admin-v2/products/[productId]", module: "productDetail", description: "Read-only product detail", implemented: true },
   { title: "Categories", path: "/admin-v2/categories", module: "categories", description: "Category management", implemented: false },
   { title: "Inventory", path: "/admin-v2/inventory", module: "inventory", description: "Inventory workflow", implemented: false },
   { title: "Reviews", path: "/admin-v2/reviews", module: "reviews", description: "Review moderation", implemented: false },
