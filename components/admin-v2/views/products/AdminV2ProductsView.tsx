@@ -136,9 +136,15 @@ function ProductIdentity({ product }: { product: AdminV2ProductListItem }) {
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
         <ProductThumbnail product={product} />
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          <MuiLink
+            component={Link}
+            href={`/admin-v2/products/${encodeURIComponent(product.id)}`}
+            aria-label={`View admin details for ${product.name}`}
+            underline="hover"
+            sx={{ display: "inline-block", fontWeight: 700, overflowWrap: "anywhere" }}
+          >
             {product.name}
-          </Typography>
+          </MuiLink>
           <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", minWidth: 0 }}>
             <Typography
               variant="caption"
@@ -219,7 +225,9 @@ function ProductPrice({ product }: { product: AdminV2ProductListItem }) {
 }
 
 function PublicProductLink({ product }: { product: AdminV2ProductListItem }) {
-  if (!product.slug) return <Typography variant="caption">No public link</Typography>;
+  if (!product.slug || product.status !== "active") {
+    return <Typography variant="caption" color="text.secondary">Draft — no public link</Typography>;
+  }
 
   return (
     <MuiLink
