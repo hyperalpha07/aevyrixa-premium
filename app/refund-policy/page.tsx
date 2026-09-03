@@ -18,7 +18,7 @@ export default async function RefundPolicyPage() {
     <InfoPageShell
       settings={settings}
       eyebrow="Refund Policy"
-      title={`${settings.supportWindowMessage} for Noromi Care Orders`}
+      title={`Refund and exchange support for ${brandName} orders.`}
       intro={`${brandName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
       sections={[
         {

@@ -367,6 +367,11 @@ export default function ProductDetailClient({
     const variantSummary = [selectedSize, selectedColor, selectedAbsorbency]
       .filter(Boolean)
       .join(" / ");
+    const cartImage = [
+      displayProduct.primaryImageUrl,
+      displayProduct.imageUrl,
+      ...(displayProduct.images ?? []),
+    ].find((image): image is string => Boolean(image?.trim()));
     addItem(
       {
         id: buildCartLineId(displayProduct, selectedSize, selectedColor, selectedAbsorbency),
@@ -374,7 +379,7 @@ export default function ProductDetailClient({
         slug: displayProduct.slug,
         name: displayProduct.name,
         price: displayProduct.price,
-        image: displayProduct.visualTheme,
+        image: cartImage ?? displayProduct.visualTheme,
         visualTheme: displayProduct.visualTheme,
         visualVariant: displayProduct.visualVariant,
         stockStatus: displayProduct.stockStatus,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCart } from "./cart-context";
-import ProductVisual from "@/app/components/product-visual";
+import CartItemVisual from "@/app/components/cart/cart-item-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { formatCurrency } from "@/app/lib/currency";
 import {
@@ -138,11 +138,7 @@ export default function CartDrawer() {
                   >
                     <div className="flex gap-3">
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0B0F1A]">
-                        <ProductVisual
-                          visualTheme={item.visualTheme}
-                          label={item.absorbency || "Noromi Care"}
-                          compact
-                        />
+                        <CartItemVisual item={item} sizes="80px" />
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col">

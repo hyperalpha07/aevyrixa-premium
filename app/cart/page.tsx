@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PackageCheck, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
-import ProductVisual from "@/app/components/product-visual";
+import CartItemVisual from "@/app/components/cart/cart-item-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { formatCurrency } from "@/app/lib/currency";
 import {
@@ -136,12 +136,8 @@ export default function CartPage() {
                   className="rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl md:p-5"
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-center">
-                    <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0B0F1A]">
-                      <ProductVisual
-                        visualTheme={item.visualTheme}
-                        label={item.absorbency || "Noromi Care"}
-                        compact
-                      />
+                    <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0B0F1A]">
+                      <CartItemVisual item={item} sizes="112px" />
                     </div>
 
                     <div className="min-w-0 flex-1">
