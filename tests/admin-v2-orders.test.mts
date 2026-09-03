@@ -15,6 +15,9 @@ import {
   isSensitiveAdminV2OrderTransition,
   validNextAdminV2OrderStatuses,
 } from "../lib/admin-v2/orders/order-status-transitions.ts";
+import { normalizePermissions } from "../app/lib/admin-permissions.ts";
+import { findAdminV2Route } from "../configs/admin-v2/routes.ts";
+import { isAdminV2NavigationItemActive } from "../lib/admin-v2/navigation.ts";
 
 const baseOrder = {
   orderId: "AEV-1",
@@ -141,4 +144,40 @@ test("financial audit detection flags stored total differences without mutation"
   const calculated = calculateAdminV2PayableTotal({ subtotal: 100, deliveryCharge: 20 });
   assert.equal(calculated, 120);
   assert.equal(hasAdminV2TotalMismatch(100, calculated), true);
+});
+
+test("invoice and note capabilities use dedicated role permissions", () => {
+  const orderStaff = normalizePermissions("order_staff", {});
+  assert.equal(orderStaff["orders.viewInvoice"], true);
+  assert.equal(orderStaff["orders.issueInvoice"], true);
+  assert.equal(orderStaff["orders.addNote"], true);
+
+  const viewer = normalizePermissions("viewer", {});
+  assert.equal(viewer["orders.viewInvoice"], true);
+  assert.equal(viewer["orders.issueInvoice"], false);
+  assert.equal(viewer["orders.addNote"], false);
+
+  const restrictedOrderStaff = normalizePermissions("order_staff", {
+    "orders.issueInvoice": false,
+  });
+  assert.equal(restrictedOrderStaff["orders.issueInvoice"], false);
+});
+
+test("implemented Admin V2 route metadata includes contextual invoice", () => {
+  assert.equal(findAdminV2Route("dashboard")?.implemented, true);
+  assert.equal(findAdminV2Route("orders")?.implemented, true);
+  assert.equal(findAdminV2Route("orderDetail")?.implemented, true);
+  assert.equal(findAdminV2Route("orderInvoice")?.implemented, true);
+  assert.equal(findAdminV2Route("products")?.implemented, false);
+});
+
+test("product navigation has only the correct active child", () => {
+  const allProducts = { href: "/admin-v2/products", module: "products" };
+  const newProduct = { href: "/admin-v2/products/new", module: "productNew" };
+
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products", allProducts), true);
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products", newProduct), false);
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/new", allProducts), false);
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/new", newProduct), true);
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/product-1", allProducts), true);
 });

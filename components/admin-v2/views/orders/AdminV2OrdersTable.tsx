@@ -22,7 +22,6 @@ import { useState } from "react";
 import type { OrderRecord } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
-import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { AdminV2OrderStatusChip } from "@/components/admin-v2/views/orders/AdminV2OrderStatusChip";
 import { AdminV2OrdersEmptyState } from "@/components/admin-v2/views/orders/AdminV2OrdersEmptyState";
 import { formatDateTime, itemCount, statusLabel } from "@/components/admin-v2/views/orders/utils";
@@ -35,12 +34,16 @@ type Props = {
   total: number;
   filtered: boolean;
   canEditStatus: boolean;
+  canAddNote: boolean;
+  canViewInvoice: boolean;
+  canIssueInvoice: boolean;
   invoicePending?: boolean;
   onPageChange: (page: number) => void;
   onRowsPerPageChange: (size: number) => void;
   onStatusClick: (order: OrderRecord) => void;
   onNotesClick: (order: OrderRecord) => void;
-  onInvoiceClick: (order: OrderRecord) => void;
+  onViewInvoiceClick: (order: OrderRecord) => void;
+  onIssueInvoiceClick: (order: OrderRecord) => void;
   onCancelClick: (order: OrderRecord) => void;
 };
 
@@ -55,12 +58,16 @@ export function AdminV2OrdersTable({
   total,
   filtered,
   canEditStatus,
+  canAddNote,
+  canViewInvoice,
+  canIssueInvoice,
   invoicePending = false,
   onPageChange,
   onRowsPerPageChange,
   onStatusClick,
   onNotesClick,
-  onInvoiceClick,
+  onViewInvoiceClick,
+  onIssueInvoiceClick,
   onCancelClick,
 }: Props) {
   const router = useRouter();
@@ -193,6 +200,7 @@ export function AdminV2OrdersTable({
         <Tooltip title="Add an internal note to this order history.">
           <span>
             <MenuItem
+              disabled={!menuOrder || !canAddNote}
               onClick={() => {
                 if (menuOrder) onNotesClick(menuOrder);
                 closeMenu();
@@ -203,13 +211,22 @@ export function AdminV2OrdersTable({
           </span>
         </Tooltip>
         <MenuItem
-          disabled={invoicePending}
+          disabled={!menuOrder || !canViewInvoice || invoicePending}
           onClick={() => {
-            if (menuOrder) onInvoiceClick(menuOrder);
+            if (menuOrder) onViewInvoiceClick(menuOrder);
             closeMenu();
           }}
         >
-          <Printer size={16} />&nbsp; {invoicePending ? "Preparing invoice..." : "Print Invoice"}
+          <Printer size={16} />&nbsp; {invoicePending ? "Checking invoice..." : "View / Print invoice"}
+        </MenuItem>
+        <MenuItem
+          disabled={!menuOrder || !canIssueInvoice || invoicePending}
+          onClick={() => {
+            if (menuOrder) onIssueInvoiceClick(menuOrder);
+            closeMenu();
+          }}
+        >
+          <Printer size={16} />&nbsp; Issue invoice
         </MenuItem>
         <Tooltip title={menuOrder && !canCancel(menuOrder) ? `Cancel is unavailable for ${statusLabel(menuOrder.status)} orders.` : ""}>
           <span>
