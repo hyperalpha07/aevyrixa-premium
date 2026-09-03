@@ -10,6 +10,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   dashboard: { section: "dashboard" },
   orders: { section: "orders" },
   orderDetail: { section: "orders" },
+  orderInvoice: { permission: "orders.viewInvoice" },
   products: { section: "products" },
   productNew: { permission: "products.edit" },
   productDetail: { section: "products" },

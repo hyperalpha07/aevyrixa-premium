@@ -21,7 +21,9 @@ import type { AdminSessionUser } from "@/app/lib/admin-permissions";
 import { roleLabels } from "@/app/lib/admin-permissions";
 import { AdminV2Logo } from "@/components/admin-v2/layouts/AdminV2Logo";
 import { adminV2Navigation, type AdminV2NavigationItem } from "@/configs/admin-v2/navigation";
+import { findAdminV2Route } from "@/configs/admin-v2/routes";
 import { canAccessAdminV2Module } from "@/lib/admin-v2/permissions";
+import { isAdminV2NavigationItemActive } from "@/lib/admin-v2/navigation";
 import { useAdminV2Motion } from "@/components/admin-v2/motion";
 import { adminV2Motion, adminV2Transition } from "@/components/admin-v2/motion/motion-config";
 
@@ -37,14 +39,8 @@ function itemVisible(session: AdminSessionUser, item: AdminV2NavigationItem): bo
   return own || children;
 }
 
-function isActive(pathname: string, item: AdminV2NavigationItem) {
-  if (!item.href) return false;
-  if (item.href === "/admin-v2/dashboard") return pathname === item.href || pathname === "/admin-v2";
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
-}
-
 function childActive(pathname: string, item: AdminV2NavigationItem): boolean {
-  return isActive(pathname, item) || Boolean(item.children?.some((child) => childActive(pathname, child)));
+  return isAdminV2NavigationItemActive(pathname, item) || Boolean(item.children?.some((child) => childActive(pathname, child)));
 }
 
 function SidebarItem({
@@ -64,13 +60,14 @@ function SidebarItem({
   const { startRouteProgress, reducedMotion } = useAdminV2Motion();
   const visibleChildren = item.children?.filter((child) => itemVisible(session, child)) ?? [];
   const hasChildren = visibleChildren.length > 0;
-  const active = isActive(pathname, item) || visibleChildren.some((child) => childActive(pathname, child));
+  const active = isAdminV2NavigationItemActive(pathname, item) || visibleChildren.some((child) => childActive(pathname, child));
   const [open, setOpen] = useState(active);
   const Icon = item.icon;
+  const implemented = item.module ? findAdminV2Route(item.module)?.implemented === true : true;
   const navigates = Boolean(item.href && (!hasChildren || collapsed));
   const tooltipTitle = hasChildren
     ? `${item.label}: ${visibleChildren.map((child) => child.label).join(", ")}`
-    : item.label;
+    : `${item.label}${implemented ? "" : " (Coming soon)"}`;
 
   useEffect(() => {
     if (active) setOpen(true);
@@ -88,7 +85,7 @@ function SidebarItem({
         }
         if (hasChildren) setOpen((current) => !current);
       }}
-      aria-current={isActive(pathname, item) ? "page" : undefined}
+      aria-current={isAdminV2NavigationItemActive(pathname, item) ? "page" : undefined}
       aria-expanded={hasChildren && !collapsed ? open : undefined}
       aria-label={collapsed ? tooltipTitle : undefined}
       selected={active}
@@ -128,6 +125,7 @@ function SidebarItem({
             slotProps={{ primary: { variant: "body2", sx: { fontWeight: active ? 700 : 600 } } }}
           />
           {item.badge ? <Chip size="small" label={item.badge} color="primary" /> : null}
+          {!implemented ? <Chip size="small" label="Soon" variant="outlined" /> : null}
           {hasChildren ? (
             <ChevronRight
               size={16}

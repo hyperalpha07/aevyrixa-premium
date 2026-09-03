@@ -9,7 +9,7 @@ export default async function AdminV2OrderInvoicePrintPage(
   props: PageProps<"/admin-v2/orders/[orderRef]/invoice">
 ) {
   const session = await requireAdminV2Session();
-  requireAdminV2RouteAccess(session, "orderDetail");
+  requireAdminV2RouteAccess(session, "orderInvoice");
   const { orderRef } = await props.params;
   const payload = await getAdminV2Order(orderRef);
 

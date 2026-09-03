@@ -20,6 +20,9 @@ export default async function AdminV2OrderDetailPage(props: PageProps<"/admin-v2
       permissions={{
         canEditStatus: hasPermission(session, "orders.editStatus"),
         canEditCourier: hasPermission(session, "orders.editCourier"),
+        canViewInvoice: hasPermission(session, "orders.viewInvoice"),
+        canIssueInvoice: hasPermission(session, "orders.issueInvoice"),
+        canAddNote: hasPermission(session, "orders.addNote"),
       }}
     />
   );

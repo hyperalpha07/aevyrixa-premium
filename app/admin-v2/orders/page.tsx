@@ -29,6 +29,9 @@ export default async function AdminV2OrdersPage(props: PageProps<"/admin-v2/orde
         canExport: hasPermission(session, "orders.export"),
         canEditStatus: hasPermission(session, "orders.editStatus"),
         canEditCourier: hasPermission(session, "orders.editCourier"),
+        canViewInvoice: hasPermission(session, "orders.viewInvoice"),
+        canIssueInvoice: hasPermission(session, "orders.issueInvoice"),
+        canAddNote: hasPermission(session, "orders.addNote"),
       }}
     />
   );

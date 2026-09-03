@@ -73,15 +73,23 @@ export function AdminV2CommandPalette({ open, onClose, session }: AdminV2Command
           {results.map((route) => (
             <ListItemButton
               key={route.path}
-              onClick={() => {
-                startRouteProgress();
-                router.push(route.path);
-                onClose();
-                setQuery("");
-              }}
+              disabled={!route.implemented}
+              onClick={
+                route.implemented
+                  ? () => {
+                      startRouteProgress();
+                      router.push(route.path);
+                      onClose();
+                      setQuery("");
+                    }
+                  : undefined
+              }
               sx={{ borderRadius: 2 }}
             >
-              <ListItemText primary={route.title} secondary={route.path} />
+              <ListItemText
+                primary={route.title}
+                secondary={`${route.path} - ${route.implemented ? "Available" : "Coming soon"}`}
+              />
             </ListItemButton>
           ))}
         </List>

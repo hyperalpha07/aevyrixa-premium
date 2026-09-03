@@ -57,7 +57,7 @@ export async function GET(
 ) {
   const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
-  if (!hasPermission(session, "orders.view")) return forbiddenAdminResponse();
+  if (!hasPermission(session, "orders.viewInvoice")) return forbiddenAdminResponse();
 
   const { orderRef } = await context.params;
   const existing = await getOrderByReference(orderRef);
@@ -79,7 +79,7 @@ export async function POST(
 ) {
   const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
-  if (!hasPermission(session, "orders.editStatus")) return forbiddenAdminResponse();
+  if (!hasPermission(session, "orders.issueInvoice")) return forbiddenAdminResponse();
   try {
     resolveTrustedAdminActor(session);
   } catch (error) {

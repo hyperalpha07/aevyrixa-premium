@@ -22,6 +22,7 @@ import { V2IconButton } from "@/components/admin-v2/shared/V2IconButton";
 import { useAdminV2Theme } from "@/components/admin-v2/theme/AdminV2ThemeProvider";
 import { roleLabels } from "@/app/lib/admin-permissions";
 import { AdminV2RouteProgress, useAdminV2Motion } from "@/components/admin-v2/motion";
+import { canAccessAdminV2Module } from "@/lib/admin-v2/permissions";
 
 type AdminV2TopbarProps = {
   session: AdminSessionUser;
@@ -45,6 +46,7 @@ export function AdminV2Topbar({
   const { startRouteProgress } = useAdminV2Motion();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mounted, setMounted] = useState(false);
+  const canAccessSettings = canAccessAdminV2Module(session, "settings");
 
   useEffect(() => {
     setMounted(true);
@@ -161,14 +163,16 @@ export function AdminV2Topbar({
             </Typography>
           </Box>
           <Divider />
-          <MenuItem component={Link} href="/admin-v2/staff" onClick={() => { startRouteProgress(); setAnchorEl(null); }}>
+          <MenuItem disabled>
             <User size={17} style={{ marginRight: 10 }} />
-            Profile
+            Profile (Coming soon)
           </MenuItem>
-          <MenuItem component={Link} href="/admin-v2/settings" onClick={() => { startRouteProgress(); setAnchorEl(null); }}>
-            <Settings size={17} style={{ marginRight: 10 }} />
-            Account settings
-          </MenuItem>
+          {canAccessSettings ? (
+            <MenuItem disabled>
+              <Settings size={17} style={{ marginRight: 10 }} />
+              Account settings (Coming soon)
+            </MenuItem>
+          ) : null}
           <MenuItem onClick={() => setMode(nextMode)}>
             <WandSparkles size={17} style={{ marginRight: 10 }} />
             Theme settings

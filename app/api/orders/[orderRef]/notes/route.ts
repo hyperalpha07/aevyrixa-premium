@@ -80,7 +80,7 @@ export async function POST(
 ) {
   const session = await getFreshAdminRequestSession(request);
   if (!session) return unauthorizedAdminResponse();
-  if (!hasPermission(session, "orders.editStatus")) return forbiddenAdminResponse();
+  if (!hasPermission(session, "orders.addNote")) return forbiddenAdminResponse();
   try {
     resolveTrustedAdminActor(session);
   } catch (error) {

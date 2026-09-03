@@ -6,7 +6,7 @@ import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
 export default async function AdminV2DashboardPage() {
   const session = await requireAdminV2Session();
   requireAdminV2RouteAccess(session, "dashboard");
-  const data = await getAdminV2DashboardData();
+  const data = await getAdminV2DashboardData(session);
 
   return <AdminV2DashboardView data={data} />;
 }

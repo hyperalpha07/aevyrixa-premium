@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function AdminV2Layout({ children }: { children: React.ReactNode }) {
   const session = await requireAdminV2Session();
-  const dashboardData = await getAdminV2DashboardData();
+  const dashboardData = await getAdminV2DashboardData(session);
 
   return (
     <div data-admin-v2-root>

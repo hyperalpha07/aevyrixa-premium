@@ -34,6 +34,9 @@ type Props = {
   permissions: {
     canEditStatus: boolean;
     canEditCourier: boolean;
+    canViewInvoice: boolean;
+    canIssueInvoice: boolean;
+    canAddNote: boolean;
   };
 };
 
@@ -85,6 +88,17 @@ async function issueInvoice(orderRef: string) {
   return result.invoice as OrderInvoiceRecord;
 }
 
+async function fetchIssuedInvoice(orderRef: string) {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/invoices`, {
+    cache: "no-store",
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(Array.isArray(result.errors) ? result.errors.join(" ") : "Invoice could not be loaded.");
+  }
+  return ((result.invoices ?? []) as OrderInvoiceRecord[]).find((invoice) => invoice.status === "issued") ?? null;
+}
+
 export function AdminV2OrderDetailView({ order, storageMode, permissions }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -100,6 +114,7 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
   const [events, setEvents] = useState<OrderEventRecord[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoiceIssueOpen, setInvoiceIssueOpen] = useState(false);
   const [issuedInvoice, setIssuedInvoice] = useState<OrderInvoiceRecord | null>(null);
   const [mutationPending, setMutationPending] = useState(false);
 
@@ -167,24 +182,56 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
     }
   };
 
-  const openInvoice = async () => {
+  const viewInvoice = async () => {
     if (mutationPending) return;
     const printWindow = window.open("", "_blank");
     if (printWindow) {
-      printWindow.document.title = "Preparing invoice";
-      printWindow.document.body.innerHTML = "<p style=\"font-family: Arial, sans-serif; padding: 24px;\">Preparing invoice...</p>";
+      printWindow.document.title = "Checking invoice";
+      printWindow.document.body.innerHTML = "<p style=\"font-family: Arial, sans-serif; padding: 24px;\">Checking for an issued invoice...</p>";
     }
 
     try {
       setMutationPending(true);
-      const invoice = await issueInvoice(order.orderReference);
+      const invoice = await fetchIssuedInvoice(order.orderReference);
+      if (!invoice) {
+        printWindow?.close();
+        setToast({ message: "No issued invoice exists for this order. Use Issue invoice to create one.", severity: "warning" });
+        return;
+      }
       setIssuedInvoice(invoice);
       if (printWindow) {
         printWindow.location.href = `/admin-v2/orders/${encodeURIComponent(order.orderReference)}/invoice`;
       } else {
         setInvoiceOpen(true);
       }
+    } catch (error) {
+      printWindow?.close();
+      setToast({ message: error instanceof Error ? error.message : "Invoice could not be loaded.", severity: "error" });
+    } finally {
+      setMutationPending(false);
+    }
+  };
+
+  const confirmIssueInvoice = async () => {
+    if (mutationPending || !permissions.canIssueInvoice) return;
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.title = "Issuing invoice";
+      printWindow.document.body.innerHTML = "<p style=\"font-family: Arial, sans-serif; padding: 24px;\">Issuing invoice after confirmation...</p>";
+    }
+
+    try {
+      setMutationPending(true);
+      const invoice = await issueInvoice(order.orderReference);
+      setIssuedInvoice(invoice);
+      setInvoiceIssueOpen(false);
+      if (printWindow) {
+        printWindow.location.href = `/admin-v2/orders/${encodeURIComponent(order.orderReference)}/invoice`;
+      } else {
+        setInvoiceOpen(true);
+      }
       setEvents(await fetchOrderEvents(order.orderReference));
+      setToast({ message: `Invoice ${invoice.invoiceNumber} is issued.`, severity: "success" });
     } catch (error) {
       printWindow?.close();
       setToast({ message: error instanceof Error ? error.message : "Invoice could not be issued.", severity: "error" });
@@ -322,14 +369,15 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
                 </Box>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, justifyContent: { lg: "flex-end" } }}>
                   <V2Button href={backHref} variant="text" startIcon={<ArrowLeft size={16} />} aria-label="Back to orders">Back</V2Button>
-                  <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} onClick={openNotes}>Add Note</V2Button>
-                  <Tooltip title="Issue or open the existing invoice print route">
+                  <V2Button variant="outlined" startIcon={<NotebookPen size={16} />} disabled={!permissions.canAddNote} onClick={openNotes}>Add Note</V2Button>
+                  <Tooltip title="Read-only: opens an already issued invoice">
                     <span>
-                      <V2Button variant="outlined" startIcon={<Printer size={16} />} loading={mutationPending} onClick={openInvoice}>
-                        {mutationPending ? "Preparing..." : "Print Invoice"}
+                      <V2Button variant="outlined" startIcon={<Printer size={16} />} loading={mutationPending} disabled={!permissions.canViewInvoice} onClick={viewInvoice}>
+                        {mutationPending ? "Checking..." : "View / Print invoice"}
                       </V2Button>
                     </span>
                   </Tooltip>
+                  <V2Button variant="outlined" startIcon={<Printer size={16} />} disabled={!permissions.canIssueInvoice} onClick={() => setInvoiceIssueOpen(true)}>Issue invoice</V2Button>
                   <V2Button variant="outlined" startIcon={<RefreshCcw size={16} />} loading={isPending} onClick={refresh}>Refresh</V2Button>
                   <V2Button variant="contained" startIcon={<SquarePen size={16} />} disabled={!permissions.canEditStatus} onClick={() => { setNextStatus(""); setReason(""); setStatusOpen(true); }}>Update Status</V2Button>
                 </Stack>
@@ -456,7 +504,7 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
           <TextField fullWidth multiline minRows={4} label="Internal note" value={note} onChange={(event) => setNote(event.target.value)} />
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setNotesOpen(false)}>Close</V2Button>
-            <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !note.trim()} onClick={saveNote}>
+            <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canAddNote || !note.trim()} onClick={saveNote}>
               {mutationPending ? "Saving..." : "Save note"}
             </V2Button>
           </DialogActions>
@@ -476,6 +524,33 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
           <DialogActions sx={{ px: 0, pb: 0 }}>
             <V2Button onClick={() => setInvoiceOpen(false)}>Close</V2Button>
             <V2Button variant="contained" onClick={() => window.print()}>Print</V2Button>
+          </DialogActions>
+        </Stack>
+      </V2Dialog>
+
+      <V2Dialog
+        title="Issue invoice?"
+        open={invoiceIssueOpen}
+        onClose={() => {
+          if (!mutationPending) setInvoiceIssueOpen(false);
+        }}
+      >
+        <Stack spacing={2}>
+          <Typography variant="body2" color="text.secondary">
+            This creates a persistent financial snapshot and audit event for order {order.orderReference}.
+            Viewing or printing an existing invoice does not perform this action.
+          </Typography>
+          <Alert severity="warning">Only continue after confirming that the order is ready for invoice issuance.</Alert>
+          <DialogActions sx={{ px: 0, pb: 0 }}>
+            <V2Button disabled={mutationPending} onClick={() => setInvoiceIssueOpen(false)}>Cancel</V2Button>
+            <V2Button
+              variant="contained"
+              loading={mutationPending}
+              disabled={!permissions.canIssueInvoice}
+              onClick={() => void confirmIssueInvoice()}
+            >
+              Issue invoice
+            </V2Button>
           </DialogActions>
         </Stack>
       </V2Dialog>
