@@ -11,7 +11,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   orders: { section: "orders" },
   orderDetail: { section: "orders" },
   orderInvoice: { permission: "orders.viewInvoice" },
-  products: { section: "products" },
+  products: { permission: "products.view" },
   productNew: { permission: "products.edit" },
   productDetail: { section: "products" },
   categories: { section: "categories" },
