@@ -311,7 +311,7 @@ export default function LiveChatWidget({
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <div className="flex items-center gap-2.5">
                 <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.9)]" />
-                <span className="text-sm font-semibold text-white">Aevyrixa Support</span>
+                <span className="text-sm font-semibold text-white">Noromi Care Support</span>
               </div>
               <button
                 onClick={() => setOpen(false)}

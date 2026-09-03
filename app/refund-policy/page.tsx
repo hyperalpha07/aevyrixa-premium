@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Refund & Exchange Policy — Hygiene-Safe Support",
+  title: { absolute: `Refund & Exchange Policy | ${brandName}` },
   description:
-    "Aevyrixa Her Care refund and exchange policy. 3-Day Hygiene-Safe Support window. Unused, unwashed items in original packaging eligible for review. Used intimate products cannot be returned.",
+    "Noromi Care refund and exchange policy. Unused, unwashed items in original packaging may be eligible for review.",
 };
 
 export default async function RefundPolicyPage() {
@@ -17,8 +18,8 @@ export default async function RefundPolicyPage() {
     <InfoPageShell
       settings={settings}
       eyebrow="Refund Policy"
-      title={`${settings.supportWindowMessage} for Her Care Orders`}
-      intro={`${settings.brandDisplayName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
+      title={`Refund and exchange support for ${brandName} orders.`}
+      intro={`${brandName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
       sections={[
         {
           title: "3-Day Hygiene-Safe Support Window",
@@ -42,11 +43,11 @@ export default async function RefundPolicyPage() {
         },
         {
           title: "Review First",
-          copy: `All support, exchange, or refund requests are reviewed by the ${settings.brandDisplayName} team before approval.`,
+          copy: `All support, exchange, or refund requests are reviewed by the ${brandName} team before approval.`,
         },
         {
           title: "Return Cost",
-          copy: `If the issue is caused by ${settings.brandShortName}, we will support the correction. If the request is due to customer size preference or change of mind, delivery/return cost may be the customer's responsibility.`,
+          copy: `If the issue is caused by ${brandName}, we will support the correction. If the request is due to customer size preference or change of mind, delivery/return cost may be the customer's responsibility.`,
         },
       ]}
     />

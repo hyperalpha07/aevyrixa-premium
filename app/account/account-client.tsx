@@ -686,7 +686,7 @@ function ProfileHero({
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#FF4DB8]/72">
-                Her Care account
+                Noromi Care account
               </p>
               <h1 className="mt-1 break-words text-xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-3xl">
                 {customer.fullName}
@@ -882,7 +882,7 @@ function SupportHub({ settings, onOpenLiveChat }: { settings: StorefrontSettings
           <SupportAction
             icon={MessageSquare}
             label="Start live chat"
-            helper="Open Aevyrixa Support here."
+            helper="Open Noromi Care Support here."
             accent="pink"
             onClick={onOpenLiveChat}
           />

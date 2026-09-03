@@ -5,7 +5,14 @@ import {
 } from "@/app/lib/admin-auth";
 import { hasPermission } from "@/app/lib/admin-permissions";
 import { logStaffActivity } from "@/app/lib/admin-staff";
-import { updateOrderOperations } from "@/app/lib/order-store";
+import {
+  eventTypeForStatusChange,
+  getOrderByReference,
+  recordOrderEvent,
+  updateOrderOperations,
+  updateOrderStatusWithEvent,
+} from "@/app/lib/order-store";
+import { validNextAdminV2OrderStatuses } from "@/lib/admin-v2/orders/order-status-transitions";
 import {
   deliveryStatuses,
   orderSources,
@@ -210,7 +217,41 @@ export async function PATCH(
   }
 
   try {
-    const result = await updateOrderOperations(orderRef, updates);
+    let previousStatus: OrderStatus | undefined;
+    if ("status" in updates) {
+      const existing = await getOrderByReference(orderRef);
+      if (!existing.order) {
+        return Response.json(
+          { errors: ["Order was not found."], storageMode: existing.storageMode },
+          { status: 404 }
+        );
+      }
+      const currentStatus = existing.order.status;
+      previousStatus = currentStatus;
+      if (!validNextAdminV2OrderStatuses(currentStatus).includes(updates.status as OrderStatus)) {
+        return Response.json(
+          { errors: ["Order status transition is not valid for the current order state."] },
+          { status: 409 }
+        );
+      }
+      if (updates.status === "Cancelled" && !updates.cancelledReason?.trim()) {
+        return Response.json(
+          { errors: ["Cancellation reason is required."] },
+          { status: 400 }
+        );
+      }
+    }
+
+    const result =
+      previousStatus && updates.status
+        ? await updateOrderStatusWithEvent({
+            orderRef,
+            status: updates.status,
+            cancelledReason: updates.cancelledReason,
+            previousStatus,
+            actor: session,
+          })
+        : await updateOrderOperations(orderRef, updates);
 
     if (!result.order) {
       return Response.json(
@@ -226,6 +267,20 @@ export async function PATCH(
       targetId: orderRef,
       metadata: { fields: Object.keys(updates) },
     });
+
+    if (!previousStatus && updates.status) {
+      await recordOrderEvent({
+        orderRef,
+        eventType: eventTypeForStatusChange(updates.status),
+        fromStatus: previousStatus,
+        toStatus: updates.status,
+        reason: updates.cancelledReason,
+        actor: session,
+        metadata: { fields: Object.keys(updates) },
+      }).catch((eventError) => {
+        console.error("Failed to record order event:", eventError);
+      });
+    }
 
     return Response.json(result);
   } catch (error) {

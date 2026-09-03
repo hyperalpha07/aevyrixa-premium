@@ -18,7 +18,7 @@ export default function InfoPageShell({
   intro,
   sections,
   topContent,
-  ctaLabel = "Shop Her Care",
+  ctaLabel = "Shop Noromi Care",
   ctaHref = "/product",
   settings = defaultStorefrontSettings,
 }: {
@@ -37,7 +37,7 @@ export default function InfoPageShell({
 
       <SiteHeader settings={settings} />
 
-      <section className="aev-info-hero mx-auto w-full min-w-0 max-w-7xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16">
+      <section className="aev-info-hero relative mx-auto w-full min-w-0 max-w-7xl overflow-clip px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16">
         <div className="min-w-0 max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200/72 sm:tracking-[0.42em]">
             {eyebrow}

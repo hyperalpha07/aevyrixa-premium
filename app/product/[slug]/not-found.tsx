@@ -21,7 +21,7 @@ export default function ProductNotFound() {
             Product Unavailable
           </p>
           <h1 className="mt-3 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-4xl">
-            This Her Care product is not available in the storefront.
+            This Noromi Care product is not available in the storefront.
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/64 sm:text-base">
             It may be in draft, temporarily paused, or no longer listed. You can

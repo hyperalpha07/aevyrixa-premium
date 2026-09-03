@@ -6,6 +6,11 @@ import {
   type HomepageCategoryMediaMode,
   type HomepageCategoryState,
 } from "@/app/lib/admin-settings";
+import {
+  brandName,
+  brandShortName as noromiShortName,
+  brandTagline as noromiTagline,
+} from "@/configs/brand/noromi";
 
 export type StorefrontSocialLink = {
   label: "Facebook" | "Instagram" | "TikTok" | "YouTube";
@@ -40,8 +45,22 @@ export type StorefrontSettings = AdminSettings & {
   shopFooterCategories: CategoryCmsEntry[];
 };
 
-function shortBrandName(storeName: string) {
-  return storeName.replace(/\s+Her\s+Care\s*$/i, "").trim() || storeName;
+function withPublicBranding<T>(value: T): T {
+  if (typeof value === "string") {
+    return value
+      .replace(/Aevyrixa Her Care/gi, brandName)
+      .replace(/\bAevyrixa\b(?![.@:/_-])/gi, brandName)
+      .replace(/\bHer Care\b/gi, brandName) as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map(withPublicBranding) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, withPublicBranding(item)])
+    ) as T;
+  }
+  return value;
 }
 
 function footerSentence(value: string) {
@@ -99,13 +118,10 @@ function buildCategories(settings: AdminSettings): CategoryCmsEntry[] {
 }
 
 export function normalizeStorefrontSettings(value: unknown): StorefrontSettings {
-  const settings = normalizeAdminSettings(value);
-  const brandDisplayName = settings.storeName || defaultAdminSettings.storeName;
-  const brandShortName = shortBrandName(brandDisplayName);
-  const brandTagline =
-    settings.storeProfile.brandSubtitle ||
-    settings.appearanceSettings.homepageHeroSubtitle ||
-    defaultAdminSettings.storeProfile.brandSubtitle;
+  const settings = withPublicBranding(normalizeAdminSettings(value));
+  const brandDisplayName = brandName;
+  const brandShortName = noromiShortName;
+  const brandTagline = noromiTagline;
   const supportContact = settings.supportWhatsApp || settings.supportPhone;
   const socialLinks: StorefrontSocialLink[] = settings.storeProfile.showSocialIcons
     ? [

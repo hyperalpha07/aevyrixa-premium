@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PackageCheck, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
 import { useCart } from "@/app/components/cart/cart-context";
-import ProductVisual from "@/app/components/product-visual";
+import CartItemVisual from "@/app/components/cart/cart-item-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { formatCurrency } from "@/app/lib/currency";
 import {
@@ -13,6 +13,7 @@ import {
   fetchStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import { brandName } from "@/configs/brand/noromi";
 
 export default function CartPage() {
   const {
@@ -62,7 +63,7 @@ export default function CartPage() {
         <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.35em] text-[#31E6D4]/70">
-              {settings.brandShortName} Cart
+              {brandName} Cart
             </p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
               Your Shopping Cart
@@ -99,7 +100,7 @@ export default function CartPage() {
             </div>
 
             <h2 className="mt-6 text-2xl font-semibold md:text-3xl">
-              Your cart is ready for Her Care essentials.
+              Your cart is ready for Noromi Care essentials.
             </h2>
 
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/60 md:text-base">
@@ -123,7 +124,7 @@ export default function CartPage() {
               href="/product"
               className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-7 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.02] sm:w-auto"
             >
-              Shop Her Care
+              Shop Noromi Care
             </Link>
           </div>
         ) : (
@@ -135,12 +136,8 @@ export default function CartPage() {
                   className="rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl md:p-5"
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-center">
-                    <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0B0F1A]">
-                      <ProductVisual
-                        visualTheme={item.visualTheme}
-                        label={item.absorbency || "Her Care"}
-                        compact
-                      />
+                    <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0B0F1A]">
+                      <CartItemVisual item={item} sizes="112px" />
                     </div>
 
                     <div className="min-w-0 flex-1">

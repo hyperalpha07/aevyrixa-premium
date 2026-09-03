@@ -3,13 +3,14 @@ import Link from "next/link";
 import SiteHeader from "@/app/components/cart/site-header";
 import SiteFooter from "@/app/components/site-footer";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Contact — Order Support & Her Care Questions",
+  title: { absolute: `Contact | ${brandName}` },
   description:
-    "Get in touch with Aevyrixa Her Care support for delivery, COD, size guidance, order tracking, and policy questions. WhatsApp and phone support available.",
+    "Contact Noromi Care support for delivery, COD, size guidance, order tracking, and policy questions.",
 };
 
 export default async function ContactPage() {
@@ -26,10 +27,10 @@ export default async function ContactPage() {
             Contact
           </p>
           <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
-            Support for orders, sizing, and Her Care questions.
+            Support for orders, sizing, and Noromi Care questions.
           </h1>
           <p className="mt-5 break-words text-base leading-8 text-white/66 [overflow-wrap:anywhere]">
-            Contact {settings.brandShortName} support for delivery, COD
+            Contact {brandName} support for delivery, COD
             questions, size guidance, order tracking, and policy support.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -40,7 +41,7 @@ export default async function ContactPage() {
                 rel="noreferrer"
                 className="aev-action-primary inline-flex min-h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-7 text-sm font-bold text-white shadow-[0_4px_28px_rgba(255,77,184,0.40)] transition hover:scale-[1.01] sm:w-auto"
               >
-                Chat with {settings.brandShortName} Support
+                Chat with {brandName} Support
               </a>
             )}
             <Link

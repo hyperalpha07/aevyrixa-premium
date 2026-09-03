@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/app/components/cart/cart-context";
 import CartDrawer from "@/app/components/cart/cart-drawer";
 import AnalyticsScripts from "@/app/components/analytics-scripts";
 import WhatsAppWidget from "@/app/components/whatsapp-widget";
+import {
+  adminV2ColorSchemeSelector,
+  adminV2ColorSchemeStorageKey,
+  adminV2DefaultThemeSettings,
+  adminV2ModeStorageKey,
+} from "@/configs/admin-v2/theme";
+import { brandName, noromiAssets } from "@/configs/brand/noromi";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,34 +25,36 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://www.aevyrixa.com";
-const OG_FALLBACK_IMAGE = `${SITE_URL}/og-image.jpg`;
+const PUBLIC_TITLE = `${brandName} - Premium Period Essentials in Bangladesh`;
+const PUBLIC_DESCRIPTION =
+  "Premium period essentials for everyday comfort, confidence, and discreet care in Bangladesh.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Aevyrixa Her Care",
+    default: PUBLIC_TITLE,
+    // Retained for legacy admin pages. Public pages define absolute titles below.
     template: "%s | Aevyrixa Her Care",
   },
-  description:
-    "Aevyrixa Her Care is a premium women's comfort, hygiene, reusable care, and intimate essentials brand in Bangladesh. Discreet privacy packaging, careful order review, and 3-Day Hygiene-Safe Support.",
+  description: PUBLIC_DESCRIPTION,
   icons: {
+    // The file-based favicon is shared with legacy admin routes; defer replacement
+    // until route-scoped icons can be introduced without changing admin branding.
     icon: "/favicon.ico",
   },
   openGraph: {
     type: "website",
-    siteName: "Aevyrixa Her Care",
-    title: "Aevyrixa Her Care",
-    description:
-      "Premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
+    siteName: brandName,
+    title: PUBLIC_TITLE,
+    description: PUBLIC_DESCRIPTION,
     url: SITE_URL,
-    images: [{ url: OG_FALLBACK_IMAGE, width: 1200, height: 630, alt: "Aevyrixa Her Care" }],
+    images: [{ url: noromiAssets.coverBannerWide, width: 1672, height: 941, alt: brandName }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aevyrixa Her Care",
-    description:
-      "Premium women's comfort, hygiene, reusable care, and intimate essentials with discreet Bangladesh delivery.",
-    images: [OG_FALLBACK_IMAGE],
+    title: PUBLIC_TITLE,
+    description: PUBLIC_DESCRIPTION,
+    images: [noromiAssets.coverBannerWide],
   },
 };
 
@@ -60,9 +70,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <InitColorSchemeScript
+          attribute={adminV2ColorSchemeSelector}
+          defaultMode={adminV2DefaultThemeSettings.mode}
+          modeStorageKey={adminV2ModeStorageKey}
+          colorSchemeStorageKey={adminV2ColorSchemeStorageKey}
+        />
         <CartProvider>
           {children}
           <CartDrawer />

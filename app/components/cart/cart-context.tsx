@@ -91,7 +91,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return prev.map((cartItem) =>
           cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + quantity }
+            ? {
+                ...cartItem,
+                ...item,
+                quantity: cartItem.quantity + quantity,
+              }
             : cartItem
         );
       }

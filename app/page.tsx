@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -24,14 +25,14 @@ import { publicProduct } from "@/app/lib/product-display";
 import { listProducts } from "@/app/lib/product-store";
 import { homeCardCtaLabel, smartHomeCtaHref } from "@/app/lib/shop-routing";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName, noromiAssets } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
-  title: "Aevyrixa Her Care - Premium Women's Comfort & Reusable Care in Bangladesh",
-  description:
-    "Aevyrixa Her Care offers premium women's comfort, hygiene, reusable care, and intimate essentials in Bangladesh with discreet privacy packaging and BDT pricing.",
+  title: { absolute: `${brandName} - Premium Period Essentials in Bangladesh` },
+  description: "Premium period essentials for everyday comfort, confidence, and discreet care in Bangladesh.",
 };
 
 const homepageStructuredData = {
@@ -40,16 +41,16 @@ const homepageStructuredData = {
     {
       "@type": "Organization",
       "@id": "https://www.aevyrixa.com/#organization",
-      name: "Aevyrixa Her Care",
+      name: brandName,
       url: "https://www.aevyrixa.com",
-      logo: { "@type": "ImageObject", url: "https://www.aevyrixa.com/favicon.ico" },
+      logo: { "@type": "ImageObject", url: `https://www.aevyrixa.com${noromiAssets.appIcon}` },
       areaServed: "BD",
     },
     {
       "@type": "WebSite",
       "@id": "https://www.aevyrixa.com/#website",
       url: "https://www.aevyrixa.com",
-      name: "Aevyrixa Her Care",
+      name: brandName,
       publisher: { "@id": "https://www.aevyrixa.com/#organization" },
     },
   ],
@@ -189,12 +190,17 @@ function StoryVisual({
   media,
   fallback,
   alt,
+  forceBrandVisual = false,
 }: {
   media: SectionMedia;
   fallback: React.ReactNode;
   alt: string;
+  forceBrandVisual?: boolean;
 }) {
-  const hasUploaded = (media.mode === "image" && media.imageUrl) || (media.mode === "video" && media.videoUrl);
+  const hasUploaded =
+    !forceBrandVisual &&
+    ((media.mode === "image" && media.imageUrl) ||
+      (media.mode === "video" && media.videoUrl));
 
   return (
     <div className="aev-story-media aev-home-art-block relative isolate min-w-0 overflow-hidden">
@@ -325,25 +331,25 @@ export default async function Home() {
       <SiteHeader active="home" productHref={featuredProductHref} settings={settings} />
       <AevIntroScreen
         enabled={hms.splashEnabled}
-        brand={hms.splashTitle || settings.brandDisplayName || "Aevyrixa Her Care"}
-        logoSrc={hms.splashLogoUrl || "/logo.jpg"}
+        brand={brandName}
+        logoSrc={noromiAssets.logoMark}
       />
 
       {hms.showHero ? (
         <section className="aev-home-hero relative isolate overflow-hidden px-4 pb-7 pt-5 sm:px-6 sm:pb-14 sm:pt-12">
           <div className="aev-hero-cinema pointer-events-none absolute inset-0 -z-10" />
-          <div className="mx-auto grid max-w-7xl items-center gap-6 lg:grid-cols-[0.94fr_1.06fr] lg:gap-14">
-            <div className="min-w-0">
+          <div className="aev-home-hero-grid mx-auto grid max-w-7xl items-center gap-6 lg:grid-cols-[0.94fr_1.06fr] lg:gap-14">
+            <div className="aev-home-hero-copy min-w-0">
               <p className="aev-story-eyebrow inline-flex rounded-full border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 py-2">
-                {heroMedia.eyebrow || settings.appearanceSettings.heroBadgeText || settings.brandDisplayName}
+                {heroMedia.eyebrow || settings.appearanceSettings.heroBadgeText || brandName}
               </p>
               <h1 className="mt-4 max-w-[12ch] text-[2.15rem] font-semibold leading-[1.04] tracking-tight text-white min-[390px]:text-[2.45rem] sm:mt-6 sm:max-w-3xl sm:text-6xl lg:text-[4.7rem]">
                 {heroMedia.heading || settings.appearanceSettings.homepageHeroTitle}
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/72 sm:text-lg sm:leading-8">
+              <p className="aev-home-hero-description mt-4 max-w-2xl text-sm leading-6 text-white/72 sm:text-lg sm:leading-8">
                 {heroMedia.subheading || settings.appearanceSettings.homepageHeroSubtitle}
               </p>
-              <div className="mt-5 flex flex-wrap gap-3 sm:mt-8">
+              <div className="aev-home-hero-actions mt-5 flex flex-wrap gap-3 sm:mt-8">
                 <Link href={smartHomeCtaHref(heroMedia.ctaLink, "finalPrimary", { broad: true })} className="aev-action-primary inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] px-6 text-sm font-bold text-white">
                   {heroMedia.ctaText || settings.appearanceSettings.primaryCtaText}
                 </Link>
@@ -352,7 +358,7 @@ export default async function Home() {
                 </Link>
               </div>
               {hms.showStatStrip ? (
-                <div className="aev-hero-stat-shelf mt-5 w-full max-w-xl overflow-hidden border-y border-[#FF4DB8]/16 sm:mt-7" aria-label="Brand trust statistics">
+                <div className="aev-hero-stat-shelf aev-home-hero-stats mt-5 w-full max-w-xl overflow-hidden border-y border-[#FF4DB8]/16 sm:mt-7" aria-label="Brand trust statistics">
                   <div className="grid grid-cols-3">
                     {(homepageStatItems.length ? homepageStatItems : statItems).map(({ value, label }) => (
                       <div key={label} className="aev-hero-stat flex flex-col items-center justify-center gap-0.5 px-1.5 py-2.5 text-center sm:px-3 sm:py-3">
@@ -366,15 +372,16 @@ export default async function Home() {
             </div>
             <StoryVisual
               media={heroMedia}
-              alt="Aevyrixa Her Care hero media"
+              forceBrandVisual
+              alt={`${brandName} hero media`}
               fallback={
-                <AevyrixaMotionPanel
-                  mp4Src="/videos/aevyrixa-hero-motion.mp4"
-                  eyebrow="Reusable care"
-                  title="Her Care in motion"
-                  copy="A visual introduction to comfort layers and refined everyday care."
-                  variant="hero"
-                  className="h-full rounded-none border-0 shadow-none"
+                <Image
+                  fill
+                  preload
+                  sizes="(max-width: 1023px) calc(100vw - 2rem), 52vw"
+                  src={noromiAssets.heroBanner}
+                  alt={`${brandName} premium period essentials`}
+                  className="aev-home-hero-image object-cover"
                 />
               }
             />
@@ -400,7 +407,7 @@ export default async function Home() {
       ) : null}
 
       {hms.showTrustStrip ? (
-        <section className="px-4 pb-3 sm:px-6 sm:pb-7" aria-label="Store trust points">
+        <section className="aev-home-trust-section px-4 pb-3 sm:px-6 sm:pb-7" aria-label="Store trust points">
           <div className="aev-trust-row mx-auto grid max-w-7xl grid-cols-3 gap-2 overflow-hidden rounded-[1.35rem] border border-[#FF4DB8]/12 bg-[#120C22]/76 p-2 sm:gap-3 sm:p-3">
             {trustItems.map(({ label, icon: Icon }) => (
               <article key={label} className="flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-[1rem] border border-white/[0.07] bg-white/[0.035] px-1.5 py-2.5 text-center sm:flex-row sm:justify-start sm:px-4">
@@ -413,9 +420,9 @@ export default async function Home() {
       ) : null}
 
       {hms.showFeaturedProducts && featuredProducts.length ? (
-        <section className="aev-scroll-section px-4 py-9 sm:px-6 sm:py-16">
+        <section className="aev-home-featured-section aev-scroll-section px-4 py-9 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl">
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="aev-home-featured-header flex flex-wrap items-end justify-between gap-4">
               <HomeSectionHeading
                 eyebrow={hms.featuredProductsEyebrow}
                 heading={hms.featuredProductsHeading}
@@ -533,7 +540,7 @@ export default async function Home() {
                     imageUrl={hms.layerComfortImageUrl}
                     videoUrl={hms.layerComfortVideoUrl}
                     mode={hms.layerComfortMediaMode}
-                    alt={hms.layerComfortAltText || "Her Care layer system"}
+                    alt={hms.layerComfortAltText || "Noromi Care layer system"}
                     className="absolute inset-0 h-full w-full object-cover opacity-90"
                   />
                   {!hms.layerComfortImageUrl && !hms.layerComfortVideoUrl ? <LayerFallback /> : <div className="absolute inset-0 bg-gradient-to-t from-[#080611]/54 via-transparent to-white/[0.04]" />}
@@ -546,11 +553,11 @@ export default async function Home() {
             <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-12">
               <StoryVisual
                 media={careMedia}
-                alt="Aevyrixa care motion media"
+                alt="Noromi Care motion media"
                 fallback={
                   <AevyrixaMotionPanel
                     mp4Src="/videos/aevyrixa-care-system.mp4"
-                    eyebrow="Aevyrixa Care Motion"
+                    eyebrow="Noromi Care Motion"
                     title="Layered reusable care"
                     copy="Soft motion and layered form keep the product story visual."
                     variant="care"
@@ -560,7 +567,7 @@ export default async function Home() {
               />
               <div className="min-w-0">
                 <HomeSectionHeading
-                  eyebrow={careMedia.eyebrow || "Aevyrixa Care Motion"}
+                  eyebrow={careMedia.eyebrow || "Noromi Care Motion"}
                   heading={careMedia.heading || "Reusable care with a softer daily feel."}
                   body={careMedia.subheading || "A compact visual look at comfort, layered support, and discreet daily wear for Bangladesh routines."}
                 />
@@ -684,7 +691,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="aev-final-cta-media relative min-h-[12rem] overflow-hidden border-t border-white/10 bg-[#120C22] lg:min-h-full lg:border-l lg:border-t-0">
-              <UploadedMedia imageUrl={hms.ctaSectionImageUrl} videoUrl={hms.ctaSectionVideoUrl} mode={hms.ctaSectionMediaMode} alt={hms.ctaSectionAltText || "Her Care collection"} className="absolute inset-0 h-full w-full object-cover opacity-90" />
+              <UploadedMedia imageUrl={hms.ctaSectionImageUrl} videoUrl={hms.ctaSectionVideoUrl} mode={hms.ctaSectionMediaMode} alt={hms.ctaSectionAltText || "Noromi Care collection"} className="absolute inset-0 h-full w-full object-cover opacity-90" />
               {!hms.ctaSectionImageUrl && !hms.ctaSectionVideoUrl ? <LayerFallback /> : null}
               <div className="absolute inset-0 bg-gradient-to-tr from-[#080611]/65 via-transparent to-[#31E6D4]/[0.06]" />
             </div>

@@ -77,7 +77,6 @@ export type OrderCartItem = Pick<
   | "slug"
   | "name"
   | "price"
-  | "image"
   | "visualTheme"
   | "visualVariant"
   | "stockStatus"
@@ -86,7 +85,11 @@ export type OrderCartItem = Pick<
   | "absorbency"
   | "variant"
   | "quantity"
->;
+> & {
+  image?: string | null;
+  sku?: string;
+  lineTotal?: number;
+};
 
 export type OrderTotals = {
   totalItems: number;
@@ -102,8 +105,15 @@ export type OrderRecord = {
   items: OrderCartItem[];
   totals: OrderTotals;
   totalAmount: number;
+  discountAmount?: number;
+  paidAmount?: number;
+  dueAmount?: number;
+  refundedAmount?: number;
+  currencyCode?: string;
+  paymentVerifiedAt?: string;
   status: OrderStatus;
   createdAt: string;
+  updatedAt?: string;
   courierName?: string;
   trackingId?: string;
   deliveryStatus?: DeliveryStatus;
@@ -127,6 +137,66 @@ export type OrderRecord = {
   deletedAt?: string;
   softDeletedAt?: string;
   cancelledReason?: string;
+};
+
+export type OrderNoteType = "internal" | "customer" | "delivery" | "payment";
+
+export type OrderNoteRecord = {
+  id: string;
+  orderReference: string;
+  noteBody: string;
+  noteType: OrderNoteType;
+  createdByAdminId?: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+};
+
+export type OrderEventType =
+  | "order_created"
+  | "status_changed"
+  | "order_confirmed"
+  | "cancellation_requested"
+  | "order_cancelled"
+  | "courier_assigned"
+  | "out_for_delivery"
+  | "delivered"
+  | "refund_initiated"
+  | "refunded"
+  | "note_added"
+  | "invoice_issued";
+
+export type OrderEventRecord = {
+  id: string;
+  orderReference: string;
+  eventType: OrderEventType;
+  fromStatus?: OrderStatus;
+  toStatus?: OrderStatus;
+  reason?: string;
+  metadata: Record<string, unknown>;
+  actorAdminId?: string;
+  actorName: string;
+  createdAt: string;
+};
+
+export type OrderInvoiceStatus = "issued" | "void";
+
+export type OrderInvoiceRecord = {
+  id: string;
+  invoiceNumber: string;
+  orderReference: string;
+  status: OrderInvoiceStatus;
+  issuedAt: string;
+  issuedByAdminId?: string;
+  issuedBy?: string;
+  subtotalAmount: number;
+  discountAmount: number;
+  deliveryAmount: number;
+  totalAmount: number;
+  currencyCode: string;
+  snapshot: Record<string, unknown>;
+  createdAt: string;
 };
 
 export type OrderOperationsUpdate = Partial<

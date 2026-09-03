@@ -4,12 +4,21 @@ import { getProductBySlug, listProducts } from "@/app/lib/product-store";
 import ProductDetailClient from "@/app/product/[slug]/product-detail-client";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { listApprovedReviewsForProduct } from "@/app/lib/review-store";
+import { publicProduct } from "@/app/lib/product-display";
+import { brandName, noromiAssets } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 const SITE_URL = "https://www.aevyrixa.com";
-const OG_FALLBACK_IMAGE = `${SITE_URL}/og-image.jpg`;
+const OG_FALLBACK_IMAGE = `${SITE_URL}${noromiAssets.coverBannerWide}`;
+
+function withBrandSuffix(value: string) {
+  const title = value.trim();
+  return title.toLocaleLowerCase().endsWith(brandName.toLocaleLowerCase())
+    ? title
+    : `${title} | ${brandName}`;
+}
 
 export async function generateMetadata({
   params,
@@ -20,28 +29,27 @@ export async function generateMetadata({
   const { product } = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: "Product Not Found" };
+    return { title: { absolute: `Product Not Found | ${brandName}` } };
   }
 
-  const title =
-    product.seoTitle
-      ? `${product.seoTitle} | Aevyrixa Her Care`
-      : `${product.name} | Aevyrixa Her Care`;
+  const displayProduct = publicProduct(product);
+
+  const title = withBrandSuffix(displayProduct.seoTitle || displayProduct.name);
   const description =
-    product.seoDescription || product.shortDescription || `Shop ${product.name} from Aevyrixa Her Care.`;
+    displayProduct.seoDescription || displayProduct.shortDescription || `Shop ${displayProduct.name} from ${brandName}.`;
   const productUrl = `${SITE_URL}/product/${product.slug}`;
   const ogImage =
     product.primaryImageUrl || product.imageUrl || OG_FALLBACK_IMAGE;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     openGraph: {
       title,
       description,
       url: productUrl,
       type: "website",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: product.name }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: displayProduct.name }],
     },
     twitter: {
       card: "summary_large_image",
@@ -67,6 +75,8 @@ export default async function ProductPage({
   if (!product) {
     notFound();
   }
+
+  const displayProduct = publicProduct(product);
 
   const relatedProducts = products
     .filter((p) => p.id !== product.id && p.status === "active" && !p.deletedAt)
@@ -94,12 +104,12 @@ export default async function ProductPage({
   const productStructuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.name,
-    description: product.shortDescription,
+    name: displayProduct.name,
+    description: displayProduct.shortDescription,
     ...(productImage ? { image: productImage } : {}),
     brand: {
       "@type": "Brand",
-      name: "Aevyrixa Her Care",
+      name: brandName,
     },
     offers: {
       "@type": "Offer",
@@ -109,7 +119,7 @@ export default async function ProductPage({
       availability,
       seller: {
         "@type": "Organization",
-        name: "Aevyrixa Her Care",
+        name: brandName,
       },
     },
   };

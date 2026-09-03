@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "FAQ — Her Care Products, Delivery & Support",
+  title: { absolute: `FAQ | ${brandName}` },
   description:
-    "Answers to common questions about Aevyrixa Her Care products, sizing, delivery, payment, and 3-Day Hygiene-Safe Support. Bangladesh delivery, BDT pricing.",
+    "Answers to common questions about Noromi Care products, sizing, delivery, payment, and support in Bangladesh.",
 };
 
 export default async function FaqPage() {
@@ -19,10 +20,10 @@ export default async function FaqPage() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "What is Aevyrixa Her Care?",
+        name: `What is ${brandName}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `${settings.brandDisplayName} is a premium women's comfort, hygiene, reusable care, and intimate essentials brand. We deliver discreetly across Bangladesh with direct order confirmation before dispatch.`,
+          text: `${brandName} is a premium period essentials and everyday care brand. We deliver discreetly across Bangladesh with direct order confirmation before dispatch.`,
         },
       },
       {
@@ -85,12 +86,12 @@ export default async function FaqPage() {
     <InfoPageShell
       settings={settings}
       eyebrow="FAQ"
-      title="Clear answers before you choose your Her Care essentials."
+      title="Clear answers before you choose your Noromi Care essentials."
       intro={`Practical guidance on products, sizing, delivery, payment, and ${settings.supportWindowMessage}.`}
       sections={[
         {
-          title: "What is Aevyrixa Her Care?",
-          copy: `${settings.brandDisplayName} is a premium women's comfort, hygiene, reusable care, and intimate essentials brand. We deliver discreetly across Bangladesh with direct order confirmation before dispatch.`,
+          title: `What is ${brandName}?`,
+          copy: `${brandName} is a premium period essentials and everyday care brand. We deliver discreetly across Bangladesh with direct order confirmation before dispatch.`,
         },
         {
           title: "What products do you sell?",

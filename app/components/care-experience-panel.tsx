@@ -10,7 +10,7 @@ export default function CareExperiencePanel({
   return (
     <div
       className={`aev-care-panel relative isolate overflow-hidden rounded-[2rem] border border-white/12 bg-[#040817] shadow-[0_34px_120px_rgba(0,0,0,0.42)] ${className}`}
-      aria-label="Aevyrixa coded care experience"
+      aria-label="Noromi Care experience"
     >
       <div className="aev-care-ambient absolute inset-0" />
       <div className="aev-care-grid absolute inset-0" />

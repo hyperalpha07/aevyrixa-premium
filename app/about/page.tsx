@@ -1,5 +1,6 @@
 import InfoPageShell from "@/app/components/info-page-shell";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
+import { brandName } from "@/configs/brand/noromi";
 
 export const dynamic = "force-dynamic";
 
@@ -9,16 +10,16 @@ export default async function AboutPage() {
   return (
     <InfoPageShell
       settings={settings}
-      eyebrow={`About ${settings.brandShortName}`}
-      title="Premium Her Care, designed for comfort, discretion, and everyday confidence."
-      intro={`${settings.brandDisplayName} is a premium women's comfort, hygiene, reusable care, and intimate essentials brand built for customers who want practical care to feel refined, considered, and easy to trust.`}
+      eyebrow={`About ${brandName}`}
+      title="Premium Noromi Care, designed for comfort, discretion, and everyday confidence."
+      intro={`${brandName} is a premium women's comfort, hygiene, reusable care, and intimate essentials brand built for customers who want practical care to feel refined, considered, and easy to trust.`}
       sections={[
         {
           title: "Brand story",
-          copy: `${settings.brandShortName} started with a simple belief: intimate care products should feel personal without feeling clinical, and reusable choices should look and feel elevated enough for everyday life.`,
+          copy: `${brandName} started with a simple belief: intimate care products should feel personal without feeling clinical, and reusable choices should look and feel elevated enough for everyday life.`,
         },
         {
-          title: "Her Care focus",
+          title: "Noromi Care focus",
           copy: "Our store brings together reusable period care, comfort wear, hygiene essentials, and intimate care — all designed for comfort, discretion, and calm routines.",
         },
         {

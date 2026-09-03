@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { useCart } from "./cart-context";
-import ProductVisual from "@/app/components/product-visual";
+import CartItemVisual from "@/app/components/cart/cart-item-visual";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { formatCurrency } from "@/app/lib/currency";
 import {
@@ -12,6 +12,7 @@ import {
   fetchStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import { brandName } from "@/configs/brand/noromi";
 
 export default function CartDrawer() {
   const {
@@ -84,7 +85,7 @@ export default function CartDrawer() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.3em] text-[#31E6D4]/70">
-                  {settings.brandShortName} Cart
+                  {brandName} Cart
                 </p>
                 <h2 className="mt-1 text-lg font-semibold text-white">
                   Your Cart
@@ -116,8 +117,8 @@ export default function CartDrawer() {
                 </h3>
 
                 <p className="mt-3 max-w-xs text-sm leading-7 text-white/60">
-                  Add premium Her Care products to your cart and build a more
-                  comfortable reusable routine with {settings.brandShortName}.
+                  Add premium Noromi Care products to your cart and build a more
+                  comfortable reusable routine with {brandName}.
                 </p>
 
                 <Link
@@ -137,11 +138,7 @@ export default function CartDrawer() {
                   >
                     <div className="flex gap-3">
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1rem] border border-white/10 bg-[#0B0F1A]">
-                        <ProductVisual
-                          visualTheme={item.visualTheme}
-                          label={item.absorbency || "Her Care"}
-                          compact
-                        />
+                        <CartItemVisual item={item} sizes="80px" />
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col">

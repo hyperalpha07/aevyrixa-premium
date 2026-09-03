@@ -12,6 +12,7 @@ import {
   fetchStorefrontSettings,
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
+import { brandName } from "@/configs/brand/noromi";
 
 type TimelineState = "complete" | "active" | "inactive";
 
@@ -110,7 +111,7 @@ function TrackOrderContent() {
     const configured = settings.deliverySettings.trackingSupportMessage.trim();
     return configured
       ? `${configured}${contact ? ` Support: ${supportContact}.` : ""}`
-      : `Need help? Contact Aevyrixa support${contact} with your order reference.`;
+      : `Need help? Contact Noromi Care support${contact} with your order reference.`;
   }, [settings.deliverySettings.trackingSupportMessage, supportContact]);
 
   useEffect(() => {
@@ -171,7 +172,7 @@ function TrackOrderContent() {
             Privacy-safe tracking
           </p>
           <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight tracking-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
-            Track your Aevyrixa order
+            Track your Noromi Care order
           </h1>
           <p className="aev-mobile-secondary-copy mt-5 break-words text-base leading-8 text-[#D8CBE8]/70 [overflow-wrap:anywhere]">
             Enter your order reference and the phone number used at checkout.
@@ -393,7 +394,7 @@ function TrackOrderContent() {
                     rel="noreferrer"
                     className="mt-2 inline-flex font-semibold text-[#31E6D4] transition hover:text-white"
                   >
-                    Chat with {settings.brandShortName} Support
+                    Chat with {brandName} Support
                   </a>
                 )}
               </div>

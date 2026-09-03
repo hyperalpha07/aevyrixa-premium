@@ -5,10 +5,12 @@ import {
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { getCustomerFromRequest } from "@/app/api/account/_utils";
 import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
-import { createOrder, listOrders } from "@/app/lib/order-store";
+import { createOrder, OrderStoreError, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
+import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
 import { getProductBySlug } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
+import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import {
   paymentMethods,
   paymentTypes,
@@ -107,10 +109,11 @@ function validateOrderPayload(payload: unknown): {
     .map((item) => ({
       id: text(item.id),
       productId: optionalText(item.productId),
+      sku: optionalText(item.sku),
       slug: text(item.slug),
       name: text(item.name),
       price: numberValue(item.price),
-      image: text(item.image),
+      image: normalizeAdminV2ImageSrc(text(item.image)),
       visualTheme: optionalText(item.visualTheme) as OrderCartItem["visualTheme"],
       visualVariant: optionalText(item.visualVariant),
       stockStatus: optionalText(item.stockStatus) as OrderCartItem["stockStatus"],
@@ -119,6 +122,7 @@ function validateOrderPayload(payload: unknown): {
       absorbency: optionalText(item.absorbency),
       variant: optionalText(item.variant),
       quantity: numberValue(item.quantity),
+      lineTotal: optionalNumber(item.lineTotal),
     }))
     .filter((item) => item.id && item.name && item.quantity > 0);
 
@@ -194,12 +198,31 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await listOrders();
+    const result = await queryOrders(parseAdminV2OrderQuery(new URL(request.url).searchParams));
     return Response.json(result);
   } catch (error) {
-    console.error("Failed to list orders:", error);
+    if (error instanceof OrderStoreError) {
+      console.error("[api:orders] failed to list orders", {
+        operation: error.operation,
+        status: error.status,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+    } else {
+      console.error("[api:orders] failed to list orders", {
+        operation: "order query",
+        code: "ORDER_BACKEND_UNKNOWN",
+        message: error instanceof Error ? error.message : "Unknown order backend error.",
+      });
+    }
+
     return Response.json(
-      { orders: [], error: "Unable to load backend orders." },
+      {
+        error: "Unable to load backend orders.",
+        code: error instanceof OrderStoreError ? error.code : "ORDER_BACKEND_UNKNOWN",
+      },
       { status: 500 }
     );
   }
@@ -253,6 +276,14 @@ export async function POST(request: Request) {
         : input;
 
     const result = await createOrder(orderInput);
+
+    await recordOrderEvent({
+      orderRef: result.order.orderReference,
+      eventType: "order_created",
+      toStatus: result.order.status,
+      actor: null,
+      metadata: { source: "checkout" },
+    }).catch(() => null);
 
     try {
       const notificationResult = await notifyNewOrder(result.order);
