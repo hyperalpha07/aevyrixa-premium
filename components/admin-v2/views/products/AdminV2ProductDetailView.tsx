@@ -228,7 +228,7 @@ function BooleanField({ label, value }: { label: string; value: boolean }) {
   return <Field label={label}>{value ? "Yes" : "No"}</Field>;
 }
 
-function CompactHeader({ product }: { product: AdminV2ProductDetail }) {
+function CompactHeader({ product, canEditDraft }: { product: AdminV2ProductDetail; canEditDraft: boolean }) {
   return (
     <Box sx={{ mb: 2 }}>
       <V2Breadcrumbs
@@ -259,6 +259,11 @@ function CompactHeader({ product }: { product: AdminV2ProductDetail }) {
             variant={product.status === "active" ? "filled" : "outlined"}
           />
           <Chip size="small" label="Read-only" color="primary" variant="outlined" />
+          {canEditDraft && product.status === "draft" ? (
+            <V2Button size="small" variant="contained" href={`/admin-v2/products/${encodeURIComponent(product.id)}/edit`}>
+              Edit draft
+            </V2Button>
+          ) : null}
           <V2Button size="small" href="/admin-v2/products" startIcon={<ArrowLeft size={15} />}>
             Back to products
           </V2Button>
@@ -449,7 +454,7 @@ function WarningsPanel({ product }: { product: AdminV2ProductDetail }) {
   );
 }
 
-export function AdminV2ProductDetailView({ data }: { data: AdminV2ProductDetailData }) {
+export function AdminV2ProductDetailView({ data, canEditDraft = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean }) {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const product = data.product;
 
@@ -480,7 +485,7 @@ export function AdminV2ProductDetailView({ data }: { data: AdminV2ProductDetailD
 
   return (
     <>
-      <CompactHeader product={product} />
+      <CompactHeader product={product} canEditDraft={canEditDraft} />
 
       <Stack spacing={2.25}>
         {warningCount > 0 ? (
@@ -525,7 +530,9 @@ export function AdminV2ProductDetailView({ data }: { data: AdminV2ProductDetailD
         </V2Card>
 
         <Typography variant="caption" color="text.secondary" sx={{ textAlign: "center", pb: 0.5 }}>
-          Editing, publishing, inventory changes, pricing changes, and media management remain unavailable.
+          {canEditDraft && product.status === "draft"
+            ? "This record is read-only. Use Edit draft to update its private draft details. Publishing and media management remain unavailable."
+            : "Editing, publishing, inventory changes, pricing changes, and media management remain unavailable."}
         </Typography>
       </Stack>
     </>

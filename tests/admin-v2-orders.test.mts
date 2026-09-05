@@ -19,10 +19,24 @@ import { normalizePermissions } from "../app/lib/admin-permissions.ts";
 import { hasPermission } from "../app/lib/admin-permissions.ts";
 import { findAdminV2Route } from "../configs/admin-v2/routes.ts";
 import { isAdminV2NavigationItemActive } from "../lib/admin-v2/navigation.ts";
+import { readFileSync, existsSync } from "node:fs";
+import { registerHooks } from "node:module";
+import type { DraftEditRequest } from "../lib/admin-v2/product-edit.ts";
 import {
   slugifyAdminV2ProductName,
   validateAdminV2DraftProduct,
 } from "../lib/admin-v2/product-create.ts";
+
+// Resolve the one extensionless application import for Node's native TS test runner.
+const editModuleHooks = registerHooks({ resolve(specifier, context, nextResolve) {
+  if (specifier === "./product-create" && context.parentURL?.endsWith("/lib/admin-v2/product-edit.ts")) {
+    return nextResolve("./product-create.ts", context);
+  }
+  return nextResolve(specifier, context);
+} });
+const { draftEditInitialValues, draftEditPayload, draftEditQuery, duplicateDraftSlugQuery,
+  isEditableDraft, persistDraftEdit, validateDraftEdit } = await import("../lib/admin-v2/product-edit.ts");
+editModuleHooks.deregister();
 
 const baseOrder = {
   orderId: "AEV-1",
@@ -257,4 +271,137 @@ test("product navigation has only the correct active child", () => {
   assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/new", allProducts), false);
   assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/new", newProduct), true);
   assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/product-1", allProducts), true);
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/product-1/edit", allProducts), true);
+  assert.equal(isAdminV2NavigationItemActive("/admin-v2/products/product-1/edit", newProduct), false);
+});
+
+const editId = "d8d79c19-1c3b-4905-92cf-b1809b6fa0f3";
+const editRow = {
+  id: editId, status: "draft", deleted_at: null, updated_at: "2026-09-01T00:00:00Z",
+  name: "Stored draft", slug: "stored-draft", price: 850, category: "Reusable Period Panty",
+  sizes: ["S", "M"], benefits: ["First benefit, with a comma"], care: ["Wash gently, air dry"],
+  image_url: "original-image.jpg", images: ["original-gallery.jpg"], media: [{ type: "original" }],
+  merchandising: { badgeStyle: "info", showOnHomepage: true, lowStockThreshold: 3 },
+};
+const editValues = draftEditInitialValues(editRow);
+
+test("draft edit route exists and requires edit without granting create/view holders edit", () => {
+  assert.equal(findAdminV2Route("productEdit")?.implemented, true);
+  assert.ok(existsSync(new URL("../app/admin-v2/products/[productId]/edit/page.tsx", import.meta.url)));
+  const rules = readFileSync(new URL("../configs/admin-v2/permissions.ts", import.meta.url), "utf8");
+  assert.match(rules, /productEdit: \{ permission: "products.edit" \}/);
+  for (const permissions of [{ "products.view": true }, { "products.create": true }]) {
+    assert.equal(normalizePermissions("viewer", permissions)["products.edit"], false);
+  }
+  assert.equal(normalizePermissions("owner", {})["products.edit"], true);
+});
+
+test("draft edit rejects forbidden fields, invalid numbers and oversized existing copy", () => {
+  for (const key of ["status", "publish", "featured", "showOnHomepage", "images", "media", "imageUrl", "deletedAt", "id"]) {
+    assert.equal(validateDraftEdit({ ...editValues, [key]: "active" }).input, null, key);
+  }
+  assert.equal(validateDraftEdit({ ...editValues, stockStatus: "invented" }).input, null);
+  assert.equal(validateDraftEdit({ ...editValues, price: "NaN" }).input, null);
+  assert.equal(validateDraftEdit({ ...editValues, stockQuantity: "2.5" }).input, null);
+  assert.equal(validateDraftEdit({ ...editValues, name: "x".repeat(181) }).input, null);
+  assert.equal(validateDraftEdit({ ...editValues, benefits: "x".repeat(101) }).input, null);
+});
+
+test("draft edit preserves list punctuation, clears optional numbers, forces private flags and omits media", () => {
+  const { payload } = draftEditPayload({ ...editValues, sizes: " S \nM\ns", compareAtPrice: "", lowStockThreshold: "" }, editRow.merchandising);
+  assert.ok(payload);
+  assert.equal(payload.status, "draft");
+  assert.equal(payload.featured, false);
+  assert.equal(payload.compare_at_price, null);
+  assert.equal(payload.stock_quantity, null);
+  assert.equal(payload.merchandising.lowStockThreshold, null);
+  assert.equal(payload.merchandising.showOnHomepage, false);
+  assert.equal(payload.merchandising.isTrending, false);
+  assert.equal(payload.merchandising.isBestSeller, false);
+  assert.equal(payload.merchandising.isNewArrival, false);
+  assert.equal(payload.merchandising.showInFeaturedCollection, false);
+  assert.equal((payload.merchandising as Record<string, unknown>).badgeStyle, "info");
+  assert.deepEqual(payload.sizes, ["S", "M"]);
+  assert.deepEqual(payload.benefits, editRow.benefits);
+  assert.deepEqual(payload.care, editRow.care);
+  for (const field of ["image_url", "primary_image_url", "images", "media", "currency", "deleted_at", "id"]) assert.equal(field in payload, false);
+});
+
+test("draft edit queries exclude other statuses/deleted rows and current slug owner", () => {
+  const query = draftEditQuery(editId);
+  assert.equal(query.get("id"), `eq.${editId}`);
+  assert.equal(query.get("status"), "eq.draft");
+  assert.equal(query.get("deleted_at"), "is.null");
+  const duplicate = duplicateDraftSlugQuery(editId, "stored-draft");
+  assert.equal(duplicate.get("id"), `neq.${editId}`);
+  assert.equal(duplicate.get("deleted_at"), "is.null");
+  assert.equal(isEditableDraft({ status: "active", deleted_at: null }), false);
+  assert.equal(isEditableDraft({ status: "draft", deleted_at: "yesterday" }), false);
+  assert.equal(isEditableDraft({ status: "unknown", deleted_at: null }), false);
+});
+
+test("draft update does not write for invalid, missing, active or deleted products", async () => {
+  for (const row of [null, { ...editRow, status: "active" }, { ...editRow, deleted_at: "yesterday" }]) {
+    const request: DraftEditRequest = async (_query, init) => {
+      assert.equal(init?.method, undefined);
+      return Response.json(row ? [row] : []);
+    };
+    assert.notEqual((await persistDraftEdit(editId, editValues, request)).saved, true);
+  }
+  await persistDraftEdit(editId, { ...editValues, name: "" }, async () => { throw new Error("Invalid data must not request the database"); });
+});
+
+test("draft update writes exactly once, preserving media and checking concurrent state", async () => {
+  const calls: Array<{ query: URLSearchParams; init?: RequestInit }> = [];
+  const request: DraftEditRequest = async (query, init) => {
+    calls.push({ query, init });
+    if (calls.length === 1) return Response.json([editRow]);
+    if (calls.length === 2) return Response.json([]);
+    assert.equal(init?.method, "PATCH");
+    assert.equal(query.get("status"), "eq.draft");
+    assert.equal(query.get("updated_at"), `eq.${editRow.updated_at}`);
+    const body = JSON.parse(String(init?.body));
+    assert.equal(body.status, "draft");
+    assert.equal("images" in body, false);
+    assert.equal("media" in body, false);
+    return Response.json([{ id: editId }]);
+  };
+  assert.equal((await persistDraftEdit(editId, editValues, request)).saved, true);
+  assert.equal(calls.length, 3);
+});
+
+test("draft update handles duplicate slugs and a concurrent publish without success", async () => {
+  for (const scenario of ["duplicate", "race", "unique-constraint"] as const) {
+    let count = 0;
+    const request: DraftEditRequest = async (_query, init) => {
+      count++;
+      if (count === 1) return Response.json([editRow]);
+      if (count === 2) return Response.json(scenario === "duplicate" ? [{ id: "other" }] : []);
+      assert.equal(init?.method, "PATCH");
+      return scenario === "unique-constraint" ? Response.json({ code: "23505" }, { status: 409 }) : Response.json([]);
+    };
+    const result = await persistDraftEdit(editId, editValues, request);
+    assert.notEqual(result.saved, true);
+    if (scenario !== "race") assert.ok(result.fields.slug);
+    assert.equal(count, scenario === "duplicate" ? 2 : 3);
+  }
+});
+
+test("draft edit supports legacy schema without silently discarding a threshold", async () => {
+  const legacy: Record<string, unknown> = { ...editRow };
+  delete legacy.merchandising;
+  let writes = 0;
+  const request: DraftEditRequest = async (query, init) => {
+    if (!init?.method) return Response.json(query.get("slug") ? [] : [legacy]);
+    writes++;
+    const body = JSON.parse(String(init.body));
+    assert.equal("merchandising" in body, false);
+    assert.equal(body.status, "draft");
+    assert.equal(body.featured, false);
+    return Response.json([{ id: editId }]);
+  };
+  assert.ok((await persistDraftEdit(editId, editValues, request)).fields.lowStockThreshold);
+  assert.equal(writes, 0);
+  assert.equal((await persistDraftEdit(editId, { ...editValues, lowStockThreshold: "" }, request)).saved, true);
+  assert.equal(writes, 1);
 });

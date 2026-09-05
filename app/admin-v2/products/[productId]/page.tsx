@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { hasPermission } from "@/app/lib/admin-permissions";
 import { AdminV2ProductDetailView } from "@/components/admin-v2/views/products/AdminV2ProductDetailView";
 import { requireAdminV2Session } from "@/lib/admin-v2/auth";
 import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
@@ -12,5 +13,5 @@ export default async function AdminV2ProductDetailPage(props: PageProps<"/admin-
 
   if (data.available && !data.product) notFound();
 
-  return <AdminV2ProductDetailView data={data} />;
+  return <AdminV2ProductDetailView data={data} canEditDraft={hasPermission(session, "products.edit")} />;
 }
