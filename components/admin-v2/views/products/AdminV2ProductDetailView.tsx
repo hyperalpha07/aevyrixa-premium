@@ -228,7 +228,7 @@ function BooleanField({ label, value }: { label: string; value: boolean }) {
   return <Field label={label}>{value ? "Yes" : "No"}</Field>;
 }
 
-function CompactHeader({ product, canEditDraft, canManageMedia, canPublish }: { product: AdminV2ProductDetail; canEditDraft: boolean; canManageMedia: boolean; canPublish: boolean }) {
+function CompactHeader({ product, canEditDraft, canManageMedia, canPublish, canUnpublish }: { product: AdminV2ProductDetail; canEditDraft: boolean; canManageMedia: boolean; canPublish: boolean; canUnpublish: boolean }) {
   return (
     <Box sx={{ mb: 2 }}>
       <V2Breadcrumbs
@@ -272,6 +272,11 @@ function CompactHeader({ product, canEditDraft, canManageMedia, canPublish }: { 
           {canPublish && product.status === "draft" ? (
             <V2Button size="small" color="warning" variant="contained" href={`/admin-v2/products/${encodeURIComponent(product.id)}/publish`}>
               Publish product
+            </V2Button>
+          ) : null}
+          {canUnpublish && product.status === "active" ? (
+            <V2Button size="small" color="warning" variant="outlined" href={`/admin-v2/products/${encodeURIComponent(product.id)}/unpublish`}>
+              Unpublish product
             </V2Button>
           ) : null}
           <V2Button size="small" href="/admin-v2/products" startIcon={<ArrowLeft size={15} />}>
@@ -464,7 +469,7 @@ function WarningsPanel({ product }: { product: AdminV2ProductDetail }) {
   );
 }
 
-export function AdminV2ProductDetailView({ data, canEditDraft = false, canManageMedia = false, canPublish = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean; canManageMedia?: boolean; canPublish?: boolean }) {
+export function AdminV2ProductDetailView({ data, canEditDraft = false, canManageMedia = false, canPublish = false, canUnpublish = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean; canManageMedia?: boolean; canPublish?: boolean; canUnpublish?: boolean }) {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const product = data.product;
 
@@ -495,7 +500,7 @@ export function AdminV2ProductDetailView({ data, canEditDraft = false, canManage
 
   return (
     <>
-      <CompactHeader product={product} canEditDraft={canEditDraft} canManageMedia={canManageMedia} canPublish={canPublish} />
+      <CompactHeader product={product} canEditDraft={canEditDraft} canManageMedia={canManageMedia} canPublish={canPublish} canUnpublish={canUnpublish} />
 
       <Stack spacing={2.25}>
         {warningCount > 0 ? (
