@@ -349,9 +349,12 @@ export function AdminV2NewProductView() {
                 <Typography component="h2" variant="h6" sx={{ fontWeight: 700 }}>
                   Product media
                 </Typography>
-                <Chip label="Coming soon" size="small" variant="outlined" />
+                <Chip label="After draft creation" size="small" variant="outlined" />
                 <Typography variant="body2" color="text.secondary">
-                  Create the draft first. Image upload, gallery editing, and media ordering remain disabled in this phase.
+                  Create the draft first, then use Manage media from the product detail page to upload, remove, reorder, and choose the primary product image.
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Description images and rich product content will be added in a later phase.
                 </Typography>
               </Stack>
             </V2Card>

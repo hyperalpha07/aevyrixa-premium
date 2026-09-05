@@ -8,10 +8,22 @@ import { hasPermission } from "@/app/lib/admin-permissions";
 import { readDraftEditProduct } from "@/lib/admin-v2/product-edit";
 import { draftProductRequest } from "@/lib/admin-v2/product-edit-store";
 import { appendDraftProductImage, draftMediaUpdateQuery, draftProductMediaPath,
-  hasValidAdminV2ImageSignature, mediaStepFailure, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
+  hasValidAdminV2ImageSignature, mediaStepFailure, moveDraftProductImage, removeDraftProductImage,
+  safeDraftMediaStoragePath, setDraftPrimaryImage, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
 import { publicProductMediaUrl, removeNewProductMediaObject, uploadProductMediaObject } from "@/lib/admin-v2/product-media-store";
 
 export type AdminV2MediaActionState = { errors: string[] };
+
+function revalidateProductMedia(productId: string, slug?: unknown) {
+  const detailPath = `/admin-v2/products/${encodeURIComponent(productId)}`;
+  revalidatePath("/admin-v2/products");
+  revalidatePath(detailPath);
+  revalidatePath(`${detailPath}/media`);
+  revalidatePath(`${detailPath}/publish`);
+  revalidatePath("/product");
+  if (typeof slug === "string" && slug) revalidatePath(`/product/${encodeURIComponent(slug)}`);
+  return detailPath;
+}
 
 export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2MediaActionState, formData: FormData): Promise<AdminV2MediaActionState> {
   const session = await getAdminSession();
@@ -62,10 +74,57 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
   } finally {
     if (uploaded && !attached) await removeNewProductMediaObject(objectPath).catch(() => null);
   }
-  const detailPath = `/admin-v2/products/${encodeURIComponent(productId)}`;
-  revalidatePath("/admin-v2/products");
-  revalidatePath(detailPath);
-  revalidatePath(`${detailPath}/media`);
-  revalidatePath(`${detailPath}/publish`);
+  const detailPath = revalidateProductMedia(productId, row.slug);
   redirect(`${detailPath}/media?uploaded=1`);
+}
+
+type MediaOperation = "remove" | "primary" | "up" | "down";
+
+export async function manageAdminV2DraftImage(productId: string, _state: AdminV2MediaActionState, formData: FormData): Promise<AdminV2MediaActionState> {
+  const session = await getAdminSession();
+  if (!hasPermission(session, "products.media")) return { errors: ["You do not have permission to manage product media."] };
+  const entries = [...formData.entries()].filter(([key]) => !key.startsWith("$ACTION_"));
+  if (entries.length !== 2 || entries.some(([key, value]) => !["operation", "imageUrl"].includes(key) || typeof value !== "string")) {
+    return { errors: ["Unsupported media fields were submitted."] };
+  }
+  const operation = formData.get("operation");
+  const imageUrl = formData.get("imageUrl");
+  if (!(["remove", "primary", "up", "down"] as unknown[]).includes(operation) || typeof imageUrl !== "string" || !imageUrl || imageUrl.length > 3000) {
+    return { errors: ["Choose a valid gallery action and image."] };
+  }
+
+  let row;
+  try { row = await readDraftEditProduct(productId, draftProductRequest); }
+  catch { return { errors: ["Product data is currently unavailable."] }; }
+  if (!row || row.deleted_at != null) return { errors: ["Product was not found or has been deleted."] };
+  if (row.status !== "draft") return { errors: ["Only draft product media can be changed."] };
+
+  const typedOperation = operation as MediaOperation;
+  const payload = typedOperation === "remove"
+    ? removeDraftProductImage(row, productId, imageUrl)
+    : typedOperation === "primary"
+      ? setDraftPrimaryImage(row, productId, imageUrl)
+      : moveDraftProductImage(row, productId, imageUrl, typedOperation);
+  if (!payload) return { errors: [typedOperation === "up" || typedOperation === "down" ? "That image cannot be moved in this direction." : "The selected image is no longer in this draft gallery."] };
+
+  const response = await draftProductRequest(draftMediaUpdateQuery(productId, row.updated_at), {
+    method: "PATCH", headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ ...payload, updated_at: new Date().toISOString() }),
+  }).catch(() => null);
+  const updated = response?.ok ? await response.json().catch(() => []) : [];
+  if (!response?.ok) return { errors: [`Draft media could not be updated${response ? ` (${response.status})` : ""}.`] };
+  if (!Array.isArray(updated) || updated.length !== 1 || updated[0].id !== productId) {
+    return { errors: ["The product changed or is no longer an editable draft. Reload before trying again."] };
+  }
+
+  let cleanupFailed = false;
+  if (typedOperation === "remove") {
+    const path = safeDraftMediaStoragePath(imageUrl, productId);
+    if (path) {
+      const cleanup = await removeNewProductMediaObject(path).catch(() => null);
+      cleanupFailed = !cleanup?.ok;
+    }
+  }
+  const detailPath = revalidateProductMedia(productId, row.slug);
+  redirect(`${detailPath}/media?updated=${typedOperation}${cleanupFailed ? "&cleanup=failed" : ""}`);
 }
