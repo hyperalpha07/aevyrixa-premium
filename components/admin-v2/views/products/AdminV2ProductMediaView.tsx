@@ -21,6 +21,8 @@ export function AdminV2ProductMediaUnavailable({ id, active = false }: { id: str
 export function AdminV2ProductMediaView({ id, name, images }: { id: string; name: string; images: string[] }) {
   const [state, action, pending] = useActionState(uploadAdminV2DraftImage.bind(null, id), { errors: [] } as AdminV2MediaActionState);
   const [clientError, setClientError] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState("");
+  const [hasValidSelection, setHasValidSelection] = useState(false);
   const detailPath = `/admin-v2/products/${encodeURIComponent(id)}`;
   return <>
     <V2PageHeader title="Product media" titleComponent="h1" description="Upload images to this private draft product."
@@ -28,7 +30,7 @@ export function AdminV2ProductMediaView({ id, name, images }: { id: string; name
         { label: name, href: detailPath }, { label: "Media" }]}
       actions={<Stack direction="row" spacing={1}><Chip label="Draft only" color="primary" variant="outlined" /><Chip label="Media phase" variant="outlined" /></Stack>} />
     <Stack spacing={2}>
-      <Alert severity="info">Images remain private while this product is a draft. Publishing is not available here.</Alert>
+      <Alert severity="info">Images remain private while this product is a draft. Publishing happens through the publish review step.</Alert>
       <V2Card><Typography component="h2" variant="h6" sx={{ mb: 2 }}>Current gallery</Typography>
         {images.length ? <Grid container spacing={1.5}>{images.map((url, index) => <Grid key={url} size={{ xs: 6, sm: 4, md: 3 }}>
           <Box sx={{ position: "relative", aspectRatio: "1 / 1", overflow: "hidden", borderRadius: 2, border: "1px solid", borderColor: "divider", bgcolor: "action.hover" }}>
@@ -47,8 +49,17 @@ export function AdminV2ProductMediaView({ id, name, images }: { id: string; name
           } else setClientError("");
         }}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
-            <Button component="label" variant="outlined" disabled={pending}>Choose image<input name="file" type="file" hidden required accept="image/jpeg,image/png,image/webp" /></Button>
-            <Button type="submit" variant="contained" loading={pending}>Upload image to draft</Button>
+            <Button component="label" variant="outlined" disabled={pending}>Choose image<input name="file" type="file" hidden required accept="image/jpeg,image/png,image/webp" onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              setSelectedFileName(file?.name ?? "");
+              const valid = Boolean(file && file.size > 0 && file.size <= 5 * 1024 * 1024 && ["image/jpeg", "image/png", "image/webp"].includes(file.type));
+              setHasValidSelection(valid);
+              setClientError(file && !valid ? "Choose a non-empty JPG, PNG, or WebP image that is 5 MB or smaller." : "");
+            }} /></Button>
+            <Typography variant="body2" color={selectedFileName ? "text.primary" : "text.secondary"} sx={{ overflowWrap: "anywhere" }}>
+              {selectedFileName || "No file selected"}
+            </Typography>
+            <Button type="submit" variant="contained" loading={pending} disabled={pending || !hasValidSelection}>Upload image to draft</Button>
           </Stack>
         </Box>
       </V2Card>

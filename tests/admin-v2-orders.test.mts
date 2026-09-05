@@ -32,6 +32,7 @@ import {
   draftMediaUpdateQuery,
   draftProductMediaPath,
   hasValidAdminV2ImageSignature,
+  mediaStepFailure,
   validateAdminV2MediaFile,
 } from "../lib/admin-v2/product-media.ts";
 import {
@@ -463,9 +464,17 @@ test("draft media paths ignore client filenames and gallery append preserves ord
   assert.equal(path.includes("photo"), false);
   const existing = { images: ["first.jpg", "second.jpg"], primary_image_url: "primary.jpg" };
   assert.deepEqual(appendDraftProductImage(existing, "new.jpg", path), { images: ["first.jpg", "second.jpg", "new.jpg"] });
-  assert.deepEqual(appendDraftProductImage({ images: [] }, "first.jpg", path), {
+  assert.deepEqual(appendDraftProductImage({ images: [], primary_image_url: null, primary_image_path: null, image_url: null }, "first.jpg", path), {
     images: ["first.jpg"], primary_image_url: "first.jpg", primary_image_path: path, image_url: "first.jpg",
   });
+  assert.deepEqual(appendDraftProductImage({ images: [] }, "first.jpg", path), { images: ["first.jpg"] });
+  assert.deepEqual(Object.keys(appendDraftProductImage({ images: [], primary_image_url: null }, "first.jpg", path)).sort(), ["images", "primary_image_url"]);
+});
+
+test("draft media failures identify storage and database steps without secrets", () => {
+  assert.equal(mediaStepFailure("storage", 403), "Storage upload failed (403). The image was not attached.");
+  assert.equal(mediaStepFailure("database", 409), "Database attachment failed (409). Cleanup of the new storage object was attempted.");
+  assert.equal(mediaStepFailure("storage").includes("service"), false);
 });
 
 test("draft media update query rejects active, deleted and concurrently changed rows", () => {

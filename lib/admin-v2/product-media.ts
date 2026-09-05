@@ -54,6 +54,15 @@ export function appendDraftProductImage(row: Record<string, unknown>, url: strin
   const hasPrimary = [row.primary_image_url, row.image_url].some((value) => typeof value === "string" && Boolean(value.trim()));
   return {
     images: images.includes(url) ? images : [...images, url],
-    ...(!hasPrimary ? { primary_image_url: url, primary_image_path: path, image_url: url } : {}),
+    ...(!hasPrimary && Object.hasOwn(row, "primary_image_url") ? { primary_image_url: url } : {}),
+    ...(!hasPrimary && Object.hasOwn(row, "primary_image_path") ? { primary_image_path: path } : {}),
+    ...(!hasPrimary && Object.hasOwn(row, "image_url") ? { image_url: url } : {}),
   };
+}
+
+export function mediaStepFailure(step: "storage" | "database", status?: number) {
+  const suffix = status ? ` (${status})` : "";
+  return step === "storage"
+    ? `Storage upload failed${suffix}. The image was not attached.`
+    : `Database attachment failed${suffix}. Cleanup of the new storage object was attempted.`;
 }
