@@ -228,7 +228,7 @@ function BooleanField({ label, value }: { label: string; value: boolean }) {
   return <Field label={label}>{value ? "Yes" : "No"}</Field>;
 }
 
-function CompactHeader({ product, canEditDraft }: { product: AdminV2ProductDetail; canEditDraft: boolean }) {
+function CompactHeader({ product, canEditDraft, canManageMedia }: { product: AdminV2ProductDetail; canEditDraft: boolean; canManageMedia: boolean }) {
   return (
     <Box sx={{ mb: 2 }}>
       <V2Breadcrumbs
@@ -262,6 +262,11 @@ function CompactHeader({ product, canEditDraft }: { product: AdminV2ProductDetai
           {canEditDraft && product.status === "draft" ? (
             <V2Button size="small" variant="contained" href={`/admin-v2/products/${encodeURIComponent(product.id)}/edit`}>
               Edit draft
+            </V2Button>
+          ) : null}
+          {canManageMedia && product.status === "draft" ? (
+            <V2Button size="small" href={`/admin-v2/products/${encodeURIComponent(product.id)}/media`}>
+              Manage media
             </V2Button>
           ) : null}
           <V2Button size="small" href="/admin-v2/products" startIcon={<ArrowLeft size={15} />}>
@@ -454,7 +459,7 @@ function WarningsPanel({ product }: { product: AdminV2ProductDetail }) {
   );
 }
 
-export function AdminV2ProductDetailView({ data, canEditDraft = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean }) {
+export function AdminV2ProductDetailView({ data, canEditDraft = false, canManageMedia = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean; canManageMedia?: boolean }) {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const product = data.product;
 
@@ -485,7 +490,7 @@ export function AdminV2ProductDetailView({ data, canEditDraft = false }: { data:
 
   return (
     <>
-      <CompactHeader product={product} canEditDraft={canEditDraft} />
+      <CompactHeader product={product} canEditDraft={canEditDraft} canManageMedia={canManageMedia} />
 
       <Stack spacing={2.25}>
         {warningCount > 0 ? (

@@ -15,6 +15,7 @@ export type AdminV2ModuleKey =
   | "productNew"
   | "productDetail"
   | "productEdit"
+  | "productMedia"
   | "categories"
   | "inventory"
   | "reviews"
@@ -58,6 +59,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "New Product", path: "/admin-v2/products/new", module: "productNew", description: "Draft-only product creation", implemented: true },
   { title: "Product Detail", path: "/admin-v2/products/[productId]", module: "productDetail", description: "Read-only product detail", implemented: true },
   { title: "Edit draft product", path: "/admin-v2/products/[productId]/edit", module: "productEdit", description: "Edit draft products only", implemented: true },
+  { title: "Product media", path: "/admin-v2/products/[productId]/media", module: "productMedia", description: "Manage draft product images", implemented: true },
   { title: "Categories", path: "/admin-v2/categories", module: "categories", description: "Category management", implemented: false },
   { title: "Inventory", path: "/admin-v2/inventory", module: "inventory", description: "Inventory workflow", implemented: false },
   { title: "Reviews", path: "/admin-v2/reviews", module: "reviews", description: "Review moderation", implemented: false },

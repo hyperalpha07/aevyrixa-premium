@@ -26,6 +26,14 @@ import {
   slugifyAdminV2ProductName,
   validateAdminV2DraftProduct,
 } from "../lib/admin-v2/product-create.ts";
+import {
+  ADMIN_V2_MEDIA_MAX_BYTES,
+  appendDraftProductImage,
+  draftMediaUpdateQuery,
+  draftProductMediaPath,
+  hasValidAdminV2ImageSignature,
+  validateAdminV2MediaFile,
+} from "../lib/admin-v2/product-media.ts";
 
 // Resolve the one extensionless application import for Node's native TS test runner.
 const editModuleHooks = registerHooks({ resolve(specifier, context, nextResolve) {
@@ -404,4 +412,55 @@ test("draft edit supports legacy schema without silently discarding a threshold"
   assert.equal(writes, 0);
   assert.equal((await persistDraftEdit(editId, { ...editValues, lowStockThreshold: "" }, request)).saved, true);
   assert.equal(writes, 1);
+});
+
+test("draft product media route uses a separate least-privilege permission", () => {
+  assert.equal(findAdminV2Route("productMedia")?.implemented, true);
+  assert.ok(existsSync(new URL("../app/admin-v2/products/[productId]/media/page.tsx", import.meta.url)));
+  const rules = readFileSync(new URL("../configs/admin-v2/permissions.ts", import.meta.url), "utf8");
+  assert.match(rules, /productMedia: \{ permission: "products.media" \}/);
+  const action = readFileSync(new URL("../app/admin-v2/products/[productId]/media/actions.ts", import.meta.url), "utf8");
+  assert.match(action, /hasPermission\(session, "products\.media"\)/);
+  for (const permissions of [{ "products.view": true }, { "products.create": true }, { "products.edit": true }]) {
+    assert.equal(normalizePermissions("viewer", permissions)["products.media"], false);
+  }
+  assert.equal(normalizePermissions("owner", {})["products.media"], true);
+});
+
+test("draft media validation accepts only matching JPG, PNG and WebP up to 5 MB", () => {
+  const file = (name: string, type: string, size = 100) => ({ name, type, size }) as File;
+  assert.equal(validateAdminV2MediaFile(file("photo.jpg", "image/jpeg")).valid, true);
+  assert.equal(validateAdminV2MediaFile(file("photo.png", "image/png")).valid, true);
+  assert.equal(validateAdminV2MediaFile(file("photo.webp", "image/webp")).valid, true);
+  assert.equal(validateAdminV2MediaFile(file("photo.svg", "image/svg+xml")).valid, false);
+  assert.equal(validateAdminV2MediaFile(file("photo.exe", "application/octet-stream")).valid, false);
+  assert.equal(validateAdminV2MediaFile(file("photo.png", "image/jpeg")).valid, false);
+  assert.equal(validateAdminV2MediaFile(file("large.jpg", "image/jpeg", ADMIN_V2_MEDIA_MAX_BYTES + 1)).valid, false);
+  assert.equal(hasValidAdminV2ImageSignature("image/jpeg", new Uint8Array([0xff, 0xd8, 0xff, 0x00])), true);
+  assert.equal(hasValidAdminV2ImageSignature("image/png", new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), true);
+  assert.equal(hasValidAdminV2ImageSignature("image/webp", new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])), true);
+  assert.equal(hasValidAdminV2ImageSignature("image/jpeg", new Uint8Array([0x4d, 0x5a, 0x90])), false);
+});
+
+test("draft media paths ignore client filenames and gallery append preserves order", () => {
+  const path = draftProductMediaPath(editId, "SAFE-ID_../evil", "webp");
+  assert.equal(path, `products/${editId}/images/safe-idevil.webp`);
+  assert.equal(path.includes("photo"), false);
+  const existing = { images: ["first.jpg", "second.jpg"], primary_image_url: "primary.jpg" };
+  assert.deepEqual(appendDraftProductImage(existing, "new.jpg", path), { images: ["first.jpg", "second.jpg", "new.jpg"] });
+  assert.deepEqual(appendDraftProductImage({ images: [] }, "first.jpg", path), {
+    images: ["first.jpg"], primary_image_url: "first.jpg", primary_image_path: path, image_url: "first.jpg",
+  });
+});
+
+test("draft media update query rejects active, deleted and concurrently changed rows", () => {
+  const query = draftMediaUpdateQuery(editId, editRow.updated_at);
+  assert.equal(query.get("id"), `eq.${editId}`);
+  assert.equal(query.get("status"), "eq.draft");
+  assert.equal(query.get("deleted_at"), "is.null");
+  assert.equal(query.get("updated_at"), `eq.${editRow.updated_at}`);
+  const allProducts = { href: "/admin-v2/products", module: "products" };
+  const newProduct = { href: "/admin-v2/products/new", module: "productNew" };
+  assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/media`, allProducts), true);
+  assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/media`, newProduct), false);
 });

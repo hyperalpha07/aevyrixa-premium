@@ -13,5 +13,5 @@ export default async function AdminV2ProductDetailPage(props: PageProps<"/admin-
 
   if (data.available && !data.product) notFound();
 
-  return <AdminV2ProductDetailView data={data} canEditDraft={hasPermission(session, "products.edit")} />;
+  return <AdminV2ProductDetailView data={data} canEditDraft={hasPermission(session, "products.edit")} canManageMedia={hasPermission(session, "products.media")} />;
 }

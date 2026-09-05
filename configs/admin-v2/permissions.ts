@@ -15,6 +15,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   productNew: { permission: "products.create" },
   productDetail: { permission: "products.view" },
   productEdit: { permission: "products.edit" },
+  productMedia: { permission: "products.media" },
   categories: { section: "categories" },
   inventory: { section: "products" },
   reviews: { section: "reviews" },
