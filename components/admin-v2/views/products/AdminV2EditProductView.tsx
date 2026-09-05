@@ -120,8 +120,8 @@ export function AdminV2EditProductView({ id, initialValues, supportsMerchandisin
       </V2Card>)}
       <V2Card><Stack spacing={1} sx={{ alignItems: "flex-start" }}>
         <Typography component="h2" variant="h6">Product media</Typography>
-        <Chip label="Coming soon" size="small" variant="outlined" />
-        <Typography variant="body2" color="text.secondary">Existing images are preserved. Media upload and gallery editing are not available here.</Typography>
+        <Chip label="Managed separately" size="small" variant="outlined" />
+        <Typography variant="body2" color="text.secondary">Existing images are preserved. Use Manage media from product detail when you have media permission.</Typography>
       </Stack></V2Card>
       <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={1} sx={{ justifyContent: "flex-end" }}>
         <Button component={Link} href={detailPath} disabled={pending} variant="outlined">Cancel</Button>
