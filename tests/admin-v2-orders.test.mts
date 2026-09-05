@@ -42,6 +42,13 @@ import {
   publishUpdateQuery,
   validatePublishConfirmation,
 } from "../lib/admin-v2/product-publish.ts";
+import {
+  UNPUBLISH_CONFIRMATION,
+  isUnpublishableActive,
+  unpublishPayload,
+  unpublishUpdateQuery,
+  validateUnpublishConfirmation,
+} from "../lib/admin-v2/product-unpublish.ts";
 
 // Resolve the one extensionless application import for Node's native TS test runner.
 const editModuleHooks = registerHooks({ resolve(specifier, context, nextResolve) {
@@ -537,4 +544,45 @@ test("publish duplicate query excludes current non-deleted product and navigatio
   const newProduct = { href: "/admin-v2/products/new", module: "productNew" };
   assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/publish`, allProducts), true);
   assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/publish`, newProduct), false);
+});
+
+test("active unpublish route uses a separate least-privilege permission", () => {
+  assert.equal(findAdminV2Route("productUnpublish")?.implemented, true);
+  assert.ok(existsSync(new URL("../app/admin-v2/products/[productId]/unpublish/page.tsx", import.meta.url)));
+  const rules = readFileSync(new URL("../configs/admin-v2/permissions.ts", import.meta.url), "utf8");
+  const action = readFileSync(new URL("../app/admin-v2/products/[productId]/unpublish/actions.ts", import.meta.url), "utf8");
+  assert.match(rules, /productUnpublish: \{ permission: "products.unpublish" \}/);
+  assert.match(action, /hasPermission\(session, "products\.unpublish"\)/);
+  for (const permissions of [{ "products.view": true }, { "products.edit": true }, { "products.media": true }, { "products.publish": true }]) {
+    assert.equal(normalizePermissions("viewer", permissions)["products.unpublish"], false);
+  }
+  assert.equal(normalizePermissions("product_staff", {})["products.unpublish"], false);
+  assert.equal(normalizePermissions("owner", {})["products.unpublish"], true);
+});
+
+test("unpublish requires exact typed confirmation and an active non-deleted row", () => {
+  assert.equal(validateUnpublishConfirmation(UNPUBLISH_CONFIRMATION), null);
+  for (const value of ["", "unpublish", " UNPUBLISH ", null, undefined]) assert.ok(validateUnpublishConfirmation(value));
+  assert.equal(isUnpublishableActive({ status: "active", deleted_at: null }), true);
+  assert.equal(isUnpublishableActive({ status: "draft", deleted_at: null }), false);
+  assert.equal(isUnpublishableActive({ status: "active", deleted_at: "today" }), false);
+  assert.equal(isUnpublishableActive(null), false);
+});
+
+test("unpublish query is active-only and optimistic, with a minimal payload", () => {
+  const query = unpublishUpdateQuery(editId, editRow.updated_at);
+  assert.equal(query.get("id"), `eq.${editId}`);
+  assert.equal(query.get("status"), "eq.active");
+  assert.equal(query.get("deleted_at"), "is.null");
+  assert.equal(query.get("updated_at"), `eq.${editRow.updated_at}`);
+  const payload = unpublishPayload("2026-09-05T00:00:00.000Z");
+  assert.deepEqual(payload, { status: "draft", updated_at: "2026-09-05T00:00:00.000Z" });
+  assert.deepEqual(Object.keys(payload).sort(), ["status", "updated_at"]);
+});
+
+test("unpublish product route stays under Products, not New Product", () => {
+  const allProducts = { href: "/admin-v2/products", module: "products" };
+  const newProduct = { href: "/admin-v2/products/new", module: "productNew" };
+  assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/unpublish`, allProducts), true);
+  assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/unpublish`, newProduct), false);
 });
