@@ -8,7 +8,7 @@ import { hasPermission } from "@/app/lib/admin-permissions";
 import { readDraftEditProduct } from "@/lib/admin-v2/product-edit";
 import { draftProductRequest } from "@/lib/admin-v2/product-edit-store";
 import { appendDraftProductImage, draftMediaUpdateQuery, draftProductMediaPath,
-  hasValidAdminV2ImageSignature, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
+  hasValidAdminV2ImageSignature, mediaStepFailure, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
 import { publicProductMediaUrl, removeNewProductMediaObject, uploadProductMediaObject } from "@/lib/admin-v2/product-media-store";
 
 export type AdminV2MediaActionState = { errors: string[] };
@@ -34,12 +34,12 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
     return { errors: ["The file content does not match a supported image format."] };
   }
   const objectPath = draftProductMediaPath(productId, randomUUID(), validation.extension);
-  const publicUrl = publicProductMediaUrl(objectPath);
   let uploaded = false;
   let attached = false;
   try {
+    const publicUrl = publicProductMediaUrl(objectPath);
     const upload = await uploadProductMediaObject(objectPath, validation.contentType, body);
-    if (!upload.ok) return { errors: ["Image could not be uploaded to storage."] };
+    if (!upload.ok) return { errors: [mediaStepFailure("storage", upload.status)] };
     uploaded = true;
     const query = draftMediaUpdateQuery(productId, row.updated_at);
     const response = await draftProductRequest(query, {
@@ -47,12 +47,18 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
       body: JSON.stringify({ ...appendDraftProductImage(row, publicUrl, objectPath), updated_at: new Date().toISOString() }),
     });
     const updated = response.ok ? await response.json().catch(() => []) : [];
-    if (!response.ok || !Array.isArray(updated) || updated.length !== 1 || updated[0].id !== productId) {
-      return { errors: ["The product changed or is no longer an editable draft. No image was attached."] };
+    if (!response.ok) return { errors: [mediaStepFailure("database", response.status)] };
+    if (!Array.isArray(updated) || updated.length !== 1 || updated[0].id !== productId) {
+      return { errors: ["The product changed or is no longer an editable draft. Cleanup of the new storage object was attempted."] };
     }
     attached = true;
-  } catch {
-    return { errors: ["The media upload could not be completed."] };
+  } catch (error) {
+    const message = error instanceof Error && error.message === "Product media storage is not configured."
+      ? "Product media storage is not configured on this server."
+      : uploaded
+        ? "Database attachment could not be completed. Cleanup of the new storage object was attempted."
+        : "Storage upload could not be completed. Check the connection and try again.";
+    return { errors: [message] };
   } finally {
     if (uploaded && !attached) await removeNewProductMediaObject(objectPath).catch(() => null);
   }
@@ -60,5 +66,6 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
   revalidatePath("/admin-v2/products");
   revalidatePath(detailPath);
   revalidatePath(`${detailPath}/media`);
+  revalidatePath(`${detailPath}/publish`);
   redirect(`${detailPath}/media?uploaded=1`);
 }

@@ -28,10 +28,12 @@ import {
 } from "../lib/admin-v2/product-create.ts";
 import {
   ADMIN_V2_MEDIA_MAX_BYTES,
+  ADMIN_V2_MEDIA_MAX_MB,
   appendDraftProductImage,
   draftMediaUpdateQuery,
   draftProductMediaPath,
   hasValidAdminV2ImageSignature,
+  mediaStepFailure,
   validateAdminV2MediaFile,
 } from "../lib/admin-v2/product-media.ts";
 import {
@@ -442,7 +444,7 @@ test("draft product media route uses a separate least-privilege permission", () 
   assert.equal(normalizePermissions("owner", {})["products.media"], true);
 });
 
-test("draft media validation accepts only matching JPG, PNG and WebP up to 5 MB", () => {
+test("draft media validation accepts only matching JPG, PNG and WebP up to 20 MB", () => {
   const file = (name: string, type: string, size = 100) => ({ name, type, size }) as File;
   assert.equal(validateAdminV2MediaFile(file("photo.jpg", "image/jpeg")).valid, true);
   assert.equal(validateAdminV2MediaFile(file("photo.png", "image/png")).valid, true);
@@ -451,6 +453,8 @@ test("draft media validation accepts only matching JPG, PNG and WebP up to 5 MB"
   assert.equal(validateAdminV2MediaFile(file("photo.exe", "application/octet-stream")).valid, false);
   assert.equal(validateAdminV2MediaFile(file("photo.png", "image/jpeg")).valid, false);
   assert.equal(validateAdminV2MediaFile(file("large.jpg", "image/jpeg", ADMIN_V2_MEDIA_MAX_BYTES + 1)).valid, false);
+  assert.equal(ADMIN_V2_MEDIA_MAX_MB, 20);
+  assert.equal(ADMIN_V2_MEDIA_MAX_BYTES, 20 * 1024 * 1024);
   assert.equal(hasValidAdminV2ImageSignature("image/jpeg", new Uint8Array([0xff, 0xd8, 0xff, 0x00])), true);
   assert.equal(hasValidAdminV2ImageSignature("image/png", new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), true);
   assert.equal(hasValidAdminV2ImageSignature("image/webp", new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])), true);
@@ -463,9 +467,17 @@ test("draft media paths ignore client filenames and gallery append preserves ord
   assert.equal(path.includes("photo"), false);
   const existing = { images: ["first.jpg", "second.jpg"], primary_image_url: "primary.jpg" };
   assert.deepEqual(appendDraftProductImage(existing, "new.jpg", path), { images: ["first.jpg", "second.jpg", "new.jpg"] });
-  assert.deepEqual(appendDraftProductImage({ images: [] }, "first.jpg", path), {
+  assert.deepEqual(appendDraftProductImage({ images: [], primary_image_url: null, primary_image_path: null, image_url: null }, "first.jpg", path), {
     images: ["first.jpg"], primary_image_url: "first.jpg", primary_image_path: path, image_url: "first.jpg",
   });
+  assert.deepEqual(appendDraftProductImage({ images: [] }, "first.jpg", path), { images: ["first.jpg"] });
+  assert.deepEqual(Object.keys(appendDraftProductImage({ images: [], primary_image_url: null }, "first.jpg", path)).sort(), ["images", "primary_image_url"]);
+});
+
+test("draft media failures identify storage and database steps without secrets", () => {
+  assert.equal(mediaStepFailure("storage", 403), "Storage upload failed (403). The image was not attached.");
+  assert.equal(mediaStepFailure("database", 409), "Database attachment failed (409). Cleanup of the new storage object was attempted.");
+  assert.equal(mediaStepFailure("storage").includes("service"), false);
 });
 
 test("draft media update query rejects active, deleted and concurrently changed rows", () => {
