@@ -380,8 +380,8 @@ export function AdminV2ProductsView({ data }: { data: AdminV2ProductCatalogData 
           </Alert>
         ) : (
           <Alert severity="info">
-            This catalog supports draft-only product creation and draft-only editing. Active products remain
-            read-only. Publishing, inventory updates, and media management are not available yet.
+            This catalog supports draft-only creation, editing, media uploads, and publishing through review.
+            Active products remain read-only. Inventory updates are not available yet.
           </Alert>
         )}
 

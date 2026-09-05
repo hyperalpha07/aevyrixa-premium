@@ -34,6 +34,14 @@ import {
   hasValidAdminV2ImageSignature,
   validateAdminV2MediaFile,
 } from "../lib/admin-v2/product-media.ts";
+import {
+  PUBLISH_CONFIRMATION,
+  evaluatePublishReadiness,
+  publishPayload,
+  publishSlugQuery,
+  publishUpdateQuery,
+  validatePublishConfirmation,
+} from "../lib/admin-v2/product-publish.ts";
 
 // Resolve the one extensionless application import for Node's native TS test runner.
 const editModuleHooks = registerHooks({ resolve(specifier, context, nextResolve) {
@@ -463,4 +471,70 @@ test("draft media update query rejects active, deleted and concurrently changed 
   const newProduct = { href: "/admin-v2/products/new", module: "productNew" };
   assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/media`, allProducts), true);
   assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/media`, newProduct), false);
+});
+
+const publishReadyRow = {
+  ...editRow,
+  short_description: "A concise product summary.",
+  description: "A complete product description.",
+  seo_title: "Stored draft",
+  seo_description: "Stored draft product description.",
+  stock_status: "in_stock",
+  stock_quantity: 3,
+  compare_at_price: 950,
+  colors: ["Black"],
+};
+
+test("draft publish route uses a dedicated least-privilege permission", () => {
+  assert.equal(findAdminV2Route("productPublish")?.implemented, true);
+  assert.ok(existsSync(new URL("../app/admin-v2/products/[productId]/publish/page.tsx", import.meta.url)));
+  const rules = readFileSync(new URL("../configs/admin-v2/permissions.ts", import.meta.url), "utf8");
+  const action = readFileSync(new URL("../app/admin-v2/products/[productId]/publish/actions.ts", import.meta.url), "utf8");
+  assert.match(rules, /productPublish: \{ permission: "products.publish" \}/);
+  assert.match(action, /hasPermission\(session, "products\.publish"\)/);
+  for (const permissions of [{ "products.view": true }, { "products.create": true }, { "products.edit": true }, { "products.media": true }]) {
+    assert.equal(normalizePermissions("viewer", permissions)["products.publish"], false);
+  }
+  assert.equal(normalizePermissions("product_staff", {})["products.publish"], false);
+  assert.equal(normalizePermissions("owner", {})["products.publish"], true);
+});
+
+test("publish readiness blocks missing fields, images, duplicates and non-draft rows", () => {
+  assert.equal(evaluatePublishReadiness(publishReadyRow, { reachableImageCount: 1, duplicateSlug: false }).ready, true);
+  for (const changed of [
+    { name: "" }, { slug: "Invalid Slug" }, { category: "" }, { price: 0 },
+    { short_description: "" }, { description: "" }, { status: "active" }, { deleted_at: "today" },
+  ]) {
+    assert.equal(evaluatePublishReadiness({ ...publishReadyRow, ...changed }, { reachableImageCount: 1, duplicateSlug: false }).ready, false);
+  }
+  assert.equal(evaluatePublishReadiness(publishReadyRow, { reachableImageCount: 0, duplicateSlug: false }).ready, false);
+  assert.equal(evaluatePublishReadiness(publishReadyRow, { reachableImageCount: 1, duplicateSlug: true }).ready, false);
+  assert.equal(evaluatePublishReadiness(publishReadyRow, { reachableImageCount: 1, duplicateSlug: false, unsafeMediaWarning: true }).ready, false);
+});
+
+test("publish requires exact typed confirmation", () => {
+  assert.equal(validatePublishConfirmation(PUBLISH_CONFIRMATION), null);
+  for (const value of ["", "publish", " PUBLISH ", null, undefined]) assert.ok(validatePublishConfirmation(value));
+});
+
+test("publish query is optimistic and payload changes status and timestamp only", () => {
+  const query = publishUpdateQuery(editId, editRow.updated_at);
+  assert.equal(query.get("id"), `eq.${editId}`);
+  assert.equal(query.get("status"), "eq.draft");
+  assert.equal(query.get("deleted_at"), "is.null");
+  assert.equal(query.get("updated_at"), `eq.${editRow.updated_at}`);
+  const payload = publishPayload("2026-09-05T00:00:00.000Z");
+  assert.deepEqual(payload, { status: "active", updated_at: "2026-09-05T00:00:00.000Z" });
+  assert.deepEqual(Object.keys(payload).sort(), ["status", "updated_at"]);
+});
+
+test("publish duplicate query excludes current non-deleted product and navigation stays under Products", () => {
+  const query = publishSlugQuery(editId, "stored-draft");
+  assert.equal(query.get("id"), `neq.${editId}`);
+  assert.equal(query.get("slug"), "eq.stored-draft");
+  assert.equal(query.get("deleted_at"), "is.null");
+  const allProducts = { href: "/admin-v2/products", module: "products" };
+  const newProduct = { href: "/admin-v2/products/new", module: "productNew" };
+  assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/publish`, allProducts), true);
+  assert.equal(isAdminV2NavigationItemActive(`/admin-v2/products/${editId}/publish`, newProduct), false);
 });

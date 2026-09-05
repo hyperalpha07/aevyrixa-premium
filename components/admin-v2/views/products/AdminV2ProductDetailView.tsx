@@ -228,7 +228,7 @@ function BooleanField({ label, value }: { label: string; value: boolean }) {
   return <Field label={label}>{value ? "Yes" : "No"}</Field>;
 }
 
-function CompactHeader({ product, canEditDraft, canManageMedia }: { product: AdminV2ProductDetail; canEditDraft: boolean; canManageMedia: boolean }) {
+function CompactHeader({ product, canEditDraft, canManageMedia, canPublish }: { product: AdminV2ProductDetail; canEditDraft: boolean; canManageMedia: boolean; canPublish: boolean }) {
   return (
     <Box sx={{ mb: 2 }}>
       <V2Breadcrumbs
@@ -267,6 +267,11 @@ function CompactHeader({ product, canEditDraft, canManageMedia }: { product: Adm
           {canManageMedia && product.status === "draft" ? (
             <V2Button size="small" href={`/admin-v2/products/${encodeURIComponent(product.id)}/media`}>
               Manage media
+            </V2Button>
+          ) : null}
+          {canPublish && product.status === "draft" ? (
+            <V2Button size="small" color="warning" variant="contained" href={`/admin-v2/products/${encodeURIComponent(product.id)}/publish`}>
+              Publish product
             </V2Button>
           ) : null}
           <V2Button size="small" href="/admin-v2/products" startIcon={<ArrowLeft size={15} />}>
@@ -459,7 +464,7 @@ function WarningsPanel({ product }: { product: AdminV2ProductDetail }) {
   );
 }
 
-export function AdminV2ProductDetailView({ data, canEditDraft = false, canManageMedia = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean; canManageMedia?: boolean }) {
+export function AdminV2ProductDetailView({ data, canEditDraft = false, canManageMedia = false, canPublish = false }: { data: AdminV2ProductDetailData; canEditDraft?: boolean; canManageMedia?: boolean; canPublish?: boolean }) {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const product = data.product;
 
@@ -490,7 +495,7 @@ export function AdminV2ProductDetailView({ data, canEditDraft = false, canManage
 
   return (
     <>
-      <CompactHeader product={product} canEditDraft={canEditDraft} canManageMedia={canManageMedia} />
+      <CompactHeader product={product} canEditDraft={canEditDraft} canManageMedia={canManageMedia} canPublish={canPublish} />
 
       <Stack spacing={2.25}>
         {warningCount > 0 ? (
