@@ -16,8 +16,13 @@ import {
   validNextAdminV2OrderStatuses,
 } from "../lib/admin-v2/orders/order-status-transitions.ts";
 import { normalizePermissions } from "../app/lib/admin-permissions.ts";
+import { hasPermission } from "../app/lib/admin-permissions.ts";
 import { findAdminV2Route } from "../configs/admin-v2/routes.ts";
 import { isAdminV2NavigationItemActive } from "../lib/admin-v2/navigation.ts";
+import {
+  slugifyAdminV2ProductName,
+  validateAdminV2DraftProduct,
+} from "../lib/admin-v2/product-create.ts";
 
 const baseOrder = {
   orderId: "AEV-1",
@@ -170,9 +175,77 @@ test("implemented Admin V2 route metadata includes contextual invoice", () => {
   assert.equal(findAdminV2Route("orderInvoice")?.implemented, true);
   assert.equal(findAdminV2Route("products")?.implemented, true);
   assert.equal(findAdminV2Route("productDetail")?.implemented, true);
-  assert.equal(findAdminV2Route("productNew")?.implemented, false);
+  assert.equal(findAdminV2Route("productNew")?.implemented, true);
   assert.equal(findAdminV2Route("categories")?.implemented, false);
   assert.equal(findAdminV2Route("inventory")?.implemented, false);
+});
+
+test("draft product creation uses a dedicated least-privilege permission", () => {
+  const viewer = normalizePermissions("viewer", {});
+  assert.equal(viewer["products.view"], true);
+  assert.equal(viewer["products.create"], false);
+
+  const editor = normalizePermissions("viewer", { "products.edit": true });
+  assert.equal(editor["products.edit"], true);
+  assert.equal(editor["products.create"], false);
+
+  const owner = {
+    userType: "owner" as const,
+    username: "owner",
+    displayName: "Owner",
+    role: "owner" as const,
+    permissions: normalizePermissions("owner", {}),
+  };
+  assert.equal(hasPermission(owner, "products.create"), true);
+
+  const explicitlyAllowedViewer = {
+    userType: "staff" as const,
+    username: "catalog-assistant",
+    displayName: "Catalog Assistant",
+    role: "viewer" as const,
+    permissions: normalizePermissions("viewer", { "products.create": true }),
+  };
+  assert.equal(hasPermission(explicitlyAllowedViewer, "products.create"), true);
+});
+
+test("draft product input is sanitized, deduplicated, and forced private", () => {
+  const result = validateAdminV2DraftProduct({
+    name: "  Noromi Test Product  ",
+    slug: "noromi-test-product",
+    price: "850",
+    compareAtPrice: "950",
+    category: " Reusable Period Panty ",
+    sizes: "S, M, s, L",
+    colors: "Black\nBlack\nNude",
+    status: "active",
+    featured: true,
+    imageUrl: "https://example.com/not-accepted.jpg",
+  });
+
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.input?.status, "draft");
+  assert.equal(result.input?.featured, false);
+  assert.equal(result.input?.showOnHomepage, false);
+  assert.deepEqual(result.input?.sizes, ["S", "M", "L"]);
+  assert.deepEqual(result.input?.colors, ["Black", "Nude"]);
+  assert.equal("imageUrl" in (result.input ?? {}), false);
+});
+
+test("draft product validation rejects unsafe slug and pricing", () => {
+  const result = validateAdminV2DraftProduct({
+    name: "Invalid Product",
+    slug: "Invalid Product",
+    price: "0",
+    compareAtPrice: "0",
+    category: "",
+  });
+
+  assert.equal(result.input, null);
+  assert.match(result.fields.slug ?? "", /lowercase/);
+  assert.match(result.fields.price ?? "", /greater than zero/);
+  assert.match(result.fields.compareAtPrice ?? "", /greater than/);
+  assert.match(result.fields.category ?? "", /required/);
+  assert.equal(slugifyAdminV2ProductName(" Noromi Care — Black Comfort "), "noromi-care-black-comfort");
 });
 
 test("product navigation has only the correct active child", () => {

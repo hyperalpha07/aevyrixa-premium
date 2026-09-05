@@ -965,6 +965,68 @@ export async function createProduct(input: ProductMutationInput) {
   return { product, storageMode: "demo-memory" as ProductStorageMode };
 }
 
+export async function createDraftProduct(input: ProductMutationInput) {
+  if (!hasSupabaseConfig()) {
+    throw new ProductStoreError("Supabase configuration is required for draft product creation.", {
+      status: 503,
+      publicMessage: "Product creation is unavailable because the product database is not configured.",
+      code: "PRODUCT_STORAGE_UNAVAILABLE",
+    });
+  }
+
+  const allowedInput: ProductMutationInput = {
+    name: input.name,
+    slug: input.slug,
+    price: input.price,
+    compareAtPrice: input.compareAtPrice,
+    category: input.category,
+    shortDescription: input.shortDescription,
+    description: input.description,
+    sizes: input.sizes,
+    colors: input.colors,
+    absorbency: input.absorbency,
+    benefits: input.benefits,
+    care: input.care,
+    seoTitle: input.seoTitle,
+    seoDescription: input.seoDescription,
+    stockStatus: input.stockStatus,
+    stockQuantity: input.stockQuantity,
+    lowStockThreshold: input.lowStockThreshold,
+  };
+
+  const product = buildProductInput({
+    ...allowedInput,
+    status: "draft",
+    featured: false,
+    isTrending: false,
+    isBestSeller: false,
+    isNewArrival: false,
+    showOnHomepage: false,
+    showInFeaturedCollection: false,
+    images: [],
+    media: [],
+  });
+
+  // Optional facts stay empty rather than inheriting public-facing catalog defaults.
+  product.absorbency = textValue(allowedInput.absorbency);
+  product.stockStatus = allowedInput.stockStatus
+    ? normalizeStockStatus(allowedInput.stockStatus)
+    : "out_of_stock";
+
+  const existing = await getProductBySlugFromSupabase(product.slug);
+  if (existing) {
+    throw new ProductStoreError("A product with this slug already exists.", {
+      status: 409,
+      publicMessage: "A product with this slug already exists.",
+      code: "PRODUCT_SLUG_EXISTS",
+      fields: { slug: "This slug is already in use." },
+    });
+  }
+
+  const created = await createProductInSupabase(product);
+  return { product: created, storageMode: "supabase" as ProductStorageMode };
+}
+
 export async function updateProduct(id: string, updates: ProductMutationInput) {
   const existing = demoProducts.find((product) => product.id === id);
   const merged = buildProductInput({ ...existing, ...updates, id });
