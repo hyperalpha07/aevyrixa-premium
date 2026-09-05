@@ -12,8 +12,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   experimental: {
-    // Admin V2 validates product images at 5 MB; leave room for multipart overhead.
-    serverActions: { bodySizeLimit: "6mb" },
+    // Admin V2 validates product images at 20 MB; leave room for multipart overhead.
+    serverActions: { bodySizeLimit: "24mb" },
   },
   async headers() {
     return [

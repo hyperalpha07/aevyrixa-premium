@@ -28,6 +28,7 @@ import {
 } from "../lib/admin-v2/product-create.ts";
 import {
   ADMIN_V2_MEDIA_MAX_BYTES,
+  ADMIN_V2_MEDIA_MAX_MB,
   appendDraftProductImage,
   draftMediaUpdateQuery,
   draftProductMediaPath,
@@ -443,7 +444,7 @@ test("draft product media route uses a separate least-privilege permission", () 
   assert.equal(normalizePermissions("owner", {})["products.media"], true);
 });
 
-test("draft media validation accepts only matching JPG, PNG and WebP up to 5 MB", () => {
+test("draft media validation accepts only matching JPG, PNG and WebP up to 20 MB", () => {
   const file = (name: string, type: string, size = 100) => ({ name, type, size }) as File;
   assert.equal(validateAdminV2MediaFile(file("photo.jpg", "image/jpeg")).valid, true);
   assert.equal(validateAdminV2MediaFile(file("photo.png", "image/png")).valid, true);
@@ -452,6 +453,8 @@ test("draft media validation accepts only matching JPG, PNG and WebP up to 5 MB"
   assert.equal(validateAdminV2MediaFile(file("photo.exe", "application/octet-stream")).valid, false);
   assert.equal(validateAdminV2MediaFile(file("photo.png", "image/jpeg")).valid, false);
   assert.equal(validateAdminV2MediaFile(file("large.jpg", "image/jpeg", ADMIN_V2_MEDIA_MAX_BYTES + 1)).valid, false);
+  assert.equal(ADMIN_V2_MEDIA_MAX_MB, 20);
+  assert.equal(ADMIN_V2_MEDIA_MAX_BYTES, 20 * 1024 * 1024);
   assert.equal(hasValidAdminV2ImageSignature("image/jpeg", new Uint8Array([0xff, 0xd8, 0xff, 0x00])), true);
   assert.equal(hasValidAdminV2ImageSignature("image/png", new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), true);
   assert.equal(hasValidAdminV2ImageSignature("image/webp", new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])), true);

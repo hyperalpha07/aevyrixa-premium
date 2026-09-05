@@ -1,4 +1,5 @@
-export const ADMIN_V2_MEDIA_MAX_BYTES = 5 * 1024 * 1024;
+export const ADMIN_V2_MEDIA_MAX_MB = 20;
+export const ADMIN_V2_MEDIA_MAX_BYTES = ADMIN_V2_MEDIA_MAX_MB * 1024 * 1024;
 
 const imageTypes = {
   "image/jpeg": { extension: "jpg", signatures: [[0xff, 0xd8, 0xff]] },
@@ -13,7 +14,7 @@ export type AdminV2MediaValidation =
 
 export function validateAdminV2MediaFile(file: Pick<File, "name" | "type" | "size">): AdminV2MediaValidation {
   if (!file.name || file.size <= 0) return { valid: false, error: "Choose a non-empty image file." };
-  if (file.size > ADMIN_V2_MEDIA_MAX_BYTES) return { valid: false, error: "Image must be 5 MB or smaller." };
+  if (file.size > ADMIN_V2_MEDIA_MAX_BYTES) return { valid: false, error: `Image must be ${ADMIN_V2_MEDIA_MAX_MB} MB or smaller.` };
   if (!Object.hasOwn(imageTypes, file.type)) return { valid: false, error: "Use a JPG, PNG, or WebP image." };
   const suffix = file.name.toLowerCase().split(".").at(-1);
   const contentType = file.type as AdminV2MediaType;

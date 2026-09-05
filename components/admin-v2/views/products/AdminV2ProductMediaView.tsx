@@ -7,6 +7,7 @@ import { useActionState, useState } from "react";
 import { uploadAdminV2DraftImage, type AdminV2MediaActionState } from "@/app/admin-v2/products/[productId]/media/actions";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
+import { ADMIN_V2_MEDIA_MAX_BYTES, ADMIN_V2_MEDIA_MAX_MB } from "@/lib/admin-v2/product-media";
 
 export function AdminV2ProductMediaUnavailable({ id, active = false }: { id: string; active?: boolean }) {
   return <Stack spacing={2}>
@@ -39,22 +40,22 @@ export function AdminV2ProductMediaView({ id, name, images }: { id: string; name
         </Grid>)}</Grid> : <Alert severity="info">No product images are attached yet. The first successful upload will become the primary image.</Alert>}
       </V2Card>
       <V2Card><Typography component="h2" variant="h6">Upload image</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>JPG, PNG, or WebP only. Maximum 5 MB.</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>JPG, PNG, or WebP only. Maximum {ADMIN_V2_MEDIA_MAX_MB} MB.</Typography>
         {clientError || state.errors.length ? <Alert severity="error" sx={{ mb: 2 }}>{clientError || state.errors[0]}</Alert> : null}
         <Box component="form" action={action} onSubmit={(event) => {
           const input = event.currentTarget.elements.namedItem("file");
           const file = input instanceof HTMLInputElement ? input.files?.[0] : null;
-          if (!file || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-            event.preventDefault(); setClientError("Choose a JPG, PNG, or WebP image that is 5 MB or smaller.");
+          if (!file || file.size <= 0 || file.size > ADMIN_V2_MEDIA_MAX_BYTES || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            event.preventDefault(); setClientError(`Choose a JPG, PNG, or WebP image that is ${ADMIN_V2_MEDIA_MAX_MB} MB or smaller.`);
           } else setClientError("");
         }}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
             <Button component="label" variant="outlined" disabled={pending}>Choose image<input name="file" type="file" hidden required accept="image/jpeg,image/png,image/webp" onChange={(event) => {
               const file = event.currentTarget.files?.[0];
               setSelectedFileName(file?.name ?? "");
-              const valid = Boolean(file && file.size > 0 && file.size <= 5 * 1024 * 1024 && ["image/jpeg", "image/png", "image/webp"].includes(file.type));
+              const valid = Boolean(file && file.size > 0 && file.size <= ADMIN_V2_MEDIA_MAX_BYTES && ["image/jpeg", "image/png", "image/webp"].includes(file.type));
               setHasValidSelection(valid);
-              setClientError(file && !valid ? "Choose a non-empty JPG, PNG, or WebP image that is 5 MB or smaller." : "");
+              setClientError(file && !valid ? `Choose a non-empty JPG, PNG, or WebP image that is ${ADMIN_V2_MEDIA_MAX_MB} MB or smaller.` : "");
             }} /></Button>
             <Typography variant="body2" color={selectedFileName ? "text.primary" : "text.secondary"} sx={{ overflowWrap: "anywhere" }}>
               {selectedFileName || "No file selected"}
