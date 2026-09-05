@@ -369,7 +369,7 @@ export function AdminV2ProductsView({ data }: { data: AdminV2ProductCatalogData 
         title="Products"
         description="Review the real product catalog, public status, pricing, options, and stock at a glance."
         breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Products" }]}
-        actions={<Chip label="Read-only phase" color="primary" variant="outlined" />}
+        actions={<Chip label="Draft workflow phase" color="primary" variant="outlined" />}
       />
 
       <Stack spacing={3}>
@@ -380,8 +380,8 @@ export function AdminV2ProductsView({ data }: { data: AdminV2ProductCatalogData 
           </Alert>
         ) : (
           <Alert severity="info">
-            This catalog is read-only. Product creation, editing, publishing, inventory updates, and media
-            management are not enabled in this phase.
+            This catalog supports draft-only product creation and draft-only editing. Active products remain
+            read-only. Publishing, inventory updates, and media management are not available yet.
           </Alert>
         )}
 
