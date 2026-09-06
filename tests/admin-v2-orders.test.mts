@@ -640,6 +640,11 @@ test("public rich product media is guarded by the storefront safety filter", () 
   assert.match(source, /isPublicProductImageAllowed\(item\.url\)/);
   assert.match(source, /isPublicProductImageAllowed\(entry\.media\.url\)/);
   assert.match(source, /isPublicProductImageAllowed\(block\.mediaUrl\)/);
+  assert.match(source, /Description Gallery/);
+  assert.match(source, /Find your perfect fit/);
+  assert.match(source, /Care made simple/);
+  assert.match(source, /Feature Highlights/);
+  assert.match(source, /Why customers trust Noromi Care/);
 });
 
 const publishReadyRow = {
