@@ -759,18 +759,6 @@ export default function ProductDetailClient({
             </button>
           </div>
 
-          <div className="aev-product-support-cards mt-4 grid gap-1.5 lg:hidden">
-            {[
-              { icon: PackageCheck, text: privacyText },
-              { icon: Truck, text: deliveryText },
-              { icon: ShieldCheck, text: supportText },
-            ].map(({ icon: Icon, text }, index) => (
-              <div key={`${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA] lg:px-2.5 lg:text-[10px] lg:leading-[1.55]">
-                <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${index === 1 ? "text-[#31E6D4]" : style.accent}`} />
-                <span className="min-w-0">{text}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="relative z-[1] order-1 lg:order-1 lg:self-start lg:pr-1">
@@ -877,13 +865,13 @@ export default function ProductDetailClient({
             </div>
           )}
 
-          <div className="aev-product-support-cards mt-4 hidden gap-1.5 lg:grid">
+          <div className="aev-product-support-cards aev-product-gallery-support mt-2.5 grid gap-1.5 lg:grid-cols-3">
             {[
               { icon: PackageCheck, text: privacyText },
               { icon: Truck, text: deliveryText },
               { icon: ShieldCheck, text: supportText },
             ].map(({ icon: Icon, text }, index) => (
-              <div key={`media-${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-[11px] leading-5 text-[#9C91AA]">
+              <div key={`media-${text}-${index}`} className="aev-product-support-card flex items-start gap-2 rounded border border-white/[0.07] bg-white/[0.035] px-2.5 py-2 text-[10px] leading-[1.45] text-[#9C91AA]">
                 <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${index === 1 ? "text-[#31E6D4]" : style.accent}`} />
                 <span className="min-w-0">{text}</span>
               </div>
