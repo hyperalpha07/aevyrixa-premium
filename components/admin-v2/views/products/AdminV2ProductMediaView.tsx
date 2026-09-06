@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Box, Button, Chip, Grid, Stack, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, FormControl, InputLabel, MenuItem, Select, Grid, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useState } from "react";
@@ -21,7 +21,16 @@ export function AdminV2ProductMediaUnavailable({ id, active = false }: { id: str
 
 type Notice = { uploaded: boolean; updated: string | null; cleanupFailed: boolean };
 
-export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, notice }: { id: string; name: string; images: Array<{ value: string; src: string }>; primaryImageUrl: string | null; notice: Notice }) {
+export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, colors, colorAssignments, supportsColorMedia, notice }: {
+  id: string;
+  name: string;
+  images: Array<{ value: string; src: string }>;
+  primaryImageUrl: string | null;
+  colors: string[];
+  colorAssignments: Record<string, string>;
+  supportsColorMedia: boolean;
+  notice: Notice;
+}) {
   const [state, uploadAction, pending] = useActionState(uploadAdminV2DraftImage.bind(null, id), { errors: [] } as AdminV2MediaActionState);
   const [manageState, manageAction, managing] = useActionState(manageAdminV2DraftImage.bind(null, id), { errors: [] } as AdminV2MediaActionState);
   const [clientError, setClientError] = useState("");
@@ -47,7 +56,10 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, not
             </Box>
             <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
               <Typography variant="body2" sx={{ fontWeight: 650 }}>Image {index + 1}</Typography>
-              {image.value === primaryImageUrl ? <Chip label="Primary" color="primary" size="small" /> : null}
+              <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
+                {colorAssignments[image.value] ? <Chip label={colorAssignments[image.value]} size="small" variant="outlined" /> : null}
+                {image.value === primaryImageUrl ? <Chip label="Primary" color="primary" size="small" /> : null}
+              </Stack>
             </Stack>
             <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.75 }}>
               {image.value !== primaryImageUrl ? <Box component="form" action={manageAction}><input type="hidden" name="operation" value="primary" /><input type="hidden" name="imageUrl" value={image.value} />
@@ -60,9 +72,22 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, not
                 <input type="hidden" name="operation" value="remove" /><input type="hidden" name="imageUrl" value={image.value} />
                 <Button type="submit" size="small" color="error" disabled={managing}>Remove</Button></Box>
             </Stack>
+            {supportsColorMedia && colors.length ? <Stack component="form" action={manageAction} direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <input type="hidden" name="operation" value="color" />
+              <input type="hidden" name="imageUrl" value={image.value} />
+              <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
+                <InputLabel id={`image-${index}-color-label`}>Product color</InputLabel>
+                <Select name="color" labelId={`image-${index}-color-label`} label="Product color" defaultValue={colorAssignments[image.value] ?? ""}>
+                  <MenuItem value="">None</MenuItem>
+                  {colors.map((color) => <MenuItem key={color} value={color}>{color}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <Button type="submit" size="small" variant="outlined" disabled={managing}>Save color</Button>
+            </Stack> : null}
           </Stack>
         </Grid>)}</Grid> : <Alert severity="info">No product images are attached yet. The first successful upload will become the primary image.</Alert>}
       </V2Card>
+      {!supportsColorMedia ? <Alert severity="info">Color-specific image assignment needs a product metadata field and will be added after schema support.</Alert> : null}
       <V2Card><Typography component="h2" variant="h6">Upload image</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>JPG, PNG, or WebP only. Maximum {ADMIN_V2_MEDIA_MAX_MB} MB.</Typography>
         {clientError || state.errors.length ? <Alert severity="error" sx={{ mb: 2 }}>{clientError || state.errors[0]}</Alert> : null}

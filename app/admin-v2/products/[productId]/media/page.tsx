@@ -5,7 +5,7 @@ import { readDraftEditProduct } from "@/lib/admin-v2/product-edit";
 import { draftProductRequest } from "@/lib/admin-v2/product-edit-store";
 import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
 import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
-import { draftProductMediaUrls } from "@/lib/admin-v2/product-media";
+import { draftColorImageAssignments, draftProductMediaUrls } from "@/lib/admin-v2/product-media";
 
 export const metadata = { title: "Product media | Noromi Care Admin" };
 
@@ -24,8 +24,12 @@ export default async function AdminV2ProductMediaPage(props: PageProps<"/admin-v
     const src = normalizeAdminV2ImageSrc(value);
     return src ? [{ value, src }] : [];
   });
+  const colors = Array.isArray(product.colors)
+    ? product.colors.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    : [];
   return <AdminV2ProductMediaView id={product.id} name={String(product.name || "Draft product")}
-    images={images} primaryImageUrl={primaryImageUrl}
+    images={images} primaryImageUrl={primaryImageUrl} colors={colors}
+    colorAssignments={draftColorImageAssignments(product)} supportsColorMedia={Object.hasOwn(product, "media")}
     notice={{ uploaded: searchParams.uploaded === "1", updated: typeof searchParams.updated === "string" ? searchParams.updated : null,
       cleanupFailed: searchParams.cleanup === "failed" }} />;
 }

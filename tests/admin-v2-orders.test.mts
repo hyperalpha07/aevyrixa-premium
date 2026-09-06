@@ -16,6 +16,14 @@ import {
   validNextAdminV2OrderStatuses,
 } from "../lib/admin-v2/orders/order-status-transitions.ts";
 import { normalizePermissions } from "../app/lib/admin-permissions.ts";
+import {
+  colorImageUrl,
+  initialProductOption,
+  normalizeProductOptions,
+  productCartLineId,
+  productVariantSummary,
+  validateProductSelections,
+} from "../app/lib/product-options.ts";
 import { hasPermission } from "../app/lib/admin-permissions.ts";
 import { findAdminV2Route } from "../configs/admin-v2/routes.ts";
 import { isAdminV2NavigationItemActive } from "../lib/admin-v2/navigation.ts";
@@ -30,6 +38,8 @@ import {
   ADMIN_V2_MEDIA_MAX_BYTES,
   ADMIN_V2_MEDIA_MAX_MB,
   appendDraftProductImage,
+  assignDraftProductColorImage,
+  draftColorImageAssignments,
   draftMediaUpdateQuery,
   draftProductMediaUrls,
   draftProductMediaPath,
@@ -546,6 +556,50 @@ test("draft product media view renders Phase 2 management controls and copy", ()
   assert.match(source, /label="Primary"/);
   assert.match(source, /Draft media can be uploaded, removed, reordered, and assigned as the primary image/);
   assert.doesNotMatch(source, /Delete, reorder, and set-primary controls are coming later/);
+});
+
+test("product options normalize, require multi-value choices, and reject stale values", () => {
+  assert.deepEqual(normalizeProductOptions([" S ", "s", "M", ""]), ["S", "M"]);
+  assert.equal(initialProductOption(["Black"]), "Black");
+  assert.equal(initialProductOption(["Black", "Pink"]), "");
+  const product = { id: editId, sizes: ["S", "M"], colors: ["Black", "Pink"], absorbencyOptions: ["Moderate"] };
+  assert.deepEqual(validateProductSelections(product, { absorbency: "Moderate" }), ["Please select a size.", "Please select a color."]);
+  assert.deepEqual(validateProductSelections(product, { size: "XL", color: "Black", absorbency: "Moderate" }), ["The selected size is no longer available."]);
+  assert.deepEqual(validateProductSelections(product, { size: "S", color: "Pink", absorbency: "Moderate" }), []);
+});
+
+test("cart line identity and serialization preserve selected product options", () => {
+  const blackSmall = { size: "S", color: "Black", absorbency: "Moderate" };
+  const pinkSmall = { ...blackSmall, color: "Pink" };
+  assert.equal(productCartLineId(editId, blackSmall), productCartLineId(editId, { ...blackSmall }));
+  assert.notEqual(productCartLineId(editId, blackSmall), productCartLineId(editId, pinkSmall));
+  assert.equal(productVariantSummary(blackSmall), "S / Black / Moderate");
+  assert.deepEqual(JSON.parse(JSON.stringify(blackSmall)), blackSmall);
+  const orderRoute = readFileSync(new URL("../app/api/orders/route.ts", import.meta.url), "utf8");
+  for (const field of ["size", "color", "absorbency", "variant"]) {
+    assert.match(orderRoute, new RegExp(`${field}: optionalText\\(item\\.${field}\\)`));
+  }
+  assert.match(orderRoute, /validateProductSelections\(product, item\)/);
+});
+
+test("color media uses assigned image and safely falls back when mapping is absent", () => {
+  const options = [{ name: "Black", mediaUrl: "black.webp" }, { name: "Pink", mediaUrl: "" }];
+  assert.equal(colorImageUrl("Black", options, "primary.webp"), "black.webp");
+  assert.equal(colorImageUrl("Pink", options, "primary.webp"), "primary.webp");
+  assert.equal(colorImageUrl("Blue", options, "primary.webp"), "primary.webp");
+});
+
+test("draft color-image assignment writes only existing media metadata for allowed images and colors", () => {
+  const row = { images: ["black.webp", "pink.webp"], colors: ["Black", "Pink"], media: [] };
+  const assigned = assignDraftProductColorImage(row, "black.webp", "Black");
+  assert.ok(assigned && Object.keys(assigned).every((key) => key === "media"));
+  assert.deepEqual(draftColorImageAssignments({ ...row, ...assigned }), { "black.webp": "Black" });
+  assert.equal(assignDraftProductColorImage(row, "unknown.webp", "Black"), null);
+  assert.equal(assignDraftProductColorImage(row, "black.webp", "Blue"), null);
+  assert.equal(assignDraftProductColorImage({ images: row.images, colors: row.colors }, "black.webp", "Black"), null);
+  const action = readFileSync(new URL("../app/admin-v2/products/[productId]/media/actions.ts", import.meta.url), "utf8");
+  assert.match(action, /hasPermission\(session, "products\.media"\)/);
+  assert.match(action, /row\.status !== "draft"/);
 });
 
 const publishReadyRow = {
