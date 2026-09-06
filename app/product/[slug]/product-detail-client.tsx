@@ -375,7 +375,16 @@ export default function ProductDetailClient({
       )
     : 0;
 
-  const displayRelated = relatedProducts.map(publicProduct);
+  const displayRelated = relatedProducts
+    .map(publicProduct)
+    .filter((relatedProduct) => {
+      if (relatedProduct.id === displayProduct.id || relatedProduct.slug === displayProduct.slug) {
+        return false;
+      }
+      return !/(^|[-_\s])(test|draft)([-_\s]|$)/i.test(
+        `${relatedProduct.slug} ${relatedProduct.name}`
+      );
+    });
   const reviewCount = reviews.length;
   const averageRating =
     reviewCount > 0
@@ -850,7 +859,7 @@ export default function ProductDetailClient({
 
       {displayFaqs.length > 0 && (
         <section className="relative z-[2] py-6 sm:py-8">
-          <div className="mx-auto max-w-[70rem] px-4 sm:px-7">
+          <div className="aev-product-desktop-canvas mx-auto max-w-[78rem] px-4 sm:px-7">
             <div className="aev-rich-panel grid gap-4 p-5 lg:grid-cols-[15rem_1fr] lg:items-start lg:p-6">
               <div>
                 <p className="aev-rich-label">{hms.faqPreviewEyebrow || "Quick Guidance"}</p>
@@ -996,7 +1005,7 @@ export default function ProductDetailClient({
       )}
 
       {displayRelated.length > 0 && (
-        <section className="aev-related-recommendations relative z-[2] mx-auto max-w-[70rem] px-4 py-7 pb-[calc(var(--aev-mobile-bottom-nav-height)+7rem+env(safe-area-inset-bottom,0px))] sm:px-7 sm:pb-10">
+        <section className="aev-related-recommendations aev-product-desktop-canvas relative z-[2] mx-auto max-w-[78rem] px-4 py-7 pb-[calc(var(--aev-mobile-bottom-nav-height)+7rem+env(safe-area-inset-bottom,0px))] sm:px-7 sm:pb-10">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="aev-rich-label">More From Our Collection</p>
@@ -1196,7 +1205,7 @@ function ProductContentMediaSections({
         Noromi
       </div>
 
-      <div className="relative mx-auto max-w-[70rem] px-4 sm:px-7">
+      <div className="aev-product-desktop-canvas relative mx-auto max-w-[78rem] px-4 sm:px-7">
         <div className="aev-rich-panel overflow-hidden">
           <div className={`grid gap-0 ${description && featuredMedia ? "lg:grid-cols-[0.9fr_1.1fr]" : ""}`}>
             {description && (
@@ -1630,7 +1639,7 @@ function ProductReviewsSection({
   if (reviewCount === 0) {
     return (
       <section id="reviews" className="relative z-[2] py-6 sm:py-8">
-        <div className="mx-auto max-w-[70rem] px-4 sm:px-7">
+        <div className="aev-product-desktop-canvas mx-auto max-w-[78rem] px-4 sm:px-7">
           <div className="aev-rich-panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div>
               <p className="aev-rich-label">Customer Feedback</p>

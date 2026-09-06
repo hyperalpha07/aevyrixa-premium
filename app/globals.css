@@ -1553,22 +1553,22 @@ button {
 }
 
 .aev-bloom-product::before {
-  background:
-    radial-gradient(ellipse 18% 32% at -2% 18%, rgba(255, 104, 197, 0.32), transparent 68%),
-    radial-gradient(ellipse 14% 28% at 3% 42%, rgba(168, 85, 247, 0.25), transparent 72%),
-    radial-gradient(ellipse 18% 34% at 102% 20%, rgba(255, 77, 184, 0.3), transparent 68%),
-    radial-gradient(ellipse 19% 28% at 98% 50%, rgba(117, 65, 210, 0.22), transparent 70%),
-    radial-gradient(ellipse 24% 22% at 96% 62%, rgba(0, 161, 190, 0.13), transparent 72%);
-  filter: blur(3px);
-  opacity: 0.9;
+  background-image:
+    linear-gradient(90deg, rgba(8, 6, 17, 0.03), rgba(8, 6, 17, 0.46) 26%, rgba(8, 6, 17, 0.62) 50%, rgba(8, 6, 17, 0.46) 74%, rgba(8, 6, 17, 0.03)),
+    linear-gradient(180deg, rgba(8, 6, 17, 0.12), rgba(8, 6, 17, 0.22) 62%, #080611 100%),
+    url("/brand/noromi/backgrounds/product-detail-bg-silk.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.96;
 }
 
 .aev-bloom-product::after {
   background:
-    conic-gradient(from 212deg at -4% 31%, transparent 0 18%, rgba(255, 179, 209, 0.13) 22%, transparent 29% 100%),
-    conic-gradient(from 35deg at 104% 34%, transparent 0 22%, rgba(255, 120, 203, 0.12) 27%, transparent 34% 100%);
-  filter: blur(7px);
-  opacity: 0.72;
+    radial-gradient(ellipse 22% 34% at 0 32%, rgba(255, 77, 184, 0.22), transparent 72%),
+    radial-gradient(ellipse 24% 32% at 100% 46%, rgba(0, 212, 198, 0.13), transparent 74%);
+  filter: blur(5px);
+  opacity: 0.86;
 }
 
 .aev-bloom-hero {
@@ -1817,6 +1817,10 @@ button {
     linear-gradient(180deg, rgba(11, 8, 20, 0.82) 0%, rgba(9, 6, 18, 0.88) 48%, rgba(8, 6, 17, 0.94) 100%);
 }
 
+.aev-product-desktop-canvas {
+  width: 100%;
+}
+
 .aev-product-rich-shell::before,
 .aev-product-rich-shell::after {
   content: "";
@@ -2004,8 +2008,39 @@ button {
 }
 
 @media (min-width: 1360px) {
+  .aev-product-desktop-canvas {
+    width: min(78rem, calc(100% - 10rem));
+    padding-inline: 0;
+  }
+
   .aev-rich-mood {
     display: block;
+    max-width: 4.4rem;
+    font-size: 0.84rem;
+    text-shadow: 0 0 18px rgba(255, 77, 184, 0.36);
+  }
+
+  .aev-rich-panel {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.065),
+      0 24px 64px rgba(0, 0, 0, 0.34),
+      -14px -12px 38px rgba(255, 77, 184, 0.12),
+      14px 12px 38px rgba(49, 230, 212, 0.065);
+  }
+
+  .aev-related-recommendations .aev-recommendation-card {
+    border-color: rgba(255, 77, 184, 0.2);
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.3),
+      -8px -7px 26px rgba(255, 77, 184, 0.075),
+      8px 7px 26px rgba(49, 230, 212, 0.035);
+  }
+}
+
+@media (min-width: 1536px) {
+  .aev-rich-mood {
+    max-width: 7.5rem;
+    font-size: 1rem;
   }
 }
 
@@ -2022,6 +2057,14 @@ button {
 }
 
 @media (max-width: 767px) {
+  .aev-bloom-product::before {
+    background-image:
+      linear-gradient(180deg, rgba(8, 6, 17, 0.45), rgba(8, 6, 17, 0.82) 58%, #080611 100%),
+      url("/brand/noromi/backgrounds/product-detail-bg-silk.png");
+    background-position: center top;
+    opacity: 0.48;
+  }
+
   .aev-product-rich-shell::before,
   .aev-product-rich-shell::after {
     width: 19rem;
@@ -4163,6 +4206,23 @@ button {
 
 .aev-related-grid {
   align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .aev-related-recommendations .aev-related-grid {
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 18rem));
+  }
+
+  .aev-related-recommendations .aev-product-image-frame > div {
+    aspect-ratio: 4 / 3;
+  }
+
+  .aev-related-recommendations .aev-recommendation-card p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
 }
 
 .aev-recommendation-card {

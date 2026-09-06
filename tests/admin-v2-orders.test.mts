@@ -646,6 +646,8 @@ test("public rich product media is guarded by the storefront safety filter", () 
   assert.match(source, /Feature Highlights/);
   assert.match(source, /Why customers trust Noromi Care/);
   assert.doesNotMatch(source, /title="Why customers choose it"/);
+  assert.match(source, /relatedProduct\.id === displayProduct\.id/);
+  assert.match(source, /\(test\|draft\)/);
 });
 
 const publishReadyRow = {
