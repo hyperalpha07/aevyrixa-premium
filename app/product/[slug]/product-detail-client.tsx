@@ -160,16 +160,21 @@ export default function ProductDetailClient({
   const care = displayCare(displayProduct);
   const cms = extractProductCmsContent(displayProduct.media, displayProduct.colors);
   const colorOptions = cms.colorOptions;
-  const descriptionMedia = cms.descriptionMedia.filter((item) => item.visible !== false);
+  const descriptionMedia = cms.descriptionMedia.filter(
+    (item) => item.visible !== false && isPublicProductImageAllowed(item.url)
+  );
   const displayColorNames = displayProduct.colors.length > 0
     ? displayProduct.colors
     : colorOptions.map((option) => option.name);
   const sectionMediaEntries = (Object.keys(productSectionLabels) as ProductSectionMediaKey[])
     .map((key) => ({ key, media: cms.sectionMedia[key] }))
     .filter((entry): entry is { key: ProductSectionMediaKey; media: ProductSectionMedia } =>
-      Boolean(entry.media?.url)
+      Boolean(entry.media?.url && isPublicProductImageAllowed(entry.media.url))
     );
-  const contentBlocks = cms.contentBlocks;
+  const contentBlocks = cms.contentBlocks.map((block) => ({
+    ...block,
+    mediaUrl: isPublicProductImageAllowed(block.mediaUrl) ? block.mediaUrl : "",
+  })).filter((block) => block.title || block.subtitle || block.text || block.longText || block.mediaUrl);
   const style =
     themeStyles[displayProduct.visualTheme] ?? themeStyles["blush-violet"];
   const canAddToCart = isPurchasableStock(displayProduct.stockStatus);
