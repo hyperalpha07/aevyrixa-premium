@@ -10,6 +10,7 @@ import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
 import { getProductBySlug } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
+import { validateProductSelections } from "@/app/lib/product-options";
 import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import {
   paymentMethods,
@@ -187,6 +188,8 @@ async function unavailableOrderItems(items: OrderCartItem[]) {
     if (!isPurchasableStock(product.stockStatus)) {
       unavailable.push(`${item.name} is currently out of stock.`);
     }
+    const optionErrors = validateProductSelections(product, item);
+    unavailable.push(...optionErrors.map((error) => `${item.name}: ${error}`));
   }
 
   return unavailable;

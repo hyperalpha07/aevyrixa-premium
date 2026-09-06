@@ -89,7 +89,8 @@ export function removeDraftProductImage(row: Record<string, unknown>, productId:
   const images = current.filter((url) => url !== target);
   const primary = text(row.primary_image_url) ?? text(row.image_url);
   const nextPrimary = primary === target || !primary || !images.includes(primary) ? images[0] ?? null : primary;
-  return { images, ...primaryFields(row, nextPrimary, productId) };
+  const colorPayload = Object.hasOwn(row, "media") ? assignDraftProductColorImage(row, target, "") : null;
+  return { images, ...primaryFields(row, nextPrimary, productId), ...(colorPayload ?? {}) };
 }
 
 export function setDraftProductPrimaryImage(row: Record<string, unknown>, productId: string, target: string) {
@@ -106,6 +107,44 @@ export function moveDraftProductImage(row: Record<string, unknown>, productId: s
   [images[index], images[nextIndex]] = [images[nextIndex], images[index]];
   const primary = text(row.primary_image_url) ?? text(row.image_url);
   return { images, ...(!primary ? primaryFields(row, images[0] ?? null, productId) : {}) };
+}
+
+export function draftColorImageAssignments(row: Record<string, unknown>) {
+  const media = Array.isArray(row.media) ? row.media : [];
+  const cms = media.find((item) => typeof item === "object" && item !== null && !Array.isArray(item)
+    && (item as Record<string, unknown>).kind === "product_cms") as Record<string, unknown> | undefined;
+  const options = Array.isArray(cms?.colorOptions) ? cms.colorOptions : [];
+  return Object.fromEntries(options.flatMap((item) => {
+    if (typeof item !== "object" || item === null || Array.isArray(item)) return [];
+    const option = item as Record<string, unknown>;
+    return typeof option.name === "string" && typeof option.mediaUrl === "string" && option.mediaUrl
+      ? [[option.mediaUrl, option.name]] : [];
+  }));
+}
+
+export function assignDraftProductColorImage(row: Record<string, unknown>, target: string, color: string) {
+  if (!Object.hasOwn(row, "media") || !draftProductMediaUrls(row).includes(target)) return null;
+  const colors = stringList(row.colors);
+  const selectedColor = colors.find((option) => option.toLocaleLowerCase() === color.trim().toLocaleLowerCase());
+  if (color && !selectedColor) return null;
+  const media = Array.isArray(row.media)
+    ? row.media.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)) as Record<string, unknown>[]
+    : [];
+  const currentCms = media.find((item) => item.kind === "product_cms") ?? {};
+  const currentOptions = Array.isArray(currentCms.colorOptions) ? currentCms.colorOptions : [];
+  const optionsByName = new Map(currentOptions.flatMap((item) => {
+    if (typeof item !== "object" || item === null || Array.isArray(item)) return [];
+    const option = item as Record<string, unknown>;
+    return typeof option.name === "string" ? [[option.name.toLocaleLowerCase(), option] as const] : [];
+  }));
+  const colorOptions = colors.map((name, index) => {
+    const existing = optionsByName.get(name.toLocaleLowerCase()) ?? { id: `color-${index}`, name, visible: true };
+    const existingUrl = typeof existing.mediaUrl === "string" ? existing.mediaUrl : "";
+    const assignHere = selectedColor?.toLocaleLowerCase() === name.toLocaleLowerCase();
+    return { ...existing, name, mediaUrl: assignHere ? target : existingUrl === target ? "" : existingUrl };
+  });
+  const nextCms = { ...currentCms, kind: "product_cms", version: 1, colorOptions };
+  return { media: [...media.filter((item) => item.kind !== "product_cms"), nextCms] };
 }
 
 export function appendDraftProductImage(row: Record<string, unknown>, url: string, path: string) {

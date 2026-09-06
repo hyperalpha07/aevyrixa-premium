@@ -41,6 +41,14 @@ import {
 } from "@/app/lib/product-display";
 import { formatProductPrice, type ProductVisualTheme } from "@/app/lib/products";
 import type { ProductCatalogItem } from "@/app/lib/product-types";
+import {
+  colorImageUrl,
+  initialProductOption,
+  productCartLineId,
+  productVariantSummary,
+  validateProductSelections,
+} from "@/app/lib/product-options";
+import { isPublicProductImageAllowed } from "@/app/lib/public-product-media-safety";
 import SiteFooter from "@/app/components/site-footer";
 import type { StorefrontSettings } from "@/app/lib/storefront-settings";
 import { brandName } from "@/configs/brand/noromi";
@@ -133,18 +141,6 @@ type PreviewMediaItem = {
   alt: string;
 };
 
-function buildCartLineId(
-  product: ProductCatalogItem,
-  size: string,
-  color: string,
-  absorbency: string
-) {
-  return `${product.id}-${size}-${color}-${absorbency}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
 export default function ProductDetailClient({
   product,
   settings,
@@ -165,8 +161,9 @@ export default function ProductDetailClient({
   const cms = extractProductCmsContent(displayProduct.media, displayProduct.colors);
   const colorOptions = cms.colorOptions;
   const descriptionMedia = cms.descriptionMedia.filter((item) => item.visible !== false);
-  const displayColorNames =
-    colorOptions.length > 0 ? colorOptions.map((option) => option.name) : displayProduct.colors;
+  const displayColorNames = displayProduct.colors.length > 0
+    ? displayProduct.colors
+    : colorOptions.map((option) => option.name);
   const sectionMediaEntries = (Object.keys(productSectionLabels) as ProductSectionMediaKey[])
     .map((key) => ({ key, media: cms.sectionMedia[key] }))
     .filter((entry): entry is { key: ProductSectionMediaKey; media: ProductSectionMedia } =>
@@ -177,10 +174,10 @@ export default function ProductDetailClient({
     themeStyles[displayProduct.visualTheme] ?? themeStyles["blush-violet"];
   const canAddToCart = isPurchasableStock(displayProduct.stockStatus);
 
-  const [selectedSize, setSelectedSize] = useState(displayProduct.sizes[0] || "");
-  const [selectedColor, setSelectedColor] = useState(displayColorNames[0] || "");
-  const [selectedAbsorbency, setSelectedAbsorbency] = useState(
-    displayProduct.absorbencyOptions[0] || displayProduct.absorbency
+  const [selectedSize, setSelectedSize] = useState(() => initialProductOption(displayProduct.sizes));
+  const [selectedColor, setSelectedColor] = useState(() => initialProductOption(displayColorNames));
+  const [selectedAbsorbency, setSelectedAbsorbency] = useState(() =>
+    initialProductOption(displayProduct.absorbencyOptions)
   );
   const [quantity, setQuantity] = useState(1);
   const [selectionMessage, setSelectionMessage] = useState("");
@@ -225,7 +222,7 @@ export default function ProductDetailClient({
   const selectedColorOption = colorOptions.find(
     (option) => option.name.toLowerCase() === selectedColor.toLowerCase()
   );
-  const colorSpecificMedia = selectedColorOption?.mediaUrl
+  const colorSpecificMedia = selectedColorOption?.mediaUrl && isPublicProductImageAllowed(selectedColorOption.mediaUrl)
     ? {
         type: inferMediaType(selectedColorOption.mediaUrl, selectedColorOption.mediaType),
         url: selectedColorOption.mediaUrl,
@@ -351,30 +348,31 @@ export default function ProductDetailClient({
 
   const handleAddToCart = (goToCart = false) => {
     if (!canAddToCart) return;
-    if (displayProduct.sizes.length > 0 && !selectedSize) {
-      setSelectionMessage("Please select a size before adding this item.");
-      return;
-    }
-    if (displayColorNames.length > 0 && !selectedColor) {
-      setSelectionMessage("Please select a color before adding this item.");
-      return;
-    }
-    if (displayProduct.absorbencyOptions.length > 0 && !selectedAbsorbency) {
-      setSelectionMessage("Please select an absorbency before adding this item.");
+    const selections = {
+      size: selectedSize || undefined,
+      color: selectedColor || undefined,
+      absorbency: selectedAbsorbency || undefined,
+    };
+    const selectionErrors = validateProductSelections(
+      { ...displayProduct, colors: displayColorNames },
+      selections
+    );
+    if (selectionErrors.length) {
+      setSelectionMessage(selectionErrors[0]);
       return;
     }
     setSelectionMessage("");
-    const variantSummary = [selectedSize, selectedColor, selectedAbsorbency]
-      .filter(Boolean)
-      .join(" / ");
-    const cartImage = [
+    const variantSummary = productVariantSummary(selections);
+    const fallbackCartImage = [
       displayProduct.primaryImageUrl,
       displayProduct.imageUrl,
       ...(displayProduct.images ?? []),
     ].find((image): image is string => Boolean(image?.trim()));
+    const mappedCartImage = colorImageUrl(selectedColor, colorOptions, fallbackCartImage);
+    const cartImage = isPublicProductImageAllowed(mappedCartImage) ? mappedCartImage : fallbackCartImage;
     addItem(
       {
-        id: buildCartLineId(displayProduct, selectedSize, selectedColor, selectedAbsorbency),
+        id: productCartLineId(displayProduct.id, selections),
         productId: displayProduct.id,
         slug: displayProduct.slug,
         name: displayProduct.name,
