@@ -249,11 +249,6 @@ export default function ProductDetailClient({
       ...item,
       alt: item.type === "video" ? `${displayProduct.name} video` : `${displayProduct.name} image ${index + 1}`,
     }));
-  const descriptionPreviewMedia: PreviewMediaItem[] = descriptionMedia.map((item, index) => ({
-    type: inferMediaType(item.url, item.type),
-    url: item.url,
-    alt: item.alt || item.caption || `${displayProduct.name} description media ${index + 1}`,
-  }));
   const lightboxMedia = lightboxItems[lightboxIndex] ?? null;
   const hasLightboxNavigation = lightboxItems.length > 1;
   const showThumbnails = mediaItems.length > 1;
@@ -882,14 +877,32 @@ export default function ProductDetailClient({
 
       {productTicker}
 
-      {(displayProduct.description || descriptionMedia.length > 0 || sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
+      {(displayProduct.description || displayProduct.shortDescription || descriptionMedia.length > 0 || sectionMediaEntries.length > 0 || contentBlocks.length > 0) && (
         <ProductContentMediaSections
-          description={displayProduct.description}
+          description={displayProduct.description || displayProduct.shortDescription}
           descriptionMedia={descriptionMedia}
+          fallbackMedia={mediaItems
+            .filter((item): item is Extract<MediaItem, { type: "image" }> =>
+              item.type === "image" && isPublicProductImageAllowed(item.url)
+            )
+            .map((item, index) => ({
+              id: `safe-gallery-fallback-${index}`,
+              url: item.url,
+              type: "image" as const,
+              alt: `${displayProduct.name} product view ${index + 1}`,
+              caption: "",
+              fit: "contain" as const,
+              position: "center" as const,
+              visible: true,
+            }))}
           sectionMediaEntries={sectionMediaEntries}
           contentBlocks={contentBlocks}
+          benefits={benefits}
+          care={care}
+          privacyText={privacyText}
+          deliveryText={deliveryText}
+          supportText={supportText}
           productName={displayProduct.name}
-          descriptionPreviewMedia={descriptionPreviewMedia}
           onPreviewMedia={openLightbox}
         />
       )}
@@ -1231,54 +1244,74 @@ export default function ProductDetailClient({
 function ProductContentMediaSections({
   description,
   descriptionMedia,
+  fallbackMedia,
   sectionMediaEntries,
   contentBlocks,
+  benefits,
+  care,
+  privacyText,
+  deliveryText,
+  supportText,
   productName,
-  descriptionPreviewMedia,
   onPreviewMedia,
 }: {
   description: string;
   descriptionMedia: ProductDescriptionMediaItem[];
+  fallbackMedia: ProductDescriptionMediaItem[];
   sectionMediaEntries: Array<{ key: ProductSectionMediaKey; media: ProductSectionMedia }>;
   contentBlocks: ProductContentBlock[];
+  benefits: string[];
+  care: string[];
+  privacyText: string;
+  deliveryText: string;
+  supportText: string;
   productName: string;
-  descriptionPreviewMedia: PreviewMediaItem[];
   onPreviewMedia: (items: PreviewMediaItem[], index: number) => void;
 }) {
-  const [showAllMedia, setShowAllMedia] = useState(false);
-  const [defaultMediaCount, setDefaultMediaCount] = useState(4);
-  const purposeMedia = sectionMediaEntries.filter(({ key }) => key !== "promise");
-  const visibleGalleryMedia = showAllMedia
-    ? descriptionMedia
-    : descriptionMedia.slice(0, defaultMediaCount);
-  const hiddenMediaCount = Math.max(0, descriptionMedia.length - visibleGalleryMedia.length);
-
-  useEffect(() => {
-    const updateCount = () => {
-      if (window.matchMedia("(max-width: 767px)").matches) {
-        setDefaultMediaCount(2);
-        return;
-      }
-      if (window.matchMedia("(max-width: 1023px)").matches) {
-        setDefaultMediaCount(3);
-        return;
-      }
-      setDefaultMediaCount(4);
-    };
-    updateCount();
-    window.addEventListener("resize", updateCount);
-    return () => window.removeEventListener("resize", updateCount);
-  }, []);
+  const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
+  const [failedRichMedia, setFailedRichMedia] = useState<Set<string>>(() => new Set());
+  const gallerySource = descriptionMedia.length > 0 ? descriptionMedia : fallbackMedia;
+  const galleryMedia = gallerySource.filter((item) => !failedRichMedia.has(item.url));
+  const galleryIndex = Math.min(selectedGalleryIndex, Math.max(0, galleryMedia.length - 1));
+  const featuredMedia = galleryMedia[galleryIndex];
+  const galleryPreviewMedia: PreviewMediaItem[] = galleryMedia.map((item, index) => ({
+    type: inferMediaType(item.url, item.type),
+    url: item.url,
+    alt: item.alt || item.caption || `${productName} closer look ${index + 1}`,
+  }));
+  const fitMedia = sectionMediaEntries.find(({ key }) => key === "fit")?.media;
+  const careMedia = sectionMediaEntries.find(({ key }) => key === "care")?.media;
+  const storyBullets = Array.from(new Set([...benefits, ...care, privacyText])).filter(Boolean).slice(0, 4);
+  const defaultFeatures = [
+    { title: "Advanced Leak Protection", text: "Multi-layer support helps you stay dry and confident.", icon: ShieldCheck },
+    { title: "Soft & Skin-Friendly", text: "Gentle, breathable comfort for everyday wear.", icon: HeartHandshake },
+    { title: "Reusable & Eco-Friendly", text: "A reusable choice designed for repeat care.", icon: Repeat2 },
+  ];
+  const trustItems = [
+    { title: "Premium Quality", text: "Thoughtfully designed for comfort.", icon: HeartHandshake },
+    { title: "Safe & Discreet", text: privacyText, icon: ShieldCheck },
+    { title: "Reliable Delivery", text: deliveryText, icon: Truck },
+    { title: "Real Support", text: supportText, icon: MessageCircle },
+  ];
 
   return (
-    <section className="relative z-[2] border-y border-white/[0.07] bg-[#0B0814] py-8 sm:py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-        <div className="overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] shadow-[0_1.2rem_3.8rem_rgba(0,0,0,0.22)]">
-          <div className={`grid gap-0 ${description && descriptionMedia.length > 0 ? "lg:grid-cols-[0.92fr_1.08fr]" : ""}`}>
+    <section className="aev-product-rich-shell relative z-[2] overflow-hidden border-y border-white/[0.07] py-10 sm:py-14 lg:py-16">
+      <div className="aev-rich-orb aev-rich-orb-left" aria-hidden="true" />
+      <div className="aev-rich-orb aev-rich-orb-right" aria-hidden="true" />
+      <span className="aev-rich-mood aev-rich-mood-left" aria-hidden="true">For a healthier, happier you</span>
+      <span className="aev-rich-mood aev-rich-mood-right" aria-hidden="true">Comfort through every phase</span>
+      <span className="aev-rich-mood aev-rich-mood-bottom" aria-hidden="true">More than a product, a new confident you</span>
+      <div className="pointer-events-none absolute left-1/2 top-[32%] -z-[1] hidden -translate-x-1/2 font-serif text-[9rem] uppercase tracking-[0.12em] text-white/[0.018] xl:block" aria-hidden="true">
+        Noromi
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+        <div className="aev-rich-panel overflow-hidden">
+          <div className={`grid gap-0 ${description && featuredMedia ? "lg:grid-cols-[0.9fr_1.1fr]" : ""}`}>
             {description && (
-              <div className={`border-b border-white/[0.07] p-5 sm:p-6 lg:border-b-0 ${descriptionMedia.length > 0 ? "lg:border-r lg:border-r-white/[0.07]" : ""}`}>
-                <SectionHeading eyebrow="Story" title="Product details" description="" />
-                <div className="mt-4 space-y-4 text-sm leading-8 text-[#D8CBE8]/76">
+              <div className={`p-5 sm:p-7 lg:p-9 ${featuredMedia ? "border-b border-white/[0.07] lg:border-b-0 lg:border-r" : ""}`}>
+                <SectionHeading eyebrow="Our Story" title="Product details" description="" />
+                <div className="mt-5 space-y-4 text-sm leading-7 text-[#D8CBE8]/82">
                   {description
                     .split(/\n{2,}/)
                     .map((paragraph) => paragraph.trim())
@@ -1287,83 +1320,126 @@ function ProductContentMediaSections({
                       <p key={`${paragraph.slice(0, 16)}-${index}`}>{paragraph}</p>
                     ))}
                 </div>
+                {storyBullets.length > 0 && (
+                  <ul className="mt-7 grid gap-2.5 sm:grid-cols-2" aria-label="Product benefits">
+                    {storyBullets.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5 text-xs leading-5 text-[#D8CBE8]">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#FF4DB8]" aria-hidden="true" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
-            {descriptionMedia.length > 0 && (
-              <div className="p-5 sm:p-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
+            {featuredMedia && (
+              <div className="p-5 sm:p-7 lg:p-9">
+                <div className="mb-5 flex items-end justify-between gap-3">
                   <div>
                     <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
                       Description Gallery
                     </p>
                     <h3 className="mt-2 font-serif text-2xl text-white">A closer look</h3>
                   </div>
-                  {descriptionMedia.length > defaultMediaCount && (
+                  {galleryMedia.length > 1 && (
                     <span className="rounded border border-white/[0.08] bg-white/[0.035] px-2.5 py-1 text-[10px] text-[#9C91AA]">
-                      {descriptionMedia.length} media
+                      {galleryIndex + 1} / {galleryMedia.length}
                     </span>
                   )}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {visibleGalleryMedia.map((item, index) => (
-                    <article key={item.id} className="group overflow-hidden rounded border border-white/[0.08] bg-[#080611]/55">
-                      <ProductInlineMedia
-                        media={item}
-                        fallbackAlt={`${productName} description media ${index + 1}`}
-                        compact
-                        onPreview={() => onPreviewMedia(descriptionPreviewMedia, index)}
-                      />
-                      {(item.caption || item.alt) && (
-                        <div className="border-t border-white/[0.07] px-3 py-2">
-                          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9C91AA]">
-                            {item.caption || item.alt}
-                          </p>
-                        </div>
-                      )}
-                    </article>
-                  ))}
+                <div className="aev-rich-featured-media">
+                  <ProductInlineMedia
+                    media={featuredMedia}
+                    fallbackAlt={`${productName} closer look`}
+                    onPreview={() => onPreviewMedia(galleryPreviewMedia, galleryIndex)}
+                    onError={() => setFailedRichMedia((items) => new Set(items).add(featuredMedia.url))}
+                  />
                 </div>
-                {descriptionMedia.length > defaultMediaCount && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllMedia((value) => !value)}
-                    className="mt-5 inline-flex min-h-10 items-center justify-center rounded border border-[#FF4DB8]/22 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
-                  >
-                    {showAllMedia ? "Show less" : `Show more (${hiddenMediaCount})`}
-                  </button>
+                {(featuredMedia.caption || featuredMedia.alt) && (
+                  <p className="mt-3 text-xs leading-5 text-[#9C91AA]">{featuredMedia.caption || featuredMedia.alt}</p>
+                )}
+                {galleryMedia.length > 1 && (
+                  <div className="mt-4 flex flex-wrap gap-2" aria-label="Description gallery navigation">
+                    {galleryMedia.map((item, index) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedGalleryIndex(index)}
+                        className={`h-2.5 rounded-full transition ${index === galleryIndex ? "w-8 bg-[#FF4DB8]" : "w-2.5 bg-white/20 hover:bg-[#31E6D4]/70"}`}
+                        aria-label={`Show description image ${index + 1}`}
+                        aria-pressed={index === galleryIndex}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {purposeMedia.length > 0 && (
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {purposeMedia.map(({ key, media }) => (
-              <article key={key} className="overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
-                <ProductInlineMedia
-                  media={media}
-                  fallbackAlt={`${productName} ${productSectionLabels[key]}`}
-                  compact
-                />
-                <div className="border-t border-white/[0.07] p-4">
-                  <p className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#FF4DB8]">
-                    {productSectionLabels[key]}
-                  </p>
-                  {media.alt && <p className="mt-2 text-sm leading-6 text-[#D8CBE8]/72">{media.alt}</p>}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${fitMedia && !failedRichMedia.has(fitMedia.url) ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
+            {fitMedia && !failedRichMedia.has(fitMedia.url) && (
+              <ProductInlineMedia media={fitMedia} fallbackAlt={`${productName} size guide`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(fitMedia.url))} />
+            )}
+            <div className="flex flex-col justify-center p-5 sm:p-6">
+              <p className="aev-rich-label">Size Guide</p>
+              <h3 className="mt-2 font-serif text-2xl text-white">Find your perfect fit</h3>
+              <p className="mt-3 text-sm leading-6 text-[#D8CBE8]/78">Choose the right size for a secure, comfortable fit that moves with you.</p>
+              <span className="mt-4 inline-flex w-fit rounded-full border border-[#FF4DB8]/25 bg-[#FF4DB8]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#FFB3D1]">View Size Guide</span>
+            </div>
+          </article>
 
-        {contentBlocks.length > 0 && (
-          <div className="mt-8 grid gap-4">
-            {contentBlocks.map((block) => (
-              <ContentBlockCard key={block.id} block={block} productName={productName} />
+          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${careMedia && !failedRichMedia.has(careMedia.url) ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
+            {careMedia && !failedRichMedia.has(careMedia.url) && (
+              <ProductInlineMedia media={careMedia} fallbackAlt={`${productName} care guide`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(careMedia.url))} />
+            )}
+            <div className="flex flex-col justify-center p-5 sm:p-6">
+              <p className="aev-rich-label">Care Guide</p>
+              <h3 className="mt-2 font-serif text-2xl text-white">Care made simple</h3>
+              <p className="mt-3 text-sm leading-6 text-[#D8CBE8]/78">Easy to wash, quick to dry, and made to last. Follow the care guide to keep your Noromi Care product fresh and effective.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["Wash gently", "Air dry only", "No bleach", "Lasts longer"].map((step) => (
+                  <span key={step} className="rounded-full border border-[#31E6D4]/20 bg-[#31E6D4]/[0.06] px-2.5 py-1 text-[10px] font-semibold text-[#8BF5EA]">{step}</span>
+                ))}
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div className="aev-rich-panel mt-5 p-5 sm:p-7">
+          <p className="aev-rich-label">Feature Highlights</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {(contentBlocks.length > 0 ? contentBlocks : defaultFeatures).map((item, index) => {
+              if ("id" in item) {
+                return <ContentBlockCard key={item.id} block={item} productName={productName} onMediaError={(url) => setFailedRichMedia((items) => new Set(items).add(url))} mediaFailed={failedRichMedia.has(item.mediaUrl)} />;
+              }
+              const Icon = item.icon;
+              return (
+                <article key={item.title} className="aev-rich-feature-card">
+                  <span className="aev-rich-icon"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <h3 className="mt-4 font-serif text-xl text-white">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#9C91AA]">{item.text}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="aev-rich-panel mt-5 px-5 py-4 sm:px-7">
+          <p className="aev-rich-label">Why customers trust Noromi Care</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {trustItems.map(({ title, text, icon: Icon }) => (
+              <div key={title} className="flex items-start gap-3 lg:border-l lg:border-white/[0.08] lg:pl-4 lg:first:border-l-0 lg:first:pl-0">
+                <span className="aev-rich-icon h-9 w-9"><Icon className="h-4 w-4" aria-hidden="true" /></span>
+                <div>
+                  <h3 className="text-xs font-semibold text-white">{title}</h3>
+                  <p className="mt-1 text-[10px] leading-4 text-[#9C91AA]">{text}</p>
+                </div>
+              </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
@@ -1374,11 +1450,13 @@ function ProductInlineMedia({
   fallbackAlt,
   compact = false,
   onPreview,
+  onError,
 }: {
   media: ProductSectionMedia;
   fallbackAlt: string;
   compact?: boolean;
   onPreview?: () => void;
+  onError?: () => void;
 }) {
   const type = inferMediaType(media.url, media.type);
   const fitClass = media.fit === "cover" ? "object-cover" : "object-contain";
@@ -1435,6 +1513,7 @@ function ProductInlineMedia({
           loading="lazy"
           decoding="async"
           className={`relative h-full w-full ${media.fit === "cover" ? "" : "p-3 sm:p-4"} ${fitClass} ${positionClass}`}
+          onError={onError}
         />
       )}
       {onPreview && type === "image" && (
@@ -1450,11 +1529,15 @@ function ProductInlineMedia({
 function ContentBlockCard({
   block,
   productName,
+  onMediaError,
+  mediaFailed = false,
 }: {
   block: ProductContentBlock;
   productName: string;
+  onMediaError?: (url: string) => void;
+  mediaFailed?: boolean;
 }) {
-  const hasMedia = Boolean(block.mediaUrl);
+  const hasMedia = Boolean(block.mediaUrl) && !mediaFailed;
   const media = hasMedia
     ? {
         url: block.mediaUrl,
@@ -1465,7 +1548,7 @@ function ContentBlockCard({
       }
     : null;
   const mediaNode = media ? (
-    <ProductInlineMedia media={media} fallbackAlt={`${productName} ${block.title}`} compact />
+    <ProductInlineMedia media={media} fallbackAlt={`${productName} ${block.title}`} compact onError={() => onMediaError?.(media.url)} />
   ) : null;
   const textNode = (
     <div className="p-4 sm:p-5">
@@ -1494,20 +1577,10 @@ function ContentBlockCard({
     </div>
   );
 
-  if (!hasMedia || block.mediaPosition === "top") {
-    return (
-      <article className="overflow-hidden rounded border border-white/[0.08] bg-white/[0.035]">
-        {mediaNode}
-        {textNode}
-      </article>
-    );
-  }
-
   return (
-    <article className={`grid gap-0 overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] ${block.mediaPosition === "full" ? "" : "lg:grid-cols-2"}`}>
-      {block.mediaPosition === "left" && mediaNode}
+    <article className="aev-rich-feature-card overflow-hidden">
+      {mediaNode}
       {textNode}
-      {block.mediaPosition !== "left" && mediaNode}
     </article>
   );
 }
