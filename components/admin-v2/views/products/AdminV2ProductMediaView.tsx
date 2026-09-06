@@ -7,7 +7,7 @@ import { useActionState, useState } from "react";
 import { manageAdminV2DraftImage, uploadAdminV2DraftImage, type AdminV2MediaActionState } from "@/app/admin-v2/products/[productId]/media/actions";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
-import { ADMIN_V2_MEDIA_MAX_BYTES, ADMIN_V2_MEDIA_MAX_MB } from "@/lib/admin-v2/product-media";
+import { ADMIN_V2_MEDIA_MAX_BYTES, ADMIN_V2_MEDIA_MAX_MB, type AdminV2RichMediaRole } from "@/lib/admin-v2/product-media";
 
 export function AdminV2ProductMediaUnavailable({ id, active = false }: { id: string; active?: boolean }) {
   return <Stack spacing={2}>
@@ -20,8 +20,16 @@ export function AdminV2ProductMediaUnavailable({ id, active = false }: { id: str
 }
 
 type Notice = { uploaded: boolean; updated: string | null; cleanupFailed: boolean };
+const richMediaRoles: Array<{ role: AdminV2RichMediaRole; label: string }> = [
+  { role: "description", label: "Description image" },
+  { role: "sizeChart", label: "Size chart" },
+  { role: "careGuide", label: "Care guide" },
+  { role: "feature1", label: "Feature image 1" },
+  { role: "feature2", label: "Feature image 2" },
+  { role: "feature3", label: "Feature image 3" },
+];
 
-export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, colors, colorAssignments, supportsColorMedia, notice }: {
+export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, colors, colorAssignments, supportsColorMedia, richAssignments, supportsRichMedia, notice }: {
   id: string;
   name: string;
   images: Array<{ value: string; src: string }>;
@@ -29,6 +37,8 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
   colors: string[];
   colorAssignments: Record<string, string>;
   supportsColorMedia: boolean;
+  richAssignments: Record<AdminV2RichMediaRole, string>;
+  supportsRichMedia: boolean;
   notice: Notice;
 }) {
   const [state, uploadAction, pending] = useActionState(uploadAdminV2DraftImage.bind(null, id), { errors: [] } as AdminV2MediaActionState);
@@ -88,6 +98,26 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
         </Grid>)}</Grid> : <Alert severity="info">No product images are attached yet. The first successful upload will become the primary image.</Alert>}
       </V2Card>
       {!supportsColorMedia ? <Alert severity="info">Color-specific image assignment needs a product metadata field and will be added after schema support.</Alert> : null}
+      <V2Card>
+        <Typography component="h2" variant="h6">Rich product content</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+          Assign existing gallery images to the public description, size, care, and feature sections. Gallery and color assignments remain separate.
+        </Typography>
+        {supportsRichMedia ? <Grid container spacing={1.5}>{richMediaRoles.map(({ role, label }) => <Grid key={role} size={{ xs: 12, md: 6 }}>
+          <Stack component="form" action={manageAction} direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" } }}>
+            <input type="hidden" name="operation" value="rich" />
+            <input type="hidden" name="role" value={role} />
+            <FormControl size="small" sx={{ minWidth: 190, flex: 1 }}>
+              <InputLabel id={`rich-${role}-label`}>{label}</InputLabel>
+              <Select name="imageUrl" labelId={`rich-${role}-label`} label={label} defaultValue={richAssignments[role] ?? ""}>
+                <MenuItem value="">None</MenuItem>
+                {images.map((image, index) => <MenuItem key={image.value} value={image.value}>Image {index + 1}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <Button type="submit" size="small" variant="outlined" disabled={managing}>Save</Button>
+          </Stack>
+        </Grid>)}</Grid> : <Alert severity="info">Rich content assignment needs the existing product media metadata field.</Alert>}
+      </V2Card>
       <V2Card><Typography component="h2" variant="h6">Upload image</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>JPG, PNG, or WebP only. Maximum {ADMIN_V2_MEDIA_MAX_MB} MB.</Typography>
         {clientError || state.errors.length ? <Alert severity="error" sx={{ mb: 2 }}>{clientError || state.errors[0]}</Alert> : null}
@@ -109,7 +139,7 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
           <Button type="submit" variant="contained" loading={pending} disabled={pending || !hasValidSelection}>Upload image to draft</Button>
         </Stack></Box>
       </V2Card>
-      <Alert severity="info">Draft media can be uploaded, removed, reordered, and assigned as the primary image. Description images and rich content are coming in a later phase.</Alert>
+      <Alert severity="info">Gallery images can be uploaded, removed, reordered, assigned to colors, and reused in rich product content. Separate inline uploads remain a later phase.</Alert>
       <Box><Button component={Link} href={detailPath} variant="outlined">Back to product detail</Button></Box>
     </Stack>
   </>;

@@ -39,10 +39,13 @@ import {
   ADMIN_V2_MEDIA_MAX_MB,
   appendDraftProductImage,
   assignDraftProductColorImage,
+  assignDraftRichContentImage,
+  clearDraftProductCmsImageReferences,
   draftColorImageAssignments,
   draftMediaUpdateQuery,
   draftProductMediaUrls,
   draftProductMediaPath,
+  draftRichContentAssignments,
   hasValidAdminV2ImageSignature,
   mediaStepFailure,
   moveDraftProductImage,
@@ -554,7 +557,8 @@ test("draft product media view renders Phase 2 management controls and copy", ()
   assert.match(source, />Move down</);
   assert.match(source, />Remove</);
   assert.match(source, /label="Primary"/);
-  assert.match(source, /Draft media can be uploaded, removed, reordered, and assigned as the primary image/);
+  assert.match(source, /Rich product content/);
+  assert.match(source, /Gallery images can be uploaded, removed, reordered, assigned to colors, and reused in rich product content/);
   assert.doesNotMatch(source, /Delete, reorder, and set-primary controls are coming later/);
 });
 
@@ -600,6 +604,42 @@ test("draft color-image assignment writes only existing media metadata for allow
   const action = readFileSync(new URL("../app/admin-v2/products/[productId]/media/actions.ts", import.meta.url), "utf8");
   assert.match(action, /hasPermission\(session, "products\.media"\)/);
   assert.match(action, /row\.status !== "draft"/);
+});
+
+test("draft rich-content roles accept gallery images, clear safely, and preserve color metadata", () => {
+  const row = { images: ["one.webp", "two.webp"], colors: ["Black"], media: [{ kind: "product_cms", version: 1,
+    colorOptions: [{ id: "black", name: "Black", mediaUrl: "one.webp", visible: true }], faqItems: [{ question: "Q", answer: "A" }] }] };
+  const description = assignDraftRichContentImage(row, "description", "two.webp");
+  assert.ok(description && Object.keys(description).every((key) => key === "media"));
+  assert.equal(draftRichContentAssignments({ ...row, ...description }).description, "two.webp");
+  assert.deepEqual(draftColorImageAssignments({ ...row, ...description }), { "one.webp": "Black" });
+  const feature = assignDraftRichContentImage({ ...row, ...description }, "feature1", "one.webp");
+  assert.equal(draftRichContentAssignments({ ...row, ...feature }).feature1, "one.webp");
+  const cleared = assignDraftRichContentImage({ ...row, ...feature }, "feature1", "");
+  assert.equal(draftRichContentAssignments({ ...row, ...cleared }).feature1, "");
+  assert.equal(assignDraftRichContentImage(row, "unsupported", "one.webp"), null);
+  assert.equal(assignDraftRichContentImage(row, "description", "unknown.webp"), null);
+});
+
+test("gallery removal clears stale rich and color media references while preserving other CMS content", () => {
+  const row = { images: ["one.webp", "two.webp"], colors: ["Black"], media: [{ kind: "product_cms", version: 1,
+    colorOptions: [{ name: "Black", mediaUrl: "one.webp" }],
+    descriptionMedia: [{ id: "description-main", url: "one.webp" }, { id: "other", url: "two.webp" }],
+    sectionMedia: { fit: { url: "one.webp" }, care: { url: "two.webp" } },
+    contentBlocks: [{ id: "rich-feature-1", mediaUrl: "one.webp" }], faqItems: [{ question: "Q", answer: "A" }] }] };
+  const payload = clearDraftProductCmsImageReferences(row, "one.webp");
+  const next = { ...row, ...payload };
+  assert.deepEqual(draftColorImageAssignments(next), {});
+  assert.deepEqual(draftRichContentAssignments(next), { description: "two.webp", sizeChart: "", careGuide: "two.webp", feature1: "", feature2: "", feature3: "" });
+  const cms = (payload?.media as Record<string, unknown>[]).find((item) => item.kind === "product_cms");
+  assert.deepEqual(cms?.faqItems, [{ question: "Q", answer: "A" }]);
+});
+
+test("public rich product media is guarded by the storefront safety filter", () => {
+  const source = readFileSync(new URL("../app/product/[slug]/product-detail-client.tsx", import.meta.url), "utf8");
+  assert.match(source, /isPublicProductImageAllowed\(item\.url\)/);
+  assert.match(source, /isPublicProductImageAllowed\(entry\.media\.url\)/);
+  assert.match(source, /isPublicProductImageAllowed\(block\.mediaUrl\)/);
 });
 
 const publishReadyRow = {

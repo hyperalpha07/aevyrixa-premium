@@ -54,6 +54,28 @@ function text(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function record(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function productCmsMedia(row: Record<string, unknown>) {
+  const media = Array.isArray(row.media) ? row.media.filter((item) => Object.keys(record(item)).length) as Record<string, unknown>[] : [];
+  const cms = media.find((item) => item.kind === "product_cms") ?? {};
+  return { media, cms };
+}
+
+function withProductCms(row: Record<string, unknown>, cms: Record<string, unknown>) {
+  const { media } = productCmsMedia(row);
+  return { media: [...media.filter((item) => item.kind !== "product_cms"), { ...cms, kind: "product_cms", version: 1 }] };
+}
+
+export const ADMIN_V2_RICH_MEDIA_ROLES = ["description", "sizeChart", "careGuide", "feature1", "feature2", "feature3"] as const;
+export type AdminV2RichMediaRole = typeof ADMIN_V2_RICH_MEDIA_ROLES[number];
+
+export function isAdminV2RichMediaRole(value: unknown): value is AdminV2RichMediaRole {
+  return typeof value === "string" && (ADMIN_V2_RICH_MEDIA_ROLES as readonly string[]).includes(value);
+}
+
 export function draftProductMediaUrls(row: Record<string, unknown>) {
   return [...new Set([...stringList(row.images), text(row.primary_image_url), text(row.image_url)].filter((value): value is string => Boolean(value)))];
 }
@@ -89,8 +111,8 @@ export function removeDraftProductImage(row: Record<string, unknown>, productId:
   const images = current.filter((url) => url !== target);
   const primary = text(row.primary_image_url) ?? text(row.image_url);
   const nextPrimary = primary === target || !primary || !images.includes(primary) ? images[0] ?? null : primary;
-  const colorPayload = Object.hasOwn(row, "media") ? assignDraftProductColorImage(row, target, "") : null;
-  return { images, ...primaryFields(row, nextPrimary, productId), ...(colorPayload ?? {}) };
+  const cmsPayload = Object.hasOwn(row, "media") ? clearDraftProductCmsImageReferences(row, target) : null;
+  return { images, ...primaryFields(row, nextPrimary, productId), ...(cmsPayload ?? {}) };
 }
 
 export function setDraftProductPrimaryImage(row: Record<string, unknown>, productId: string, target: string) {
@@ -110,9 +132,7 @@ export function moveDraftProductImage(row: Record<string, unknown>, productId: s
 }
 
 export function draftColorImageAssignments(row: Record<string, unknown>) {
-  const media = Array.isArray(row.media) ? row.media : [];
-  const cms = media.find((item) => typeof item === "object" && item !== null && !Array.isArray(item)
-    && (item as Record<string, unknown>).kind === "product_cms") as Record<string, unknown> | undefined;
+  const { cms } = productCmsMedia(row);
   const options = Array.isArray(cms?.colorOptions) ? cms.colorOptions : [];
   return Object.fromEntries(options.flatMap((item) => {
     if (typeof item !== "object" || item === null || Array.isArray(item)) return [];
@@ -127,10 +147,7 @@ export function assignDraftProductColorImage(row: Record<string, unknown>, targe
   const colors = stringList(row.colors);
   const selectedColor = colors.find((option) => option.toLocaleLowerCase() === color.trim().toLocaleLowerCase());
   if (color && !selectedColor) return null;
-  const media = Array.isArray(row.media)
-    ? row.media.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)) as Record<string, unknown>[]
-    : [];
-  const currentCms = media.find((item) => item.kind === "product_cms") ?? {};
+  const { cms: currentCms } = productCmsMedia(row);
   const currentOptions = Array.isArray(currentCms.colorOptions) ? currentCms.colorOptions : [];
   const optionsByName = new Map(currentOptions.flatMap((item) => {
     if (typeof item !== "object" || item === null || Array.isArray(item)) return [];
@@ -143,8 +160,57 @@ export function assignDraftProductColorImage(row: Record<string, unknown>, targe
     const assignHere = selectedColor?.toLocaleLowerCase() === name.toLocaleLowerCase();
     return { ...existing, name, mediaUrl: assignHere ? target : existingUrl === target ? "" : existingUrl };
   });
-  const nextCms = { ...currentCms, kind: "product_cms", version: 1, colorOptions };
-  return { media: [...media.filter((item) => item.kind !== "product_cms"), nextCms] };
+  return withProductCms(row, { ...currentCms, colorOptions });
+}
+
+export function draftRichContentAssignments(row: Record<string, unknown>) {
+  const { cms } = productCmsMedia(row);
+  const descriptions = Array.isArray(cms.descriptionMedia) ? cms.descriptionMedia.map(record) : [];
+  const sections = record(cms.sectionMedia);
+  const blocks = Array.isArray(cms.contentBlocks) ? cms.contentBlocks.map(record) : [];
+  const assignment = (value: unknown, key: "url" | "mediaUrl") => text(record(value)[key]) ?? "";
+  return {
+    description: assignment(descriptions.find((item) => item.id === "description-main") ?? descriptions[0], "url"),
+    sizeChart: assignment(sections.fit, "url"),
+    careGuide: assignment(sections.care, "url"),
+    feature1: assignment(blocks.find((item) => item.id === "rich-feature-1"), "mediaUrl"),
+    feature2: assignment(blocks.find((item) => item.id === "rich-feature-2"), "mediaUrl"),
+    feature3: assignment(blocks.find((item) => item.id === "rich-feature-3"), "mediaUrl"),
+  } satisfies Record<AdminV2RichMediaRole, string>;
+}
+
+export function assignDraftRichContentImage(row: Record<string, unknown>, role: unknown, target: string) {
+  if (!Object.hasOwn(row, "media") || !isAdminV2RichMediaRole(role)) return null;
+  if (target && !draftProductMediaUrls(row).includes(target)) return null;
+  const { cms } = productCmsMedia(row);
+  const descriptionMedia = Array.isArray(cms.descriptionMedia) ? cms.descriptionMedia.map(record) : [];
+  const sectionMedia = { ...record(cms.sectionMedia) };
+  const contentBlocks = Array.isArray(cms.contentBlocks) ? cms.contentBlocks.map(record) : [];
+  if (role === "description") {
+    const remaining = descriptionMedia.filter((item) => item.id !== "description-main");
+    cms.descriptionMedia = target ? [{ id: "description-main", url: target, type: "image", alt: "", caption: "", fit: "contain", position: "center", visible: true, sortOrder: 1 }, ...remaining] : remaining;
+  } else if (role === "sizeChart" || role === "careGuide") {
+    const key = role === "sizeChart" ? "fit" : "care";
+    if (target) sectionMedia[key] = { ...record(sectionMedia[key]), url: target, type: "image", alt: "", fit: "contain", position: "center" };
+    else delete sectionMedia[key];
+    cms.sectionMedia = sectionMedia;
+  } else {
+    const position = Number(role.slice(-1));
+    const id = `rich-feature-${position}`;
+    const remaining = contentBlocks.filter((item) => item.id !== id);
+    cms.contentBlocks = target ? [...remaining, { id, type: "image", title: "", subtitle: "", text: "", longText: "", mediaUrl: target, mediaType: "image", mediaAlt: "", mediaFit: "contain", mediaPosition: "full", mediaObjectPosition: "center", layout: "full-width", visible: true, sortOrder: 900 + position, ctaLabel: "", ctaLink: "" }] : remaining;
+  }
+  return withProductCms(row, cms);
+}
+
+export function clearDraftProductCmsImageReferences(row: Record<string, unknown>, target: string) {
+  if (!Object.hasOwn(row, "media")) return null;
+  const { cms } = productCmsMedia(row);
+  cms.colorOptions = (Array.isArray(cms.colorOptions) ? cms.colorOptions.map(record) : []).map((item) => ({ ...item, mediaUrl: item.mediaUrl === target ? "" : item.mediaUrl }));
+  cms.descriptionMedia = (Array.isArray(cms.descriptionMedia) ? cms.descriptionMedia.map(record) : []).filter((item) => item.url !== target);
+  cms.sectionMedia = Object.fromEntries(Object.entries(record(cms.sectionMedia)).filter(([, item]) => record(item).url !== target));
+  cms.contentBlocks = (Array.isArray(cms.contentBlocks) ? cms.contentBlocks.map(record) : []).map((item) => item.mediaUrl === target ? { ...item, mediaUrl: "" } : item);
+  return withProductCms(row, cms);
 }
 
 export function appendDraftProductImage(row: Record<string, unknown>, url: string, path: string) {

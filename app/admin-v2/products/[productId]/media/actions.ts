@@ -7,7 +7,7 @@ import { getAdminSession } from "@/app/lib/admin-auth";
 import { hasPermission } from "@/app/lib/admin-permissions";
 import { readDraftEditProduct } from "@/lib/admin-v2/product-edit";
 import { draftProductRequest } from "@/lib/admin-v2/product-edit-store";
-import { appendDraftProductImage, assignDraftProductColorImage, draftMediaUpdateQuery, draftProductMediaPath,
+import { appendDraftProductImage, assignDraftProductColorImage, assignDraftRichContentImage, draftMediaUpdateQuery, draftProductMediaPath,
   hasValidAdminV2ImageSignature, mediaStepFailure, moveDraftProductImage, removeDraftProductImage,
   safeDraftMediaStoragePath, setDraftProductPrimaryImage, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
 import { publicProductMediaUrl, removeNewProductMediaObject, uploadProductMediaObject } from "@/lib/admin-v2/product-media-store";
@@ -78,21 +78,23 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
   redirect(`${detailPath}/media?uploaded=1`);
 }
 
-type MediaOperation = "remove" | "primary" | "up" | "down" | "color";
+type MediaOperation = "remove" | "primary" | "up" | "down" | "color" | "rich";
 
 export async function manageAdminV2DraftImage(productId: string, _state: AdminV2MediaActionState, formData: FormData): Promise<AdminV2MediaActionState> {
   const session = await getAdminSession();
   if (!hasPermission(session, "products.media")) return { errors: ["You do not have permission to manage product media."] };
   const entries = [...formData.entries()].filter(([key]) => !key.startsWith("$ACTION_"));
-  if (entries.some(([key, value]) => !["operation", "imageUrl", "color"].includes(key) || typeof value !== "string")) {
+  if (entries.some(([key, value]) => !["operation", "imageUrl", "color", "role"].includes(key) || typeof value !== "string")) {
     return { errors: ["Unsupported media fields were submitted."] };
   }
   const operation = formData.get("operation");
   const imageUrl = formData.get("imageUrl");
   const color = formData.get("color");
-  const expectedFields = operation === "color" ? 3 : 2;
-  if (entries.length !== expectedFields || !(["remove", "primary", "up", "down", "color"] as unknown[]).includes(operation)
-    || typeof imageUrl !== "string" || !imageUrl || imageUrl.length > 3000 || (operation === "color" && typeof color !== "string")) {
+  const role = formData.get("role");
+  const expectedFields = operation === "color" || operation === "rich" ? 3 : 2;
+  if (entries.length !== expectedFields || !(["remove", "primary", "up", "down", "color", "rich"] as unknown[]).includes(operation)
+    || typeof imageUrl !== "string" || (operation !== "rich" && !imageUrl) || imageUrl.length > 3000
+    || (operation === "color" && typeof color !== "string") || (operation === "rich" && typeof role !== "string")) {
     return { errors: ["Choose a valid gallery action and image."] };
   }
 
@@ -109,11 +111,15 @@ export async function manageAdminV2DraftImage(productId: string, _state: AdminV2
       ? setDraftProductPrimaryImage(row, productId, imageUrl)
       : typedOperation === "color"
         ? assignDraftProductColorImage(row, imageUrl, color as string)
-        : moveDraftProductImage(row, productId, imageUrl, typedOperation);
+        : typedOperation === "rich"
+          ? assignDraftRichContentImage(row, role, imageUrl)
+          : moveDraftProductImage(row, productId, imageUrl, typedOperation);
   if (!payload) return { errors: [typedOperation === "up" || typedOperation === "down"
     ? "That image cannot be moved in this direction."
     : typedOperation === "color"
       ? "Choose a current product color and gallery image."
+      : typedOperation === "rich"
+        ? "Choose a supported rich-content role and current gallery image."
       : "The selected image is no longer in this draft gallery."] };
 
   const response = await draftProductRequest(draftMediaUpdateQuery(productId, row.updated_at), {
