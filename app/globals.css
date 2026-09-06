@@ -1966,6 +1966,17 @@ button {
     white-space: normal;
   }
 
+  .aev-product-gallery-support {
+    gap: 0.4rem;
+    margin-top: 0.625rem;
+  }
+
+  .aev-product-gallery-support .aev-product-support-card {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.6875rem;
+    line-height: 1.45;
+  }
+
   .aev-bloom-media-frame .aev-bloom-product-media {
     padding: 0.9rem;
   }
