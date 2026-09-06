@@ -50,6 +50,64 @@ function stringList(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
 }
 
+function text(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+export function draftProductMediaUrls(row: Record<string, unknown>) {
+  return [...new Set([...stringList(row.images), text(row.primary_image_url), text(row.image_url)].filter((value): value is string => Boolean(value)))];
+}
+
+export function safeDraftMediaStoragePath(value: string, productId: string) {
+  const prefix = `products/${productId.toLowerCase()}/images/`;
+  let candidate = value;
+  try {
+    if (/^https?:\/\//i.test(value)) {
+      const pathname = decodeURIComponent(new URL(value).pathname);
+      const marker = "/storage/v1/object/public/product-media/";
+      if (!pathname.startsWith(marker)) return null;
+      candidate = pathname.slice(marker.length);
+    }
+  } catch { return null; }
+  candidate = candidate.replace(/^\/+/, "");
+  if (!candidate.toLowerCase().startsWith(prefix)) return null;
+  const filename = candidate.slice(prefix.length);
+  return /^[a-z0-9-]+\.(?:jpe?g|png|webp)$/i.test(filename) ? candidate : null;
+}
+
+function primaryFields(row: Record<string, unknown>, nextPrimary: string | null, productId: string) {
+  return {
+    ...(Object.hasOwn(row, "primary_image_url") ? { primary_image_url: nextPrimary } : {}),
+    ...(Object.hasOwn(row, "image_url") ? { image_url: nextPrimary } : {}),
+    ...(Object.hasOwn(row, "primary_image_path") ? { primary_image_path: nextPrimary ? safeDraftMediaStoragePath(nextPrimary, productId) : null } : {}),
+  };
+}
+
+export function removeDraftProductImage(row: Record<string, unknown>, productId: string, target: string) {
+  const current = draftProductMediaUrls(row);
+  if (!current.includes(target)) return null;
+  const images = current.filter((url) => url !== target);
+  const primary = text(row.primary_image_url) ?? text(row.image_url);
+  const nextPrimary = primary === target || !primary || !images.includes(primary) ? images[0] ?? null : primary;
+  return { images, ...primaryFields(row, nextPrimary, productId) };
+}
+
+export function setDraftProductPrimaryImage(row: Record<string, unknown>, productId: string, target: string) {
+  return draftProductMediaUrls(row).includes(target) ? primaryFields(row, target, productId) : null;
+}
+
+export const setDraftPrimaryImage = setDraftProductPrimaryImage;
+
+export function moveDraftProductImage(row: Record<string, unknown>, productId: string, target: string, direction: "up" | "down") {
+  const images = draftProductMediaUrls(row);
+  const index = images.indexOf(target);
+  const nextIndex = direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || nextIndex < 0 || nextIndex >= images.length) return null;
+  [images[index], images[nextIndex]] = [images[nextIndex], images[index]];
+  const primary = text(row.primary_image_url) ?? text(row.image_url);
+  return { images, ...(!primary ? primaryFields(row, images[0] ?? null, productId) : {}) };
+}
+
 export function appendDraftProductImage(row: Record<string, unknown>, url: string, path: string) {
   const images = stringList(row.images);
   const hasPrimary = [row.primary_image_url, row.image_url].some((value) => typeof value === "string" && Boolean(value.trim()));
