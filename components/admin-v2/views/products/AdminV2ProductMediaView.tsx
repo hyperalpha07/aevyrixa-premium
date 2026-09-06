@@ -52,10 +52,10 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, not
             <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.75 }}>
               {image.value !== primaryImageUrl ? <Box component="form" action={manageAction}><input type="hidden" name="operation" value="primary" /><input type="hidden" name="imageUrl" value={image.value} />
                 <Button type="submit" size="small" variant="outlined" disabled={managing}>Set primary</Button></Box> : null}
-              <Box component="form" action={manageAction}><input type="hidden" name="operation" value="up" /><input type="hidden" name="imageUrl" value={image.value} />
-                <Button type="submit" size="small" disabled={managing || index === 0} aria-label={`Move image ${index + 1} up`}>Move up</Button></Box>
-              <Box component="form" action={manageAction}><input type="hidden" name="operation" value="down" /><input type="hidden" name="imageUrl" value={image.value} />
-                <Button type="submit" size="small" disabled={managing || index === images.length - 1} aria-label={`Move image ${index + 1} down`}>Move down</Button></Box>
+              {index > 0 ? <Box component="form" action={manageAction}><input type="hidden" name="operation" value="up" /><input type="hidden" name="imageUrl" value={image.value} />
+                <Button type="submit" size="small" disabled={managing} aria-label={`Move image ${index + 1} up`}>Move up</Button></Box> : null}
+              {index < images.length - 1 ? <Box component="form" action={manageAction}><input type="hidden" name="operation" value="down" /><input type="hidden" name="imageUrl" value={image.value} />
+                <Button type="submit" size="small" disabled={managing} aria-label={`Move image ${index + 1} down`}>Move down</Button></Box> : null}
               <Box component="form" action={manageAction} onSubmit={(event) => { if (!window.confirm(`Remove image ${index + 1} from this draft gallery?`)) event.preventDefault(); }}>
                 <input type="hidden" name="operation" value="remove" /><input type="hidden" name="imageUrl" value={image.value} />
                 <Button type="submit" size="small" color="error" disabled={managing}>Remove</Button></Box>
@@ -84,7 +84,7 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, not
           <Button type="submit" variant="contained" loading={pending} disabled={pending || !hasValidSelection}>Upload image to draft</Button>
         </Stack></Box>
       </V2Card>
-      <Alert severity="info">Active product media remains read-only. Description images and rich product content are coming in a later phase.</Alert>
+      <Alert severity="info">Draft media can be uploaded, removed, reordered, and assigned as the primary image. Description images and rich content are coming in a later phase.</Alert>
       <Box><Button component={Link} href={detailPath} variant="outlined">Back to product detail</Button></Box>
     </Stack>
   </>;

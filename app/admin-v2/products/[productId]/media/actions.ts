@@ -9,7 +9,7 @@ import { readDraftEditProduct } from "@/lib/admin-v2/product-edit";
 import { draftProductRequest } from "@/lib/admin-v2/product-edit-store";
 import { appendDraftProductImage, draftMediaUpdateQuery, draftProductMediaPath,
   hasValidAdminV2ImageSignature, mediaStepFailure, moveDraftProductImage, removeDraftProductImage,
-  safeDraftMediaStoragePath, setDraftPrimaryImage, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
+  safeDraftMediaStoragePath, setDraftProductPrimaryImage, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
 import { publicProductMediaUrl, removeNewProductMediaObject, uploadProductMediaObject } from "@/lib/admin-v2/product-media-store";
 
 export type AdminV2MediaActionState = { errors: string[] };
@@ -103,7 +103,7 @@ export async function manageAdminV2DraftImage(productId: string, _state: AdminV2
   const payload = typedOperation === "remove"
     ? removeDraftProductImage(row, productId, imageUrl)
     : typedOperation === "primary"
-      ? setDraftPrimaryImage(row, productId, imageUrl)
+      ? setDraftProductPrimaryImage(row, productId, imageUrl)
       : moveDraftProductImage(row, productId, imageUrl, typedOperation);
   if (!payload) return { errors: [typedOperation === "up" || typedOperation === "down" ? "That image cannot be moved in this direction." : "The selected image is no longer in this draft gallery."] };
 

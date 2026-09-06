@@ -38,7 +38,7 @@ import {
   moveDraftProductImage,
   removeDraftProductImage,
   safeDraftMediaStoragePath,
-  setDraftPrimaryImage,
+  setDraftProductPrimaryImage,
   validateAdminV2MediaFile,
 } from "../lib/admin-v2/product-media.ts";
 import {
@@ -510,8 +510,8 @@ test("draft media removal preserves order and safely replaces or clears primary 
 
 test("draft media primary selection and movement accept current gallery images only", () => {
   const row = { images: ["one.jpg", "two.jpg", "three.jpg"], primary_image_url: "one.jpg", image_url: "one.jpg" };
-  assert.deepEqual(setDraftPrimaryImage(row, editId, "two.jpg"), { primary_image_url: "two.jpg", image_url: "two.jpg" });
-  assert.equal(setDraftPrimaryImage(row, editId, "unknown.jpg"), null);
+  assert.deepEqual(setDraftProductPrimaryImage(row, editId, "two.jpg"), { primary_image_url: "two.jpg", image_url: "two.jpg" });
+  assert.equal(setDraftProductPrimaryImage(row, editId, "unknown.jpg"), null);
   assert.deepEqual(moveDraftProductImage(row, editId, "two.jpg", "up")?.images, ["two.jpg", "one.jpg", "three.jpg"]);
   assert.deepEqual(moveDraftProductImage(row, editId, "two.jpg", "down")?.images, ["one.jpg", "three.jpg", "two.jpg"]);
   assert.equal(moveDraftProductImage(row, editId, "unknown.jpg", "up"), null);
@@ -535,6 +535,17 @@ test("new product explains media management begins after draft creation", () => 
   assert.match(source, /After draft creation/);
   assert.match(source, /upload, remove, reorder, and choose the primary product image/);
   assert.match(source, /Description images and rich product content will be added in a later phase/);
+});
+
+test("draft product media view renders Phase 2 management controls and copy", () => {
+  const source = readFileSync(new URL("../components/admin-v2/views/products/AdminV2ProductMediaView.tsx", import.meta.url), "utf8");
+  assert.match(source, />Set primary</);
+  assert.match(source, />Move up</);
+  assert.match(source, />Move down</);
+  assert.match(source, />Remove</);
+  assert.match(source, /label="Primary"/);
+  assert.match(source, /Draft media can be uploaded, removed, reordered, and assigned as the primary image/);
+  assert.doesNotMatch(source, /Delete, reorder, and set-primary controls are coming later/);
 });
 
 const publishReadyRow = {

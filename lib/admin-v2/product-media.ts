@@ -92,9 +92,11 @@ export function removeDraftProductImage(row: Record<string, unknown>, productId:
   return { images, ...primaryFields(row, nextPrimary, productId) };
 }
 
-export function setDraftPrimaryImage(row: Record<string, unknown>, productId: string, target: string) {
+export function setDraftProductPrimaryImage(row: Record<string, unknown>, productId: string, target: string) {
   return draftProductMediaUrls(row).includes(target) ? primaryFields(row, target, productId) : null;
 }
+
+export const setDraftPrimaryImage = setDraftProductPrimaryImage;
 
 export function moveDraftProductImage(row: Record<string, unknown>, productId: string, target: string, direction: "up" | "down") {
   const images = draftProductMediaUrls(row);
