@@ -19,7 +19,6 @@ import {
   Play,
   Plus,
   Repeat2,
-  Ruler,
   ShieldCheck,
   ShoppingCart,
   Star,
@@ -58,7 +57,6 @@ import {
   inferMediaType,
   productSectionLabels,
   safeColorHex,
-  type ProductBenefitItem,
   type ProductColorOption,
   type ProductContentBlock,
   type ProductDescriptionMediaItem,
@@ -102,23 +100,6 @@ const themeStyles: Record<
     border: "border-[#A855F7]/18 hover:border-[#A855F7]/40",
   },
 };
-
-const safeSupportFallbackFaqs = [
-  {
-    question: "How should I check the size?",
-    answer: "Check fit over clean underwear or clean fitted clothing only before direct wear.",
-  },
-  {
-    question: "What keeps an item eligible for support?",
-    answer:
-      "Items should remain unused, unwashed, and in original packaging with tags and hygiene liner or seal intact where applicable.",
-  },
-  {
-    question: "When should I contact support?",
-    answer:
-      "Contact support within the 3-Day Hygiene-Safe Support window for eligible order, size, wrong item, or damaged item concerns.",
-  },
-];
 
 const productTickerItems = [
   { label: "Discreet Packaging", icon: PackageCheck },
@@ -264,14 +245,6 @@ export default function ProductDetailClient({
     settings.privacyPackagingMessage || "Orders ship in discreet privacy packaging.";
   const supportText =
     settings.supportWindowMessage || "3-Day Hygiene-Safe Support on eligible concerns.";
-  const sizeFitItems = [
-    displayProduct.sizes.length > 0
-      ? `Available sizes: ${displayProduct.sizes.join(", ")}`
-      : "Size availability is shown before checkout.",
-    "If you are between sizes, choose the fit that feels more comfortable around the waist and leg opening.",
-    "Check fit over clean clothing before direct wear.",
-  ];
-
   const openLightbox = (items: PreviewMediaItem[], index: number) => {
     const validItems = items.filter((item) => item.url && !brokenMediaUrls.has(item.url));
     if (validItems.length === 0) return;
@@ -529,40 +502,7 @@ export default function ProductDetailClient({
     .filter((faq) => faq.visible)
     .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
     .map((faq) => ({ question: faq.question, answer: faq.answer }));
-  const displayFaqs =
-    cmsFaqs.length > 0 ? cmsFaqs : supportFaqs.length > 0 ? supportFaqs : safeSupportFallbackFaqs;
-  const promiseCards =
-    cms.benefitItems.filter((item) => item.visible).length > 0
-      ? cms.benefitItems
-          .filter((item) => item.visible)
-          .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
-          .slice(0, 4)
-          .map((item) => ({
-            title: item.title,
-            body: item.description,
-            badge: item.badge,
-            iconKey: item.iconKey,
-          }))
-      : benefits.slice(0, 4).map((benefit, index) => ({
-          title: ["Comfort", "Packaging", "Care", "Guidance"][index] || "Comfort point",
-          body: benefit,
-          badge: ["Daily routine", "Discreet", "Reusable", "Clear info"][index] || brandName,
-          iconKey: "sparkles",
-        }));
-  const carePanels = [
-    { icon: Ruler, title: "Fit", items: sizeFitItems.slice(0, 3), tone: "text-[#FF4DB8]" },
-    { icon: CheckCircle2, title: "Care", items: care.slice(0, 3), tone: "text-[#31E6D4]" },
-    {
-      icon: ShieldCheck,
-      title: "Support",
-      items: [
-        supportText,
-        "Keep hygiene seal and packaging intact until fit is confirmed.",
-        "Message us for size, care, or order help before checkout.",
-      ],
-      tone: "text-[#C084FC]",
-    },
-  ];
+  const displayFaqs = cmsFaqs.length > 0 ? cmsFaqs : supportFaqs;
   const productTicker = (
     <section className="aev-product-ticker aev-product-ticker-after-hero relative z-[2]" aria-label="Noromi Care service highlights">
       <div className="aev-product-ticker-track">
@@ -894,7 +834,8 @@ export default function ProductDetailClient({
               fit: "contain" as const,
               position: "center" as const,
               visible: true,
-            }))}
+            }))
+            .slice(1, 2)}
           sectionMediaEntries={sectionMediaEntries}
           contentBlocks={contentBlocks}
           benefits={benefits}
@@ -907,79 +848,30 @@ export default function ProductDetailClient({
         />
       )}
 
-      {promiseCards.length > 0 && (
-        <section className="relative z-[2] py-12 sm:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-            <SectionHeading
-              eyebrow="Promise"
-              title="Why customers choose it"
-              description=""
-            />
-            <div className="aev-trust-reasons mt-7 grid gap-3">
-              {promiseCards.map((card, index) => (
-                <article
-                  key={`${card.body}-${index}`}
-                  className="aev-trust-reason-row group relative grid gap-3 overflow-hidden rounded border border-white/[0.08] bg-white/[0.035] p-4 transition duration-300 hover:border-[#FF4DB8]/24 hover:bg-[#FF4DB8]/[0.045] sm:grid-cols-[3.25rem_1fr_1.45fr] sm:items-center sm:p-5"
-                  style={{ animationDelay: `${index * 90}ms` }}
-                >
-                  <div className="aev-trust-line-sweep" aria-hidden="true" />
-                  <div className="font-serif text-3xl italic leading-none text-[#FF4DB8]/35">
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
-                  <div className="sm:pr-8">
-                    <h3 className="font-serif text-lg text-white sm:text-xl">{card.title}</h3>
-                    <span className="mt-2 inline-flex rounded-sm border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FFB3D1]">
-                      {card.badge || brandName}
-                    </span>
-                  </div>
-                  <p className="text-sm leading-7 text-[#D8CBE8]/82">{card.body}</p>
-                </article>
-              ))}
+      {displayFaqs.length > 0 && (
+        <section className="relative z-[2] py-6 sm:py-8">
+          <div className="mx-auto max-w-[70rem] px-4 sm:px-7">
+            <div className="aev-rich-panel grid gap-4 p-5 lg:grid-cols-[15rem_1fr] lg:items-start lg:p-6">
+              <div>
+                <p className="aev-rich-label">{hms.faqPreviewEyebrow || "Quick Guidance"}</p>
+                <h2 className="mt-2 font-serif text-2xl text-white">{hms.faqPreviewHeading || "Helpful answers"}</h2>
+                <p className="mt-2 text-xs leading-5 text-[#9C91AA]">Fit, care, and support guidance in one place.</p>
+              </div>
+              <div className="overflow-hidden rounded-lg border border-white/[0.08]">
+            {displayFaqs.map((faq, index) => (
+              <details key={`${faq.question}-${index}`} className="group border-b border-white/[0.08] last:border-b-0">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-xs font-semibold text-white marker:hidden">
+                  <span>{faq.question}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-[#FF4DB8] transition group-open:rotate-180" />
+                </summary>
+                <p className="px-4 pb-3 text-xs leading-5 text-[#9C91AA]">{faq.answer}</p>
+              </details>
+            ))}
+              </div>
             </div>
           </div>
         </section>
       )}
-
-      <section className="relative z-[2] border-y border-white/[0.08] bg-[#0D0918] py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
-          <div className="grid gap-8 lg:grid-cols-[1fr_1.8fr] lg:items-end">
-            <SectionHeading
-              eyebrow={hms.faqPreviewEyebrow || "Guidance"}
-              title={hms.faqPreviewHeading || "Fit, Care & Support"}
-              description=""
-            />
-            <p className="max-w-3xl text-sm leading-7 text-[#9C91AA]">
-              Everything about fit, washing, and after-purchase support in one place. If still unsure, support is one message away.
-            </p>
-          </div>
-          <div className="mt-9 grid gap-0 sm:grid-cols-3">
-            {carePanels.map(({ icon: Icon, title, items, tone }) => (
-              <article key={title} className="aev-clean-hover-line border border-white/[0.06] bg-[#080611] p-6">
-                <Icon className={`h-6 w-6 ${tone}`} />
-                <h3 className="mt-4 font-serif text-lg text-white">{title}</h3>
-                <div className="mt-3 space-y-2">
-                  {items.map((item, index) => (
-                    <p key={`${title}-${index}`} className="text-xs leading-6 text-[#9C91AA]">
-                      {item}
-                    </p>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-          <div className="mt-6 overflow-hidden rounded border border-white/[0.08]">
-            {displayFaqs.map((faq, index) => (
-              <details key={`${faq.question}-${index}`} className="group border-b border-white/[0.08] last:border-b-0">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-white marker:hidden">
-                  <span>{faq.question}</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 text-[#FF4DB8] transition group-open:rotate-180" />
-                </summary>
-                <p className="px-5 pb-4 text-xs leading-6 text-[#9C91AA]">{faq.answer}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <ProductReviewsSection
         reviews={reviews}
@@ -1104,13 +996,12 @@ export default function ProductDetailClient({
       )}
 
       {displayRelated.length > 0 && (
-        <section className="aev-related-recommendations relative z-[2] mx-auto max-w-7xl px-3 pb-[calc(var(--aev-mobile-bottom-nav-height)+8rem+env(safe-area-inset-bottom,0px))] sm:px-7 sm:pb-16 lg:px-12">
-          <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-            <SectionHeading
-              eyebrow="More From Our Collection"
-              title="You May Also Like"
-              description=""
-            />
+        <section className="aev-related-recommendations relative z-[2] mx-auto max-w-[70rem] px-4 py-7 pb-[calc(var(--aev-mobile-bottom-nav-height)+7rem+env(safe-area-inset-bottom,0px))] sm:px-7 sm:pb-10">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="aev-rich-label">More From Our Collection</p>
+              <h2 className="mt-2 font-serif text-2xl text-white sm:text-3xl">You May Also Like</h2>
+            </div>
             <Link
               href="/product"
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
@@ -1295,7 +1186,7 @@ function ProductContentMediaSections({
   ];
 
   return (
-    <section className="aev-product-rich-shell relative z-[2] overflow-hidden border-y border-white/[0.07] py-10 sm:py-14 lg:py-16">
+    <section className="aev-product-rich-shell relative z-[2] overflow-hidden border-y border-white/[0.07] py-6 sm:py-8 lg:py-9">
       <div className="aev-rich-orb aev-rich-orb-left" aria-hidden="true" />
       <div className="aev-rich-orb aev-rich-orb-right" aria-hidden="true" />
       <span className="aev-rich-mood aev-rich-mood-left" aria-hidden="true">For a healthier, happier you</span>
@@ -1305,11 +1196,11 @@ function ProductContentMediaSections({
         Noromi
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
+      <div className="relative mx-auto max-w-[70rem] px-4 sm:px-7">
         <div className="aev-rich-panel overflow-hidden">
           <div className={`grid gap-0 ${description && featuredMedia ? "lg:grid-cols-[0.9fr_1.1fr]" : ""}`}>
             {description && (
-              <div className={`p-5 sm:p-7 lg:p-9 ${featuredMedia ? "border-b border-white/[0.07] lg:border-b-0 lg:border-r" : ""}`}>
+              <div className={`p-5 sm:p-6 ${featuredMedia ? "border-b border-white/[0.07] lg:border-b-0 lg:border-r" : ""}`}>
                 <SectionHeading eyebrow="Our Story" title="Product details" description="" />
                 <div className="mt-5 space-y-4 text-sm leading-7 text-[#D8CBE8]/82">
                   {description
@@ -1321,7 +1212,7 @@ function ProductContentMediaSections({
                     ))}
                 </div>
                 {storyBullets.length > 0 && (
-                  <ul className="mt-7 grid gap-2.5 sm:grid-cols-2" aria-label="Product benefits">
+                  <ul className="mt-5 grid gap-2 sm:grid-cols-2" aria-label="Product benefits">
                     {storyBullets.map((item) => (
                       <li key={item} className="flex items-start gap-2.5 text-xs leading-5 text-[#D8CBE8]">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#FF4DB8]" aria-hidden="true" />
@@ -1333,8 +1224,8 @@ function ProductContentMediaSections({
               </div>
             )}
             {featuredMedia && (
-              <div className="p-5 sm:p-7 lg:p-9">
-                <div className="mb-5 flex items-end justify-between gap-3">
+              <div className="p-5 sm:p-6">
+                <div className="mb-3 flex items-end justify-between gap-3">
                   <div>
                     <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-[#FF4DB8]">
                       Description Gallery
@@ -1377,12 +1268,12 @@ function ProductContentMediaSections({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
+        <div className="mt-3 grid items-stretch gap-3 md:grid-cols-2">
           <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${fitMedia && !failedRichMedia.has(fitMedia.url) ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
             {fitMedia && !failedRichMedia.has(fitMedia.url) && (
               <ProductInlineMedia media={fitMedia} fallbackAlt={`${productName} size guide`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(fitMedia.url))} />
             )}
-            <div className="flex flex-col justify-center p-5 sm:p-6">
+            <div className="flex flex-col justify-center p-4 sm:p-5">
               <p className="aev-rich-label">Size Guide</p>
               <h3 className="mt-2 font-serif text-2xl text-white">Find your perfect fit</h3>
               <p className="mt-3 text-sm leading-6 text-[#D8CBE8]/78">Choose the right size for a secure, comfortable fit that moves with you.</p>
@@ -1394,7 +1285,7 @@ function ProductContentMediaSections({
             {careMedia && !failedRichMedia.has(careMedia.url) && (
               <ProductInlineMedia media={careMedia} fallbackAlt={`${productName} care guide`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(careMedia.url))} />
             )}
-            <div className="flex flex-col justify-center p-5 sm:p-6">
+            <div className="flex flex-col justify-center p-4 sm:p-5">
               <p className="aev-rich-label">Care Guide</p>
               <h3 className="mt-2 font-serif text-2xl text-white">Care made simple</h3>
               <p className="mt-3 text-sm leading-6 text-[#D8CBE8]/78">Easy to wash, quick to dry, and made to last. Follow the care guide to keep your Noromi Care product fresh and effective.</p>
@@ -1407,10 +1298,10 @@ function ProductContentMediaSections({
           </article>
         </div>
 
-        <div className="aev-rich-panel mt-5 p-5 sm:p-7">
+        <div className="aev-rich-panel mt-3 p-4 sm:p-5">
           <p className="aev-rich-label">Feature Highlights</p>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {(contentBlocks.length > 0 ? contentBlocks : defaultFeatures).map((item, index) => {
+            {(contentBlocks.length > 0 ? contentBlocks.slice(0, 3) : defaultFeatures).map((item) => {
               if ("id" in item) {
                 return <ContentBlockCard key={item.id} block={item} productName={productName} onMediaError={(url) => setFailedRichMedia((items) => new Set(items).add(url))} mediaFailed={failedRichMedia.has(item.mediaUrl)} />;
               }
@@ -1426,7 +1317,7 @@ function ProductContentMediaSections({
           </div>
         </div>
 
-        <div className="aev-rich-panel mt-5 px-5 py-4 sm:px-7">
+        <div className="aev-rich-panel mt-3 px-4 py-3.5 sm:px-5">
           <p className="aev-rich-label">Why customers trust Noromi Care</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {trustItems.map(({ title, text, icon: Icon }) => (
@@ -1736,8 +1627,31 @@ function ProductReviewsSection({
     return { rating, count, percent };
   });
 
+  if (reviewCount === 0) {
+    return (
+      <section id="reviews" className="relative z-[2] py-6 sm:py-8">
+        <div className="mx-auto max-w-[70rem] px-4 sm:px-7">
+          <div className="aev-rich-panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <p className="aev-rich-label">Customer Feedback</p>
+              <h2 className="mt-2 font-serif text-2xl text-white">Share your experience</h2>
+              <p className="mt-2 text-xs leading-5 text-[#9C91AA]">No approved feedback yet. Reviews appear after approval.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onWriteReview}
+              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white"
+            >
+              Write a Review
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="reviews" className="relative z-[2] py-16 sm:py-20">
+    <section id="reviews" className="relative z-[2] py-10 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-7 lg:px-12">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
