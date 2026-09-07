@@ -1873,7 +1873,7 @@ button {
 
 .aev-rich-mood {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   display: none;
   max-width: 7.5rem;
   color: rgba(255, 179, 209, 0.38);
@@ -1882,6 +1882,11 @@ button {
   font-style: italic;
   line-height: 1.25;
   letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.aev-product-rich-shell > .aev-product-desktop-canvas {
+  z-index: 1;
 }
 
 .aev-rich-mood-left {

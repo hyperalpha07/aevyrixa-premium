@@ -855,6 +855,7 @@ export default function ProductDetailClient({
           deliveryText={deliveryText}
           supportText={supportText}
           productName={displayProduct.name}
+          sizes={displayProduct.sizes}
           onPreviewMedia={openLightbox}
         />
       )}
@@ -1155,6 +1156,7 @@ function ProductContentMediaSections({
   deliveryText,
   supportText,
   productName,
+  sizes,
   onPreviewMedia,
 }: {
   description: string;
@@ -1168,20 +1170,27 @@ function ProductContentMediaSections({
   deliveryText: string;
   supportText: string;
   productName: string;
+  sizes: string[];
   onPreviewMedia: (items: PreviewMediaItem[], index: number) => void;
 }) {
-  const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [failedRichMedia, setFailedRichMedia] = useState<Set<string>>(() => new Set());
   const gallerySource = descriptionMedia.length > 0 ? descriptionMedia : fallbackMedia;
-  const galleryMedia = gallerySource.filter((item) => !failedRichMedia.has(item.url));
-  const galleryIndex = Math.min(selectedGalleryIndex, Math.max(0, galleryMedia.length - 1));
-  const featuredMedia = galleryMedia[galleryIndex];
+  const galleryMedia = gallerySource.filter(
+    (item) => isPublicProductImageAllowed(item.url) && !failedRichMedia.has(item.url)
+  );
+  const visibleGalleryMedia = galleryMedia.slice(0, 2);
+  const featuredMedia = visibleGalleryMedia[0];
   const galleryPreviewMedia: PreviewMediaItem[] = galleryMedia.map((item, index) => ({
     type: inferMediaType(item.url, item.type),
     url: item.url,
     alt: item.alt || item.caption || `${productName} closer look ${index + 1}`,
   }));
   const fitMedia = sectionMediaEntries.find(({ key }) => key === "fit")?.media;
+  const safeFitMedia =
+    fitMedia && isPublicProductImageAllowed(fitMedia.url) && !failedRichMedia.has(fitMedia.url)
+      ? fitMedia
+      : undefined;
   const careMedia = sectionMediaEntries.find(({ key }) => key === "care")?.media;
   const storyBullets = Array.from(new Set([...benefits, ...care, privacyText])).filter(Boolean).slice(0, 4);
   const defaultFeatures = [
@@ -1196,7 +1205,32 @@ function ProductContentMediaSections({
     { title: "Real Support", text: supportText, icon: MessageCircle },
   ];
 
+  useEffect(() => {
+    if (!sizeGuideOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSizeGuideOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [sizeGuideOpen]);
+
+  const openSizeGuide = () => {
+    if (safeFitMedia) {
+      onPreviewMedia(
+        [{
+          type: inferMediaType(safeFitMedia.url, safeFitMedia.type),
+          url: safeFitMedia.url,
+          alt: safeFitMedia.alt || `${productName} size guide`,
+        }],
+        0
+      );
+      return;
+    }
+    setSizeGuideOpen(true);
+  };
+
   return (
+    <>
     <section className="aev-product-rich-shell relative z-[2] overflow-hidden border-y border-white/[0.07] py-6 sm:py-8 lg:py-9">
       <div className="aev-rich-orb aev-rich-orb-left" aria-hidden="true" />
       <div className="aev-rich-orb aev-rich-orb-right" aria-hidden="true" />
@@ -1245,34 +1279,35 @@ function ProductContentMediaSections({
                   </div>
                   {galleryMedia.length > 1 && (
                     <span className="rounded border border-white/[0.08] bg-white/[0.035] px-2.5 py-1 text-[10px] text-[#9C91AA]">
-                      {galleryIndex + 1} / {galleryMedia.length}
+                      {galleryMedia.length} views
                     </span>
                   )}
                 </div>
-                <div className="aev-rich-featured-media">
-                  <ProductInlineMedia
-                    media={featuredMedia}
-                    fallbackAlt={`${productName} closer look`}
-                    onPreview={() => onPreviewMedia(galleryPreviewMedia, galleryIndex)}
-                    onError={() => setFailedRichMedia((items) => new Set(items).add(featuredMedia.url))}
-                  />
-                </div>
-                {(featuredMedia.caption || featuredMedia.alt) && (
-                  <p className="mt-3 text-xs leading-5 text-[#9C91AA]">{featuredMedia.caption || featuredMedia.alt}</p>
-                )}
-                {galleryMedia.length > 1 && (
-                  <div className="mt-4 flex flex-wrap gap-2" aria-label="Description gallery navigation">
-                    {galleryMedia.map((item, index) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedGalleryIndex(index)}
-                        className={`h-2.5 rounded-full transition ${index === galleryIndex ? "w-8 bg-[#FF4DB8]" : "w-2.5 bg-white/20 hover:bg-[#31E6D4]/70"}`}
-                        aria-label={`Show description image ${index + 1}`}
-                        aria-pressed={index === galleryIndex}
+                <div className={`aev-rich-gallery-grid grid gap-3 ${visibleGalleryMedia.length > 1 ? "md:grid-cols-2" : ""}`}>
+                  {visibleGalleryMedia.map((item, index) => (
+                    <div className="aev-rich-featured-media min-w-0" key={item.id}>
+                      <ProductInlineMedia
+                        media={item}
+                        fallbackAlt={`${productName} closer look ${index + 1}`}
+                        onPreview={() => onPreviewMedia(galleryPreviewMedia, index)}
+                        onError={() => setFailedRichMedia((items) => new Set(items).add(item.url))}
                       />
-                    ))}
-                  </div>
+                      {(item.caption || item.alt) && (
+                        <p className="mt-2 text-xs leading-5 text-[#9C91AA]">{item.caption || item.alt}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {galleryMedia.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => onPreviewMedia(galleryPreviewMedia, 0)}
+                    className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[#FF4DB8]/24 bg-[#FF4DB8]/[0.08] px-4 text-xs font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8]"
+                    aria-label={`View all ${galleryMedia.length} closer look images`}
+                  >
+                    View all {galleryMedia.length}
+                    <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
                 )}
               </div>
             )}
@@ -1280,15 +1315,22 @@ function ProductContentMediaSections({
         </div>
 
         <div className="mt-3 grid items-stretch gap-3 md:grid-cols-2">
-          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${fitMedia && !failedRichMedia.has(fitMedia.url) ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
-            {fitMedia && !failedRichMedia.has(fitMedia.url) && (
-              <ProductInlineMedia media={fitMedia} fallbackAlt={`${productName} size guide`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(fitMedia.url))} />
+          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${safeFitMedia ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
+            {safeFitMedia && (
+              <ProductInlineMedia media={safeFitMedia} fallbackAlt={`${productName} size guide`} compact onPreview={openSizeGuide} onError={() => setFailedRichMedia((items) => new Set(items).add(safeFitMedia.url))} />
             )}
             <div className="flex flex-col justify-center p-4 sm:p-5">
               <p className="aev-rich-label">Size Guide</p>
               <h3 className="mt-2 font-serif text-2xl text-white">Find your perfect fit</h3>
               <p className="mt-3 text-sm leading-6 text-[#D8CBE8]/78">Choose the right size for a secure, comfortable fit that moves with you.</p>
-              <span className="mt-4 inline-flex w-fit rounded-full border border-[#FF4DB8]/25 bg-[#FF4DB8]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#FFB3D1]">View Size Guide</span>
+              <button
+                type="button"
+                onClick={openSizeGuide}
+                className="mt-4 inline-flex min-h-10 w-fit items-center justify-center rounded-full border border-[#FF4DB8]/25 bg-[#FF4DB8]/[0.08] px-3 py-1.5 text-xs font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/45 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8]"
+                aria-label={safeFitMedia ? "Open product size guide image" : "Open product size guidance"}
+              >
+                View Size Guide
+              </button>
             </div>
           </article>
 
@@ -1344,6 +1386,45 @@ function ProductContentMediaSections({
         </div>
       </div>
     </section>
+    {sizeGuideOpen && (
+      <div
+        className="fixed inset-0 z-[90] flex items-end justify-center bg-black/72 px-4 py-5 backdrop-blur-sm sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-size-guide-title"
+        onClick={() => setSizeGuideOpen(false)}
+      >
+        <div
+          className="w-full max-w-md rounded-xl border border-[#FF4DB8]/24 bg-[#0D0918] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="aev-rich-label">Size Guidance</p>
+              <h2 id="product-size-guide-title" className="mt-2 font-serif text-2xl text-white">Find your comfortable fit</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSizeGuideOpen(false)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-[#D8CBE8] transition hover:border-[#FF4DB8]/35 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF4DB8]"
+              aria-label="Close size guidance"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+          <p className="mt-4 text-sm leading-6 text-[#D8CBE8]">Choose the right size for a secure, comfortable fit.</p>
+          <div className="mt-4 flex flex-wrap gap-2" aria-label="Available product sizes">
+            {sizes.map((size) => (
+              <span key={size} className="rounded border border-[#31E6D4]/20 bg-[#31E6D4]/[0.06] px-3 py-1.5 text-xs font-semibold text-[#8BF5EA]">{size}</span>
+            ))}
+          </div>
+          <p className="mt-4 rounded-lg border border-white/[0.08] bg-white/[0.035] p-3 text-xs leading-5 text-[#9C91AA]">
+            Check size over clean underwear or clothing only before direct wear.
+          </p>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
