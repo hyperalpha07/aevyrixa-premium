@@ -1192,6 +1192,22 @@ function ProductContentMediaSections({
       ? fitMedia
       : undefined;
   const careMedia = sectionMediaEntries.find(({ key }) => key === "care")?.media;
+  const safeCareMedia =
+    careMedia && isPublicProductImageAllowed(careMedia.url) && !failedRichMedia.has(careMedia.url)
+      ? careMedia
+      : undefined;
+  const safeProductMedia = Array.from(
+    new Map(
+      [...descriptionMedia, ...fallbackMedia]
+        .filter((item) => isPublicProductImageAllowed(item.url) && !failedRichMedia.has(item.url))
+        .map((item) => [item.url, item])
+    ).values()
+  );
+  const fitDisplayMedia = safeFitMedia ?? safeProductMedia[0];
+  const careDisplayMedia =
+    safeCareMedia ??
+    safeProductMedia.find((item) => item.url !== fitDisplayMedia?.url) ??
+    safeProductMedia[0];
   const storyBullets = Array.from(new Set([...benefits, ...care, privacyText])).filter(Boolean).slice(0, 4);
   const defaultFeatures = [
     { title: "Advanced Leak Protection", text: "Multi-layer support helps you stay dry and confident.", icon: Droplets, iconClass: "aev-rich-icon-cyan" },
@@ -1242,7 +1258,8 @@ function ProductContentMediaSections({
       </div>
 
       <div className="aev-product-desktop-canvas relative mx-auto max-w-[78rem] px-4 sm:px-7">
-        <div className="aev-rich-panel overflow-hidden">
+        <div className="aev-rich-composition">
+        <div className="aev-rich-panel aev-rich-composition-row overflow-hidden">
           <div className={`grid gap-0 ${description && featuredMedia ? "lg:grid-cols-[0.9fr_1.1fr]" : ""}`}>
             {description && (
               <div className={`p-5 sm:p-6 ${featuredMedia ? "border-b border-white/[0.07] lg:border-b-0 lg:border-r" : ""}`}>
@@ -1320,10 +1337,10 @@ function ProductContentMediaSections({
           </div>
         </div>
 
-        <div className="mt-3 grid items-stretch gap-3 md:grid-cols-2">
-          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${safeFitMedia ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
-            {safeFitMedia && (
-              <ProductInlineMedia media={safeFitMedia} fallbackAlt={`${productName} size guide`} compact onPreview={openSizeGuide} onError={() => setFailedRichMedia((items) => new Set(items).add(safeFitMedia.url))} />
+        <div className="aev-rich-composition-row aev-rich-composition-pair mt-3 grid items-stretch gap-3 md:grid-cols-2">
+          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${fitDisplayMedia ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
+            {fitDisplayMedia && (
+              <ProductInlineMedia media={fitDisplayMedia} fallbackAlt={`${productName} fit preview`} compact onPreview={safeFitMedia ? openSizeGuide : undefined} onError={() => setFailedRichMedia((items) => new Set(items).add(fitDisplayMedia.url))} />
             )}
             <div className="flex flex-col justify-center p-4 sm:p-5">
               <p className="aev-rich-label">Size Guide</p>
@@ -1340,9 +1357,9 @@ function ProductContentMediaSections({
             </div>
           </article>
 
-          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${careMedia && !failedRichMedia.has(careMedia.url) ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
-            {careMedia && !failedRichMedia.has(careMedia.url) && (
-              <ProductInlineMedia media={careMedia} fallbackAlt={`${productName} care guide`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(careMedia.url))} />
+          <article className={`aev-rich-panel aev-rich-guide-card grid overflow-hidden ${careDisplayMedia ? "sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" : ""}`}>
+            {careDisplayMedia && (
+              <ProductInlineMedia media={careDisplayMedia} fallbackAlt={`${productName} care preview`} compact onError={() => setFailedRichMedia((items) => new Set(items).add(careDisplayMedia.url))} />
             )}
             <div className="flex flex-col justify-center p-4 sm:p-5">
               <p className="aev-rich-label">Care Guide</p>
@@ -1357,7 +1374,7 @@ function ProductContentMediaSections({
           </article>
         </div>
 
-        <div className="aev-rich-panel mt-3 p-4 sm:p-5">
+        <div className="aev-rich-panel aev-rich-composition-row mt-3 p-4 sm:p-5">
           <p className="aev-rich-label">Feature Highlights</p>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {(contentBlocks.length > 0 ? contentBlocks.slice(0, 3) : defaultFeatures).map((item) => {
@@ -1376,7 +1393,7 @@ function ProductContentMediaSections({
           </div>
         </div>
 
-        <div className="aev-rich-panel mt-3 px-4 py-3.5 sm:px-5">
+        <div className="aev-rich-panel aev-rich-composition-row mt-3 px-4 py-3.5 sm:px-5">
           <p className="aev-rich-label">Why customers trust Noromi Care</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {trustItems.map(({ title, text, icon: Icon }) => (
@@ -1389,6 +1406,7 @@ function ProductContentMediaSections({
               </div>
             ))}
           </div>
+        </div>
         </div>
       </div>
     </section>
