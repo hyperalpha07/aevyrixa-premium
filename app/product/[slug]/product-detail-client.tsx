@@ -10,6 +10,8 @@ import {
   ChevronDown,
   ChevronRight,
   CreditCard,
+  Droplets,
+  Feather,
   HeartHandshake,
   Info,
   LockKeyhole,
@@ -1183,9 +1185,9 @@ function ProductContentMediaSections({
   const careMedia = sectionMediaEntries.find(({ key }) => key === "care")?.media;
   const storyBullets = Array.from(new Set([...benefits, ...care, privacyText])).filter(Boolean).slice(0, 4);
   const defaultFeatures = [
-    { title: "Advanced Leak Protection", text: "Multi-layer support helps you stay dry and confident.", icon: ShieldCheck },
-    { title: "Soft & Skin-Friendly", text: "Gentle, breathable comfort for everyday wear.", icon: HeartHandshake },
-    { title: "Reusable & Eco-Friendly", text: "A reusable choice designed for repeat care.", icon: Repeat2 },
+    { title: "Advanced Leak Protection", text: "Multi-layer support helps you stay dry and confident.", icon: Droplets, iconClass: "aev-rich-icon-cyan" },
+    { title: "Soft & Skin-Friendly", text: "Gentle, breathable comfort for everyday wear.", icon: Feather, iconClass: "aev-rich-icon-rose" },
+    { title: "Reusable & Eco-Friendly", text: "A reusable choice designed for repeat care.", icon: Repeat2, iconClass: "aev-rich-icon-violet" },
   ];
   const trustItems = [
     { title: "Premium Quality", text: "Thoughtfully designed for comfort.", icon: HeartHandshake },
@@ -1317,7 +1319,7 @@ function ProductContentMediaSections({
               const Icon = item.icon;
               return (
                 <article key={item.title} className="aev-rich-feature-card">
-                  <span className="aev-rich-icon"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <span className={`aev-rich-icon ${item.iconClass}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
                   <h3 className="mt-4 font-serif text-xl text-white">{item.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#9C91AA]">{item.text}</p>
                 </article>
