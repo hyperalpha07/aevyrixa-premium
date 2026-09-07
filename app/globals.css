@@ -2073,6 +2073,14 @@ button {
 }
 
 @media (min-width: 1024px) {
+  .aev-rich-gallery-grid-single {
+    justify-items: center;
+  }
+
+  .aev-rich-gallery-grid-single > .aev-rich-featured-media {
+    width: min(100%, 21rem);
+  }
+
   .aev-product-page-shell .aev-bloom-hero {
     width: min(74rem, calc(100% - 5rem));
     grid-template-columns: minmax(0, 32rem) minmax(0, 35rem);

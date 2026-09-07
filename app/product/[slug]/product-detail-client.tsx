@@ -1283,7 +1283,13 @@ function ProductContentMediaSections({
                     </span>
                   )}
                 </div>
-                <div className={`aev-rich-gallery-grid grid gap-3 ${visibleGalleryMedia.length > 1 ? "md:grid-cols-2" : ""}`}>
+                <div
+                  className={`aev-rich-gallery-grid grid gap-3 ${
+                    visibleGalleryMedia.length > 1
+                      ? "md:grid-cols-2"
+                      : "aev-rich-gallery-grid-single"
+                  }`}
+                >
                   {visibleGalleryMedia.map((item, index) => (
                     <div className="aev-rich-featured-media min-w-0" key={item.id}>
                       <ProductInlineMedia
