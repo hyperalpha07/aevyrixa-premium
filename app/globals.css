@@ -2019,6 +2019,12 @@ button {
   box-shadow: 0 0 24px rgba(168, 85, 247, 0.11);
 }
 
+.aev-rich-feature-card > .aev-rich-icon {
+  position: static;
+  margin: 1rem 0 0 1rem;
+  transform: none;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .aev-rich-feature-card:hover {
     border-color: rgba(255, 77, 184, 0.28);
