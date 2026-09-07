@@ -1318,7 +1318,7 @@ function ProductContentMediaSections({
               }
               const Icon = item.icon;
               return (
-                <article key={item.title} className="aev-rich-feature-card">
+                <article key={item.title} className="aev-rich-feature-card aev-rich-feature-card-default">
                   <span className={`aev-rich-icon ${item.iconClass}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
                   <h3 className="mt-4 font-serif text-xl text-white">{item.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#9C91AA]">{item.text}</p>
