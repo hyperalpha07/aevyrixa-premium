@@ -1999,6 +1999,26 @@ button {
   box-shadow: 0 0 24px rgba(255, 77, 184, 0.12);
 }
 
+.aev-rich-icon-rose {
+  border-color: rgba(255, 77, 184, 0.28);
+  background: rgba(255, 77, 184, 0.09);
+  color: #ff8fcb;
+}
+
+.aev-rich-icon-cyan {
+  border-color: rgba(49, 230, 212, 0.28);
+  background: rgba(49, 230, 212, 0.08);
+  color: #70eee2;
+  box-shadow: 0 0 24px rgba(49, 230, 212, 0.1);
+}
+
+.aev-rich-icon-violet {
+  border-color: rgba(192, 132, 252, 0.3);
+  background: rgba(168, 85, 247, 0.09);
+  color: #d8b4fe;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.11);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .aev-rich-feature-card:hover {
     border-color: rgba(255, 77, 184, 0.28);
