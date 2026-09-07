@@ -2055,6 +2055,11 @@ button {
     text-shadow: 0 0 18px rgba(255, 77, 184, 0.36);
   }
 
+  .aev-rich-mood-right,
+  .aev-rich-mood-bottom {
+    display: none;
+  }
+
   .aev-rich-panel {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.065),
@@ -2073,6 +2078,10 @@ button {
 }
 
 @media (min-width: 1024px) {
+  .aev-product-page-shell .aev-product-rich-shell {
+    border-bottom: 0;
+  }
+
   .aev-rich-gallery-grid-single {
     justify-items: center;
   }
