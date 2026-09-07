@@ -2049,15 +2049,10 @@ button {
   }
 
   .aev-rich-mood {
-    display: block;
+    display: none;
     max-width: 4.4rem;
     font-size: 0.84rem;
     text-shadow: 0 0 18px rgba(255, 77, 184, 0.36);
-  }
-
-  .aev-rich-mood-right,
-  .aev-rich-mood-bottom {
-    display: none;
   }
 
   .aev-rich-panel {
@@ -2080,6 +2075,73 @@ button {
 @media (min-width: 1024px) {
   .aev-product-page-shell .aev-product-rich-shell {
     border-bottom: 0;
+    background:
+      radial-gradient(circle at 15% 18%, rgba(255, 77, 184, 0.16), transparent 30rem),
+      radial-gradient(circle at 86% 62%, rgba(49, 230, 212, 0.1), transparent 27rem),
+      linear-gradient(180deg, rgba(18, 12, 30, 0.54), rgba(12, 9, 23, 0.64));
+  }
+
+  .aev-rich-composition {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 134, 207, 0.4);
+    border-radius: 1rem;
+    background:
+      radial-gradient(circle at 8% 5%, rgba(255, 77, 184, 0.15), transparent 25rem),
+      radial-gradient(circle at 94% 88%, rgba(49, 230, 212, 0.09), transparent 23rem),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.045) 42%, rgba(49, 230, 212, 0.04)),
+      rgba(24, 16, 39, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      inset 0 0 80px rgba(255, 77, 184, 0.055),
+      0 28px 72px rgba(0, 0, 0, 0.34),
+      -14px -12px 38px rgba(255, 77, 184, 0.13),
+      14px 12px 38px rgba(49, 230, 212, 0.075);
+    backdrop-filter: blur(20px) saturate(1.08);
+  }
+
+  .aev-rich-composition > .aev-rich-composition-row {
+    margin-top: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .aev-rich-composition > .aev-rich-composition-row::before,
+  .aev-rich-composition > .aev-rich-composition-row::after,
+  .aev-rich-composition-pair > .aev-rich-panel::before,
+  .aev-rich-composition-pair > .aev-rich-panel::after {
+    display: none;
+  }
+
+  .aev-rich-composition > .aev-rich-composition-row + .aev-rich-composition-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.085);
+  }
+
+  .aev-rich-composition-pair {
+    gap: 0;
+  }
+
+  .aev-rich-composition-pair > .aev-rich-panel {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .aev-rich-composition-pair > .aev-rich-panel + .aev-rich-panel {
+    border-left: 1px solid rgba(255, 255, 255, 0.085);
+  }
+
+  .aev-rich-composition .aev-rich-guide-card > div:first-child:not(:last-child) {
+    min-height: 10.5rem;
+    max-height: 10.5rem;
+  }
+
+  .aev-rich-composition .aev-rich-feature-card > div:first-child:not(:last-child) {
+    min-height: 10rem;
+    max-height: 10rem;
   }
 
   .aev-rich-gallery-grid-single {
@@ -2193,8 +2255,23 @@ button {
 
 @media (min-width: 1536px) {
   .aev-rich-mood {
-    max-width: 7.5rem;
-    font-size: 1rem;
+    display: block;
+    max-width: 6.25rem;
+    font-size: 0.88rem;
+    opacity: 0.58;
+  }
+
+  .aev-rich-mood-left {
+    left: max(0.75rem, calc((100vw - 78rem) / 2 - 7rem));
+  }
+
+  .aev-rich-mood-right {
+    top: 24rem;
+    right: max(0.75rem, calc((100vw - 78rem) / 2 - 7rem));
+  }
+
+  .aev-rich-mood-bottom {
+    display: none;
   }
 }
 
