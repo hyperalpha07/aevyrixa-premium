@@ -1548,7 +1548,7 @@ button {
   inset-inline: 0;
   top: 0;
   z-index: 0;
-  height: min(118rem, 72%);
+  height: 100%;
   pointer-events: none;
 }
 
@@ -1557,9 +1557,9 @@ button {
     linear-gradient(90deg, rgba(8, 6, 17, 0.03), rgba(8, 6, 17, 0.46) 26%, rgba(8, 6, 17, 0.62) 50%, rgba(8, 6, 17, 0.46) 74%, rgba(8, 6, 17, 0.03)),
     linear-gradient(180deg, rgba(8, 6, 17, 0.12), rgba(8, 6, 17, 0.22) 62%, #080611 100%),
     url("/brand/noromi/backgrounds/product-detail-bg-silk.png");
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-position: center top, center top, center top;
+  background-repeat: no-repeat, no-repeat, repeat-y;
+  background-size: 100% 100%, 100% 100%, max(90rem, 100vw) auto;
   opacity: 0.96;
 }
 
@@ -1814,7 +1814,7 @@ button {
   background:
     radial-gradient(circle at 14% 22%, rgba(255, 77, 184, 0.12), transparent 28rem),
     radial-gradient(circle at 86% 58%, rgba(49, 230, 212, 0.075), transparent 24rem),
-    linear-gradient(180deg, rgba(11, 8, 20, 0.82) 0%, rgba(9, 6, 18, 0.88) 48%, rgba(8, 6, 17, 0.94) 100%);
+    linear-gradient(180deg, rgba(11, 8, 20, 0.64) 0%, rgba(9, 6, 18, 0.72) 48%, rgba(8, 6, 17, 0.78) 100%);
 }
 
 .aev-product-desktop-canvas {
@@ -2035,6 +2035,108 @@ button {
       -8px -7px 26px rgba(255, 77, 184, 0.075),
       8px 7px 26px rgba(49, 230, 212, 0.035);
   }
+}
+
+@media (min-width: 1024px) {
+  .aev-product-page-shell .aev-bloom-hero {
+    width: min(74rem, calc(100% - 5rem));
+    grid-template-columns: minmax(0, 32rem) minmax(0, 35rem);
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.75rem 0 1.25rem;
+  }
+
+  .aev-product-page-shell .aev-bloom-media-frame {
+    max-height: 31rem;
+  }
+
+  .aev-product-page-shell .aev-product-info-card {
+    padding: 1.35rem;
+  }
+
+  .aev-product-page-shell .aev-product-info-card > .mb-5 {
+    margin-bottom: 0.8rem;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-title {
+    max-width: 19ch;
+    font-size: clamp(2.1rem, 2.8vw, 2.55rem);
+    line-height: 1.02;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-copy {
+    margin-top: 0.75rem;
+    line-height: 1.55;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-price {
+    margin-top: 0.85rem;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-price > span:first-child {
+    font-size: 2rem;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-rating,
+  .aev-product-page-shell .aev-product-mobile-options,
+  .aev-product-page-shell .aev-product-mobile-controls {
+    margin-top: 0.85rem;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-options {
+    gap: 0.55rem 1rem;
+  }
+
+  .aev-product-page-shell .aev-product-mobile-cta {
+    margin-top: 0.75rem;
+  }
+
+  .aev-product-page-shell .aev-product-gallery-support {
+    margin-top: 0.45rem;
+  }
+
+  .aev-product-page-shell .aev-product-support-card {
+    padding: 0.42rem 0.55rem;
+    line-height: 1.35;
+  }
+
+  .aev-product-page-shell .aev-product-ticker-after-hero {
+    margin-top: 0;
+  }
+
+  .aev-product-page-shell .aev-product-rich-shell {
+    padding-block: 1.35rem;
+  }
+
+  .aev-product-page-shell .aev-product-rich-shell .aev-rich-featured-media > div {
+    min-height: 12rem;
+    max-height: 16rem;
+  }
+
+  .aev-product-page-shell #reviews {
+    padding-block: 1.35rem;
+  }
+
+  .aev-product-page-shell .aev-related-recommendations {
+    padding-top: 1.35rem;
+    padding-bottom: 2rem;
+  }
+}
+
+.aev-product-detail-footer {
+  position: relative;
+  border-top-color: rgba(255, 77, 184, 0.24);
+  background-image:
+    linear-gradient(180deg, rgba(8, 6, 17, 0.18), rgba(8, 6, 17, 0.9) 12rem),
+    linear-gradient(90deg, rgba(255, 77, 184, 0.08), transparent 34%, transparent 66%, rgba(49, 230, 212, 0.07)),
+    url("/brand/noromi/backgrounds/product-detail-bg-silk.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow:
+    inset 0 1px 0 rgba(49, 230, 212, 0.1),
+    0 -1.25rem 3.5rem rgba(255, 77, 184, 0.065);
 }
 
 @media (min-width: 1536px) {

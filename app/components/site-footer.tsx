@@ -72,9 +72,10 @@ export default function SiteFooter({
     pathname.startsWith("/track-order") ||
     pathname === "/product" ||
     pathname.startsWith("/product/");
+  const isProductDetailRoute = pathname.startsWith("/product/");
 
   return (
-    <footer className={`aev-site-footer ${hasActionHeavyMobileRoute ? "aev-mobile-action-footer" : ""} relative overflow-hidden border-t border-[#FF4DB8]/10 bg-[#0D0918] px-4 pb-28 pt-10 text-white sm:px-6 sm:pb-16 sm:pt-12`}>
+    <footer className={`aev-site-footer ${hasActionHeavyMobileRoute ? "aev-mobile-action-footer" : ""} ${isProductDetailRoute ? "aev-product-detail-footer" : ""} relative overflow-hidden border-t border-[#FF4DB8]/10 bg-[#0D0918] px-4 pb-28 pt-10 text-white sm:px-6 sm:pb-16 sm:pt-12`}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF4DB8]/25 to-transparent" />
       <div className="pointer-events-none absolute left-0 right-0 top-0 h-48 bg-gradient-to-b from-[#FF4DB8]/[0.04] to-transparent" />
       <div className="pointer-events-none absolute left-[-10%] top-[20%] h-[200px] w-[200px] rounded-full bg-[#A855F7]/[0.06] blur-[80px]" />
