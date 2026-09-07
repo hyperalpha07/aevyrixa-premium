@@ -2019,9 +2019,13 @@ button {
   box-shadow: 0 0 24px rgba(168, 85, 247, 0.11);
 }
 
+.aev-rich-feature-card-default {
+  padding: 1rem;
+}
+
 .aev-rich-feature-card > .aev-rich-icon {
   position: static;
-  margin: 1rem 0 0 1rem;
+  margin: 0;
   transform: none;
 }
 
