@@ -2228,13 +2228,58 @@ button {
     max-height: 16rem;
   }
 
+  .aev-product-page-shell .aev-product-rich-shell + section {
+    background:
+      radial-gradient(ellipse 42% 78% at 8% 8%, rgba(255, 77, 184, 0.105), transparent 72%),
+      radial-gradient(ellipse 38% 72% at 94% 88%, rgba(49, 230, 212, 0.07), transparent 74%);
+  }
+
+  .aev-product-page-shell .aev-product-rich-shell + section .aev-rich-panel,
+  .aev-product-page-shell #reviews .aev-rich-panel {
+    border-color: rgba(255, 126, 203, 0.3);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025) 56%, rgba(49, 230, 212, 0.025)),
+      rgba(19, 13, 33, 0.76);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.105),
+      0 20px 52px rgba(0, 0, 0, 0.25),
+      -10px -8px 30px rgba(255, 77, 184, 0.07),
+      10px 8px 30px rgba(49, 230, 212, 0.035);
+    backdrop-filter: blur(16px);
+  }
+
   .aev-product-page-shell #reviews {
     padding-block: 1.35rem;
+    background:
+      radial-gradient(ellipse 48% 92% at 82% 18%, rgba(192, 132, 252, 0.075), transparent 74%),
+      radial-gradient(ellipse 38% 82% at 12% 84%, rgba(255, 77, 184, 0.075), transparent 76%);
   }
 
   .aev-product-page-shell .aev-related-recommendations {
     padding-top: 1.35rem;
     padding-bottom: 2rem;
+    border-radius: 1.25rem;
+    background:
+      radial-gradient(ellipse 52% 58% at 14% 26%, rgba(255, 77, 184, 0.105), transparent 76%),
+      radial-gradient(ellipse 48% 62% at 88% 72%, rgba(49, 230, 212, 0.065), transparent 78%);
+  }
+
+  .aev-product-page-shell .aev-related-recommendations .aev-recommendation-card {
+    border-color: rgba(255, 126, 203, 0.25);
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.02)),
+      rgba(18, 12, 31, 0.76);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 20px 48px rgba(0, 0, 0, 0.27),
+      0 0 30px rgba(255, 77, 184, 0.055);
+  }
+
+  .aev-product-detail-footer {
+    box-shadow:
+      inset 0 1px 0 rgba(49, 230, 212, 0.085),
+      0 -2.5rem 5rem rgba(255, 77, 184, 0.075),
+      0 -1.5rem 4rem rgba(49, 230, 212, 0.035);
   }
 }
 
