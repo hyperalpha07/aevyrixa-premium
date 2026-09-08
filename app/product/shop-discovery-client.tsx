@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -57,6 +57,14 @@ type StockFilter = ShopStockFilter;
 type SignalFilter = ShopSignalFilter;
 type PriceFilter = "all" | "under-1300" | "1300-1600" | "over-1600";
 type SortMode = "featured" | "newest" | "price-asc" | "price-desc" | "stock";
+
+const sortOptions: { value: SortMode; label: string }[] = [
+  { value: "featured", label: "Featured" },
+  { value: "newest", label: "Newest" },
+  { value: "price-asc", label: "Price low" },
+  { value: "price-desc", label: "Price high" },
+  { value: "stock", label: "In stock" },
+];
 
 const stockRank: Record<ProductStockStatus, number> = {
   in_stock: 0,
@@ -168,9 +176,13 @@ export default function ShopDiscoveryClient({
   const [price, setPrice] = useState<PriceFilter>("all");
   const [signal, setSignal] = useState<SignalFilter>(initialFilters.signal);
   const [sort, setSort] = useState<SortMode>("featured");
+  const [sortOpen, setSortOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [collection, setCollection] = useState(initialFilters.collection);
   const [shopHeroImageFailed, setShopHeroImageFailed] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement>(null);
+
+  const selectedSortLabel = sortOptions.find((option) => option.value === sort)?.label ?? "Featured";
 
   const categoriesWithProducts = useMemo(() => {
     return activeCategories.filter((entry) =>
@@ -351,22 +363,41 @@ export default function ShopDiscoveryClient({
   useEffect(() => {
     if (!filtersOpen) return;
 
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setFiltersOpen(false);
     };
 
-    document.body.style.overflow = "hidden";
+    if (!isDesktop) document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      if (!isDesktop) document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [filtersOpen]);
 
+  useEffect(() => {
+    if (!sortOpen) return;
+
+    const closeSortMenu = (event: MouseEvent) => {
+      if (!sortMenuRef.current?.contains(event.target as Node)) setSortOpen(false);
+    };
+    const closeSortMenuOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSortOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeSortMenu);
+    window.addEventListener("keydown", closeSortMenuOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeSortMenu);
+      window.removeEventListener("keydown", closeSortMenuOnEscape);
+    };
+  }, [sortOpen]);
+
   const filterPanel = (
-    <div className="space-y-5">
+    <div className="aev-shop-filter-groups space-y-5">
       <FilterGroup label="Category">
         <Chip active={!category} onClick={() => setCategory("")}>
           All
@@ -598,7 +629,7 @@ export default function ShopDiscoveryClient({
                 );
               })}
             </div>
-            <p className="text-xs text-[#9C91AA] sm:ml-auto">
+            <p className="aev-shop-result-count text-xs text-[#9C91AA] sm:ml-auto">
               Showing <span className="font-bold text-[#FF4DB8]">{filteredProducts.length}</span> real product{filteredProducts.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -607,8 +638,8 @@ export default function ShopDiscoveryClient({
 
       <section id="shop-products" className="aev-shop-products-section mx-auto max-w-7xl px-3 pb-6 pt-0 sm:px-6 sm:pb-10">
         <div className="aev-v2-sort-bar sticky top-[4.9rem] z-30 -mx-3 mb-4 border-b border-white/[0.07] bg-[#080611]/92 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-[6.25rem]">
-          <div className="mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(12rem,23rem)_minmax(0,auto)] lg:items-center lg:justify-between">
-            <div className="relative min-w-0">
+          <div className="aev-shop-controls-layout mx-auto grid max-w-7xl gap-2 lg:grid-cols-[minmax(12rem,23rem)_minmax(0,auto)] lg:items-center lg:justify-between">
+            <div className="aev-shop-search-control relative min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#FF4DB8]/60" />
               <input
                 value={query}
@@ -628,22 +659,43 @@ export default function ShopDiscoveryClient({
               )}
             </div>
             <div className="aev-shop-control-row grid grid-cols-[minmax(0,1fr)_minmax(5.4rem,auto)_minmax(4.6rem,auto)] gap-2 lg:flex lg:items-center">
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortMode)}
-                className="aev-input min-h-10 min-w-0 rounded-md px-3 py-2 text-xs font-semibold lg:w-36"
-                aria-label="Sort products"
-              >
-                <option value="featured">Featured</option>
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price low</option>
-                <option value="price-desc">Price high</option>
-                <option value="stock">In stock</option>
-              </select>
+              <div ref={sortMenuRef} className="aev-shop-sort-dropdown relative">
+                <button
+                  type="button"
+                  className="aev-shop-sort-trigger inline-flex min-h-10 w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-xs font-semibold"
+                  aria-label={`Sort products: ${selectedSortLabel}`}
+                  aria-haspopup="listbox"
+                  aria-expanded={sortOpen}
+                  onClick={() => setSortOpen((open) => !open)}
+                >
+                  <span>{selectedSortLabel}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+                </button>
+                {sortOpen && (
+                  <div className="aev-shop-sort-menu absolute right-0 top-[calc(100%+0.4rem)] z-50 w-full overflow-hidden rounded-lg p-1" role="listbox" aria-label="Sort products">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="option"
+                        aria-selected={sort === option.value}
+                        className="aev-shop-sort-option flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-semibold"
+                        onClick={() => {
+                          setSort(option.value);
+                          setSortOpen(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() => setFiltersOpen(true)}
-                className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-semibold sm:px-4"
+                onClick={() => setFiltersOpen((open) => !open)}
+                className={`aev-shop-filter-button aev-button-secondary inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-semibold sm:px-4 ${filtersOpen ? "aev-shop-filter-button-open" : ""}`}
+                aria-expanded={filtersOpen}
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
@@ -653,7 +705,7 @@ export default function ShopDiscoveryClient({
                 type="button"
                 onClick={resetFilters}
                 disabled={!hasActiveFilters && sort === "featured"}
-                className="aev-button-ghost inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-45 sm:px-4"
+                className="aev-shop-reset-button aev-button-ghost inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-md px-2.5 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-45 sm:px-4"
                 aria-label="Reset filters"
               >
                 Reset
@@ -661,7 +713,7 @@ export default function ShopDiscoveryClient({
             </div>
           </div>
 
-          <div className="mx-auto mt-2 flex max-w-7xl gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
+          <div className="aev-shop-meta-row mx-auto mt-2 flex max-w-7xl gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-2">
             {[
               `${products.length} Products`,
               "BDT Pricing",
@@ -684,10 +736,41 @@ export default function ShopDiscoveryClient({
               </span>
             ))}
           </div>
+
+          {filtersOpen && (
+            <section
+              className="aev-shop-inline-filters mx-auto mt-3 hidden max-w-7xl lg:block"
+              aria-label="Shop filters"
+            >
+              {filterPanel}
+              <div className="aev-shop-inline-filter-actions mt-2.5 flex items-center justify-between gap-3 pt-2">
+                <p className="text-xs text-[#9C91AA]">
+                  Showing <span className="font-bold text-[#FF4DB8]">{filteredProducts.length}</span> product{filteredProducts.length === 1 ? "" : "s"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    disabled={!hasActiveFilters && sort === "featured"}
+                    className="aev-shop-inline-reset min-h-9 rounded-full border border-white/10 px-4 text-xs font-semibold text-[#D8CBE8] transition disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(false)}
+                    className="aev-shop-inline-done min-h-9 rounded-full border border-[#FF4DB8]/30 bg-[#FF4DB8]/10 px-4 text-xs font-semibold text-[#FFB3D1] transition"
+                  >
+                    Close filters
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="min-w-0">
-          <div className="mb-3 flex flex-col gap-1 border-b border-white/[0.08] pb-2.5 sm:mb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-3">
+          <div className="aev-shop-grid-heading mb-3 flex flex-col gap-1 border-b border-white/[0.08] pb-2.5 sm:mb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-3">
             <h2 className="aev-heading text-xl sm:text-2xl md:text-3xl">
               {hasActiveFilters ? context.heading : "All Products"}
             </h2>
@@ -771,7 +854,7 @@ export default function ShopDiscoveryClient({
 
       {filtersOpen && (
         <div
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-[#080611]/78 p-0 backdrop-blur-sm md:items-center md:p-5 lg:items-stretch lg:justify-end lg:p-4"
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-[#080611]/78 p-0 backdrop-blur-sm md:items-center md:p-5 lg:hidden"
           role="presentation"
           onMouseDown={() => setFiltersOpen(false)}
         >
