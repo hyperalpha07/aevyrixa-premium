@@ -1623,27 +1623,44 @@ button {
 
 @media (min-width: 1024px) {
   .aev-v2-shop-hero {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .aev-v2-hero-main {
-    min-height: 20rem;
+    min-height: 18rem;
   }
 
   .aev-v2-hero-media-card {
-    min-height: 18rem;
+    height: 18rem;
+    min-height: 0;
   }
 }
 
 @media (min-width: 1280px) {
   .aev-v2-hero-main {
-    min-height: 22rem;
+    min-height: 19rem;
   }
 
   .aev-v2-hero-media-card {
-    min-height: 20rem;
+    height: 19rem;
   }
+}
+
+@media (min-width: 1536px) {
+  .aev-v2-hero-main,
+  .aev-v2-hero-media-card {
+    height: 21rem;
+    min-height: 21rem;
+  }
+}
+
+.aev-v2-shop-hero .aev-shop-hero-cta:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.92);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 5px rgba(255, 77, 184, 0.22),
+    0 12px 38px rgba(255, 64, 184, 0.28);
 }
 
 .aev-premium-edge-line::after {

@@ -12,7 +12,6 @@ import {
   LockKeyhole,
   Moon,
   Package,
-  PackageCheck,
   Repeat2,
   Search,
   ShieldCheck,
@@ -71,6 +70,8 @@ const discoveryChips = [
   { label: "Everyday Comfort", category: "Comfort Panty", icon: Sparkles },
   { label: "Night Comfort", category: "Nightwear", icon: Moon },
 ];
+
+const shopHeroCollectionImage = "/brand/noromi/shop/shop-hero-collection.png";
 
 function normalized(value: string | undefined) {
   return (value ?? "").trim().toLowerCase();
@@ -169,6 +170,7 @@ export default function ShopDiscoveryClient({
   const [sort, setSort] = useState<SortMode>("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [collection, setCollection] = useState(initialFilters.collection);
+  const [shopHeroImageFailed, setShopHeroImageFailed] = useState(false);
 
   const categoriesWithProducts = useMemo(() => {
     return activeCategories.filter((entry) =>
@@ -295,32 +297,16 @@ export default function ShopDiscoveryClient({
   const secondaryCta = hms.shopHeroSecondaryCtaText || "Track Order";
   const secondaryCtaLink = hms.shopHeroSecondaryCtaLink || "/track-order";
   const heroEyebrow = safeShopCopy(hms.shopHeroEyebrow || `${brandName} SHOP`);
-  const heroMediaUrl = noromiAssets.logoMark;
-  const heroMediaAlt = `${brandName} floral emblem`;
+  const heroMediaUrl = shopHeroImageFailed
+    ? noromiAssets.logoMark
+    : shopHeroCollectionImage;
+  const heroMediaAlt = shopHeroImageFailed
+    ? `${brandName} floral emblem`
+    : `${brandName} shop collection featuring reusable care products`;
   const heroBadge1 = hms.shopHeroBadge1 ? safeShopCopy(hms.shopHeroBadge1) : "";
   const heroBadge2 = hms.shopHeroBadge2 ? safeShopCopy(hms.shopHeroBadge2) : "";
   const heroCaption = hms.shopHeroCaption || "";
   const heroMediaPosition = "center";
-  const trustCards = [
-    {
-      icon: PackageCheck,
-      kicker: safeShopCopy(hms.shopHeroTrust1Label || "Privacy"),
-      label: safeShopCopy(hms.shopHeroTrust1Description || "Discreet privacy packaging"),
-      tone: "text-[#FFB3D1]",
-    },
-    {
-      icon: HeartHandshake,
-      kicker: safeShopCopy(hms.shopHeroTrust2Label || "Support"),
-      label: safeShopCopy(hms.shopHeroTrust2Description || "3-Day Hygiene-Safe Support"),
-      tone: "text-[#31E6D4]",
-    },
-    {
-      icon: Truck,
-      kicker: safeShopCopy(hms.shopHeroTrust3Label || "Delivery"),
-      label: safeShopCopy(hms.shopHeroTrust3Description || "Bangladesh delivery"),
-      tone: "text-[#C084FC]",
-    },
-  ];
   const tickerIconFor = (item: string) => {
     const text = normalized(item);
     if (text.includes("packag") || text.includes("privacy") || text.includes("discreet")) return Package;
@@ -448,9 +434,9 @@ export default function ShopDiscoveryClient({
 
   return (
     <>
-      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[78rem] px-3 pb-2 pt-2 sm:px-5 lg:px-8">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="grid gap-3">
+      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[84rem] px-3 pb-2 pt-2 sm:px-5 lg:px-8">
+        <div className="aev-shop-hero-grid grid gap-3 lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_26rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
+          <div>
             {/* Main hero content card */}
             <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-7">
               <div className="mb-3 flex items-center gap-2">
@@ -469,14 +455,14 @@ export default function ShopDiscoveryClient({
               <div className="aev-shop-hero-actions mt-5 flex flex-wrap gap-2">
                 <Link
                   href={primaryCtaLink}
-                  className="aev-button-primary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 text-xs font-bold text-white sm:min-h-11 sm:px-6"
+                  className="aev-shop-hero-cta aev-button-primary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 text-xs font-bold text-white sm:min-h-11 sm:px-6"
                 >
                   {primaryCta}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   href={secondaryCtaLink}
-                  className="aev-button-secondary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-xs font-semibold sm:min-h-11 sm:px-5"
+                  className="aev-shop-hero-cta aev-button-secondary inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-xs font-semibold sm:min-h-11 sm:px-5"
                 >
                   {secondaryCta}
                 </Link>
@@ -500,109 +486,44 @@ export default function ShopDiscoveryClient({
                     src={heroMediaUrl}
                     alt={heroMediaAlt}
                     sizes="(max-width: 1023px) calc(100vw - 1.5rem), 20rem"
-                    className="object-contain p-2"
+                    className={shopHeroImageFailed ? "object-contain p-2" : "object-cover"}
                     style={{ objectPosition: heroMediaPosition }}
+                    onError={() => setShopHeroImageFailed(true)}
                   />
+                  {!shopHeroImageFailed && (
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080611]/25 via-transparent to-[#080611]/10" />
+                  )}
                 </div>
               )}
 
-              {/* Mobile compact trust chips — hidden on lg+ */}
-              <div className="aev-shop-hero-trust mt-2.5 flex flex-wrap gap-1.5 lg:hidden">
-                {trustCards.map((card) => {
-                  const TrustIcon = card.icon;
-                  return (
-                    <div
-                      key={card.kicker}
-                      className="flex items-center gap-1.5 rounded-full border border-white/[0.07] bg-[#0E0A1C]/90 px-2.5 py-1.5 backdrop-blur-sm"
-                    >
-                      <TrustIcon className={`h-3 w-3 shrink-0 ${card.tone}`} />
-                      <span className="text-[0.6rem] font-bold tracking-wide text-white">{card.kicker}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Desktop trust grid — hidden on mobile, shown lg+ */}
-            <div className="aev-v2-trust-grid hidden gap-2 sm:gap-3 lg:grid">
-              {trustCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div
-                    key={card.kicker}
-                    className="aev-v2-trust-card min-w-0 rounded-xl border border-white/[0.07] bg-[#0E0A1C] p-2.5 sm:flex sm:items-center sm:gap-2.5 sm:p-3"
-                  >
-                    <span className={`mb-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.04] sm:mb-0 ${card.tone}`}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[0.68rem] font-black uppercase tracking-[0.12em] text-white sm:text-sm">
-                        {card.kicker}
-                      </span>
-                      <span className="mt-0.5 block max-w-full break-words text-[0.58rem] leading-4 text-[#9C91AA] [overflow-wrap:anywhere] sm:line-clamp-2 sm:text-[0.7rem]">
-                        {card.label}
-                      </span>
-                    </span>
-                  </div>
-                );
-              })}
             </div>
           </div>
 
           {/* Desktop hero media card — hidden on mobile, shown lg+ */}
-          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:self-stretch">
+          <div className="aev-v2-hero-media-card relative hidden overflow-hidden rounded-2xl border border-white/[0.07] bg-[linear-gradient(145deg,#1A0E28,#0E0A1F,#07101F)] shadow-[0_16px_54px_rgba(0,0,0,0.36)] lg:block lg:self-start">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,77,184,0.22),transparent_34%),radial-gradient(circle_at_20%_82%,rgba(0,212,198,0.11),transparent_30%)]" />
 
-            {heroMediaUrl ? (
-              <>
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url(${heroMediaUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    filter: "blur(28px) brightness(0.28)",
-                    transform: "scale(1.12)",
-                  }}
-                />
-                <Image
-                  fill
-                  src={heroMediaUrl}
-                  alt={heroMediaAlt}
-                  sizes="22rem"
-                  className="object-contain p-8"
-                  style={{ objectPosition: heroMediaPosition }}
-                />
-              </>
-            ) : (
-              /* Default brand trust visual when no media is set */
-              <div className="relative flex h-full min-h-[12.25rem] flex-col justify-between p-5">
-                <div className="pointer-events-none absolute inset-0 opacity-70">
-                  <div className="absolute left-1/2 top-1/3 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF4DB8]/20 blur-2xl" />
-                  <div className="absolute bottom-1/4 left-1/4 h-14 w-14 rounded-full bg-[#31E6D4]/15 blur-xl" />
-                </div>
-                <div className="relative grid grid-cols-3 gap-2">
-                  {trustCards.map((card) => {
-                    const Icon = card.icon;
-                    return (
-                      <div
-                        key={card.kicker}
-                        className="flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.04] px-1 py-3"
-                      >
-                        <span className={`grid h-7 w-7 place-items-center rounded-lg bg-white/[0.06] ${card.tone}`}>
-                          <Icon className="h-3.5 w-3.5" />
-                        </span>
-                        <span className="text-center text-[0.5rem] font-bold uppercase leading-tight tracking-wide text-white/60">
-                          {card.kicker}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="relative mt-auto pt-3 text-center text-[0.58rem] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">
-                  {brandName}
-                </p>
-              </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${heroMediaUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(28px) brightness(0.28)",
+                transform: "scale(1.12)",
+              }}
+            />
+            <Image
+              fill
+              src={heroMediaUrl}
+              alt={heroMediaAlt}
+              sizes="(min-width: 1536px) 28rem, (min-width: 1280px) 26rem, 24rem"
+              className={shopHeroImageFailed ? "object-contain p-10 xl:p-11" : "object-cover"}
+              style={{ objectPosition: heroMediaPosition }}
+              onError={() => setShopHeroImageFailed(true)}
+            />
+            {!shopHeroImageFailed && (
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080611]/28 via-transparent to-[#080611]/12" />
             )}
 
             {/* Badges */}
