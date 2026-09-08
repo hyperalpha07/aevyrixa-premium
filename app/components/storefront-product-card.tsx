@@ -420,8 +420,8 @@ export default function StorefrontProductCard({
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col px-1.5 pb-2 pt-2 sm:px-2 sm:pb-2.5 sm:pt-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <div className="aev-product-card-body flex flex-1 flex-col px-1.5 pb-2 pt-2 sm:px-2 sm:pb-2.5 sm:pt-3">
+          <div className="aev-product-card-badges flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-[0_0_14px_rgba(0,0,0,0.16)] sm:px-2.5 sm:py-1 sm:text-[11px] ${stockBadgeClass(product.stockStatus)}`}>
               {stockStatusLabel(product.stockStatus)}
             </span>
@@ -442,8 +442,8 @@ export default function StorefrontProductCard({
             </div>
           )}
 
-          <Link href={productHref}>
-            <h3 className="mt-2 line-clamp-2 break-words text-[0.82rem] font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:mt-2.5 sm:text-base md:text-lg">
+          <Link href={productHref} className="aev-product-title-link rounded-sm">
+            <h3 className="aev-product-card-title mt-2 line-clamp-2 break-words text-[0.82rem] font-semibold leading-snug text-white [overflow-wrap:anywhere] sm:mt-2.5 sm:text-base md:text-lg">
               {product.name}
             </h3>
           </Link>
@@ -460,7 +460,7 @@ export default function StorefrontProductCard({
             </div>
           )}
 
-          <div className="mt-2.5 flex flex-wrap items-baseline gap-2 sm:mt-3">
+          <div className="aev-product-card-price mt-2.5 flex flex-wrap items-baseline gap-2 sm:mt-3">
             <span className="text-[0.98rem] font-extrabold text-[#FF4DB8] sm:text-lg">
               {formatProductPrice(product)}
             </span>
