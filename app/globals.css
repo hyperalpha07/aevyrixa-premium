@@ -1426,7 +1426,7 @@ button {
 /* Shop listing premium surfaces. Kept under the listing page shell so product
    detail and other storefront routes retain their own visual systems. */
 .aev-shop-page-background .aev-shop-hero-grid {
-  gap: clamp(1rem, 1.35vw, 1.5rem);
+  gap: clamp(1.25rem, 1.5vw, 1.75rem);
   padding: clamp(0.65rem, 0.9vw, 0.85rem);
   overflow: hidden;
   border: 1px solid rgba(255, 77, 184, 0.28);

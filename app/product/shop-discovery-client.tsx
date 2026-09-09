@@ -475,7 +475,7 @@ export default function ShopDiscoveryClient({
       }
     >
       <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-7xl px-3 pb-2 pt-2 sm:px-0">
-        <div className="aev-shop-hero-grid grid gap-3 lg:grid-cols-[minmax(0,1fr)_30rem] xl:grid-cols-[minmax(0,1fr)_33rem] 2xl:grid-cols-[minmax(0,1fr)_35rem]">
+        <div className="aev-shop-hero-grid grid gap-3 lg:grid-cols-[minmax(0,1fr)_32rem] xl:grid-cols-[minmax(0,1fr)_35rem] 2xl:grid-cols-[minmax(0,1fr)_37rem]">
           <div>
             {/* Main hero content card */}
             <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-9">
