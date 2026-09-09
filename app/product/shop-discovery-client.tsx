@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -32,6 +33,7 @@ import type {
 } from "@/app/lib/storefront-settings";
 import type { ReviewSummary } from "@/app/lib/review-types";
 import { brandName, noromiAssets } from "@/configs/brand/noromi";
+import { noromiBackgroundUsage } from "@/configs/brand/noromi-backgrounds";
 import {
   emptyShopQueryFilters,
   parseShopSignal,
@@ -464,12 +466,19 @@ export default function ShopDiscoveryClient({
   );
 
   return (
-    <>
-      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-[84rem] px-3 pb-2 pt-2 sm:px-5 lg:px-8">
-        <div className="aev-shop-hero-grid grid gap-3 lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_26rem] 2xl:grid-cols-[minmax(0,1fr)_28rem]">
+    <div
+      className="aev-shop-page-background"
+      style={
+        {
+          "--aev-shop-background-image": noromiBackgroundUsage.shop.cssImageSet,
+        } as CSSProperties
+      }
+    >
+      <section className="aev-v2-shop-hero aev-mobile-safe relative mx-auto max-w-7xl px-3 pb-2 pt-2 sm:px-0">
+        <div className="aev-shop-hero-grid grid gap-3 lg:grid-cols-[minmax(0,1fr)_32rem] xl:grid-cols-[minmax(0,1fr)_35rem] 2xl:grid-cols-[minmax(0,1fr)_37rem]">
           <div>
             {/* Main hero content card */}
-            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-7">
+            <div className="aev-v2-hero-main rounded-2xl border border-white/[0.07] bg-[#130F22] p-3 shadow-[0_16px_54px_rgba(0,0,0,0.32)] sm:p-3.5 lg:p-9">
               <div className="mb-3 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#FF4DB8] shadow-[0_0_0_5px_rgba(255,77,184,0.10)]" />
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.28em] text-[#9C91AA]">
@@ -919,7 +928,7 @@ export default function ShopDiscoveryClient({
           </Link>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
