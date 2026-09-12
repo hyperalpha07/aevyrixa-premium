@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { PackageCheck, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -14,6 +15,7 @@ import {
   type StorefrontSettings,
 } from "@/app/lib/storefront-settings";
 import { brandName } from "@/configs/brand/noromi";
+import { noromiBackgroundUsage } from "@/configs/brand/noromi-backgrounds";
 
 export default function CartPage() {
   const {
@@ -50,35 +52,34 @@ export default function CartPage() {
   ];
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-10%] top-[8%] h-[320px] w-[320px] rounded-full bg-[#00D4C6]/20 blur-[120px]" />
-        <div className="absolute right-[-8%] top-[18%] h-[360px] w-[360px] rounded-full bg-[#FF4DB8]/20 blur-[140px]" />
-        <div className="absolute bottom-[-8%] left-[30%] h-[280px] w-[280px] rounded-full bg-amber-400/10 blur-[120px]" />
-      </div>
-
+    <main
+      className="aev-cart-page-background min-h-screen overflow-x-hidden bg-[#080611] text-white"
+      style={{ "--aev-customer-background-image": noromiBackgroundUsage.cart.cssImageSet } as CSSProperties}
+    >
       <SiteHeader active="cart" settings={settings} />
 
       <section className="mx-auto max-w-7xl px-6 py-12 md:py-16">
-        <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.35em] text-[#31E6D4]/70">
-              {brandName} Cart
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
-              Your Shopping Cart
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 md:text-base">
-              Review your selected products, update quantities, and continue to
-              checkout when you are ready.
-            </p>
+        <div className="aev-cart-hero-shell mb-10 grid gap-6 p-6 sm:p-7 md:grid-cols-[minmax(0,3fr)_minmax(14rem,2fr)] md:items-center md:p-8">
+          <div className="aev-flow-hero-zone">
+            <div className="aev-flow-hero-copy aev-cart-hero-copy">
+              <p className="text-sm uppercase tracking-[0.35em] text-[#31E6D4]/70">
+                {brandName} Cart
+              </p>
+              <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">
+                Your Shopping Cart
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 md:text-base">
+                Review your selected products, update quantities, and continue to
+                checkout when you are ready.
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="aev-cart-hero-actions flex flex-wrap items-center gap-3 md:justify-end">
             {items.length > 0 && (
               <button
                 onClick={clearCart}
-                className="inline-flex rounded-full border border-red-400/25 bg-red-400/10 px-6 py-3 text-sm font-medium text-red-200 transition hover:bg-red-400/15"
+                className="aev-cart-hero-clear inline-flex rounded-full px-6 py-3 text-sm font-medium transition"
               >
                 Clear Cart
               </button>
@@ -86,7 +87,7 @@ export default function CartPage() {
 
             <Link
               href="/product"
-              className="inline-flex rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-6 py-3 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white"
+              className="aev-cart-hero-primary inline-flex rounded-full px-6 py-3 text-sm font-semibold text-white transition"
             >
               Continue Shopping
             </Link>
@@ -94,7 +95,7 @@ export default function CartPage() {
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center shadow-[0_0_48px_rgba(255,77,184,0.10)] backdrop-blur-2xl sm:p-8 md:p-12">
+          <div className="aev-cart-panel rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center shadow-[0_0_48px_rgba(255,77,184,0.10)] backdrop-blur-2xl sm:p-8 md:p-12">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#00D4C6]/20 bg-[#00D4C6]/10 text-2xl text-[#31E6D4]">
               <ShoppingBag className="h-7 w-7" />
             </div>
@@ -133,7 +134,7 @@ export default function CartPage() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl md:p-5"
+                  className="aev-cart-panel aev-cart-item-panel rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-2xl md:p-5"
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-center">
                     <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0B0F1A]">
@@ -205,7 +206,7 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="h-fit rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
+            <div className="aev-cart-panel aev-cart-summary-panel h-fit rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-2xl">
               <p className="text-sm uppercase tracking-[0.35em] text-[#31E6D4]/70">
                 Order Summary
               </p>

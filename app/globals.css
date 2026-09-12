@@ -679,6 +679,244 @@ button {
   );
 }
 
+/* Cart background and surfaces. These selectors are intentionally route-scoped. */
+.aev-cart-page-background {
+  --aev-customer-background-image: none;
+  --aev-customer-background-position: center 44%;
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  background-color: #080611;
+}
+
+.aev-cart-page-background::before,
+.aev-cart-page-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.aev-cart-page-background::before {
+  opacity: 1;
+  background-image: var(--aev-customer-background-image);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: var(--aev-customer-background-position);
+  filter: none;
+}
+
+.aev-cart-page-background::after {
+  z-index: -1;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(7, 4, 13, 0.16) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(8, 5, 16, 0.08) 0%,
+      rgba(15, 6, 24, 0.18) 42%,
+      rgba(7, 4, 13, 0.36) 100%
+    );
+}
+
+.aev-cart-page-background .aev-cart-hero-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 77, 184, 0.34);
+  border-radius: clamp(1.35rem, 2vw, 1.9rem);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(56, 18, 62, 0.46) 0%,
+      rgba(12, 8, 24, 0.56) 52%,
+      rgba(9, 23, 36, 0.48) 100%
+    ),
+    image-set(
+      url("/brand/noromi/backgrounds/cart-hero-glass-texture.avif") type("image/avif"),
+      url("/brand/noromi/backgrounds/cart-hero-glass-texture.webp") type("image/webp")
+    );
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 77, 184, 0.14),
+    0 28px 90px rgba(0, 0, 0, 0.34),
+    0 0 48px rgba(255, 77, 184, 0.16),
+    0 0 34px rgba(49, 230, 212, 0.06);
+  backdrop-filter: blur(18px) saturate(1.24);
+  -webkit-backdrop-filter: blur(18px) saturate(1.24);
+}
+
+.aev-cart-page-background .aev-cart-hero-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 22%, rgba(255, 77, 184, 0.18), transparent 34%),
+    radial-gradient(circle at 86% 30%, rgba(49, 230, 212, 0.14), transparent 36%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.1), transparent 32%);
+  opacity: 0.9;
+}
+
+.aev-cart-page-background .aev-cart-hero-shell::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.1), transparent 30%),
+    radial-gradient(circle at 82% 18%, rgba(49, 230, 212, 0.09), transparent 28%),
+    linear-gradient(290deg, rgba(255, 77, 184, 0.09), transparent 38%);
+  opacity: 0.82;
+}
+
+.aev-cart-page-background .aev-cart-hero-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-cart-page-background .aev-cart-hero-copy h1 {
+  color: rgba(255, 255, 255, 0.99);
+  letter-spacing: -0.035em;
+  text-shadow:
+    0 2px 18px rgba(10, 4, 18, 0.72),
+    0 0 22px rgba(255, 77, 184, 0.14);
+}
+
+.aev-cart-page-background .aev-cart-hero-copy > p:last-child {
+  max-width: 42rem;
+  color: rgba(252, 246, 253, 0.9);
+  line-height: 1.72;
+  text-shadow: 0 1px 12px rgba(10, 4, 18, 0.66);
+}
+
+.aev-cart-page-background .aev-cart-hero-copy > p:first-child {
+  color: rgba(72, 235, 219, 0.9);
+  text-shadow: 0 0 16px rgba(49, 230, 212, 0.12);
+}
+
+.aev-cart-page-background .aev-cart-hero-primary {
+  border: 1px solid rgba(255, 179, 209, 0.42);
+  background: linear-gradient(90deg, rgba(255, 77, 184, 0.96), rgba(168, 85, 247, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 12px 32px rgba(255, 77, 184, 0.24);
+}
+
+.aev-cart-page-background .aev-cart-hero-primary:hover {
+  border-color: rgba(255, 214, 233, 0.62);
+  filter: brightness(1.08);
+}
+
+.aev-cart-page-background .aev-cart-hero-clear {
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  background: rgba(57, 22, 61, 0.44);
+  color: rgba(255, 205, 225, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aev-cart-page-background .aev-cart-hero-clear:hover {
+  border-color: rgba(244, 114, 182, 0.48);
+  background: rgba(77, 27, 72, 0.58);
+  color: #fff;
+}
+
+.aev-cart-page-background .aev-cart-panel {
+  border-color: rgba(255, 77, 184, 0.32);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 77, 184, 0.13), transparent 32%),
+    radial-gradient(circle at 94% 100%, rgba(49, 230, 212, 0.065), transparent 30%),
+    linear-gradient(145deg, rgba(24, 13, 38, 0.96), rgba(8, 6, 18, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 52px rgba(255, 77, 184, 0.04),
+    0 24px 70px rgba(5, 2, 10, 0.4),
+    0 0 34px rgba(255, 77, 184, 0.105),
+    0 0 22px rgba(49, 230, 212, 0.035);
+  backdrop-filter: blur(20px) saturate(1.06);
+}
+
+.aev-cart-page-background .aev-cart-summary-panel {
+  border-color: rgba(255, 77, 184, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 58px rgba(255, 77, 184, 0.045),
+    0 26px 74px rgba(0, 0, 0, 0.42),
+    0 0 38px rgba(255, 77, 184, 0.115),
+    0 0 24px rgba(49, 230, 212, 0.03);
+}
+
+.aev-cart-page-background :where(h1, h2, h3) {
+  color: rgba(255, 255, 255, 0.98);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.22);
+}
+
+.aev-cart-page-background .aev-flow-hero-zone {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.aev-cart-page-background .aev-flow-hero-copy {
+  max-width: 44rem;
+  padding-left: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.aev-cart-page-background .aev-flow-hero-copy > :where(h1, h2) {
+  color: rgba(255, 255, 255, 0.98);
+  text-shadow: 0 1px 10px rgba(40, 10, 38, 0.35);
+}
+
+.aev-cart-page-background .aev-flow-hero-copy > p:last-child {
+  color: rgba(248, 240, 250, 0.84);
+  line-height: 1.7;
+  text-shadow: 0 1px 8px rgba(40, 10, 38, 0.28);
+}
+
+.aev-cart-page-background :where(p, span, div, label)[class*="text-white/"] {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.aev-cart-page-background :where(p, span, div, label)[class*="text-[#D8CBE8]"] {
+  color: rgba(238, 229, 247, 0.76);
+}
+
+.aev-cart-page-background :where(p, span, div, label)[class*="text-[#9C91AA]"] {
+  color: rgba(224, 214, 235, 0.62);
+}
+
+@media (max-width: 639px) {
+  .aev-cart-page-background .aev-flow-hero-copy {
+    max-width: 100%;
+  }
+
+  .aev-cart-page-background .aev-cart-hero-actions,
+  .aev-cart-page-background .aev-cart-hero-actions > * {
+    width: 100%;
+  }
+
+  .aev-cart-page-background .aev-cart-hero-actions > * {
+    justify-content: center;
+  }
+}
+
 ::selection {
   background: rgba(255, 77, 184, 0.25);
   color: #FFFFFF;
