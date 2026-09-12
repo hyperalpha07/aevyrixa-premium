@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Copy, LockKeyhole, PackageCheck, ShieldCheck, Truck, UserPlus } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -29,6 +29,7 @@ import {
   type PaymentType,
 } from "@/app/lib/order-types";
 import { brandName } from "@/configs/brand/noromi";
+import { noromiBackgroundUsage } from "@/configs/brand/noromi-backgrounds";
 
 const BANGLADESH_MOBILE_ERROR = "Please enter a valid Bangladesh mobile number.";
 const CHECKOUT_DRAFT_KEY = "aevyrixa-checkout-form-draft";
@@ -486,17 +487,15 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-[-14%] top-[8%] h-[300px] w-[300px] rounded-full bg-[#00D4C6]/16 blur-[120px]" />
-        <div className="absolute right-[-18%] top-[18%] h-[340px] w-[340px] rounded-full bg-[#FF4DB8]/16 blur-[140px]" />
-        <div className="absolute bottom-[-12%] left-[24%] h-[260px] w-[260px] rounded-full bg-rose-300/10 blur-[120px]" />
-      </div>
-
+    <main
+      className="aev-checkout-page-background min-h-screen overflow-x-hidden bg-[#080611] text-white"
+      style={{ "--aev-checkout-background-image": noromiBackgroundUsage.checkout.cssImageSet } as CSSProperties}
+    >
       <SiteHeader active="cart" settings={adminSettings} />
 
       <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 pb-24 pt-10 sm:px-6 md:pt-16">
-        <div className="mb-8 w-full max-w-3xl min-w-0 md:mb-10">
+        <div className="aev-checkout-hero-shell mb-8 w-full min-w-0 p-6 sm:p-7 md:mb-10 md:p-8">
+          <div className="aev-checkout-hero-copy max-w-3xl">
           <p className="text-xs uppercase tracking-[0.32em] text-[#31E6D4]/70 sm:text-sm sm:tracking-[0.42em]">
             {brandName} Checkout
           </p>
@@ -507,10 +506,11 @@ export default function CheckoutPage() {
             Share your delivery details and choose your preferred payment method.
             Our team will confirm your order before dispatch.
           </p>
+          </div>
         </div>
 
         {!isLoaded ? (
-          <div className="w-full min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-white/65 backdrop-blur-2xl">
+          <div className="aev-checkout-panel w-full min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-white/65 backdrop-blur-2xl">
             Loading checkout...
           </div>
         ) : preparedOrder ? (
@@ -521,7 +521,7 @@ export default function CheckoutPage() {
           <div className="grid w-full min-w-0 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] lg:items-start">
             <form
               onSubmit={handleSubmit}
-              className="min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6"
+              className="aev-checkout-panel min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6"
             >
               <div className="flex flex-col gap-2 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -877,7 +877,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
               disabled={isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)}
-              className={`mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
+              className={`aev-checkout-primary-action aev-checkout-submit mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
                   isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
                     : "bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] text-white hover:scale-[1.01]"
@@ -1040,7 +1040,7 @@ function OrderSummary({
       : 0;
 
   return (
-    <aside className="min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6 lg:sticky lg:top-6">
+    <aside className="aev-checkout-panel aev-checkout-summary min-w-0 rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 backdrop-blur-2xl sm:p-6 lg:sticky lg:top-6">
       <p className="text-xs uppercase tracking-[0.28em] text-[#31E6D4]/70">
         Order Summary
       </p>
@@ -1145,7 +1145,7 @@ function freeDeliveryApplies(subtotal: number, threshold: string) {
 
 function EmptyCheckoutState() {
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_0_48px_rgba(255,77,184,0.10)] backdrop-blur-2xl sm:p-10">
+    <div className="aev-checkout-panel w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_0_48px_rgba(255,77,184,0.10)] backdrop-blur-2xl sm:p-10">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#00D4C6]/25 bg-[#00D4C6]/10">
         <ShieldCheck className="h-6 w-6 text-[#31E6D4]" />
       </div>
@@ -1159,7 +1159,7 @@ function EmptyCheckoutState() {
       </p>
       <Link
         href="/product"
-        className="mt-7 inline-flex w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
+        className="aev-checkout-primary-action mt-7 inline-flex w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
       >
         Shop Noromi Care
       </Link>
@@ -1203,7 +1203,7 @@ function ConfirmationPanel({
   };
 
   return (
-    <div className="mx-auto max-w-4xl rounded-[1.75rem] border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] p-5 text-center shadow-[0_0_48px_rgba(255,77,184,0.12)] backdrop-blur-2xl sm:p-10">
+    <div className="aev-checkout-panel mx-auto max-w-4xl rounded-[1.75rem] border border-[#00D4C6]/25 bg-[#00D4C6]/[0.08] p-5 text-center shadow-[0_0_48px_rgba(255,77,184,0.12)] backdrop-blur-2xl sm:p-10">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#00D4C6]/30 bg-[#00D4C6]/12">
         <CheckCircle2 className="h-8 w-8 text-[#31E6D4]" />
       </div>
@@ -1274,13 +1274,13 @@ function ConfirmationPanel({
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href={trackOrderHref}
-          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
+          className="aev-checkout-primary-action inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] sm:w-auto"
         >
           Track Your Order
         </Link>
         <Link
           href="/product"
-          className="inline-flex w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-6 py-3 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white sm:w-auto"
+          className="aev-checkout-secondary-action inline-flex w-full items-center justify-center rounded-full border border-[#FF4DB8]/30 bg-[#211633]/75 px-6 py-3 text-sm font-semibold text-[#FFB3D1] transition hover:border-[#FF4DB8]/50 hover:bg-[#2A183D] hover:text-white sm:w-auto"
         >
           Continue Shopping
         </Link>
