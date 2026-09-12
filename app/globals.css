@@ -5714,6 +5714,149 @@ button {
 }
 
 /* ─── R1: Track order card ─── */
+.aev-track-order-page-background {
+  position: relative;
+  isolation: isolate;
+  background-color: #090613;
+  background-image:
+    linear-gradient(180deg, rgba(10, 5, 18, 0.12) 0%, rgba(15, 7, 25, 0.22) 48%, rgba(8, 5, 15, 0.46) 100%),
+    radial-gradient(ellipse at center, transparent 35%, rgba(10, 4, 18, 0.18) 100%),
+    image-set(
+      url("/brand/noromi/backgrounds/customer-flow-bg-03.avif") type("image/avif"),
+      url("/brand/noromi/backgrounds/customer-flow-bg-03.webp") type("image/webp")
+    );
+  background-position: center, center, center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
+}
+
+.aev-track-order-hero-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 77, 184, 0.3);
+  border-radius: clamp(1.45rem, 2.4vw, 2.15rem);
+  background:
+    radial-gradient(circle at 88% 12%, rgba(49, 230, 212, 0.12), transparent 32%),
+    linear-gradient(135deg, rgba(60, 18, 64, 0.62), rgba(13, 9, 27, 0.72) 52%, rgba(8, 26, 39, 0.58));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 77, 184, 0.12),
+    0 28px 86px rgba(4, 2, 10, 0.38),
+    0 0 42px rgba(255, 77, 184, 0.13),
+    0 0 30px rgba(49, 230, 212, 0.06);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.aev-track-order-hero-shell::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.1), transparent 26%),
+    radial-gradient(circle at 82% 28%, rgba(112, 224, 255, 0.14), transparent 29%),
+    radial-gradient(circle at 14% 78%, rgba(255, 77, 184, 0.12), transparent 32%);
+}
+
+.aev-track-order-hero-copy h1 {
+  color: rgba(255, 255, 255, 0.99);
+  text-shadow: 0 2px 16px rgba(23, 7, 29, 0.62);
+}
+
+.aev-track-order-hero-shell > *,
+.aev-track-order-lookup-panel,
+.aev-track-order-lookup-panel input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.aev-track-order-hero-copy > p:last-of-type {
+  color: rgba(244, 236, 249, 0.82);
+  text-shadow: 0 1px 10px rgba(23, 7, 29, 0.5);
+}
+
+.aev-track-order-feature-card,
+.aev-track-order-lookup-panel,
+.aev-track-order-result-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 77, 184, 0.22);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 42%),
+    rgba(15, 10, 31, 0.84);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 18px 46px rgba(5, 2, 12, 0.28),
+    0 0 24px rgba(255, 77, 184, 0.07);
+  backdrop-filter: blur(18px) saturate(1.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.16);
+}
+
+.aev-track-order-feature-card {
+  border-color: rgba(255, 77, 184, 0.17);
+  background:
+    linear-gradient(125deg, rgba(255, 77, 184, 0.07), transparent 48%),
+    rgba(18, 12, 36, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.aev-track-order-lookup-panel {
+  border-color: rgba(255, 77, 184, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(49, 230, 212, 0.08),
+    0 22px 58px rgba(5, 2, 12, 0.34),
+    0 0 34px rgba(255, 77, 184, 0.11),
+    0 0 24px rgba(49, 230, 212, 0.05);
+}
+
+.aev-track-order-lookup-panel input {
+  border-color: rgba(255, 77, 184, 0.24);
+  background: rgba(7, 6, 18, 0.78);
+  color: rgba(255, 255, 255, 0.96);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.aev-track-order-lookup-panel input::placeholder {
+  color: rgba(216, 203, 232, 0.48);
+}
+
+.aev-track-order-lookup-panel input:focus-visible {
+  border-color: rgba(49, 230, 212, 0.52);
+  box-shadow:
+    0 0 0 3px rgba(49, 230, 212, 0.09),
+    0 0 22px rgba(255, 77, 184, 0.1);
+}
+
+.aev-track-order-result-card {
+  border-color: rgba(49, 230, 212, 0.2);
+}
+
+@media (max-width: 639px) {
+  .aev-track-order-page-background {
+    background-position: center, center, 56% top;
+  }
+
+  .aev-track-order-hero-shell {
+    margin-inline: 0.75rem;
+    width: calc(100% - 1.5rem);
+    box-sizing: border-box;
+    border-radius: 1.45rem;
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  }
+
+  .aev-track-order-lookup-panel {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .aev-track-card {
   position: relative;
   overflow: hidden;

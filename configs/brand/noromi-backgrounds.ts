@@ -34,6 +34,7 @@ export const noromiBackgroundAssets = Object.freeze({
   mysticalBlossomRibbonJourney: backgroundAsset("mystical_blossom_ribbon_journey"),
   customerFlow01: backgroundAsset("customer-flow-bg-01"),
   customerFlow02: backgroundAsset("customer-flow-bg-02"),
+  customerFlow03: backgroundAsset("customer-flow-bg-03"),
 });
 
 /** Proposed page-role mapping for later, separately scoped visual phases. */
@@ -43,7 +44,7 @@ export const noromiBackgroundUsage = Object.freeze({
   productDetail: noromiBackgroundAssets.etherealPlumBlossomSilkscape,
   cart: noromiBackgroundAssets.customerFlow01,
   checkout: noromiBackgroundAssets.customerFlow02,
-  trackOrder: noromiBackgroundAssets.etherealPlumFloralRibbonFrame,
+  trackOrder: noromiBackgroundAssets.customerFlow03,
   accountLogin: noromiBackgroundAssets.dreamyPlumSilkFloralFrame,
   contentSupport: noromiBackgroundAssets.luxePlumSilkAndPetals,
 });

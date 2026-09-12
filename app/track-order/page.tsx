@@ -162,16 +162,15 @@ function TrackOrderContent() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.07),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
+    <main className="aev-track-order-page-background min-h-screen overflow-x-hidden text-white">
       <SiteHeader active="track" settings={settings} />
 
-      <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-5 px-4 pb-28 pt-6 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
-        <div className="min-w-0 lg:order-first">
+      <section className="aev-track-order-hero-shell mx-auto grid min-w-0 max-w-7xl gap-5 px-4 py-5 sm:px-6 sm:py-6 md:my-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-10 lg:px-10 lg:py-10">
+        <div className="aev-track-order-hero-copy min-w-0 lg:order-first">
           <p className="text-xs font-semibold uppercase tracking-[0.36em] text-[#FF4DB8]/72">
             Privacy-safe tracking
           </p>
-          <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight tracking-tight [overflow-wrap:anywhere] min-[390px]:text-4xl sm:text-5xl">
+          <h1 className="mt-4 max-w-full break-words text-[2rem] font-semibold leading-tight tracking-tight [overflow-wrap:anywhere] sm:text-5xl">
             Track your Noromi Care order
           </h1>
           <p className="aev-mobile-secondary-copy mt-5 break-words text-base leading-8 text-[#D8CBE8]/70 [overflow-wrap:anywhere]">
@@ -185,7 +184,7 @@ function TrackOrderContent() {
               { icon: LockKeyhole, label: "Privacy safe", desc: "Only matched details are revealed" },
               { icon: ListChecks, label: "Full timeline", desc: "See every step from order to delivery" },
             ].map(({ icon: Icon, label, desc }) => (
-              <div key={label} className="flex items-start gap-3 rounded-2xl border border-[#FF4DB8]/12 bg-[#151024] px-4 py-3">
+              <div key={label} className="aev-track-order-feature-card flex items-start gap-3 rounded-2xl px-4 py-3">
                 <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/18 bg-[#FF4DB8]/[0.07] text-[#FF4DB8]">
                   <Icon className="h-4 w-4" />
                 </span>
@@ -208,7 +207,7 @@ function TrackOrderContent() {
         <div className="order-first min-w-0 space-y-5 lg:order-none">
           <form
             onSubmit={handleSubmit}
-            className="aev-track-card aev-intent-card aev-intent-orders min-w-0 rounded-[1.75rem] p-5 sm:p-6"
+            className="aev-track-order-lookup-panel aev-intent-card aev-intent-orders min-w-0 rounded-[1.75rem] p-5 sm:p-6"
           >
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] text-[#FF4DB8]">
@@ -271,7 +270,7 @@ function TrackOrderContent() {
           </form>
 
           {order && (
-            <section className="aev-track-card aev-intent-card aev-intent-delivery min-w-0 rounded-[1.75rem] p-5 sm:p-6">
+            <section className="aev-track-order-result-card aev-intent-card aev-intent-delivery min-w-0 rounded-[1.75rem] p-5 sm:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#FF4DB8]/70">
@@ -403,17 +402,19 @@ function TrackOrderContent() {
         </div>
       </section>
 
-      <SiteFooter settings={settings} />
+      <div className="pt-16 md:pt-20">
+        <SiteFooter settings={settings} />
+      </div>
     </main>
   );
 }
 
 function TrackOrderFallback() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
+    <main className="aev-track-order-page-background min-h-screen overflow-x-hidden text-white">
       <SiteHeader active="track" />
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6">
-        <div className="rounded-[1.75rem] border border-[#FF4DB8]/12 bg-[#151024] p-6 text-[#9C91AA]">
+        <div className="aev-track-order-lookup-panel rounded-[1.75rem] p-6 text-[#D8CBE8]">
           Loading order tracking...
         </div>
       </section>
