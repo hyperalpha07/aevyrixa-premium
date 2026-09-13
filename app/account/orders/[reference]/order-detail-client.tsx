@@ -158,10 +158,9 @@ export default function AccountOrderDetailClient({ reference }: { reference: str
   }, []);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(168,85,247,0.07),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(0,212,198,0.04),transparent_30%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
+    <main className="aev-account-page-background min-h-screen overflow-x-hidden text-white">
       <SiteHeader settings={settings} active="account" />
-      <section className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14">
+      <section className="aev-account-shell mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14">
         <Link href="/account/orders" className="inline-flex items-center gap-2 text-sm font-semibold text-[#FFB3D1] hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           Back to orders

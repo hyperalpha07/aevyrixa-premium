@@ -68,12 +68,11 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080611] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_10%,rgba(255,77,184,0.09),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(168,85,247,0.07),transparent_32%),linear-gradient(180deg,#080611_0%,#0B0F1A_100%)]" />
+    <main className="aev-account-page-background min-h-screen overflow-x-hidden text-white">
       <SiteHeader settings={settings} active="account" />
 
-      <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[0.9fr_1.1fr] md:py-16">
-        <div className="min-w-0">
+      <section className="aev-account-shell aev-account-auth-shell mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 md:grid-cols-[0.9fr_1.1fr] md:py-12">
+        <div className="aev-account-hero min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#FF4DB8]/75">
             Customer Account
           </p>
@@ -91,7 +90,7 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
 
         <form
           onSubmit={submit}
-          className="min-w-0 rounded-[1.75rem] border border-[#FF4DB8]/14 bg-[#151024] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.28)] sm:p-6"
+          className={`aev-account-card ${isRegister ? "aev-register-card" : "aev-login-card"} min-w-0 rounded-[1.75rem] p-5 sm:p-6`}
         >
           <h2 className="text-2xl font-semibold text-white">
             {isRegister ? "Create Account" : "Login"}
