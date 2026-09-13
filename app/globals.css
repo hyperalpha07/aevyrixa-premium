@@ -6171,6 +6171,219 @@ button {
   }
 }
 
+/* Account-only background and private glass surfaces. */
+.aev-account-page-background {
+  position: relative;
+  isolation: isolate;
+  background-color: #090613;
+  background-image:
+    linear-gradient(180deg, rgba(10, 5, 18, 0.12) 0%, rgba(16, 7, 26, 0.24) 50%, rgba(8, 5, 15, 0.48) 100%),
+    radial-gradient(ellipse at center, transparent 34%, rgba(9, 4, 17, 0.2) 100%),
+    image-set(
+      url("/brand/noromi/backgrounds/account-flow-bg-01.avif") type("image/avif"),
+      url("/brand/noromi/backgrounds/account-flow-bg-01.webp") type("image/webp")
+    );
+  background-position: center, center, center 34%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
+}
+
+.aev-account-auth-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  align-items: center;
+  margin-block: clamp(1rem, 4vw, 3.5rem);
+  border: 1px solid rgba(255, 77, 184, 0.28);
+  border-radius: clamp(1.45rem, 2.4vw, 2.15rem);
+  background:
+    radial-gradient(circle at 88% 18%, rgba(49, 230, 212, 0.1), transparent 30%),
+    linear-gradient(135deg, rgba(62, 18, 65, 0.56), rgba(13, 9, 28, 0.7) 52%, rgba(8, 25, 38, 0.54));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 77, 184, 0.12),
+    0 28px 86px rgba(4, 2, 10, 0.38),
+    0 0 40px rgba(255, 77, 184, 0.12),
+    0 0 28px rgba(49, 230, 212, 0.05);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.aev-account-auth-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/account-flow-bg-01.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/account-flow-bg-01.webp") type("image/webp")
+  );
+  background-position: center 34%;
+  background-repeat: no-repeat;
+  background-size: 122% auto;
+  opacity: 0.3;
+  filter: saturate(1.12) contrast(1.08) brightness(0.98);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.46) 46%, rgba(0, 0, 0, 0.18) 70%, rgba(0, 0, 0, 0.78));
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.46) 46%, rgba(0, 0, 0, 0.18) 70%, rgba(0, 0, 0, 0.78));
+}
+
+.aev-account-auth-shell::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 77, 184, 0.16), transparent 29%),
+    radial-gradient(circle at 88% 72%, rgba(49, 230, 212, 0.1), transparent 28%),
+    linear-gradient(112deg, rgba(255, 255, 255, 0.1), transparent 25%),
+    linear-gradient(96deg, transparent 62%, rgba(207, 241, 255, 0.07) 76%, transparent 90%);
+  opacity: 0.84;
+}
+
+.aev-account-auth-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-account-hero h1 {
+  color: rgba(255, 255, 255, 0.99);
+  text-shadow:
+    0 2px 16px rgba(24, 7, 30, 0.62),
+    0 0 24px rgba(255, 77, 184, 0.1);
+}
+
+.aev-account-hero > p:last-of-type {
+  color: rgba(245, 237, 249, 0.82);
+  text-shadow: 0 1px 10px rgba(24, 7, 30, 0.48);
+}
+
+.aev-account-card,
+.aev-account-page-background .aev-panel {
+  border-color: rgba(255, 77, 184, 0.25);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 42%),
+    rgba(15, 10, 31, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(49, 230, 212, 0.06),
+    0 20px 54px rgba(5, 2, 12, 0.32),
+    0 0 28px rgba(255, 77, 184, 0.08);
+  backdrop-filter: blur(18px) saturate(1.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.16);
+}
+
+.aev-account-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.aev-account-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, rgba(12, 8, 26, 0.88) 0%, rgba(12, 8, 26, 0.68) 58%, rgba(12, 8, 26, 0.3) 100%),
+    image-set(
+      url("/brand/noromi/backgrounds/account-flow-bg-01.avif") type("image/avif"),
+      url("/brand/noromi/backgrounds/account-flow-bg-01.webp") type("image/webp")
+    );
+  background-position: center, 76% 42%;
+  background-repeat: no-repeat;
+  background-size: cover, 175% auto;
+  opacity: 0.28;
+  filter: saturate(1.1) contrast(1.08);
+  -webkit-mask-image: linear-gradient(90deg, transparent 32%, rgba(0, 0, 0, 0.22) 58%, rgba(0, 0, 0, 0.9) 100%);
+  mask-image: linear-gradient(90deg, transparent 32%, rgba(0, 0, 0, 0.22) 58%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.aev-account-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(49, 230, 212, 0.08), transparent 27%),
+    linear-gradient(118deg, rgba(255, 255, 255, 0.08), transparent 28%),
+    linear-gradient(292deg, rgba(255, 77, 184, 0.08), transparent 42%);
+}
+
+.aev-account-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-account-card input,
+.aev-account-page-background input,
+.aev-account-page-background textarea,
+.aev-account-page-background select {
+  min-width: 0;
+  max-width: 100%;
+  border-color: rgba(255, 77, 184, 0.24);
+  background-color: rgba(7, 6, 18, 0.8);
+  color: rgba(255, 255, 255, 0.96);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.aev-account-page-background input::placeholder,
+.aev-account-page-background textarea::placeholder {
+  color: rgba(216, 203, 232, 0.5);
+}
+
+.aev-account-page-background input:focus-visible,
+.aev-account-page-background textarea:focus-visible,
+.aev-account-page-background select:focus-visible {
+  border-color: rgba(49, 230, 212, 0.5);
+  box-shadow:
+    0 0 0 3px rgba(49, 230, 212, 0.09),
+    0 0 22px rgba(255, 77, 184, 0.1);
+}
+
+.aev-account-page-background .action-primary {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(100deg, #ff4db8, #e844cb 54%, #a855f7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 10px 30px rgba(255, 77, 184, 0.28);
+}
+
+@media (max-width: 639px) {
+  .aev-account-page-background {
+    background-position: center, center, 54% top;
+  }
+
+  .aev-account-auth-shell {
+    margin: 0.75rem;
+    width: calc(100% - 1.5rem);
+    box-sizing: border-box;
+    border-radius: 1.45rem;
+    backdrop-filter: blur(14px) saturate(1.14);
+    -webkit-backdrop-filter: blur(14px) saturate(1.14);
+  }
+
+  .aev-account-auth-shell::before {
+    background-position: 52% center;
+    background-size: auto 112%;
+    opacity: 0.24;
+  }
+
+  .aev-account-card::before {
+    background-position: center, 72% center;
+    background-size: cover, auto 150%;
+    opacity: 0.22;
+  }
+}
+
 /* R2G account intent art system and mobile action-footer strategy */
 .aev-intent-card,
 .aev-intent-art {
