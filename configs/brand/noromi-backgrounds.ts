@@ -36,6 +36,7 @@ export const noromiBackgroundAssets = Object.freeze({
   customerFlow02: backgroundAsset("customer-flow-bg-02"),
   customerFlow03: backgroundAsset("customer-flow-bg-03"),
   accountFlow01: backgroundAsset("account-flow-bg-01"),
+  aboutPage01: backgroundAsset("about-page-bg-01"),
 });
 
 /** Proposed page-role mapping for later, separately scoped visual phases. */
@@ -47,6 +48,7 @@ export const noromiBackgroundUsage = Object.freeze({
   checkout: noromiBackgroundAssets.customerFlow02,
   trackOrder: noromiBackgroundAssets.customerFlow03,
   accountLogin: noromiBackgroundAssets.accountFlow01,
+  about: noromiBackgroundAssets.aboutPage01,
   contentSupport: noromiBackgroundAssets.luxePlumSilkAndPetals,
 });
 
