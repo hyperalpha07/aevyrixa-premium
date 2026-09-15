@@ -17,12 +17,11 @@ export default async function ContactPage() {
   const { settings } = await loadStorefrontSettings();
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_8%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_86%_16%,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,#050816_0%,#07101f_48%,#030612_100%)]" />
-      <SiteHeader settings={settings} />
+    <main className="aev-contact-page-background min-h-screen overflow-x-hidden text-white">
+      <SiteHeader active="none" settings={settings} />
 
-      <section className="mx-auto grid w-full min-w-0 max-w-7xl gap-8 px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="min-w-0">
+      <section className="aev-contact-hero-shell mx-auto grid w-full min-w-0 max-w-7xl gap-8 px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-16 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="aev-contact-hero-copy min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.36em] text-cyan-200/72">
             Contact
           </p>
@@ -53,7 +52,7 @@ export default async function ContactPage() {
           </div>
         </div>
 
-        <section className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
+        <section className="aev-contact-card min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur-2xl sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-100/72">
             Support Details
           </p>
@@ -65,7 +64,7 @@ export default async function ContactPage() {
             <ContactDetail label="Email" value={settings.supportEmail} />
             <ContactDetail label="Delivery" value={settings.deliveryCoverageText} />
           </div>
-          <div className="mt-5 space-y-3 rounded-2xl border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-7 text-white/72">
+          <div className="aev-contact-care-note mt-5 space-y-3 rounded-2xl border border-cyan-200/18 bg-cyan-200/[0.055] p-4 text-sm leading-7 text-white/72">
             <p>{settings.codMessage}</p>
             <p>{settings.privacyPackagingMessage}</p>
             <p>{settings.supportWindowMessage}</p>
@@ -96,7 +95,7 @@ export default async function ContactPage() {
 
 function ContactDetail({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="aev-contact-info-card min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/42">
         {label}
       </p>
