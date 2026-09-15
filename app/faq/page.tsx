@@ -78,7 +78,7 @@ export default async function FaqPage() {
   };
 
   return (
-    <>
+    <div className="aev-faq-page-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
@@ -143,6 +143,6 @@ export default async function FaqPage() {
         },
       ]}
     />
-    </>
+    </div>
   );
 }
