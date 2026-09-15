@@ -137,6 +137,7 @@ export default function SiteHeader({
           <Link href="/product"  className={`${navBase} ${active === "shop"    ? navActive : navMuted}`}>Shop</Link>
           <Link href={productHref} className={`${navBase} ${active === "product" ? navActive : navMuted}`}>Product</Link>
           <Link href="/track-order" className={`${navBase} ${active === "track"   ? navActive : navMuted}`}>Track Order</Link>
+          <Link href="/contact" className={`${navBase} ${active === "none" ? navActive : navMuted}`}>Contact</Link>
 
           {hasAccountSession ? (
             <details
@@ -208,6 +209,7 @@ export default function SiteHeader({
           <MobileNavItem href="/" active={active === "home"} icon={Home} label="Home" />
           <MobileNavItem href="/product" active={active === "shop" || active === "product"} icon={LayoutGrid} label="Shop" />
           <MobileNavItem href="/track-order" active={active === "track"} icon={PackageSearch} label="Track" />
+          <MobileNavItem href="/contact" active={active === "none"} icon={MessageSquare} label="Contact" />
           <MobileNavItem
             href={hasAccountSession ? "/account" : "/account/login"}
             active={active === "account"}
