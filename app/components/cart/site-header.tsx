@@ -14,7 +14,7 @@ import {
 import { brandName, brandTagline, noromiAssets } from "@/configs/brand/noromi";
 
 type SiteHeaderProps = {
-  active?: "home" | "shop" | "product" | "track" | "cart" | "account";
+  active?: "home" | "shop" | "product" | "track" | "cart" | "account" | "none";
   productHref?: string;
   settings?: StorefrontSettings;
   compactMobile?: boolean;
