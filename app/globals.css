@@ -6665,16 +6665,16 @@ button {
   inset: 0;
   pointer-events: none;
   background-image: image-set(
-    url("/brand/noromi/backgrounds/faq-page-bg-01.avif") type("image/avif"),
-    url("/brand/noromi/backgrounds/faq-page-bg-01.webp") type("image/webp")
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.webp") type("image/webp")
   );
-  background-position: center 22%;
+  background-position: center 38%;
   background-repeat: no-repeat;
-  background-size: 126% auto;
-  opacity: 0.24;
-  filter: saturate(1.12) contrast(1.06);
-  -webkit-mask-image: linear-gradient(105deg, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.28) 42%, transparent 62%, rgba(0, 0, 0, 0.62));
-  mask-image: linear-gradient(105deg, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.28) 42%, transparent 62%, rgba(0, 0, 0, 0.62));
+  background-size: cover;
+  opacity: 0.27;
+  filter: saturate(1.14) contrast(1.07);
+  -webkit-mask-image: linear-gradient(104deg, #000 0%, rgba(0, 0, 0, 0.7) 23%, transparent 48%, rgba(0, 0, 0, 0.3) 72%, rgba(0, 0, 0, 0.86) 100%);
+  mask-image: linear-gradient(104deg, #000 0%, rgba(0, 0, 0, 0.7) 23%, transparent 48%, rgba(0, 0, 0, 0.3) 72%, rgba(0, 0, 0, 0.86) 100%);
 }
 
 .aev-faq-page-background .aev-info-hero > div:first-of-type::after {
@@ -6685,9 +6685,10 @@ button {
   pointer-events: none;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 12% 18%, rgba(255, 77, 184, 0.16), transparent 28%),
-    radial-gradient(circle at 91% 76%, rgba(49, 230, 212, 0.11), transparent 26%),
-    linear-gradient(112deg, rgba(255, 255, 255, 0.1), transparent 26%);
+    radial-gradient(circle at 10% 14%, rgba(255, 77, 184, 0.2), transparent 27%),
+    radial-gradient(circle at 91% 79%, rgba(49, 230, 212, 0.14), transparent 25%),
+    linear-gradient(112deg, rgba(255, 255, 255, 0.13), transparent 25%),
+    linear-gradient(288deg, rgba(49, 230, 212, 0.07), transparent 34%);
 }
 
 .aev-faq-page-background .aev-info-hero > div:first-of-type > * {
@@ -6732,15 +6733,16 @@ button {
   pointer-events: none;
   border-radius: inherit;
   background-image: image-set(
-    url("/brand/noromi/backgrounds/faq-page-bg-01.avif") type("image/avif"),
-    url("/brand/noromi/backgrounds/faq-page-bg-01.webp") type("image/webp")
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.webp") type("image/webp")
   );
-  background-position: 88% 74%;
+  background-position: center bottom;
   background-repeat: no-repeat;
-  background-size: 155% auto;
-  opacity: 0.13;
-  -webkit-mask-image: radial-gradient(circle at 88% 82%, #000, transparent 46%);
-  mask-image: radial-gradient(circle at 88% 82%, #000, transparent 46%);
+  background-size: cover;
+  opacity: 0.18;
+  filter: saturate(1.12) contrast(1.06);
+  -webkit-mask-image: radial-gradient(ellipse at 0% 100%, #000 0%, rgba(0, 0, 0, 0.82) 24%, transparent 62%);
+  mask-image: radial-gradient(ellipse at 0% 100%, #000 0%, rgba(0, 0, 0, 0.82) 24%, transparent 62%);
 }
 
 .aev-faq-page-background .aev-info-sections article {
@@ -6758,12 +6760,56 @@ button {
     0 12px 32px rgba(4, 2, 10, 0.2);
 }
 
+.aev-faq-page-background .aev-info-sections article::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  opacity: 0.17;
+}
+
+.aev-faq-page-background .aev-info-sections article:nth-child(3n + 1)::before {
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.webp") type("image/webp")
+  );
+  background-position: center 18%;
+  background-size: cover;
+  -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.78) 24%, transparent 62%);
+  mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.78) 24%, transparent 62%);
+}
+
+.aev-faq-page-background .aev-info-sections article:nth-child(3n + 2)::before {
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/mystical_blossom_ribbon_journey.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/mystical_blossom_ribbon_journey.webp") type("image/webp")
+  );
+  background-position: center 72%;
+  background-size: cover;
+  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.76) 22%, transparent 62%);
+  mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.76) 22%, transparent 62%);
+}
+
+.aev-faq-page-background .aev-info-sections article:nth-child(3n)::before {
+  background:
+    radial-gradient(circle at 88% 26%, rgba(49, 230, 212, 0.14), transparent 24%),
+    linear-gradient(102deg, transparent 62%, rgba(255, 255, 255, 0.08) 78%, transparent 92%);
+  opacity: 0.58;
+}
+
 .aev-faq-page-background .aev-info-sections article::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: linear-gradient(96deg, transparent 68%, rgba(49, 230, 212, 0.045), transparent 96%);
+}
+
+.aev-faq-page-background .aev-info-sections article > * {
+  position: relative;
+  z-index: 1;
 }
 
 .aev-faq-page-background .aev-info-sections article h2 {
@@ -6822,9 +6868,9 @@ button {
   }
 
   .aev-faq-page-background .aev-info-hero > div:first-of-type::before {
-    background-position: 48% center;
-    background-size: auto 118%;
-    opacity: 0.16;
+    background-position: center 34%;
+    background-size: cover;
+    opacity: 0.17;
   }
 
   .aev-faq-page-background .aev-info-sections {
@@ -6833,7 +6879,17 @@ button {
   }
 
   .aev-faq-page-background .aev-info-sections::before {
-    opacity: 0.08;
+    background-position: center bottom;
+    background-size: cover;
+    opacity: 0.11;
+  }
+
+  .aev-faq-page-background .aev-info-sections article::before {
+    opacity: 0.1;
+  }
+
+  .aev-faq-page-background .aev-info-sections article:nth-child(3n)::before {
+    opacity: 0.38;
   }
 
   .aev-faq-page-background .aev-info-sections article p {
