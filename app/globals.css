@@ -672,6 +672,303 @@ html[data-admin-v2-color-scheme="dark"] body:has([data-admin-v2-root]) {
   }
 }
 
+/* Logged-in Account orders Phase B: reuses the approved Account workspace. */
+.aev-account-orders-workspace .aev-account-orders-welcome::before {
+  background-position: 88% 42%;
+  background-size: 122% auto;
+  opacity: 0.22;
+}
+
+.aev-account-orders-overview {
+  margin-bottom: 0.85rem;
+}
+
+.aev-account-orders-page .aev-account-orders-overview .aev-metric-card {
+  min-height: 7rem;
+  border-color: rgba(255, 77, 184, 0.2);
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.065), transparent 42%),
+    linear-gradient(150deg, rgba(36, 15, 47, 0.78), rgba(8, 13, 26, 0.78));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 14px 36px rgba(4, 2, 10, 0.22);
+}
+
+.aev-account-orders-page .aev-account-orders-list-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(255, 77, 184, 0.22);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 38%),
+    linear-gradient(150deg, rgba(31, 13, 43, 0.84), rgba(7, 12, 25, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 20px 55px rgba(4, 2, 10, 0.28),
+    0 0 34px rgba(255, 77, 184, 0.065);
+}
+
+.aev-account-orders-list-panel::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -8rem;
+  right: -9rem;
+  width: 25rem;
+  aspect-ratio: 1;
+  pointer-events: none;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.webp") type("image/webp")
+  );
+  background-position: right top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.09;
+  filter: saturate(1.12) contrast(1.06);
+  -webkit-mask-image: radial-gradient(circle at 70% 28%, #000, transparent 67%);
+  mask-image: radial-gradient(circle at 70% 28%, #000, transparent 67%);
+}
+
+.aev-account-orders-list-heading {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.aev-account-order-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.aev-account-order-card {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 77, 184, 0.17);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 38%),
+    rgba(8, 9, 22, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    0 13px 34px rgba(3, 2, 9, 0.19);
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.aev-account-order-card:hover {
+  border-color: rgba(255, 77, 184, 0.3);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 40%),
+    rgba(20, 11, 31, 0.76);
+  transform: translateY(-1px);
+}
+
+.aev-account-order-card::before,
+.aev-account-order-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.aev-account-order-card::before {
+  width: 15rem;
+  height: 11rem;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.09;
+}
+
+.aev-account-order-card.is-variant-1::before {
+  top: -4rem;
+  right: -4rem;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.webp") type("image/webp")
+  );
+  background-position: right top;
+  -webkit-mask-image: radial-gradient(ellipse at 75% 25%, #000, transparent 68%);
+  mask-image: radial-gradient(ellipse at 75% 25%, #000, transparent 68%);
+}
+
+.aev-account-order-card.is-variant-2::before {
+  right: -3rem;
+  bottom: -4rem;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.webp") type("image/webp")
+  );
+  background-position: right bottom;
+  -webkit-mask-image: radial-gradient(ellipse at 75% 75%, #000, transparent 68%);
+  mask-image: radial-gradient(ellipse at 75% 75%, #000, transparent 68%);
+}
+
+.aev-account-order-card.is-variant-3::before {
+  top: -3rem;
+  right: -3rem;
+  background:
+    radial-gradient(circle at 68% 30%, rgba(49, 230, 212, 0.18), transparent 32%),
+    linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.08), transparent 70%);
+  opacity: 0.62;
+}
+
+.aev-account-order-card::after {
+  inset: 1px;
+  border-radius: inherit;
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.055), transparent 20%),
+    radial-gradient(circle at 94% 82%, rgba(49, 230, 212, 0.055), transparent 28%);
+}
+
+.aev-account-order-card-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.aev-account-order-card-primary {
+  min-width: 0;
+}
+
+.aev-account-order-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.aev-account-order-card-actions {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 0.55rem;
+}
+
+.aev-account-order-total {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 1rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.aev-account-order-total p {
+  color: rgba(156, 145, 170, 0.7);
+  font-size: 0.625rem;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.aev-account-order-total strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #ffb3d1;
+  font-size: 0.95rem;
+}
+
+.aev-account-order-secondary-actions {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.aev-account-orders-empty {
+  display: grid;
+  min-height: 18rem;
+  place-items: center;
+  align-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.aev-account-orders-empty-icon {
+  display: grid;
+  width: 4rem;
+  height: 4rem;
+  place-items: center;
+  border: 1px solid rgba(255, 77, 184, 0.28);
+  border-radius: 1.35rem;
+  background: rgba(255, 77, 184, 0.09);
+  color: #ffb3d1;
+  box-shadow: 0 15px 38px rgba(255, 77, 184, 0.13);
+}
+
+.aev-account-orders-empty h3 {
+  margin-top: 1rem;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.aev-account-orders-empty p {
+  max-width: 27rem;
+  margin-top: 0.5rem;
+  color: rgba(216, 203, 232, 0.7);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 900px) {
+  .aev-account-order-card-content {
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 14rem);
+    align-items: start;
+    padding: 1.15rem;
+  }
+
+  .aev-account-order-meta-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .aev-account-order-total {
+    text-align: right;
+  }
+}
+
+@media (max-width: 767px) {
+  .aev-account-orders-overview {
+    margin-bottom: 0.55rem;
+  }
+
+  .aev-account-orders-page .aev-account-orders-list-panel {
+    padding: 1rem;
+    border-radius: 1.2rem;
+  }
+
+  .aev-account-orders-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .aev-account-orders-list-heading .mini-action {
+    width: 100%;
+  }
+
+  .aev-account-order-card-content {
+    padding: 0.9rem;
+  }
+
+  .aev-account-order-card::before {
+    opacity: 0.055;
+  }
+
+  .aev-account-order-secondary-actions .mini-action {
+    min-width: 8rem;
+  }
+}
+
 .support-panel {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;

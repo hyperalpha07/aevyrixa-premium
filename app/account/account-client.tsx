@@ -303,15 +303,15 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const homeMedia = settings.homepageMediaSettings;
 
   return (
-    <main className={`aev-account-page-background min-h-screen overflow-x-hidden text-white ${view === "dashboard" ? "aev-account-dashboard-page" : ""}`}>
+    <main className={`aev-account-page-background min-h-screen overflow-x-hidden text-white ${view === "dashboard" || view === "orders" ? "aev-account-dashboard-page" : ""} ${view === "orders" ? "aev-account-orders-page" : ""}`}>
       <SiteHeader settings={settings} active="account" compactMobile />
 
       <section className="aev-account-shell mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6 md:pb-20 md:pt-8">
-        {view !== "dashboard" && <AccountMobileMenu view={view} />}
-        {view !== "dashboard" && (
+        {view !== "dashboard" && view !== "orders" && <AccountMobileMenu view={view} />}
+        {view !== "dashboard" && view !== "orders" && (
           <nav className="mb-5 hidden scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
             <AccountTab href="/account" active={false} icon={UserRound} label="Account" />
-            <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
+            <AccountTab href="/account/orders" active={false} icon={PackageSearch} label="Orders" />
             <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
             <AccountTab href="/account/support" active={view === "support"} icon={MessageSquare} label="Support" />
           </nav>
@@ -352,6 +352,8 @@ export default function AccountClient({ view }: { view: AccountView }) {
               {view === "orders" && (
                 <OrdersView
                   orders={orders}
+                  customer={customer}
+                  onLogout={logout}
                 />
               )}
               {view === "addresses" && (
@@ -423,9 +425,9 @@ function AccountMobileMenu({
   const CurrentIcon = current.icon;
   const heroActions = [
     { href: "/track-order", label: "Track Order", icon: PackageSearch },
-    { href: "/account/orders", label: "View Orders", icon: PackageSearch },
-    { href: "/account/addresses", label: "Saved Addresses", icon: MapPin },
-    { href: "/account/support", label: "Support", icon: MessageSquare },
+    { view: "orders", href: "/account/orders", label: "View Orders", icon: PackageSearch },
+    { view: "addresses", href: "/account/addresses", label: "Saved Addresses", icon: MapPin },
+    { view: "support", href: "/account/support", label: "Support", icon: MessageSquare },
   ] as const;
 
   return (
@@ -561,7 +563,7 @@ function Dashboard({
 
   return (
     <div className="aev-account-dashboard-workspace">
-      <DashboardSidebar customer={customer} onLogout={onLogout} />
+      <DashboardSidebar customer={customer} activeView="dashboard" onLogout={onLogout} />
 
       <div className="aev-account-dashboard-main">
         <section className="aev-account-dashboard-welcome">
@@ -629,14 +631,16 @@ function Dashboard({
 
 function DashboardSidebar({
   customer,
+  activeView,
   onLogout,
 }: {
   customer: Customer;
+  activeView: "dashboard" | "orders";
   onLogout: () => void;
 }) {
   const items = [
-    { href: "/account", label: "Dashboard", icon: LayoutDashboard, active: true },
-    { href: "/account/orders", label: "My Orders", icon: PackageSearch, active: false },
+    { href: "/account", label: "Dashboard", icon: LayoutDashboard, active: activeView === "dashboard" },
+    { href: "/account/orders", label: "My Orders", icon: PackageSearch, active: activeView === "orders" },
     { href: "/account/addresses", label: "My Addresses", icon: MapPin, active: false },
     { href: "/account/support", label: "Support Requests", icon: MessageSquare, active: false },
   ];
@@ -1002,18 +1006,73 @@ function SectionTitle({ title, href, label = "View" }: { title: string; href: st
   );
 }
 
-function OrdersView({ orders }: { orders: AccountOrder[] }) {
+function OrdersView({
+  orders,
+  customer,
+  onLogout,
+}: {
+  orders: AccountOrder[];
+  customer: Customer;
+  onLogout: () => void;
+}) {
+  const isPending = (order: AccountOrder) => normalizeStatus(order.status).includes("pending");
+  const isDelivered = (order: AccountOrder) =>
+    normalizeStatus(order.status).includes("deliver") ||
+    normalizeStatus(order.deliveryStatus).includes("deliver");
+  const pendingOrders = orders.filter(isPending).length;
+  const deliveredOrders = orders.filter(isDelivered).length;
+  const cancelledOrOtherOrders = orders.filter(
+    (order) => !isPending(order) && !isDelivered(order)
+  ).length;
+
   return (
-    <div className="grid gap-5">
-      <Panel className="aev-intent-art aev-intent-orders">
-        <h2 className="text-xl font-semibold text-white">Order History</h2>
-        <p className="mt-2 text-sm leading-7 text-[#9C91AA]">
-          Open an order for a focused detail view with tracking and support actions.
-        </p>
-        <div className="mt-5">
-          <OrderRows orders={orders} detailed />
-        </div>
-      </Panel>
+    <div className="aev-account-dashboard-workspace aev-account-orders-workspace">
+      <DashboardSidebar customer={customer} activeView="orders" onLogout={onLogout} />
+
+      <div className="aev-account-dashboard-main">
+        <section className="aev-account-dashboard-welcome aev-account-orders-welcome">
+          <div className="aev-account-dashboard-welcome-art" aria-hidden="true" />
+          <div className="relative z-10 min-w-0 pr-12 md:pr-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#31E6D4]/78">
+              Noromi Care Account
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              My Orders
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#E8DDF0]/78 sm:text-base">
+              Review your Noromi Care orders, delivery progress, and available support actions.
+            </p>
+          </div>
+          <div className="absolute right-4 top-4 z-20 md:hidden">
+            <AccountMobileMenu view="orders" hero onLogout={onLogout} />
+          </div>
+        </section>
+
+        <section className="aev-account-dashboard-stats aev-account-orders-overview" aria-label="Order overview">
+          <Metric icon={PackageSearch} label="Total Orders" value={String(orders.length)} accent="pink" />
+          <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
+          <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
+          <Metric icon={MoreHorizontal} label="Cancelled / Other" value={String(cancelledOrOtherOrders)} accent="violet" />
+        </section>
+
+        <Panel className="aev-account-orders-list-panel">
+          <div className="aev-account-orders-list-heading">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#FFB3D1]/72">
+                Order history
+              </p>
+              <h2 className="mt-1.5 text-xl font-semibold text-white sm:text-2xl">Your orders</h2>
+            </div>
+            <Link href="/track-order" className="mini-action min-h-10 justify-center">
+              <PackageSearch className="h-4 w-4" />
+              Track an order
+            </Link>
+          </div>
+          <div className="mt-5">
+            <OrderRows orders={orders} detailed />
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }
@@ -1037,7 +1096,23 @@ function OrderRows({
   onSelect?: (orderRef: string) => void;
   detailed?: boolean;
 }) {
-  if (orders.length === 0) return <EmptyLine text="No orders found for this account phone yet." />;
+  if (orders.length === 0) {
+    if (!detailed) return <EmptyLine text="No orders found for this account phone yet." />;
+
+    return (
+      <div className="aev-account-orders-empty">
+        <span className="aev-account-orders-empty-icon">
+          <ShoppingBag className="h-6 w-6" />
+        </span>
+        <h3>No orders yet</h3>
+        <p>Your Noromi Care orders will appear here after they are placed.</p>
+        <Link href="/product" className="aev-account-care-cta">
+          Continue Shopping
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    );
+  }
 
   if (!detailed) {
     return (
@@ -1079,67 +1154,93 @@ function OrderRows({
   }
 
   return (
-    <div className="space-y-3">
-      {orders.map((order) => (
-        <div
-          key={order.orderRef}
-          className="group relative grid gap-4 overflow-hidden rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230]/95 p-4 transition hover:border-[#FF4DB8]/28 hover:bg-[#211633]/90 sm:p-4 md:grid-cols-[minmax(0,1fr)_auto]"
-        >
-          <div className="pointer-events-none absolute right-4 top-4 h-14 w-14 rounded-full bg-[#FF4DB8]/[0.05] blur-xl transition group-hover:bg-[#FF4DB8]/[0.10]" />
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{order.orderRef}</p>
-              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.status)}`}>
-                {readable(order.status)}
-              </span>
+    <div className="aev-account-order-list">
+      {orders.map((order, index) => {
+        const itemCount = order.items.reduce((total, item) => total + item.quantity, 0);
+        const deliveryArea = order.deliveryArea || order.cityArea || order.deliveryZone;
+
+        return (
+          <article
+            key={order.orderRef}
+            className={`aev-account-order-card is-variant-${(index % 3) + 1}`}
+          >
+            <div className="aev-account-order-card-content">
+              <div className="aev-account-order-card-primary">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <p className="break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
+                    {order.orderRef}
+                  </p>
+                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.status)}`}>
+                    {readable(order.status)}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-[#C6B6D2]/68">Placed {formatDate(order.createdAt)}</p>
+
+                <div className="aev-account-order-meta-grid">
+                  <OrderMeta label="Items" value={`${itemCount} ${itemCount === 1 ? "item" : "items"}`} />
+                  <OrderMeta label="Payment" value={readable(order.paymentMethod)} />
+                  {deliveryArea && <OrderMeta label="Delivery area" value={deliveryArea} />}
+                  {order.deliveryStatus && <OrderMeta label="Delivery" value={readable(order.deliveryStatus)} />}
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {order.paymentStatus && (
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.paymentStatus)}`}>
+                      Payment: {readable(order.paymentStatus)}
+                    </span>
+                  )}
+                  {order.deliveryStatus && (
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.deliveryStatus)}`}>
+                      Delivery: {readable(order.deliveryStatus)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="aev-account-order-card-actions">
+                <div className="aev-account-order-total">
+                  <p>Total</p>
+                  <strong>{formatCurrency(order.total)}</strong>
+                </div>
+                {onSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(order.orderRef)}
+                    className="mini-action min-h-10 w-full justify-center"
+                  >
+                    View details
+                  </button>
+                ) : (
+                  <Link className="mini-action min-h-10 w-full justify-center text-center" href={orderDetailHref(order.orderRef)}>
+                    View details
+                  </Link>
+                )}
+                <div className="aev-account-order-secondary-actions">
+                  {order.customerPhone && (
+                    <Link className="mini-action min-h-10 flex-1 justify-center text-center" href={trackOrderHref(order)}>
+                      Track order
+                    </Link>
+                  )}
+                  <Link className="mini-action min-h-10 flex-1 justify-center text-center" href="/account/support">
+                    Get support
+                  </Link>
+                </div>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-[#9C91AA]">{formatDate(order.createdAt)}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {order.paymentStatus && (
-                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.paymentStatus)}`}>
-                  Payment: {readable(order.paymentStatus)}
-                </span>
-              )}
-              {order.deliveryStatus && (
-                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusChipClass(order.deliveryStatus)}`}>
-                  Delivery: {readable(order.deliveryStatus)}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 md:min-w-[10.5rem] md:items-end">
-            <div className="w-full rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2 md:text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9C91AA]/70">Total</p>
-              <p className="mt-1 text-sm font-semibold text-[#FFB3D1]">{formatCurrency(order.total)}</p>
-            </div>
-            {onSelect ? (
-              <button
-                type="button"
-                onClick={() => onSelect(order.orderRef)}
-                className="min-h-10 w-full rounded-full border border-[#FF4DB8]/25 bg-[#211633] px-4 py-2 text-sm font-semibold text-[#D8CBE8] transition hover:border-[#FF4DB8]/45 hover:text-white md:w-auto"
-              >
-                View details
-              </button>
-            ) : (
-              <Link className="mini-action min-h-10 w-full justify-center text-center md:w-auto" href={orderDetailHref(order.orderRef)}>
-                View details
-              </Link>
-            )}
-            <div className="flex w-full flex-col gap-2 min-[390px]:flex-row md:justify-end">
-              {order.customerPhone && (
-                <Link className="mini-action min-h-10 flex-1 justify-center text-center md:flex-none" href={trackOrderHref(order)}>
-                  Track order
-                </Link>
-              )}
-              {detailed && (
-                <Link className="mini-action min-h-10 flex-1 justify-center text-center md:flex-none" href="/account/support">
-                  Get support
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      ))}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function OrderMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9C91AA]/64">{label}</p>
+      <p className="mt-1 break-words text-xs font-medium capitalize text-[#E9DEEF]/82 [overflow-wrap:anywhere]">
+        {value}
+      </p>
     </div>
   );
 }
