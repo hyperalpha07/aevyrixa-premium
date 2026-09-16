@@ -27,16 +27,22 @@ export default async function SupportPage() {
   const homeMedia = settings.homepageMediaSettings;
 
   return (
-    <>
-    <InfoPageShell
-      settings={settings}
-      eyebrow="Support"
-      title="3-Day Hygiene-Safe Support — we review every request personally."
-      intro={`${settings.supportWindowMessage} Our team reviews each request individually and will guide you through the next steps.`}
-      ctaLabel="View Contact Details"
-      ctaHref="/contact"
-      topContent={<SupportActionPanel whatsappUrl={canShowWhatsapp ? settings.whatsappUrl : ""} />}
-      sections={[
+    <div className="aev-support-page-scope">
+      <InfoPageShell
+        settings={settings}
+        eyebrow="Support"
+        title="3-Day Hygiene-Safe Support — we review every request personally."
+        intro={`${settings.supportWindowMessage} Our team reviews each request individually and will guide you through the next steps.`}
+        ctaLabel="View Contact Details"
+        ctaHref="/contact"
+        topContent={
+          <div className="aev-support-action-panel">
+            <SupportActionPanel
+              whatsappUrl={canShowWhatsapp ? settings.whatsappUrl : ""}
+            />
+          </div>
+        }
+        sections={[
         {
           title: "How to Request Support",
           items: [
@@ -81,17 +87,17 @@ export default async function SupportPage() {
           title: "Contact Support",
           copy: contactCopy,
         },
-      ]}
-    />
-    <LiveChatWidget
-      enabled={canShowLiveChat && homeMedia.liveChatEnabled}
-      label={homeMedia.liveChatLabel}
-      placement={homeMedia.liveChatPlacement}
-      whatsappAlsoEnabled={canShowWhatsapp && !!settings.whatsappUrl}
-      whatsappUrl={settings.whatsappUrl}
-      supportPhone={settings.supportPhone}
-      hideLauncherOnMobile
-    />
-    </>
+        ]}
+      />
+      <LiveChatWidget
+        enabled={canShowLiveChat && homeMedia.liveChatEnabled}
+        label={homeMedia.liveChatLabel}
+        placement={homeMedia.liveChatPlacement}
+        whatsappAlsoEnabled={canShowWhatsapp && !!settings.whatsappUrl}
+        whatsappUrl={settings.whatsappUrl}
+        supportPhone={settings.supportPhone}
+        hideLauncherOnMobile
+      />
+    </div>
   );
 }
