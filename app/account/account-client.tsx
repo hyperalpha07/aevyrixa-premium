@@ -303,20 +303,10 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const homeMedia = settings.homepageMediaSettings;
 
   return (
-    <main className={`aev-account-page-background min-h-screen overflow-x-hidden text-white ${view === "dashboard" || view === "orders" ? "aev-account-dashboard-page" : ""} ${view === "orders" ? "aev-account-orders-page" : ""}`}>
+    <main className={`aev-account-page-background aev-account-dashboard-page min-h-screen overflow-x-hidden text-white ${view === "orders" ? "aev-account-orders-page" : ""} ${view === "addresses" ? "aev-account-addresses-page" : ""} ${view === "support" ? "aev-account-support-page" : ""}`}>
       <SiteHeader settings={settings} active="account" compactMobile />
 
       <section className="aev-account-shell mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6 md:pb-20 md:pt-8">
-        {view !== "dashboard" && view !== "orders" && <AccountMobileMenu view={view} />}
-        {view !== "dashboard" && view !== "orders" && (
-          <nav className="mb-5 hidden scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-            <AccountTab href="/account" active={false} icon={UserRound} label="Account" />
-            <AccountTab href="/account/orders" active={false} icon={PackageSearch} label="Orders" />
-            <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
-            <AccountTab href="/account/support" active={view === "support"} icon={MessageSquare} label="Support" />
-          </nav>
-        )}
-
         {isLoading ? (
           <Panel>Loading your account...</Panel>
         ) : !customer ? (
@@ -374,9 +364,19 @@ export default function AccountClient({ view }: { view: AccountView }) {
                   onEdit={editAddress}
                   onDelete={deleteAddress}
                   onSetDefault={setDefaultAddress}
+                  customer={customer}
+                  onLogout={logout}
                 />
               )}
-              {view === "support" && <SupportView message={supportMessage} settings={settings} onOpenLiveChat={openLiveChat} />}
+              {view === "support" && (
+                <SupportView
+                  message={supportMessage}
+                  settings={settings}
+                  customer={customer}
+                  onLogout={logout}
+                  onOpenLiveChat={openLiveChat}
+                />
+              )}
             </section>
 
           </div>
@@ -501,32 +501,6 @@ function AccountMobileMenu({
   );
 }
 
-function AccountTab({
-  href,
-  active,
-  icon: Icon,
-  label,
-}: {
-  href: string;
-  active: boolean;
-  icon: typeof UserRound;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition ${
-        active
-          ? "border-[#FF4DB8]/45 bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_0_16px_rgba(255,77,184,0.30)]"
-          : "border-white/10 bg-[#151024] text-[#9C91AA] hover:border-[#FF4DB8]/25 hover:bg-[#211633] hover:text-[#D8CBE8]"
-      }`}
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </Link>
-  );
-}
-
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`aev-panel min-w-0 rounded-[1.5rem] border border-[#FF4DB8]/12 bg-[#151024] p-5 shadow-[0_16px_56px_rgba(0,0,0,0.28)] sm:p-6 ${className}`}>
@@ -616,11 +590,10 @@ function Dashboard({
           </Panel>
 
           <div className="aev-account-dashboard-side-stack">
-            <DashboardQuickActions />
-            <DashboardHelp
-              settings={settings}
-              onOpenLiveChat={onOpenLiveChat}
-            />
+            <Panel className="aev-account-dashboard-utilities">
+              <DashboardQuickActions />
+              <DashboardHelp settings={settings} onOpenLiveChat={onOpenLiveChat} />
+            </Panel>
             <WishlistPanel items={wishlistItems} onRemove={onRemoveWishlistItem} />
           </div>
         </div>
@@ -635,14 +608,14 @@ function DashboardSidebar({
   onLogout,
 }: {
   customer: Customer;
-  activeView: "dashboard" | "orders";
+  activeView: AccountView;
   onLogout: () => void;
 }) {
   const items = [
     { href: "/account", label: "Dashboard", icon: LayoutDashboard, active: activeView === "dashboard" },
     { href: "/account/orders", label: "My Orders", icon: PackageSearch, active: activeView === "orders" },
-    { href: "/account/addresses", label: "My Addresses", icon: MapPin, active: false },
-    { href: "/account/support", label: "Support Requests", icon: MessageSquare, active: false },
+    { href: "/account/addresses", label: "My Addresses", icon: MapPin, active: activeView === "addresses" },
+    { href: "/account/support", label: "Support Requests", icon: MessageSquare, active: activeView === "support" },
   ];
 
   return (
@@ -704,7 +677,7 @@ function DashboardQuickActions() {
   ] as const;
 
   return (
-    <Panel className="aev-account-dashboard-quick-panel">
+    <section className="aev-account-dashboard-quick-panel">
       <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         {actions.map((action) => {
@@ -724,7 +697,7 @@ function DashboardQuickActions() {
           );
         })}
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -736,7 +709,7 @@ function DashboardHelp({
   onOpenLiveChat: () => void;
 }) {
   return (
-    <Panel className="aev-account-dashboard-help">
+    <section className="aev-account-dashboard-help">
       <div className="relative z-10">
         <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#31E6D4]/76">
           Customer care
@@ -764,7 +737,7 @@ function DashboardHelp({
           </Link>
         </div>
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -1256,6 +1229,8 @@ function AddressesView({
   onEdit,
   onDelete,
   onSetDefault,
+  customer,
+  onLogout,
 }: {
   addresses: Address[];
   isOpen: boolean;
@@ -1267,85 +1242,122 @@ function AddressesView({
   onEdit: (address: Address) => void;
   onDelete: (addressId: string) => void;
   onSetDefault: (addressId: string) => void;
+  customer: Customer;
+  onLogout: () => void;
 }) {
   return (
-    <div className="grid gap-5">
-      <Panel>
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-white">Saved Addresses</h2>
-          <button type="button" onClick={onOpen} className="icon-action">
-            <Plus className="h-4 w-4" />
-            Add
-          </button>
-        </div>
-        {isOpen && (
-          <form onSubmit={onSave} className="mt-5 grid gap-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Label" value={draft.label} onChange={(value) => setDraft({ ...draft, label: value })} />
-              <Input label="Full name" value={draft.fullName} onChange={(value) => setDraft({ ...draft, fullName: value })} />
-              <Input label="Phone" value={draft.phone} onChange={(value) => setDraft({ ...draft, phone: value })} />
-              <Input label="City / area" value={draft.cityArea} onChange={(value) => setDraft({ ...draft, cityArea: value })} />
-            </div>
-            <label className="block">
-              <span className="text-sm font-medium text-[#D8CBE8]">Full address</span>
-              <textarea
-                value={draft.address}
-                rows={3}
-                onChange={(event) => setDraft({ ...draft, address: event.target.value })}
-                className="mt-2 w-full resize-none rounded-2xl border border-[#FF4DB8]/14 bg-[#0B0F1A] px-4 py-3 text-sm text-white outline-none focus:border-[#FF4DB8]/35 placeholder:text-[#6B5F7A]"
-              />
-            </label>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-sm font-medium text-[#D8CBE8]">Delivery zone</span>
-                <select
-                  value={draft.deliveryZone}
-                  onChange={(event) => setDraft({ ...draft, deliveryZone: event.target.value })}
-                  className="mt-2 w-full rounded-2xl border border-[#FF4DB8]/14 bg-[#0B0F1A] px-4 py-3 text-sm text-white outline-none focus:border-[#FF4DB8]/35"
-                >
-                  <option>Inside Dhaka</option>
-                  <option>Outside Dhaka</option>
-                </select>
-              </label>
-              <label className="mt-8 flex items-center gap-3 text-sm text-[#D8CBE8]">
-                <input
-                  type="checkbox"
-                  checked={draft.isDefault}
-                  onChange={(event) => setDraft({ ...draft, isDefault: event.target.checked })}
-                  className="h-4 w-4 accent-[#FF4DB8]"
-                />
-                Set as default
-              </label>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button className="action-primary" type="submit">Save address</button>
-              <button className="action-muted" type="button" onClick={onCancel}>Cancel</button>
-            </div>
-          </form>
-        )}
-      </Panel>
-      <Panel>
-        {addresses.length === 0 ? (
-          <EmptyLine text="No saved addresses yet." />
-        ) : (
-          <div className="space-y-3">
-            {addresses.map((address) => (
-              <div key={address.id} className="rounded-2xl border border-[#FF4DB8]/12 bg-[#1B1230] p-4">
-                <AddressSummary address={address} />
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button className="mini-action" type="button" onClick={() => onEdit(address)}>Edit</button>
-                  <button className="mini-action" type="button" onClick={() => onDelete(address.id)}>Delete</button>
-                  {!address.isDefault && (
-                    <button className="mini-action" type="button" onClick={() => onSetDefault(address.id)}>
-                      Set default
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+    <div className="aev-account-dashboard-workspace aev-account-addresses-workspace">
+      <DashboardSidebar customer={customer} activeView="addresses" onLogout={onLogout} />
+
+      <div className="aev-account-dashboard-main">
+        <section className="aev-account-dashboard-welcome aev-account-addresses-welcome">
+          <div className="aev-account-dashboard-welcome-art" aria-hidden="true" />
+          <div className="relative z-10 min-w-0 pr-12 md:pr-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#31E6D4]/78">
+              Noromi Care Account
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold leading-tight text-white sm:text-4xl">My Addresses</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#E8DDF0]/78 sm:text-base">
+              Keep your delivery details accurate for a smooth and discreet Noromi Care order experience.
+            </p>
           </div>
-        )}
-      </Panel>
+          <button type="button" onClick={onOpen} className="aev-account-addresses-add">
+            <Plus className="h-4 w-4" />
+            Add Address
+          </button>
+          <div className="absolute right-4 top-4 z-20 md:hidden">
+            <AccountMobileMenu view="addresses" hero onLogout={onLogout} />
+          </div>
+        </section>
+
+        <Panel className="aev-account-addresses-panel">
+          {isOpen && (
+            <form onSubmit={onSave} className="aev-account-address-form">
+              <div className="aev-account-address-form-heading">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#31E6D4]/72">
+                    Delivery details
+                  </p>
+                  <h2 className="mt-1.5 text-xl font-semibold text-white">
+                    {draft.id ? "Edit address" : "Add an address"}
+                  </h2>
+                </div>
+                <button className="mini-action" type="button" onClick={onCancel}>Cancel</button>
+              </div>
+              <div className="aev-account-address-form-grid">
+                <Input label="Label" value={draft.label} onChange={(value) => setDraft({ ...draft, label: value })} />
+                <Input label="Full name" value={draft.fullName} onChange={(value) => setDraft({ ...draft, fullName: value })} />
+                <Input label="Phone" value={draft.phone} onChange={(value) => setDraft({ ...draft, phone: value })} />
+                <Input label="City / area" value={draft.cityArea} onChange={(value) => setDraft({ ...draft, cityArea: value })} />
+                <label className="aev-account-address-field sm:col-span-2">
+                  <span>Full address</span>
+                  <textarea
+                    value={draft.address}
+                    rows={3}
+                    onChange={(event) => setDraft({ ...draft, address: event.target.value })}
+                  />
+                </label>
+                <label className="aev-account-address-field">
+                  <span>Delivery zone</span>
+                  <select
+                    value={draft.deliveryZone}
+                    onChange={(event) => setDraft({ ...draft, deliveryZone: event.target.value })}
+                  >
+                    <option>Inside Dhaka</option>
+                    <option>Outside Dhaka</option>
+                  </select>
+                </label>
+                <label className="aev-account-address-default-toggle">
+                  <input
+                    type="checkbox"
+                    checked={draft.isDefault}
+                    onChange={(event) => setDraft({ ...draft, isDefault: event.target.checked })}
+                  />
+                  <span>Set as default</span>
+                </label>
+              </div>
+              <button className="action-primary mt-5" type="submit">Save address</button>
+            </form>
+          )}
+
+          <div className={isOpen ? "aev-account-address-list has-form" : "aev-account-address-list"}>
+            {addresses.length === 0 ? (
+              <div className="aev-account-addresses-empty">
+                <span><MapPin className="h-6 w-6" /></span>
+                <h2>No saved addresses yet</h2>
+                <p>Add a delivery address to make future Noromi Care orders quicker and easier.</p>
+                {!isOpen && (
+                  <button type="button" onClick={onOpen} className="aev-account-care-cta">
+                    <Plus className="h-4 w-4" />
+                    Add Address
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="aev-account-address-list-heading">
+                  <h2>Saved addresses</h2>
+                  <span>{addresses.length} {addresses.length === 1 ? "address" : "addresses"}</span>
+                </div>
+                {addresses.map((address) => (
+                  <article key={address.id} className="aev-account-address-row">
+                    <AddressSummary address={address} />
+                    <div className="aev-account-address-actions">
+                      <button className="mini-action" type="button" onClick={() => onEdit(address)}>Edit</button>
+                      <button className="mini-action" type="button" onClick={() => onDelete(address.id)}>Delete</button>
+                      {!address.isDefault && (
+                        <button className="mini-action" type="button" onClick={() => onSetDefault(address.id)}>
+                          Set default
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </>
+            )}
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }
@@ -1381,23 +1393,108 @@ function AddressSummary({ address }: { address: Address }) {
   );
 }
 
-function SupportView({ message, settings, onOpenLiveChat }: { message: string; settings: StorefrontSettings; onOpenLiveChat: () => void }) {
+function SupportView({
+  message,
+  settings,
+  customer,
+  onLogout,
+  onOpenLiveChat,
+}: {
+  message: string;
+  settings: StorefrontSettings;
+  customer: Customer;
+  onLogout: () => void;
+  onOpenLiveChat: () => void;
+}) {
+  const supportActions: Array<{
+    label: string;
+    helper: string;
+    icon: typeof MessageSquare;
+    onClick?: () => void;
+    href?: string;
+    external?: boolean;
+  }> = [
+    { label: "Live Chat", helper: "Chat with Noromi Care support.", icon: MessageSquare, onClick: onOpenLiveChat },
+    {
+      label: "WhatsApp",
+      helper: settings.supportWhatsApp || "Open the current support contact details.",
+      icon: Headphones,
+      href: settings.whatsappUrl || "/support",
+      external: Boolean(settings.whatsappUrl),
+    },
+    { label: "Support Center", helper: "Review support and care guidance.", icon: ShieldCheck, href: "/support" },
+    { label: "Track Order", helper: "Check the latest delivery progress.", icon: PackageSearch, href: "/track-order" },
+  ];
+
   return (
-    <div className="grid gap-5">
-      <SupportHub settings={settings} onOpenLiveChat={onOpenLiveChat} />
-      <Panel>
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A855F7]/22 bg-[#A855F7]/[0.08] text-[#A855F7]">
-            <MessageSquare className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-xl font-semibold text-white">Support History</h2>
-            <p className="mt-2 text-sm leading-7 text-[#9C91AA]">
-              {message || "Live chat conversations are currently token-based and not safely linked to customer accounts yet."}
+    <div className="aev-account-dashboard-workspace aev-account-support-workspace">
+      <DashboardSidebar customer={customer} activeView="support" onLogout={onLogout} />
+
+      <div className="aev-account-dashboard-main">
+        <section className="aev-account-dashboard-welcome aev-account-support-welcome">
+          <div className="aev-account-dashboard-welcome-art" aria-hidden="true" />
+          <div className="relative z-10 min-w-0 pr-12 md:pr-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#31E6D4]/78">
+              Noromi Care Account
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold leading-tight text-white sm:text-4xl">Support Requests</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#E8DDF0]/78 sm:text-base">
+              Get private, thoughtful help with your orders, delivery, sizing, or product concerns.
             </p>
           </div>
+          <div className="absolute right-4 top-4 z-20 md:hidden">
+            <AccountMobileMenu view="support" hero onLogout={onLogout} />
+          </div>
+        </section>
+
+        <div className="aev-account-support-layout">
+          <Panel className="aev-account-support-history">
+            <div className="aev-account-support-heading">
+              <span><MessageSquare className="h-5 w-5" /></span>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#FFB3D1]/72">Account support</p>
+                <h2 className="mt-1.5 text-xl font-semibold text-white sm:text-2xl">Support history</h2>
+              </div>
+            </div>
+            <div className="aev-account-support-message">
+              <p>{message || "Live chat conversations are currently token-based and not safely linked to customer accounts yet."}</p>
+            </div>
+            <div className="aev-account-support-reassurance">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <p>Share your order reference when contacting support so the team can help efficiently.</p>
+            </div>
+          </Panel>
+
+          <Panel className="aev-account-support-utilities">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#31E6D4]/72">Support tools</p>
+            <h2 className="mt-1.5 text-xl font-semibold text-white">How can we help?</h2>
+            <div className="aev-account-support-action-list">
+              {supportActions.map((action) => {
+                const Icon = action.icon;
+                const content = (
+                  <>
+                    <span><Icon className="h-4 w-4" /></span>
+                    <span className="min-w-0 flex-1">
+                      <strong>{action.label}</strong>
+                      <small>{action.helper}</small>
+                    </span>
+                    <ArrowRight className="h-4 w-4 opacity-55" />
+                  </>
+                );
+                const className = "aev-account-support-action";
+
+                if (action.onClick) {
+                  return <button key={action.label} type="button" onClick={action.onClick} className={className}>{content}</button>;
+                }
+                if (action.external) {
+                  return <a key={action.label} href={action.href} target="_blank" rel="noreferrer" className={className}>{content}</a>;
+                }
+                return <Link key={action.label} href={action.href || "/support"} className={className}>{content}</Link>;
+              })}
+            </div>
+          </Panel>
         </div>
-      </Panel>
+      </div>
     </div>
   );
 }
