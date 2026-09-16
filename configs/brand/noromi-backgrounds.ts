@@ -41,6 +41,7 @@ export const noromiBackgroundAssets = Object.freeze({
   faqPage01: backgroundAsset("faq-page-bg-01"),
   privacyPage01: backgroundAsset("privacy-page-bg-01"),
   termsPage01: backgroundAsset("terms-page-bg-01"),
+  shippingPage01: backgroundAsset("shipping-page-bg-01"),
 });
 
 /** Proposed page-role mapping for later, separately scoped visual phases. */
@@ -57,6 +58,7 @@ export const noromiBackgroundUsage = Object.freeze({
   faq: noromiBackgroundAssets.faqPage01,
   privacy: noromiBackgroundAssets.privacyPage01,
   terms: noromiBackgroundAssets.termsPage01,
+  shipping: noromiBackgroundAssets.shippingPage01,
   contentSupport: noromiBackgroundAssets.luxePlumSilkAndPetals,
 });
 
