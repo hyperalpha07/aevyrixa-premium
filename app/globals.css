@@ -7155,6 +7155,290 @@ button {
   }
 }
 
+/* Terms-only formal policy background and document surfaces. */
+.aev-terms-page-background {
+  min-height: 100vh;
+  background-color: #16081f;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/terms-page-bg-01.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/terms-page-bg-01.webp") type("image/webp")
+  );
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.aev-terms-page-background > main {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, rgba(42, 12, 47, 0.08), rgba(24, 8, 35, 0.17) 54%, rgba(16, 6, 25, 0.32)),
+    radial-gradient(ellipse at center, rgba(28, 10, 38, 0.06), transparent 69%);
+}
+
+.aev-terms-page-background > main > .pointer-events-none.fixed.inset-0 {
+  display: none;
+}
+
+.aev-terms-page-background .aev-info-hero {
+  overflow: visible;
+  padding-top: clamp(1.5rem, 4vw, 3.75rem);
+}
+
+.aev-terms-page-background .aev-info-hero::before,
+.aev-terms-page-background .aev-info-hero::after {
+  display: none;
+}
+
+.aev-terms-page-background .aev-info-hero > div:first-of-type {
+  position: relative;
+  isolation: isolate;
+  max-width: none;
+  overflow: hidden;
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  border: 1px solid rgba(255, 77, 184, 0.29);
+  border-radius: clamp(1.5rem, 2.5vw, 2.2rem);
+  background:
+    linear-gradient(90deg, rgba(75, 21, 72, 0.3), transparent 42%),
+    radial-gradient(circle at 86% 22%, rgba(49, 230, 212, 0.08), transparent 29%),
+    linear-gradient(135deg, rgba(59, 17, 63, 0.64), rgba(15, 9, 30, 0.78) 55%, rgba(8, 23, 37, 0.64));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(49, 230, 212, 0.06),
+    0 28px 86px rgba(4, 2, 10, 0.38),
+    0 0 40px rgba(255, 77, 184, 0.11);
+  backdrop-filter: blur(18px) saturate(1.17);
+  -webkit-backdrop-filter: blur(18px) saturate(1.17);
+}
+
+.aev-terms-page-background .aev-info-hero > div:first-of-type::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.webp") type("image/webp")
+  );
+  background-position: center 32%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.24;
+  filter: saturate(1.1) contrast(1.08);
+  -webkit-mask-image: linear-gradient(108deg, #000 0%, rgba(0, 0, 0, 0.7) 22%, transparent 49%, rgba(0, 0, 0, 0.28) 74%, rgba(0, 0, 0, 0.82) 100%);
+  mask-image: linear-gradient(108deg, #000 0%, rgba(0, 0, 0, 0.7) 22%, transparent 49%, rgba(0, 0, 0, 0.28) 74%, rgba(0, 0, 0, 0.82) 100%);
+}
+
+.aev-terms-page-background .aev-info-hero > div:first-of-type::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 11% 14%, rgba(255, 77, 184, 0.17), transparent 28%),
+    radial-gradient(circle at 91% 82%, rgba(49, 230, 212, 0.13), transparent 25%),
+    linear-gradient(112deg, rgba(255, 255, 255, 0.12), transparent 25%),
+    linear-gradient(94deg, transparent 70%, rgba(194, 238, 255, 0.06) 82%, transparent 94%);
+}
+
+.aev-terms-page-background .aev-info-hero > div:first-of-type > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-terms-page-background .aev-info-hero h1 {
+  max-width: 60rem;
+  color: rgba(255, 255, 255, 0.99);
+  letter-spacing: -0.035em;
+  text-shadow: 0 2px 16px rgba(25, 6, 31, 0.54);
+}
+
+.aev-terms-page-background .aev-info-hero > div:first-of-type > p:last-of-type {
+  color: rgba(246, 238, 250, 0.85);
+}
+
+.aev-terms-page-background .aev-info-sections {
+  position: relative;
+  isolation: isolate;
+  counter-reset: terms-section;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  border: 1px solid rgba(255, 77, 184, 0.19);
+  border-radius: clamp(1.4rem, 2vw, 1.9rem);
+  background: linear-gradient(145deg, rgba(47, 15, 57, 0.52), rgba(10, 9, 25, 0.78) 48%, rgba(8, 20, 33, 0.7));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 24px 72px rgba(4, 2, 10, 0.33),
+    0 0 32px rgba(49, 230, 212, 0.04);
+  backdrop-filter: blur(16px) saturate(1.13);
+  -webkit-backdrop-filter: blur(16px) saturate(1.13);
+}
+
+.aev-terms-page-background .aev-info-sections::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/mystical_blossom_ribbon_journey.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/mystical_blossom_ribbon_journey.webp") type("image/webp")
+  );
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.16;
+  filter: saturate(1.08) contrast(1.06);
+  -webkit-mask-image: radial-gradient(ellipse at 0% 100%, #000 0%, rgba(0, 0, 0, 0.78) 23%, transparent 61%);
+  mask-image: radial-gradient(ellipse at 0% 100%, #000 0%, rgba(0, 0, 0, 0.78) 23%, transparent 61%);
+}
+
+.aev-terms-page-background .aev-info-sections article {
+  counter-increment: terms-section;
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.05rem, 2vw, 1.45rem);
+  border-color: rgba(255, 77, 184, 0.18);
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.052), transparent 28%),
+    rgba(14, 10, 29, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    inset 0 -1px 0 rgba(49, 230, 212, 0.04),
+    0 12px 32px rgba(4, 2, 10, 0.21);
+}
+
+.aev-terms-page-background .aev-info-sections article::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  opacity: 0.15;
+}
+
+.aev-terms-page-background .aev-info-sections article:nth-child(3n + 1)::before {
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.webp") type("image/webp")
+  );
+  background-position: center 18%;
+  background-size: cover;
+  -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.74) 22%, transparent 60%);
+  mask-image: radial-gradient(circle at 0% 0%, #000 0%, rgba(0, 0, 0, 0.74) 22%, transparent 60%);
+}
+
+.aev-terms-page-background .aev-info-sections article:nth-child(3n + 2)::before {
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.webp") type("image/webp")
+  );
+  background-position: center 76%;
+  background-size: cover;
+  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.72) 22%, transparent 60%);
+  mask-image: radial-gradient(circle at 100% 100%, #000 0%, rgba(0, 0, 0, 0.72) 22%, transparent 60%);
+}
+
+.aev-terms-page-background .aev-info-sections article:nth-child(3n)::before {
+  background:
+    radial-gradient(circle at 90% 25%, rgba(49, 230, 212, 0.13), transparent 23%),
+    linear-gradient(100deg, transparent 61%, rgba(255, 77, 184, 0.055) 74%, rgba(255, 255, 255, 0.075) 82%, transparent 94%);
+  opacity: 0.58;
+}
+
+.aev-terms-page-background .aev-info-sections article::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(96deg, transparent 68%, rgba(49, 230, 212, 0.04), transparent 96%);
+}
+
+.aev-terms-page-background .aev-info-sections article > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-terms-page-background .aev-info-sections article h2 {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.97);
+}
+
+.aev-terms-page-background .aev-info-sections article h2::before {
+  content: counter(terms-section, decimal-leading-zero);
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(49, 230, 212, 0.2);
+  border-radius: 0.65rem;
+  color: rgba(188, 255, 247, 0.84);
+  background: rgba(49, 230, 212, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.aev-terms-page-background .aev-info-sections article p,
+.aev-terms-page-background .aev-info-sections article ul {
+  color: rgba(241, 232, 247, 0.8);
+  line-height: 1.75;
+}
+
+.aev-terms-page-background .aev-info-sections article li > span:first-child {
+  background: #31e6d4;
+  box-shadow: 0 0 12px rgba(49, 230, 212, 0.34);
+}
+
+@media (max-width: 639px) {
+  .aev-terms-page-background {
+    background-position: 52% top;
+  }
+
+  .aev-terms-page-background .aev-info-hero {
+    padding-inline: 0.75rem;
+    padding-top: 0.9rem;
+  }
+
+  .aev-terms-page-background .aev-info-hero > div:first-of-type {
+    padding: 1.25rem;
+    border-radius: 1.4rem;
+    backdrop-filter: blur(14px) saturate(1.11);
+    -webkit-backdrop-filter: blur(14px) saturate(1.11);
+  }
+
+  .aev-terms-page-background .aev-info-hero > div:first-of-type::before {
+    background-position: center 32%;
+    opacity: 0.15;
+  }
+
+  .aev-terms-page-background .aev-info-sections {
+    margin-top: 1rem;
+    padding: 0.55rem;
+  }
+
+  .aev-terms-page-background .aev-info-sections::before {
+    opacity: 0.09;
+  }
+
+  .aev-terms-page-background .aev-info-sections article::before {
+    opacity: 0.08;
+  }
+
+  .aev-terms-page-background .aev-info-sections article:nth-child(3n)::before {
+    opacity: 0.34;
+  }
+}
+
 /* Account-only background and private glass surfaces. */
 .aev-account-page-background {
   position: relative;
