@@ -15,12 +15,13 @@ export default async function RefundPolicyPage() {
   const { settings } = await loadStorefrontSettings();
 
   return (
-    <InfoPageShell
-      settings={settings}
-      eyebrow="Refund Policy"
-      title={`Refund and exchange support for ${brandName} orders.`}
-      intro={`${brandName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
-      sections={[
+    <div className="aev-refund-page-background">
+      <InfoPageShell
+        settings={settings}
+        eyebrow="Refund Policy"
+        title={`Refund and exchange support for ${brandName} orders.`}
+        intro={`${brandName} keeps support fair and transparent while respecting hygiene-sensitive product handling.`}
+        sections={[
         {
           title: "3-Day Hygiene-Safe Support Window",
           copy: settings.supportWindowMessage,
@@ -49,7 +50,8 @@ export default async function RefundPolicyPage() {
           title: "Return Cost",
           copy: `If the issue is caused by ${brandName}, we will support the correction. If the request is due to customer size preference or change of mind, delivery/return cost may be the customer's responsibility.`,
         },
-      ]}
-    />
+        ]}
+      />
+    </div>
   );
 }
