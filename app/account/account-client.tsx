@@ -10,14 +10,15 @@ import {
   Clock3,
   Heart,
   Headphones,
+  LayoutDashboard,
   LogOut,
   MapPin,
-  Menu,
   MessageSquare,
   MoreHorizontal,
   PackageSearch,
   Plus,
   ShieldCheck,
+  ShoppingBag,
   UserRound,
 } from "lucide-react";
 import SiteHeader from "@/app/components/cart/site-header";
@@ -148,7 +149,6 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
   const recentOrders = orders.slice(0, 3);
 
   useEffect(() => {
@@ -303,17 +303,19 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const homeMedia = settings.homepageMediaSettings;
 
   return (
-    <main className="aev-account-page-background min-h-screen overflow-x-hidden text-white">
+    <main className={`aev-account-page-background min-h-screen overflow-x-hidden text-white ${view === "dashboard" ? "aev-account-dashboard-page" : ""}`}>
       <SiteHeader settings={settings} active="account" compactMobile />
 
       <section className="aev-account-shell mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6 md:pb-20 md:pt-8">
         {view !== "dashboard" && <AccountMobileMenu view={view} />}
-        <nav className="mb-5 hidden scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-          <AccountTab href="/account" active={view === "dashboard"} icon={UserRound} label="Account" />
-          <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
-          <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
-          <AccountTab href="/account/support" active={view === "support"} icon={MessageSquare} label="Support" />
-        </nav>
+        {view !== "dashboard" && (
+          <nav className="mb-5 hidden scroll-px-4 gap-2 overflow-x-auto rounded-[1.35rem] border border-white/[0.08] bg-[#080611]/92 p-2 text-sm shadow-[0_14px_40px_rgba(0,0,0,0.26)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:mb-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+            <AccountTab href="/account" active={false} icon={UserRound} label="Account" />
+            <AccountTab href="/account/orders" active={view === "orders"} icon={PackageSearch} label="Orders" />
+            <AccountTab href="/account/addresses" active={view === "addresses"} icon={MapPin} label="Addresses" />
+            <AccountTab href="/account/support" active={view === "support"} icon={MessageSquare} label="Support" />
+          </nav>
+        )}
 
         {isLoading ? (
           <Panel>Loading your account...</Panel>
@@ -338,7 +340,6 @@ export default function AccountClient({ view }: { view: AccountView }) {
                 <Dashboard
                   orders={recentOrders}
                   allOrders={orders}
-                  address={defaultAddress}
                   addressCount={addresses.length}
                   customer={customer}
                   settings={settings}
@@ -535,7 +536,6 @@ function Panel({ children, className = "" }: { children: React.ReactNode; classN
 function Dashboard({
   orders,
   allOrders,
-  address,
   addressCount,
   customer,
   settings,
@@ -546,7 +546,6 @@ function Dashboard({
 }: {
   orders: AccountOrder[];
   allOrders: AccountOrder[];
-  address?: Address;
   addressCount: number;
   customer: Customer;
   settings: StorefrontSettings;
@@ -561,52 +560,207 @@ function Dashboard({
   ).length;
 
   return (
-    <div className="grid gap-4 sm:gap-5 lg:gap-6">
-      <ProfileHero
-        customer={customer}
-        totalOrders={allOrders.length}
-        pendingOrders={pendingOrders}
-        deliveredOrders={deliveredOrders}
-        addressCount={addressCount}
-        onLogout={onLogout}
-      />
-      <Panel className="aev-account-summary aev-intent-art aev-intent-pulse hidden overflow-hidden p-4 sm:p-5 md:block">
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <Metric icon={PackageSearch} label="Total orders" value={String(allOrders.length)} accent="pink" />
-          <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
-          <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
-          <Metric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
-        </div>
-      </Panel>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(19rem,0.78fr)] lg:gap-5">
-        <Panel className="aev-account-orders aev-intent-art aev-intent-orders overflow-hidden">
-          <SectionTitle title="Recent Orders" href="/account/orders" />
-          <OrderRows orders={orders} />
-        </Panel>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-          <Panel className="aev-intent-art aev-intent-address overflow-hidden">
-            <SectionTitle title="Saved Address" href="/account/addresses" />
-            {address ? (
-              <>
-                <AddressSummary address={address} />
-                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/38">
-                  {addressCount} saved {addressCount === 1 ? "address" : "addresses"}
-                </p>
-              </>
-            ) : (
-              <div>
-                <EmptyLine text="No saved address yet." />
-                <Link className="mini-action mt-3 inline-flex" href="/account/addresses">
-                  Add address
-                </Link>
-              </div>
-            )}
+    <div className="aev-account-dashboard-workspace">
+      <DashboardSidebar customer={customer} onLogout={onLogout} />
+
+      <div className="aev-account-dashboard-main">
+        <section className="aev-account-dashboard-welcome">
+          <div className="aev-account-dashboard-welcome-art" aria-hidden="true" />
+          <div className="relative z-10 min-w-0 pr-12 md:pr-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#31E6D4]/78">
+              Noromi Care Account
+            </p>
+            <h1 className="mt-2 break-words text-3xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-4xl">
+              Hello, {customer.fullName}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#E8DDF0]/78 sm:text-base">
+              Manage your orders, saved addresses, and support in one calm, private place.
+            </p>
+          </div>
+          <div className="absolute right-4 top-4 z-20 md:hidden">
+            <AccountMobileMenu view="dashboard" hero onLogout={onLogout} />
+          </div>
+        </section>
+
+        <section className="aev-account-dashboard-stats" aria-label="Account overview">
+          <Metric icon={PackageSearch} label="Total Orders" value={String(allOrders.length)} accent="pink" />
+          <Metric icon={Clock3} label="Pending Orders" value={String(pendingOrders)} accent="amber" />
+          <Metric icon={CheckCircle2} label="Delivered Orders" value={String(deliveredOrders)} accent="green" />
+          <Metric icon={MapPin} label="Saved Addresses" value={String(addressCount)} accent="cyan" />
+        </section>
+
+        <section className="aev-account-care-banner">
+          <div className="relative z-10 max-w-xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#31E6D4]/78">
+              The Noromi Care promise
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+              Comfort. Confidence. Care.
+            </h2>
+            <p className="mt-3 max-w-lg text-sm leading-7 text-[#F2E8F5]/82">
+              Thoughtful period care, discreet delivery, and support from a team that listens.
+            </p>
+            <Link className="aev-account-care-cta" href="/product">
+              Continue Shopping
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+
+        <div className="aev-account-dashboard-content-grid">
+          <Panel className="aev-account-dashboard-orders overflow-hidden">
+            <SectionTitle title="Recent Orders" href="/account/orders" label="View all" />
+            <OrderRows orders={orders} />
           </Panel>
-          <DashboardSupport settings={settings} onOpenLiveChat={onOpenLiveChat} />
-          <WishlistPanel items={wishlistItems} onRemove={onRemoveWishlistItem} />
+
+          <div className="aev-account-dashboard-side-stack">
+            <DashboardQuickActions />
+            <DashboardHelp
+              settings={settings}
+              onOpenLiveChat={onOpenLiveChat}
+            />
+            <WishlistPanel items={wishlistItems} onRemove={onRemoveWishlistItem} />
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function DashboardSidebar({
+  customer,
+  onLogout,
+}: {
+  customer: Customer;
+  onLogout: () => void;
+}) {
+  const items = [
+    { href: "/account", label: "Dashboard", icon: LayoutDashboard, active: true },
+    { href: "/account/orders", label: "My Orders", icon: PackageSearch, active: false },
+    { href: "/account/addresses", label: "My Addresses", icon: MapPin, active: false },
+    { href: "/account/support", label: "Support Requests", icon: MessageSquare, active: false },
+  ];
+
+  return (
+    <aside className="aev-account-dashboard-sidebar">
+      <div className="relative z-10">
+        <div className="aev-account-dashboard-avatar">
+          {customer.fullName.trim().charAt(0) || <UserRound className="h-6 w-6" />}
+        </div>
+        <p className="mt-4 break-words text-lg font-semibold text-white [overflow-wrap:anywhere]">
+          {customer.fullName}
+        </p>
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.23em] text-[#FFB3D1]/72">
+          Noromi Care Account
+        </p>
+        <p className="mt-3 break-all text-xs leading-5 text-[#D8CBE8]/65">
+          {customer.phone}
+        </p>
+      </div>
+
+      <nav className="relative z-10 mt-8 grid gap-2" aria-label="Account dashboard">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={item.active ? "page" : undefined}
+              className={`aev-account-dashboard-nav-item ${item.active ? "is-active" : ""}`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={onLogout}
+          className="aev-account-dashboard-nav-item aev-account-dashboard-logout"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          <span>Logout</span>
+        </button>
+      </nav>
+
+      <div className="aev-account-dashboard-sidebar-note">
+        <ShieldCheck className="h-4 w-4 shrink-0 text-[#31E6D4]" />
+        <p>Private account access for your Noromi Care orders and support.</p>
+      </div>
+    </aside>
+  );
+}
+
+function DashboardQuickActions() {
+  const actions = [
+    { href: "/track-order", label: "Track an Order", icon: PackageSearch, accent: "cyan" },
+    { href: "/account/addresses", label: "Manage Addresses", icon: MapPin, accent: "pink" },
+    { href: "/account/support", label: "Support Requests", icon: MessageSquare, accent: "violet" },
+    { href: "/product", label: "Continue Shopping", icon: ShoppingBag, accent: "amber" },
+  ] as const;
+
+  return (
+    <Panel className="aev-account-dashboard-quick-panel">
+      <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        {actions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link
+              key={action.href}
+              href={action.href}
+              className={`aev-account-dashboard-quick-action is-${action.accent}`}
+            >
+              <span className="aev-account-dashboard-quick-icon">
+                <Icon className="h-4 w-4" />
+              </span>
+              <span>{action.label}</span>
+              <ArrowRight className="h-3.5 w-3.5 opacity-55" />
+            </Link>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+function DashboardHelp({
+  settings,
+  onOpenLiveChat,
+}: {
+  settings: StorefrontSettings;
+  onOpenLiveChat: () => void;
+}) {
+  return (
+    <Panel className="aev-account-dashboard-help">
+      <div className="relative z-10">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#31E6D4]/76">
+          Customer care
+        </p>
+        <h2 className="mt-2 text-xl font-semibold text-white">Need help?</h2>
+        <p className="mt-2 text-sm leading-6 text-[#E8DDF0]/74">
+          Our support team can guide you with orders, delivery, sizing, or product concerns.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={onOpenLiveChat} className="mini-action">
+            Live Chat
+          </button>
+          {settings.whatsappUrl && (
+            <a
+              href={settings.whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mini-action"
+            >
+              WhatsApp
+            </a>
+          )}
+          <Link href="/support" className="mini-action">
+            Support Center
+          </Link>
+        </div>
+      </div>
+    </Panel>
   );
 }
 
@@ -659,99 +813,6 @@ function WishlistPanel({
   );
 }
 
-function ProfileHero({
-  customer,
-  totalOrders,
-  pendingOrders,
-  deliveredOrders,
-  addressCount,
-  onLogout,
-}: {
-  customer: Customer;
-  totalOrders: number;
-  pendingOrders: number;
-  deliveredOrders: number;
-  addressCount: number;
-  onLogout: () => void;
-}) {
-  return (
-    <Panel className="aev-account-profile aev-intent-art aev-intent-profile z-20 overflow-visible p-0 sm:p-0">
-      <div className="relative grid min-w-0 gap-4 rounded-[inherit] p-4 sm:p-6 lg:p-7">
-        <div className="aev-account-profile-aura" aria-hidden="true" />
-        <div className="relative min-w-0 pr-12 sm:pr-16 lg:pr-0">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF4DB8]/25 bg-[#080611]/55 text-lg font-semibold text-[#FFB3D1] shadow-[0_0_30px_rgba(255,77,184,0.16)] sm:h-14 sm:w-14">
-              {customer.fullName.trim().charAt(0) || <UserRound className="h-5 w-5" />}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#FF4DB8]/72">
-                Noromi Care account
-              </p>
-              <h1 className="mt-1 break-words text-xl font-semibold leading-tight text-white [overflow-wrap:anywhere] sm:text-3xl">
-                {customer.fullName}
-              </h1>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-[#D8CBE8]/82">
-            <span className="break-all rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5">
-              {customer.phone}
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/18 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-semibold text-emerald-100">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" />
-              Account active
-            </span>
-          </div>
-          {customer.email && (
-            <p className="mt-3 break-all text-xs text-[#9C91AA]">{customer.email}</p>
-          )}
-        </div>
-        <div className="relative grid grid-cols-2 gap-2.5 md:hidden">
-          <HeroSummaryMetric icon={PackageSearch} label="Total Orders" value={String(totalOrders)} accent="pink" />
-          <HeroSummaryMetric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
-          <HeroSummaryMetric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
-          <HeroSummaryMetric icon={MapPin} label="Addresses" value={String(addressCount)} accent="cyan" />
-        </div>
-        <div className="absolute right-5 top-5 sm:right-6 lg:hidden">
-          <AccountMobileMenu view="dashboard" hero onLogout={onLogout} />
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-function HeroSummaryMetric({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: typeof UserRound;
-  label: string;
-  value: string;
-  accent: "pink" | "amber" | "green" | "cyan";
-}) {
-  const accents = {
-    pink: "border-[#FF4DB8]/20 bg-[#FF4DB8]/[0.08] text-[#FFB3D1]",
-    amber: "border-[#FFB84D]/20 bg-[#FFB84D]/[0.08] text-[#FFD18A]",
-    green: "border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-100",
-    cyan: "border-[#00D4C6]/20 bg-[#00D4C6]/[0.08] text-[#31E6D4]",
-  };
-
-  return (
-    <div className="min-w-0 rounded-[1.05rem] border border-white/[0.08] bg-[#0B0F1A]/62 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
-      <div className="flex items-center justify-between gap-2">
-        <p className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9C91AA]/78">
-          {label}
-        </p>
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${accents[accent]}`}>
-          <Icon className="h-3.5 w-3.5" />
-        </span>
-      </div>
-      <p className="mt-2 text-xl font-semibold leading-none text-white">{value}</p>
-    </div>
-  );
-}
-
 function Metric({
   icon: Icon,
   label,
@@ -780,76 +841,6 @@ function Metric({
       <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9C91AA]/70">{label}</p>
       <p className="mt-1.5 text-2xl font-semibold text-white">{value}</p>
     </div>
-  );
-}
-
-function DashboardSupport({ settings, onOpenLiveChat }: { settings: StorefrontSettings; onOpenLiveChat: () => void }) {
-  return (
-    <Panel className="aev-account-support aev-intent-art aev-intent-support relative overflow-hidden border-[#00D4C6]/14">
-      <SupportAgentVisual imageUrl={settings.storeProfile.supportAgentImageUrl} />
-      <SectionTitle title="Support" href="/account/support" />
-      <div className="relative grid grid-cols-3 gap-2">
-        <CompactSupportAction icon={MessageSquare} label="Live Chat" accent="pink" onClick={onOpenLiveChat} />
-        {settings.whatsappUrl ? (
-          <CompactSupportAction icon={Headphones} label="WhatsApp Support" accent="cyan" href={settings.whatsappUrl} external />
-        ) : (
-          <CompactSupportAction icon={Headphones} label="WhatsApp Support" accent="cyan" href="/support" />
-        )}
-        <CompactSupportAction icon={ShieldCheck} label="Support Page" accent="amber" href="/support" />
-      </div>
-    </Panel>
-  );
-}
-
-function CompactSupportAction({
-  href,
-  icon: Icon,
-  label,
-  accent,
-  external = false,
-  onClick,
-}: {
-  href?: string;
-  icon: typeof UserRound;
-  label: string;
-  accent: "pink" | "cyan" | "amber";
-  external?: boolean;
-  onClick?: () => void;
-}) {
-  const accents = {
-    pink: "border-[#FF4DB8]/25 bg-[#FF4DB8]/[0.10] text-[#FFB3D1]",
-    cyan: "border-[#00D4C6]/25 bg-[#00D4C6]/[0.09] text-[#31E6D4]",
-    amber: "border-[#FFB84D]/25 bg-[#FFB84D]/[0.09] text-[#FFD18A]",
-  };
-  const className =
-    "group relative flex min-h-[5.75rem] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-[#0B0F1A]/72 px-2 py-3 text-center text-[11px] font-semibold leading-4 text-[#D8CBE8] transition hover:border-white/[0.16] hover:text-white sm:min-h-[6.5rem] sm:text-xs";
-  const content = (
-    <>
-      <span className={`flex h-9 w-9 items-center justify-center rounded-xl border ${accents[accent]}`}>
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="break-words [overflow-wrap:anywhere]">{label}</span>
-    </>
-  );
-
-  if (onClick) {
-    return (
-      <button type="button" className={className} onClick={onClick}>
-        {content}
-      </button>
-    );
-  }
-
-  if (!href) return null;
-
-  return external ? (
-    <a className={className} href={href} target="_blank" rel="noreferrer">
-      {content}
-    </a>
-  ) : (
-    <Link className={className} href={href}>
-      {content}
-    </Link>
   );
 }
 
