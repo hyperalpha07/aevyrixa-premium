@@ -25,6 +25,7 @@ import {
   validateProductSelections,
 } from "../app/lib/product-options.ts";
 import { hasPermission } from "../app/lib/admin-permissions.ts";
+import { isPublicCatalogProduct } from "../app/lib/product-types.ts";
 import { findAdminV2Route } from "../configs/admin-v2/routes.ts";
 import { isAdminV2NavigationItemActive } from "../lib/admin-v2/navigation.ts";
 import { readFileSync, existsSync } from "node:fs";
@@ -748,6 +749,19 @@ test("unpublish query is active-only and optimistic, with a minimal payload", ()
   const payload = unpublishPayload("2026-09-05T00:00:00.000Z");
   assert.deepEqual(payload, { status: "draft", updated_at: "2026-09-05T00:00:00.000Z" });
   assert.deepEqual(Object.keys(payload).sort(), ["status", "updated_at"]);
+});
+
+test("public catalog visibility requires an active, non-deleted product", () => {
+  assert.equal(isPublicCatalogProduct({ status: "active", deletedAt: undefined }), true);
+  assert.equal(isPublicCatalogProduct({ status: "draft", deletedAt: undefined }), false);
+  assert.equal(
+    isPublicCatalogProduct({ status: "active", deletedAt: "2026-09-05T00:00:00.000Z" }),
+    false
+  );
+  assert.equal(
+    isPublicCatalogProduct({ status: "draft", deletedAt: "2026-09-05T00:00:00.000Z" }),
+    false
+  );
 });
 
 test("unpublish product route stays under Products, not New Product", () => {

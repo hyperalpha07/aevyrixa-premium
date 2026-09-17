@@ -1,4 +1,5 @@
 import {
+  isPublicCatalogProduct,
   productStockStatuses,
   productStatuses,
   type ProductCatalogItem,
@@ -864,9 +865,7 @@ export async function listProducts(
         ? supabaseProducts.filter((product) => Boolean(product.deletedAt))
         : includeDrafts
           ? supabaseProducts.filter((product) => !product.deletedAt)
-          : supabaseProducts.filter(
-              (product) => product.status === "active" && !product.deletedAt
-            );
+          : supabaseProducts.filter(isPublicCatalogProduct);
 
     logProductSource("supabase", { count: products.length, scope });
 
@@ -880,7 +879,7 @@ export async function listProducts(
     ? demoProducts.filter((product) => !product.deletedAt)
     : scope === "deleted"
       ? demoProducts.filter((product) => Boolean(product.deletedAt))
-      : demoProducts.filter((product) => product.status === "active" && !product.deletedAt);
+      : demoProducts.filter(isPublicCatalogProduct);
 
   const storageMode = hasSupabaseConfig()
     ? ("fallback-static" as ProductStorageMode)
@@ -909,7 +908,7 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
         `Product detail source: supabase (slug=${slug}, found=${Boolean(supabaseProduct)}, includeDrafts=${includeDrafts})`
       );
 
-      if (!includeDrafts && supabaseProduct.status !== "active") {
+      if (!includeDrafts && !isPublicCatalogProduct(supabaseProduct)) {
         return { product: null, storageMode: "supabase" as ProductStorageMode };
       }
 
@@ -922,7 +921,9 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
     // safelyUseSupabase returned null: Supabase unavailable or table missing — fall through to static.
     const fallbackProduct =
       demoProducts.find(
-        (item) => item.slug === slug && !item.deletedAt && (includeDrafts || item.status === "active")
+        (item) =>
+          item.slug === slug &&
+          (includeDrafts ? !item.deletedAt : isPublicCatalogProduct(item))
       ) ?? null;
 
     console.info(
@@ -939,8 +940,9 @@ export async function getProductBySlug(slug: string, options: { includeDrafts?: 
     demoProducts.find(
       (item) =>
         item.slug === slug &&
-        !item.deletedAt &&
-        (includeDrafts || item.status === "active")
+        (includeDrafts
+          ? !item.deletedAt
+          : isPublicCatalogProduct(item))
     ) ?? null;
 
   console.info(
