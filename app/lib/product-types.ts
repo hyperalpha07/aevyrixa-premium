@@ -76,6 +76,12 @@ export type ProductStorageMode = "supabase" | "fallback-static" | "demo-memory";
 
 export const productStatuses = ["active", "draft"] as const;
 
+export function isPublicCatalogProduct(
+  product: Pick<ProductCatalogItem, "status" | "deletedAt">
+) {
+  return product.status === "active" && !product.deletedAt;
+}
+
 export const productStockStatuses = [
   "in_stock",
   "low_stock",
