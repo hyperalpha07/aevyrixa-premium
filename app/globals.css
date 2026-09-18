@@ -11654,6 +11654,246 @@ button {
   }
 }
 
+/* Global storefront not-found page */
+.aev-not-found-page {
+  position: relative;
+  isolation: isolate;
+  background: #0a0612;
+}
+
+.aev-not-found-page::before,
+.aev-not-found-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.aev-not-found-page::before {
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/mystical_blossom_ribbon_journey.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/mystical_blossom_ribbon_journey.webp") type("image/webp")
+  );
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: saturate(1.04) contrast(1.04) brightness(0.78);
+}
+
+.aev-not-found-page::after {
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(255, 77, 184, 0.08), transparent 46%),
+    linear-gradient(180deg, rgba(10, 6, 18, 0.12) 0%, rgba(11, 6, 19, 0.3) 58%, rgba(10, 6, 18, 0.68) 100%);
+}
+
+.aev-not-found-stage {
+  min-height: clamp(36rem, 68vh, 48rem);
+}
+
+.aev-not-found-shell {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(255, 119, 200, 0.28);
+  background:
+    linear-gradient(138deg, rgba(79, 23, 74, 0.42), rgba(12, 9, 25, 0.74) 49%, rgba(7, 29, 42, 0.54)),
+    rgba(13, 8, 24, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 77, 184, 0.12),
+    0 30px 90px rgba(3, 2, 10, 0.45),
+    0 0 52px rgba(255, 77, 184, 0.12),
+    0 0 38px rgba(49, 230, 212, 0.07);
+  backdrop-filter: blur(18px) saturate(1.16);
+}
+
+.aev-not-found-shell::before,
+.aev-not-found-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.aev-not-found-shell::before {
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 9% 8%, rgba(255, 77, 184, 0.24), transparent 30%),
+    radial-gradient(circle at 92% 88%, rgba(49, 230, 212, 0.15), transparent 32%),
+    linear-gradient(116deg, rgba(255, 255, 255, 0.07), transparent 22% 74%, rgba(103, 247, 243, 0.035));
+}
+
+.aev-not-found-shell::after {
+  inset: 1px;
+  z-index: 0;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.1), transparent 24%);
+  mask-image: linear-gradient(180deg, black, transparent 48%);
+}
+
+.aev-not-found-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-not-found-visual {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 19rem;
+  place-items: center;
+}
+
+.aev-not-found-visual::before,
+.aev-not-found-visual::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.aev-not-found-visual::before {
+  inset: -5rem -3.5rem -5rem -5rem;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.webp") type("image/webp")
+  );
+  background-position: left top;
+  background-repeat: no-repeat;
+  background-size: 124% auto;
+  filter: saturate(1.06) contrast(1.05) brightness(0.88);
+  mask-image: radial-gradient(ellipse 78% 76% at 38% 42%, black 28%, rgba(0, 0, 0, 0.82) 56%, transparent 84%);
+  opacity: 0.68;
+}
+
+.aev-not-found-visual::after {
+  inset: 12% 4%;
+  border: 1px solid rgba(255, 179, 209, 0.12);
+  border-radius: 48% 52% 46% 54%;
+  background:
+    radial-gradient(circle at 24% 24%, rgba(255, 119, 200, 0.17), transparent 38%),
+    radial-gradient(circle at 78% 76%, rgba(103, 247, 243, 0.1), transparent 36%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 34px rgba(255, 77, 184, 0.08);
+  transform: rotate(-4deg);
+}
+
+.aev-not-found-mark {
+  justify-self: center;
+  color: transparent;
+  font-size: clamp(6rem, 13vw, 10.5rem);
+  font-weight: 760;
+  letter-spacing: -0.085em;
+  line-height: 0.86;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.93), rgba(255, 119, 200, 0.78) 47%, rgba(103, 247, 243, 0.64));
+  background-clip: text;
+  -webkit-background-clip: text;
+  filter: drop-shadow(0 0 30px rgba(255, 77, 184, 0.17));
+  text-shadow: 0 10px 44px rgba(7, 4, 16, 0.42);
+}
+
+.aev-not-found-icon {
+  border: 1px solid rgba(103, 247, 243, 0.26);
+  color: rgba(185, 255, 253, 0.92);
+  background: linear-gradient(145deg, rgba(103, 247, 243, 0.11), rgba(255, 119, 200, 0.08));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 24px rgba(103, 247, 243, 0.08);
+}
+
+.aev-not-found-copy h1,
+.aev-not-found-copy p {
+  overflow-wrap: anywhere;
+}
+
+.aev-not-found-actions a {
+  max-width: 100%;
+}
+
+.aev-not-found-cta {
+  min-width: 10.75rem;
+}
+
+.aev-not-found-actions .aev-action-primary {
+  box-shadow:
+    0 8px 30px rgba(255, 64, 184, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.aev-not-found-cta-arrow {
+  filter: drop-shadow(0 0 8px rgba(255, 77, 184, 0.24));
+  transition: transform 180ms ease;
+}
+
+.aev-not-found-actions a:focus-visible {
+  outline: 2px solid rgba(185, 255, 253, 0.9);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-not-found-cta:hover .aev-not-found-cta-arrow {
+    transform: translateX(0.25rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .aev-not-found-page::before {
+    background-position: 48% top;
+    filter: saturate(0.94) contrast(1.03) brightness(0.67);
+  }
+
+  .aev-not-found-stage {
+    min-height: 38rem;
+  }
+
+  .aev-not-found-shell {
+    backdrop-filter: blur(14px) saturate(1.12);
+  }
+
+  .aev-not-found-visual {
+    min-height: 9.25rem;
+  }
+
+  .aev-not-found-visual::before {
+    inset: -3.75rem -2rem -3rem;
+    background-position: left top;
+    background-size: 118% auto;
+    mask-image: radial-gradient(ellipse 78% 76% at 50% 45%, black 30%, rgba(0, 0, 0, 0.74) 57%, transparent 84%);
+    opacity: 0.58;
+  }
+
+  .aev-not-found-visual::after {
+    inset: 6% 12%;
+  }
+
+  .aev-not-found-mark {
+    font-size: clamp(5rem, 23vw, 6.5rem);
+  }
+
+  .aev-not-found-icon {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+
+  .aev-not-found-cta {
+    min-width: min(14.75rem, 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-not-found-cta,
+  .aev-not-found-cta::after,
+  .aev-not-found-cta-arrow {
+    transition: none;
+  }
+
+  .aev-not-found-cta:hover,
+  .aev-not-found-cta:active,
+  .aev-not-found-cta:hover .aev-not-found-cta-arrow {
+    transform: none;
+  }
+}
+
 /* Admin control room redesign */
 .aev-admin-control-room {
   --admin-bg: #02040b;
