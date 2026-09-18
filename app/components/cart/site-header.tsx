@@ -14,7 +14,7 @@ import {
 import { brandName, brandTagline, noromiAssets } from "@/configs/brand/noromi";
 
 type SiteHeaderProps = {
-  active?: "home" | "shop" | "product" | "track" | "cart" | "account" | "none";
+  active?: "home" | "shop" | "product" | "track" | "cart" | "account" | "none" | "neutral";
   productHref?: string;
   settings?: StorefrontSettings;
   compactMobile?: boolean;
@@ -74,7 +74,7 @@ export default function SiteHeader({
   return (
     <>
     <header className="aev-site-header sticky top-0 z-50">
-      {active !== "shop" && (
+      {active !== "shop" && active !== "neutral" && (
         <div className={compactMobile ? "hidden md:block" : ""}>
           <AnnouncementBanner
             settings={settings}
