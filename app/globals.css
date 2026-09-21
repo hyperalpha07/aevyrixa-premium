@@ -406,6 +406,170 @@ html[data-admin-v2-color-scheme="dark"] body:has([data-admin-v2-root]) {
   max-width: 77.5rem;
 }
 
+.aev-account-auth-required,
+.aev-account-service-error {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 53rem);
+  min-height: clamp(24rem, 52vh, 32rem);
+  margin-inline: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 77, 184, 0.3);
+  border-radius: clamp(1.5rem, 2.2vw, 2rem);
+  padding: clamp(2rem, 5vw, 4.25rem);
+  text-align: center;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(49, 230, 212, 0.1), transparent 29%),
+    linear-gradient(140deg, rgba(65, 18, 67, 0.54), rgba(12, 8, 26, 0.82) 48%, rgba(7, 22, 33, 0.68));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(49, 230, 212, 0.06),
+    0 30px 90px rgba(4, 2, 10, 0.4),
+    0 0 48px rgba(255, 77, 184, 0.12);
+  backdrop-filter: blur(20px) saturate(1.18);
+  -webkit-backdrop-filter: blur(20px) saturate(1.18);
+}
+
+.aev-account-auth-required::before,
+.aev-account-service-error::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, rgba(10, 6, 20, 0.74), rgba(10, 6, 20, 0.38) 52%, rgba(10, 6, 20, 0.64)),
+    image-set(
+      url("/brand/noromi/backgrounds/account-flow-bg-01.avif") type("image/avif"),
+      url("/brand/noromi/backgrounds/account-flow-bg-01.webp") type("image/webp")
+    );
+  background-position: center, center 36%;
+  background-repeat: no-repeat;
+  background-size: cover, 128% auto;
+  opacity: 0.34;
+  filter: saturate(1.08) contrast(1.05);
+  mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.48) 24%, black 100%);
+}
+
+.aev-account-auth-required::after,
+.aev-account-service-error::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 13% 17%, rgba(255, 77, 184, 0.17), transparent 29%),
+    radial-gradient(circle at 88% 78%, rgba(49, 230, 212, 0.09), transparent 28%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.1), transparent 24%);
+}
+
+.aev-account-auth-required-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border: 1px solid rgba(49, 230, 212, 0.28);
+  border-radius: 1.1rem;
+  color: rgba(196, 255, 251, 0.96);
+  background: linear-gradient(145deg, rgba(255, 77, 184, 0.15), rgba(49, 230, 212, 0.1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), 0 0 24px rgba(49, 230, 212, 0.08);
+}
+
+.aev-account-auth-required-eyebrow {
+  margin-top: 1.25rem;
+  color: rgba(255, 179, 209, 0.86);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.aev-account-auth-required h1,
+.aev-account-service-error h1 {
+  max-width: 39rem;
+  margin-top: 0.75rem;
+  color: rgba(255, 255, 255, 0.99);
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-weight: 680;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  text-shadow: 0 2px 18px rgba(24, 7, 30, 0.6);
+}
+
+.aev-account-auth-required-copy,
+.aev-account-service-error > p:not(.aev-account-auth-required-eyebrow) {
+  max-width: 36rem;
+  margin-top: 1.1rem;
+  color: rgba(240, 230, 247, 0.76);
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.aev-account-auth-required-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.aev-account-auth-required-actions a,
+.aev-account-service-error button {
+  min-width: 10.75rem;
+}
+
+.aev-account-service-error button {
+  margin-top: 1.75rem;
+}
+
+.aev-account-auth-required-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.35rem;
+  color: rgba(216, 203, 232, 0.74);
+  font-size: 0.82rem;
+  font-weight: 650;
+  transition: color 180ms ease;
+}
+
+.aev-account-auth-required-track:hover,
+.aev-account-auth-required-track:focus-visible {
+  color: rgba(196, 255, 251, 0.98);
+}
+
+@media (max-width: 639px) {
+  .aev-account-auth-required,
+  .aev-account-service-error {
+    min-height: 25rem;
+    border-radius: 1.4rem;
+    padding: 2rem 1.15rem;
+  }
+
+  .aev-account-auth-required::before,
+  .aev-account-service-error::before {
+    background-position: center, 52% center;
+    background-size: cover, auto 112%;
+    opacity: 0.27;
+  }
+
+  .aev-account-auth-required-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .aev-account-auth-required-actions a,
+  .aev-account-service-error button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 .aev-account-dashboard-workspace {
   position: relative;
   isolation: isolate;

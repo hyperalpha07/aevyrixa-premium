@@ -24,6 +24,8 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isRegister = mode === "register";
+  const alternateAuthPath = isRegister ? "/account/login" : "/account/register";
+  const alternateAuthHref = `${alternateAuthPath}?${new URLSearchParams({ returnTo }).toString()}`;
 
   useEffect(() => {
     let isActive = true;
@@ -128,7 +130,7 @@ export default function AccountAuthForm({ mode }: { mode: Mode }) {
           <p className="mt-5 text-center text-sm text-[#9C91AA]">
             {isRegister ? "Already have an account?" : "New customer?"}{" "}
             <Link
-              href={isRegister ? "/account/login" : "/account/register"}
+              href={alternateAuthHref}
               className="font-semibold text-[#FFB3D1] transition hover:text-white"
             >
               {isRegister ? "Login" : "Create account"}
