@@ -131,10 +131,27 @@ async function readJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   const payload = (await response.json().catch(() => ({}))) as T & { errors?: string[] };
   if (!response.ok) {
-    throw new Error(payload.errors?.[0] || "Request failed.");
+    throw new AccountRequestError(response.status, payload.errors?.[0] || "Request failed.");
   }
   return payload;
 }
+
+class AccountRequestError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "AccountRequestError";
+    this.status = status;
+  }
+}
+
+const protectedAccountPaths: Record<AccountView, string> = {
+  dashboard: "/account",
+  orders: "/account/orders",
+  addresses: "/account/addresses",
+  support: "/account/support",
+};
 
 export default function AccountClient({ view }: { view: AccountView }) {
   const router = useRouter();
@@ -147,9 +164,15 @@ export default function AccountClient({ view }: { view: AccountView }) {
   const [supportMessage, setSupportMessage] = useState("");
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [error, setError] = useState("");
+  const [isAuthRequired, setIsAuthRequired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   const recentOrders = orders.slice(0, 3);
+  const protectedPath = protectedAccountPaths[view];
+  const returnToQuery = new URLSearchParams({ returnTo: protectedPath }).toString();
+  const loginHref = `/account/login?${returnToQuery}`;
+  const registerHref = `/account/register?${returnToQuery}`;
 
   useEffect(() => {
     let isActive = true;
@@ -177,6 +200,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
     async function load() {
       setIsLoading(true);
       setError("");
+      setIsAuthRequired(false);
       try {
         const session = await readJson<{ customer: Customer }>("/api/account/session");
         if (!isActive) return;
@@ -195,8 +219,14 @@ export default function AccountClient({ view }: { view: AccountView }) {
         setSupportMessage(supportPayload.message ?? "");
       } catch (err) {
         if (!isActive) return;
-        setError(err instanceof Error ? err.message : "Please log in to continue.");
         setCustomer(null);
+        if (err instanceof AccountRequestError && err.status === 401) {
+          setIsAuthRequired(true);
+          setError("");
+        } else {
+          setIsAuthRequired(false);
+          setError("We couldn't load your account right now.");
+        }
       } finally {
         if (isActive) setIsLoading(false);
       }
@@ -205,7 +235,7 @@ export default function AccountClient({ view }: { view: AccountView }) {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   const logout = async () => {
     await fetch("/api/account/logout", { method: "POST" }).catch(() => null);
@@ -310,14 +340,38 @@ export default function AccountClient({ view }: { view: AccountView }) {
         {isLoading ? (
           <Panel>Loading your account...</Panel>
         ) : !customer ? (
-          <Panel>
-            <p className="text-lg font-semibold text-white">Login required</p>
-            <p className="mt-2 text-sm leading-7 text-white/62">{error}</p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Link className="action-primary" href="/account/login">Login</Link>
-              <Link className="action-muted" href="/account/register">Create Account</Link>
-            </div>
-          </Panel>
+          isAuthRequired ? (
+            <section className="aev-account-auth-required" aria-labelledby="account-auth-required-title">
+              <div className="aev-account-auth-required-icon" aria-hidden="true">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <p className="aev-account-auth-required-eyebrow">Private account access</p>
+              <h1 id="account-auth-required-title">Sign in to access your account</h1>
+              <p className="aev-account-auth-required-copy">
+                Your orders, saved addresses, and support history stay private and become available after you sign in.
+              </p>
+              <div className="aev-account-auth-required-actions">
+                <Link className="action-primary" href={loginHref}>Sign In</Link>
+                <Link className="action-muted" href={registerHref}>Create Account</Link>
+              </div>
+              <Link className="aev-account-auth-required-track" href="/track-order">
+                Track an order without signing in
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </section>
+          ) : (
+            <section className="aev-account-service-error" aria-labelledby="account-service-error-title">
+              <div className="aev-account-auth-required-icon" aria-hidden="true">
+                <Headphones className="h-6 w-6" />
+              </div>
+              <p className="aev-account-auth-required-eyebrow">Account service</p>
+              <h1 id="account-service-error-title">We couldn&apos;t load your account right now.</h1>
+              <p>Please check your connection and try again. Your account information remains safe.</p>
+              <button type="button" className="action-primary" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>
+                Try Again
+              </button>
+            </section>
+          )
         ) : (
           <div className="grid gap-5 lg:gap-6">
             <section className="min-w-0">
