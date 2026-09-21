@@ -1,5 +1,5 @@
-import AccountClient from "@/app/account/account-client";
+import AccountOrdersClient from "@/app/account/orders/account-orders-client";
 
 export default function AccountOrdersPage() {
-  return <AccountClient view="orders" />;
+  return <AccountOrdersClient />;
 }
