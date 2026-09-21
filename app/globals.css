@@ -11894,6 +11894,446 @@ button {
   }
 }
 
+/* Product-specific unavailable state */
+.aev-product-unavailable-page {
+  position: relative;
+  isolation: isolate;
+  background: #0b0613;
+}
+
+.aev-product-unavailable-page::before,
+.aev-product-unavailable-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.aev-product-unavailable-page::before {
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.webp") type("image/webp")
+  );
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: saturate(1.04) contrast(1.05) brightness(0.72);
+}
+
+.aev-product-unavailable-page::after {
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 52% 24%, rgba(255, 77, 184, 0.07), transparent 48%),
+    linear-gradient(180deg, rgba(11, 6, 19, 0.1), rgba(12, 6, 22, 0.34) 62%, rgba(10, 5, 17, 0.7));
+}
+
+.aev-product-unavailable-stage {
+  min-height: clamp(36rem, 68vh, 48rem);
+}
+
+.aev-product-unavailable-shell {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(255, 119, 200, 0.3);
+  background:
+    linear-gradient(138deg, rgba(82, 24, 76, 0.44), rgba(13, 8, 26, 0.75) 50%, rgba(6, 31, 43, 0.55)),
+    rgba(13, 8, 24, 0.64);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 77, 184, 0.12),
+    0 30px 90px rgba(3, 2, 10, 0.46),
+    0 0 54px rgba(255, 77, 184, 0.13),
+    0 0 38px rgba(49, 230, 212, 0.07);
+  backdrop-filter: blur(18px) saturate(1.16);
+}
+
+.aev-product-unavailable-shell::before,
+.aev-product-unavailable-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.aev-product-unavailable-shell::before {
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 9% 10%, rgba(255, 77, 184, 0.23), transparent 31%),
+    radial-gradient(circle at 92% 88%, rgba(49, 230, 212, 0.15), transparent 33%),
+    linear-gradient(116deg, rgba(255, 255, 255, 0.07), transparent 22% 74%, rgba(103, 247, 243, 0.04));
+}
+
+.aev-product-unavailable-shell::after {
+  inset: 1px;
+  z-index: 0;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.1), transparent 24%);
+  mask-image: linear-gradient(180deg, black, transparent 48%);
+}
+
+.aev-product-unavailable-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-product-unavailable-visual {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 19rem;
+  place-items: center;
+}
+
+.aev-product-unavailable-visual::before,
+.aev-product-unavailable-visual::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.aev-product-unavailable-visual::before {
+  inset: -4.5rem -3.25rem -4.5rem -4.75rem;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.webp") type("image/webp")
+  );
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 132% auto;
+  filter: saturate(1.08) contrast(1.06) brightness(0.86);
+  mask-image: radial-gradient(ellipse 76% 75% at 40% 48%, black 28%, rgba(0, 0, 0, 0.82) 56%, transparent 84%);
+  opacity: 0.7;
+}
+
+.aev-product-unavailable-visual::after {
+  inset: 9% 6%;
+  border: 1px solid rgba(255, 179, 209, 0.13);
+  border-radius: 48% 52% 45% 55%;
+  background:
+    radial-gradient(circle at 25% 24%, rgba(255, 119, 200, 0.17), transparent 38%),
+    radial-gradient(circle at 78% 76%, rgba(103, 247, 243, 0.11), transparent 38%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 36px rgba(255, 77, 184, 0.09);
+  transform: rotate(-4deg);
+}
+
+.aev-product-unavailable-preview {
+  position: relative;
+  isolation: isolate;
+  width: min(15.5rem, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(255, 119, 200, 0.3);
+  border-radius: 1.15rem;
+  background: linear-gradient(155deg, rgba(29, 15, 43, 0.96), rgba(9, 8, 21, 0.97));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 22px 55px rgba(5, 2, 13, 0.44),
+    0 0 32px rgba(255, 77, 184, 0.14),
+    0 0 22px rgba(49, 230, 212, 0.055);
+  transform: perspective(52rem) rotateY(4deg) rotateZ(-1.5deg);
+  transition: transform 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
+}
+
+.aev-product-unavailable-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.13), transparent 19% 69%, rgba(103, 247, 243, 0.06));
+  mask-image: linear-gradient(180deg, black, transparent 56%);
+}
+
+.aev-product-unavailable-media {
+  position: relative;
+  min-height: 15.25rem;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 119, 200, 0.16);
+  background:
+    linear-gradient(180deg, rgba(8, 6, 17, 0.08) 35%, rgba(8, 6, 17, 0.82) 100%),
+    url("/brand/noromi/shop/shop-hero-collection-unavailable.webp") 66% 55% / cover no-repeat;
+  filter: saturate(0.72) contrast(1.04) brightness(0.78);
+  transition: filter 280ms ease, background-size 480ms ease;
+}
+
+.aev-product-unavailable-media::before,
+.aev-product-unavailable-media::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.aev-product-unavailable-media::before {
+  inset: 0;
+  background:
+    repeating-linear-gradient(128deg, transparent 0 4.6rem, rgba(255, 255, 255, 0.035) 4.7rem, transparent 4.82rem),
+    radial-gradient(circle at 12% 14%, rgba(255, 77, 184, 0.2), transparent 34%),
+    radial-gradient(circle at 88% 86%, rgba(49, 230, 212, 0.13), transparent 35%);
+}
+
+.aev-product-unavailable-media::after {
+  inset: 0;
+  background: linear-gradient(118deg, transparent 24%, rgba(255, 255, 255, 0.12) 46%, transparent 64%);
+  opacity: 0.6;
+  transform: translateX(-18%);
+}
+
+.aev-product-unavailable-badge {
+  position: absolute;
+  left: 0.65rem;
+  top: 0.65rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 119, 200, 0.38);
+  border-radius: 999px;
+  padding: 0.34rem 0.58rem;
+  color: rgba(255, 207, 231, 0.94);
+  background: rgba(13, 8, 24, 0.83);
+  box-shadow: 0 0 18px rgba(255, 77, 184, 0.14);
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.aev-product-unavailable-status-mark {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  display: grid;
+  height: 2.7rem;
+  width: 2.7rem;
+  place-items: center;
+  border: 1px solid rgba(103, 247, 243, 0.3);
+  border-radius: 0.85rem;
+  color: rgba(201, 255, 252, 0.94);
+  background: rgba(8, 12, 24, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 22px rgba(49, 230, 212, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.aev-product-unavailable-preview-body {
+  display: flex;
+  min-height: 8.4rem;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.9rem 1rem 1rem;
+  text-align: left;
+}
+
+.aev-product-unavailable-preview-body > span {
+  color: rgba(255, 179, 209, 0.68);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.aev-product-unavailable-preview-body strong {
+  margin-top: 0.42rem;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.aev-product-unavailable-preview-lines {
+  display: grid;
+  width: 100%;
+  gap: 0.34rem;
+  margin-top: 0.68rem;
+}
+
+.aev-product-unavailable-preview-lines i {
+  display: block;
+  height: 0.3rem;
+  width: 78%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(216, 203, 232, 0.2), rgba(216, 203, 232, 0.055));
+}
+
+.aev-product-unavailable-preview-lines i:last-child {
+  width: 54%;
+}
+
+.aev-product-unavailable-preview-body small {
+  margin-top: auto;
+  border: 1px solid rgba(255, 77, 184, 0.2);
+  border-radius: 999px;
+  padding: 0.25rem 0.52rem;
+  color: rgba(216, 203, 232, 0.68);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.62rem;
+  font-weight: 650;
+}
+
+.aev-product-unavailable-copy h1,
+.aev-product-unavailable-copy p {
+  overflow-wrap: anywhere;
+}
+
+.aev-product-unavailable-actions a {
+  max-width: 100%;
+}
+
+.aev-product-unavailable-cta {
+  min-width: 11.25rem;
+}
+
+.aev-product-unavailable-actions .aev-action-primary {
+  box-shadow:
+    0 8px 30px rgba(255, 64, 184, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.aev-product-unavailable-arrow {
+  filter: drop-shadow(0 0 8px rgba(255, 77, 184, 0.24));
+  transition: transform 180ms ease;
+}
+
+.aev-product-unavailable-actions a:focus-visible {
+  outline: 2px solid rgba(185, 255, 253, 0.9);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aev-product-unavailable-preview:hover {
+    border-color: rgba(255, 119, 200, 0.44);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.17),
+      0 25px 60px rgba(5, 2, 13, 0.48),
+      0 0 36px rgba(255, 77, 184, 0.17),
+      0 0 25px rgba(49, 230, 212, 0.07);
+    transform: perspective(52rem) translateY(-2px) rotateY(2deg) rotateZ(-0.7deg);
+  }
+
+  .aev-product-unavailable-preview:hover .aev-product-unavailable-media {
+    filter: saturate(0.77) contrast(1.06) brightness(0.8);
+    background-size: 102%;
+  }
+
+  .aev-product-unavailable-cta:hover .aev-product-unavailable-arrow {
+    transform: translateX(0.25rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .aev-product-unavailable-page::before {
+    background-position: 47% top;
+    filter: saturate(0.96) contrast(1.04) brightness(0.65);
+  }
+
+  .aev-product-unavailable-stage {
+    min-height: 38rem;
+  }
+
+  .aev-product-unavailable-shell {
+    backdrop-filter: blur(14px) saturate(1.12);
+  }
+
+  .aev-product-unavailable-visual {
+    min-height: 10rem;
+  }
+
+  .aev-product-unavailable-visual::before {
+    inset: -3.5rem -2rem -2.75rem;
+    background-position: left center;
+    background-size: 124% auto;
+    opacity: 0.58;
+  }
+
+  .aev-product-unavailable-visual::after {
+    inset: 4% 14%;
+  }
+
+  .aev-product-unavailable-preview {
+    display: grid;
+    width: min(18rem, 100%);
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    border-radius: 1rem;
+    transform: none;
+  }
+
+  .aev-product-unavailable-media {
+    min-height: 9.2rem;
+    border-bottom: 0;
+    border-right: 1px solid rgba(255, 119, 200, 0.16);
+    background-position: 68% 55%;
+  }
+
+  .aev-product-unavailable-badge {
+    left: 0.45rem;
+    top: 0.45rem;
+    gap: 0.25rem;
+    padding: 0.28rem 0.42rem;
+    font-size: 0.48rem;
+  }
+
+  .aev-product-unavailable-status-mark {
+    bottom: 0.5rem;
+    right: 0.5rem;
+    height: 2.2rem;
+    width: 2.2rem;
+    border-radius: 0.72rem;
+  }
+
+  .aev-product-unavailable-status-mark svg {
+    height: 1.15rem;
+    width: 1.15rem;
+  }
+
+  .aev-product-unavailable-preview-body {
+    min-height: 9.2rem;
+    padding: 0.78rem 0.72rem;
+  }
+
+  .aev-product-unavailable-preview-body > span {
+    font-size: 0.48rem;
+    letter-spacing: 0.11em;
+  }
+
+  .aev-product-unavailable-preview-body strong {
+    font-size: 0.8rem;
+  }
+
+  .aev-product-unavailable-preview-body small {
+    font-size: 0.54rem;
+  }
+
+  .aev-product-unavailable-cta {
+    min-width: min(15rem, 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-product-unavailable-preview,
+  .aev-product-unavailable-media,
+  .aev-product-unavailable-cta,
+  .aev-product-unavailable-cta::after,
+  .aev-product-unavailable-arrow {
+    transition: none;
+  }
+
+  .aev-product-unavailable-cta:hover,
+  .aev-product-unavailable-cta:active,
+  .aev-product-unavailable-cta:hover .aev-product-unavailable-arrow {
+    transform: none;
+  }
+
+  .aev-product-unavailable-preview:hover .aev-product-unavailable-media {
+    filter: saturate(0.72) contrast(1.04) brightness(0.78);
+    background-size: cover;
+  }
+}
+
 /* Admin control room redesign */
 .aev-admin-control-room {
   --admin-bg: #02040b;

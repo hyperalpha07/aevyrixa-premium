@@ -128,7 +128,9 @@ export default async function ProductPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productStructuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productStructuredData).replace(/</g, "\\u003c"),
+        }}
       />
       <ProductDetailClient
         product={product}
