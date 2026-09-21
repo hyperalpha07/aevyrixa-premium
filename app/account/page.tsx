@@ -1,5 +1,5 @@
-import AccountClient from "@/app/account/account-client";
+import AccountDashboardClient from "@/app/account/account-dashboard-client";
 
 export default function AccountPage() {
-  return <AccountClient view="dashboard" />;
+  return <AccountDashboardClient />;
 }

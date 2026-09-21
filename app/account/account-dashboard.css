@@ -1,0 +1,300 @@
+.aev-account-care-banner {
+  position: relative;
+  isolation: isolate;
+  min-height: 13.5rem;
+  margin-top: 0.85rem;
+  overflow: hidden;
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  border: 1px solid rgba(255, 77, 184, 0.26);
+  border-radius: 1.5rem;
+  background-image:
+    linear-gradient(90deg, rgba(23, 8, 31, 0.9) 0%, rgba(24, 8, 34, 0.68) 43%, rgba(12, 8, 25, 0.18) 76%, rgba(8, 12, 23, 0.1) 100%),
+    image-set(
+      url("/brand/noromi/backgrounds/account-dashboard-care-banner-01.avif") type("image/avif"),
+      url("/brand/noromi/backgrounds/account-dashboard-care-banner-01.webp") type("image/webp")
+    );
+  background-position: center, center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 20px 56px rgba(4, 2, 10, 0.28),
+    0 0 36px rgba(255, 77, 184, 0.1),
+    0 0 26px rgba(49, 230, 212, 0.045);
+}
+
+.aev-account-care-banner::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(49, 230, 212, 0.13), transparent 25%),
+    linear-gradient(112deg, rgba(255, 255, 255, 0.11), transparent 23%);
+}
+
+.aev-account-dashboard-content-grid {
+  display: grid;
+  min-width: 0;
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+}
+
+.aev-account-dashboard-page .aev-account-dashboard-content-grid .aev-panel {
+  border-color: rgba(255, 77, 184, 0.2);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 40%),
+    linear-gradient(150deg, rgba(29, 13, 42, 0.8), rgba(8, 12, 25, 0.84));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 18px 46px rgba(4, 2, 10, 0.25),
+    0 0 28px rgba(255, 77, 184, 0.055);
+}
+
+.aev-account-dashboard-orders {
+  position: relative;
+  min-width: 0;
+}
+
+.aev-account-dashboard-orders::before {
+  content: "";
+  position: absolute;
+  right: -15%;
+  bottom: -28%;
+  width: 58%;
+  aspect-ratio: 1.4;
+  pointer-events: none;
+  background-image: image-set(
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.avif") type("image/avif"),
+    url("/brand/noromi/backgrounds/luxe_plum_silk_and_petals.webp") type("image/webp")
+  );
+  background-position: right bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.11;
+  -webkit-mask-image: radial-gradient(ellipse at 100% 100%, #000, transparent 67%);
+  mask-image: radial-gradient(ellipse at 100% 100%, #000, transparent 67%);
+}
+
+.aev-account-dashboard-orders > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aev-account-dashboard-orders .group {
+  border-color: rgba(255, 77, 184, 0.16);
+  background: rgba(9, 8, 22, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.aev-account-dashboard-orders .group > div:first-of-type::before {
+  content: "";
+  float: left;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin-right: 0.7rem;
+  border: 1px solid rgba(255, 77, 184, 0.18);
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(circle at 68% 28%, rgba(49, 230, 212, 0.13), transparent 31%),
+    linear-gradient(145deg, rgba(255, 77, 184, 0.14), rgba(15, 10, 30, 0.8));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aev-account-dashboard-side-stack {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 0.85rem;
+}
+
+.aev-account-dashboard-quick-panel {
+  overflow: hidden;
+}
+
+.aev-account-dashboard-quick-action {
+  display: grid;
+  min-width: 0;
+  min-height: 5.4rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 0.7rem;
+  background: rgba(7, 8, 21, 0.56);
+  color: rgba(235, 225, 243, 0.8);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.35;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.aev-account-dashboard-quick-action:hover,
+.aev-account-dashboard-quick-action:focus-visible {
+  border-color: rgba(255, 77, 184, 0.28);
+  background: rgba(37, 16, 48, 0.68);
+  color: white;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.aev-account-dashboard-quick-icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid rgba(255, 77, 184, 0.2);
+  border-radius: 0.7rem;
+  background: rgba(255, 77, 184, 0.09);
+  color: #ffb3d1;
+}
+
+.aev-account-dashboard-quick-action.is-cyan .aev-account-dashboard-quick-icon {
+  border-color: rgba(49, 230, 212, 0.22);
+  background: rgba(49, 230, 212, 0.08);
+  color: #31e6d4;
+}
+
+.aev-account-dashboard-quick-action.is-violet .aev-account-dashboard-quick-icon {
+  border-color: rgba(168, 85, 247, 0.24);
+  background: rgba(168, 85, 247, 0.09);
+  color: #c9a7ff;
+}
+
+.aev-account-dashboard-quick-action.is-amber .aev-account-dashboard-quick-icon {
+  border-color: rgba(255, 184, 77, 0.23);
+  background: rgba(255, 184, 77, 0.08);
+  color: #ffd18a;
+}
+
+.aev-account-dashboard-help {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(49, 230, 212, 0.18) !important;
+}
+
+.aev-account-dashboard-help::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 92% 18%, rgba(49, 230, 212, 0.13), transparent 29%),
+    radial-gradient(circle at 78% 90%, rgba(255, 77, 184, 0.1), transparent 35%),
+    linear-gradient(112deg, rgba(255, 255, 255, 0.075), transparent 28%);
+}
+
+.aev-account-dashboard-help .mini-action {
+  min-height: 2.35rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+.aev-account-dashboard-content-grid {
+    grid-template-columns: minmax(0, 1.42fr) minmax(18rem, 0.82fr);
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-care-banner {
+    min-height: 15rem;
+    margin-top: 0.55rem;
+    padding: 1.25rem;
+    background-image:
+      linear-gradient(90deg, rgba(23, 8, 31, 0.91), rgba(24, 8, 34, 0.66) 62%, rgba(8, 12, 23, 0.18)),
+      image-set(
+        url("/brand/noromi/backgrounds/account-dashboard-care-banner-01.avif") type("image/avif"),
+        url("/brand/noromi/backgrounds/account-dashboard-care-banner-01.webp") type("image/webp")
+      );
+    background-position: center, 55% center;
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-dashboard-content-grid {
+    gap: 0.55rem;
+    margin-top: 0.55rem;
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-dashboard-side-stack {
+    gap: 0.55rem;
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-dashboard-page .aev-account-dashboard-content-grid .aev-panel {
+    padding: 1rem;
+    border-radius: 1.2rem;
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-dashboard-quick-action {
+    min-height: 5.15rem;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-dashboard-quick-action > svg {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+.aev-account-dashboard-orders::before {
+    opacity: 0.07;
+  }
+}
+
+.aev-account-dashboard-utilities {
+  overflow: hidden;
+}
+
+.aev-account-dashboard-quick-panel {
+  overflow: visible;
+}
+
+.aev-account-dashboard-utilities .aev-account-dashboard-quick-action {
+  min-height: 4.55rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.aev-account-dashboard-utilities .aev-account-dashboard-quick-action:nth-child(odd) {
+  border-right: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.aev-account-dashboard-utilities .aev-account-dashboard-quick-action:nth-child(n + 3) {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.aev-account-dashboard-utilities .aev-account-dashboard-quick-action:hover,
+.aev-account-dashboard-utilities .aev-account-dashboard-quick-action:focus-visible {
+  background: rgba(255, 77, 184, 0.055);
+  transform: none;
+}
+
+.aev-account-dashboard-utilities .aev-account-dashboard-help {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border: 0 !important;
+  border-top: 1px solid rgba(49, 230, 212, 0.12) !important;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.aev-account-dashboard-utilities .aev-account-dashboard-help::before {
+  opacity: 0.55;
+}

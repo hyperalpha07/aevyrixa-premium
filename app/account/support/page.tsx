@@ -1,5 +1,5 @@
-import AccountClient from "@/app/account/account-client";
+import AccountSupportClient from "@/app/account/support/account-support-client";
 
 export default function AccountSupportPage() {
-  return <AccountClient view="support" />;
+  return <AccountSupportClient />;
 }
