@@ -76,7 +76,7 @@ export function validateAdminV2DraftProduct(raw: unknown): AdminV2DraftProductVa
   };
 
   const name = text(source.name, 180);
-  const slug = text(source.slug, 160);
+  const slug = text(source.slug, 160) || slugifyAdminV2ProductName(name);
   const category = text(source.category, 120);
   const price = optionalNumber(source.price);
   const compareAtPrice = optionalNumber(source.compareAtPrice);

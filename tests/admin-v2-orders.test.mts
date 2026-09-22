@@ -544,11 +544,12 @@ test("draft storage cleanup path is limited to generated images for the same pro
   assert.equal(safeDraftMediaStoragePath(`${path}/../other.webp`, editId), null);
 });
 
-test("new product explains media management begins after draft creation", () => {
+test("new product sends media-capable staff straight to image upload after draft creation", () => {
   const source = readFileSync(new URL("../components/admin-v2/views/products/AdminV2NewProductView.tsx", import.meta.url), "utf8");
-  assert.match(source, /After draft creation/);
-  assert.match(source, /upload, remove, reorder, and choose the primary product image/);
-  assert.match(source, /Description images and rich product content will be added in a later phase/);
+  const action = readFileSync(new URL("../app/admin-v2/products/new/actions.ts", import.meta.url), "utf8");
+  assert.match(source, /After creating the draft, you will go straight to image upload/);
+  assert.match(source, /a teammate with media access can add images/);
+  assert.match(action, /\/media\?created=1/);
 });
 
 test("draft product media view renders Phase 2 management controls and copy", () => {

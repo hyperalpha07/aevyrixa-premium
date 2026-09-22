@@ -19,7 +19,7 @@ export function AdminV2ProductMediaUnavailable({ id, active = false }: { id: str
   </Stack>;
 }
 
-type Notice = { uploaded: boolean; updated: string | null; cleanupFailed: boolean };
+type Notice = { created: boolean; uploaded: boolean; updated: string | null; cleanupFailed: boolean };
 const richMediaRoles: Array<{ role: AdminV2RichMediaRole; label: string }> = [
   { role: "description", label: "Description image" },
   { role: "sizeChart", label: "Size chart" },
@@ -54,6 +54,7 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
       actions={<Stack direction="row" spacing={1}><Chip label="Draft only" color="primary" variant="outlined" /><Chip label="Media management" variant="outlined" /></Stack>} />
     <Stack spacing={2}>
       <Alert severity="info">Draft-only media management is enabled. Publishing happens through the publish review step.</Alert>
+      {notice.created ? <Alert severity="success">Product created. Add product images.</Alert> : null}
       {notice.uploaded ? <Alert severity="success">Image uploaded and attached to this draft.</Alert> : null}
       {notice.updated ? <Alert severity="success">Draft gallery updated.</Alert> : null}
       {notice.cleanupFailed ? <Alert severity="warning">The gallery was updated, but Storage cleanup failed. The unreferenced object may need manual review.</Alert> : null}
