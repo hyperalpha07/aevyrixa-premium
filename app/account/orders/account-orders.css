@@ -339,3 +339,197 @@
 .aev-account-orders-page .aev-account-order-card::after {
   opacity: 0.46;
 }
+
+.aev-account-orders-metric {
+  display: flex;
+  min-width: 0;
+  min-height: 5.4rem;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgba(255, 77, 184, 0.2);
+  border-radius: 1.1rem;
+  padding: 0.75rem;
+  text-align: left;
+  color: #f7effa;
+  background: linear-gradient(135deg, rgba(65, 22, 68, 0.72), rgba(13, 12, 29, 0.82));
+}
+.aev-account-orders-metric.is-active { border-color: rgba(255, 77, 184, 0.66); }
+.aev-account-orders-metric-icon { flex: none; color: #ff9dca; }
+.aev-account-orders-metric-copy { display: grid; min-width: 0; gap: 0.15rem; }
+.aev-account-orders-metric-copy span { font-size: 0.68rem; font-weight: 700; line-height: 1.25; }
+.aev-account-orders-metric-copy strong { color: white; font-size: 1.35rem; line-height: 1; }
+.aev-account-orders-metric:focus-visible { outline: 2px solid #31e6d4; outline-offset: 2px; }
+.aev-account-orders-results { margin-top: 0.9rem; }
+.aev-account-order-thumbnail { display: none; }
+.aev-account-orders-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-top: 1rem; color: #d7c8df; font-size: 0.72rem; }
+.aev-account-orders-pagination > div { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.aev-account-orders-page-number { display: inline-flex; align-items: center; gap: 0.3rem; }
+.aev-account-orders-pagination button { display: grid; min-width: 2rem; height: 2rem; place-items: center; border: 1px solid rgba(255, 77, 184, 0.24); border-radius: 0.55rem; color: #f8effa; background: rgba(255, 255, 255, 0.04); }
+.aev-account-orders-pagination button:disabled { opacity: 0.36; cursor: not-allowed; }
+
+/* Orders-only desktop composition. Other Account routes retain the shared workspace. */
+@media (min-width: 768px) {
+  .aev-account-page-background.aev-account-orders-page {
+    background-color: #120819;
+    background-image:
+      linear-gradient(180deg, rgba(19, 7, 28, 0.16), rgba(19, 7, 28, 0.3) 68%, #120819),
+      image-set(
+        url("/brand/noromi/backgrounds/account-hub-bg-01.avif") type("image/avif"),
+        url("/brand/noromi/backgrounds/account-hub-bg-01.webp") type("image/webp")
+      );
+    background-size: 100% 100%, 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+
+  .aev-account-orders-page .aev-account-dashboard-workspace {
+    grid-template-columns: minmax(13.75rem, 15rem) minmax(0, 1fr);
+  }
+
+  .aev-account-orders-page .aev-account-dashboard-sidebar a,
+  .aev-account-orders-page .aev-account-dashboard-sidebar button {
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+  }
+
+  .aev-account-orders-page .aev-account-dashboard-welcome {
+    padding-block: 1.4rem;
+  }
+
+  .aev-account-orders-page .aev-account-orders-overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 77, 184, 0.28);
+    border-radius: 1.25rem;
+    padding: 0.2rem;
+    background:
+      linear-gradient(118deg, rgba(255, 255, 255, 0.09), transparent 26%),
+      linear-gradient(130deg, rgba(41, 18, 52, 0.88), rgba(11, 13, 31, 0.88));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      inset 0 -1px 0 rgba(49, 230, 212, 0.06),
+      0 15px 38px rgba(4, 2, 10, 0.22);
+  }
+
+  .aev-account-orders-metric {
+    display: flex;
+    min-width: 0;
+    min-height: 5.4rem;
+    align-items: center;
+    gap: 0.7rem;
+    border: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.085);
+    border-radius: 0;
+    padding: 0.75rem;
+    text-align: left;
+    color: #f7effa;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 48%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+  }
+
+  .aev-account-orders-metric:first-child { border-left: 0; border-radius: 1.05rem 0 0 1.05rem; }
+  .aev-account-orders-metric:last-child { border-radius: 0 1.05rem 1.05rem 0; }
+  .aev-account-orders-metric:hover,
+  .aev-account-orders-metric.is-active {
+    background:
+      radial-gradient(ellipse at 15% 15%, rgba(255, 77, 184, 0.18), transparent 65%),
+      linear-gradient(145deg, rgba(100, 35, 96, 0.22), rgba(23, 20, 48, 0.18));
+  }
+
+  .aev-account-orders-metric.is-active {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 112, 194, 0.53),
+      inset 0 1px 0 rgba(255, 255, 255, 0.17),
+      0 0 23px rgba(255, 77, 184, 0.1);
+  }
+
+  .aev-account-orders-metric:hover { transform: translateY(-2px); }
+  .aev-account-orders-metric:focus-visible { outline: 2px solid #31e6d4; outline-offset: 2px; }
+  .aev-account-orders-metric-icon {
+    display: grid;
+    width: 1.95rem;
+    height: 1.95rem;
+    flex: none;
+    place-items: center;
+    border: 1px solid rgba(255, 179, 209, 0.22);
+    border-radius: 0.65rem;
+    color: #ffb3d1;
+    background: linear-gradient(145deg, rgba(255, 77, 184, 0.13), rgba(49, 230, 212, 0.045));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .aev-account-orders-metric.is-active .aev-account-orders-metric-icon {
+    border-color: rgba(255, 179, 209, 0.42);
+    color: #ffe0ee;
+    background: linear-gradient(145deg, rgba(255, 77, 184, 0.24), rgba(49, 230, 212, 0.09));
+  }
+  .aev-account-orders-metric-copy { display: grid; min-width: 0; gap: 0.15rem; }
+  .aev-account-orders-metric-copy span { font-size: 0.68rem; font-weight: 700; line-height: 1.25; }
+  .aev-account-orders-metric-copy strong { color: white; font-size: 1.35rem; line-height: 1; }
+
+  .aev-account-orders-page .aev-account-orders-list-panel { padding: 1.15rem; }
+  .aev-account-orders-results { margin-top: 0.9rem; }
+  .aev-account-orders-page .aev-account-order-list { border-top: 0; gap: 0.65rem; overflow: visible; }
+  .aev-account-orders-page .aev-account-order-card {
+    border: 1px solid rgba(255, 77, 184, 0.16);
+    border-radius: 1rem;
+    background: rgba(10, 9, 24, 0.54);
+  }
+  .aev-account-orders-page .aev-account-order-card:hover {
+    border-color: rgba(255, 77, 184, 0.38);
+    background: rgba(34, 16, 42, 0.68);
+    transform: translateY(-1px);
+  }
+  .aev-account-order-card-content {
+    grid-template-columns: minmax(0, 1fr) minmax(10.5rem, 12rem);
+    gap: 1rem;
+    align-items: center;
+    padding: 0.9rem;
+  }
+  .aev-account-order-card-primary { display: grid; grid-template-columns: 4.8rem minmax(0, 1fr); align-items: start; gap: 0.9rem; }
+  .aev-account-order-main-info { min-width: 0; }
+  .aev-account-order-title-line { display: flex; min-width: 0; align-items: center; gap: 0.55rem; }
+  .aev-account-order-reference { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: white; font-size: 0.88rem; font-weight: 700; }
+  .aev-account-order-status { flex: none; border-radius: 999px; padding: 0.24rem 0.55rem; font-size: 0.67rem; font-weight: 700; white-space: nowrap; }
+  .aev-account-order-placed { margin-top: 0.2rem; color: #cfc0da; font-size: 0.7rem; }
+  .aev-account-order-product { overflow: hidden; margin-top: 0.45rem; text-overflow: ellipsis; white-space: nowrap; color: #f8effa; font-size: 0.8rem; font-weight: 650; }
+  .aev-account-order-variant { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c9bcd4; font-size: 0.68rem; }
+  .aev-account-order-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem 0.65rem; margin-top: 0.65rem; }
+  .aev-account-order-meta-grid p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+  .aev-account-order-meta-grid p:first-child { color: #bdb0ca; }
+  .aev-account-order-card-actions { gap: 0.4rem; }
+  .aev-account-order-total { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 0.5rem; border-color: rgba(255, 77, 184, 0.17); padding: 0.45rem 0.6rem; text-align: left; background: rgba(255, 77, 184, 0.055); }
+  .aev-account-order-total p { white-space: nowrap; font-size: 0.6rem; letter-spacing: 0.1em; }
+  .aev-account-order-total strong { overflow: hidden; margin: 0; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
+  .aev-account-order-card-actions .mini-action { min-height: 2.2rem; min-width: 0; padding-inline: 0.45rem; white-space: nowrap; font-size: 0.7rem; }
+  .aev-account-order-secondary-actions { gap: 0.35rem; }
+  .aev-account-order-thumbnail { position: relative; display: grid; width: 4.8rem; height: 4.8rem; flex: none; place-items: center; overflow: hidden; border: 1px solid rgba(255, 77, 184, 0.25); border-radius: 0.8rem; color: #ffb3d1; background: radial-gradient(circle at 30% 20%, rgba(255, 77, 184, 0.18), transparent 60%), #1b1029; }
+  .aev-account-order-thumbnail img { object-fit: cover; transition: transform 180ms ease; }
+  .aev-account-order-card:hover .aev-account-order-thumbnail img { transform: scale(1.04); }
+  .aev-account-orders-pagination { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-top: 1rem; color: #d7c8df; font-size: 0.72rem; }
+  .aev-account-orders-pagination > div { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .aev-account-orders-pagination button { display: grid; min-width: 2rem; height: 2rem; place-items: center; border: 1px solid rgba(255, 77, 184, 0.24); border-radius: 0.55rem; color: #f8effa; background: rgba(255, 255, 255, 0.04); transition: background 160ms ease; }
+  .aev-account-orders-pagination button:hover,
+  .aev-account-orders-pagination button[aria-current="page"] { background: rgba(255, 77, 184, 0.22); }
+  .aev-account-orders-pagination button:disabled { opacity: 0.36; cursor: not-allowed; }
+  .aev-account-orders-pagination button:focus-visible { outline: 2px solid #31e6d4; outline-offset: 2px; }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .aev-account-orders-page .aev-account-dashboard-workspace { grid-template-columns: 13.75rem minmax(0, 1fr); }
+  .aev-account-orders-page .aev-account-orders-overview { gap: 0; }
+  .aev-account-orders-metric { gap: 0.4rem; padding: 0.6rem; }
+  .aev-account-orders-metric-copy span { font-size: 0.62rem; }
+  .aev-account-order-card-content { grid-template-columns: minmax(0, 1fr) 10.5rem; gap: 0.6rem; }
+  .aev-account-order-card-primary { grid-template-columns: 4rem minmax(0, 1fr); gap: 0.55rem; }
+  .aev-account-order-thumbnail { width: 4rem; height: 4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-account-orders-page .aev-account-orders-metric,
+  .aev-account-orders-page .aev-account-order-card,
+  .aev-account-orders-page .aev-account-order-thumbnail img { transition: none; transform: none; }
+}

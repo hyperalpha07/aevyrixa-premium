@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, Clock3, MoreHorizontal, PackageSearch } from "lucide-react";
-import { normalizeAccountStatus as normalizeStatus } from "@/app/account/_shared/account-format";
-import { AccountMobileMenu, DashboardSidebar, Metric, Panel } from "@/app/account/_shared/account-ui";
+import { useState } from "react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, MoreHorizontal, PackageSearch } from "lucide-react";
+import { AccountMobileMenu, DashboardSidebar, Panel } from "@/app/account/_shared/account-ui";
 import { DetailedOrderRows } from "@/app/account/orders/account-detailed-orders";
+import { filterOrders, orderGroup, paginateOrders, paginationNumbers, type OrderFilter } from "@/app/account/orders/account-orders-model";
 import type { AccountOrder, Customer } from "@/app/account/_shared/account-types";
 
 export default function OrdersView({
@@ -16,15 +17,26 @@ export default function OrdersView({
   customer: Customer;
   onLogout: () => void;
 }) {
-  const isPending = (order: AccountOrder) => normalizeStatus(order.status).includes("pending");
-  const isDelivered = (order: AccountOrder) =>
-    normalizeStatus(order.status).includes("deliver") ||
-    normalizeStatus(order.deliveryStatus).includes("deliver");
-  const pendingOrders = orders.filter(isPending).length;
-  const deliveredOrders = orders.filter(isDelivered).length;
-  const cancelledOrOtherOrders = orders.filter(
-    (order) => !isPending(order) && !isDelivered(order)
-  ).length;
+  const [filter, setFilter] = useState<OrderFilter>("all");
+  const [page, setPage] = useState(1);
+  const counts = {
+    all: orders.length,
+    pending: orders.filter((order) => orderGroup(order) === "pending").length,
+    delivered: orders.filter((order) => orderGroup(order) === "delivered").length,
+    other: orders.filter((order) => orderGroup(order) === "other").length,
+  };
+  const filtered = filterOrders(orders, filter);
+  const { items: visibleOrders, currentPage, pageCount } = paginateOrders(filtered, page);
+  const metrics = [
+    { key: "all", label: "Total Orders", icon: PackageSearch },
+    { key: "pending", label: "Pending", icon: Clock3 },
+    { key: "delivered", label: "Delivered", icon: CheckCircle2 },
+    { key: "other", label: "Cancelled / Other", icon: MoreHorizontal },
+  ] as const;
+  function selectFilter(next: OrderFilter) {
+    setFilter(next);
+    setPage(1);
+  }
 
   return (
     <div className="aev-account-dashboard-workspace aev-account-orders-workspace">
@@ -50,10 +62,13 @@ export default function OrdersView({
         </section>
 
         <section className="aev-account-dashboard-stats aev-account-orders-overview" aria-label="Order overview">
-          <Metric icon={PackageSearch} label="Total Orders" value={String(orders.length)} accent="pink" />
-          <Metric icon={Clock3} label="Pending" value={String(pendingOrders)} accent="amber" />
-          <Metric icon={CheckCircle2} label="Delivered" value={String(deliveredOrders)} accent="green" />
-          <Metric icon={MoreHorizontal} label="Cancelled / Other" value={String(cancelledOrOtherOrders)} accent="violet" />
+          {metrics.map(({ key, label, icon: Icon }) => (
+            <button key={key} type="button" className={`aev-account-orders-metric ${filter === key ? "is-active" : ""}`}
+              aria-pressed={filter === key} onClick={() => selectFilter(key)}>
+              <span className="aev-account-orders-metric-icon"><Icon size={18} aria-hidden="true" /></span>
+              <span className="aev-account-orders-metric-copy"><span>{label}</span><strong>{counts[key]}</strong></span>
+            </button>
+          ))}
         </section>
 
         <Panel className="aev-account-orders-list-panel">
@@ -62,16 +77,27 @@ export default function OrdersView({
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#FFB3D1]/72">
                 Order history
               </p>
-              <h2 className="mt-1.5 text-xl font-semibold text-white sm:text-2xl">Your orders</h2>
+              <h2 className="mt-1.5 text-xl font-semibold text-white sm:text-2xl">{filter === "all" ? "Your orders" : `${metrics.find((metric) => metric.key === filter)?.label} orders`}</h2>
             </div>
             <Link href="/track-order" className="mini-action min-h-10 justify-center">
               <PackageSearch className="h-4 w-4" />
               Track an order
             </Link>
           </div>
-          <div className="mt-5">
-            <DetailedOrderRows orders={orders} />
+          <div className="aev-account-orders-results">
+            <DetailedOrderRows orders={visibleOrders} emptyMessage={orders.length && !filtered.length ? "No orders match this status yet." : undefined} />
           </div>
+          {pageCount > 1 && <nav className="aev-account-orders-pagination" aria-label="Order history pages">
+            <p>Showing {(currentPage - 1) * 5 + 1}–{Math.min(currentPage * 5, filtered.length)} of {filtered.length}</p>
+            <div>
+              <button type="button" aria-label="Previous page" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft size={17} /></button>
+              {paginationNumbers(currentPage, pageCount).map((number, index, numbers) => <span key={number} className="aev-account-orders-page-number">
+                {index > 0 && number - numbers[index - 1] > 1 && <span aria-hidden="true">…</span>}
+                <button type="button" aria-label={`Page ${number}`} aria-current={currentPage === number ? "page" : undefined} onClick={() => setPage(number)}>{number}</button>
+              </span>)}
+              <button type="button" aria-label="Next page" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}><ChevronRight size={17} /></button>
+            </div>
+          </nav>}
         </Panel>
       </div>
     </div>
