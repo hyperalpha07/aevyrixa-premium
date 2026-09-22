@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Clock3, Heart, Headphones, MapPin, MessageSquare, PackageSearch, ShieldCheck, ShoppingBag, UserRound } from "lucide-react";
-import { accountStatusChipClass as statusChipClass, normalizeAccountStatus as normalizeStatus } from "@/app/account/_shared/account-format";
+import { normalizeAccountStatus as normalizeStatus } from "@/app/account/_shared/account-format";
 import { AccountMobileMenu, DashboardSidebar, Metric, Panel } from "@/app/account/_shared/account-ui";
 import { RecentOrderRows } from "@/app/account/account-recent-orders";
 import { formatCurrency } from "@/app/lib/currency";
@@ -37,7 +37,7 @@ export default function Dashboard({
   ).length;
 
   return (
-    <div className="aev-account-dashboard-workspace">
+    <div className="aev-account-dashboard-workspace aev-account-dashboard-home">
       <DashboardSidebar customer={customer} activeView="dashboard" onLogout={onLogout} />
 
       <div className="aev-account-dashboard-main">
@@ -59,7 +59,13 @@ export default function Dashboard({
           </div>
         </section>
 
-        <section className="aev-account-dashboard-stats" aria-label="Account overview">
+        <section className="aev-account-dashboard-stats aev-account-dashboard-stats-desktop" aria-label="Account overview">
+          <DashboardMetric icon={PackageSearch} label="Total Orders" value={allOrders.length} href="/account/orders" accent="pink" />
+          <DashboardMetric icon={Clock3} label="Pending Orders" value={pendingOrders} href="/account/orders" accent="amber" />
+          <DashboardMetric icon={CheckCircle2} label="Delivered Orders" value={deliveredOrders} href="/account/orders" accent="green" />
+          <DashboardMetric icon={MapPin} label="Saved Addresses" value={addressCount} href="/account/addresses" accent="cyan" />
+        </section>
+        <section className="aev-account-dashboard-stats aev-account-dashboard-stats-mobile" aria-label="Account overview">
           <Metric icon={PackageSearch} label="Total Orders" value={String(allOrders.length)} accent="pink" />
           <Metric icon={Clock3} label="Pending Orders" value={String(pendingOrders)} accent="amber" />
           <Metric icon={CheckCircle2} label="Delivered Orders" value={String(deliveredOrders)} accent="green" />
@@ -101,6 +107,20 @@ export default function Dashboard({
       </div>
     </div>
   );
+}
+
+function DashboardMetric({ icon: Icon, label, value, href, accent }: {
+  icon: typeof PackageSearch;
+  label: string;
+  value: number;
+  href: string;
+  accent: "pink" | "amber" | "green" | "cyan";
+}) {
+  return <Link href={href} className={`aev-account-dashboard-metric is-${accent}`} aria-label={`${label}: ${value}. View ${href === "/account/addresses" ? "addresses" : "orders"}`}>
+    <span className="aev-account-dashboard-metric-icon"><Icon size={18} aria-hidden="true" /></span>
+    <span className="aev-account-dashboard-metric-copy"><span>{label}</span><strong>{value}</strong></span>
+    <ArrowRight className="aev-account-dashboard-metric-arrow" size={15} aria-hidden="true" />
+  </Link>;
 }
 
 function DashboardQuickActions() {

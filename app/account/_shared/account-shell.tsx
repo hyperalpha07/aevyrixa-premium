@@ -17,6 +17,7 @@ import type { Customer } from "@/app/account/_shared/account-types";
 export type AccountShellContext = {
   customer: Customer;
   settings: StorefrontSettings;
+  bootstrapData: unknown;
   logout: () => Promise<void>;
   openLiveChat: () => void;
 };
@@ -30,14 +31,17 @@ const protectedAccountPaths: Record<AccountView, string> = {
 
 export default function AccountShell({
   view,
+  bootstrapUrl,
   children,
 }: {
   view: AccountView;
+  bootstrapUrl?: string;
   children: (context: AccountShellContext) => ReactNode;
 }) {
   const router = useRouter();
   const [settings, setSettings] = useState<StorefrontSettings>(defaultStorefrontSettings);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [bootstrapData, setBootstrapData] = useState<unknown>(null);
   const [isAuthRequired, setIsAuthRequired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -55,9 +59,13 @@ export default function AccountShell({
     async function loadSession() {
       setIsLoading(true);
       setIsAuthRequired(false);
+      setBootstrapData(null);
       try {
-        const session = await readAccountJson<{ customer: Customer }>("/api/account/session");
-        if (isActive) setCustomer(session.customer);
+        const session = await readAccountJson<{ customer: Customer }>(bootstrapUrl ?? "/api/account/session");
+        if (isActive) {
+          setCustomer(session.customer);
+          setBootstrapData(session);
+        }
       } catch (error) {
         if (!isActive) return;
         setCustomer(null);
@@ -68,7 +76,7 @@ export default function AccountShell({
     }
     void loadSession();
     return () => { isActive = false; };
-  }, [loadAttempt]);
+  }, [loadAttempt, bootstrapUrl]);
 
   const logout = async () => {
     await fetch("/api/account/logout", { method: "POST" }).catch(() => null);
@@ -86,14 +94,14 @@ export default function AccountShell({
   const canShowLiveChatSupport = ["live_chat", "both"].includes(settings.storeProfile.liveSupportMode);
 
   return (
-    <main className={`aev-account-page-background aev-account-dashboard-page min-h-screen overflow-x-hidden text-white ${view === "orders" ? "aev-account-orders-page" : ""} ${view === "addresses" ? "aev-account-addresses-page" : ""} ${view === "support" ? "aev-account-support-page" : ""}`}>
+    <main className={`aev-account-page-background aev-account-dashboard-page min-h-screen overflow-x-hidden text-white ${view === "dashboard" || view === "orders" ? "aev-account-background-framed" : ""} ${view === "orders" ? "aev-account-orders-page" : ""} ${view === "addresses" ? "aev-account-addresses-page" : ""} ${view === "support" ? "aev-account-support-page" : ""}`}>
       <SiteHeader settings={settings} active="account" compactMobile />
       <section className="aev-account-shell mx-auto w-full max-w-7xl px-4 pb-[calc(var(--aev-mobile-bottom-nav-height)+2.5rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6 sm:pt-6 md:pb-20 md:pt-8">
         {isLoading ? (
           <Panel>Loading your account...</Panel>
         ) : customer ? (
           <div className="grid gap-5 lg:gap-6"><section className="min-w-0">
-            {children({ customer, settings, logout, openLiveChat })}
+            {children({ customer, settings, bootstrapData, logout, openLiveChat })}
           </section></div>
         ) : isAuthRequired ? (
           <section className="aev-account-auth-required" aria-labelledby="account-auth-required-title">

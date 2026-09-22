@@ -20,10 +20,12 @@ test("account session 401 is classified as authentication-required, not a generi
   assert.doesNotMatch(accountShellSource, />\{error\}<\/p>/);
 });
 
-test("protected account data is requested only after a successful session request", () => {
-  assert.match(accountShellSource, /readAccountJson<\{ customer: Customer \}>\("\/api\/account\/session"\)/);
-  assert.match(accountShellSource, /children\(\{ customer, settings, logout, openLiveChat \}\)/);
+test("protected views use one authenticated bootstrap while other views retain the session boundary", () => {
+  assert.match(accountShellSource, /readAccountJson<\{ customer: Customer \}>\(bootstrapUrl \?\? "\/api\/account\/session"\)/);
+  assert.match(accountShellSource, /children\(\{ customer, settings, bootstrapData, logout, openLiveChat \}\)/);
   assert.match(accountShellSource, /setLoadAttempt\(\(attempt\) => attempt \+ 1\)/);
+  const bootstrap = readFileSync(new URL("../app/api/account/bootstrap/route.ts", import.meta.url), "utf8");
+  assert.match(bootstrap, /if \(!customer\) return response/);
 });
 
 test("every protected view maps to a local returnTo destination", () => {

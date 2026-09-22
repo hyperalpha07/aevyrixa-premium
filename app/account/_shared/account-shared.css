@@ -12,6 +12,14 @@
   background-size: cover;
 }
 
+/* Shared desktop artwork framing for Dashboard and Orders only. A fixed image
+   sizes against the viewport, not the much taller document scroll area. */
+@media (min-width: 768px) {
+  .aev-account-page-background.aev-account-background-framed {
+    background-attachment: scroll, scroll, fixed;
+  }
+}
+
 .aev-account-dashboard-page .aev-account-shell {
   max-width: 77.5rem;
 }
