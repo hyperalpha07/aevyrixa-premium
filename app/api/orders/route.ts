@@ -8,10 +8,12 @@ import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
 import { createOrder, OrderStoreError, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
 import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
-import { getProductBySlug } from "@/app/lib/product-store";
+import { getProductBySlug, listProducts } from "@/app/lib/product-store";
 import { isPurchasableStock } from "@/app/lib/product-display";
 import { validateProductSelections } from "@/app/lib/product-options";
 import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
+import { isPublicProductImageAllowed } from "@/app/lib/public-product-media-safety";
+import { safeAccountOrderImage, snapshotOrderItemImages } from "@/app/account/orders/account-order-image";
 import {
   paymentMethods,
   paymentTypes,
@@ -23,6 +25,7 @@ import { walletProviders } from "@/app/lib/admin-settings";
 export const dynamic = "force-dynamic";
 
 const bdMobilePattern = /^01[3-9]\d{8}$/;
+const safeOrderImage = (value: unknown) => safeAccountOrderImage(value, normalizeAdminV2ImageSrc, isPublicProductImageAllowed, process.env.NEXT_PUBLIC_SUPABASE_URL);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -114,7 +117,7 @@ function validateOrderPayload(payload: unknown): {
       slug: text(item.slug),
       name: text(item.name),
       price: numberValue(item.price),
-      image: normalizeAdminV2ImageSrc(text(item.image)),
+      image: safeOrderImage(item.image),
       visualTheme: optionalText(item.visualTheme) as OrderCartItem["visualTheme"],
       visualVariant: optionalText(item.visualVariant),
       stockStatus: optionalText(item.stockStatus) as OrderCartItem["stockStatus"],
@@ -278,7 +281,11 @@ export async function POST(request: Request) {
         ? { ...input, customerId: customer.id }
         : input;
 
-    const result = await createOrder(orderInput);
+    const catalogResult = await listProducts({ scope: "public" });
+    const resolvedItems = catalogResult.storageMode === "supabase"
+      ? snapshotOrderItemImages(orderInput.items, catalogResult.products, safeOrderImage)
+      : orderInput.items.map((item) => ({ ...item, image: safeOrderImage(item.image) }));
+    const result = await createOrder({ ...orderInput, items: resolvedItems });
 
     await recordOrderEvent({
       orderRef: result.order.orderReference,

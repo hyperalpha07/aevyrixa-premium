@@ -32,7 +32,7 @@ export type AccountOrder = {
   cityArea: string;
   courierName?: string;
   trackingId?: string;
-  items: { name: string; quantity: number; price: number; variant?: string }[];
+  items: { name: string; quantity: number; price: number; variant?: string; image?: string | null }[];
 };
 
 export type SupportPayload = {
