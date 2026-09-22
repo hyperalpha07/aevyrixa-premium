@@ -31,6 +31,6 @@ export default async function AdminV2ProductMediaPage(props: PageProps<"/admin-v
     images={images} primaryImageUrl={primaryImageUrl} colors={colors}
     colorAssignments={draftColorImageAssignments(product)} supportsColorMedia={Object.hasOwn(product, "media")}
     richAssignments={draftRichContentAssignments(product)} supportsRichMedia={Object.hasOwn(product, "media")}
-    notice={{ uploaded: searchParams.uploaded === "1", updated: typeof searchParams.updated === "string" ? searchParams.updated : null,
+    notice={{ created: searchParams.created === "1", uploaded: searchParams.uploaded === "1", updated: typeof searchParams.updated === "string" ? searchParams.updated : null,
       cleanupFailed: searchParams.cleanup === "failed" }} />;
 }

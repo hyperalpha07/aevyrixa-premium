@@ -86,5 +86,6 @@ export async function createAdminV2DraftProductAction(
   }
 
   revalidatePath("/admin-v2/products");
-  redirect(`/admin-v2/products/${encodeURIComponent(productId)}`);
+  const detailPath = `/admin-v2/products/${encodeURIComponent(productId)}`;
+  redirect(hasPermission(session, "products.media") ? `${detailPath}/media?created=1` : detailPath);
 }
