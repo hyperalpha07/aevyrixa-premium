@@ -33,7 +33,7 @@ test("order thumbnail uses the resolved first item image and has a genuine missi
   assert.equal(firstOrderImage([{ image: "https://example.com/product.webp" }, { image: null }]), "https://example.com/product.webp");
   assert.equal(firstOrderImage([{ image: null }, { image: "https://example.com/second.webp" }]), null);
   assert.equal(firstOrderImage([{ image: null }]), null);
-  const api = read("../app/api/account/orders/route.ts");
+  const api = read("../app/api/account/orders/account-order-data.ts");
   assert.match(api, /listProducts\(\{ scope: "admin" \}\)/);
   assert.match(api, /resolveOrderItemImage\(item, catalog, safeImage\)/);
   assert.match(api, /isPublicProductImageAllowed/);

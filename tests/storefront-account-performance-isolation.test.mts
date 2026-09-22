@@ -21,13 +21,13 @@ test("each protected route imports its own Account implementation", () => {
 
 test("each page owns only its required protected API calls and view module", () => {
   const expected = {
-    dashboard: ["/api/account/orders", "/api/account/addresses"],
-    orders: ["/api/account/orders"],
+    dashboard: ["/api/account/bootstrap?view=dashboard"],
+    orders: ["/api/account/bootstrap?view=orders"],
     addresses: ["/api/account/addresses"],
     support: ["/api/account/support"],
   };
   for (const [route, source] of Object.entries(modules)) {
-    for (const endpoint of ["/api/account/orders", "/api/account/addresses", "/api/account/support"]) {
+    for (const endpoint of ["/api/account/bootstrap?view=dashboard", "/api/account/bootstrap?view=orders", "/api/account/orders", "/api/account/addresses", "/api/account/support"]) {
       assert.equal(source.includes(endpoint), expected[route as keyof typeof expected].includes(endpoint), `${route}: ${endpoint}`);
     }
     assert.match(source, new RegExp(`account-${route}-view`));
@@ -40,10 +40,22 @@ test("each page owns only its required protected API calls and view module", () 
 test("shared shell owns session and 401 boundary but no page-specific data", () => {
   const shell = read("../app/account/_shared/account-shell.tsx");
   assert.match(shell, /\/api\/account\/session/);
+  assert.match(shell, /bootstrapUrl \?\? "\/api\/account\/session"/);
   assert.match(shell, /error instanceof AccountRequestError && error\.status === 401/);
   for (const endpoint of ["/api/account/orders", "/api/account/addresses", "/api/account/support"]) {
     assert.doesNotMatch(shell, new RegExp(endpoint));
   }
+});
+
+test("authenticated bootstrap returns only the requested view data", () => {
+  const bootstrap = read("../app/api/account/bootstrap/route.ts");
+  assert.match(bootstrap, /requireCustomer\(request\)/);
+  assert.match(bootstrap, /if \(!customer\) return response/);
+  assert.match(bootstrap, /view === "orders"/);
+  assert.match(bootstrap, /Promise\.all\(/);
+  assert.match(bootstrap, /listCustomerAddresses\(customer\.id\)/);
+  assert.doesNotMatch(bootstrap, /\/api\/account\/support/);
+  assert.match(bootstrap, /private, no-store/);
 });
 
 test("page-specific view modules have no cross-feature imports", () => {

@@ -369,19 +369,6 @@
 
 /* Orders-only desktop composition. Other Account routes retain the shared workspace. */
 @media (min-width: 768px) {
-  .aev-account-page-background.aev-account-orders-page {
-    background-color: #120819;
-    background-image:
-      linear-gradient(180deg, rgba(19, 7, 28, 0.16), rgba(19, 7, 28, 0.3) 68%, #120819),
-      image-set(
-        url("/brand/noromi/backgrounds/account-hub-bg-01.avif") type("image/avif"),
-        url("/brand/noromi/backgrounds/account-hub-bg-01.webp") type("image/webp")
-      );
-    background-size: 100% 100%, 100% auto;
-    background-position: center top;
-    background-repeat: no-repeat;
-  }
-
   .aev-account-orders-page .aev-account-dashboard-workspace {
     grid-template-columns: minmax(13.75rem, 15rem) minmax(0, 1fr);
   }

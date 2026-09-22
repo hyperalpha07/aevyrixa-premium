@@ -298,3 +298,159 @@
 .aev-account-dashboard-utilities .aev-account-dashboard-help::before {
   opacity: 0.55;
 }
+
+/* Authenticated Dashboard only: keep the shared Account shell untouched. */
+.aev-account-dashboard-home .aev-account-dashboard-stats-desktop { display: none; }
+@media (min-width: 768px) {
+  .aev-account-dashboard-home .aev-account-dashboard-stats-desktop { display: grid; }
+  .aev-account-dashboard-home .aev-account-dashboard-stats-mobile { display: none; }
+}
+@media (min-width: 768px) {
+  .aev-account-dashboard-home .aev-account-dashboard-main {
+    padding: clamp(1.25rem, 2vw, 1.85rem);
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-welcome {
+    display: flex;
+    min-height: 12.5rem;
+    align-items: center;
+    padding: clamp(1.5rem, 2.7vw, 2.5rem);
+    border-color: rgba(255, 77, 184, 0.27);
+    background: linear-gradient(115deg, rgba(53, 15, 58, 0.79), rgba(21, 10, 36, 0.7) 58%, rgba(10, 25, 38, 0.53));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.17), 0 24px 58px rgba(5, 3, 13, 0.25), 0 0 30px rgba(255, 77, 184, 0.075);
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-welcome::before {
+    background-position: 89% center;
+    background-size: 108% auto;
+    opacity: 0.24;
+    -webkit-mask-image: linear-gradient(90deg, transparent 40%, rgba(0, 0, 0, 0.3) 60%, #000 100%);
+    mask-image: linear-gradient(90deg, transparent 40%, rgba(0, 0, 0, 0.3) 60%, #000 100%);
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-welcome > div:nth-child(2) {
+    max-width: 70%;
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-welcome h1 {
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 1rem;
+    padding: 0.3rem;
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-content-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .aev-account-dashboard-home .aev-account-dashboard-side-stack {
+    gap: 1rem;
+  }
+
+  .aev-account-dashboard-home .aev-account-care-banner {
+    margin-top: 1rem;
+  }
+}
+
+.aev-account-dashboard-home .aev-account-dashboard-metric {
+  display: grid;
+  min-width: 0;
+  min-height: 7.15rem;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.9rem 0.8rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  color: white;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.aev-account-dashboard-home .aev-account-dashboard-metric:first-child { border-left: 0; }
+.aev-account-dashboard-home .aev-account-dashboard-metric:hover,
+.aev-account-dashboard-home .aev-account-dashboard-metric:focus-visible {
+  background: rgba(255, 77, 184, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  outline: 2px solid rgba(255, 179, 209, 0.35);
+  outline-offset: -2px;
+}
+.aev-account-dashboard-home .aev-account-dashboard-metric-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(255, 77, 184, 0.22);
+  border-radius: 0.85rem;
+  background: rgba(255, 77, 184, 0.11);
+  color: #ffb3d1;
+}
+.aev-account-dashboard-home .aev-account-dashboard-metric.is-cyan .aev-account-dashboard-metric-icon { border-color: rgba(49, 230, 212, 0.25); background: rgba(49, 230, 212, 0.1); color: #31e6d4; }
+.aev-account-dashboard-home .aev-account-dashboard-metric.is-amber .aev-account-dashboard-metric-icon { border-color: rgba(255, 184, 77, 0.25); background: rgba(255, 184, 77, 0.1); color: #ffd18a; }
+.aev-account-dashboard-home .aev-account-dashboard-metric.is-green .aev-account-dashboard-metric-icon { border-color: rgba(110, 231, 183, 0.24); background: rgba(110, 231, 183, 0.09); color: #a7f3d0; }
+.aev-account-dashboard-home .aev-account-dashboard-metric-copy { display: grid; min-width: 0; gap: 0.25rem; }
+.aev-account-dashboard-home .aev-account-dashboard-metric-copy > span { color: rgba(232, 221, 240, 0.74); font-size: 0.72rem; font-weight: 650; line-height: 1.35; }
+.aev-account-dashboard-home .aev-account-dashboard-metric-copy strong { font-size: clamp(1.5rem, 2.2vw, 2rem); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.aev-account-dashboard-home .aev-account-dashboard-metric-arrow { align-self: start; margin-top: 0.2rem; color: rgba(255, 179, 209, 0.5); }
+
+.aev-account-dashboard-home .aev-account-dashboard-orders .group > div:first-of-type::before { content: none; }
+.aev-account-dashboard-order-list { display: grid; gap: 0.6rem; }
+.aev-account-dashboard-order-list-desktop { display: none; }
+@media (min-width: 768px) {
+  .aev-account-dashboard-order-list-desktop { display: grid; }
+  .aev-account-dashboard-order-list-mobile { display: none; }
+}
+.aev-account-dashboard-order-row {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: center;
+  border: 1px solid rgba(255, 77, 184, 0.14);
+  border-radius: 1rem;
+  padding: 0.8rem;
+  background: rgba(9, 8, 22, 0.62);
+  transition: border-color 180ms ease, background 180ms ease;
+}
+.aev-account-dashboard-order-row:hover { border-color: rgba(255, 77, 184, 0.3); background: rgba(27, 15, 40, 0.75); }
+.aev-account-dashboard-order-image { position: relative; display: grid; width: 4rem; height: 4rem; place-items: center; overflow: hidden; border: 1px solid rgba(255, 77, 184, 0.2); border-radius: 0.85rem; background: rgba(19, 12, 35, 0.86); color: #ffb3d1; }
+.aev-account-dashboard-order-image img { object-fit: cover; transition: transform 180ms ease; }
+.aev-account-dashboard-order-row:hover .aev-account-dashboard-order-image img { transform: scale(1.035); }
+.aev-account-dashboard-order-info { min-width: 0; }
+.aev-account-dashboard-order-head { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 0.55rem; }
+.aev-account-dashboard-order-ref { overflow: hidden; color: white; font-size: 0.83rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.aev-account-dashboard-order-status { flex: none; border-radius: 999px; padding: 0.2rem 0.5rem; font-size: 0.62rem; font-weight: 650; white-space: nowrap; }
+.aev-account-dashboard-order-product { overflow: hidden; margin-top: 0.3rem; color: rgba(245, 237, 249, 0.86); font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+.aev-account-dashboard-order-date { margin-top: 0.35rem; color: rgba(226, 213, 236, 0.63); font-size: 0.71rem; white-space: nowrap; }
+.aev-account-dashboard-order-date strong { color: #ffb3d1; font-weight: 700; }
+.aev-account-dashboard-order-actions { display: flex; grid-column: 2; flex-wrap: wrap; gap: 0.4rem; }
+.aev-account-dashboard-order-actions .mini-action { min-height: 2rem; padding: 0.35rem 0.7rem; font-size: 0.68rem; white-space: nowrap; }
+.aev-account-dashboard-orders-empty { color: rgba(226, 213, 236, 0.72); font-size: 0.85rem; line-height: 1.65; }
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .aev-account-dashboard-home .aev-account-dashboard-content-grid { grid-template-columns: minmax(0, 1fr); }
+  .aev-account-dashboard-home .aev-account-dashboard-metric { grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0.4rem; padding-inline: 0.6rem; }
+  .aev-account-dashboard-home .aev-account-dashboard-metric-icon { width: 2.2rem; height: 2.2rem; }
+  .aev-account-dashboard-home .aev-account-dashboard-metric-arrow { display: none; }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .aev-account-dashboard-home .aev-account-dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aev-account-dashboard-home .aev-account-dashboard-metric:nth-child(odd) { border-left: 0; }
+  .aev-account-dashboard-home .aev-account-dashboard-metric:nth-child(n + 3) { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aev-account-dashboard-home .aev-account-dashboard-metric,
+  .aev-account-dashboard-order-row,
+  .aev-account-dashboard-order-image img { transition: none; }
+  .aev-account-dashboard-order-row:hover .aev-account-dashboard-order-image img { transform: none; }
+}
