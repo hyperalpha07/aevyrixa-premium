@@ -6,6 +6,7 @@ import { deliveryStatuses, orderStatuses, paymentMethods, paymentStatuses } from
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Input } from "@/components/admin-v2/forms/V2Input";
+import { V2SearchField } from "@/components/admin-v2/shared/V2SearchField";
 import { V2Select } from "@/components/admin-v2/forms/V2Select";
 import {
   activeFilterCount,
@@ -32,7 +33,7 @@ function FilterFields({ filters, onChange }: Pick<Props, "filters" | "onChange">
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 4 }}>
-        <V2Input
+        <V2SearchField
           label="Search"
           value={filters.q}
           onChange={(event) => update("q", event.target.value)}

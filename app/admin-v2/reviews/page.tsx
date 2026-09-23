@@ -7,6 +7,8 @@ import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { requireAdminV2Session } from "@/lib/admin-v2/auth";
 import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
 import { parseReviewFilter, queryReviews } from "@/lib/admin-v2/reviews/review-query";
+import { getAdminV2ProductCatalog } from "@/lib/admin-v2/products";
+import { reviewProductOptions } from "@/lib/admin-v2/reviews/review-product";
 
 export default async function AdminV2ReviewsPage(props: PageProps<"/admin-v2/reviews">) {
   const session = await requireAdminV2Session();
@@ -16,10 +18,17 @@ export default async function AdminV2ReviewsPage(props: PageProps<"/admin-v2/rev
   const status = parseReviewFilter(typeof search.status === "string" ? search.status : undefined);
   const requestedPage = typeof search.page === "string" ? Number(search.page) : 1;
   try {
-    const allReviews = await listAllReviews();
+    const [allReviews, catalog] = await Promise.all([
+      listAllReviews(),
+      hasPermission(session, "reviews.manage")
+        ? getAdminV2ProductCatalog().catch(() => ({ available: false, products: [] }))
+        : Promise.resolve({ available: false, products: [] }),
+    ]);
     const result = queryReviews(allReviews, query, status, requestedPage);
     return <AdminV2ReviewsView
       allReviews={allReviews}
+      products={reviewProductOptions(catalog.products)}
+      productsAvailable={catalog.available}
       query={query}
       status={status}
       permissions={{

@@ -1,23 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Rating, Stack, TextField } from "@mui/material";
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Rating, Stack, TextField, Typography } from "@mui/material";
 import type { ReviewSourceType, ReviewStatus } from "@/app/lib/review-types";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
+import { selectedReviewProduct, type ReviewProductOption } from "@/lib/admin-v2/reviews/review-product";
 
-export function AdminV2ReviewCreateDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+export function AdminV2ReviewCreateDialog({ open, onClose, onCreated, products, productsAvailable }: { open: boolean; onClose: () => void; onCreated: () => void; products: ReviewProductOption[]; productsAvailable: boolean }) {
+  const [productId, setProductId] = useState("");
   const [rating, setRating] = useState(5);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const selectedProduct = productsAvailable ? selectedReviewProduct(products, productId) : null;
+  const hasActiveProducts = products.some((product) => selectedReviewProduct(products, product.id));
 
   async function submit(formData: FormData) {
+    if (!selectedProduct || busy) {
+      setError("Select an active product before adding a review.");
+      return;
+    }
     setBusy(true);
     setError("");
+    try {
     const response = await fetch("/api/admin/reviews", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        productId: formData.get("productId"), productSlug: formData.get("productSlug"),
+        ...selectedProduct,
         customerName: formData.get("customerName"), rating,
         title: formData.get("title"), body: formData.get("body"),
         sourceType: formData.get("sourceType") as ReviewSourceType,
@@ -26,10 +35,14 @@ export function AdminV2ReviewCreateDialog({ open, onClose, onCreated }: { open: 
       }),
     });
     const result = await response.json().catch(() => null) as { errors?: string[] } | null;
-    setBusy(false);
     if (!response.ok) { setError(result?.errors?.[0] || "Review creation failed."); return; }
     onCreated();
     onClose();
+    } catch {
+      setError("Review creation failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -37,8 +50,16 @@ export function AdminV2ReviewCreateDialog({ open, onClose, onCreated }: { open: 
     <Stack component="form" action={submit}>
       <DialogContent><Stack sx={{ gap: 2 }}>
         {error ? <Alert severity="error">{error}</Alert> : null}
-        <TextField name="productSlug" label="Product slug" required slotProps={{ htmlInput: { maxLength: 160 } }} />
-        <TextField name="productId" label="Product ID (optional)" slotProps={{ htmlInput: { maxLength: 120 } }} />
+        {!productsAvailable ? <Alert severity="warning">Product catalog is temporarily unavailable. Refresh to try again.</Alert> : !hasActiveProducts ? <Alert severity="info">No active products are available. Publish a product before adding a storefront review.</Alert> : null}
+        <TextField label="Product" select required value={productId} disabled={busy || !productsAvailable || !hasActiveProducts} onChange={(event) => setProductId(event.target.value)}>
+          <MenuItem value="" disabled>Select a product</MenuItem>
+          {products.map((product) => <MenuItem key={product.id} value={product.id} disabled={!selectedReviewProduct(products, product.id)} sx={{ whiteSpace: "normal" }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2">{product.name}</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>{product.slug}{product.status === "draft" ? " — Draft — not visible on storefront" : ""}</Typography>
+            </Box>
+          </MenuItem>)}
+        </TextField>
         <TextField name="customerName" label="Customer name" required slotProps={{ htmlInput: { maxLength: 120 } }} />
         <Stack direction="row" sx={{ gap: 1.5, alignItems: "center" }}>Rating <Rating value={rating} onChange={(_, value) => setRating(value || 1)} /></Stack>
         <TextField name="title" label="Title (optional)" slotProps={{ htmlInput: { maxLength: 120 } }} />
@@ -47,7 +68,7 @@ export function AdminV2ReviewCreateDialog({ open, onClose, onCreated }: { open: 
         <TextField name="status" label="Status" select defaultValue="pending">{(["pending", "approved", "rejected", "hidden"] as ReviewStatus[]).map((status) => <MenuItem key={status} value={status}>{status[0].toUpperCase() + status.slice(1)}</MenuItem>)}</TextField>
         <TextField name="adminNote" label="Internal admin note (optional)" multiline minRows={2} slotProps={{ htmlInput: { maxLength: 500 } }} />
       </Stack></DialogContent>
-      <DialogActions><V2Button onClick={onClose} disabled={busy}>Cancel</V2Button><V2Button type="submit" variant="contained" loading={busy}>Add review</V2Button></DialogActions>
+      <DialogActions><V2Button onClick={onClose} disabled={busy}>Cancel</V2Button><V2Button type="submit" variant="contained" loading={busy} disabled={!selectedProduct}>Add review</V2Button></DialogActions>
     </Stack>
   </Dialog>;
 }
