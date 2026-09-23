@@ -1,4 +1,5 @@
 // Server-only. Do NOT import from client components.
+import { buildSupportInbox } from "@/lib/admin-v2/support/support-query";
 
 export type ConversationStatus = "open" | "pending" | "closed";
 export type SenderType = "customer" | "admin";
@@ -170,6 +171,32 @@ export async function getAllConversations(): Promise<SupportConversation[]> {
   return dbGet<SupportConversation[]>(
     "support_conversations?order=created_at.desc&select=*"
   );
+}
+
+// Batch inbox reads, not one full message query for every conversation.
+// Continue paging until empty, including installations with a lower REST row cap.
+async function dbGetAll<T>(path: string): Promise<T[]> {
+  const result: T[] = [];
+  for (let offset = 0; ; ) {
+    const rows = await dbGet<T[]>(`${path}&limit=500&offset=${offset}`);
+    if (!rows.length) return result;
+    result.push(...rows);
+    offset += rows.length;
+  }
+}
+
+export async function getAdminSupportInbox() {
+  if (!hasConfig()) throw new Error("Support backend not configured.");
+  const [conversations, messages] = await Promise.all([
+    dbGetAll<Omit<SupportConversation, "public_token">>("support_conversations?select=id,status,source_page,created_at,updated_at&order=created_at.desc,id.asc"),
+    dbGetAll<SupportMessage>("support_messages?select=id,conversation_id,body,sender_type,created_at,is_read&order=created_at.asc,id.asc"),
+  ]);
+  return buildSupportInbox(conversations, messages);
+}
+
+export async function getAdminSupportMessages(conversationId: string): Promise<SupportMessage[]> {
+  if (!hasConfig()) throw new Error("Support backend not configured.");
+  return dbGetAll<SupportMessage>(`support_messages?conversation_id=eq.${encodeURIComponent(conversationId)}&select=*&order=created_at.asc,id.asc`);
 }
 
 export async function getConversationById(id: string): Promise<SupportConversation | null> {

@@ -71,7 +71,7 @@ export const adminV2Routes: AdminV2Route[] = [
     { title: "Customer Detail", path: "/admin-v2/customers/[customerId]", module: "customerDetail", description: "Customer profile", implemented: true },
   { title: "Returns", path: "/admin-v2/returns", module: "returns", description: "Returns workflow", implemented: false },
   { title: "Discounts", path: "/admin-v2/discounts", module: "discounts", description: "Discount management", implemented: false },
-  { title: "Support", path: "/admin-v2/support", module: "support", description: "Support inbox", implemented: false },
+  { title: "Support", path: "/admin-v2/support", module: "support", description: "Support inbox", implemented: true },
   { title: "Chat", path: "/admin-v2/chat", module: "chat", description: "Live chat", implemented: false },
   { title: "Email", path: "/admin-v2/email", module: "email", description: "Email workspace", implemented: false },
   { title: "Notifications", path: "/admin-v2/notifications", module: "notifications", description: "Notification center", implemented: false },
