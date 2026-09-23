@@ -185,3 +185,32 @@ test("workspace uses shared search, URL state, closed composer guard, manual ref
     assert.doesNotMatch(read(file), /divider=\{<Divider|component=\{Link\}/);
   }
 });
+
+test("composer keyboard behavior sends Enter, preserves Shift+Enter and protects duplicates", () => {
+  const composer = read("components/admin-v2/views/support/AdminV2SupportComposer.tsx");
+  assert.match(composer, /event\.key === "Enter"/);
+  assert.match(composer, /!event\.shiftKey/);
+  assert.match(composer, /!event\.nativeEvent\.isComposing/);
+  assert.match(composer, /event\.preventDefault\(\)/);
+  assert.match(composer, /requestSubmit\(\)/);
+  assert.match(composer, /submitting\.current/);
+  assert.match(composer, /busy \|\| submitting\.current \|\| !value/);
+  assert.match(composer, /type="submit"/);
+  assert.match(composer, /if \(await onReply\(value\)\) setBody\(""\)/);
+  assert.match(composer, /maxLength: 4000/);
+});
+
+test("support console layout uses connected workspace, flexible history and compact feedback", () => {
+  const view = read("components/admin-v2/views/support/AdminV2SupportView.tsx");
+  const conversation = read("components/admin-v2/views/support/AdminV2SupportConversation.tsx");
+  const inbox = read("components/admin-v2/views/support/AdminV2SupportInbox.tsx");
+  assert.match(view, /gridTemplateColumns: "minmax\(320px, 370px\) minmax\(0, 1fr\)"/);
+  assert.match(view, /minHeight: "clamp\(620px, calc\(100vh - 310px\), 780px\)"/);
+  assert.doesNotMatch(conversation, /height:\s*340/);
+  assert.match(conversation, /flex: 1/);
+  assert.match(conversation, /dateLabel/);
+  assert.match(conversation, /maxWidth: "68%"/);
+  assert.match(view, /role="status"/);
+  assert.match(inbox, /borderLeft: "3px solid"/);
+  assert.match(inbox, /unread_customer_count/);
+});
