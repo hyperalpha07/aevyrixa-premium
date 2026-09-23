@@ -3,6 +3,7 @@ import { Box, Button, Chip, Divider, Stack, Table, TableBody, TableCell, TableCo
 import type { AdminCustomerOverview } from "@/app/lib/customer-account-store";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { V2SearchField } from "@/components/admin-v2/shared/V2SearchField";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { customerListHref, type CustomerFilter } from "@/lib/admin-v2/customers/customer-query";
 import { formatCustomerDate, formatCustomerMoney } from "@/lib/admin-v2/customers/customer-format";
@@ -37,7 +38,7 @@ export function AdminV2CustomersView({ allCustomers, customers, query, filter, p
       <Stack direction="row" sx={{ mb: 2, gap: 2, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
         <Box component="form" action="/admin-v2/customers" method="get" sx={{ display: "flex", gap: 1 }}>
           {filter !== "all" && <input type="hidden" name="filter" value={filter} />}
-          <input name="q" type="search" defaultValue={query} placeholder="Search name, phone, or email" aria-label="Search customers" style={{ minWidth: 270, padding: "9px 12px", borderRadius: 8 }} />
+          <V2SearchField name="q" defaultValue={query} placeholder="Search name, phone, or email" slotProps={{ htmlInput: { "aria-label": "Search customers" } }} sx={{ minWidth: 270 }} />
           <Button type="submit" variant="contained">Search</Button>
         </Box>
         <Typography variant="body2" color="text.secondary">{totalCount} matching customers</Typography>

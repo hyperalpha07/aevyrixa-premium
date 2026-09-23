@@ -6,15 +6,19 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import type { ProductReview } from "@/app/lib/review-types";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { V2SearchField } from "@/components/admin-v2/shared/V2SearchField";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { reviewStatusLabels } from "@/lib/admin-v2/reviews/review-format";
 import { reviewListHref, type ReviewFilter } from "@/lib/admin-v2/reviews/review-query";
 import { reviewMetrics } from "@/lib/admin-v2/reviews/review-metrics";
 import { AdminV2ReviewCreateDialog } from "./AdminV2ReviewCreateDialog";
 import { AdminV2ReviewRow } from "./AdminV2ReviewRow";
+import type { ReviewProductOption } from "@/lib/admin-v2/reviews/review-product";
 
 type Props = {
   allReviews: ProductReview[];
+  products: ReviewProductOption[];
+  productsAvailable: boolean;
   reviews: ProductReview[];
   query: string;
   status: ReviewFilter;
@@ -56,7 +60,7 @@ export function AdminV2ReviewsView(props: Props) {
       <Stack direction="row" sx={{ gap: 2, justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" }}>
         <Box component="form" action="/admin-v2/reviews" method="get" sx={{ display: "flex", gap: 1 }}>
           {status !== "all" ? <input type="hidden" name="status" value={status} /> : null}
-          <input name="q" type="search" defaultValue={query} placeholder="Search customer, product, order, or review" aria-label="Search reviews" style={{ minWidth: 360, padding: "9px 12px", borderRadius: 8 }} />
+          <V2SearchField name="q" defaultValue={query} placeholder="Search customer, product, order, or review" slotProps={{ htmlInput: { "aria-label": "Search reviews" } }} sx={{ minWidth: 360 }} />
           <Button type="submit" variant="contained">Search</Button>
         </Box>
         <Typography variant="body2" color="text.secondary">{totalCount} matching reviews</Typography>
@@ -76,6 +80,6 @@ export function AdminV2ReviewsView(props: Props) {
         </Stack>
       </Stack>
     </V2Card>
-    {permissions.canManage ? <AdminV2ReviewCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={refresh} /> : null}
+    {permissions.canManage ? <AdminV2ReviewCreateDialog products={props.products} productsAvailable={props.productsAvailable} open={createOpen} onClose={() => setCreateOpen(false)} onCreated={refresh} /> : null}
   </>;
 }

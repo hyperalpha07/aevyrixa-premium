@@ -16,7 +16,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -34,6 +33,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { ProductStockStatus } from "@/app/lib/product-types";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { V2SearchField } from "@/components/admin-v2/shared/V2SearchField";
 import { V2MetricCard } from "@/components/admin-v2/shared/V2MetricCard";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { V2Select } from "@/components/admin-v2/forms/V2Select";
@@ -403,7 +403,7 @@ export function AdminV2ProductsView({ data }: { data: AdminV2ProductCatalogData 
           <V2Card>
             <Grid container spacing={2} sx={{ alignItems: "center" }}>
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
+                <V2SearchField
                   fullWidth
                   size="small"
                   label="Search products"

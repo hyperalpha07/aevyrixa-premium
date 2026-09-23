@@ -5,6 +5,8 @@ import {
 } from "@/app/lib/admin-auth";
 import { hasPermission } from "@/app/lib/admin-permissions";
 import { logStaffActivity } from "@/app/lib/admin-staff";
+import { listProducts } from "@/app/lib/product-store";
+import { selectedReviewProduct } from "@/lib/admin-v2/reviews/review-product";
 import {
   listAllReviews,
   createReview,
@@ -103,9 +105,16 @@ export async function POST(request: Request) {
   try {
     const sourceType = sourceTypeValue(payload.sourceType);
     const status = statusValue(payload.status) ?? "pending";
+    const catalog = await listProducts({ scope: "admin" });
+    if (catalog.storageMode !== "supabase") {
+      return Response.json({ errors: ["Product catalog is temporarily unavailable. Please try again."] }, { status: 503 });
+    }
+    const product = selectedReviewProduct(catalog.products, payload.productId);
+    if (!product) {
+      return Response.json({ errors: ["Select an active, existing product before adding a review."] }, { status: 400 });
+    }
     const review = await createReview({
-      productId: sanitizeReviewText(payload.productId, 120),
-      productSlug: sanitizeReviewText(payload.productSlug, 160),
+      ...product,
       customerName: sanitizeReviewText(payload.customerName, 120),
       rating: ratingValue(payload.rating),
       title: sanitizeReviewText(payload.title, 120),
