@@ -1,4 +1,5 @@
 import { createHash, pbkdf2Sync, randomBytes, timingSafeEqual } from "node:crypto";
+import { customerOrderMetrics } from "@/lib/admin-v2/customers/customer-metrics";
 
 export const CUSTOMER_SESSION_COOKIE = "aevyrixa_customer_session";
 
@@ -376,6 +377,39 @@ export type AdminCustomerOverview = CustomerAccount & {
   savedAddressesCount: number;
 };
 
+export type AdminCustomerLinkedOrder = {
+  orderRef: string;
+  createdAt?: string;
+  status: string;
+  total: number;
+};
+
+export async function getAdminCustomerDetail(customerId: string) {
+  const accounts = await dbGet<AccountRow[]>(
+    `${ACCOUNTS_TABLE}?id=eq.${encodeURIComponent(customerId)}&select=id,full_name,phone,email,is_active,created_at,updated_at,last_login_at&limit=1`
+  );
+  if (!accounts[0]) return null;
+  const [addresses, rows] = await Promise.all([
+    listCustomerAddresses(customerId),
+    dbGet<Array<{ order_ref?: string | null; created_at?: string | null; status?: string | null; total?: number | string | null }>>(
+      `orders?customer_id=eq.${encodeURIComponent(customerId)}&select=order_ref,created_at,status,total&order=created_at.desc&limit=2000`
+    ),
+  ]);
+  const orders: AdminCustomerLinkedOrder[] = rows.map((row) => ({
+    orderRef: row.order_ref ?? "",
+    createdAt: row.created_at ?? undefined,
+    status: row.status ?? "Unknown",
+    total: Number.isFinite(Number(row.total)) ? Number(row.total) : 0,
+  }));
+  const metrics = customerOrderMetrics(customerId, rows.map((row) => ({ ...row, customer_id: customerId })));
+  return {
+    customer: mapAccount(accounts[0]),
+    addresses,
+    orders,
+    ...metrics,
+  };
+}
+
 export async function listAdminCustomerOverviews(): Promise<AdminCustomerOverview[]> {
   const accounts = await dbGet<AccountRow[]>(
     `${ACCOUNTS_TABLE}?select=id,full_name,phone,email,is_active,created_at,updated_at,last_login_at&order=created_at.desc&limit=500`
@@ -394,22 +428,11 @@ export async function listAdminCustomerOverviews(): Promise<AdminCustomerOvervie
   ).catch(() => []);
 
   return mapped.map((customer) => {
-    const customerOrders = orderRows.filter((order) => order.customer_id === customer.id);
-    const activeOrders = customerOrders.filter((order) => order.status !== "Cancelled");
-    const totalSpent = activeOrders.reduce((sum, order) => {
-      const total = typeof order.total === "number" ? order.total : Number(order.total ?? 0);
-      return sum + (Number.isFinite(total) ? total : 0);
-    }, 0);
-    const latestOrderAt = customerOrders
-      .map((order) => order.created_at)
-      .filter((value): value is string => Boolean(value))
-      .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
+    const metrics = customerOrderMetrics(customer.id, orderRows);
 
     return {
       ...customer,
-      orderCount: customerOrders.length,
-      totalSpent,
-      latestOrderAt,
+      ...metrics,
       savedAddressesCount: addressRows.filter((address) => address.customer_id === customer.id).length,
     };
   });
