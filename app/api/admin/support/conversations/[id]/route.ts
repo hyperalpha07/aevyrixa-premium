@@ -2,7 +2,7 @@ import { forbiddenAdminResponse, verifyFreshAdminRequestPermission } from "@/app
 import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   getConversationById,
-  getMessagesByConversation,
+  getAdminSupportMessages,
   markCustomerMessagesRead,
   updateConversationStatus,
   type ConversationStatus,
@@ -30,9 +30,9 @@ export async function GET(
     const conversation = await getConversationById(id);
     if (!conversation) return json({ error: "Conversation not found." }, { status: 404 });
 
-    const messages = await getMessagesByConversation(id);
+    const messages = await getAdminSupportMessages(id);
     if (shouldMarkRead) {
-      markCustomerMessagesRead(id).catch(() => null);
+      await markCustomerMessagesRead(id);
     }
 
     return json({
@@ -76,6 +76,7 @@ export async function PATCH(
   }
 
   try {
+    if (!(await getConversationById(id))) return json({ error: "Conversation not found." }, { status: 404 });
     await updateConversationStatus(id, status);
     await logStaffActivity({
       actor: session,

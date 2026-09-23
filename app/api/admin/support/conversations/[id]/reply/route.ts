@@ -39,6 +39,10 @@ export async function POST(
       return json({ error: "Conversation not found." }, { status: 404 });
     }
 
+    if (conversation.status === "closed") {
+      return json({ error: "Conversation closed. Reopen it before replying." }, { status: 409 });
+    }
+
     const message = await addMessage(id, body, "admin");
     await logStaffActivity({
       actor: session,
