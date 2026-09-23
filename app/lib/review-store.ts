@@ -296,6 +296,7 @@ function toUpdatePayload(updates: {
       updates.status === "approved" ? new Date().toISOString() : null;
   }
   if (typeof updates.isFeatured === "boolean") payload.is_featured = updates.isFeatured;
+  if (updates.status && updates.status !== "approved") payload.is_featured = false;
   if (updates.adminNote !== undefined) {
     payload.admin_note = sanitizeReviewText(updates.adminNote, 500) || null;
   }
@@ -556,6 +557,7 @@ export async function updateReview(
         : {}),
       ...(updates.createdAt !== undefined ? { createdAt: dateIsoOrUndefined(updates.createdAt) ?? demoReviews[index].createdAt } : {}),
       ...(typeof updates.isFeatured === "boolean" ? { isFeatured: updates.isFeatured } : {}),
+      ...(updates.status && updates.status !== "approved" ? { isFeatured: false } : {}),
       ...(updates.adminNote !== undefined ? { adminNote: sanitizeReviewText(updates.adminNote, 500) } : {}),
       approvedAt: updates.status === "approved" ? new Date().toISOString() : demoReviews[index].approvedAt,
       updatedAt: new Date().toISOString(),

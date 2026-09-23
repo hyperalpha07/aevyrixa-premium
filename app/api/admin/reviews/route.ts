@@ -166,6 +166,15 @@ export async function PATCH(request: Request) {
   }
 
   try {
+    if (isFeatured === true && nextStatus !== "approved") {
+      if (nextStatus) {
+        return Response.json({ errors: ["Only approved reviews can be featured."] }, { status: 400 });
+      }
+      const currentReview = (await listAllReviews()).find((review) => review.id === id);
+      if (!currentReview || currentReview.status !== "approved") {
+        return Response.json({ errors: ["Only approved reviews can be featured."] }, { status: 400 });
+      }
+    }
     const review = await updateReview(id, {
       status: nextStatus,
       isFeatured,

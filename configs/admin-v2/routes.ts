@@ -66,7 +66,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Unpublish product", path: "/admin-v2/products/[productId]/unpublish", module: "productUnpublish", description: "Review and return an active product to draft", implemented: true },
   { title: "Categories", path: "/admin-v2/categories", module: "categories", description: "Category management", implemented: false },
   { title: "Inventory", path: "/admin-v2/inventory", module: "inventory", description: "Inventory workflow", implemented: false },
-  { title: "Reviews", path: "/admin-v2/reviews", module: "reviews", description: "Review moderation", implemented: false },
+  { title: "Reviews", path: "/admin-v2/reviews", module: "reviews", description: "Review moderation", implemented: true },
     { title: "Customers", path: "/admin-v2/customers", module: "customers", description: "Customer management", implemented: true },
     { title: "Customer Detail", path: "/admin-v2/customers/[customerId]", module: "customerDetail", description: "Customer profile", implemented: true },
   { title: "Returns", path: "/admin-v2/returns", module: "returns", description: "Returns workflow", implemented: false },
