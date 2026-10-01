@@ -40,6 +40,9 @@ export async function GET(
         body: m.body,
         sender_type: m.sender_type,
         created_at: m.created_at,
+        attachments: m.attachments ?? [],
+        product_shares: m.product_shares ?? [],
+        order_shares: m.order_shares ?? [],
       })),
     });
   } catch (error) {

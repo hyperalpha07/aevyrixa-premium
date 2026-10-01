@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HelpCircle, MessageCircle, Package, Ruler, Send, X } from "lucide-react";
+import { FileText, HelpCircle, MessageCircle, Package, Paperclip, Ruler, Send, X } from "lucide-react";
+import { formatSupportAttachmentSize, supportAttachmentAccept, validateSupportAttachmentFiles } from "@/app/lib/support-attachment-rules";
 
 const STORAGE_KEY = "aevyrixa-chat-session";
 const POLL_INTERVAL_MS = 7000;
@@ -11,6 +12,22 @@ type ChatMessage = {
   body: string;
   sender_type: "customer" | "admin";
   created_at: string;
+  attachments?: Array<{
+    id: string;
+    file_name: string;
+    mime_type: string;
+    size_bytes: number;
+    signed_url?: string;
+  }>;
+  product_shares?: Array<{
+    id: string;
+    product_slug: string;
+    title: string;
+    image_url?: string | null;
+    price?: number | null;
+    currency?: string | null;
+    stock_status?: string | null;
+  }>;
 };
 
 type StoredSession = {
@@ -65,6 +82,23 @@ function clearSession() {
   }
 }
 
+function buildSupportMessageBody(input: { body?: string; message?: string; token?: string; sourcePage?: string }) {
+  const text = input.body ?? input.message ?? "";
+  return JSON.stringify({
+    ...(input.body !== undefined ? { body: text } : { message: text }),
+    ...(input.token ? { token: input.token } : {}),
+    ...(input.sourcePage ? { sourcePage: input.sourcePage } : {}),
+  });
+}
+
+type PreparedSupportUpload = {
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  upload_url: string;
+};
+
 export default function LiveChatWidget({
   enabled,
   label,
@@ -81,11 +115,13 @@ export default function LiveChatWidget({
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [conversationClosed, setConversationClosed] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -174,7 +210,7 @@ export default function LiveChatWidget({
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || sending) return;
+      if ((!trimmed && !attachments.length) || sending) return;
 
       setSending(true);
       setSendError("");
@@ -185,13 +221,11 @@ export default function LiveChatWidget({
 
         if (!currentSession) {
           // Create conversation and include first message in same request
+          const convBody = buildSupportMessageBody({ sourcePage: window.location.pathname, message: attachments.length ? "" : trimmed });
           const convRes = await fetch("/api/support/conversations", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              sourcePage: window.location.pathname,
-              message: trimmed,
-            }),
+            body: convBody,
           });
 
           if (!convRes.ok) {
@@ -219,16 +253,60 @@ export default function LiveChatWidget({
           }
         }
 
-        if (!firstMessageSent) {
+        if (attachments.length) {
+          const preparedRes = await fetch(
+            `/api/support/conversations/${encodeURIComponent(currentSession.conversationId)}/attachments/prepare`,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                token: currentSession.publicToken,
+                files: attachments.map((file) => ({ file_name: file.name, mime_type: file.type, size_bytes: file.size })),
+              }),
+            }
+          );
+          if (!preparedRes.ok) {
+            setSendError("Could not prepare attachments. Please try again.");
+            return;
+          }
+          const prepared = (await preparedRes.json()) as { messageId: string; manifestToken: string; attachments: PreparedSupportUpload[] };
+          for (const [index, attachment] of prepared.attachments.entries()) {
+            const upload = await fetch(attachment.upload_url, {
+              method: "PUT",
+              headers: { "content-type": attachments[index]?.type || attachment.mime_type },
+              body: attachments[index],
+            });
+            if (!upload.ok) {
+              setSendError("Attachment upload failed. Please try again.");
+              return;
+            }
+          }
+          const finalizeRes = await fetch(
+            `/api/support/conversations/${encodeURIComponent(currentSession.conversationId)}/attachments/finalize`,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                token: currentSession.publicToken,
+                manifestToken: prepared.manifestToken,
+                body: trimmed,
+              }),
+            }
+          );
+          if (!finalizeRes.ok) {
+            setSendError("Could not finish attachment send. Please try again.");
+            return;
+          }
+          const newMsg = (await finalizeRes.json()) as ChatMessage;
+          setMessages((prev) => [...prev, newMsg]);
+        } else if (!firstMessageSent) {
+          const msgBody = buildSupportMessageBody({ body: trimmed, token: currentSession.publicToken });
           const msgRes = await fetch(
             `/api/support/conversations/${encodeURIComponent(currentSession.conversationId)}/messages`,
             {
               method: "POST",
               headers: { "content-type": "application/json" },
-              body: JSON.stringify({
-                body: trimmed,
-                token: currentSession.publicToken,
-              }),
+              body: msgBody,
             }
           );
 
@@ -248,6 +326,8 @@ export default function LiveChatWidget({
         }
 
         setInputText("");
+        setAttachments([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         setTimeout(scrollToBottom, 50);
       } catch {
         setSendError("Network error. Please try again.");
@@ -255,8 +335,18 @@ export default function LiveChatWidget({
         setSending(false);
       }
     },
-    [session, sending, scrollToBottom]
+    [attachments, session, sending, scrollToBottom]
   );
+
+  function updateAttachments(nextFiles: File[]) {
+    const validation = validateSupportAttachmentFiles(nextFiles);
+    if (validation) {
+      setSendError(validation);
+      return;
+    }
+    setSendError("");
+    setAttachments(nextFiles);
+  }
 
   const handleQuickAction = (action: "track" | "product" | "size" | "whatsapp") => {
     if (action === "track") {
@@ -388,6 +478,59 @@ export default function LiveChatWidget({
                       </p>
                     )}
                     <p className="break-words">{msg.body}</p>
+                    {Boolean(msg.product_shares?.length) && (
+                      <div className="mt-2 space-y-1.5">
+                        {msg.product_shares!.map((share) => {
+                          const price = typeof share.price === "number" ? `${share.currency || "BDT"} ${share.price}` : "Price unavailable";
+                          const stock = share.stock_status ? share.stock_status.replace(/_/g, " ") : "availability unknown";
+                          return (
+                            <a
+                              key={share.id}
+                              href={`/product/${encodeURIComponent(share.product_slug)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2 rounded-xl border border-white/10 bg-white/[0.07] p-2 text-left text-white/84 transition hover:border-cyan-200/30 hover:bg-white/[0.1]"
+                            >
+                              {share.image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={share.image_url} alt="" className="h-11 w-11 rounded-lg object-cover" />
+                              ) : (
+                                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/[0.08]">
+                                  <Package className="h-4 w-4 text-cyan-200/80" />
+                                </span>
+                              )}
+                              <span className="min-w-0">
+                                <span className="block truncate text-[11px] font-semibold text-white">{share.title}</span>
+                                <span className="block text-[10px] capitalize text-white/55">{price} · {stock}</span>
+                                <span className="mt-0.5 block text-[10px] font-semibold text-cyan-200">View Product</span>
+                              </span>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {Boolean(msg.attachments?.length) && (
+                      <div className="mt-2 space-y-1.5">
+                        {msg.attachments!.map((attachment) => (
+                          <a
+                            key={attachment.id}
+                            href={attachment.signed_url || "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-2 text-[11px] text-white/78 transition hover:border-cyan-200/30 hover:text-white"
+                          >
+                            {attachment.mime_type.startsWith("image/") && attachment.signed_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={attachment.signed_url} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
+                            ) : (
+                              <FileText className="h-4 w-4 shrink-0 text-cyan-200/80" />
+                            )}
+                            <span className="min-w-0 flex-1 truncate">{attachment.file_name}</span>
+                            <span className="shrink-0 text-white/42">{formatSupportAttachmentSize(attachment.size_bytes)}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -414,13 +557,45 @@ export default function LiveChatWidget({
                 {sendError && (
                   <p className="mb-2 text-[11px] text-rose-300/80">{sendError}</p>
                 )}
+                {attachments.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {attachments.map((file, index) => (
+                      <button
+                        key={`${file.name}-${file.size}-${index}`}
+                        type="button"
+                        onClick={() => updateAttachments(attachments.filter((_, fileIndex) => fileIndex !== index))}
+                        className="max-w-[9.5rem] truncate rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] text-white/70 transition hover:text-white"
+                        title="Remove attachment"
+                      >
+                        {file.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-end gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept={supportAttachmentAccept()}
+                    className="hidden"
+                    onChange={(event) => updateAttachments([...attachments, ...Array.from(event.target.files ?? [])])}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sending}
+                    aria-label="Attach files"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-white/60 transition hover:border-cyan-200/30 hover:text-white disabled:opacity-40"
+                  >
+                    <Paperclip className="h-3.5 w-3.5" />
+                  </button>
                   <textarea
                     ref={inputRef}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
+                      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                         e.preventDefault();
                         sendMessage(inputText).catch(() => null);
                       }
@@ -432,7 +607,7 @@ export default function LiveChatWidget({
                   />
                   <button
                     onClick={() => sendMessage(inputText).catch(() => null)}
-                    disabled={sending || !inputText.trim()}
+                    disabled={sending || (!inputText.trim() && !attachments.length)}
                     aria-label="Send message"
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#FF4DB8] to-[#FF3FA4] text-white shadow-[0_4px_16px_rgba(255,77,184,0.30)] transition hover:shadow-[0_4px_22px_rgba(255,77,184,0.45)] disabled:opacity-40"
                   >

@@ -1,5 +1,6 @@
 import { forbiddenAdminResponse, verifyFreshAdminRequestPermission } from "@/app/lib/admin-auth";
 import { logStaffActivity } from "@/app/lib/admin-staff";
+import { readSupportMessageInput } from "@/app/lib/support-message-input";
 import {
   addMessage,
   getConversationById,
@@ -22,14 +23,10 @@ export async function POST(
 
   const { id } = await params;
 
-  let body: string;
-  try {
-    const payload = (await request.json()) as Record<string, unknown>;
-    body = typeof payload.body === "string" ? payload.body.trim() : "";
-  } catch {
-    return json({ error: "Invalid request body." }, { status: 400 });
-  }
+  const parsed = await readSupportMessageInput(request);
+  if ("error" in parsed) return json({ error: parsed.error }, { status: parsed.status });
 
+  const body = parsed.input.body;
   if (!body) return json({ error: "Reply body is required." }, { status: 400 });
   if (body.length > 4000) return json({ error: "Reply too long." }, { status: 400 });
 
@@ -56,6 +53,7 @@ export async function POST(
       body: message.body,
       sender_type: message.sender_type,
       created_at: message.created_at,
+      attachments: [],
     });
   } catch (error) {
     console.error("Failed to send admin reply:", error);
