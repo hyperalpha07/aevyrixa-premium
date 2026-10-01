@@ -35,7 +35,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   couriers: { section: "orders" },
   automation: { section: "settings" },
   staff: { section: "staff" },
-  roles: { permission: "staff.manage" },
+  roles: { section: "staff" },
   permissions: { permission: "staff.manage" },
   auditLogs: { permission: "activity.view" },
   approvals: { section: "staff" },
