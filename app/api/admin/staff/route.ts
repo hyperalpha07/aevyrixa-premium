@@ -119,6 +119,7 @@ export async function POST(request: Request) {
 
   if (!name) errors.push("Name is required.");
   if (!username) errors.push("Username is required.");
+  if (!password) errors.push("Temporary password is required.");
   if (password && password.length < 8) errors.push("Temporary password must be at least 8 characters.");
   if (role === "owner") errors.push("Owner staff accounts cannot be created from this UI.");
   if (errors.length > 0) return Response.json({ errors }, { status: 400 });

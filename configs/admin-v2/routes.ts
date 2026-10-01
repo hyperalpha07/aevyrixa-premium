@@ -80,7 +80,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Kanban", path: "/admin-v2/kanban", module: "kanban", description: "Kanban board", implemented: false },
   { title: "Couriers", path: "/admin-v2/couriers", module: "couriers", description: "Courier operations", implemented: false },
   { title: "Automation", path: "/admin-v2/automation", module: "automation", description: "Automation rules", implemented: false },
-  { title: "Staff", path: "/admin-v2/staff", module: "staff", description: "Staff management", implemented: false },
+  { title: "Staff", path: "/admin-v2/staff", module: "staff", description: "Staff management", implemented: true },
   { title: "Roles", path: "/admin-v2/roles", module: "roles", description: "Role management", implemented: false },
   { title: "Permissions", path: "/admin-v2/permissions", module: "permissions", description: "Permission matrix", implemented: false },
   { title: "Audit Logs", path: "/admin-v2/audit-logs", module: "auditLogs", description: "Audit log", implemented: false },
