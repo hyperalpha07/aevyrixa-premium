@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Noromi Care – Support Inbox</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF4F8;--panel:#fff;--ink:#2B1236;--mute:#7C6A86;--line:#EFE3EA;--orchid:#8A2BC9;--rose:#E5487F;--sage:#2F8F7B;--amber:#D98A1B;--soft:#F4E8F8;--mine:#2B1236;--mineink:#fff;
+--pt:env(safe-area-inset-top,0px);--pb:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17091D;--panel:#241030;--ink:#F6EAF9;--mute:#A894B3;--line:#3A2247;--soft:#33194A;--mine:#8A2BC9}}
+:root[data-theme="dark"]{--bg:#17091D;--panel:#241030;--ink:#F6EAF9;--mute:#A894B3;--line:#3A2247;--soft:#33194A;--mine:#8A2BC9}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 "Hind Siliguri","Bricolage Grotesque",system-ui,sans-serif;padding-top:var(--pt);padding-bottom:var(--pb);overflow:hidden}
+h1,h2,h3,.d{font-family:"Bricolage Grotesque","Hind Siliguri",sans-serif;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--orchid);outline-offset:2px}
+.app{display:grid;grid-template-columns:64px 340px 1fr 320px;height:100%}
+/* rail */
+.rail{background:var(--mine);display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0;color:#fff}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--rose),var(--orchid));display:grid;place-items:center;font:800 18px "Bricolage Grotesque";margin-bottom:12px}
+.rail button{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;opacity:.6;font-size:18px}
+.rail button.on{background:rgba(255,255,255,.14);opacity:1}
+.rail .sp{flex:1}
+/* list */
+.list{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.lh{padding:18px 18px 10px}
+.lh h1{font-size:22px;font-weight:800}
+.lh p{color:var(--mute);font-size:12.5px}
+.search{margin:10px 18px;display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:0 12px;height:38px}
+.search input{flex:1;border:0;background:none;color:var(--ink);font:inherit;outline:0;min-width:0}
+.tabs{display:flex;gap:4px;padding:0 18px 10px;overflow-x:auto}
+.tab{padding:5px 11px;border-radius:99px;font-size:12.5px;font-weight:600;color:var(--mute);white-space:nowrap}
+.tab.on{background:var(--ink);color:var(--panel)}
+.tab b{font-weight:600;opacity:.6;margin-left:4px}
+.items{overflow:auto;flex:1;padding:0 10px 10px}
+.it{display:grid;grid-template-columns:40px 1fr auto;gap:10px;padding:11px 10px;border-radius:14px;width:100%;text-align:left;align-items:start;position:relative}
+.it:hover{background:var(--bg)}
+.it.on{background:var(--soft)}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 13px "Bricolage Grotesque";color:#fff}
+.it .n{font-weight:600;font-size:13.5px;display:flex;gap:6px;align-items:center}
+.it .m{color:var(--mute);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.it .t{font-size:11.5px;color:var(--mute);text-align:right}
+.tags{display:flex;gap:4px;margin-top:4px}
+.tg{font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--soft);color:var(--orchid)}
+.tg.r{background:#FDE5EE;color:#C2255F}.tg.g{background:#DDF3EE;color:var(--sage)}.tg.a{background:#FCEBCF;color:#A8650A}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--rose);display:inline-block}
+.ai{margin:10px;padding:12px;border-radius:14px;background:linear-gradient(135deg,var(--soft),#FDE9F1);font-size:12.5px}
+.ai b{display:block;font-family:"Bricolage Grotesque";font-size:13px}
+/* chat */
+.chat{display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+.ch{background:var(--panel);border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:14px}
+.ch h2{font-size:17px;font-weight:700}
+.ch small{color:var(--mute)}
+.grow{flex:1;min-width:0}
+.sla{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:#FCEBCF;color:#8A5208;font-weight:600;font-size:12.5px}
+.sla i{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:p 1.6s infinite}
+@keyframes p{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.sla i{animation:none}}
+.sel{height:36px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;color:var(--ink);font-weight:600}
+.msgs{flex:1;overflow:auto;padding:20px 26px;display:flex;flex-direction:column;gap:10px}
+.day{align-self:center;font-size:11.5px;color:var(--mute);background:var(--panel);border:1px solid var(--line);padding:2px 12px;border-radius:99px;margin:6px 0}
+.b{max-width:min(520px,80%);padding:10px 14px;border-radius:18px;background:var(--panel);border:1px solid var(--line);border-top-left-radius:6px}
+.b.me{align-self:flex-end;background:var(--mine);color:var(--mineink);border:0;border-radius:18px;border-top-right-radius:6px}
+.b .w{font-size:11px;opacity:.65;margin-top:3px}
+.sys{align-self:center;font-size:12px;color:var(--mute)}
+.note{align-self:flex-end;max-width:min(520px,80%);background:#FFF6D9;border:1px dashed #E0B94A;color:#6B5310;padding:8px 12px;border-radius:12px;font-size:12.5px}
+.typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);opacity:.5}
+/* composer */
+.comp{background:var(--panel);border-top:1px solid var(--line);padding:10px 22px 14px}
+.sug{display:flex;gap:8px;margin-bottom:8px;overflow-x:auto;align-items:center}
+.sug em{font:700 12px "Bricolage Grotesque";font-style:normal;color:var(--orchid);white-space:nowrap}
+.chip{padding:5px 12px;border-radius:99px;border:1px solid var(--orchid);color:var(--orchid);font-size:12.5px;font-weight:500;white-space:nowrap}
+.chip:hover{background:var(--soft)}
+.box{border:1px solid var(--line);border-radius:16px;padding:10px 12px;background:var(--bg)}
+.box textarea{width:100%;border:0;background:none;resize:none;font:inherit;color:var(--ink);height:44px;outline:0}
+.bar{display:flex;align-items:center;gap:6px}
+.ib{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--mute)}
+.ib:hover{background:var(--soft)}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:2px;margin-left:6px}
+.seg button{padding:3px 10px;border-radius:8px;font-size:12px;font-weight:600;color:var(--mute)}
+.seg .on{background:var(--ink);color:var(--panel)}
+.send{background:linear-gradient(135deg,var(--rose),var(--orchid));color:#fff;padding:8px 18px;border-radius:11px;font-weight:700;margin-left:auto}
+/* side */
+.side{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:18px}
+.who{text-align:center;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.who .av{width:62px;height:62px;font-size:20px;margin:0 auto 8px;background:linear-gradient(135deg,var(--rose),var(--orchid))}
+.who h3{font-size:17px}
+.mood{display:inline-flex;gap:6px;align-items:center;margin-top:6px;font-size:12.5px;color:var(--sage);font-weight:600}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.kp div{background:var(--bg);border-radius:12px;padding:8px;text-align:center}
+.kp b{display:block;font:800 17px "Bricolage Grotesque"}
+.kp span{font-size:11.5px;color:var(--mute)}
+.side h4{font:700 13px "Bricolage Grotesque";margin:16px 0 8px;display:flex;justify-content:space-between}
+.side h4 a{font:500 12px "Hind Siliguri";color:var(--orchid)}
+.ord{display:flex;gap:10px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px}
+.ord .th{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#F7C6DA,#D9B3F0);flex:none}
+.ord b{font-size:13px;display:block}
+.ord span{font-size:12px;color:var(--mute)}
+.row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--mute)}
+.row b{color:var(--ink);font-weight:600}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.acts button{padding:8px;border-radius:10px;border:1px solid var(--line);font-size:12.5px;font-weight:600}
+.acts button:hover{background:var(--soft)}
+@media (max-width:1180px){.app{grid-template-columns:64px 300px 1fr}.side{display:none}}
+@media (max-width:760px){.app{grid-template-columns:1fr}.rail,.list{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="logo">N</div>
+    <button aria-label="Dashboard">▦</button><button aria-label="Orders">🛍</button><button aria-label="Customers">👥</button>
+    <button class="on" aria-label="Support">💬</button><button aria-label="Reviews">★</button>
+    <div class="sp"></div><button aria-label="Settings">⚙</button>
+  </nav>
+
+  <aside class="list">
+    <div class="lh"><h1 class="d">Support inbox</h1><p>2 open · 0 pending · avg reply 4m</p></div>
+    <label class="search"><span aria-hidden="true">⌕</span><input placeholder="Search name, order or message"></label>
+    <div class="tabs" id="tabs">
+      <button class="tab on">All<b>6</b></button><button class="tab">Open<b>2</b></button><button class="tab">Unread<b>0</b></button><button class="tab">Pending<b>0</b></button><button class="tab">Closed<b>4</b></button>
+    </div>
+    <div class="items">
+      <button class="it on"><div class="av" style="background:#8A2BC9">RA</div><div><div class="n">Rafiya Akter <span class="dot"></span></div><div class="m">hi</div><div class="tags"><span class="tg">Homepage</span><span class="tg a">Waiting on you</span></div></div><div class="t">16:53<br>4 msgs</div></button>
+      <button class="it"><div class="av" style="background:#2F8F7B">SM</div><div><div class="n">Sumaiya M.</div><div class="m">hi</div><div class="tags"><span class="tg">Homepage</span><span class="tg g">Open</span></div></div><div class="t">1 Jun<br>6 msgs</div></button>
+      <button class="it"><div class="av" style="background:#E5487F">TN</div><div><div class="n">Tania Nasrin</div><div class="m">ok sir</div><div class="tags"><span class="tg">Order #1042</span></div></div><div class="t">19 May<br>8 msgs</div></button>
+      <button class="it"><div class="av" style="background:#6B4FD8">NJ</div><div><div class="n">Nusrat Jahan</div><div class="m">জি বলুন</div><div class="tags"><span class="tg">Homepage</span></div></div><div class="t">19 May<br>2 msgs</div></button>
+      <button class="it"><div class="av" style="background:#D98A1B">FK</div><div><div class="n">Farhana Khan</div><div class="m">জি সার বলুন আপনাকে কিভাবে সাহায্য করতে পারি</div><div class="tags"><span class="tg">Homepage</span></div></div><div class="t">19 May<br>2 msgs</div></button>
+    </div>
+    <div class="ai"><b>✦ Inbox summary</b>Rafiya has waited 1h 12m since her last "hi". Reply now to stay within your 2h target.</div>
+  </aside>
+
+  <main class="chat">
+    <header class="ch">
+      <div class="av" style="background:#8A2BC9;width:40px;height:40px">RA</div>
+      <div class="grow"><h2 class="d">Rafiya Akter</h2><small>Conversation #23bace88 · Homepage chat · Dhaka</small></div>
+      <div class="sla"><i></i>Reply due in 48m</div>
+      <select class="sel" aria-label="Status"><option>Open</option><option>Pending</option><option>Closed</option></select>
+      <button class="ib" aria-label="More">⋯</button>
+    </header>
+
+    <div class="msgs">
+      <div class="day">16 Jun 2026</div>
+      <div class="b">hi<div class="w">Rafiya · 04:16</div></div>
+      <div class="day">23 Sept 2026</div>
+      <div class="b me">hello<div class="w">You · 13:54 · seen</div></div>
+      <div class="b me">hi<div class="w">You · 16:50 · delivered</div></div>
+      <div class="b me">hi<div class="w">You · 16:53 · delivered</div></div>
+      <div class="note">🔒 Note to team: customer has not replied since June. Ask about her Noromi order before closing.</div>
+      <div class="sys">Rafiya is offline · last seen 16 Jun</div>
+    </div>
+
+    <div class="comp">
+      <div class="sug"><em>✦ Suggested</em>
+        <button class="chip">আসসালামু আলাইকুম! কিভাবে সাহায্য করতে পারি?</button>
+        <button class="chip">Ask for order number</button>
+        <button class="chip">Share delivery update</button>
+        <button class="chip">Send return policy</button>
+      </div>
+      <div class="box">
+        <textarea id="ta" placeholder="Write a reply… type / for saved replies"></textarea>
+        <div class="bar">
+          <button class="ib" aria-label="Attach">📎</button><button class="ib" aria-label="Emoji">☺</button><button class="ib" aria-label="Product">🛍</button><button class="ib" aria-label="Translate">A⇄অ</button>
+          <div class="seg"><button class="on">Reply</button><button>Internal note</button></div>
+          <span style="color:var(--mute);font-size:12px;margin-left:10px">0 / 4000</span>
+          <button class="send">Send reply</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="side">
+    <div class="who"><div class="av">RA</div><h3 class="d">Rafiya Akter</h3><div style="color:var(--mute);font-size:12.5px">rafiya@example.com · +880 17•• ••• 214</div><div class="mood">● Returning customer</div></div>
+    <div class="kp"><div><b>3</b><span>Orders</span></div><div><b>৳4,850</b><span>Spent</span></div><div><b>4.8</b><span>Rating</span></div></div>
+    <div class="acts"><button>Create order</button><button>Send coupon</button><button>Assign to me</button><button>Escalate</button></div>
+    <h4>Recent orders <a href="#">View all</a></h4>
+    <div class="ord"><div class="th"></div><div style="flex:1"><b>#1042 · Glow Serum</b><span>Delivered 12 Jun</span></div><span class="tg g">৳1,650</span></div>
+    <div class="ord"><div class="th"></div><div style="flex:1"><b>#0987 · Care Kit</b><span>Returned 2 May</span></div><span class="tg a">৳2,100</span></div>
+    <h4>Details</h4>
+    <div class="row">Channel<b>Homepage chat</b></div>
+    <div class="row">First contact<b>16 Jun, 04:16</b></div>
+    <div class="row">Language<b>বাংলা / English</b></div>
+    <div class="row">Assigned<b>Owner</b></div>
+    <h4>Labels <a href="#">+ Add</a></h4>
+    <div class="tags"><span class="tg">Skincare</span><span class="tg r">Follow-up</span><span class="tg g">VIP</span></div>
+  </aside>
+</div>
+<script>
+document.querySelectorAll('#tabs .tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('on'));t.classList.add('on')});
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{document.getElementById('ta').value=c.textContent;});
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('on'));b.classList.add('on')});
+</script>
+</body>
+</html>

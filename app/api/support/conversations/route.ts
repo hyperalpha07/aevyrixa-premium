@@ -1,3 +1,4 @@
+import { readSupportMessageInput } from "@/app/lib/support-message-input";
 import { notifySupportChat } from "@/app/lib/support-notifications";
 import { addMessage, createConversation } from "@/app/lib/support-store";
 
@@ -10,21 +11,18 @@ function json(payload: unknown, init: ResponseInit = {}) {
 }
 
 export async function POST(request: Request) {
-  let sourcePage = "homepage";
-  let firstMessage = "";
+  const parsed = await readSupportMessageInput(request);
+  if ("error" in parsed) return json({ error: parsed.error }, { status: parsed.status });
 
-  try {
-    const body = (await request.json()) as Record<string, unknown>;
-    if (typeof body.sourcePage === "string") sourcePage = body.sourcePage;
-    if (typeof body.message === "string") firstMessage = body.message.trim();
-  } catch {
-    // use defaults
-  }
+  const sourcePage = parsed.input.sourcePage || "homepage";
+  const firstMessage = parsed.input.body;
+
+  if (firstMessage.length > 2000) return json({ error: "Message too long." }, { status: 400 });
 
   try {
     const conversation = await createConversation(sourcePage);
 
-    const messages: { id: string; body: string; sender_type: string; created_at: string }[] = [];
+    const messages: { id: string; body: string; sender_type: string; created_at: string; attachments?: unknown[] }[] = [];
 
     if (firstMessage) {
       try {
@@ -34,13 +32,14 @@ export async function POST(request: Request) {
           body: msg.body,
           sender_type: msg.sender_type,
           created_at: msg.created_at,
+          attachments: [],
         });
         notifySupportChat("new_conversation", conversation, msg).catch((notifyErr) => {
           console.error("Failed to send support Telegram notification:", notifyErr);
         });
       } catch (msgErr) {
         console.error("Failed to save first support message:", msgErr);
-        // Non-fatal — conversation still created; widget falls back to /messages endpoint
+        // Non-fatal - conversation still created; widget falls back to /messages endpoint.
       }
     } else {
       notifySupportChat("new_conversation", conversation).catch((notifyErr) => {

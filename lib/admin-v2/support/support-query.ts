@@ -1,4 +1,5 @@
-import type { ConversationStatus, SupportConversation, SupportMessage } from "@/app/lib/support-store";
+import type { SupportAttachment } from "@/app/lib/support-attachments";
+import type { ConversationStatus, SupportConversation, SupportMessage, SupportOrderShare, SupportProductShare } from "@/app/lib/support-store";
 
 export type SupportInboxItem = Omit<SupportConversation, "public_token"> & {
   last_message: Pick<SupportMessage, "body" | "sender_type" | "created_at"> | null;
@@ -6,7 +7,16 @@ export type SupportInboxItem = Omit<SupportConversation, "public_token"> & {
   unread_customer_count: number;
 };
 export type SupportDetail = Omit<SupportConversation, "public_token"> & {
-  messages: Pick<SupportMessage, "id" | "body" | "sender_type" | "created_at">[];
+  assigned_staff_id?: string | null;
+  assigned_staff_name?: string | null;
+  labels?: Array<{ id: string; name: string; color: string | null }>;
+  availableLabels?: Array<{ id: string; name: string; color: string | null }>;
+  staff?: Array<{ id: string; name: string; email?: string; role?: string }>;
+  messages: Array<Pick<SupportMessage, "id" | "body" | "sender_type" | "created_at"> & {
+    attachments?: SupportAttachment[];
+    product_shares?: SupportProductShare[];
+    order_shares?: SupportOrderShare[];
+  }>;
 };
 export type SupportFilter = "all" | ConversationStatus | "unread";
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Drawer } from "@mui/material";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { AdminSessionUser } from "@/app/lib/admin-permissions";
 import { AdminV2NotificationDrawer } from "@/components/admin-v2/core/AdminV2NotificationDrawer";
@@ -26,17 +27,26 @@ type AdminV2ShellProps = {
 };
 
 function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellProps) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { contentWidth, navigationStyle } = useAdminV2Theme();
   const sidebarWidth = collapsed ? collapsedWidth : expandedWidth;
+  const supportWorkspace = pathname === "/admin-v2/support";
   const notificationCount =
     (dashboardData?.orders.pending ?? 0) + (dashboardData?.reviews.pending ?? 0) + (dashboardData?.support.open ?? 0);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", position: "relative" }}>
+    <Box sx={{
+      display: "flex",
+      minHeight: "100vh",
+      height: supportWorkspace ? "100vh" : "auto",
+      overflow: supportWorkspace ? "hidden" : "visible",
+      bgcolor: "background.default",
+      position: "relative",
+    }}>
       <AdminV2AmbientBackground />
       <Box
         component="aside"
@@ -73,7 +83,17 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
       >
         <AdminV2Sidebar session={session} collapsed={false} onNavigate={() => setMobileOpen(false)} />
       </Drawer>
-      <Box sx={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}>
+      <Box sx={{
+        minWidth: 0,
+        minHeight: 0,
+        height: supportWorkspace ? "100vh" : "auto",
+        overflow: supportWorkspace ? "hidden" : "visible",
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        zIndex: 1,
+      }}>
         <AdminV2Topbar
           session={session}
           onOpenMobileNav={() => setMobileOpen(true)}
@@ -89,13 +109,17 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
             width: "100%",
             maxWidth: contentWidth === "compact" ? 1440 : "none",
             mx: "auto",
-            px: { xs: 2, sm: 3, lg: 4 },
-            py: { xs: 2.5, lg: 4 },
+            px: supportWorkspace ? { xs: 2, sm: 3, lg: 3 } : { xs: 2, sm: 3, lg: 4 },
+            py: supportWorkspace ? { xs: 2, lg: 2.25 } : { xs: 2.5, lg: 4 },
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            overflow: supportWorkspace ? "hidden" : "visible",
           }}
         >
           <AdminV2PageTransition>{children}</AdminV2PageTransition>
         </Box>
-        <AdminV2Footer />
+        {!supportWorkspace && <AdminV2Footer />}
       </Box>
       <AdminV2CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} session={session} />
       <AdminV2NotificationDrawer
