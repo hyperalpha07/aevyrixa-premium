@@ -142,6 +142,7 @@ export const permissionGroups = [
     title: "Products",
     permissions: [
       "products.view",
+      "products.create",
       "products.edit",
       "products.media",
       "products.publish",

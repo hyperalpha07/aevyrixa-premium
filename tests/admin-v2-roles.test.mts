@@ -49,10 +49,10 @@ function countRoleStaff(role: AdminRole) {
   return staff.filter((member) => member.role === role);
 }
 
-test("Roles route is implemented while Permissions remains Coming Soon", () => {
+test("Roles and Permissions routes are implemented", () => {
   const routes = read("configs/admin-v2/routes.ts");
   assert.match(routes, /title: "Roles"[\s\S]+?module: "roles"[\s\S]+?implemented: true/);
-  assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: false/);
+  assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: true/);
 });
 
 test("Roles page is guarded by the existing staff/security administration boundary", () => {

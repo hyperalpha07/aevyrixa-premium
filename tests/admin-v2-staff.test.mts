@@ -11,11 +11,11 @@ const staff = [
   { id: "2", name: "Rafi Support", username: "rafi", email: "rafi@example.com", role: "support_staff" as const, permissions: normalizePermissions("support_staff", {}), isActive: false },
 ];
 
-test("Staff and Roles routes are implemented while Permissions remains Coming Soon", () => {
+test("Staff, Roles and Permissions routes are implemented", () => {
   const routes = read("configs/admin-v2/routes.ts");
   assert.match(routes, /title: "Staff"[\s\S]+?module: "staff"[\s\S]+?implemented: true/);
   assert.match(routes, /title: "Roles"[\s\S]+?module: "roles"[\s\S]+?implemented: true/);
-  assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: false/);
+  assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: true/);
 });
 
 test("Staff page is guarded and passes independent staff/activity permissions", () => {
