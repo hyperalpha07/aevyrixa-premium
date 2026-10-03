@@ -88,7 +88,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Analytics", path: "/admin-v2/analytics", module: "analytics", description: "Analytics", implemented: true },
   { title: "Reports", path: "/admin-v2/reports", module: "reports", description: "Reports", implemented: true },
   { title: "Invoices", path: "/admin-v2/invoices", module: "invoices", description: "Invoices", implemented: true },
-  { title: "Transactions", path: "/admin-v2/transactions", module: "transactions", description: "Transactions", implemented: false },
+  { title: "Transactions", path: "/admin-v2/transactions", module: "transactions", description: "Order payment reconciliation", implemented: true },
   { title: "Expenses", path: "/admin-v2/expenses", module: "expenses", description: "Expenses", implemented: false },
   { title: "Refunds", path: "/admin-v2/refunds", module: "refunds", description: "Refunds", implemented: false },
   { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax settings", implemented: false },

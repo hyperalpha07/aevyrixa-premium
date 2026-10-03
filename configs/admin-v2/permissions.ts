@@ -42,7 +42,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   analytics: { section: "analytics" },
   reports: { section: "analytics" },
   invoices: { permission: "orders.viewInvoice" },
-  transactions: { section: "billing" },
+  transactions: { permission: "orders.view" },
   expenses: { section: "billing" },
   refunds: { section: "billing" },
   tax: { section: "billing" },
