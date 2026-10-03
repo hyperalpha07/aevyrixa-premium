@@ -44,7 +44,8 @@ test("Invoices route is real, protected by orders.viewInvoice, and related unfin
   assert.equal(findAdminV2Route("analytics")?.implemented, true);
   assert.equal(findAdminV2Route("reports")?.implemented, true);
   assert.equal(findAdminV2Route("transactions")?.implemented, true);
-  for (const module of ["expenses", "refunds", "tax", "billing"] as const) {
+  assert.equal(findAdminV2Route("refunds")?.implemented, true);
+  for (const module of ["expenses", "tax", "billing"] as const) {
     assert.equal(findAdminV2Route(module)?.implemented, false);
   }
   assert.equal(adminV2AccessRules.invoices.permission, "orders.viewInvoice");
