@@ -90,7 +90,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Invoices", path: "/admin-v2/invoices", module: "invoices", description: "Invoices", implemented: true },
   { title: "Transactions", path: "/admin-v2/transactions", module: "transactions", description: "Order payment reconciliation", implemented: true },
   { title: "Expenses", path: "/admin-v2/expenses", module: "expenses", description: "Expenses", implemented: false },
-  { title: "Refunds", path: "/admin-v2/refunds", module: "refunds", description: "Refunds", implemented: false },
+  { title: "Refunds", path: "/admin-v2/refunds", module: "refunds", description: "Refunds", implemented: true },
   { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax settings", implemented: false },
   { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: false },
   { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Store settings", implemented: false },
