@@ -1,5 +1,18 @@
-import { AdminV2ModulePage } from "@/components/admin-v2/views/AdminV2ModulePage";
+import { AdminV2TransactionsView } from "@/components/admin-v2/views/transactions/AdminV2TransactionsView";
+import { requireAdminV2Session } from "@/lib/admin-v2/auth";
+import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
+import { getAdminV2Transactions } from "@/lib/admin-v2/transactions/transactions-query";
 
-export default function AdminV2TransactionsPage() {
-  return <AdminV2ModulePage module="transactions" />;
+export default async function AdminV2TransactionsPage(props: PageProps<"/admin-v2/transactions">) {
+  const session = await requireAdminV2Session();
+  requireAdminV2RouteAccess(session, "transactions");
+  const search = await props.searchParams;
+  const params = new URLSearchParams();
+  Object.entries(search ?? {}).forEach(([key, value]) => {
+    if (Array.isArray(value)) value.forEach((item) => params.append(key, item));
+    else if (value !== undefined) params.set(key, value);
+  });
+  const data = await getAdminV2Transactions(params);
+
+  return <AdminV2TransactionsView data={data} />;
 }
