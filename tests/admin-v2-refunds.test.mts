@@ -35,7 +35,7 @@ test("Refunds route becomes real while sibling billing modules remain coming soo
   assert.equal(findAdminV2Route("refunds")?.implemented, true);
   assert.equal(findAdminV2Route("expenses")?.implemented, false);
   assert.equal(findAdminV2Route("tax")?.implemented, false);
-  assert.equal(findAdminV2Route("billing")?.implemented, false);
+  assert.equal(findAdminV2Route("billing")?.implemented, true);
   assert.match(refundsPage, /AdminV2RefundsView/);
   assert.doesNotMatch(refundsPage, /AdminV2ModulePage/);
 });

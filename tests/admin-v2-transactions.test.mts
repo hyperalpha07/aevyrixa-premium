@@ -34,7 +34,8 @@ const transactionMetricsSource = readFileSync(new URL("../lib/admin-v2/transacti
 test("Transactions route is implemented as order payment reconciliation and unrelated billing modules stay coming soon", () => {
   assert.equal(findAdminV2Route("transactions")?.implemented, true);
   assert.equal(findAdminV2Route("refunds")?.implemented, true);
-  for (const module of ["expenses", "tax", "billing"] as const) {
+  assert.equal(findAdminV2Route("billing")?.implemented, true);
+  for (const module of ["expenses", "tax"] as const) {
     assert.equal(findAdminV2Route(module)?.implemented, false);
   }
   assert.match(findAdminV2Route("transactions")?.description ?? "", /payment reconciliation/i);

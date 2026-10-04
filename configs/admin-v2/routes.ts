@@ -92,7 +92,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Expenses", path: "/admin-v2/expenses", module: "expenses", description: "Expenses", implemented: false },
   { title: "Refunds", path: "/admin-v2/refunds", module: "refunds", description: "Refunds", implemented: true },
   { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax settings", implemented: false },
-  { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: false },
+  { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: true },
   { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Store settings", implemented: false },
   { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Integrations", implemented: false },
   { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Webhook management", implemented: false },
