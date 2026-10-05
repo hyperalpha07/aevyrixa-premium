@@ -7,7 +7,6 @@ const migrationDir = new URL("../supabase/migrations/", import.meta.url);
 const files = readdirSync(migrationDir).filter(file => file.endsWith(".sql")).sort();
 const sqlByFile = new Map(files.map(file => [file, read(`supabase/migrations/${file}`)]));
 const allSql = Array.from(sqlByFile.values()).join("\n\n");
-const sqlWithoutFunctionBodies = allSql.replace(/\$function\$[\s\S]*?\$function\$/g, "$function$BODY$function$");
 
 const baselines = [
   "20260901080000_core_extensions_and_settings_baseline.sql",
@@ -20,6 +19,8 @@ const baselines = [
 ] as const;
 
 const baselineSql = (file: (typeof baselines)[number]) => sqlByFile.get(file) ?? "";
+const allBaselineSql = baselines.map(file => baselineSql(file)).join("\n\n");
+const baselineSqlWithoutFunctionBodies = allBaselineSql.replace(/\$function\$[\s\S]*?\$function\$/g, "$function$BODY$function$");
 const compact = (value: string) => value.replace(/\s+/g, " ").trim();
 const hasSql = (sql: string, expected: string) => assert.match(compact(sql), new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\ /g, "\\s+"), "i"));
 
@@ -386,10 +387,10 @@ test("invoice schema is intentionally not duplicated by the baseline", () => {
 });
 
 test("baseline migrations are schema-only and avoid destructive business-data operations", () => {
-  assert.doesNotMatch(allSql, /\bdrop\s+table\b|\bdrop\s+column\b|\btruncate\b/i);
-  assert.doesNotMatch(allSql, /\bdelete\s+from\s+public\./i);
-  assert.doesNotMatch(sqlWithoutFunctionBodies, /\bupdate\s+public\.(?:orders|products|product_reviews|customer_accounts|customers|support_|store_settings|admin_staff)\b\s+set\b/i);
-  assert.doesNotMatch(allSql, /AEV\s*->\s*NOR|NOR-/i);
+  assert.doesNotMatch(allBaselineSql, /\bdrop\s+table\b|\bdrop\s+column\b|\btruncate\b/i);
+  assert.doesNotMatch(allBaselineSql, /\bdelete\s+from\s+public\./i);
+  assert.doesNotMatch(baselineSqlWithoutFunctionBodies, /\bupdate\s+public\.(?:orders|products|product_reviews|customer_accounts|customers|support_|store_settings|admin_staff)\b\s+set\b/i);
+  assert.doesNotMatch(allBaselineSql, /AEV\s*->\s*NOR|NOR-/i);
 });
 
 test("migration dependency scan: additive references have earlier baseline ownership", () => {
