@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -259,4 +259,3 @@ test("P0 migration is access-control only and does not mutate business rows or b
   assert.doesNotMatch(migration, /\binsert\s+into\s+public\./i);
   assert.doesNotMatch(migration, /AEV\s*->\s*NOR|rename\s+.*\bAEV\b/i);
 });
-
