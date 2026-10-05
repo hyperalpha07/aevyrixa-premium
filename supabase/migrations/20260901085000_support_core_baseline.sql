@@ -146,4 +146,3 @@ drop policy if exists support_messages_service_role_all on public.support_messag
 create policy support_messages_service_role_all on public.support_messages for all to service_role using (true) with check (true);
 revoke all on function public.resolve_support_message_conversation_id() from public, anon, authenticated, service_role;
 revoke all on function public.sync_support_message_body_message() from public, anon, authenticated, service_role;
-

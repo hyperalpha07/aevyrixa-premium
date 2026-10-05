@@ -111,4 +111,3 @@ drop policy if exists admin_staff_service_role_all on public.admin_staff;
 create policy admin_staff_service_role_all on public.admin_staff for all to service_role using (true) with check (true);
 drop policy if exists admin_staff_activity_logs_service_role_all on public.admin_staff_activity_logs;
 create policy admin_staff_activity_logs_service_role_all on public.admin_staff_activity_logs for all to service_role using (true) with check (true);
-

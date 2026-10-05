@@ -1,4 +1,4 @@
-﻿-- P0 baseline 1: core extensions and store settings.
+-- P0 baseline 1: core extensions and store settings.
 -- Historical baseline for fresh database reproducibility. Safe on production-shaped DBs.
 
 create schema if not exists extensions;

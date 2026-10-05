@@ -170,4 +170,3 @@ drop policy if exists customer_sessions_service_role_all on public.customer_sess
 create policy customer_sessions_service_role_all on public.customer_sessions for all to service_role using (true) with check (true);
 drop policy if exists customer_activity_logs_service_role_all on public.customer_activity_logs;
 create policy customer_activity_logs_service_role_all on public.customer_activity_logs for all to service_role using (true) with check (true);
-

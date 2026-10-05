@@ -198,5 +198,3 @@ create policy products_service_role_all on public.products for all to service_ro
 drop policy if exists product_reviews_service_role_all on public.product_reviews;
 create policy product_reviews_service_role_all on public.product_reviews for all to service_role using (true) with check (true);
 revoke all on function public.set_products_updated_at() from public, anon, authenticated, service_role;
-
-
