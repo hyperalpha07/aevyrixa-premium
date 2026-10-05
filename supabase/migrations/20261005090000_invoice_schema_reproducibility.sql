@@ -460,15 +460,11 @@ $$;
 
 alter table public.invoices enable row level security;
 
-revoke all on table public.invoices from public, anon, authenticated;
-revoke all on sequence public.admin_v2_invoice_number_seq from public, anon, authenticated;
-revoke execute on function public.admin_v2_next_invoice_number(text, timestamptz) from public, anon, authenticated;
-revoke all on table public.invoices from service_role;
-revoke all on sequence public.admin_v2_invoice_number_seq from service_role;
-revoke execute on function public.admin_v2_next_invoice_number(text, timestamptz) from service_role;
+revoke all on table public.invoices from public, anon, authenticated, service_role;
+revoke all on sequence public.admin_v2_invoice_number_seq from public, anon, authenticated, service_role;
+revoke all on function public.admin_v2_next_invoice_number(text, timestamptz) from public, anon, authenticated, service_role;
 
-grant select, insert, update, delete on table public.invoices to service_role;
-grant usage, select on sequence public.admin_v2_invoice_number_seq to service_role;
+grant select, insert on table public.invoices to service_role;
 grant execute on function public.admin_v2_next_invoice_number(text, timestamptz) to service_role;
 
 drop policy if exists "invoices_service_role_all" on public.invoices;

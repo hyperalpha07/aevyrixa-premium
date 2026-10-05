@@ -40,6 +40,7 @@ const orderInvoicesSource = readFileSync(new URL("../lib/admin-v2/orders/order-i
 const orderStoreSource = readFileSync(new URL("../app/lib/order-store.ts", import.meta.url), "utf8");
 const invoiceMigrationName = "20261005090000_invoice_schema_reproducibility.sql";
 const invoiceMigration = readFileSync(new URL(`../supabase/migrations/${invoiceMigrationName}`, import.meta.url), "utf8");
+const migrationNames = readdirSync(new URL("../supabase/migrations", import.meta.url));
 
 test("Invoices route is real, protected by orders.viewInvoice, and related unfinished modules stay coming soon", () => {
   assert.equal(findAdminV2Route("invoices")?.implemented, true);
@@ -208,14 +209,38 @@ test("Invoices navigation uses route progress friendly links and a thin loading 
 });
 
 test("Invoice schema reproducibility migration covers the live invoice table and numbering RPC", () => {
-  const migrationNames = readdirSync(new URL("../supabase/migrations", import.meta.url)).join("\n");
-  assert.match(migrationNames, new RegExp(invoiceMigrationName));
+  const migrationNamesText = migrationNames.join("\n");
+  assert.match(migrationNamesText, new RegExp(invoiceMigrationName));
+  assert.ok(
+    migrationNames.indexOf("20260901084000_orders_core_baseline.sql") < migrationNames.indexOf(invoiceMigrationName),
+    "invoice reproducibility must run after the P0 baseline migrations",
+  );
+  const securityMigrationIndex = migrationNames.indexOf("20261006090000_p0_database_access_security_hardening.sql");
+  if (securityMigrationIndex !== -1) {
+    assert.ok(
+      migrationNames.indexOf(invoiceMigrationName) < securityMigrationIndex,
+      "invoice reproducibility must remain compatible with the later P0 security hardening pass",
+    );
+  }
   assert.match(invoiceMigration, /c\.conrelid = 'public\.orders'::regclass/);
   assert.match(invoiceMigration, /c\.contype in \('u', 'p'\)/);
   assert.match(invoiceMigration, /t\.typname = 'text'/);
   assert.match(invoiceMigration, /a\.attnotnull/);
   assert.match(invoiceMigration, /c\.conkey = array\[a\.attnum\]::smallint\[\]/);
   assert.match(invoiceMigration, /create table if not exists public\.invoices/);
+  assert.match(invoiceMigration, /id uuid primary key default gen_random_uuid\(\)/);
+  assert.match(invoiceMigration, /invoice_number text not null unique/);
+  assert.match(invoiceMigration, /order_ref text not null/);
+  assert.match(invoiceMigration, /status text not null default 'issued'/);
+  assert.match(invoiceMigration, /issued_at timestamptz not null default now\(\)/);
+  assert.match(invoiceMigration, /actor_source text not null default 'admin'/);
+  assert.match(invoiceMigration, /subtotal_amount numeric not null/);
+  assert.match(invoiceMigration, /discount_amount numeric not null/);
+  assert.match(invoiceMigration, /delivery_amount numeric not null/);
+  assert.match(invoiceMigration, /total_amount numeric not null/);
+  assert.match(invoiceMigration, /currency_code text not null/);
+  assert.match(invoiceMigration, /snapshot jsonb not null/);
+  assert.match(invoiceMigration, /created_at timestamptz not null default now\(\)/);
   for (const column of [
     "invoice_number",
     "order_ref",
@@ -243,6 +268,10 @@ test("Invoice schema reproducibility migration covers the live invoice table and
   assert.match(invoiceMigration, /snapshot \? 'payment'/);
   assert.match(invoiceMigration, /create unique index if not exists invoices_one_issued_per_order_idx/);
   assert.match(invoiceMigration, /where status = 'issued'/);
+  assert.match(invoiceMigration, /create index if not exists invoices_order_ref_idx/);
+  assert.match(invoiceMigration, /on public\.invoices\(order_ref\)/);
+  assert.match(invoiceMigration, /create index if not exists invoices_created_at_idx/);
+  assert.match(invoiceMigration, /on public\.invoices\(created_at desc\)/);
   assert.match(invoiceMigration, /create sequence if not exists public\.admin_v2_invoice_number_seq/);
   assert.match(invoiceMigration, /as bigint/);
   assert.match(invoiceMigration, /increment by 1/);
@@ -261,18 +290,33 @@ test("Invoice migration preserves current references, security posture, and avoi
   assert.match(invoiceMigration, /AEV-INV-/);
   assert.doesNotMatch(invoiceMigration, /NOR-INV|NOR-ORD/);
   assert.match(invoiceMigration, /alter table public\.invoices enable row level security/);
-  assert.match(invoiceMigration, /revoke all on table public\.invoices from public, anon, authenticated/);
-  assert.match(invoiceMigration, /revoke all on sequence public\.admin_v2_invoice_number_seq from public, anon, authenticated/);
-  assert.match(invoiceMigration, /revoke execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) from public, anon, authenticated/);
-  assert.match(invoiceMigration, /revoke all on table public\.invoices from service_role/);
-  assert.match(invoiceMigration, /revoke all on sequence public\.admin_v2_invoice_number_seq from service_role/);
-  assert.match(invoiceMigration, /revoke execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) from service_role/);
-  assert.match(invoiceMigration, /grant select, insert, update, delete on table public\.invoices to service_role/);
-  assert.match(invoiceMigration, /grant usage, select on sequence public\.admin_v2_invoice_number_seq to service_role/);
+  assert.match(invoiceMigration, /revoke all on table public\.invoices from public, anon, authenticated, service_role/);
+  assert.match(invoiceMigration, /grant select, insert on table public\.invoices to service_role/);
+  assert.doesNotMatch(
+    invoiceMigration,
+    /grant\s+[^;]*(update|delete|all|truncate|trigger|references)[^;]*on table public\.invoices to service_role/i,
+  );
+  assert.doesNotMatch(invoiceMigration, /grant\s+[^;]*on table public\.invoices to (public|anon|authenticated)/i);
+  assert.match(
+    invoiceMigration,
+    /revoke all on sequence public\.admin_v2_invoice_number_seq from public, anon, authenticated, service_role/,
+  );
+  assert.doesNotMatch(
+    invoiceMigration,
+    /grant\s+[^;]*on sequence public\.admin_v2_invoice_number_seq to (service_role|public|anon|authenticated)/i,
+  );
+  assert.match(
+    invoiceMigration,
+    /revoke all on function public\.admin_v2_next_invoice_number\(text, timestamptz\) from public, anon, authenticated, service_role/,
+  );
+  assert.match(invoiceMigration, /grant execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) to service_role/);
+  assert.doesNotMatch(
+    invoiceMigration,
+    /grant execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) to (public|anon|authenticated)/i,
+  );
   assert.match(invoiceMigration, /create policy "invoices_service_role_all"/);
   assert.match(invoiceMigration, /to service_role/);
-  assert.doesNotMatch(invoiceMigration, /grant\s+[^;]*(truncate|trigger|references)[^;]*on table public\.invoices to service_role/i);
-  assert.doesNotMatch(invoiceMigration, /grant\s+[^;]*update[^;]*on sequence public\.admin_v2_invoice_number_seq to service_role/i);
+  assert.doesNotMatch(invoiceMigration, /create policy "[^"]+"[\s\S]*?to (public|anon|authenticated)/i);
   assert.doesNotMatch(invoiceMigration, /pdf|xlsx|tax_|vat|mark_paid|overdue|settlement|payout|billing_accounts|statements/i);
   assert.doesNotMatch(invoiceMigration, /update public\.invoices\s+set|insert into public\.invoices\s+select|delete from public\.invoices|setval\(|alter sequence/i);
 });
