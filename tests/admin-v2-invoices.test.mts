@@ -38,6 +38,8 @@ const orderInvoiceRoute = readFileSync(new URL("../app/api/orders/[orderRef]/inv
 const orderInvoicePrintPage = readFileSync(new URL("../app/admin-v2/orders/[orderRef]/invoice/page.tsx", import.meta.url), "utf8");
 const orderInvoicesSource = readFileSync(new URL("../lib/admin-v2/orders/order-invoices.ts", import.meta.url), "utf8");
 const orderStoreSource = readFileSync(new URL("../app/lib/order-store.ts", import.meta.url), "utf8");
+const invoiceMigrationName = "20261005090000_invoice_schema_reproducibility.sql";
+const invoiceMigration = readFileSync(new URL(`../supabase/migrations/${invoiceMigrationName}`, import.meta.url), "utf8");
 
 test("Invoices route is real, protected by orders.viewInvoice, and related unfinished modules stay coming soon", () => {
   assert.equal(findAdminV2Route("invoices")?.implemented, true);
@@ -205,7 +207,154 @@ test("Invoices navigation uses route progress friendly links and a thin loading 
   assert.doesNotMatch(invoicesLoading, /V2PageContentSkeleton/);
 });
 
-test("No invoice migration or replacement billing model is introduced", () => {
+test("Invoice schema reproducibility migration covers the live invoice table and numbering RPC", () => {
   const migrationNames = readdirSync(new URL("../supabase/migrations", import.meta.url)).join("\n");
-  assert.doesNotMatch(migrationNames, /invoice|billing/i);
+  assert.match(migrationNames, new RegExp(invoiceMigrationName));
+  assert.match(invoiceMigration, /c\.conrelid = 'public\.orders'::regclass/);
+  assert.match(invoiceMigration, /c\.contype in \('u', 'p'\)/);
+  assert.match(invoiceMigration, /t\.typname = 'text'/);
+  assert.match(invoiceMigration, /a\.attnotnull/);
+  assert.match(invoiceMigration, /c\.conkey = array\[a\.attnum\]::smallint\[\]/);
+  assert.match(invoiceMigration, /create table if not exists public\.invoices/);
+  for (const column of [
+    "invoice_number",
+    "order_ref",
+    "status",
+    "issued_at",
+    "issued_by_admin_id",
+    "issued_by",
+    "actor_source",
+    "subtotal_amount",
+    "discount_amount",
+    "delivery_amount",
+    "total_amount",
+    "currency_code",
+    "snapshot",
+    "created_at",
+  ]) {
+    assert.match(invoiceMigration, new RegExp(`\\b${column}\\b`));
+  }
+  assert.match(invoiceMigration, /references public\.orders\(order_ref\) on update cascade on delete restrict/);
+  assert.match(invoiceMigration, /status in \('issued', 'void'\)/);
+  assert.match(invoiceMigration, /snapshot \? 'orderReference'/);
+  assert.match(invoiceMigration, /snapshot \? 'items'/);
+  assert.match(invoiceMigration, /snapshot \? 'totals'/);
+  assert.match(invoiceMigration, /snapshot \? 'customer'/);
+  assert.match(invoiceMigration, /snapshot \? 'payment'/);
+  assert.match(invoiceMigration, /create unique index if not exists invoices_one_issued_per_order_idx/);
+  assert.match(invoiceMigration, /where status = 'issued'/);
+  assert.match(invoiceMigration, /create sequence if not exists public\.admin_v2_invoice_number_seq/);
+  assert.match(invoiceMigration, /as bigint/);
+  assert.match(invoiceMigration, /increment by 1/);
+  assert.match(invoiceMigration, /minvalue 1/);
+  assert.match(invoiceMigration, /no cycle/);
+  assert.match(invoiceMigration, /create or replace function public\.admin_v2_next_invoice_number/);
+  assert.match(invoiceMigration, /security definer/);
+  assert.match(invoiceMigration, /set search_path = pg_catalog, public/);
+  assert.match(invoiceMigration, /at time zone 'UTC'/);
+  assert.match(invoiceMigration, /lpad\(nextval\('public\.admin_v2_invoice_number_seq'\)::text, 6, '0'\)/);
+  assert.match(invoiceMigration, /nextval\('public\.admin_v2_invoice_number_seq'\)/);
+  assert.match(invoiceMigration, /grant execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) to service_role/);
+});
+
+test("Invoice migration preserves current references, security posture, and avoids future feature creep", () => {
+  assert.match(invoiceMigration, /AEV-INV-/);
+  assert.doesNotMatch(invoiceMigration, /NOR-INV|NOR-ORD/);
+  assert.match(invoiceMigration, /alter table public\.invoices enable row level security/);
+  assert.match(invoiceMigration, /revoke all on table public\.invoices from public, anon, authenticated/);
+  assert.match(invoiceMigration, /revoke all on sequence public\.admin_v2_invoice_number_seq from public, anon, authenticated/);
+  assert.match(invoiceMigration, /revoke execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) from public, anon, authenticated/);
+  assert.match(invoiceMigration, /revoke all on table public\.invoices from service_role/);
+  assert.match(invoiceMigration, /revoke all on sequence public\.admin_v2_invoice_number_seq from service_role/);
+  assert.match(invoiceMigration, /revoke execute on function public\.admin_v2_next_invoice_number\(text, timestamptz\) from service_role/);
+  assert.match(invoiceMigration, /grant select, insert, update, delete on table public\.invoices to service_role/);
+  assert.match(invoiceMigration, /grant usage, select on sequence public\.admin_v2_invoice_number_seq to service_role/);
+  assert.match(invoiceMigration, /create policy "invoices_service_role_all"/);
+  assert.match(invoiceMigration, /to service_role/);
+  assert.doesNotMatch(invoiceMigration, /grant\s+[^;]*(truncate|trigger|references)[^;]*on table public\.invoices to service_role/i);
+  assert.doesNotMatch(invoiceMigration, /grant\s+[^;]*update[^;]*on sequence public\.admin_v2_invoice_number_seq to service_role/i);
+  assert.doesNotMatch(invoiceMigration, /pdf|xlsx|tax_|vat|mark_paid|overdue|settlement|payout|billing_accounts|statements/i);
+  assert.doesNotMatch(invoiceMigration, /update public\.invoices\s+set|insert into public\.invoices\s+select|delete from public\.invoices|setval\(|alter sequence/i);
+});
+
+test("Invoice migration fail-fast checks existing invoice table compatibility", () => {
+  assert.match(invoiceMigration, /if to_regclass\('public\.invoices'\) is not null then/);
+  for (const [column, type, notNull] of [
+    ["id", "uuid", true],
+    ["invoice_number", "text", true],
+    ["order_ref", "text", true],
+    ["status", "text", true],
+    ["issued_at", "timestamptz", true],
+    ["issued_by_admin_id", "text", false],
+    ["issued_by", "text", false],
+    ["actor_source", "text", true],
+    ["subtotal_amount", "numeric", true],
+    ["discount_amount", "numeric", true],
+    ["delivery_amount", "numeric", true],
+    ["total_amount", "numeric", true],
+    ["currency_code", "text", true],
+    ["snapshot", "jsonb", true],
+    ["created_at", "timestamptz", true],
+  ] as const) {
+    assert.match(invoiceMigration, new RegExp(`\\('${column}', '${type}', ${notNull}\\)`));
+  }
+  assert.match(invoiceMigration, /existing public\.invoices columns are incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices defaults are incompatible/);
+  assert.match(invoiceMigration, /\('id', 'gen_random_uuid\(\)'\)/);
+  assert.match(invoiceMigration, /\('status', '''issued''::text'\)/);
+  assert.match(invoiceMigration, /\('issued_at', 'now\(\)'\)/);
+  assert.match(invoiceMigration, /\('actor_source', '''admin''::text'\)/);
+  assert.match(invoiceMigration, /\('created_at', 'now\(\)'\)/);
+  assert.match(invoiceMigration, /existing public\.invoices must have a single-column primary key on id/);
+  assert.match(invoiceMigration, /existing public\.invoices must have a single-column unique constraint on invoice_number/);
+  assert.match(invoiceMigration, /existing public\.invoices\.order_ref foreign key is incompatible/);
+  assert.match(invoiceMigration, /confupdtype = 'c'/);
+  assert.match(invoiceMigration, /confdeltype = 'r'/);
+  assert.match(invoiceMigration, /existing public\.invoices must restrict status to issued\/void/);
+  assert.match(invoiceMigration, /existing public\.invoices amount constraints are incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices total arithmetic constraint is incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices currency constraint is incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices snapshot constraint is incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices snapshot size constraint is incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices issuer integrity constraint is incompatible/);
+  assert.match(invoiceMigration, /existing public\.invoices one-issued-invoice-per-order index is incompatible/);
+  assert.match(invoiceMigration, /lower\(regexp_replace\(pg_get_constraintdef\(oid\), '\\s\+', '', 'g'\)\)/);
+  assert.match(invoiceMigration, /check\(\(status=any\(array\[''issued''::text,''void''::text\]\)\)\)/);
+  assert.match(invoiceMigration, /check\(\(length\(btrim\(invoice_number\)\)>=8\)and\(length\(btrim\(invoice_number\)\)<=80\)\)/);
+  assert.match(invoiceMigration, /check\(\(currency_code~''\^\[A-Z\]\{3\}\$''::text\)\)/);
+  assert.match(invoiceMigration, /jsonb_typeof\(snapshot\)=''object''::text/);
+  assert.match(invoiceMigration, /orderReference/);
+  assert.match(invoiceMigration, /payment/);
+  assert.match(invoiceMigration, /actor_source=''admin''::text/);
+});
+
+test("Invoice migration protects sequence state and exact partial unique index semantics", () => {
+  const functionStart = invoiceMigration.indexOf("create or replace function public.admin_v2_next_invoice_number");
+  const preFunctionMigration = invoiceMigration.slice(0, functionStart);
+  assert.match(invoiceMigration, /existing public\.invoices requires existing public\.admin_v2_invoice_number_seq/);
+  assert.match(invoiceMigration, /s\.seqtypid = 'bigint'::regtype/);
+  assert.match(invoiceMigration, /s\.seqincrement = 1/);
+  assert.match(invoiceMigration, /s\.seqmin = 1/);
+  assert.match(invoiceMigration, /not s\.seqcycle/);
+  assert.match(invoiceMigration, /v_seq_is_called/);
+  assert.match(invoiceMigration, /v_next_sequence_value <= v_max_invoice_suffix/);
+  assert.match(invoiceMigration, /public\.admin_v2_invoice_number_seq is behind existing invoice numbers/);
+  assert.doesNotMatch(preFunctionMigration, /nextval\(/i);
+  assert.doesNotMatch(invoiceMigration, /setval\(|alter sequence/i);
+  assert.match(invoiceMigration, /array_length\(string_to_array\(i\.indkey::text, ' '\), 1\) = 1/);
+  assert.match(invoiceMigration, /lower\(regexp_replace\(pg_get_expr\(i\.indpred, i\.indrelid\), '\\s\+', '', 'g'\)\) =\s+'\(\(status=''issued''::text\)\)'/);
+  assert.doesNotMatch(invoiceMigration, /pg_get_expr\(i\.indpred, i\.indrelid\) ilike '%status%'/i);
+});
+
+test("Invoice migration relation-scopes additive constraint checks", () => {
+  for (const constraintName of [
+    "invoices_actor_source_valid",
+    "invoices_issuer_integrity",
+    "invoices_snapshot_size",
+  ]) {
+    const pattern = new RegExp(
+      `where conname = '${constraintName}'[\\s\\S]*?and conrelid = 'public\\.invoices'::regclass`,
+    );
+    assert.match(invoiceMigration, pattern);
+  }
 });
