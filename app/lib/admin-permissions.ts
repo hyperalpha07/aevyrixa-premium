@@ -32,6 +32,7 @@ export const adminPermissionKeys = [
   "support.view",
   "support.reply",
   "support.close",
+  "support.manage",
   "analytics.view",
   "staff.manage",
   "activity.view",
@@ -119,6 +120,7 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "support.view": "View live chat",
   "support.reply": "Reply live chat",
   "support.close": "Close conversations",
+  "support.manage": "Manage support assignment, labels, saved replies, priority, and escalation",
   "analytics.view": "View analytics",
   "staff.manage": "Manage staff",
   "activity.view": "View activity logs",
@@ -157,7 +159,7 @@ export const permissionGroups = [
   },
   {
     title: "Support",
-    permissions: ["support.view", "support.reply", "support.close"],
+    permissions: ["support.view", "support.reply", "support.close", "support.manage"],
   },
   {
     title: "Storefront CMS",
@@ -209,6 +211,7 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "support.view",
     "support.reply",
     "support.close",
+    "support.manage",
     "analytics.view",
     "activity.view",
   ],
@@ -234,7 +237,7 @@ export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
     "reviews.feature",
     "categories.manage",
   ],
-  support_staff: ["dashboard.view", "support.view", "support.reply", "support.close"],
+  support_staff: ["dashboard.view", "support.view", "support.reply", "support.close", "support.manage"],
   viewer: [
     "dashboard.view",
     "orders.view",

@@ -3,6 +3,7 @@ import { buildSupportInbox } from "@/lib/admin-v2/support/support-query";
 import { signedSupportAttachmentUrl, type PreparedSupportAttachment, type SupportAttachment } from "@/app/lib/support-attachments";
 
 export type ConversationStatus = "open" | "pending" | "closed";
+export type SupportPriority = "low" | "normal" | "high" | "urgent";
 export type SenderType = "customer" | "admin";
 
 export type SupportConversation = {
@@ -14,6 +15,11 @@ export type SupportConversation = {
   updated_at: string | null;
   assigned_staff_id?: string | null;
   assigned_staff_name?: string | null;
+  priority?: SupportPriority | null;
+  sla_started_at?: string | null;
+  escalated_at?: string | null;
+  escalated_by?: string | null;
+  escalation_reason?: string | null;
 };
 
 export type SupportMessage = {
@@ -71,6 +77,15 @@ export type SupportLabel = {
   name: string;
   color: string | null;
   created_at?: string;
+};
+
+export type SupportSavedReply = {
+  id: string;
+  title: string;
+  body: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 function hasConfig() {
@@ -169,6 +184,8 @@ export async function createConversation(sourcePage: string): Promise<SupportCon
     {
       public_token: crypto.randomUUID(),
       status: "open",
+      priority: "normal",
+      sla_started_at: now,
       source_page: sourcePage || "homepage",
       created_at: now,
       updated_at: now,
@@ -391,7 +408,7 @@ async function dbGetAll<T>(path: string): Promise<T[]> {
 export async function getAdminSupportInbox() {
   if (!hasConfig()) throw new Error("Support backend not configured.");
   const [conversations, messages] = await Promise.all([
-    dbGetAll<Omit<SupportConversation, "public_token">>("support_conversations?select=id,status,source_page,created_at,updated_at,assigned_staff_id,assigned_staff_name&order=created_at.desc,id.asc"),
+    dbGetAll<Omit<SupportConversation, "public_token">>("support_conversations?select=id,status,source_page,created_at,updated_at,assigned_staff_id,assigned_staff_name,priority,sla_started_at,escalated_at,escalated_by,escalation_reason&order=created_at.desc,id.asc"),
     dbGetAll<SupportMessage>("support_messages?select=id,conversation_id,message,body,sender_type,created_at,is_read&order=created_at.asc,id.asc"),
   ]);
   return buildSupportInbox(conversations, normalizeSupportMessages(messages));
@@ -485,6 +502,42 @@ export async function updateConversationAssignment(
   );
 }
 
+export async function updateConversationPriority(id: string, priority: SupportPriority): Promise<void> {
+  if (!hasConfig()) return;
+
+  await dbPatch(
+    `support_conversations?id=eq.${encodeURIComponent(id)}`,
+    { priority, updated_at: new Date().toISOString() }
+  );
+}
+
+export async function escalateSupportConversation(
+  id: string,
+  input: { actorName: string; reason: string; staffId?: string | null; staffName?: string | null }
+): Promise<void> {
+  if (!hasConfig()) return;
+  const now = new Date().toISOString();
+  const payload: Record<string, unknown> = {
+    escalated_at: now,
+    escalated_by: input.actorName || "Admin",
+    escalation_reason: input.reason.trim(),
+    updated_at: now,
+  };
+  if ("staffId" in input) {
+    payload.assigned_staff_id = input.staffId ?? null;
+    payload.assigned_staff_name = input.staffName ?? null;
+  }
+  await dbPatch(`support_conversations?id=eq.${encodeURIComponent(id)}`, payload);
+}
+
+export async function clearSupportEscalation(id: string): Promise<void> {
+  if (!hasConfig()) return;
+  await dbPatch(
+    `support_conversations?id=eq.${encodeURIComponent(id)}`,
+    { escalated_at: null, escalated_by: null, escalation_reason: null, updated_at: new Date().toISOString() }
+  );
+}
+
 export async function listSupportLabels(): Promise<SupportLabel[]> {
   if (!hasConfig()) return [];
   try {
@@ -509,15 +562,38 @@ export async function getSupportConversationLabels(conversationId: string): Prom
   }
 }
 
-export async function createSupportLabel(name: string): Promise<SupportLabel> {
-  const clean = name.trim().replace(/\s+/g, " ").slice(0, 40);
+export async function createSupportLabel(name: string, color: string | null = null): Promise<SupportLabel> {
+  const clean = name.trim().replace(/\s+/g, " ").slice(0, 80);
   if (!clean) throw new Error("Label name is required.");
   const rows = await dbPost<SupportLabel[]>("support_labels?select=id,name,color,created_at", {
     name: clean,
-    color: null,
+    color,
   });
   if (!rows[0]) throw new Error("Failed to create support label.");
   return rows[0];
+}
+
+export async function updateSupportLabel(labelId: string, input: { name: string; color: string | null }): Promise<SupportLabel> {
+  const clean = input.name.trim().replace(/\s+/g, " ").slice(0, 80);
+  if (!clean) throw new Error("Label name is required.");
+  const res = await fetch(endpoint(`support_labels?id=eq.${encodeURIComponent(labelId)}&select=id,name,color,created_at`), {
+    method: "PATCH",
+    headers: authHeaders({ prefer: "return=representation" }),
+    body: JSON.stringify({ name: clean, color: input.color }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Support label update failed ${res.status}: ${detail.slice(0, 200)}`);
+  }
+  const rows = (await res.json()) as SupportLabel[];
+  if (!rows[0]) throw new Error("Support label not found.");
+  return rows[0];
+}
+
+export async function deleteSupportLabel(labelId: string): Promise<void> {
+  if (!hasConfig()) return;
+  await dbDelete(`support_labels?id=eq.${encodeURIComponent(labelId)}`);
 }
 
 export async function attachSupportLabel(conversationId: string, labelId: string): Promise<void> {
@@ -535,4 +611,44 @@ export async function removeSupportLabel(conversationId: string, labelId: string
   await dbDelete(
     `support_conversation_labels?conversation_id=eq.${encodeURIComponent(conversationId)}&label_id=eq.${encodeURIComponent(labelId)}`
   );
+}
+
+export async function listSupportSavedReplies(): Promise<SupportSavedReply[]> {
+  if (!hasConfig()) return [];
+  return dbGet<SupportSavedReply[]>("support_saved_replies?select=id,title,body,created_by,created_at,updated_at&order=updated_at.desc,id.asc");
+}
+
+export async function createSupportSavedReply(input: { title: string; body: string; createdBy: string }): Promise<SupportSavedReply> {
+  const now = new Date().toISOString();
+  const rows = await dbPost<SupportSavedReply[]>("support_saved_replies?select=id,title,body,created_by,created_at,updated_at", {
+    title: input.title.trim(),
+    body: input.body.trim(),
+    created_by: input.createdBy || null,
+    created_at: now,
+    updated_at: now,
+  });
+  if (!rows[0]) throw new Error("Failed to create saved reply.");
+  return rows[0];
+}
+
+export async function updateSupportSavedReply(id: string, input: { title: string; body: string }): Promise<SupportSavedReply | null> {
+  const res = await fetch(endpoint(`support_saved_replies?id=eq.${encodeURIComponent(id)}&select=id,title,body,created_by,created_at,updated_at`), {
+    method: "PATCH",
+    headers: authHeaders({ prefer: "return=representation" }),
+    body: JSON.stringify({ title: input.title.trim(), body: input.body.trim(), updated_at: new Date().toISOString() }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Support saved reply update failed ${res.status}: ${detail.slice(0, 200)}`);
+  }
+  return ((await res.json()) as SupportSavedReply[])[0] ?? null;
+}
+
+export async function deleteSupportSavedReply(id: string): Promise<boolean> {
+  if (!hasConfig()) return false;
+  const existing = await dbGet<Pick<SupportSavedReply, "id">[]>(`support_saved_replies?id=eq.${encodeURIComponent(id)}&select=id&limit=1`);
+  if (!existing[0]) return false;
+  await dbDelete(`support_saved_replies?id=eq.${encodeURIComponent(id)}`);
+  return true;
 }

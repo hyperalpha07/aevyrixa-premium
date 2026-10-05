@@ -6,5 +6,10 @@ import { AdminV2SupportView } from "@/components/admin-v2/views/support/AdminV2S
 export default async function AdminV2SupportPage() {
   const session = await requireAdminV2Session();
   requireAdminV2RouteAccess(session, "support");
-  return <AdminV2SupportView canReply={hasPermission(session, "support.reply")} canClose={hasPermission(session, "support.close")} />;
+  return <AdminV2SupportView
+    canReply={hasPermission(session, "support.reply")}
+    canClose={hasPermission(session, "support.close")}
+    canManage={hasPermission(session, "support.manage")}
+    aiEnabled={Boolean(process.env.OPENAI_API_KEY)}
+  />;
 }

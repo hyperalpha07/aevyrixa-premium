@@ -1,5 +1,5 @@
 import type { SupportAttachment } from "@/app/lib/support-attachments";
-import type { ConversationStatus, SupportConversation, SupportMessage, SupportOrderShare, SupportProductShare } from "@/app/lib/support-store";
+import type { ConversationStatus, SupportConversation, SupportInternalNote, SupportMessage, SupportOrderShare, SupportPriority, SupportProductShare } from "@/app/lib/support-store";
 
 export type SupportInboxItem = Omit<SupportConversation, "public_token"> & {
   last_message: Pick<SupportMessage, "body" | "sender_type" | "created_at"> | null;
@@ -9,9 +9,15 @@ export type SupportInboxItem = Omit<SupportConversation, "public_token"> & {
 export type SupportDetail = Omit<SupportConversation, "public_token"> & {
   assigned_staff_id?: string | null;
   assigned_staff_name?: string | null;
+  priority?: SupportPriority | null;
+  sla_started_at?: string | null;
+  escalated_at?: string | null;
+  escalated_by?: string | null;
+  escalation_reason?: string | null;
   labels?: Array<{ id: string; name: string; color: string | null }>;
   availableLabels?: Array<{ id: string; name: string; color: string | null }>;
   staff?: Array<{ id: string; name: string; email?: string; role?: string }>;
+  internalNotes?: SupportInternalNote[];
   messages: Array<Pick<SupportMessage, "id" | "body" | "sender_type" | "created_at"> & {
     attachments?: SupportAttachment[];
     product_shares?: SupportProductShare[];
@@ -35,11 +41,18 @@ export function buildSupportInbox(conversations: Omit<SupportConversation, "publ
     group.push(message);
     grouped.set(message.conversation_id, group);
   }
-  return conversations.map(({ id, status, source_page, created_at, updated_at }) => {
+  return conversations.map(({ id, status, source_page, created_at, updated_at, assigned_staff_id, assigned_staff_name, priority, sla_started_at, escalated_at, escalated_by, escalation_reason }) => {
     const history = orderSupportMessages(grouped.get(id) ?? []);
     const last = history.at(-1);
     return {
       id, status, source_page, created_at, updated_at,
+      assigned_staff_id,
+      assigned_staff_name,
+      priority,
+      sla_started_at,
+      escalated_at,
+      escalated_by,
+      escalation_reason,
       last_message: last ? { body: last.body.slice(0, 80), sender_type: last.sender_type, created_at: last.created_at } : null,
       message_count: history.length,
       unread_customer_count: history.filter(m => m.sender_type === "customer" && m.is_read !== true).length,

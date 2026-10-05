@@ -3,12 +3,13 @@
 import { Box, ButtonBase, Chip, IconButton, Menu, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Copy, LockKeyhole, Mail, MoreHorizontal, Paperclip, ShieldCheck, StickyNote, Tag, UserRound, UserRoundCheck } from "lucide-react";
+import { BellRing, Copy, LockKeyhole, Mail, MoreHorizontal, Paperclip, ShieldCheck, StickyNote, Tag, UserRound, UserRoundCheck } from "lucide-react";
 import type { SupportAttachment } from "@/app/lib/support-attachments";
 import { formatSupportAttachmentSize } from "@/app/lib/support-attachment-rules";
 import type { ConversationStatus, SupportProductShare } from "@/app/lib/support-store";
 import { canReplyToSupport, orderSupportMessages, type SupportDetail } from "@/lib/admin-v2/support/support-query";
 import { supportLabel, supportSourceLabel, supportTime } from "@/lib/admin-v2/support/support-format";
+import { deriveSupportSlaState } from "@/lib/admin-v2/support/support-sla";
 import { AdminV2SupportComposer } from "./AdminV2SupportComposer";
 
 function dateLabel(value: string) {
@@ -21,64 +22,20 @@ function dateLabel(value: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Dhaka" }).format(date);
 }
 
-type InternalNote = {
-  id: string;
-  body: string;
-  created_at: string;
-  author: string;
-};
-
-function internalNotesKey(conversationId: string) {
-  return `noromi-admin-support-internal-notes:${conversationId}`;
-}
-
-function loadInternalNotes(conversationId: string): InternalNote[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(internalNotesKey(conversationId)) || "[]") as InternalNote[];
-    return Array.isArray(parsed) ? parsed.filter(note => note && typeof note.body === "string" && typeof note.created_at === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-export function AdminV2SupportConversation({ conversation, canReply, canClose, busy, actionError, onReply, onProductShare, onStatus, onRefresh, onMarkUnread }: {
+export function AdminV2SupportConversation({ conversation, canReply, canClose, busy, actionError, onReply, onInternalNote, onProductShare, aiEnabled, onStatus, onRefresh, onMarkUnread }: {
   conversation: SupportDetail; canReply: boolean; canClose: boolean; busy: boolean;
   actionError: string;
-  onReply: (body: string, files: File[]) => Promise<boolean>; onProductShare?: (product: { id: string; slug: string }) => Promise<boolean>; onStatus: (status: ConversationStatus) => void;
+  onReply: (body: string, files: File[]) => Promise<boolean>; onInternalNote?: (body: string) => Promise<boolean>; onProductShare?: (product: { id: string; slug: string }) => Promise<boolean>; aiEnabled: boolean; onStatus: (status: ConversationStatus) => void;
   onRefresh?: () => void; onMarkUnread?: () => void;
 }) {
   const history = useRef<HTMLDivElement>(null);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-  const [internalNotes, setInternalNotes] = useState<InternalNote[]>([]);
-
-  useEffect(() => {
-    setInternalNotes(loadInternalNotes(conversation.id));
-  }, [conversation.id]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(internalNotesKey(conversation.id), JSON.stringify(internalNotes));
-    }
-  }, [conversation.id, internalNotes]);
-
-  function addInternalNote(body: string) {
-    const value = body.trim();
-    if (!value) return false;
-    setInternalNotes(current => [...current, {
-      id: crypto.randomUUID(),
-      body: value,
-      created_at: new Date().toISOString(),
-      author: "Owner",
-    }]);
-    return true;
-  }
 
   let lastDate = "";
   const messages = orderSupportMessages(conversation.messages);
   const thread = orderSupportMessages([
     ...messages.map(message => ({ ...message, kind: "message" as const })),
-    ...internalNotes.map(note => ({ ...note, kind: "note" as const })),
+    ...(conversation.internalNotes ?? []).map(note => ({ ...note, kind: "note" as const })),
   ]);
   const nextStatus = conversation.status === "closed" ? "open" : "closed";
 
@@ -174,7 +131,7 @@ export function AdminV2SupportConversation({ conversation, canReply, canClose, b
               <Box sx={{ maxWidth: "76%", mx: "auto", mb: 1.35, px: 1.45, py: 1.05, borderRadius: 2.4, bgcolor: "rgba(255,246,217,0.72)", border: "1px solid rgba(217,139,18,0.2)", color: "#5F4212", boxShadow: "0 10px 22px rgba(137,91,18,0.08)" }}>
                 <Stack direction="row" sx={{ alignItems: "center", gap: 0.65, mb: 0.45 }}>
                   <LockKeyhole size={14} />
-                  <Typography variant="caption" sx={{ fontWeight: 950 }}>Internal note · {entry.author} · {supportTime(entry.created_at)}</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 950 }}>Internal note · {entry.author_name || "Admin"} · {supportTime(entry.created_at)}</Typography>
                 </Stack>
                 <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", lineHeight: 1.55 }}>{entry.body}</Typography>
               </Box>
@@ -214,7 +171,7 @@ export function AdminV2SupportConversation({ conversation, canReply, canClose, b
         })}
       </Box>
     </Box>
-    {canReplyToSupport(canReply, conversation.status) ? <AdminV2SupportComposer key={conversation.id} busy={busy} error={actionError} onReply={onReply} onProductShare={onProductShare} onInternalNote={addInternalNote} /> :
+    {canReplyToSupport(canReply, conversation.status) ? <AdminV2SupportComposer key={conversation.id} busy={busy} error={actionError} onReply={onReply} onProductShare={onProductShare} onInternalNote={onInternalNote} aiEnabled={aiEnabled} messages={conversation.messages} /> :
       <Box sx={{ px: 2.5, py: 2, borderTop: 1, borderColor: "rgba(31, 25, 56, 0.08)", bgcolor: "rgba(248, 247, 252, 0.9)" }}>
         {actionError && <Typography color="error" sx={{ mb: 1, fontWeight: 700 }}>{actionError}</Typography>}
         <Typography color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -224,15 +181,21 @@ export function AdminV2SupportConversation({ conversation, canReply, canClose, b
   </Box>;
 }
 
-export function AdminV2SupportContextPanel({ conversation, canClose, busy, onStatus, onAssign, onAttachLabel, onRemoveLabel, onCreateLabel }: {
+export function AdminV2SupportContextPanel({ conversation, canClose, canManage, busy, onStatus, onAssign, onPriority, onEscalate, onClearEscalation, onAttachLabel, onRemoveLabel, onCreateLabel, onUpdateLabel, onDeleteLabel }: {
   conversation: SupportDetail;
   canClose: boolean;
+  canManage: boolean;
   busy: boolean;
   onStatus: (status: ConversationStatus) => void;
   onAssign: (staffId: string | null, staffName: string | null) => void;
+  onPriority: (priority: "low" | "normal" | "high" | "urgent") => void;
+  onEscalate: (reason: string, staffId: string | null) => void;
+  onClearEscalation: () => void;
   onAttachLabel: (labelId: string) => void;
   onRemoveLabel: (labelId: string) => void;
   onCreateLabel: (labelName: string) => void;
+  onUpdateLabel: (labelId: string, name: string, color: string | null) => void;
+  onDeleteLabel: (labelId: string) => void;
 }) {
   const messages = orderSupportMessages(conversation.messages);
   const firstMessage = messages[0];
@@ -244,11 +207,18 @@ export function AdminV2SupportContextPanel({ conversation, canClose, busy, onSta
   const [assignAnchor, setAssignAnchor] = useState<HTMLElement | null>(null);
   const [labelAnchor, setLabelAnchor] = useState<HTMLElement | null>(null);
   const [newLabel, setNewLabel] = useState("");
+  const [escalationReason, setEscalationReason] = useState("");
   const labels = conversation.labels ?? [];
   const availableLabels = conversation.availableLabels ?? [];
   const staff = conversation.staff ?? [];
   const attachedIds = new Set(labels.map(label => label.id));
   const unassigned = !conversation.assigned_staff_name;
+  const sla = deriveSupportSlaState({
+    priority: conversation.priority ?? "normal",
+    slaStartedAt: conversation.sla_started_at,
+    status: conversation.status,
+    messages: conversation.messages,
+  });
 
   return <Box sx={{ minHeight: 0, overflowY: "auto", px: 1.9, py: 1.7 }}>
     <Stack sx={{ gap: 0 }}>
@@ -313,16 +283,50 @@ export function AdminV2SupportContextPanel({ conversation, canClose, busy, onSta
         <InfoRow label="Admin replies" value={String(adminMessages)} />
         <InfoRow label="Attachments" value={String(attachmentCount)} />
         <InfoRow label="Status" value={conversation.status[0].toUpperCase() + conversation.status.slice(1)} />
+        <InfoRow label="Priority" value={(conversation.priority ?? "normal").toUpperCase()} />
+        <InfoRow label="SLA" value={sla.label} />
         <InfoRow label="Assigned To" value={conversation.assigned_staff_name || "Unassigned"} />
         <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 5.8rem) minmax(0, 1fr)", gap: 1.25, py: 0.55, alignItems: "start" }}>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Labels</Typography>
           <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 0.55, flexWrap: "wrap" }}>
             {labels.length ? labels.map(label => <Chip key={label.id} size="small" label={label.name}
-              onDelete={canClose && !busy ? () => onRemoveLabel(label.id) : undefined}
+              onDelete={canManage && !busy ? () => onRemoveLabel(label.id) : undefined}
               sx={{ height: 22, fontWeight: 850, color: "#5F3DB9", bgcolor: "rgba(124,77,255,0.08)", border: "1px solid rgba(124,77,255,0.16)" }} />) :
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>None</Typography>}
           </Stack>
         </Box>
+      </ContextSection>
+
+      <ContextSection>
+        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Priority & SLA</Typography>
+          <Chip size="small" label={sla.tracked ? sla.label : "SLA not tracked"} color={sla.resolutionBreached || sla.firstResponseBreached ? "error" : "default"} />
+        </Stack>
+        <TextField select size="small" fullWidth value={conversation.priority ?? "normal"} disabled={!canManage || busy}
+          aria-label="Support priority" onChange={event => onPriority(event.target.value as "low" | "normal" | "high" | "urgent")} sx={{ mt: 1.2 }}>
+          <MenuItem value="low">Low</MenuItem>
+          <MenuItem value="normal">Normal</MenuItem>
+          <MenuItem value="high">High</MenuItem>
+          <MenuItem value="urgent">Urgent</MenuItem>
+        </TextField>
+        <InfoRow label="First response" value={sla.firstResponseDeadline ? supportTime(sla.firstResponseDeadline) : "SLA not tracked"} />
+        <InfoRow label="Resolution" value={sla.resolutionDeadline ? supportTime(sla.resolutionDeadline) : "SLA not tracked"} />
+      </ContextSection>
+
+      <ContextSection>
+        <Stack direction="row" sx={{ alignItems: "center", gap: 0.8 }}>
+          <BellRing size={16} color="#7C3AED" />
+          <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Escalation</Typography>
+        </Stack>
+        {conversation.escalated_at ? <Box sx={{ mt: 1 }}>
+          <InfoRow label="Escalated" value={supportTime(conversation.escalated_at)} />
+          <InfoRow label="By" value={conversation.escalated_by || "Admin"} />
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.7, lineHeight: 1.45 }}>{conversation.escalation_reason}</Typography>
+          {canManage && <V2ContextButton disabled={busy} onClick={onClearEscalation}>Clear escalation</V2ContextButton>}
+        </Box> : <Box sx={{ mt: 1 }}>
+          <TextField size="small" fullWidth placeholder="Reason required" disabled={!canManage || busy} value={escalationReason} onChange={event => setEscalationReason(event.target.value)} />
+          {canManage && <V2ContextButton disabled={busy || !escalationReason.trim()} onClick={() => { onEscalate(escalationReason, null); setEscalationReason(""); }}>Escalate conversation</V2ContextButton>}
+        </Box>}
       </ContextSection>
 
       <ContextSection>
@@ -338,7 +342,7 @@ export function AdminV2SupportContextPanel({ conversation, canClose, busy, onSta
       </ContextSection>
 
       <Box sx={{ display: "grid", gridTemplateColumns: canClose ? "1fr 1fr 1fr" : "1fr", gap: 0.8, pt: 1.5 }}>
-        {canClose && <ButtonBase disabled={busy} onClick={event => setAssignAnchor(event.currentTarget)}
+        {canManage && <ButtonBase disabled={busy} onClick={event => setAssignAnchor(event.currentTarget)}
           sx={{
             justifyContent: "center",
             gap: 0.6,
@@ -400,7 +404,7 @@ export function AdminV2SupportContextPanel({ conversation, canClose, busy, onSta
           {conversation.status === "closed" ? "Reopen" : "Close"}
         </ButtonBase>}
       </Box>
-      {canClose && <Box sx={{ display: "grid", gridTemplateColumns: "1fr", pt: 0.8 }}>
+      {canManage && <Box sx={{ display: "grid", gridTemplateColumns: "1fr", pt: 0.8 }}>
         <ButtonBase disabled={busy} onClick={event => setLabelAnchor(event.currentTarget)}
           sx={{ justifyContent: "center", gap: 0.65, px: 1, py: 0.9, borderRadius: 2, border: "1px solid rgba(124,77,255,0.18)", color: "#5F3DB9", bgcolor: "rgba(124,77,255,0.045)", fontWeight: 950, fontSize: 13, "&:hover": { bgcolor: "rgba(124,77,255,0.09)" } }}>
           <Tag size={15} />
@@ -429,7 +433,11 @@ export function AdminV2SupportContextPanel({ conversation, canClose, busy, onSta
               onClick={() => { attached ? onRemoveLabel(label.id) : onAttachLabel(label.id); setLabelAnchor(null); }}>
               <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, width: "100%" }}>
                 <Typography variant="body2" sx={{ fontWeight: 850 }}>{label.name}</Typography>
-                <Typography variant="caption" color="text.secondary">{attached ? "Remove" : "Add"}</Typography>
+                <Stack direction="row" sx={{ gap: 0.75 }}>
+                  <Typography variant="caption" color="text.secondary">{attached ? "Remove" : "Add"}</Typography>
+                  <Typography variant="caption" color="text.secondary" onClick={(event) => { event.stopPropagation(); const name = window.prompt("Rename label", label.name); if (name?.trim()) onUpdateLabel(label.id, name, label.color); }}>Edit</Typography>
+                  <Typography variant="caption" color="error" onClick={(event) => { event.stopPropagation(); if (window.confirm(`Delete label "${label.name}" everywhere?`)) onDeleteLabel(label.id); }}>Delete</Typography>
+                </Stack>
               </Stack>
             </MenuItem>;
           })}
@@ -460,6 +468,13 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>{label}</Typography>
     <Typography variant="caption" sx={{ fontWeight: 850, textAlign: "right", overflowWrap: "anywhere" }}>{value}</Typography>
   </Stack>;
+}
+
+function V2ContextButton({ children, disabled, onClick }: { children: ReactNode; disabled?: boolean; onClick: () => void }) {
+  return <ButtonBase disabled={disabled} onClick={onClick}
+    sx={{ mt: 1, width: "100%", justifyContent: "center", px: 1, py: 0.85, borderRadius: 2, border: "1px solid rgba(124,77,255,0.18)", color: "#5F3DB9", bgcolor: "rgba(124,77,255,0.045)", fontWeight: 950, fontSize: 13, "&:hover": { bgcolor: "rgba(124,77,255,0.09)" }, "&.Mui-disabled": { opacity: 0.48 } }}>
+    {children}
+  </ButtonBase>;
 }
 
 function MessageAvatar({ admin }: { admin: boolean }) {

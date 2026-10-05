@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Local Materio reference source
 .materio-reference/
+
+# Supabase local CLI/runtime temp state
+supabase/.temp/

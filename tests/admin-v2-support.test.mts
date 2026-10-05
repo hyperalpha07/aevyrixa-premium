@@ -4,7 +4,7 @@ import { test } from "node:test";
 import ts from "typescript";
 import { buildSupportInbox, canReplyToSupport, orderSupportMessages, parseSupportFilter, querySupportInbox, supportHref } from "../lib/admin-v2/support/support-query.ts";
 import { supportMetrics } from "../lib/admin-v2/support/support-metrics.ts";
-import { hasPermission, normalizePermissions, type AdminPermissionKey, type AdminSessionUser } from "../app/lib/admin-permissions.ts";
+import { adminPermissionKeys, hasPermission, normalizePermissions, type AdminPermissionKey, type AdminSessionUser } from "../app/lib/admin-permissions.ts";
 import { SUPPORT_ATTACHMENT_LIMIT, SUPPORT_ATTACHMENT_MAX_BYTES, validateSupportAttachmentFiles } from "../app/lib/support-attachment-rules.ts";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -23,6 +23,7 @@ test("Support implemented; Chat and unrelated coming-soon flags stay false; serv
   assert.match(page, /requireAdminV2RouteAccess\(session, "support"\)/);
   assert.match(page, /hasPermission\(session, "support.reply"\)/);
   assert.match(page, /hasPermission\(session, "support.close"\)/);
+  assert.match(page, /hasPermission\(session, "support.manage"\)/);
   assert.doesNotMatch(page, /use client/);
 });
 
@@ -62,22 +63,29 @@ function loadModule(path: string, dependencies: Record<string, unknown>, overrid
   return exports;
 }
 
-function harness(allowed: AdminPermissionKey[] = ["support.view", "support.reply", "support.close"]) {
+function harness(allowed: AdminPermissionKey[] = ["support.view", "support.reply", "support.close", "support.manage"]) {
   let status: "open" | "pending" | "closed" = "open";
   let exists = true;
   const history = messages.map(m => ({ ...m })) as Array<{id:string; conversation_id:string; body:string; sender_type:"admin"|"customer";created_at:string;is_read:boolean}>;
   const calls: string[] = [];
+  const permissionMap = Object.fromEntries(adminPermissionKeys.map(key => [key, allowed.includes(key)]));
   const store = {
     getAdminSupportInbox: async () => { calls.push("list"); return buildSupportInbox([{ ...conversation, status }], history); },
     getConversationById: async () => { calls.push("get"); return exists ? { ...conversation, status } : null; },
     getConversationByToken: async (_id: string, token: string) => token === conversation.public_token ? { ...conversation, status } : null,
     getAdminSupportMessages: async () => orderSupportMessages(history),
     getSupportConversationLabels: async () => [],
+    getSupportInternalNotes: async () => [],
     listSupportLabels: async () => [],
     updateConversationAssignment: async () => { calls.push("assign"); },
     attachSupportLabel: async () => { calls.push("label"); },
     removeSupportLabel: async () => { calls.push("label"); },
-    createSupportLabel: async (name: string) => ({ id: "label-id", name, color: null }),
+    createSupportLabel: async (name: string, color: string | null) => ({ id: "label-id", name, color }),
+    updateConversationPriority: async () => { calls.push("priority"); },
+    escalateSupportConversation: async () => { calls.push("escalate"); },
+    clearSupportEscalation: async () => { calls.push("clearEscalation"); },
+    updateSupportLabel: async (labelId: string, input: { name: string; color: string | null }) => ({ id: labelId, name: input.name, color: input.color }),
+    deleteSupportLabel: async () => { calls.push("label"); },
     getMessagesByConversation: async () => orderSupportMessages(history),
     markCustomerMessagesRead: async () => { await Promise.resolve(); calls.push("mark"); history.filter(m => m.sender_type === "customer").forEach(m => { m.is_read = true; }); },
     markCustomerMessagesUnread: async () => { await Promise.resolve(); calls.push("unread"); history.filter(m => m.sender_type === "customer").forEach(m => { m.is_read = false; }); },
@@ -99,8 +107,10 @@ function harness(allowed: AdminPermissionKey[] = ["support.view", "support.reply
     },
     "@/app/lib/admin-auth": {
       verifyFreshAdminRequestPermission: async (_request: Request, key: AdminPermissionKey) => allowed.includes(key) ? { role: "test" } : null,
+      getFreshAdminRequestSession: async () => ({ userType: "staff", username: "test", displayName: "Test Admin", role: "viewer", permissions: normalizePermissions("viewer", permissionMap) }),
       forbiddenAdminResponse: () => Response.json({}, { status: 403 }),
     },
+    "@/app/lib/admin-permissions": { hasPermission },
     "@/app/lib/admin-staff": { logStaffActivity: async () => { calls.push("audit"); }, listStaff: async () => [] },
   };
   const list = loadModule("app/api/admin/support/conversations/route.ts", dependencies);
@@ -127,6 +137,7 @@ test("support.view is required for list/history and viewer cannot reply or chang
   assert.ok(hasPermission(viewer, "support.view"));
   assert.ok(!hasPermission(viewer, "support.reply"));
   assert.ok(!hasPermission(viewer, "support.close"));
+  assert.ok(!hasPermission(viewer, "support.manage"));
   const readOnly = harness(["support.view"]);
   assert.equal((await readOnly.get()).status, 200);
   assert.equal((await readOnly.reply("Denied")).status, 403);
@@ -172,6 +183,33 @@ test("reply and close permissions remain independent", async () => {
   const closeOnly = harness(["support.close"]);
   assert.equal((await closeOnly.reply("Denied")).status, 403);
   assert.equal((await closeOnly.status("closed")).status, 200);
+});
+
+test("support.manage gates assignment, labels, priority, escalation and unread management", () => {
+  const route = read("app/api/admin/support/conversations/[id]/route.ts");
+  assert.match(route, /hasPermission\(session, "support\.manage"\)/);
+  for (const action of ["mark_unread", "assign", "attach_label", "create_label", "update_label", "delete_label", "priority", "escalate", "clear_escalation"]) {
+    assert.match(route, new RegExp(`action === "${action}"`));
+  }
+  assert.match(route, /duplicateLabelExists/);
+  assert.match(route, /createSupportLabel\(cleanLabelName, labelColor\)/);
+});
+
+test("support AI route is server-side, bounded, unavailable without a key and timeout protected", () => {
+  const route = read("app/api/admin/support/ai/route.ts");
+  assert.match(route, /verifyFreshAdminRequestPermission\(request, "support\.reply"\)/);
+  assert.match(route, /OPENAI_API_KEY/);
+  assert.match(route, /OPENAI_SUPPORT_MODEL \|\| "gpt-6-luna"/);
+  assert.match(route, /new OpenAI\(\{ apiKey: process\.env\.OPENAI_API_KEY \}\)/);
+  assert.match(route, /client\.responses\.create/);
+  assert.match(route, /AbortController/);
+  assert.match(route, /20_000/);
+  assert.match(route, /"English", "Bangla", "Sinhala"/);
+  assert.match(route, /slice\(-12\)/);
+  assert.match(route, /slice\(0, 6000\)/);
+  assert.match(route, /AI is not configured/);
+  assert.match(route, /AI request failed/);
+  assert.doesNotMatch(route, /public_token|service[_-]?role|attachment binary|dbPost|dbPatch|addMessage/);
 });
 
 test("batched inbox reads page through row caps without per-conversation queries or token exposure", async () => {
@@ -239,6 +277,8 @@ test("workspace uses shared search, URL state, closed composer guard, manual ref
   assert.match(conversation, /Mark as unread/);
   assert.match(conversation, /MessageAttachments/);
   assert.match(read("components/admin-v2/views/support/AdminV2SupportComposer.tsx"), /maxLength: 4000/);
+  assert.doesNotMatch(conversation, /localStorage/);
+  assert.doesNotMatch(read("components/admin-v2/views/support/AdminV2SupportComposer.tsx"), /localStorage/);
   for (const file of ["app/admin-v2/support/page.tsx", ...["View", "Inbox", "Conversation", "Composer"].map(name => `components/admin-v2/views/support/AdminV2Support${name}.tsx`)]) {
     assert.doesNotMatch(read(file), /divider=\{<Divider|component=\{Link\}/);
   }
@@ -724,6 +764,9 @@ test("support console layout uses connected workspace, flexible history and comp
   assert.match(inbox, /supportSourceLabel/);
   assert.match(composer, /Paperclip/);
   assert.match(composer, /Saved Replies/);
+  assert.match(composer, /\/api\/admin\/support\/saved-replies/);
+  assert.match(composer, /AI Suggest/);
+  assert.match(composer, /Translate to Bangla/);
   assert.match(composer, /Insert emoji/);
   assert.match(composer, /Share product card/);
   assert.match(composer, /onProductShare/);

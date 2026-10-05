@@ -2,15 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, ButtonBase, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Popover, Stack, TextField, Tooltip, Typography } from "@mui/material";
-import { ImageIcon, MessageSquareText, PackageSearch, Paperclip, SmilePlus } from "lucide-react";
+import { ImageIcon, Languages, MessageSquareText, PackageSearch, Paperclip, SmilePlus, Sparkles } from "lucide-react";
 import { supportAttachmentAccept, validateSupportAttachmentFiles } from "@/app/lib/support-attachment-rules";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 
 type SavedReply = {
   id: string;
   title: string;
-  text: string;
-  updatedAt: string;
+  body: string;
+  updated_at: string;
+};
+
+type SupportComposerMessage = {
+  body: string;
+  sender_type: "customer" | "admin";
+  created_at: string;
 };
 
 type ProductPick = {
@@ -28,26 +34,14 @@ type ProductPick = {
 
 const emojis = ["😊", "🙏", "💜", "✨", "👍", "✅", "📦", "🌸"];
 
-function savedReplyKey() {
-  return "noromi-admin-support-saved-replies";
-}
-
-function loadSavedReplies(): SavedReply[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(savedReplyKey()) || "[]") as SavedReply[];
-    return Array.isArray(parsed) ? parsed.filter(reply => reply && typeof reply.title === "string" && typeof reply.text === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, onProductShare }: {
+export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, onProductShare, aiEnabled = false, messages = [] }: {
   busy: boolean;
   error: string;
   onReply: (body: string, files: File[]) => Promise<boolean>;
   onInternalNote?: (body: string) => Promise<boolean> | boolean;
   onProductShare?: (product: ProductPick) => Promise<boolean>;
+  aiEnabled?: boolean;
+  messages?: SupportComposerMessage[];
 }) {
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -63,13 +57,32 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
   const [editingReply, setEditingReply] = useState<SavedReply | null>(null);
   const [replyTitle, setReplyTitle] = useState("");
   const [replyText, setReplyText] = useState("");
+  const [savedLoading, setSavedLoading] = useState(false);
+  const [savedError, setSavedError] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submitting = useRef(false);
 
+  async function loadSavedReplies() {
+    setSavedLoading(true);
+    setSavedError("");
+    try {
+      const response = await fetch("/api/admin/support/saved-replies", { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok || data.error) throw new Error("saved replies unavailable");
+      setSavedReplies(Array.isArray(data.replies) ? data.replies : []);
+    } catch {
+      setSavedError("Saved replies are unavailable.");
+    } finally {
+      setSavedLoading(false);
+    }
+  }
+
   useEffect(() => {
-    setSavedReplies(loadSavedReplies());
+    void loadSavedReplies();
   }, []);
 
   useEffect(() => {
@@ -81,12 +94,6 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
     window.addEventListener("noromi-support:add-note", switchToNote);
     return () => window.removeEventListener("noromi-support:add-note", switchToNote);
   }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(savedReplyKey(), JSON.stringify(savedReplies));
-    }
-  }, [savedReplies]);
 
   useEffect(() => {
     if (!productAnchor || products.length) return;
@@ -167,25 +174,70 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
   }
 
   function startSavedReplyEdit(reply?: SavedReply) {
-    setEditingReply(reply ?? { id: "", title: "", text: "", updatedAt: "" });
+    setEditingReply(reply ?? { id: "", title: "", body: "", updated_at: "" });
     setReplyTitle(reply?.title ?? "");
-    setReplyText(reply?.text ?? "");
+    setReplyText(reply?.body ?? "");
   }
 
-  function saveReplyTemplate() {
+  async function saveReplyTemplate() {
     const title = replyTitle.trim();
     const text = replyText.trim();
     if (!title || !text) return;
-    const now = new Date().toISOString();
-    setSavedReplies(current => {
-      if (editingReply?.id) {
-        return current.map(reply => reply.id === editingReply.id ? { ...reply, title, text, updatedAt: now } : reply);
-      }
-      return [{ id: crypto.randomUUID(), title, text, updatedAt: now }, ...current];
-    });
-    setEditingReply(null);
-    setReplyTitle("");
-    setReplyText("");
+    setSavedError("");
+    try {
+      const url = editingReply?.id ? `/api/admin/support/saved-replies/${encodeURIComponent(editingReply.id)}` : "/api/admin/support/saved-replies";
+      const response = await fetch(url, {
+        method: editingReply?.id ? "PATCH" : "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ title, body: text }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) throw new Error("save failed");
+      setEditingReply(null);
+      setReplyTitle("");
+      setReplyText("");
+      await loadSavedReplies();
+    } catch {
+      setSavedError("Could not save reply template.");
+    }
+  }
+
+  async function deleteReplyTemplate(id: string) {
+    if (!window.confirm("Delete this saved reply for all admins?")) return;
+    setSavedError("");
+    try {
+      const response = await fetch(`/api/admin/support/saved-replies/${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok || data.error) throw new Error("delete failed");
+      await loadSavedReplies();
+    } catch {
+      setSavedError("Could not delete saved reply.");
+    }
+  }
+
+  async function runAi(action: "suggest" | "translate", targetLanguage = "English") {
+    if (!aiEnabled) {
+      setAiError("AI is not configured.");
+      return;
+    }
+    setAiBusy(true);
+    setAiError("");
+    try {
+      const response = await fetch("/api/admin/support/ai", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(action === "suggest"
+          ? { action, history: messages ?? [] }
+          : { action, text: body, targetLanguage }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.error || typeof data.text !== "string") throw new Error("ai failed");
+      setBody(data.text.slice(0, 4000));
+    } catch {
+      setAiError(aiEnabled ? "AI request failed." : "AI is not configured.");
+    } finally {
+      setAiBusy(false);
+    }
   }
 
   const filteredProducts = useMemo(() => {
@@ -198,7 +250,7 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
 
   const filteredReplies = useMemo(() => {
     const term = savedQuery.trim().toLowerCase();
-    return savedReplies.filter(reply => !term || [reply.title, reply.text].some(value => value.toLowerCase().includes(term)));
+    return savedReplies.filter(reply => !term || [reply.title, reply.body].some(value => value.toLowerCase().includes(term)));
   }, [savedQuery, savedReplies]);
 
   return <Box component="form" ref={formRef} onSubmit={event => {
@@ -207,6 +259,7 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
   }} sx={{ p: 1.45, borderTop: 1, borderColor: "rgba(31, 25, 56, 0.08)", bgcolor: "rgba(255, 255, 255, 0.96)", flexShrink: 0 }}>
     {error && <Typography color="error" sx={{ mb: 1, fontWeight: 700 }}>{error}</Typography>}
     {fileError && <Typography color="error" sx={{ mb: 1, fontWeight: 700 }}>{fileError}</Typography>}
+    {aiError && <Typography color="error" sx={{ mb: 1, fontWeight: 700 }}>{aiError}</Typography>}
     <Box sx={{
       p: 1.1,
       border: 1,
@@ -302,10 +355,12 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
             <PackageSearch size={15} />
             Product
           </ButtonBase>}
+          {mode === "reply" && <Tooltip title={aiEnabled ? "Draft a suggested reply" : "AI is not configured"}><span><IconButton aria-label="AI Suggest" disabled={busy || aiBusy || !aiEnabled} onClick={() => { void runAi("suggest"); }} sx={{ width: 36, height: 36, color: "#6D5B8E" }}><Sparkles size={17} /></IconButton></span></Tooltip>}
+          {mode === "reply" && <Tooltip title={aiEnabled ? "Translate draft to Bangla" : "AI is not configured"}><span><IconButton aria-label="Translate to Bangla" disabled={busy || aiBusy || !aiEnabled || !body.trim()} onClick={() => { void runAi("translate", "Bangla"); }} sx={{ width: 36, height: 36, color: "#6D5B8E" }}><Languages size={17} /></IconButton></span></Tooltip>}
         </Stack>
         <Stack direction="row" sx={{ gap: 0.75, alignItems: "center", flexShrink: 0 }}>
           <Typography variant="caption" color="text.secondary" sx={{ minWidth: 52, textAlign: "right", fontWeight: 750, whiteSpace: "nowrap" }}>{body.length} / 4000</Typography>
-          <V2Button type="submit" variant="contained" loading={busy} disabled={busy || submitting.current || (!body.trim() && !files.length)}
+          <V2Button type="submit" variant="contained" loading={busy || aiBusy} disabled={busy || submitting.current || (!body.trim() && !files.length)}
             sx={{ minWidth: 104, borderRadius: 2, py: 0.95, px: 1.4, boxShadow: "0 14px 28px rgba(124,77,255,0.25)", whiteSpace: "nowrap" }}>{mode === "note" ? "Add Note" : "Send Reply"}</V2Button>
         </Stack>
       </Stack>
@@ -344,15 +399,17 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
           <V2Button variant="contained" size="small" onClick={() => startSavedReplyEdit()}>Create</V2Button>
         </Stack>
         <Stack sx={{ gap: 0.7, maxHeight: 300, overflowY: "auto" }}>
+          {savedError && <Typography variant="body2" color="error" sx={{ p: 1 }}>{savedError}</Typography>}
+          {savedLoading && <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>Loading saved replies...</Typography>}
           {filteredReplies.length ? filteredReplies.map(reply => <Box key={reply.id} sx={{ p: 1, border: "1px solid rgba(31,25,56,0.08)", borderRadius: 1.5 }}>
             <Typography variant="body2" sx={{ fontWeight: 900 }}>{reply.title}</Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>{reply.text.slice(0, 100)}</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>{reply.body.slice(0, 100)}</Typography>
             <Stack direction="row" sx={{ gap: 0.75, mt: 0.75 }}>
-              <V2Button size="small" variant="contained" onClick={() => { insertText(reply.text); setSavedAnchor(null); }}>Use</V2Button>
+              <V2Button size="small" variant="contained" onClick={() => { insertText(reply.body); setSavedAnchor(null); }}>Use</V2Button>
               <V2Button size="small" variant="outlined" onClick={() => startSavedReplyEdit(reply)}>Edit</V2Button>
-              <V2Button size="small" variant="text" onClick={() => setSavedReplies(current => current.filter(item => item.id !== reply.id))}>Delete</V2Button>
+              <V2Button size="small" variant="text" onClick={() => { void deleteReplyTemplate(reply.id); }}>Delete</V2Button>
             </Stack>
-          </Box>) : <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>No saved replies yet. Create one to reuse it later.</Typography>}
+          </Box>) : !savedLoading && <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>No saved replies yet. Create one to reuse it later.</Typography>}
         </Stack>
       </Box>
     </Popover>
@@ -366,7 +423,7 @@ export function AdminV2SupportComposer({ busy, error, onReply, onInternalNote, o
       </DialogContent>
       <DialogActions>
         <V2Button variant="text" onClick={() => setEditingReply(null)}>Cancel</V2Button>
-        <V2Button variant="contained" onClick={saveReplyTemplate} disabled={!replyTitle.trim() || !replyText.trim()}>Save</V2Button>
+        <V2Button variant="contained" onClick={() => { void saveReplyTemplate(); }} disabled={!replyTitle.trim() || !replyText.trim()}>Save</V2Button>
       </DialogActions>
     </Dialog>
   </Box>;

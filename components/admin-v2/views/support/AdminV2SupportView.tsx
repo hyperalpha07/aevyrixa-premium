@@ -42,7 +42,7 @@ async function readJson<T>(url: string, options?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export function AdminV2SupportView({ canReply, canClose }: { canReply: boolean; canClose: boolean }) {
+export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }: { canReply: boolean; canClose: boolean; canManage: boolean; aiEnabled: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
   const query = (params.get("q") ?? "").slice(0, 160);
@@ -94,9 +94,9 @@ export function AdminV2SupportView({ canReply, canClose }: { canReply: boolean; 
     router.push(supportHref(nextQuery, nextFilter, conversation), { scroll: false });
   }
 
-  async function mutate(kind: "reply" | "status" | "markUnread" | "assign" | "attachLabel" | "removeLabel" | "createLabel", value = "", files: File[] = [], extra: Record<string, unknown> = {}) {
+  async function mutate(kind: "reply" | "note" | "status" | "markUnread" | "assign" | "priority" | "escalate" | "clearEscalation" | "attachLabel" | "removeLabel" | "createLabel" | "updateLabel" | "deleteLabel", value = "", files: File[] = [], extra: Record<string, unknown> = {}) {
     if (mutationLock.current || !detail || detail.id !== selected) return false;
-    if (kind === "reply" ? !canReply || detail.status === "closed" : !canClose) return false;
+    if (kind === "reply" ? !canReply || detail.status === "closed" : kind === "note" ? !canReply : kind === "status" ? !canClose : !canManage) return false;
     mutationLock.current = true;
     setBusy(true);
     setActionError("");
@@ -133,6 +133,15 @@ export function AdminV2SupportView({ canReply, canClose }: { canReply: boolean; 
         setNotice("Reply sent.");
         setReload(count => count + 1);
         return true;
+      } else if (kind === "note") {
+        await readJson(`${base}/${encodeURIComponent(selected)}/notes`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ body: value }),
+        });
+        setNotice("Internal note added.");
+        setReload(count => count + 1);
+        return true;
       } else {
         options = {
           method: kind === "reply" ? "POST" : "PATCH",
@@ -141,19 +150,24 @@ export function AdminV2SupportView({ canReply, canClose }: { canReply: boolean; 
             kind === "reply" ? { body: value } :
               kind === "markUnread" ? { action: "mark_unread" } :
                 kind === "assign" ? { action: "assign", staffId: extra.staffId ?? null, staffName: extra.staffName ?? null } :
+                  kind === "priority" ? { action: "priority", priority: value } :
+                    kind === "escalate" ? { action: "escalate", reason: value, staffId: extra.staffId ?? null } :
+                      kind === "clearEscalation" ? { action: "clear_escalation" } :
                   kind === "attachLabel" ? { action: "attach_label", labelId: extra.labelId } :
                     kind === "removeLabel" ? { action: "remove_label", labelId: extra.labelId } :
                       kind === "createLabel" ? { action: "create_label", labelName: value } :
+                        kind === "updateLabel" ? { action: "update_label", labelId: extra.labelId, labelName: value, color: extra.color ?? null } :
+                          kind === "deleteLabel" ? { action: "delete_label", labelId: extra.labelId } :
                         { status: value }
           ),
         };
       }
       await readJson(`${base}/${encodeURIComponent(selected)}${kind === "reply" ? "/reply" : ""}`, options);
-      setNotice(kind === "reply" ? "Reply sent." : kind === "markUnread" ? "Conversation marked unread." : kind === "assign" ? "Assignment updated." : kind === "attachLabel" || kind === "createLabel" ? "Label added." : kind === "removeLabel" ? "Label removed." : "Conversation status updated.");
+      setNotice(kind === "reply" ? "Reply sent." : kind === "markUnread" ? "Conversation marked unread." : kind === "assign" ? "Assignment updated." : kind === "priority" ? "Priority updated." : kind === "escalate" ? "Conversation escalated." : kind === "clearEscalation" ? "Escalation cleared." : kind === "attachLabel" || kind === "createLabel" ? "Label added." : kind === "removeLabel" ? "Label removed." : kind === "updateLabel" ? "Label updated." : kind === "deleteLabel" ? "Label deleted." : "Conversation status updated.");
       setReload(count => count + 1);
       return true;
     } catch {
-      setActionError(kind === "reply" ? "Could not send reply. Refresh to check conversation status before retrying." : kind === "markUnread" ? "Could not mark unread. Please try again." : kind === "assign" ? "Could not update assignment. Please try again." : kind.includes("Label") ? "Could not update labels. Please try again." : "Could not update status. Please try again.");
+      setActionError(kind === "reply" ? "Could not send reply. Refresh to check conversation status before retrying." : kind === "note" ? "Could not add internal note." : kind === "markUnread" ? "Could not mark unread. Please try again." : kind === "assign" ? "Could not update assignment. Please try again." : kind === "priority" ? "Could not update priority." : kind === "escalate" || kind === "clearEscalation" ? "Could not update escalation." : kind.includes("Label") ? "Could not update labels. Please try again." : "Could not update status. Please try again.");
       return false;
     } finally {
       mutationLock.current = false;
@@ -287,19 +301,26 @@ export function AdminV2SupportView({ canReply, canClose }: { canReply: boolean; 
           {detailError ? <Alert severity="error" sx={{ m: 2.5 }}>{detailError}</Alert> : detail && detail.id === selected ?
             <AdminV2SupportConversation conversation={detail} canReply={canReply} canClose={canClose} busy={busy || loading}
               actionError={actionError} onReply={(body, files) => mutate("reply", body, files)}
+              onInternalNote={(body) => mutate("note", body)}
               onProductShare={shareProduct}
+              aiEnabled={aiEnabled}
               onStatus={(status: ConversationStatus) => { void mutate("status", status); }}
               onRefresh={() => setReload(count => count + 1)}
               onMarkUnread={() => { void mutate("markUnread"); }} /> :
             <Box sx={{ p: 6, textAlign: "center", m: "auto" }}><Typography variant="h6">{selected && loading ? "Loading conversation..." : "Select a conversation"}</Typography><Typography color="text.secondary" sx={{ mt: 1 }}>Read the history and respond from this workspace.</Typography></Box>}
         </Card>
         <Card variant="outlined" sx={{ minWidth: 0, minHeight: 0, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 3.25, borderColor: "rgba(124, 77, 255, 0.16)", bgcolor: "rgba(255,255,255,0.96)", boxShadow: "0 22px 60px rgba(31,25,56,0.1), inset 0 1px 0 rgba(255,255,255,0.92)" }}>
-          {detail && detail.id === selected ? <AdminV2SupportContextPanel conversation={detail} canClose={canClose} busy={busy || loading}
+          {detail && detail.id === selected ? <AdminV2SupportContextPanel conversation={detail} canClose={canClose} canManage={canManage} busy={busy || loading}
             onStatus={(status: ConversationStatus) => { void mutate("status", status); }}
             onAssign={(staffId, staffName) => { void mutate("assign", "", [], { staffId, staffName }); }}
+            onPriority={(priority) => { void mutate("priority", priority); }}
+            onEscalate={(reason, staffId) => { void mutate("escalate", reason, [], { staffId }); }}
+            onClearEscalation={() => { void mutate("clearEscalation"); }}
             onAttachLabel={(labelId) => { void mutate("attachLabel", "", [], { labelId }); }}
             onRemoveLabel={(labelId) => { void mutate("removeLabel", "", [], { labelId }); }}
-            onCreateLabel={(labelName) => { void mutate("createLabel", labelName); }} /> :
+            onCreateLabel={(labelName) => { void mutate("createLabel", labelName); }}
+            onUpdateLabel={(labelId, name, color) => { void mutate("updateLabel", name, [], { labelId, color }); }}
+            onDeleteLabel={(labelId) => { void mutate("deleteLabel", "", [], { labelId }); }} /> :
             <Box sx={{ p: 2.5 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Customer context</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.6 }}>Select a conversation to see source, timeline, status, and customer details.</Typography>
