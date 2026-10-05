@@ -83,8 +83,11 @@ test("Permissions workspace uses existing permission source of truth", () => {
   assert.match(query, /roleDefaultPermissions/);
   assert.match(view, /permissionLabels/);
   assert.equal(permissionLabels["orders.view"], "View orders");
+  assert.equal(permissionLabels["support.manage"], "Manage support assignment, labels, saved replies, priority, and escalation");
   assert.ok(permissionGroups.some((group) => group.title === "Support"));
   assert.ok(roleDefaultPermissions.manager.includes("support.reply"));
+  assert.ok(roleDefaultPermissions.manager.includes("support.manage"));
+  assert.ok(roleDefaultPermissions.support_staff.includes("support.manage"));
 });
 
 test("Owner is treated as full protected access", () => {

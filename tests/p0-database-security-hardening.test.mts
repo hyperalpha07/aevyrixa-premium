@@ -5,6 +5,8 @@ import test from "node:test";
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migrationPath = "supabase/migrations/20261005093000_p0_database_access_security_hardening.sql";
 const migration = read(migrationPath);
+const supportFinalizationMigrationPath = "supabase/migrations/20261006090000_support_finalization.sql";
+const supportFinalizationMigration = read(supportFinalizationMigrationPath);
 
 const requiredTables = [
   "products",
@@ -258,4 +260,30 @@ test("P0 migration is access-control only and does not mutate business rows or b
   assert.doesNotMatch(migration, /\btruncate\s+public\./i);
   assert.doesNotMatch(migration, /\binsert\s+into\s+public\./i);
   assert.doesNotMatch(migration, /AEV\s*->\s*NOR|rename\s+.*\bAEV\b/i);
+});
+
+test("Support finalization migration grants only the required service-role Support management privileges", () => {
+  assert.ok(existsSync(new URL(`../${supportFinalizationMigrationPath}`, import.meta.url)));
+
+  for (const table of [
+    "support_conversations",
+    "support_internal_notes",
+    "support_conversation_labels",
+    "support_labels",
+    "support_saved_replies",
+  ]) {
+    assertContainsSql(supportFinalizationMigration, `revoke all on table public.${table} from public, anon, authenticated, service_role;`);
+    assertContainsSql(supportFinalizationMigration, `alter table public.${table} enable row level security;`);
+    assertContainsSql(supportFinalizationMigration, `drop policy if exists ${table}_service_role_all on public.${table};`);
+    assertContainsSql(supportFinalizationMigration, `create policy ${table}_service_role_all on public.${table} for all to service_role using (true) with check (true);`);
+  }
+
+  assertContainsSql(supportFinalizationMigration, "grant select, insert, update on table public.support_conversations to service_role;");
+  assertContainsSql(supportFinalizationMigration, "grant select, insert on table public.support_internal_notes to service_role;");
+  assertContainsSql(supportFinalizationMigration, "grant select, insert, delete on table public.support_conversation_labels to service_role;");
+  assertContainsSql(supportFinalizationMigration, "grant select, insert, update, delete on table public.support_labels to service_role;");
+  assertContainsSql(supportFinalizationMigration, "grant select, insert, update, delete on table public.support_saved_replies to service_role;");
+  assert.doesNotMatch(supportFinalizationMigration, /grant\s+all\s+on\s+table/i);
+  assert.doesNotMatch(supportFinalizationMigration, /grant\s+[^;]*(?:truncate|trigger|references)[^;]*\s+on\s+table/i);
+  assert.doesNotMatch(supportFinalizationMigration, /grant\s+(?:select|insert|update|delete|all)[^;]+to\s+(?:anon|authenticated)\b/i);
 });
