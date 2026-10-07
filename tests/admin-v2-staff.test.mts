@@ -65,10 +65,14 @@ test("Staff view uses real API, full permission map and role defaults", () => {
   assert.ok(roleDefaultPermissions.manager.includes("staff.manage") || roleDefaultPermissions.manager.includes("activity.view"));
 });
 
-test("Activity logs are read-only and do not render secret metadata", () => {
+test("Activity logs sanitize metadata while Staff security uses real invite/reset/session APIs", () => {
   const query = read("lib/admin-v2/staff/staff-query.ts");
   const view = read("components/admin-v2/views/staff/AdminV2StaffView.tsx");
   assert.match(query, /password\|secret\|token\|hash\|key/i);
   assert.match(view, /ActivityLog/);
-  assert.doesNotMatch(view, /Delete staff|Invite by email|2FA|revoke/i);
+  assert.match(view, /Create Invite Link/);
+  assert.match(view, /\/api\/admin\/staff\/invites/);
+  assert.match(view, /Create Reset Link/);
+  assert.match(view, /\/api\/admin\/staff\/\$\{encodeURIComponent\(member\.id\)\}\/sessions/);
+  assert.doesNotMatch(view, /Email sent|Invite by email|2FA enabled/i);
 });

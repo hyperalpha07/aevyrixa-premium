@@ -23,6 +23,8 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,7 +43,7 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
 
       if (!response.ok) {
         if (response.status === 401) {
-          setError("Invalid username or password.");
+          setError("Invalid credentials.");
         } else if (response.status === 404) {
           setError("Login service is unavailable. Please restart the server or contact support.");
         } else {
@@ -50,6 +52,37 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
         return;
       }
 
+      if (isRecord(payload) && payload.mfaRequired === true) {
+        setMfaRequired(true);
+        setPassword("");
+        return;
+      }
+
+      router.replace(isRecord(payload) && typeof payload.next === "string" ? payload.next : nextPath);
+      router.refresh();
+    } catch {
+      setError("Server or network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitMfa = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/admin/login/mfa", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code: mfaCode, next: nextPath }),
+      });
+      const payload = (await response.json().catch(() => null)) as unknown;
+      if (!response.ok) {
+        setError(response.status === 429 ? "Verification failed. Please retry later." : "Verification failed.");
+        return;
+      }
       router.replace(isRecord(payload) && typeof payload.next === "string" ? payload.next : nextPath);
       router.refresh();
     } catch {
@@ -66,7 +99,7 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
         <div className="absolute right-[-18%] top-[22%] h-[360px] w-[360px] rounded-full bg-fuchsia-400/14 blur-[150px]" />
       </div>
       <form
-        onSubmit={submitLogin}
+        onSubmit={mfaRequired ? submitMfa : submitLogin}
         className="w-full max-w-md rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5 shadow-[0_0_70px_rgba(34,211,238,0.10)] backdrop-blur-2xl sm:p-7"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10 text-cyan-100">
@@ -79,10 +112,12 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
           Admin login
         </h1>
         <p className="mt-3 text-sm leading-6 text-white/56">
-          Use the admin username and password configured in the server environment.
+          {mfaRequired
+            ? "Enter a current authenticator code or one unused recovery code."
+            : "Use the admin username and password configured in the server environment."}
         </p>
 
-        <label className="mt-6 block">
+        {!mfaRequired ? <><label className="mt-6 block">
           <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/45">
             Username
           </span>
@@ -110,7 +145,21 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
             placeholder="Admin password"
             required
           />
-        </label>
+        </label></> : <label className="mt-6 block">
+          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-white/45">
+            Verification code
+          </span>
+          <input
+            value={mfaCode}
+            onChange={(event) => setMfaCode(event.target.value)}
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            className="w-full rounded-2xl border border-white/10 bg-black/28 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-cyan-200/45"
+            placeholder="6-digit code or recovery code"
+            required
+          />
+        </label>}
 
         {error && (
           <p className="mt-3 rounded-2xl border border-rose-200/20 bg-rose-200/10 px-3 py-2 text-sm text-rose-100">
@@ -123,16 +172,30 @@ export default function AdminLoginForm({ nextPath }: { nextPath: string }) {
           disabled={isSubmitting}
           className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-200 to-fuchsia-200 px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.01] disabled:pointer-events-none disabled:opacity-60"
         >
-          {isSubmitting ? "Checking..." : "Enter Admin"}
+          {isSubmitting ? "Checking..." : mfaRequired ? "Verify and Enter Admin" : "Enter Admin"}
         </button>
 
-        <Link
+        {mfaRequired ? (
+          <button
+            type="button"
+            onClick={() => {
+              setMfaRequired(false);
+              setMfaCode("");
+              setError("");
+            }}
+            className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-medium text-white/70 transition hover:border-cyan-200/35 hover:text-white"
+          >
+            Back to credentials
+          </button>
+        ) : null}
+
+        {!mfaRequired ? <Link
           href="/"
           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-medium text-white/70 transition hover:border-cyan-200/35 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Store
-        </Link>
+        </Link> : null}
       </form>
     </main>
   );

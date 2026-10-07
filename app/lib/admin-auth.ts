@@ -7,8 +7,15 @@ import {
   type AdminSessionUser,
 } from "@/app/lib/admin-permissions";
 import { getStaffById, logStaffActivity } from "@/app/lib/admin-staff";
+import {
+  adminSessionInfrastructureReady,
+  createPersistentAdminSession,
+  getPersistentAdminSession,
+  revokeAdminSession,
+} from "@/app/lib/admin-identity-access";
 
 export const ADMIN_SESSION_COOKIE = "aevyrixa_admin_session";
+export const ADMIN_MFA_CHALLENGE_COOKIE = "aevyrixa_admin_mfa";
 
 const sessionMaxAgeSeconds = 60 * 60 * 8;
 const sessionVersion = "v1";
@@ -91,6 +98,33 @@ export function createAdminSessionToken(user: string | AdminSessionUser) {
   if (!signature) return null;
 
   return `${payload}.${signature}`;
+}
+
+export function adminMfaChallengeCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 5 * 60,
+  };
+}
+
+export async function createPersistentAdminSessionToken(
+  user: AdminSessionUser,
+  request?: Request
+) {
+  try {
+    return await createPersistentAdminSession({
+      principalType: user.userType,
+      username: user.username,
+      staffId: user.staffId ?? null,
+      userAgent: request?.headers.get("user-agent"),
+    });
+  } catch (error) {
+    if (!(await adminSessionInfrastructureReady())) return createAdminSessionToken(user);
+    throw error;
+  }
 }
 
 export function getAdminSessionFromToken(token?: string | null): AdminSessionUser | null {
@@ -182,14 +216,13 @@ export function verifyAdminSessionToken(token?: string | null) {
 
 export async function hasAdminSession() {
   const cookieStore = await cookies();
-  return verifyAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  return Boolean(await getSessionFromTokenWithCutover(cookieStore.get(ADMIN_SESSION_COOKIE)?.value));
 }
 
 export async function getAdminSession() {
   const cookieStore = await cookies();
-  return refreshStaffSession(
-    getAdminSessionFromToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value)
-  );
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+  return getSessionFromTokenWithCutover(token);
 }
 
 export function verifyAdminRequest(request: Request) {
@@ -201,7 +234,8 @@ export function getAdminRequestSession(request: Request) {
 }
 
 export async function getFreshAdminRequestSession(request: Request) {
-  return refreshStaffSession(getAdminRequestSession(request));
+  const token = readCookie(request, ADMIN_SESSION_COOKIE);
+  return getSessionFromTokenWithCutover(token);
 }
 
 export function verifyAdminRequestPermission(
@@ -267,6 +301,43 @@ async function refreshStaffSession(session: AdminSessionUser | null) {
 
   return {
     userType: "staff" as const,
+    staffId: staff.id,
+    username: staff.username,
+    displayName: staff.name,
+    role: staff.role,
+    permissions: staff.permissions,
+  };
+}
+
+async function getSessionFromTokenWithCutover(token?: string | null) {
+  const persistent = await getAdminSessionFromPersistentToken(token);
+  if (persistent) return persistent;
+  if (await adminSessionInfrastructureReady()) return null;
+  return refreshStaffSession(getAdminSessionFromToken(token));
+}
+
+async function getAdminSessionFromPersistentToken(token?: string | null): Promise<AdminSessionUser | null> {
+  const persistent = await getPersistentAdminSession(token).catch(() => null);
+  if (!persistent) return null;
+  if (persistent.principal_type === "owner") {
+    const credentials = getAdminCredentials();
+    if (!credentials || persistent.username !== credentials.username) return null;
+    return {
+      userType: "owner",
+      username: credentials.username,
+      displayName: "Owner",
+      role: "owner",
+      permissions: normalizePermissions("owner", {}),
+    };
+  }
+  if (!persistent.staff_id) return null;
+  const staff = await getStaffById(persistent.staff_id).catch(() => null);
+  if (!staff) {
+    await revokeAdminSession(persistent.id, "inactive_or_missing_staff").catch(() => null);
+    return null;
+  }
+  return {
+    userType: "staff",
     staffId: staff.id,
     username: staff.username,
     displayName: staff.name,

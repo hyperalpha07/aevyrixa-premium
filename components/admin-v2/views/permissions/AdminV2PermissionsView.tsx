@@ -548,6 +548,24 @@ function PermissionDetail({
 }
 
 function StaffOverridesView({ overrides }: { overrides: StaffPermissionOverride[] }) {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  async function saveOverride(staffId: string, permission: AdminPermission, value: "inherit" | "allow" | "deny") {
+    setMessage("");
+    setError("");
+    const overridesPayload = value === "inherit" ? { [permission]: null } : { [permission]: value === "allow" };
+    const response = await fetch(`/api/admin/staff/${encodeURIComponent(staffId)}/permissions`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ overrides: overridesPayload }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError((data.errors ?? ["Permission override was rejected."]).join(" "));
+      return;
+    }
+    setMessage("Permission override saved. Refresh to view the updated effective access.");
+  }
   return (
     <V2Card>
       <Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: { md: "center" }, justifyContent: "space-between", mb: 2 }}>
@@ -557,6 +575,8 @@ function StaffOverridesView({ overrides }: { overrides: StaffPermissionOverride[
         </Box>
         <V2Button href="/admin-v2/staff" variant="outlined">Manage Staff Access</V2Button>
       </Stack>
+      {message ? <Alert severity="success" sx={{ mb: 1.5 }} onClose={() => setMessage("")}>{message}</Alert> : null}
+      {error ? <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setError("")}>{error}</Alert> : null}
 
       <Stack sx={{ gap: 1.25 }}>
         {overrides.map((override) => (
@@ -576,6 +596,29 @@ function StaffOverridesView({ overrides }: { overrides: StaffPermissionOverride[
               <OverrideList title="Granted beyond default" permissions={override.grantedBeyondDefault} positive />
               <OverrideList title="Removed from default" permissions={override.removedFromDefault} />
             </Box>
+            <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap", mt: 1.4 }}>
+              <TextField select size="small" label="Permission" defaultValue="dashboard.view" sx={{ minWidth: 220 }}>
+                {adminPermissionKeys.map(permission => <MenuItem key={permission} value={permission}>{permissionLabels[permission]}</MenuItem>)}
+              </TextField>
+              <V2Button size="small" variant="outlined" onClick={(event) => {
+                const root = event.currentTarget.parentElement;
+                const input = root?.querySelector("input") as HTMLInputElement | null;
+                const permission = (input?.value || "dashboard.view") as AdminPermission;
+                void saveOverride(override.staff.id, permission, "inherit");
+              }}>Set Inherit</V2Button>
+              <V2Button size="small" variant="outlined" onClick={(event) => {
+                const root = event.currentTarget.parentElement;
+                const input = root?.querySelector("input") as HTMLInputElement | null;
+                const permission = (input?.value || "dashboard.view") as AdminPermission;
+                void saveOverride(override.staff.id, permission, "allow");
+              }}>Allow</V2Button>
+              <V2Button size="small" variant="outlined" onClick={(event) => {
+                const root = event.currentTarget.parentElement;
+                const input = root?.querySelector("input") as HTMLInputElement | null;
+                const permission = (input?.value || "dashboard.view") as AdminPermission;
+                void saveOverride(override.staff.id, permission, "deny");
+              }}>Deny</V2Button>
+            </Stack>
           </Box>
         ))}
         {!overrides.length ? (

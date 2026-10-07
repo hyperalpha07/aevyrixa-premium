@@ -35,18 +35,23 @@ export const adminPermissionKeys = [
   "support.manage",
   "analytics.view",
   "staff.manage",
+  "roles.manage",
+  "permissions.manage",
+  "security.manage",
   "activity.view",
 ] as const;
 
 export type AdminPermission = (typeof adminPermissionKeys)[number];
 
-export type AdminRole =
+export type SystemAdminRole =
   | "owner"
   | "manager"
   | "order_staff"
   | "product_staff"
   | "support_staff"
   | "viewer";
+
+export type AdminRole = SystemAdminRole | (string & {});
 
 export type AdminSessionUser = {
   userType: "owner" | "staff";
@@ -77,7 +82,13 @@ export type AdminSection =
 export const blockedPermissionMessage =
   "You do not have permission to perform this action.";
 
-export const roleLabels: Record<AdminRole, string> = {
+export const systemStaffRoleKeys = ["manager", "order_staff", "product_staff", "support_staff", "viewer"] as const;
+export const protectedAdminRoleKeys = ["owner", ...systemStaffRoleKeys] as const;
+
+export type PermissionOverrideValue = true | false | null;
+export type PermissionOverrides = Partial<Record<AdminPermission, PermissionOverrideValue>>;
+
+export const roleLabels: Record<string, string> = {
   owner: "Owner",
   manager: "Manager",
   order_staff: "Order Staff",
@@ -123,6 +134,9 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "support.manage": "Manage support assignment, labels, saved replies, priority, and escalation",
   "analytics.view": "View analytics",
   "staff.manage": "Manage staff",
+  "roles.manage": "Manage roles",
+  "permissions.manage": "Manage permission policy",
+  "security.manage": "Manage admin sessions and MFA",
   "activity.view": "View activity logs",
 };
 
@@ -177,11 +191,20 @@ export const permissionGroups = [
   },
   {
     title: "Admin",
-    permissions: ["dashboard.view", "customers.view", "staff.manage", "activity.view", "analytics.view"],
+    permissions: [
+      "dashboard.view",
+      "customers.view",
+      "staff.manage",
+      "roles.manage",
+      "permissions.manage",
+      "security.manage",
+      "activity.view",
+      "analytics.view",
+    ],
   },
 ] satisfies Array<{ title: string; permissions: AdminPermission[] }>;
 
-export const roleDefaultPermissions: Record<AdminRole, AdminPermission[]> = {
+export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
   owner: [...adminPermissionKeys],
   manager: [
     "dashboard.view",
@@ -262,6 +285,10 @@ export function normalizeRole(value: unknown): AdminRole {
     return value;
   }
 
+  if (typeof value === "string" && /^[a-z][a-z0-9_]{1,63}$/.test(value) && value !== "owner") {
+    return value as AdminRole;
+  }
+
   return "viewer";
 }
 
@@ -269,7 +296,10 @@ export function normalizePermissions(
   role: AdminRole,
   permissions: unknown
 ): Record<AdminPermission, boolean> {
-  const defaults = new Set(roleDefaultPermissions[role]);
+  const defaultList = Object.prototype.hasOwnProperty.call(roleDefaultPermissions, role)
+    ? roleDefaultPermissions[role as SystemAdminRole]
+    : [];
+  const defaults = new Set(defaultList);
   const source =
     typeof permissions === "object" && permissions !== null && !Array.isArray(permissions)
       ? (permissions as Record<string, unknown>)
@@ -278,6 +308,31 @@ export function normalizePermissions(
   return adminPermissionKeys.reduce((result, key) => {
     result[key] =
       role === "owner" ? true : typeof source[key] === "boolean" ? source[key] : defaults.has(key);
+    return result;
+  }, {} as Record<AdminPermission, boolean>);
+}
+
+export function normalizePermissionOverrides(value: unknown): PermissionOverrides {
+  const source =
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+
+  return adminPermissionKeys.reduce((result, key) => {
+    if (source[key] === true || source[key] === false || source[key] === null) {
+      result[key] = source[key] as PermissionOverrideValue;
+    }
+    return result;
+  }, {} as PermissionOverrides);
+}
+
+export function applyPermissionOverrides(
+  base: Record<AdminPermission, boolean>,
+  overrides: PermissionOverrides
+) {
+  return adminPermissionKeys.reduce((result, key) => {
+    const override = overrides[key];
+    result[key] = override === true ? true : override === false ? false : base[key] === true;
     return result;
   }, {} as Record<AdminPermission, boolean>);
 }
