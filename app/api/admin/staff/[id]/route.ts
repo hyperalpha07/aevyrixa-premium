@@ -4,6 +4,11 @@ import {
   unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
 import {
+  actorCanGrantPermissions,
+  getAdminRole,
+  revokeStaffSessions,
+} from "@/app/lib/admin-identity-access";
+import {
   adminPermissionKeys,
   hasPermission,
   normalizePermissions,
@@ -84,11 +89,20 @@ export async function PATCH(
   }
 
   const role = payload.role === undefined ? undefined : normalizeRole(payload.role);
+  if (session.staffId === id && (role !== undefined || payload.permissions !== undefined || typeof payload.isActive === "boolean")) {
+    return Response.json({ errors: ["You cannot change your own role, permissions, or active status."] }, { status: 409 });
+  }
   if (role === "owner") {
     return Response.json(
       { errors: ["Owner role is reserved for the environment admin login."] },
       { status: 400 }
     );
+  }
+  if (role) {
+    const roleRecord = await getAdminRole(role);
+    if (!roleRecord || roleRecord.is_active === false) {
+      return Response.json({ errors: ["Selected role is not available."] }, { status: 400 });
+    }
   }
 
   const password = text(payload.password);
@@ -98,6 +112,13 @@ export async function PATCH(
       { status: 400 }
     );
   }
+  if (password && !hasPermission(session, "security.manage")) return forbiddenAdminResponse();
+  const nextPermissions = role
+    ? permissionsFromPayload(role, payload.permissions)
+    : payload.permissions && isRecord(payload.permissions)
+      ? permissionsFromPayload("viewer", payload.permissions)
+      : undefined;
+  if (nextPermissions && !actorCanGrantPermissions(session, nextPermissions)) return forbiddenAdminResponse();
 
   try {
     const staff = await updateStaff(id, {
@@ -105,15 +126,14 @@ export async function PATCH(
       username: payload.username === undefined ? undefined : text(payload.username),
       email: payload.email === undefined ? undefined : text(payload.email),
       role,
-      permissions: role
-        ? permissionsFromPayload(role, payload.permissions)
-        : payload.permissions && isRecord(payload.permissions)
-          ? permissionsFromPayload("viewer", payload.permissions)
-          : undefined,
+      permissions: nextPermissions,
       password: password || undefined,
       isActive:
         typeof payload.isActive === "boolean" ? payload.isActive : undefined,
     });
+    if (password || typeof payload.isActive === "boolean" && payload.isActive === false) {
+      await revokeStaffSessions(id, password ? "password_changed" : "staff_deactivated").catch(() => null);
+    }
     await logStaffActivity({
       actor: session,
       action: "staff.updated",

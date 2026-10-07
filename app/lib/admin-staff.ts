@@ -1,5 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import {
+  applyPermissionOverrides,
+  adminPermissionKeys,
   normalizePermissions,
   normalizeRole,
   type AdminPermission,
@@ -9,6 +11,7 @@ import {
 
 const STAFF_TABLE = "admin_staff";
 const ACTIVITY_TABLE = "admin_staff_activity_logs";
+const ROLE_TABLE = "admin_roles";
 
 export type AdminStaffRecord = {
   id: string;
@@ -17,6 +20,7 @@ export type AdminStaffRecord = {
   username: string;
   role: AdminRole;
   permissions: Record<AdminPermission, boolean>;
+  permissionOverrides?: Partial<Record<AdminPermission, true | false | null>>;
   isActive: boolean;
   createdBy?: string;
   lastLoginAt?: string;
@@ -43,6 +47,7 @@ type StaffRow = {
   password_hash?: string | null;
   role?: string | null;
   permissions?: unknown;
+  permission_overrides?: unknown;
   is_active?: boolean | null;
   created_by?: string | null;
   last_login_at?: string | null;
@@ -112,15 +117,68 @@ async function staffStoreError(response: Response, action: string) {
   );
 }
 
-function mapStaff(row: StaffRow): AdminStaffRecord {
+function normalizePermissionMap(value: unknown): Record<AdminPermission, boolean> {
+  const source =
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+
+  return adminPermissionKeys.reduce((result, key) => {
+    result[key] = source[key] === true;
+    return result;
+  }, {} as Record<AdminPermission, boolean>);
+}
+
+async function rolePermissionMap() {
+  if (!hasSupabaseConfig()) return new Map<string, Record<AdminPermission, boolean>>();
+
+  const response = await fetch(
+    supabaseEndpoint(`${ROLE_TABLE}?select=key,permissions,is_active`),
+    { headers: supabaseHeaders(), cache: "no-store" }
+  );
+
+  if (!response.ok) return new Map<string, Record<AdminPermission, boolean>>();
+  const rows = (await response.json()) as Array<{ key?: string | null; permissions?: unknown; is_active?: boolean | null }>;
+  return new Map(
+    rows
+      .filter((row) => row.key && row.is_active !== false)
+      .map((row) => [String(row.key), normalizePermissionMap(row.permissions)])
+  );
+}
+
+function basePermissionsForRole(
+  role: AdminRole,
+  staffPermissions: unknown,
+  roles: Map<string, Record<AdminPermission, boolean>>
+) {
+  const base = roles.get(role) ?? normalizePermissions(role, {});
+  const source =
+    typeof staffPermissions === "object" && staffPermissions !== null && !Array.isArray(staffPermissions)
+      ? (staffPermissions as Record<string, unknown>)
+      : {};
+
+  return adminPermissionKeys.reduce((result, key) => {
+    result[key] =
+      role === "owner" ? true : typeof source[key] === "boolean" ? source[key] : base[key] === true;
+    return result;
+  }, {} as Record<AdminPermission, boolean>);
+}
+
+function mapStaff(row: StaffRow, roles = new Map<string, Record<AdminPermission, boolean>>()): AdminStaffRecord {
   const role = normalizeRole(row.role);
+  const base = basePermissionsForRole(role, row.permissions, roles);
+  const overrides =
+    typeof row.permission_overrides === "object" && row.permission_overrides !== null && !Array.isArray(row.permission_overrides)
+      ? row.permission_overrides as Partial<Record<AdminPermission, true | false | null>>
+      : {};
   return {
     id: row.id ?? "",
     name: row.name ?? "",
     email: row.email ?? "",
     username: row.username ?? "",
     role,
-    permissions: normalizePermissions(role, row.permissions),
+    permissions: applyPermissionOverrides(base, overrides),
+    permissionOverrides: overrides,
     isActive: row.is_active !== false,
     createdBy: row.created_by ?? undefined,
     lastLoginAt: row.last_login_at ?? undefined,
@@ -176,12 +234,13 @@ export async function listStaff() {
   }
 
   const response = await fetch(
-    supabaseEndpoint(`${STAFF_TABLE}?select=id,name,email,username,role,permissions,is_active,created_by,last_login_at,created_at,updated_at&order=created_at.desc`),
+    supabaseEndpoint(`${STAFF_TABLE}?select=id,name,email,username,role,permissions,permission_overrides,is_active,created_by,last_login_at,created_at,updated_at&order=created_at.desc`),
     { headers: supabaseHeaders(), cache: "no-store" }
   );
 
   if (!response.ok) throw await staffStoreError(response, "list");
-  return ((await response.json()) as StaffRow[]).map(mapStaff);
+  const roles = await rolePermissionMap();
+  return ((await response.json()) as StaffRow[]).map((row) => mapStaff(row, roles));
 }
 
 export async function getStaffById(id: string) {
@@ -189,7 +248,7 @@ export async function getStaffById(id: string) {
 
   const response = await fetch(
     supabaseEndpoint(
-      `${STAFF_TABLE}?id=eq.${encodeURIComponent(id)}&select=id,name,email,username,role,permissions,is_active,created_by,last_login_at,created_at,updated_at&limit=1`
+      `${STAFF_TABLE}?id=eq.${encodeURIComponent(id)}&select=id,name,email,username,role,permissions,permission_overrides,is_active,created_by,last_login_at,created_at,updated_at&limit=1`
     ),
     { headers: supabaseHeaders(), cache: "no-store" }
   );
@@ -197,7 +256,7 @@ export async function getStaffById(id: string) {
   if (!response.ok) return null;
   const row = ((await response.json()) as StaffRow[])[0];
   if (!row || row.is_active === false) return null;
-  return mapStaff(row);
+  return mapStaff(row, await rolePermissionMap());
 }
 
 export async function listActivityLogs() {
@@ -247,7 +306,7 @@ export async function createStaff(input: {
   });
 
   if (!response.ok) throw await staffStoreError(response, "create");
-  return mapStaff(((await response.json()) as StaffRow[])[0] ?? {});
+  return mapStaff(((await response.json()) as StaffRow[])[0] ?? {}, await rolePermissionMap());
 }
 
 export async function updateStaff(
@@ -285,7 +344,7 @@ export async function updateStaff(
   );
 
   if (!response.ok) throw await staffStoreError(response, "update");
-  return mapStaff(((await response.json()) as StaffRow[])[0] ?? {});
+  return mapStaff(((await response.json()) as StaffRow[])[0] ?? {}, await rolePermissionMap());
 }
 
 export async function authenticateStaff(username: string, password: string) {
@@ -309,7 +368,7 @@ export async function authenticateStaff(username: string, password: string) {
     return null;
   }
 
-  const staff = mapStaff(row);
+  const staff = mapStaff(row, await rolePermissionMap());
   await updateStaff(staff.id, { isActive: true }).catch(() => null);
   await fetch(
     supabaseEndpoint(`${STAFF_TABLE}?id=eq.${encodeURIComponent(staff.id)}`),

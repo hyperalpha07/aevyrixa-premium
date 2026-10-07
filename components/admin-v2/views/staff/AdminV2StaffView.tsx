@@ -49,6 +49,15 @@ type StaffPayload = {
   errors?: string[];
 };
 
+type InviteRecord = {
+  id: string;
+  email: string;
+  role_key: string;
+  expires_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+};
+
 const editableRoles: Array<Exclude<AdminRole, "owner">> = ["manager", "order_staff", "product_staff", "support_staff", "viewer"];
 const roleFilters: Array<[StaffRoleFilter, string]> = [["all", "All Roles"], ...editableRoles.map(role => [role, roleLabels[role]] as [StaffRoleFilter, string])];
 const statusFilters: Array<[StaffStatusFilter, string]> = [["all", "All"], ["active", "Active"], ["inactive", "Inactive"]];
@@ -123,6 +132,7 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [invites, setInvites] = useState<InviteRecord[]>([]);
 
   async function load() {
     setLoading(true);
@@ -132,6 +142,13 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
       setStaff(data.staff ?? []);
       setActivityLogs(data.activityLogs ?? []);
       setSelectedId(current => current || data.staff?.[0]?.id || "");
+      if (permissions.canManageStaff) {
+        const inviteResponse = await fetch("/api/admin/staff/invites", { cache: "no-store" });
+        if (inviteResponse.ok) {
+          const inviteData = await inviteResponse.json();
+          setInvites(inviteData.invites ?? []);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Staff data unavailable.");
     } finally {
@@ -214,11 +231,49 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
     }
   }
 
+  async function createInviteLink() {
+    const email = window.prompt("Email for the invite link");
+    if (!email) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/staff/invites", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, roleKey: "viewer", permissionOverrides: {} }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error((data.errors ?? ["Could not create invite link."]).join(" "));
+      await navigator.clipboard?.writeText(data.inviteLink ?? "");
+      setNotice("Invite link created and copied. No email was sent.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create invite link.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function revokeInvite(id: string) {
+    if (!window.confirm("Revoke this invite link?")) return;
+    const response = await fetch(`/api/admin/staff/invites/${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setError((data.errors ?? ["Could not revoke invite."]).join(" "));
+      return;
+    }
+    setNotice("Invite revoked.");
+    await load();
+  }
+
   return <>
     <V2PageHeader
       title="Staff"
       description="Manage team access, roles and account security."
-      actions={permissions.canManageStaff ? <V2Button variant="contained" startIcon={<UserPlus size={16} />} onClick={openCreate}>Add Staff</V2Button> : undefined}
+      actions={permissions.canManageStaff ? <Stack direction="row" sx={{ gap: 1 }}>
+        <V2Button variant="outlined" startIcon={<UserPlus size={16} />} onClick={createInviteLink}>Create Invite Link</V2Button>
+        <V2Button variant="contained" startIcon={<UserPlus size={16} />} onClick={openCreate}>Add Staff</V2Button>
+      </Stack> : undefined}
     />
 
     {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
@@ -282,8 +337,29 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
             {!filtered.length ? <Box sx={{ py: 7, textAlign: "center" }}><Typography variant="h6">No staff found</Typography><Typography color="text.secondary">Try another search, role, or status.</Typography></Box> : null}
           </Box>
 
-          <StaffDetails member={selected} canManage={permissions.canManageStaff} onEdit={selected ? () => openEdit(selected) : undefined} />
+          <StaffDetails member={selected} canManage={permissions.canManageStaff} onEdit={selected ? () => openEdit(selected) : undefined} onNotice={setNotice} onError={setError} />
         </Box>
+
+        {permissions.canManageStaff ? <V2Card sx={{ mt: 2 }}>
+          <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 950 }}>Invite Links</Typography>
+            <V2Button size="small" variant="outlined" onClick={createInviteLink}>Create Invite Link</V2Button>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>Links are generated once. No email is sent by this workspace.</Typography>
+          <Stack sx={{ gap: 1 }}>
+            {invites.map(invite => <Stack key={invite.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, border: 1, borderColor: "divider", borderRadius: 2, p: 1 }}>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 850 }}>{invite.email}</Typography>
+                <Typography variant="caption" color="text.secondary">{invite.role_key} · expires {dateLabel(invite.expires_at)}</Typography>
+              </Box>
+              <Stack direction="row" sx={{ gap: 0.75 }}>
+                <Chip size="small" label={invite.accepted_at ? "Accepted" : invite.revoked_at ? "Revoked" : "Open"} color={invite.accepted_at ? "success" : invite.revoked_at ? "default" : "warning"} />
+                {!invite.accepted_at && !invite.revoked_at ? <V2Button size="small" variant="outlined" onClick={() => revokeInvite(invite.id)}>Revoke Invite</V2Button> : null}
+              </Stack>
+            </Stack>)}
+            {!invites.length ? <Typography variant="body2" color="text.secondary">No active invite links.</Typography> : null}
+          </Stack>
+        </V2Card> : null}
       </> : <ActivityLog logs={activityLogs} />}
     </V2Card>
 
@@ -314,8 +390,55 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
   </>;
 }
 
-function StaffDetails({ member, canManage, onEdit }: { member?: AdminStaffRecord; canManage: boolean; onEdit?: () => void }) {
+function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member?: AdminStaffRecord; canManage: boolean; onEdit?: () => void; onNotice: (message: string) => void; onError: (message: string) => void }) {
+  const [sessions, setSessions] = useState<Array<{ id: string; created_at: string; last_seen_at: string; expires_at: string; revoked_at: string | null }>>([]);
+  const [securityLoading, setSecurityLoading] = useState(false);
+  useEffect(() => {
+    if (!member || !canManage) return;
+    fetch(`/api/admin/staff/${encodeURIComponent(member.id)}/sessions`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setSessions(data?.sessions ?? []))
+      .catch(() => setSessions([]));
+  }, [member, canManage]);
   if (!member) return <V2Card><Typography variant="subtitle2">Select a staff member</Typography></V2Card>;
+  async function createResetLink() {
+    if (!member) return;
+    setSecurityLoading(true);
+    try {
+      const response = await fetch(`/api/admin/staff/${encodeURIComponent(member.id)}/reset-link`, { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) throw new Error((data.errors ?? ["Could not create reset link."]).join(" "));
+      await navigator.clipboard?.writeText(data.resetLink ?? "");
+      onNotice("Reset link created and copied. No email was sent.");
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Could not create reset link.");
+    } finally {
+      setSecurityLoading(false);
+    }
+  }
+  async function revokeSession(sessionId?: string) {
+    if (!member) return;
+    if (!window.confirm(sessionId ? "Revoke this session?" : "Revoke all sessions for this staff member?")) return;
+    const suffix = sessionId ? `?session=${encodeURIComponent(sessionId)}` : "";
+    const response = await fetch(`/api/admin/staff/${encodeURIComponent(member.id)}/sessions${suffix}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      onError((data.errors ?? ["Could not revoke session."]).join(" "));
+      return;
+    }
+    onNotice(sessionId ? "Session revoked." : "All sessions revoked.");
+    setSessions(current => sessionId ? current.map(item => item.id === sessionId ? { ...item, revoked_at: new Date().toISOString() } : item) : []);
+  }
+  async function resetMfa() {
+    if (!member || !window.confirm("Disable MFA for this staff member?")) return;
+    const response = await fetch(`/api/admin/staff/${encodeURIComponent(member.id)}/mfa`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      onError((data.errors ?? ["Could not reset MFA."]).join(" "));
+      return;
+    }
+    onNotice("MFA disabled for this staff member.");
+  }
   return <Box sx={{ border: 1, borderColor: "divider", borderRadius: 3, p: 2, minWidth: 0 }}>
     <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1.5 }}>
       <Box>
@@ -335,6 +458,26 @@ function StaffDetails({ member, canManage, onEdit }: { member?: AdminStaffRecord
       <DetailLine label="Created By" value={member.createdBy || "—"} />
     </Stack>
     <Divider sx={{ my: 1.6 }} />
+    {canManage ? <>
+      <Typography variant="subtitle2" sx={{ fontWeight: 950, mb: 1 }}>Security</Typography>
+      <Stack sx={{ gap: 1 }}>
+        <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap" }}>
+          <V2Button size="small" variant="outlined" loading={securityLoading} onClick={createResetLink}>Create Reset Link</V2Button>
+          <V2Button size="small" variant="outlined" onClick={resetMfa}>Disable MFA</V2Button>
+          <V2Button size="small" variant="outlined" onClick={() => revokeSession()}>Revoke All Sessions</V2Button>
+        </Stack>
+        <Typography variant="caption" color="text.secondary">MFA status is server-owned; reset links and sessions are never emailed or faked.</Typography>
+        {sessions.map(session => <Stack key={session.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Typography variant="caption" color="text.secondary">Created {dateLabel(session.created_at)} · last seen {dateLabel(session.last_seen_at)}</Typography>
+          <Stack direction="row" sx={{ gap: 0.75 }}>
+            <Chip size="small" label={session.revoked_at ? "Revoked" : "Active"} color={session.revoked_at ? "default" : "success"} />
+            {!session.revoked_at ? <V2Button size="small" variant="outlined" onClick={() => revokeSession(session.id)}>Revoke Session</V2Button> : null}
+          </Stack>
+        </Stack>)}
+        {!sessions.length ? <Typography variant="caption" color="text.secondary">No active sessions reported.</Typography> : null}
+      </Stack>
+      <Divider sx={{ my: 1.6 }} />
+    </> : null}
     <Typography variant="subtitle2" sx={{ fontWeight: 950, mb: 1 }}>Permissions</Typography>
     <Stack direction="row" sx={{ gap: 0.7, flexWrap: "wrap" }}>
       {permissionGroups.map(group => {

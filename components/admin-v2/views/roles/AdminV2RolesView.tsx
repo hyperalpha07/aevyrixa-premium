@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { CheckCircle2, GitCompareArrows, LockKeyhole, RefreshCw, ShieldCheck, UsersRound, XCircle } from "lucide-react";
 import {
+  adminPermissionKeys,
   permissionGroups,
   permissionLabels,
   roleLabels,
@@ -39,6 +40,15 @@ type StaffPayload = {
   errors?: string[];
 };
 
+type RoleRecord = {
+  key: string;
+  name: string;
+  description: string | null;
+  permissions: Record<AdminPermission, boolean>;
+  is_system: boolean;
+  is_active: boolean;
+};
+
 const comparableRoles: AdminRole[] = ["manager", "order_staff", "product_staff", "support_staff", "viewer"];
 
 async function readStaff(): Promise<AdminStaffRecord[]> {
@@ -46,6 +56,13 @@ async function readStaff(): Promise<AdminStaffRecord[]> {
   const data = (await response.json()) as StaffPayload;
   if (!response.ok) throw new Error((data.errors ?? ["Staff usage data unavailable."]).join(" "));
   return data.staff ?? [];
+}
+
+async function readRoles(): Promise<RoleRecord[]> {
+  const response = await fetch("/api/admin/roles", { cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok) throw new Error((data.errors ?? ["Roles unavailable."]).join(" "));
+  return data.roles ?? [];
 }
 
 function dateLabel(value?: string) {
@@ -72,6 +89,9 @@ function staffIdentity(member: AdminStaffRecord) {
   return `@${member.username}${member.email ? ` · ${member.email}` : " · No email"}`;
 }
 
+function adminPermissionCount(permissions: Record<AdminPermission, boolean>) {
+  return adminPermissionKeys.filter((key) => permissions[key] === true).length;
+}
 export function AdminV2RolesView() {
   const [staff, setStaff] = useState<AdminStaffRecord[]>([]);
   const [selectedRole, setSelectedRole] = useState<AdminRole>("manager");
@@ -79,17 +99,68 @@ export function AdminV2RolesView() {
   const [compareB, setCompareB] = useState<AdminRole>("support_staff");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [roles, setRoles] = useState<RoleRecord[]>([]);
+  const [notice, setNotice] = useState("");
 
   async function load() {
     setLoading(true);
     setError("");
     try {
-      setStaff(await readStaff());
+      const [nextStaff, nextRoles] = await Promise.all([readStaff(), readRoles()]);
+      setStaff(nextStaff);
+      setRoles(nextRoles);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Staff usage data unavailable.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function createCustomRole() {
+    const key = window.prompt("Custom role key (lowercase slug)");
+    if (!key) return;
+    const name = window.prompt("Role name") ?? key;
+    try {
+      const response = await fetch("/api/admin/roles", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ key, name, permissions: {} }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error((data.errors ?? ["Could not create role."]).join(" "));
+      setNotice("Custom role created.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create role.");
+    }
+  }
+
+  async function toggleRole(role: RoleRecord) {
+    try {
+      const response = await fetch(`/api/admin/roles/${encodeURIComponent(role.key)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: role.name, description: role.description, permissions: role.permissions, isActive: !role.is_active }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error((data.errors ?? ["Could not update role."]).join(" "));
+      setNotice(role.is_active ? "Custom role deactivated." : "Custom role activated.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update role.");
+    }
+  }
+
+  async function deleteRole(role: RoleRecord) {
+    if (!window.confirm(`Delete custom role ${role.name}? Assigned roles will be rejected by the server.`)) return;
+    const response = await fetch(`/api/admin/roles/${encodeURIComponent(role.key)}`, { method: "DELETE" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError((data.errors ?? ["Could not delete role."]).join(" "));
+      return;
+    }
+    setNotice("Custom role deleted.");
+    await load();
   }
 
   useEffect(() => {
@@ -110,10 +181,37 @@ export function AdminV2RolesView() {
       <V2PageHeader
         title="Roles"
         description="Review built-in staff roles, default access, and team usage."
-        actions={<V2Button href="/admin-v2/staff" variant="outlined">View Staff</V2Button>}
+        actions={<Stack direction="row" sx={{ gap: 1 }}>
+          <V2Button variant="contained" onClick={createCustomRole}>Create Custom Role</V2Button>
+          <V2Button href="/admin-v2/staff" variant="outlined">View Staff</V2Button>
+        </Stack>}
       />
 
       {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
+      {notice ? <Alert severity="success" sx={{ mb: 2 }} onClose={() => setNotice("")}>{notice}</Alert> : null}
+
+      <V2Card sx={{ mb: 2 }}>
+        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 950 }}>Role Management</Typography>
+          <V2Button size="small" variant="outlined" onClick={createCustomRole}>Create Role</V2Button>
+        </Stack>
+        <Stack sx={{ gap: 1 }}>
+          {roles.map(role => {
+            const assigned = staff.filter(member => member.role === role.key).length;
+            return <Stack key={role.key} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, border: 1, borderColor: "divider", borderRadius: 2, p: 1 }}>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 900 }}>{role.name}</Typography>
+                <Typography variant="caption" color="text.secondary">{role.key} · {adminPermissionCount(role.permissions)} permissions · {assigned} assigned</Typography>
+              </Box>
+              <Stack direction="row" sx={{ gap: 0.75, alignItems: "center" }}>
+                <Chip size="small" label={role.is_system ? "Protected System Role" : role.is_active ? "Active custom role" : "Disabled custom role"} color={role.is_system ? "default" : role.is_active ? "success" : "warning"} />
+                {!role.is_system ? <V2Button size="small" variant="outlined" onClick={() => toggleRole(role)}>{role.is_active ? "Deactivate" : "Activate"}</V2Button> : null}
+                {!role.is_system ? <V2Button size="small" variant="outlined" onClick={() => deleteRole(role)}>Delete</V2Button> : null}
+              </Stack>
+            </Stack>;
+          })}
+        </Stack>
+      </V2Card>
 
       <V2Card sx={{ mb: 2 }}>
         <Stack direction="row" sx={{ gap: 0, flexWrap: "nowrap" }}>

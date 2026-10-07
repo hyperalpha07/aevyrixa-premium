@@ -65,12 +65,12 @@ test("Permissions route is implemented while Staff and Roles remain implemented"
   assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: true/);
 });
 
-test("Permissions access remains staff.manage and uses the Admin V2 server boundary", () => {
+test("Permissions access uses the explicit permission-management permission and Admin V2 server boundary", () => {
   const page = read("app/admin-v2/permissions/page.tsx");
   const permissions = read("configs/admin-v2/permissions.ts");
   assert.match(page, /requireAdminV2Session\(\)/);
   assert.match(page, /requireAdminV2RouteAccess\(session, "permissions"\)/);
-  assert.match(permissions, /permissions:\s*\{\s*permission: "staff\.manage"\s*\}/);
+  assert.match(permissions, /permissions:\s*\{\s*permission: "permissions\.manage"\s*\}/);
   assert.doesNotMatch(permissions, /permissions:\s*\{\s*section: "staff"\s*\}/);
 });
 
@@ -142,8 +142,10 @@ test("Unknown or malformed values are handled without granting unknown permissio
   assert.equal(Object.prototype.hasOwnProperty.call(normalized, "not.real"), false);
 });
 
-test("No permission mutation API is introduced", () => {
+test("Permission overrides persist through the staff override API only", () => {
   const view = read("components/admin-v2/views/permissions/AdminV2PermissionsView.tsx");
   assert.doesNotMatch(view, /\/api\/admin\/permissions/);
-  assert.doesNotMatch(view, /method:\s*"(POST|PATCH|DELETE)"/);
+  assert.match(view, /\/api\/admin\/staff\/\$\{encodeURIComponent\(staffId\)\}\/permissions/);
+  assert.match(view, /method:\s*"PATCH"/);
+  assert.match(view, /Set Inherit|Allow|Deny/);
 });

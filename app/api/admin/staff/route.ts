@@ -4,6 +4,10 @@ import {
   unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
 import {
+  actorCanGrantPermissions,
+  getAdminRole,
+} from "@/app/lib/admin-identity-access";
+import {
   adminPermissionKeys,
   hasPermission,
   normalizePermissions,
@@ -123,6 +127,12 @@ export async function POST(request: Request) {
   if (password && password.length < 8) errors.push("Temporary password must be at least 8 characters.");
   if (role === "owner") errors.push("Owner staff accounts cannot be created from this UI.");
   if (errors.length > 0) return Response.json({ errors }, { status: 400 });
+  const roleRecord = await getAdminRole(role);
+  if (!roleRecord || roleRecord.is_active === false) {
+    return Response.json({ errors: ["Selected role is not available."] }, { status: 400 });
+  }
+  const permissions = permissionsFromPayload(role, payload.permissions);
+  if (!actorCanGrantPermissions(session, permissions)) return forbiddenAdminResponse();
 
   try {
     const staff = await createStaff({
@@ -130,7 +140,7 @@ export async function POST(request: Request) {
       username,
       email,
       role,
-      permissions: permissionsFromPayload(role, payload.permissions),
+      permissions,
       password: password || undefined,
       isActive: bool(payload.isActive, true),
       createdBy: session.displayName,

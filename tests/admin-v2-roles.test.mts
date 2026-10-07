@@ -55,12 +55,12 @@ test("Roles and Permissions routes are implemented", () => {
   assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: true/);
 });
 
-test("Roles page is guarded by the existing staff/security administration boundary", () => {
+test("Roles page is guarded by the explicit role-management permission", () => {
   const page = read("app/admin-v2/roles/page.tsx");
   const permissions = read("configs/admin-v2/permissions.ts");
   assert.match(page, /requireAdminV2Session\(\)/);
   assert.match(page, /requireAdminV2RouteAccess\(session, "roles"\)/);
-  assert.match(permissions, /roles:\s*\{\s*section: "staff"\s*\}/);
+  assert.match(permissions, /roles:\s*\{\s*permission: "roles\.manage"\s*\}/);
 });
 
 test("Roles source uses existing role labels, default permissions and permission labels", () => {
@@ -85,11 +85,14 @@ test("Owner is displayed as protected full-access system role", () => {
   assert.match(view, /Owner access is controlled by the existing environment\/admin authentication/);
 });
 
-test("Roles workspace has no role mutation API or fake mutation actions", () => {
+test("Roles workspace wires real custom role CRUD APIs without fake success actions", () => {
   const view = read("components/admin-v2/views/roles/AdminV2RolesView.tsx");
-  assert.doesNotMatch(view, /Create Role|Edit Role|Delete Role|Duplicate Role|Custom Role|Save Changes/i);
-  assert.doesNotMatch(view, /fetch\([^)]*\/api\/admin\/roles/);
-  assert.doesNotMatch(view, /method:\s*"(POST|PATCH|DELETE)"/);
+  assert.match(view, /Create Custom Role|Create Role|Delete/);
+  assert.match(view, /fetch\("\/api\/admin\/roles"/);
+  assert.match(view, /method:\s*"POST"/);
+  assert.match(view, /method:\s*"PATCH"/);
+  assert.match(view, /method:\s*"DELETE"/);
+  assert.match(view, /Protected System Role/);
 });
 
 test("Real staff API is used for role usage counts and assigned staff", () => {
