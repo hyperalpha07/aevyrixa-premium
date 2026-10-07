@@ -81,27 +81,43 @@ test("Owner is displayed as protected full-access system role", () => {
   const query = read("lib/admin-v2/roles/roles-query.ts");
   assert.match(query, /protected:\s*role === "owner"/);
   assert.equal(roleDefaultPermissions.owner.length, adminPermissionKeys.length);
-  assert.match(view, /Protected System Role/);
-  assert.match(view, /Owner access is controlled by the existing environment\/admin authentication/);
+  assert.match(view, /Protected principal/);
+  assert.match(view, /Not a staff role/);
+  assert.match(view, /const systemStaffRoleCount = 5/);
+  assert.match(view, /<MetricCard label="System Roles" value=\{systemStaffRoleCount\}/);
 });
 
-test("Roles workspace wires real custom role CRUD APIs without fake success actions", () => {
+test("Roles workspace wires real custom role CRUD APIs through dialogs without prompt-based actions", () => {
   const view = read("components/admin-v2/views/roles/AdminV2RolesView.tsx");
-  assert.match(view, /Create Custom Role|Create Role|Delete/);
+  assert.match(view, /Create Custom Role/);
+  assert.match(view, /RoleEditorDialog/);
+  assert.match(view, /Edit Custom Role/);
+  assert.match(view, /Delete custom role\?/);
   assert.match(view, /fetch\("\/api\/admin\/roles"/);
-  assert.match(view, /method:\s*"POST"/);
+  assert.match(view, /method:\s*editingRole \? "PATCH" : "POST"/);
   assert.match(view, /method:\s*"PATCH"/);
   assert.match(view, /method:\s*"DELETE"/);
-  assert.match(view, /Protected System Role/);
+  assert.match(view, /System roles are protected and read-only/);
+  assert.doesNotMatch(view, /window\.prompt|prompt\(/);
 });
 
 test("Real staff API is used for role usage counts and assigned staff", () => {
   const view = read("components/admin-v2/views/roles/AdminV2RolesView.tsx");
   assert.match(view, /fetch\("\/api\/admin\/staff"/);
-  assert.match(view, /staff\.filter\(\(member\) => member\.role === selected\.role\)/);
+  assert.match(view, /function assignedStaff\(staff: AdminStaffRecord\[\], roleKey: string\)/);
+  assert.match(view, /assignedStaff\(staff, selected\.key\)/);
   assert.equal(countRoleStaff("manager").length, 1);
   assert.equal(countRoleStaff("manager").filter((member) => member.isActive).length, 1);
   assert.equal(countRoleStaff("support_staff").filter((member) => member.isActive).length, 0);
+});
+
+test("Roles directory is API-driven and compare access is secondary", () => {
+  const view = read("components/admin-v2/views/roles/AdminV2RolesView.tsx");
+  assert.match(view, /fetch\("\/api\/admin\/roles"/);
+  assert.match(view, /const directory = useMemo\(\(\) => \[\.\.\.roles\]/);
+  assert.match(view, /<RoleDirectoryRow/);
+  assert.match(view, /Compare Access/);
+  assert.match(view, /<Collapse in=\{compareOpen\} unmountOnExit>/);
 });
 
 test("Unknown roles are counted safely without inventing roles", () => {

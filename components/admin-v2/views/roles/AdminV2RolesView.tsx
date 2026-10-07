@@ -1,44 +1,37 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
+  Checkbox,
   Chip,
+  Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControlLabel,
   MenuItem,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
-import { CheckCircle2, GitCompareArrows, LockKeyhole, RefreshCw, ShieldCheck, UsersRound, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, GitCompareArrows, LockKeyhole, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import {
   adminPermissionKeys,
   permissionGroups,
   permissionLabels,
-  roleLabels,
   type AdminPermission,
-  type AdminRole,
 } from "@/app/lib/admin-permissions";
 import type { AdminStaffRecord } from "@/app/lib/admin-staff";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
-import {
-  buildRoleSummaries,
-  compareRoles,
-  groupedRolePermissions,
-  ownerRoleKey,
-  roleDirectoryOrder,
-  rolePurposes,
-  rolesMetrics,
-  type RoleSummary,
-} from "@/lib/admin-v2/roles/roles-query";
 
-type StaffPayload = {
-  staff?: AdminStaffRecord[];
-  errors?: string[];
-};
+type StaffPayload = { staff?: AdminStaffRecord[]; errors?: string[] };
 
 type RoleRecord = {
   key: string;
@@ -49,7 +42,15 @@ type RoleRecord = {
   is_active: boolean;
 };
 
-const comparableRoles: AdminRole[] = ["manager", "order_staff", "product_staff", "support_staff", "viewer"];
+type RoleDraft = {
+  key: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  permissions: Record<AdminPermission, boolean>;
+};
+
+const systemStaffRoleCount = 5;
 
 async function readStaff(): Promise<AdminStaffRecord[]> {
   const response = await fetch("/api/admin/staff", { cache: "no-store" });
@@ -65,42 +66,60 @@ async function readRoles(): Promise<RoleRecord[]> {
   return data.roles ?? [];
 }
 
-function dateLabel(value?: string) {
-  if (!value) return "Never";
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "Never";
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function accessLabel(summary: RoleSummary) {
-  if (summary.accessLevel === "full") return "Full access";
-  if (summary.accessLevel === "privileged") return "Privileged";
-  if (summary.accessLevel === "read_only") return "Read-only";
-  return "Focused";
-}
-
-function staffIdentity(member: AdminStaffRecord) {
-  return `@${member.username}${member.email ? ` · ${member.email}` : " · No email"}`;
-}
-
-function adminPermissionCount(permissions: Record<AdminPermission, boolean>) {
+function permissionCount(permissions: Record<AdminPermission, boolean>) {
   return adminPermissionKeys.filter((key) => permissions[key] === true).length;
 }
+
+function assignedStaff(staff: AdminStaffRecord[], roleKey: string) {
+  return staff.filter((member) => member.role === roleKey);
+}
+
+function emptyPermissionMap() {
+  return adminPermissionKeys.reduce((result, key) => {
+    result[key] = false;
+    return result;
+  }, {} as Record<AdminPermission, boolean>);
+}
+
+function draftFromRole(role?: RoleRecord): RoleDraft {
+  return {
+    key: role?.key ?? "",
+    name: role?.name ?? "",
+    description: role?.description ?? "",
+    isActive: role?.is_active ?? true,
+    permissions: role?.permissions ?? emptyPermissionMap(),
+  };
+}
+
+function rolePurpose(role: RoleRecord) {
+  if (!role.is_system) return role.description || "Custom access profile managed by your admin team.";
+  if (role.key === "manager") return "Broad operations lead for orders, products, support, storefront, analytics, and activity.";
+  if (role.key === "order_staff") return "Order operations for fulfilment, courier updates, invoices, notes, and exports.";
+  if (role.key === "product_staff") return "Catalog operations for products, media, merchandising, reviews, and categories.";
+  if (role.key === "support_staff") return "Customer care access for live support visibility, replies, and conversation closing.";
+  if (role.key === "viewer") return "Read-mostly operational visibility without mutation-heavy access.";
+  return "Protected system role.";
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 64);
+}
+
 export function AdminV2RolesView() {
   const [staff, setStaff] = useState<AdminStaffRecord[]>([]);
-  const [selectedRole, setSelectedRole] = useState<AdminRole>("manager");
-  const [compareA, setCompareA] = useState<AdminRole>("manager");
-  const [compareB, setCompareB] = useState<AdminRole>("support_staff");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [roles, setRoles] = useState<RoleRecord[]>([]);
+  const [selectedKey, setSelectedKey] = useState("manager");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<RoleRecord | null>(null);
+  const [draft, setDraft] = useState<RoleDraft>(draftFromRole());
+  const [dialogError, setDialogError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<RoleRecord | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [roleSearch, setRoleSearch] = useState("");
 
   async function load() {
     setLoading(true);
@@ -109,29 +128,77 @@ export function AdminV2RolesView() {
       const [nextStaff, nextRoles] = await Promise.all([readStaff(), readRoles()]);
       setStaff(nextStaff);
       setRoles(nextRoles);
+      setSelectedKey((current) => nextRoles.some((role) => role.key === current) ? current : nextRoles[0]?.key ?? "manager");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Staff usage data unavailable.");
+      setError(err instanceof Error ? err.message : "Access data unavailable.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function createCustomRole() {
-    const key = window.prompt("Custom role key (lowercase slug)");
-    if (!key) return;
-    const name = window.prompt("Role name") ?? key;
+  useEffect(() => { void load(); }, []);
+
+  const directory = useMemo(() => [...roles]
+    .filter((role) => {
+      const term = roleSearch.trim().toLowerCase();
+      if (!term) return true;
+      return [role.name, role.key, role.description].some((value) => String(value ?? "").toLowerCase().includes(term));
+    })
+    .sort((a, b) => Number(b.is_system) - Number(a.is_system) || a.name.localeCompare(b.name)), [roles, roleSearch]);
+  const selected = directory.find((role) => role.key === selectedKey) ?? directory[0];
+  const selectedStaff = selected ? assignedStaff(staff, selected.key) : [];
+  const customRoles = roles.filter((role) => !role.is_system);
+  const activeStaff = staff.filter((member) => member.isActive).length;
+
+  function openCreate() {
+    setEditingRole(null);
+    setDraft(draftFromRole());
+    setDialogError("");
+    setEditorOpen(true);
+  }
+
+  function openEdit(role: RoleRecord) {
+    setEditingRole(role);
+    setDraft(draftFromRole(role));
+    setDialogError("");
+    setEditorOpen(true);
+  }
+
+  async function saveRole() {
+    setDialogError("");
+    const key = slugify(draft.key);
+    const name = draft.name.trim();
+    if (!editingRole && !/^[a-z][a-z0-9_]{1,63}$/.test(key)) {
+      setDialogError("Role key must be a lowercase slug starting with a letter.");
+      return;
+    }
+    if (!name) {
+      setDialogError("Role name is required.");
+      return;
+    }
+    setSaving(true);
     try {
-      const response = await fetch("/api/admin/roles", {
-        method: "POST",
+      const response = await fetch(editingRole ? `/api/admin/roles/${encodeURIComponent(editingRole.key)}` : "/api/admin/roles", {
+        method: editingRole ? "PATCH" : "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ key, name, permissions: {} }),
+        body: JSON.stringify({
+          key,
+          name,
+          description: draft.description,
+          permissions: draft.permissions,
+          isActive: draft.isActive,
+        }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error((data.errors ?? ["Could not create role."]).join(" "));
-      setNotice("Custom role created.");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error((data.errors ?? ["Role could not be saved."]).join(" "));
+      setNotice(editingRole ? "Custom role updated." : "Custom role created.");
+      setEditorOpen(false);
       await load();
+      setSelectedKey(data.role?.key ?? key);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create role.");
+      setDialogError(err instanceof Error ? err.message : "Role could not be saved.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -142,7 +209,7 @@ export function AdminV2RolesView() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: role.name, description: role.description, permissions: role.permissions, isActive: !role.is_active }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error((data.errors ?? ["Could not update role."]).join(" "));
       setNotice(role.is_active ? "Custom role deactivated." : "Custom role activated.");
       await load();
@@ -151,367 +218,265 @@ export function AdminV2RolesView() {
     }
   }
 
-  async function deleteRole(role: RoleRecord) {
-    if (!window.confirm(`Delete custom role ${role.name}? Assigned roles will be rejected by the server.`)) return;
-    const response = await fetch(`/api/admin/roles/${encodeURIComponent(role.key)}`, { method: "DELETE" });
+  async function deleteRole() {
+    if (!deleteTarget) return;
+    setSaving(true);
+    const response = await fetch(`/api/admin/roles/${encodeURIComponent(deleteTarget.key)}`, { method: "DELETE" });
     const data = await response.json().catch(() => ({}));
+    setSaving(false);
     if (!response.ok) {
       setError((data.errors ?? ["Could not delete role."]).join(" "));
+      setDeleteTarget(null);
       return;
     }
     setNotice("Custom role deleted.");
+    setDeleteTarget(null);
     await load();
   }
-
-  useEffect(() => {
-    void load();
-  }, []);
-
-  const summaries = useMemo(() => buildRoleSummaries(staff), [staff]);
-  const metrics = useMemo(() => rolesMetrics(staff), [staff]);
-  const ownerSummary = summaries.find((summary) => summary.role === ownerRoleKey)!;
-  const directory = summaries.filter((summary) => summary.role !== ownerRoleKey);
-  const selected = summaries.find((summary) => summary.role === selectedRole) ?? directory[0];
-  const selectedStaff = staff.filter((member) => member.role === selected.role);
-  const selectedPermissions = groupedRolePermissions(selected.role);
-  const comparison = compareRoles(compareA, compareB);
 
   return (
     <>
       <V2PageHeader
         title="Roles"
-        description="Review built-in staff roles, default access, and team usage."
-        actions={<Stack direction="row" sx={{ gap: 1 }}>
-          <V2Button variant="contained" onClick={createCustomRole}>Create Custom Role</V2Button>
-          <V2Button href="/admin-v2/staff" variant="outlined">View Staff</V2Button>
-        </Stack>}
+        description="Manage staff role templates, custom access profiles, and protected owner context."
+        actions={<V2Button variant="contained" onClick={openCreate}>Create Custom Role</V2Button>}
       />
+      <Box aria-hidden sx={{ height: 0, display: "flex", justifyContent: "flex-end", pr: 3, pointerEvents: "none" }}>
+        <Box sx={{ width: 180, height: 84, mt: -9, borderRadius: "999px", opacity: 0.5, background: "radial-gradient(circle at 25% 40%, rgba(236,72,153,0.18), transparent 34%), radial-gradient(circle at 72% 34%, rgba(124,77,255,0.16), transparent 38%), linear-gradient(135deg, rgba(255,255,255,0.55), rgba(236,72,153,0.08))", filter: "blur(0.4px)" }} />
+      </Box>
 
       {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
       {notice ? <Alert severity="success" sx={{ mb: 2 }} onClose={() => setNotice("")}>{notice}</Alert> : null}
 
-      <V2Card sx={{ mb: 2 }}>
-        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 950 }}>Role Management</Typography>
-          <V2Button size="small" variant="outlined" onClick={createCustomRole}>Create Role</V2Button>
-        </Stack>
-        <Stack sx={{ gap: 1 }}>
-          {roles.map(role => {
-            const assigned = staff.filter(member => member.role === role.key).length;
-            return <Stack key={role.key} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, border: 1, borderColor: "divider", borderRadius: 2, p: 1 }}>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 900 }}>{role.name}</Typography>
-                <Typography variant="caption" color="text.secondary">{role.key} · {adminPermissionCount(role.permissions)} permissions · {assigned} assigned</Typography>
-              </Box>
-              <Stack direction="row" sx={{ gap: 0.75, alignItems: "center" }}>
-                <Chip size="small" label={role.is_system ? "Protected System Role" : role.is_active ? "Active custom role" : "Disabled custom role"} color={role.is_system ? "default" : role.is_active ? "success" : "warning"} />
-                {!role.is_system ? <V2Button size="small" variant="outlined" onClick={() => toggleRole(role)}>{role.is_active ? "Deactivate" : "Activate"}</V2Button> : null}
-                {!role.is_system ? <V2Button size="small" variant="outlined" onClick={() => deleteRole(role)}>Delete</V2Button> : null}
-              </Stack>
-            </Stack>;
-          })}
-        </Stack>
-      </V2Card>
-
-      <V2Card sx={{ mb: 2 }}>
-        <Stack direction="row" sx={{ gap: 0, flexWrap: "nowrap" }}>
-          {([
-            ["Built-in Roles", metrics.builtInRoles],
-            ["Active Staff", metrics.activeStaff],
-            ["Privileged Roles", metrics.privilegedRoles],
-            ["Unknown Roles", metrics.unknownRoleCount],
-          ] as Array<[string, number]>).map(([label, value], index) => (
-            <Box
-              key={label}
-              sx={{
-                flex: 1,
-                minWidth: 0,
-                px: index ? 2.5 : 0,
-                borderLeft: index ? 1 : 0,
-                borderColor: "divider",
-              }}
-            >
-              <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.7, fontWeight: 800 }}>
-                {label}
-              </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 950 }}>{value}</Typography>
-            </Box>
-          ))}
-        </Stack>
-      </V2Card>
-
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "minmax(0, 1.1fr) minmax(23rem, 0.9fr)" }, gap: 2 }}>
-        <Stack sx={{ gap: 2 }}>
-          <V2Card>
-            <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1.5, mb: 2 }}>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 950 }}>Role directory</Typography>
-                <Typography variant="body2" color="text.secondary">Built-in governance roles sourced from the existing permission system.</Typography>
-              </Box>
-              <V2Button variant="outlined" startIcon={<RefreshCw size={15} />} disabled={loading} onClick={() => { void load(); }}>Refresh</V2Button>
-            </Stack>
-
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" }, gap: 1.25 }}>
-              {directory.map((summary) => (
-                <RoleCard
-                  key={summary.role}
-                  summary={summary}
-                  selected={selected.role === summary.role}
-                  onSelect={() => setSelectedRole(summary.role)}
-                />
-              ))}
-            </Box>
-          </V2Card>
-
-          <V2Card>
-            <Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: { md: "center" }, justifyContent: "space-between" }}>
-              <Stack direction="row" sx={{ gap: 1.25, alignItems: "center" }}>
-                <Box sx={{ width: 44, height: 44, borderRadius: "50%", display: "grid", placeItems: "center", bgcolor: "rgba(124,77,255,0.1)", color: "primary.main" }}>
-                  <LockKeyhole size={21} />
-                </Box>
-                <Box>
-                  <Typography variant="overline" color="text.secondary">Protected System Role</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 950 }}>{ownerSummary.label}</Typography>
-                </Box>
-              </Stack>
-              <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap" }}>
-                <Chip size="small" color="primary" label="Protected" sx={{ fontWeight: 850 }} />
-                <Chip size="small" label="Full access" sx={{ fontWeight: 850 }} />
-                <Chip size="small" label={`${ownerSummary.permissionCount} permissions`} sx={{ fontWeight: 850 }} />
-              </Stack>
-            </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-              Owner access is controlled by the existing environment/admin authentication and is not created or edited from this workspace.
-            </Typography>
-          </V2Card>
-
-          <RoleComparisonCard
-            roleA={compareA}
-            roleB={compareB}
-            onRoleA={setCompareA}
-            onRoleB={setCompareB}
-            shared={comparison.shared}
-            onlyA={comparison.onlyA}
-            onlyB={comparison.onlyB}
-          />
-        </Stack>
-
-        <V2Card sx={{ alignSelf: "start", position: { xl: "sticky" }, top: { xl: 88 } }}>
-          <RoleDetail summary={selected} staff={selectedStaff} groupedPermissions={selectedPermissions} />
-        </V2Card>
+      <V2Card sx={{ mb: 2, overflow: "hidden", "& .MuiCardContent-root": { p: 0, "&:last-child": { pb: 0 } } }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+        <MetricCard label="System Roles" value={systemStaffRoleCount} helper="Staff DB roles only" />
+        <MetricCard label="Custom Roles" value={customRoles.length} helper="Real custom roles" />
+        <MetricCard label="Active Staff" value={activeStaff} helper="Current active accounts" />
       </Box>
+      </V2Card>
+
+      <V2Card sx={{ mb: 2, "& .MuiCardContent-root": { py: 1.35, "&:last-child": { pb: 1.35 } } }}>
+        <Stack direction="row" sx={{ gap: 1.4, alignItems: "center", justifyContent: "space-between" }}>
+          <Stack direction="row" sx={{ gap: 1.2, alignItems: "center" }}>
+            <Box sx={{ width: 36, height: 36, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: "rgba(124,77,255,0.10)", color: "primary.main" }}><LockKeyhole size={18} /></Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>Owner</Typography>
+              <Typography variant="body2" color="text.secondary">Protected principal - full access - environment authenticated</Typography>
+            </Box>
+          </Stack>
+          <Chip size="small" color="primary" label="Not a staff role" sx={{ fontWeight: 850 }} />
+        </Stack>
+      </V2Card>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "21rem minmax(0, 1fr)" }, gap: 2, minHeight: 620, maxHeight: { xl: "calc(100vh - 230px)" } }}>
+        <V2Card sx={{ minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1, alignItems: "center", mb: 1.5 }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 950 }}>Role directory</Typography>
+              <Typography variant="body2" color="text.secondary">System and custom roles from the real Roles API.</Typography>
+            </Box>
+            <V2Button size="small" variant="outlined" startIcon={<RefreshCw size={15} />} disabled={loading} onClick={() => { void load(); }}>Refresh</V2Button>
+          </Stack>
+          <TextField size="small" value={roleSearch} onChange={(event) => setRoleSearch(event.target.value)} placeholder="Search roles" sx={{ mb: 1 }} />
+          <Stack sx={{ gap: 0, minHeight: 0, overflow: "auto", mx: -2, px: 2, pb: 1 }}>
+            {directory.map((role) => <RoleDirectoryRow key={role.key} role={role} staff={staff} selected={selected?.key === role.key} onSelect={() => setSelectedKey(role.key)} />)}
+          </Stack>
+        </V2Card>
+
+        {selected ? <V2Card sx={{ minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <RoleDetail role={selected} staff={selectedStaff} onEdit={() => openEdit(selected)} onToggle={() => toggleRole(selected)} onDelete={() => setDeleteTarget(selected)} />
+          <Divider sx={{ my: 2 }} />
+          <Box>
+            <V2Button variant="outlined" startIcon={<GitCompareArrows size={16} />} endIcon={<ChevronDown size={15} style={{ transform: compareOpen ? "rotate(180deg)" : "none" }} />} onClick={() => setCompareOpen((current) => !current)}>
+              Compare Access
+            </V2Button>
+            <Collapse in={compareOpen} unmountOnExit>
+              <CompareAccess roles={directory} />
+            </Collapse>
+          </Box>
+        </V2Card> : null}
+      </Box>
+
+      <RoleEditorDialog
+        open={editorOpen}
+        draft={draft}
+        editingRole={editingRole}
+        error={dialogError}
+        saving={saving}
+        onClose={() => setEditorOpen(false)}
+        onSave={saveRole}
+        onDraft={setDraft}
+      />
+
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth aria-labelledby="delete-role-title">
+        <DialogTitle id="delete-role-title">Delete custom role?</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary">The server will reject deletion if this role is assigned to staff.</Typography>
+          <Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 900 }}>{deleteTarget?.name}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <V2Button variant="outlined" onClick={() => setDeleteTarget(null)}>Cancel</V2Button>
+          <V2Button color="error" variant="contained" loading={saving} onClick={deleteRole}>Delete Role</V2Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
 
-function RoleCard({ summary, selected, onSelect }: { summary: RoleSummary; selected: boolean; onSelect: () => void }) {
-  return (
-    <Box
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
-      sx={{
-        border: 1,
-        borderColor: selected ? "primary.main" : "divider",
-        borderRadius: 3,
-        p: 1.75,
-        cursor: "pointer",
-        bgcolor: selected ? "rgba(124,77,255,0.07)" : "background.paper",
-        transition: "border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease",
-        "&:hover": {
-          borderColor: "primary.main",
-          boxShadow: "0 16px 38px rgba(35, 22, 80, 0.12)",
-          transform: "translateY(-1px)",
-        },
-        "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 3 },
-      }}
-    >
-      <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1.5, alignItems: "flex-start" }}>
+function MetricCard({ label, value, helper }: { label: string; value: number; helper: string }) {
+  return <Box sx={{ px: 1.5, py: 1.1, borderRight: 1, borderColor: "divider", "&:last-of-type": { borderRight: 0 } }}>
+    <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.7, fontWeight: 850 }}>{label}</Typography>
+    <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.1 }}>{value}</Typography>
+    <Typography variant="caption" color="text.secondary">{helper}</Typography>
+  </Box>;
+}
+
+function RoleDirectoryRow({ role, staff, selected, onSelect }: { role: RoleRecord; staff: AdminStaffRecord[]; selected: boolean; onSelect: () => void }) {
+  const assigned = assignedStaff(staff, role.key).length;
+  return <Box component="button" type="button" onClick={onSelect} sx={{ width: "100%", textAlign: "left", border: 0, borderLeft: 3, borderLeftColor: selected ? "primary.main" : "transparent", borderBottom: 1, borderColor: "divider", p: 1.1, bgcolor: selected ? "rgba(124,77,255,0.07)" : "transparent", cursor: "pointer", "&:hover": { bgcolor: "rgba(124,77,255,0.045)" }, "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: -2 } }}>
+    <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1, alignItems: "flex-start" }}>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 900 }}>{role.name}</Typography>
+        <Typography variant="caption" color="text.secondary">{role.key}</Typography>
+      </Box>
+      <Chip size="small" label={role.is_system ? "System" : "Custom"} color={role.is_system ? "default" : "primary"} sx={{ fontWeight: 850 }} />
+    </Stack>
+    <Stack direction="row" sx={{ gap: 0.9, flexWrap: "wrap", mt: 0.7 }}>
+      <Typography variant="caption" color="text.secondary">{permissionCount(role.permissions)} permissions</Typography>
+      <Typography variant="caption" color="text.secondary">{assigned} assigned</Typography>
+      {!role.is_active ? <Chip size="small" color="warning" label="Disabled" sx={{ fontWeight: 800 }} /> : null}
+    </Stack>
+  </Box>;
+}
+
+function RoleDetail({ role, staff, onEdit, onToggle, onDelete }: { role: RoleRecord; staff: AdminStaffRecord[]; onEdit: () => void; onToggle: () => void; onDelete: () => void }) {
+  const [openGroup, setOpenGroup] = useState(permissionGroups[0]?.title ?? "");
+  const count = permissionCount(role.permissions);
+  return <Stack sx={{ gap: 1.4, minHeight: 0, overflow: "hidden", flex: 1 }}>
+    <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
+      <Box>
+        <Typography variant="overline" color="text.secondary">Selected role</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 950, letterSpacing: "-0.03em" }}>{role.name}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 720 }}>{rolePurpose(role)}</Typography>
+      </Box>
+      <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <Chip size="small" label={role.is_system ? "System" : "Custom"} color={role.is_system ? "default" : "primary"} sx={{ fontWeight: 850 }} />
+        <Chip size="small" label={role.is_active ? "Active" : "Disabled"} color={role.is_active ? "success" : "warning"} sx={{ fontWeight: 850 }} />
+      </Stack>
+    </Stack>
+
+    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 1 }}>
+      <MiniStat label="Key" value={role.key} />
+      <MiniStat label="Assigned Staff" value={String(staff.length)} />
+      <MiniStat label="Permissions" value={`${count} / ${adminPermissionKeys.length}`} />
+      <MiniStat label="Type" value={role.is_system ? "Protected" : "Editable"} />
+    </Box>
+
+    {role.is_system ? <Alert severity="info" icon={<ShieldCheck size={18} />}>System roles are protected and read-only. Create a custom role to edit permission sets.</Alert> : <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
+      <V2Button variant="contained" onClick={onEdit}>Edit</V2Button>
+      <V2Button variant="outlined" onClick={onToggle}>{role.is_active ? "Deactivate" : "Activate"}</V2Button>
+      <V2Button variant="outlined" color="error" onClick={onDelete}>Delete</V2Button>
+    </Stack>}
+
+    <Box sx={{ minHeight: 0, overflow: "hidden" }}>
+      <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 0.75 }}>Permission modules</Typography>
+      <Stack sx={{ gap: 0, minHeight: 0, overflow: "auto", overscrollBehavior: "contain", maxHeight: { xl: "calc(100vh - 520px)" } }}>
+        {permissionGroups.map((group) => <PermissionGroupRows key={group.title} title={group.title} permissions={group.permissions} rolePermissions={role.permissions} open={openGroup === group.title} onToggle={() => setOpenGroup((current) => current === group.title ? "" : group.title)} />)}
+      </Stack>
+    </Box>
+  </Stack>;
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return <Box sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.15, bgcolor: "rgba(124,77,255,0.025)", minWidth: 0 }}>
+    <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 850 }}>{label}</Typography>
+    <Typography variant="body2" sx={{ fontWeight: 950, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</Typography>
+  </Box>;
+}
+
+function PermissionGroupRows({ title, permissions, rolePermissions, open, onToggle }: { title: string; permissions: AdminPermission[]; rolePermissions: Record<AdminPermission, boolean>; open: boolean; onToggle: () => void }) {
+  const enabled = permissions.filter((permission) => rolePermissions[permission]).length;
+  return <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+    <Box component="button" type="button" onClick={onToggle} sx={{ width: "100%", border: 0, bgcolor: open ? "rgba(124,77,255,0.055)" : "transparent", cursor: "pointer", px: 1.25, py: 1, textAlign: "left", "&:hover": { bgcolor: "rgba(124,77,255,0.04)" } }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{title}</Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>{enabled}/{permissions.length}</Typography>
+      </Stack>
+      <Box sx={{ mt: 0.6, height: 5, borderRadius: 999, bgcolor: "rgba(124,77,255,0.10)", overflow: "hidden" }}><Box sx={{ width: `${Math.round((enabled / permissions.length) * 100)}%`, height: "100%", bgcolor: "primary.main", opacity: 0.65 }} /></Box>
+    </Box>
+    {open ? <Box sx={{ maxHeight: 340, overflowY: "auto", borderTop: 1, borderColor: "divider" }}>
+      {permissions.map((permission) => <Stack key={permission} direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 1, px: 1.25, py: 0.72, borderBottom: 1, borderColor: "divider", "&:last-child": { borderBottom: 0 } }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" sx={{ fontWeight: 950 }}>{summary.label}</Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>{summary.role}</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 820 }}>{permissionLabels[permission]}</Typography>
+          <Typography variant="caption" color="text.secondary">{permission}</Typography>
         </Box>
-        <Chip size="small" label={accessLabel(summary)} color={summary.accessLevel === "privileged" ? "primary" : "default"} sx={{ fontWeight: 850 }} />
-      </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1.2, minHeight: 42 }}>
-        {summary.purpose}
-      </Typography>
-      <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap", mt: 1.5 }}>
-        <Chip size="small" icon={<UsersRound size={14} />} label={`${summary.assignedStaff} assigned`} sx={{ fontWeight: 800 }} />
-        <Chip size="small" label={`${summary.activeStaff} active`} sx={{ fontWeight: 800 }} />
-        <Chip size="small" label={`${summary.permissionCount} defaults`} sx={{ fontWeight: 800 }} />
-      </Stack>
-    </Box>
-  );
+        {rolePermissions[permission] ? <CheckCircle2 size={16} color="#2e7d32" /> : <XCircle size={16} color="#9aa0aa" />}
+      </Stack>)}
+    </Box> : null}
+  </Box>;
 }
 
-function RoleDetail({
-  summary,
-  staff,
-  groupedPermissions,
-}: {
-  summary: RoleSummary;
-  staff: AdminStaffRecord[];
-  groupedPermissions: ReturnType<typeof groupedRolePermissions>;
-}) {
-  return (
-    <Stack sx={{ gap: 2 }}>
-      <Box>
-        <Typography variant="overline" color="text.secondary">Overview</Typography>
-        <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1.5 }}>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 950 }}>{summary.label}</Typography>
-            <Typography variant="body2" color="text.secondary">{summary.role}</Typography>
-          </Box>
-          <Chip size="small" label="Built-in" sx={{ fontWeight: 850 }} />
-        </Stack>
-      </Box>
-
-      <Stack sx={{ gap: 0.75 }}>
-        <DetailLine label="Role type" value={summary.protected ? "Protected system" : "Built-in"} />
-        <DetailLine label="Assigned staff" value={String(summary.assignedStaff)} />
-        <DetailLine label="Active staff" value={String(summary.activeStaff)} />
-        <DetailLine label="Default access" value={`${summary.permissionCount} permissions`} />
-        <DetailLine label="Access level" value={accessLabel(summary)} />
-      </Stack>
-
-      <Divider />
-
-      <Box>
-        <Typography variant="overline" color="text.secondary">Default access</Typography>
-        <Stack sx={{ gap: 1 }}>
-          {groupedPermissions.map((group) => (
-            <Box key={group.title} sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.25 }}>
-              <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1, mb: 0.75 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>{group.title}</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>
-                  {group.permissions.filter((item) => item.enabled).length}/{group.permissions.length}
-                </Typography>
-              </Stack>
-              <Stack sx={{ gap: 0.4 }}>
-                {group.permissions.map(({ permission, enabled }) => (
-                  <Stack key={permission} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                    <Typography variant="caption" color={enabled ? "text.primary" : "text.secondary"} sx={{ fontWeight: enabled ? 800 : 600 }}>
-                      {permissionLabels[permission]}
-                    </Typography>
-                    {enabled ? <CheckCircle2 size={15} color="#2e7d32" /> : <XCircle size={15} color="#9aa0aa" />}
-                  </Stack>
-                ))}
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
-      </Box>
-
-      <Divider />
-
-      <Box>
-        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-          <Typography variant="overline" color="text.secondary">Assigned staff</Typography>
-          <V2Button href={summary.role === "owner" ? "/admin-v2/staff" : `/admin-v2/staff?role=${summary.role}`} size="small" variant="outlined">
-            View Staff
-          </V2Button>
-        </Stack>
-        <Stack sx={{ gap: 0.85, mt: 1 }}>
-          {staff.map((member) => (
-            <Box key={member.id} sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.1 }}>
-              <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 900 }}>{member.name}</Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {staffIdentity(member)}
-                  </Typography>
-                </Box>
-                <Chip size="small" color={member.isActive ? "success" : "default"} label={member.isActive ? "Active" : "Inactive"} />
-              </Stack>
-              <Typography variant="caption" color="text.secondary">Last login: {dateLabel(member.lastLoginAt)}</Typography>
-            </Box>
-          ))}
-          {!staff.length ? (
-            <Box sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.4, textAlign: "center" }}>
-              <Typography variant="body2" sx={{ fontWeight: 850 }}>No staff assigned</Typography>
-              <Typography variant="caption" color="text.secondary">Real staff assigned to this role will appear here.</Typography>
-            </Box>
-          ) : null}
-        </Stack>
-      </Box>
-    </Stack>
-  );
-}
-
-function RoleComparisonCard({
-  roleA,
-  roleB,
-  onRoleA,
-  onRoleB,
-  shared,
-  onlyA,
-  onlyB,
-}: {
-  roleA: AdminRole;
-  roleB: AdminRole;
-  onRoleA: (role: AdminRole) => void;
-  onRoleB: (role: AdminRole) => void;
-  shared: AdminPermission[];
-  onlyA: AdminPermission[];
-  onlyB: AdminPermission[];
-}) {
-  return (
-    <V2Card>
-      <Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: { md: "center" }, justifyContent: "space-between", mb: 2 }}>
-        <Box>
-          <Stack direction="row" sx={{ gap: 1, alignItems: "center" }}>
-            <GitCompareArrows size={18} />
-            <Typography variant="h6" sx={{ fontWeight: 950 }}>Compare roles</Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">Compare default permissions from the existing role definitions.</Typography>
+function RoleEditorDialog({ open, draft, editingRole, error, saving, onClose, onSave, onDraft }: { open: boolean; draft: RoleDraft; editingRole: RoleRecord | null; error: string; saving: boolean; onClose: () => void; onSave: () => void; onDraft: (draft: RoleDraft) => void }) {
+  const isEditing = Boolean(editingRole);
+  const normalizedKey = slugify(draft.key || draft.name);
+  function updatePermission(permission: AdminPermission, enabled: boolean) {
+    onDraft({ ...draft, permissions: { ...draft.permissions, [permission]: enabled } });
+  }
+  function setGroup(groupPermissions: AdminPermission[], enabled: boolean) {
+    const next = { ...draft.permissions };
+    for (const permission of groupPermissions) next[permission] = enabled;
+    onDraft({ ...draft, permissions: next });
+  }
+  return <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth aria-labelledby="role-editor-title">
+    <DialogTitle id="role-editor-title">{isEditing ? "Edit Custom Role" : "Create Custom Role"}</DialogTitle>
+    <DialogContent dividers>
+      {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
+      <Stack sx={{ gap: 2 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField label="Role name" value={draft.name} onChange={(event) => onDraft({ ...draft, name: event.target.value, key: isEditing ? draft.key : slugify(event.target.value) })} autoFocus />
+          <TextField label="Role key" value={isEditing ? draft.key : normalizedKey} onChange={(event) => onDraft({ ...draft, key: slugify(event.target.value) })} disabled={isEditing} helperText={isEditing ? "Role key is immutable." : "Lowercase stable slug."} />
+          <TextField label="Description" value={draft.description} onChange={(event) => onDraft({ ...draft, description: event.target.value })} multiline minRows={2} sx={{ gridColumn: { md: "1 / -1" } }} />
+          <FormControlLabel control={<Switch checked={draft.isActive} onChange={(event) => onDraft({ ...draft, isActive: event.target.checked })} />} label={draft.isActive ? "Active role" : "Disabled role"} />
         </Box>
-        <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
-          <TextField select size="small" label="Role A" value={roleA} onChange={(event) => onRoleA(event.target.value as AdminRole)} sx={{ minWidth: 160 }}>
-            {comparableRoles.map((role) => <MenuItem key={role} value={role}>{roleLabels[role]}</MenuItem>)}
-          </TextField>
-          <TextField select size="small" label="Role B" value={roleB} onChange={(event) => onRoleB(event.target.value as AdminRole)} sx={{ minWidth: 160 }}>
-            {comparableRoles.map((role) => <MenuItem key={role} value={role}>{roleLabels[role]}</MenuItem>)}
-          </TextField>
-        </Stack>
+        <Divider />
+        <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>Grouped permissions</Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.25 }}>
+          {permissionGroups.map((group) => <Box key={group.title} sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.25 }}>
+            <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 1, mb: 0.6 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>{group.title}</Typography>
+              <Stack direction="row" sx={{ gap: 0.5 }}>
+                <V2Button size="small" variant="text" onClick={() => setGroup(group.permissions, true)}>Select All</V2Button>
+                <V2Button size="small" variant="text" onClick={() => setGroup(group.permissions, false)}>Clear</V2Button>
+              </Stack>
+            </Stack>
+            <Stack sx={{ gap: 0.1 }}>
+              {group.permissions.map((permission) => <FormControlLabel key={permission} control={<Checkbox size="small" checked={Boolean(draft.permissions[permission])} onChange={(event) => updatePermission(permission, event.target.checked)} />} label={<Box><Typography variant="body2" sx={{ fontWeight: 750 }}>{permissionLabels[permission]}</Typography><Typography variant="caption" color="text.secondary">{permission}</Typography></Box>} />)}
+            </Stack>
+          </Box>)}
+        </Box>
       </Stack>
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(3, minmax(0, 1fr))" }, gap: 1.25 }}>
-        <PermissionSet title="Shared access" permissions={shared} tone="shared" />
-        <PermissionSet title={`Only ${roleLabels[roleA]}`} permissions={onlyA} tone="a" />
-        <PermissionSet title={`Only ${roleLabels[roleB]}`} permissions={onlyB} tone="b" />
+    </DialogContent>
+    <DialogActions>
+      <V2Button variant="outlined" onClick={onClose}>Cancel</V2Button>
+      <V2Button variant="contained" loading={saving} onClick={onSave}>{isEditing ? "Save Changes" : "Create Role"}</V2Button>
+    </DialogActions>
+  </Dialog>;
+}
+
+function CompareAccess({ roles }: { roles: RoleRecord[] }) {
+  return <Box sx={{ mt: 1.5, border: 1, borderColor: "divider", borderRadius: 2.5, overflow: "hidden" }}>
+    <Box sx={{ overflowX: "auto" }}>
+      <Box sx={{ minWidth: 820 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: `minmax(16rem, 1.2fr) repeat(${roles.length}, minmax(7rem, 0.6fr))`, gap: 1, px: 1.25, py: 0.8, bgcolor: "rgba(124,77,255,0.055)" }}>
+          <Typography variant="caption" sx={{ fontWeight: 900 }}>Permission</Typography>
+          {roles.map((role) => <Typography key={role.key} variant="caption" sx={{ textAlign: "center", fontWeight: 900 }}>{role.name}</Typography>)}
+        </Box>
+        {adminPermissionKeys.map((permission) => <Box key={permission} sx={{ display: "grid", gridTemplateColumns: `minmax(16rem, 1.2fr) repeat(${roles.length}, minmax(7rem, 0.6fr))`, gap: 1, px: 1.25, py: 0.7, borderTop: 1, borderColor: "divider" }}>
+          <Box><Typography variant="body2" sx={{ fontWeight: 800 }}>{permissionLabels[permission]}</Typography><Typography variant="caption" color="text.secondary">{permission}</Typography></Box>
+          {roles.map((role) => <Box key={role.key} sx={{ textAlign: "center" }}>{role.permissions[permission] ? <CheckCircle2 size={16} color="#2e7d32" /> : <XCircle size={16} color="#9aa0aa" />}</Box>)}
+        </Box>)}
       </Box>
-    </V2Card>
-  );
-}
-
-function PermissionSet({ title, permissions, tone }: { title: string; permissions: AdminPermission[]; tone: "shared" | "a" | "b" }) {
-  const color = tone === "shared" ? "rgba(46,125,50,0.08)" : tone === "a" ? "rgba(124,77,255,0.08)" : "rgba(2,136,209,0.08)";
-  return (
-    <Box sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.25, bgcolor: color }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 950, mb: 0.75 }}>{title}</Typography>
-      <Stack sx={{ gap: 0.55 }}>
-        {permissions.map((permission) => (
-          <Typography key={permission} variant="caption" sx={{ fontWeight: 800 }}>
-            {permissionLabels[permission]}
-          </Typography>
-        ))}
-        {!permissions.length ? <Typography variant="caption" color="text.secondary">No unique permissions.</Typography> : null}
-      </Stack>
     </Box>
-  );
-}
-
-function DetailLine({ label, value }: { label: string; value: string }) {
-  return (
-    <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>{label}</Typography>
-      <Typography variant="caption" sx={{ fontWeight: 850, textAlign: "right" }}>{value}</Typography>
-    </Stack>
-  );
+  </Box>;
 }

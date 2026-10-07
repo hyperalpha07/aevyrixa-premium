@@ -1,22 +1,26 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
+  Checkbox,
   Chip,
   Divider,
   MenuItem,
   Stack,
+  Tab,
+  Tabs,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { CheckCircle2, ChevronDown, KeyRound, RefreshCw, ShieldCheck, SlidersHorizontal, XCircle } from "lucide-react";
+import { CheckCircle2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import {
   adminPermissionKeys,
   permissionGroups,
   permissionLabels,
-  roleLabels,
   type AdminPermission,
 } from "@/app/lib/admin-permissions";
 import type { AdminStaffRecord } from "@/app/lib/admin-staff";
@@ -24,34 +28,22 @@ import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { V2SearchField } from "@/components/admin-v2/shared/V2SearchField";
-import {
-  buildPermissionMatrix,
-  effectiveStaffAccess,
-  permissionsMetrics,
-  permissionRoleOrder,
-  queryPermissionRows,
-  roleCoverage,
-  staffPermissionOverrides,
-  type PermissionGrantFilter,
-  type PermissionMatrixRow,
-  type StaffPermissionOverride,
-} from "@/lib/admin-v2/permissions/permissions-query";
 
-type StaffPayload = {
-  staff?: AdminStaffRecord[];
-  errors?: string[];
+type StaffPayload = { staff?: AdminStaffRecord[]; errors?: string[] };
+
+type RoleRecord = {
+  key: string;
+  name: string;
+  description: string | null;
+  permissions: Record<AdminPermission, boolean>;
+  is_system: boolean;
+  is_active: boolean;
 };
 
-type ViewMode = "matrix" | "overrides";
+type ViewMode = "roles" | "overrides" | "compare";
+type OverrideChoice = "inherit" | "allow" | "deny";
 
-const groupFilters = ["all", ...permissionGroups.map((group) => group.title)] as const;
-const firstPermissionGroup = permissionGroups[0]?.title ?? "Orders";
-const grantFilters: Array<[PermissionGrantFilter, string]> = [
-  ["all", "All access"],
-  ["any", "Granted to any role"],
-  ["normal_none", "Owner-only / none"],
-  ["wide", "Widely granted"],
-];
+type LocalOverrides = Partial<Record<AdminPermission, OverrideChoice>>;
 
 async function readStaff(): Promise<AdminStaffRecord[]> {
   const response = await fetch("/api/admin/staff", { cache: "no-store" });
@@ -60,603 +52,303 @@ async function readStaff(): Promise<AdminStaffRecord[]> {
   return data.staff ?? [];
 }
 
-function statusColor(value: boolean) {
-  return value ? "success" : "default";
+async function readRoles(): Promise<RoleRecord[]> {
+  const response = await fetch("/api/admin/roles", { cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok) throw new Error((data.errors ?? ["Roles unavailable."]).join(" "));
+  return data.roles ?? [];
+}
+
+function permissionCount(permissions: Record<AdminPermission, boolean>) {
+  return adminPermissionKeys.filter((key) => permissions[key] === true).length;
+}
+
+function roleDefault(role: RoleRecord | undefined, permission: AdminPermission) {
+  return Boolean(role?.permissions?.[permission]);
+}
+
+function staffOverrideChoice(member: AdminStaffRecord | undefined, role: RoleRecord | undefined, permission: AdminPermission): OverrideChoice {
+  if (!member) return "inherit";
+  const actual = member.permissions?.[permission] === true;
+  const defaultGranted = roleDefault(role, permission);
+  if (actual === defaultGranted) return "inherit";
+  return actual ? "allow" : "deny";
+}
+
+function effectiveValue(defaultGranted: boolean, override: OverrideChoice) {
+  if (override === "allow") return true;
+  if (override === "deny") return false;
+  return defaultGranted;
 }
 
 function staffIdentity(member: AdminStaffRecord) {
   return `@${member.username}${member.email ? ` · ${member.email}` : " · No email"}`;
 }
 
-function dateLabel(value?: string) {
-  if (!value) return "Never";
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "Never";
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
 export function AdminV2PermissionsView() {
   const [staff, setStaff] = useState<AdminStaffRecord[]>([]);
+  const [roles, setRoles] = useState<RoleRecord[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("roles");
+  const [selectedRoleKey, setSelectedRoleKey] = useState("manager");
+  const [selectedStaffId, setSelectedStaffId] = useState("");
+  const [staffSearch, setStaffSearch] = useState("");
+  const [draftOverrides, setDraftOverrides] = useState<LocalOverrides>({});
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("");
-  const [group, setGroup] = useState<(typeof groupFilters)[number]>("all");
-  const [grantFilter, setGrantFilter] = useState<PermissionGrantFilter>("all");
-  const [selectedPermission, setSelectedPermission] = useState<AdminPermission>("dashboard.view");
-  const [viewMode, setViewMode] = useState<ViewMode>("matrix");
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    [firstPermissionGroup]: true,
-  });
+  const [notice, setNotice] = useState("");
 
   async function load() {
     setLoading(true);
     setError("");
     try {
-      setStaff(await readStaff());
+      const [nextStaff, nextRoles] = await Promise.all([readStaff(), readRoles()]);
+      setStaff(nextStaff);
+      setRoles(nextRoles);
+      setSelectedRoleKey((current) => nextRoles.some((role) => role.key === current) ? current : nextRoles[0]?.key ?? "manager");
+      setSelectedStaffId((current) => current || nextStaff[0]?.id || "");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Staff access data unavailable.");
+      setError(err instanceof Error ? err.message : "Access data unavailable.");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    void load();
-  }, []);
+  useEffect(() => { void load(); }, []);
 
-  const matrix = useMemo(() => buildPermissionMatrix(), []);
-  const filteredRows = useMemo(
-    () => queryPermissionRows(matrix, query, group, grantFilter),
-    [matrix, query, group, grantFilter]
-  );
-  const metrics = useMemo(() => permissionsMetrics(staff), [staff]);
-  const coverage = useMemo(() => roleCoverage(), []);
-  const overrides = useMemo(() => staffPermissionOverrides(staff), [staff]);
-  const selectedRow = matrix.find((row) => row.permission === selectedPermission) ?? matrix[0];
-  const selectedStaffAccess = useMemo(
-    () => effectiveStaffAccess(staff, selectedRow.permission),
-    [staff, selectedRow.permission]
-  );
+  const selectedRole = roles.find((role) => role.key === selectedRoleKey) ?? roles[0];
+  const selectedStaff = staff.find((member) => member.id === selectedStaffId) ?? staff[0];
+  const selectedStaffRole = roles.find((role) => role.key === selectedStaff?.role);
+  const filteredStaff = useMemo(() => {
+    const term = staffSearch.trim().toLowerCase();
+    if (!term) return staff;
+    return staff.filter((member) => [member.name, member.username, member.email, member.role].some((value) => String(value ?? "").toLowerCase().includes(term)));
+  }, [staff, staffSearch]);
 
-  return (
-    <>
-      <V2PageHeader
-        title="Permissions"
-        description="Review role defaults, effective staff access, and permission coverage."
-        actions={<V2Button href="/admin-v2/staff" variant="outlined">Manage Staff Access</V2Button>}
-      />
+  useEffect(() => { setDraftOverrides({}); }, [selectedStaffId]);
 
-      {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
+  const roleGrants = selectedStaffRole ? permissionCount(selectedStaffRole.permissions) : 0;
+  const explicitAllows = adminPermissionKeys.filter((permission) => (draftOverrides[permission] ?? staffOverrideChoice(selectedStaff, selectedStaffRole, permission)) === "allow").length;
+  const explicitDenies = adminPermissionKeys.filter((permission) => (draftOverrides[permission] ?? staffOverrideChoice(selectedStaff, selectedStaffRole, permission)) === "deny").length;
+  const effectiveGrants = adminPermissionKeys.filter((permission) => effectiveValue(roleDefault(selectedStaffRole, permission), draftOverrides[permission] ?? staffOverrideChoice(selectedStaff, selectedStaffRole, permission))).length;
+  const dirty = Object.keys(draftOverrides).length > 0;
 
-      <V2Card sx={{ mb: 2 }}>
-        <Stack direction="row" sx={{ gap: 0, flexWrap: "nowrap" }}>
-          {([
-            ["Total Permissions", metrics.totalPermissions],
-            ["Permission Groups", metrics.permissionGroups],
-            ["Built-in Roles", metrics.builtInRoles],
-            ["Staff Overrides", metrics.staffOverrides],
-          ] as Array<[string, number]>).map(([label, value], index) => (
-            <Box
-              key={label}
-              sx={{
-                flex: 1,
-                minWidth: 0,
-                px: index ? 2.5 : 0,
-                borderLeft: index ? 1 : 0,
-                borderColor: "divider",
-              }}
-            >
-              <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.7, fontWeight: 800 }}>
-                {label}
-              </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 950 }}>{value}</Typography>
-            </Box>
-          ))}
-        </Stack>
-      </V2Card>
-
-      <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap", mb: 2 }}>
-        <V2Button variant={viewMode === "matrix" ? "contained" : "outlined"} startIcon={<KeyRound size={15} />} onClick={() => setViewMode("matrix")}>
-          Permission Matrix
-        </V2Button>
-        <V2Button variant={viewMode === "overrides" ? "contained" : "outlined"} startIcon={<SlidersHorizontal size={15} />} onClick={() => setViewMode("overrides")}>
-          Staff Overrides
-        </V2Button>
-        <V2Button variant="outlined" startIcon={<RefreshCw size={15} />} disabled={loading} onClick={() => { void load(); }} sx={{ ml: { md: "auto" } }}>
-          Refresh
-        </V2Button>
-      </Stack>
-
-      {viewMode === "matrix" ? (
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1.14fr) minmax(22rem, 0.86fr)" }, gap: 2 }}>
-          <Stack sx={{ gap: 2 }}>
-            <V2Card>
-              <RoleCoverageCompact coverage={coverage} />
-
-              <Stack direction={{ xs: "column", lg: "row" }} sx={{ gap: 1, alignItems: { lg: "center" }, mb: 1.5 }}>
-                <Box component="form" onSubmit={(event) => event.preventDefault()} sx={{ minWidth: { lg: 320 } }}>
-                  <V2SearchField
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search permission label or key"
-                    slotProps={{ htmlInput: { "aria-label": "Search permissions" } }}
-                    sx={{ width: "100%" }}
-                  />
-                </Box>
-                <TextField select size="small" label="Group" value={group} onChange={(event) => setGroup(event.target.value as (typeof groupFilters)[number])} sx={{ minWidth: 180 }}>
-                  {groupFilters.map((value) => <MenuItem key={value} value={value}>{value === "all" ? "All Groups" : value}</MenuItem>)}
-                </TextField>
-                <TextField select size="small" label="Coverage" value={grantFilter} onChange={(event) => setGrantFilter(event.target.value as PermissionGrantFilter)} sx={{ minWidth: 200 }}>
-                  {grantFilters.map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}
-                </TextField>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: { lg: "auto" } }}>{filteredRows.length} permissions</Typography>
-              </Stack>
-
-              <PermissionMatrix
-                rows={filteredRows}
-                allRows={matrix}
-                query={query}
-                group={group}
-                expandedGroups={expandedGroups}
-                onToggleGroup={(groupName) => setExpandedGroups((current) => ({ ...current, [groupName]: !current[groupName] }))}
-                selectedPermission={selectedRow.permission}
-                onSelect={(permission) => setSelectedPermission(permission)}
-              />
-            </V2Card>
-          </Stack>
-
-          <V2Card sx={{ alignSelf: "start", position: { lg: "sticky" }, top: { lg: 88 } }}>
-            <PermissionDetail row={selectedRow} staffAccess={selectedStaffAccess} />
-          </V2Card>
-        </Box>
-      ) : (
-        <StaffOverridesView overrides={overrides} />
-      )}
-    </>
-  );
-}
-
-function RoleCoverageCompact({
-  coverage,
-}: {
-  coverage: ReturnType<typeof roleCoverage>;
-}) {
-  return (
-    <Box sx={{ mb: 1.5, border: 1, borderColor: "divider", borderRadius: 2.5, overflow: "hidden", bgcolor: "rgba(124,77,255,0.035)" }}>
-      <Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 0 }}>
-        {coverage.map((item, index) => (
-          <Box
-            key={item.role}
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              px: 1.35,
-              py: 1,
-              borderLeft: { xs: 0, md: index ? 1 : 0 },
-              borderTop: { xs: index ? 1 : 0, md: 0 },
-              borderColor: "divider",
-            }}
-          >
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontWeight: 900, lineHeight: 1.2, textTransform: "uppercase" }}>
-              {item.label}
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 950 }}>{item.count} / {item.total}</Typography>
-          </Box>
-        ))}
-      </Stack>
-      <Typography variant="caption" color="text.secondary" sx={{ display: "block", px: 1.35, py: 0.7, borderTop: 1, borderColor: "divider" }}>
-        Owner access is controlled by the protected admin authentication path and is always full access.
-      </Typography>
-    </Box>
-  );
-}
-
-function PermissionMatrix({
-  rows,
-  allRows,
-  query,
-  group,
-  expandedGroups,
-  onToggleGroup,
-  selectedPermission,
-  onSelect,
-}: {
-  rows: PermissionMatrixRow[];
-  allRows: PermissionMatrixRow[];
-  query: string;
-  group: string;
-  expandedGroups: Record<string, boolean>;
-  onToggleGroup: (groupName: string) => void;
-  selectedPermission: AdminPermission;
-  onSelect: (permission: AdminPermission) => void;
-}) {
-  const configuredGroups = permissionGroups.map((permissionGroup) => permissionGroup.title);
-  const displayGroups = allRows.some((row) => !configuredGroups.includes(row.group))
-    ? [...configuredGroups, "Other"]
-    : configuredGroups;
-  const groupedRows = displayGroups
-    .map((groupName) => ({
-      groupName,
-      rows: rows.filter((row) => row.group === groupName),
-      totalRows: allRows.filter((row) => row.group === groupName),
-    }))
-    .filter((item) => item.rows.length > 0);
-  const forceOpen = query.trim().length > 0 || group !== "all";
-
-  return (
-    <Box sx={{ border: 1, borderColor: "divider", borderRadius: 3, overflow: "hidden" }}>
-      <Box sx={{ overflowX: "auto" }}>
-        <Box sx={{ minWidth: 980 }}>
-          <PermissionMatrixHeader />
-          <Stack sx={{ gap: 0 }}>
-            {groupedRows.map((item, index) => {
-              const open = forceOpen || expandedGroups[item.groupName] === true;
-              return (
-                <PermissionGroupSection
-                  key={item.groupName}
-                  groupName={item.groupName}
-                  rows={item.rows}
-                  totalRows={item.totalRows.length}
-                  open={open}
-                  selectedPermission={selectedPermission}
-                  onToggle={() => onToggleGroup(item.groupName)}
-                  onSelect={onSelect}
-                  forceOpen={forceOpen}
-                  first={index === 0}
-                />
-              );
-            })}
-          </Stack>
-          {!rows.length ? (
-            <Box sx={{ py: 7, textAlign: "center" }}>
-              <Typography variant="h6">No permissions found</Typography>
-              <Typography color="text.secondary">Try a different search, group, or coverage filter.</Typography>
-            </Box>
-          ) : null}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
-
-function PermissionMatrixHeader() {
-  return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "minmax(18rem, 1.55fr) repeat(6, minmax(6.5rem, 0.72fr))",
-        gap: 1,
-        px: 1.25,
-        py: 0.8,
-        bgcolor: "rgba(124,77,255,0.055)",
-        position: "sticky",
-        top: 0,
-        zIndex: 1,
-      }}
-    >
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900, textTransform: "uppercase" }}>Permission</Typography>
-      {permissionRoleOrder.map((role) => (
-        <Typography key={role} variant="caption" color="text.secondary" sx={{ fontWeight: 900, textTransform: "uppercase", textAlign: "center" }}>
-          {roleLabels[role]}
-        </Typography>
-      ))}
-    </Box>
-  );
-}
-
-function PermissionGroupSection({
-  groupName,
-  rows,
-  totalRows,
-  open,
-  forceOpen,
-  first,
-  selectedPermission,
-  onToggle,
-  onSelect,
-}: {
-  groupName: string;
-  rows: PermissionMatrixRow[];
-  totalRows: number;
-  open: boolean;
-  forceOpen: boolean;
-  first: boolean;
-  selectedPermission: AdminPermission;
-  onToggle: () => void;
-  onSelect: (permission: AdminPermission) => void;
-}) {
-  const normalRoleTotal = permissionRoleOrder.length - 1;
-  const normalRoleGrants = rows.reduce((sum, row) => sum + row.normalGrantCount, 0);
-  const maxNormalRoleGrants = rows.length * normalRoleTotal;
-
-  return (
-    <Box sx={{ borderTop: first ? 0 : 1, borderColor: "divider" }}>
-      <Box
-        component="button"
-        type="button"
-        aria-expanded={open}
-        onClick={onToggle}
-        disabled={forceOpen}
-        sx={{
-          width: "100%",
-          display: "grid",
-          gridTemplateColumns: "minmax(18rem, 1.55fr) repeat(6, minmax(6.5rem, 0.72fr))",
-          gap: 1,
-          alignItems: "center",
-          px: 1.25,
-          py: 0.85,
-          border: 0,
-          borderRadius: 0,
-          cursor: forceOpen ? "default" : "pointer",
-          color: "text.primary",
-          bgcolor: open ? "rgba(124,77,255,0.055)" : "rgba(17,24,39,0.018)",
-          textAlign: "left",
-          "&:hover": { bgcolor: "rgba(124,77,255,0.07)" },
-          "&:disabled": { color: "text.primary" },
-          "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: -2 },
-        }}
-      >
-        <Stack direction="row" sx={{ alignItems: "center", gap: 1, minWidth: 0 }}>
-          <ChevronDown
-            size={16}
-            style={{
-              transform: open ? "rotate(0deg)" : "rotate(-90deg)",
-              transition: "transform 140ms ease",
-            }}
-          />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body2" sx={{ fontWeight: 950 }}>{groupName}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {rows.length}{rows.length === totalRows ? "" : ` of ${totalRows}`} permissions
-            </Typography>
-          </Box>
-        </Stack>
-        <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "span 6", textAlign: "right", fontWeight: 850 }}>
-          {normalRoleGrants} / {maxNormalRoleGrants} non-owner role grants
-        </Typography>
-      </Box>
-      {open ? rows.map((row) => (
-        <PermissionMatrixRowItem
-          key={row.permission}
-          row={row}
-          selected={selectedPermission === row.permission}
-          onSelect={() => onSelect(row.permission)}
-        />
-      )) : null}
-    </Box>
-  );
-}
-
-function PermissionMatrixRowItem({
-  row,
-  selected,
-  onSelect,
-}: {
-  row: PermissionMatrixRow;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <Box
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "minmax(18rem, 1.55fr) repeat(6, minmax(6.5rem, 0.72fr))",
-        gap: 1,
-        px: 1.25,
-        py: 0.85,
-        alignItems: "center",
-        borderTop: 1,
-        borderColor: "divider",
-        cursor: "pointer",
-        bgcolor: selected ? "rgba(124,77,255,0.075)" : "transparent",
-        "&:hover": { bgcolor: "rgba(124,77,255,0.045)" },
-        "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: -2 },
-      }}
-    >
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 900, lineHeight: 1.25 }}>{row.label}</Typography>
-        <Typography variant="caption" color="text.secondary">{row.permission}</Typography>
-      </Box>
-      {permissionRoleOrder.map((role) => (
-        <Box key={role} sx={{ display: "flex", justifyContent: "center" }}>
-          <GrantChip granted={row.grants[role]} label={role === "owner" ? "Full" : row.grants[role] ? "Yes" : "No"} />
-        </Box>
-      ))}
-    </Box>
-  );
-}
-
-function PermissionDetail({
-  row,
-  staffAccess,
-}: {
-  row: PermissionMatrixRow;
-  staffAccess: ReturnType<typeof effectiveStaffAccess>;
-}) {
-  return (
-    <Stack sx={{ gap: 2 }}>
-      <Box>
-        <Typography variant="overline" color="text.secondary">Overview</Typography>
-        <Typography variant="h5" sx={{ fontWeight: 950 }}>{row.label}</Typography>
-        <Typography variant="body2" color="text.secondary">{row.permission}</Typography>
-        <Chip size="small" label={row.group} sx={{ mt: 1, fontWeight: 850 }} />
-      </Box>
-
-      <Divider />
-
-      <Box>
-        <Typography variant="overline" color="text.secondary">Default role access</Typography>
-        <Stack sx={{ gap: 0.75, mt: 0.75 }}>
-          {permissionRoleOrder.map((role) => (
-            <Stack key={role} direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 850 }}>{roleLabels[role]}</Typography>
-              <GrantChip granted={row.grants[role]} label={role === "owner" ? "Full access" : row.grants[role] ? "Yes" : "No"} />
-            </Stack>
-          ))}
-        </Stack>
-      </Box>
-
-      <Divider />
-
-      <Box>
-        <Typography variant="overline" color="text.secondary">Real staff access</Typography>
-        <Stack sx={{ gap: 0.85, mt: 0.75 }}>
-          {staffAccess.map((access) => (
-            <Box key={access.staff.id} sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.1 }}>
-              <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 900 }}>{access.staff.name}</Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {staffIdentity(access.staff)}
-                  </Typography>
-                </Box>
-                <Chip size="small" color={statusColor(access.staff.isActive)} label={access.staff.isActive ? "Active" : "Inactive"} />
-              </Stack>
-              <Stack direction="row" sx={{ gap: 0.7, flexWrap: "wrap", mt: 0.9 }}>
-                <Chip size="small" label={roleLabels[access.staff.role]} sx={{ fontWeight: 800 }} />
-                <GrantChip granted={access.granted} label={access.granted ? "Granted" : "Not granted"} />
-                <Chip size="small" color={access.override ? "warning" : "default"} label={access.override ? "Custom override" : "Default"} sx={{ fontWeight: 800 }} />
-              </Stack>
-              <Typography variant="caption" color="text.secondary">Last login: {dateLabel(access.staff.lastLoginAt)}</Typography>
-            </Box>
-          ))}
-          {!staffAccess.length ? (
-            <Box sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.4, textAlign: "center" }}>
-              <Typography variant="body2" sx={{ fontWeight: 850 }}>No staff records available</Typography>
-              <Typography variant="caption" color="text.secondary">Real staff access will appear when staff data is available.</Typography>
-            </Box>
-          ) : null}
-        </Stack>
-      </Box>
-    </Stack>
-  );
-}
-
-function StaffOverridesView({ overrides }: { overrides: StaffPermissionOverride[] }) {
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  async function saveOverride(staffId: string, permission: AdminPermission, value: "inherit" | "allow" | "deny") {
-    setMessage("");
+  async function saveOverrides() {
+    if (!selectedStaff) return;
+    setSaving(true);
     setError("");
-    const overridesPayload = value === "inherit" ? { [permission]: null } : { [permission]: value === "allow" };
-    const response = await fetch(`/api/admin/staff/${encodeURIComponent(staffId)}/permissions`, {
+    const payload = adminPermissionKeys.reduce((result, permission) => {
+      const value = draftOverrides[permission];
+      if (value === "inherit") result[permission] = null;
+      if (value === "allow") result[permission] = true;
+      if (value === "deny") result[permission] = false;
+      return result;
+    }, {} as Record<string, boolean | null>);
+    const response = await fetch(`/api/admin/staff/${encodeURIComponent(selectedStaff.id)}/permissions`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ overrides: overridesPayload }),
+      body: JSON.stringify({ overrides: payload }),
     });
     const data = await response.json().catch(() => ({}));
+    setSaving(false);
     if (!response.ok) {
       setError((data.errors ?? ["Permission override was rejected."]).join(" "));
       return;
     }
-    setMessage("Permission override saved. Refresh to view the updated effective access.");
+    setNotice("Permission overrides saved.");
+    setDraftOverrides({});
+    await load();
   }
-  return (
-    <V2Card>
-      <Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: { md: "center" }, justifyContent: "space-between", mb: 2 }}>
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 950 }}>Staff Overrides</Typography>
-          <Typography variant="body2" color="text.secondary">Accounts whose explicit permission map differs from their built-in role defaults.</Typography>
-        </Box>
-        <V2Button href="/admin-v2/staff" variant="outlined">Manage Staff Access</V2Button>
-      </Stack>
-      {message ? <Alert severity="success" sx={{ mb: 1.5 }} onClose={() => setMessage("")}>{message}</Alert> : null}
-      {error ? <Alert severity="error" sx={{ mb: 1.5 }} onClose={() => setError("")}>{error}</Alert> : null}
 
-      <Stack sx={{ gap: 1.25 }}>
-        {overrides.map((override) => (
-          <Box key={override.staff.id} sx={{ border: 1, borderColor: "divider", borderRadius: 3, p: 1.5 }}>
-            <Stack direction={{ xs: "column", md: "row" }} sx={{ justifyContent: "space-between", gap: 1.5 }}>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>{override.staff.name}</Typography>
-                <Typography variant="body2" color="text.secondary">{staffIdentity(override.staff)}</Typography>
-                <Stack direction="row" sx={{ gap: 0.7, flexWrap: "wrap", mt: 0.85 }}>
-                  <Chip size="small" label={roleLabels[override.staff.role]} sx={{ fontWeight: 850 }} />
-                  <Chip size="small" color={statusColor(override.staff.isActive)} label={override.staff.isActive ? "Active" : "Inactive"} sx={{ fontWeight: 850 }} />
-                  <Chip size="small" color="warning" label={`${override.differenceCount} custom differences`} sx={{ fontWeight: 850 }} />
-                </Stack>
-              </Box>
-            </Stack>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 1.25, mt: 1.4 }}>
-              <OverrideList title="Granted beyond default" permissions={override.grantedBeyondDefault} positive />
-              <OverrideList title="Removed from default" permissions={override.removedFromDefault} />
-            </Box>
-            <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap", mt: 1.4 }}>
-              <TextField select size="small" label="Permission" defaultValue="dashboard.view" sx={{ minWidth: 220 }}>
-                {adminPermissionKeys.map(permission => <MenuItem key={permission} value={permission}>{permissionLabels[permission]}</MenuItem>)}
-              </TextField>
-              <V2Button size="small" variant="outlined" onClick={(event) => {
-                const root = event.currentTarget.parentElement;
-                const input = root?.querySelector("input") as HTMLInputElement | null;
-                const permission = (input?.value || "dashboard.view") as AdminPermission;
-                void saveOverride(override.staff.id, permission, "inherit");
-              }}>Set Inherit</V2Button>
-              <V2Button size="small" variant="outlined" onClick={(event) => {
-                const root = event.currentTarget.parentElement;
-                const input = root?.querySelector("input") as HTMLInputElement | null;
-                const permission = (input?.value || "dashboard.view") as AdminPermission;
-                void saveOverride(override.staff.id, permission, "allow");
-              }}>Allow</V2Button>
-              <V2Button size="small" variant="outlined" onClick={(event) => {
-                const root = event.currentTarget.parentElement;
-                const input = root?.querySelector("input") as HTMLInputElement | null;
-                const permission = (input?.value || "dashboard.view") as AdminPermission;
-                void saveOverride(override.staff.id, permission, "deny");
-              }}>Deny</V2Button>
-            </Stack>
-          </Box>
-        ))}
-        {!overrides.length ? (
-          <Box sx={{ py: 8, textAlign: "center", border: 1, borderColor: "divider", borderRadius: 3 }}>
-            <ShieldCheck size={30} />
-            <Typography variant="h6" sx={{ mt: 1, fontWeight: 950 }}>No custom staff overrides</Typography>
-            <Typography color="text.secondary">Current staff permissions match their built-in role defaults.</Typography>
-          </Box>
-        ) : null}
-      </Stack>
+  return <>
+    <V2PageHeader title="Permissions" description="Manage role permissions, explicit staff overrides, and compare access without changing the permission catalog." actions={<V2Button href="/admin-v2/staff" variant="outlined">Manage Staff Access</V2Button>} />
+    <Box aria-hidden sx={{ height: 0, display: "flex", justifyContent: "flex-end", pr: 3, pointerEvents: "none" }}>
+      <Box sx={{ width: 180, height: 84, mt: -9, borderRadius: "999px", opacity: 0.5, background: "radial-gradient(circle at 25% 40%, rgba(236,72,153,0.18), transparent 34%), radial-gradient(circle at 72% 34%, rgba(124,77,255,0.16), transparent 38%), linear-gradient(135deg, rgba(255,255,255,0.55), rgba(236,72,153,0.08))", filter: "blur(0.4px)" }} />
+    </Box>
+    {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
+    {notice ? <Alert severity="success" sx={{ mb: 2 }} onClose={() => setNotice("")}>{notice}</Alert> : null}
+
+    <V2Card sx={{ mb: 2, overflow: "hidden", "& .MuiCardContent-root": { p: 0, "&:last-child": { pb: 0 } } }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+        <Metric label="Permissions" value={adminPermissionKeys.length} helper="Catalog controlled" />
+        <Metric label="Staff Roles" value={roles.filter((role) => role.is_system).length || 5} helper="Excludes owner" />
+        <Metric label="Protected Owner" value="Full" helper="Environment principal" />
+        <Metric label="Staff Overrides" value={staff.filter((member) => roles.some((role) => role.key === member.role) && adminPermissionKeys.some((permission) => staffOverrideChoice(member, roles.find((role) => role.key === member.role), permission) !== "inherit")).length} helper="Explicit differences" />
+      </Box>
     </V2Card>
-  );
+
+    <V2Card sx={{ minHeight: 620, maxHeight: { xl: "calc(100vh - 220px)" }, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1, alignItems: "center", mb: 2 }}>
+        <Tabs value={viewMode} onChange={(_, value) => setViewMode(value)} aria-label="Permission workspace tabs">
+          <Tab value="roles" label="Role Permissions" />
+          <Tab value="overrides" label="Staff Overrides" />
+          <Tab value="compare" label="Compare Access" />
+        </Tabs>
+        <V2Button variant="outlined" startIcon={<RefreshCw size={15} />} disabled={loading} onClick={() => { void load(); }}>Refresh</V2Button>
+      </Stack>
+      <Box sx={{ minHeight: 0, flex: 1, overflow: "hidden" }}>
+      {viewMode === "roles" ? <RolePermissionsView roles={roles} selectedRole={selectedRole} selectedKey={selectedRoleKey} onSelect={setSelectedRoleKey} onReload={load} onError={setError} onNotice={setNotice} /> : null}
+      {viewMode === "overrides" ? <StaffOverridesView staff={filteredStaff} search={staffSearch} onSearch={setStaffSearch} selectedStaff={selectedStaff} selectedStaffRole={selectedStaffRole} selectedStaffId={selectedStaffId} onSelectStaff={setSelectedStaffId} draftOverrides={draftOverrides} onDraftOverrides={setDraftOverrides} roleGrants={roleGrants} explicitAllows={explicitAllows} explicitDenies={explicitDenies} effectiveGrants={effectiveGrants} dirty={dirty} saving={saving} onSave={saveOverrides} /> : null}
+      {viewMode === "compare" ? <CompareMatrix roles={roles} /> : null}
+      </Box>
+    </V2Card>
+  </>;
 }
 
-function OverrideList({ title, permissions, positive }: { title: string; permissions: AdminPermission[]; positive?: boolean }) {
-  return (
-    <Box sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, p: 1.25, bgcolor: positive ? "rgba(46,125,50,0.06)" : "rgba(237,108,2,0.06)" }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 950, mb: 0.75 }}>{title}</Typography>
-      <Stack sx={{ gap: 0.55 }}>
-        {permissions.map((permission) => (
-          <Typography key={permission} variant="caption" sx={{ fontWeight: 800 }}>
-            {permissionLabels[permission]}
-          </Typography>
-        ))}
-        {!permissions.length ? <Typography variant="caption" color="text.secondary">None</Typography> : null}
+function Metric({ label, value, helper }: { label: string; value: number | string; helper: string }) {
+  return <Box sx={{ px: 1.35, py: 1, borderRight: 1, borderColor: "divider", "&:last-of-type": { borderRight: 0 } }}>
+    <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.65, fontWeight: 850 }}>{label}</Typography>
+    <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.15 }}>{value}</Typography>
+    <Typography variant="caption" color="text.secondary">{helper}</Typography>
+  </Box>;
+}
+
+function RolePermissionsView({ roles, selectedRole, selectedKey, onSelect, onReload, onError, onNotice }: { roles: RoleRecord[]; selectedRole?: RoleRecord; selectedKey: string; onSelect: (key: string) => void; onReload: () => Promise<void>; onError: (value: string) => void; onNotice: (value: string) => void }) {
+  const [openGroup, setOpenGroup] = useState(permissionGroups[0]?.title ?? "");
+  const [draftPermissions, setDraftPermissions] = useState<Record<AdminPermission, boolean> | null>(null);
+  useEffect(() => {
+    setDraftPermissions(null);
+    setOpenGroup(permissionGroups[0]?.title ?? "");
+  }, [selectedRole?.key]);
+  const workingPermissions = draftPermissions ?? selectedRole?.permissions;
+  const dirty = Boolean(draftPermissions);
+  function setDraftPermission(permission: AdminPermission, enabled: boolean) {
+    if (!selectedRole || selectedRole.is_system) return;
+    setDraftPermissions({ ...(draftPermissions ?? selectedRole.permissions), [permission]: enabled });
+  }
+  async function saveRolePermissions() {
+    if (!selectedRole || selectedRole.is_system) return;
+    const response = await fetch(`/api/admin/roles/${encodeURIComponent(selectedRole.key)}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: selectedRole.name, description: selectedRole.description, permissions: draftPermissions ?? selectedRole.permissions, isActive: selectedRole.is_active }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      onError((data.errors ?? ["Role permission update was rejected."]).join(" "));
+      return;
+    }
+    onNotice("Role permissions updated.");
+    setDraftPermissions(null);
+    await onReload();
+  }
+  return <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "20rem minmax(0, 1fr)" }, gap: 2, minHeight: 0, height: "100%" }}>
+    <Stack sx={{ gap: 0.25, minHeight: 0, overflow: "auto", pr: 0.5 }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", px: 1, py: 1, bgcolor: "rgba(124,77,255,0.035)" }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Owner</Typography>
+        <Typography variant="caption" color="text.secondary">Protected full access · read-only</Typography>
+      </Box>
+      {roles.map((role) => <Box component="button" type="button" key={role.key} onClick={() => onSelect(role.key)} sx={{ width: "100%", textAlign: "left", border: 0, borderLeft: 3, borderLeftColor: selectedKey === role.key ? "primary.main" : "transparent", borderBottom: 1, borderColor: "divider", p: 1.05, bgcolor: selectedKey === role.key ? "rgba(124,77,255,0.07)" : "transparent", cursor: "pointer", "&:hover": { bgcolor: "rgba(124,77,255,0.04)" }, "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: -2 } }}>
+        <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}><Typography variant="body2" sx={{ fontWeight: 900 }}>{role.name}</Typography><Chip size="small" label={role.is_system ? "System" : "Custom"} /></Stack>
+        <Typography variant="caption" color="text.secondary">{permissionCount(role.permissions)} / {adminPermissionKeys.length} enabled</Typography>
+      </Box>)}
+    </Stack>
+    {selectedRole && workingPermissions ? <Stack sx={{ gap: 1.25, minHeight: 0, overflow: "hidden" }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
+        <Box><Typography variant="h6" sx={{ fontWeight: 950 }}>{selectedRole.name}</Typography><Typography variant="body2" color="text.secondary">{selectedRole.key} · {selectedRole.is_system ? "System Role" : selectedRole.is_active ? "Active custom role" : "Disabled custom role"}</Typography></Box>
+        <Stack direction="row" sx={{ gap: 0.75 }}><Chip size="small" label={`${permissionCount(selectedRole.permissions)} / ${adminPermissionKeys.length} enabled`} /><Chip size="small" label={selectedRole.is_system ? "Read-only" : "Editable"} color={selectedRole.is_system ? "default" : "primary"} /></Stack>
+      </Stack>
+      {selectedRole.is_system ? <Alert severity="info">Built-in role permissions are read-only. Custom roles can be edited here.</Alert> : null}
+      {!selectedRole.is_system ? <Stack direction="row" sx={{ gap: 1, justifyContent: "flex-end" }}>
+        {dirty ? <Chip size="small" label="Unsaved changes" color="warning" /> : null}
+        <V2Button size="small" variant="outlined" disabled={!dirty} onClick={() => setDraftPermissions(null)}>Reset</V2Button>
+        <V2Button size="small" variant="contained" disabled={!dirty} onClick={() => { void saveRolePermissions(); }}>Save Changes</V2Button>
+      </Stack> : null}
+      <Stack sx={{ gap: 0.75, minHeight: 0, overflow: "auto", pr: 0.5, overscrollBehavior: "contain" }}>
+        {permissionGroups.map((group) => <PermissionModule key={group.title} title={group.title} permissions={group.permissions} values={workingPermissions} open={openGroup === group.title} editable={!selectedRole.is_system} onToggle={() => setOpenGroup((current) => current === group.title ? "" : group.title)} onChange={setDraftPermission} />)}
+      </Stack>
+    </Stack> : null}
+  </Box>;
+}
+
+function PermissionModule({ title, permissions, values, open, editable, onToggle, onChange }: { title: string; permissions: AdminPermission[]; values: Record<AdminPermission, boolean>; open: boolean; editable: boolean; onToggle: () => void; onChange?: (permission: AdminPermission, enabled: boolean) => void }) {
+  const enabled = permissions.filter((permission) => values[permission]).length;
+  const pct = Math.round((enabled / permissions.length) * 100);
+  return <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+    <Box component="button" type="button" onClick={onToggle} sx={{ width: "100%", border: 0, bgcolor: open ? "rgba(124,77,255,0.055)" : "transparent", cursor: "pointer", px: 1.25, py: 1, textAlign: "left", "&:hover": { bgcolor: "rgba(124,77,255,0.04)" } }}>
+      <Stack direction="row" sx={{ alignItems: "center", gap: 1.1 }}>
+        <Box sx={{ width: 30, height: 30, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: "rgba(124,77,255,0.10)", color: "primary.main", fontWeight: 950 }}>{title.slice(0, 1)}</Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 900 }}>{title}</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>{enabled} / {permissions.length}</Typography>
+          </Stack>
+          <Box sx={{ mt: 0.55, height: 5, borderRadius: 999, bgcolor: "rgba(124,77,255,0.10)", overflow: "hidden" }}><Box sx={{ width: `${pct}%`, height: "100%", bgcolor: "primary.main", opacity: 0.65 }} /></Box>
+        </Box>
       </Stack>
     </Box>
-  );
+    {open ? <Box sx={{ maxHeight: 340, overflowY: "auto", overscrollBehavior: "contain", borderTop: 1, borderColor: "divider" }}>
+      {permissions.map((permission) => <Stack key={permission} direction="row" sx={{ alignItems: "center", gap: 1, px: 1.25, py: 0.72, borderBottom: 1, borderColor: "divider", "&:last-child": { borderBottom: 0 } }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}><Typography variant="body2" sx={{ fontWeight: 820 }}>{permissionLabels[permission]}</Typography><Typography variant="caption" color="text.secondary">{permission}</Typography></Box>
+        {editable ? <Checkbox size="small" checked={Boolean(values[permission])} onChange={(event) => onChange?.(permission, event.target.checked)} /> : values[permission] ? <CheckCircle2 size={16} color="#2e7d32" /> : <XCircle size={16} color="#9aa0aa" />}
+      </Stack>)}
+    </Box> : null}
+  </Box>;
 }
 
-function GrantChip({ granted, label }: { granted: boolean; label: string }) {
-  return (
-    <Chip
-      size="small"
-      icon={granted ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-      color={granted ? "success" : "default"}
-      label={label}
-      sx={{ fontWeight: 850, minWidth: 72 }}
-    />
-  );
+function StaffOverridesView({ staff, search, onSearch, selectedStaff, selectedStaffRole, selectedStaffId, onSelectStaff, draftOverrides, onDraftOverrides, roleGrants, explicitAllows, explicitDenies, effectiveGrants, dirty, saving, onSave }: { staff: AdminStaffRecord[]; search: string; onSearch: (value: string) => void; selectedStaff?: AdminStaffRecord; selectedStaffRole?: RoleRecord; selectedStaffId: string; onSelectStaff: (id: string) => void; draftOverrides: LocalOverrides; onDraftOverrides: (value: LocalOverrides) => void; roleGrants: number; explicitAllows: number; explicitDenies: number; effectiveGrants: number; dirty: boolean; saving: boolean; onSave: () => void }) {
+  const [openGroup, setOpenGroup] = useState(permissionGroups[0]?.title ?? "");
+  useEffect(() => { setOpenGroup(permissionGroups[0]?.title ?? ""); }, [selectedStaff?.id]);
+  return <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "20rem minmax(0, 1fr)" }, gap: 2, height: "100%", minHeight: 0 }}>
+    <Stack sx={{ gap: 0.5, minHeight: 0, overflow: "auto", pr: 0.5 }}>
+      <V2SearchField value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search staff" slotProps={{ htmlInput: { "aria-label": "Search staff overrides" } }} />
+      {staff.map((member) => <Box component="button" type="button" key={member.id} onClick={() => onSelectStaff(member.id)} sx={{ width: "100%", textAlign: "left", border: 0, borderLeft: 3, borderLeftColor: selectedStaffId === member.id ? "primary.main" : "transparent", borderBottom: 1, borderColor: "divider", p: 1.05, bgcolor: selectedStaffId === member.id ? "rgba(124,77,255,0.07)" : "transparent", cursor: "pointer", "&:hover": { bgcolor: "rgba(124,77,255,0.04)" } }}>
+        <Typography variant="body2" sx={{ fontWeight: 900 }}>{member.name}</Typography><Typography variant="caption" color="text.secondary">{staffIdentity(member)}</Typography>
+      </Box>)}
+    </Stack>
+    {selectedStaff ? <Stack sx={{ gap: 1.2, minHeight: 0, overflow: "hidden" }}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, alignItems: "flex-start" }}>
+        <Box><Typography variant="h6" sx={{ fontWeight: 950 }}>{selectedStaff.name}</Typography><Typography variant="body2" color="text.secondary">@{selectedStaff.username} · {selectedStaff.role} · {selectedStaff.isActive ? "Active" : "Inactive"}</Typography></Box>
+        <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap", justifyContent: "flex-end" }}><Chip size="small" label={`Role grants: ${roleGrants}`} /><Chip size="small" label={`Allows: ${explicitAllows}`} color={explicitAllows ? "success" : "default"} /><Chip size="small" label={`Denies: ${explicitDenies}`} color={explicitDenies ? "warning" : "default"} /><Chip size="small" label={`Effective: ${effectiveGrants}`} /></Stack>
+      </Stack>
+      <Stack direction="row" sx={{ gap: 1, justifyContent: "flex-end" }}>{dirty ? <Chip label="Unsaved changes" color="warning" /> : null}<V2Button variant="outlined" disabled={!dirty || saving} onClick={() => onDraftOverrides({})}>Cancel Changes</V2Button><V2Button variant="contained" loading={saving} disabled={!dirty} onClick={onSave}>Save Changes</V2Button></Stack>
+      <Stack sx={{ minHeight: 0, overflow: "auto", overscrollBehavior: "contain" }}>
+      {permissionGroups.map((group) => {
+        const enabled = group.permissions.filter((permission) => effectiveValue(roleDefault(selectedStaffRole, permission), draftOverrides[permission] ?? staffOverrideChoice(selectedStaff, selectedStaffRole, permission))).length;
+        return <Box key={group.title} sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Box component="button" type="button" onClick={() => setOpenGroup((current) => current === group.title ? "" : group.title)} sx={{ width: "100%", border: 0, cursor: "pointer", px: 1.25, py: 1, textAlign: "left", bgcolor: openGroup === group.title ? "rgba(124,77,255,0.055)" : "transparent" }}><Stack direction="row" sx={{ justifyContent: "space-between" }}><Typography variant="subtitle2" sx={{ fontWeight: 950 }}>{group.title}</Typography><Typography variant="caption" color="text.secondary">{enabled}/{group.permissions.length}</Typography></Stack></Box>
+        {openGroup === group.title ? <Box sx={{ maxHeight: 340, overflowY: "auto", borderTop: 1, borderColor: "divider" }}>{group.permissions.map((permission) => {
+          const baseline = roleDefault(selectedStaffRole, permission);
+          const current = draftOverrides[permission] ?? staffOverrideChoice(selectedStaff, selectedStaffRole, permission);
+          const effective = effectiveValue(baseline, current);
+          return <Stack key={permission} direction="row" sx={{ alignItems: "center", gap: 1.25, px: 1.25, py: 0.72, borderBottom: 1, borderColor: "divider", "&:last-child": { borderBottom: 0 } }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}><Typography variant="body2" sx={{ fontWeight: 850 }}>{permissionLabels[permission]}</Typography><Typography variant="caption" color="text.secondary">{permission}</Typography></Box>
+            <Typography variant="caption" sx={{ width: 70, color: baseline ? "success.main" : "text.secondary", fontWeight: 850 }}>{baseline ? "Allow" : "Deny"}</Typography>
+            <ToggleButtonGroup exclusive size="small" value={current} onChange={(_, value) => { if (value) onDraftOverrides({ ...draftOverrides, [permission]: value }); }} aria-label={`${permission} override`}><ToggleButton value="inherit">Inherit</ToggleButton><ToggleButton value="allow">Allow</ToggleButton><ToggleButton value="deny">Deny</ToggleButton></ToggleButtonGroup>
+            <Typography variant="caption" sx={{ width: 74, color: effective ? "success.main" : "text.secondary", fontWeight: 850 }}>{effective ? "Allowed" : "Denied"}</Typography>
+          </Stack>;
+        })}</Box> : null}
+      </Box>;})}
+      </Stack>
+    </Stack> : <Alert severity="info">Select a staff member to edit explicit overrides.</Alert>}
+  </Box>;
+}
+
+function CompareMatrix({ roles }: { roles: RoleRecord[] }) {
+  const [roleA, setRoleA] = useState(roles[0]?.key ?? "");
+  const [roleB, setRoleB] = useState(roles[1]?.key ?? roles[0]?.key ?? "");
+  const [open, setOpen] = useState(false);
+  const a = roles.find((role) => role.key === roleA) ?? roles[0];
+  const b = roles.find((role) => role.key === roleB) ?? roles[1] ?? roles[0];
+  const shared = adminPermissionKeys.filter((permission) => a?.permissions[permission] && b?.permissions[permission]).length;
+  const onlyA = adminPermissionKeys.filter((permission) => a?.permissions[permission] && !b?.permissions[permission]).length;
+  const onlyB = adminPermissionKeys.filter((permission) => !a?.permissions[permission] && b?.permissions[permission]).length;
+  return <Stack sx={{ gap: 1.5 }}>
+    <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
+      <TextField select size="small" label="Role A" value={roleA} onChange={(event) => setRoleA(event.target.value)} sx={{ minWidth: 220 }}>{roles.map((role) => <MenuItem key={role.key} value={role.key}>{role.name}</MenuItem>)}</TextField>
+      <TextField select size="small" label="Role B" value={roleB} onChange={(event) => setRoleB(event.target.value)} sx={{ minWidth: 220 }}>{roles.map((role) => <MenuItem key={role.key} value={role.key}>{role.name}</MenuItem>)}</TextField>
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(7rem, 1fr))", gap: 1, flex: 1 }}>
+        <Metric label="Shared" value={shared} helper="Both roles" />
+        <Metric label="Only Role A" value={onlyA} helper={a?.name ?? "Role A"} />
+        <Metric label="Only Role B" value={onlyB} helper={b?.name ?? "Role B"} />
+      </Box>
+    </Stack>
+    <Box><V2Button variant="outlined" onClick={() => setOpen((current) => !current)}>{open ? "Hide detailed matrix" : "Open detailed matrix"}</V2Button></Box>
+    {open ? <Box sx={{ border: 1, borderColor: "divider", borderRadius: 2.5, overflow: "hidden" }}>
+      <Box sx={{ overflow: "auto", maxHeight: 450 }}><Box sx={{ minWidth: 920 }}>
+        <Box sx={{ position: "sticky", top: 0, zIndex: 1, display: "grid", gridTemplateColumns: `minmax(18rem, 1.3fr) repeat(${roles.length + 1}, minmax(7rem, 0.6fr))`, gap: 1, px: 1.25, py: 0.8, bgcolor: "rgba(248,247,252,0.98)", borderBottom: 1, borderColor: "divider" }}><Typography variant="caption" sx={{ fontWeight: 900 }}>Permission</Typography><Typography variant="caption" sx={{ textAlign: "center", fontWeight: 900 }}>Owner</Typography>{roles.map((role) => <Typography key={role.key} variant="caption" sx={{ textAlign: "center", fontWeight: 900 }}>{role.name}</Typography>)}</Box>
+        {adminPermissionKeys.map((permission) => <Box key={permission} sx={{ display: "grid", gridTemplateColumns: `minmax(18rem, 1.3fr) repeat(${roles.length + 1}, minmax(7rem, 0.6fr))`, gap: 1, px: 1.25, py: 0.75, borderTop: 1, borderColor: "divider" }}><Box sx={{ position: "sticky", left: 0, bgcolor: "background.paper" }}><Typography variant="body2" sx={{ fontWeight: 850 }}>{permissionLabels[permission]}</Typography><Typography variant="caption" color="text.secondary">{permission}</Typography></Box><Box sx={{ textAlign: "center" }}><ShieldCheck size={16} color="#7c4dff" /></Box>{roles.map((role) => <Box key={role.key} sx={{ textAlign: "center" }}>{role.permissions[permission] ? <CheckCircle2 size={16} color="#2e7d32" /> : <XCircle size={16} color="#9aa0aa" />}</Box>)}</Box>)}
+      </Box></Box>
+    </Box> : null}
+  </Stack>;
 }
