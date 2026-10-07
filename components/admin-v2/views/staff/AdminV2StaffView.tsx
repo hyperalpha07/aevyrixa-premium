@@ -16,6 +16,8 @@ import {
   MenuItem,
   Stack,
   Switch,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -270,11 +272,11 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
     <V2PageHeader
       title="Staff"
       description="Manage team access, roles and account security."
-      actions={permissions.canManageStaff ? <Stack direction="row" sx={{ gap: 1 }}>
-        <V2Button variant="outlined" startIcon={<UserPlus size={16} />} onClick={createInviteLink}>Create Invite Link</V2Button>
-        <V2Button variant="contained" startIcon={<UserPlus size={16} />} onClick={openCreate}>Add Staff</V2Button>
-      </Stack> : undefined}
+      actions={permissions.canManageStaff ? <V2Button variant="contained" startIcon={<UserPlus size={16} />} onClick={openCreate}>Add Staff</V2Button> : undefined}
     />
+    <Box aria-hidden sx={{ height: 0, display: "flex", justifyContent: "flex-end", pr: 3, pointerEvents: "none" }}>
+      <Box sx={{ width: 180, height: 84, mt: -9, borderRadius: "999px", opacity: 0.5, background: "radial-gradient(circle at 25% 40%, rgba(236,72,153,0.18), transparent 34%), radial-gradient(circle at 72% 34%, rgba(124,77,255,0.16), transparent 38%), linear-gradient(135deg, rgba(255,255,255,0.55), rgba(236,72,153,0.08))", filter: "blur(0.4px)" }} />
+    </Box>
 
     {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
     {notice ? <Alert severity="success" sx={{ mb: 2 }} onClose={() => setNotice("")}>{notice}</Alert> : null}
@@ -392,6 +394,8 @@ export function AdminV2StaffView({ initialQuery, initialRole, initialStatus, per
 
 function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member?: AdminStaffRecord; canManage: boolean; onEdit?: () => void; onNotice: (message: string) => void; onError: (message: string) => void }) {
   const [sessions, setSessions] = useState<Array<{ id: string; created_at: string; last_seen_at: string; expires_at: string; revoked_at: string | null }>>([]);
+  const [mfaStatus, setMfaStatus] = useState<"enabled" | "disabled" | "unavailable">("unavailable");
+  const [detailTab, setDetailTab] = useState<"overview" | "permissions" | "sessions" | "activity">("overview");
   const [securityLoading, setSecurityLoading] = useState(false);
   useEffect(() => {
     if (!member || !canManage) return;
@@ -399,6 +403,10 @@ function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member
       .then(response => response.ok ? response.json() : null)
       .then(data => setSessions(data?.sessions ?? []))
       .catch(() => setSessions([]));
+    fetch(`/api/admin/staff/${encodeURIComponent(member.id)}/mfa`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setMfaStatus(data?.mfa?.available === false ? "unavailable" : data?.mfa?.enabled ? "enabled" : "disabled"))
+      .catch(() => setMfaStatus("unavailable"));
   }, [member, canManage]);
   if (!member) return <V2Card><Typography variant="subtitle2">Select a staff member</Typography></V2Card>;
   async function createResetLink() {
@@ -438,6 +446,7 @@ function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member
       return;
     }
     onNotice("MFA disabled for this staff member.");
+    setMfaStatus("disabled");
   }
   return <Box sx={{ border: 1, borderColor: "divider", borderRadius: 3, p: 2, minWidth: 0 }}>
     <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1.5 }}>
@@ -448,7 +457,13 @@ function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member
       </Box>
       {canManage ? <V2Button size="small" variant="outlined" onClick={onEdit}>View/Edit</V2Button> : null}
     </Stack>
-    <Divider sx={{ my: 1.6 }} />
+    <Tabs value={detailTab} onChange={(_, value) => setDetailTab(value)} variant="scrollable" sx={{ mt: 1.2, borderBottom: 1, borderColor: "divider", minHeight: 38, "& .MuiTab-root": { minHeight: 38, py: 0.5, fontSize: 12 } }}>
+      <Tab value="overview" label="Overview" />
+      <Tab value="permissions" label="Permissions" />
+      <Tab value="sessions" label="Sessions" />
+      <Tab value="activity" label="Activity" />
+    </Tabs>
+    <Box sx={{ display: detailTab === "overview" ? "block" : "none", pt: 1.4 }}>
     <Stack sx={{ gap: 0.75 }}>
       <DetailLine label="Role" value={roleLabels[member.role]} />
       <DetailLine label="Status" value={member.isActive ? "Active" : "Inactive"} />
@@ -463,10 +478,13 @@ function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member
       <Stack sx={{ gap: 1 }}>
         <Stack direction="row" sx={{ gap: 0.75, flexWrap: "wrap" }}>
           <V2Button size="small" variant="outlined" loading={securityLoading} onClick={createResetLink}>Create Reset Link</V2Button>
-          <V2Button size="small" variant="outlined" onClick={resetMfa}>Disable MFA</V2Button>
+          {mfaStatus === "enabled" ? <V2Button size="small" variant="outlined" onClick={resetMfa}>Disable MFA</V2Button> : null}
           <V2Button size="small" variant="outlined" onClick={() => revokeSession()}>Revoke All Sessions</V2Button>
         </Stack>
-        <Typography variant="caption" color="text.secondary">MFA status is server-owned; reset links and sessions are never emailed or faked.</Typography>
+        <Stack direction="row" sx={{ gap: 0.75, alignItems: "center", flexWrap: "wrap" }}>
+          <Chip size="small" label={`MFA: ${mfaStatus === "enabled" ? "Enabled" : mfaStatus === "disabled" ? "Disabled" : "Unavailable"}`} color={mfaStatus === "enabled" ? "success" : "default"} />
+          <Typography variant="caption" color="text.secondary">MFA status is server-owned; reset links and sessions are never emailed or faked.</Typography>
+        </Stack>
         {sessions.map(session => <Stack key={session.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
           <Typography variant="caption" color="text.secondary">Created {dateLabel(session.created_at)} · last seen {dateLabel(session.last_seen_at)}</Typography>
           <Stack direction="row" sx={{ gap: 0.75 }}>
@@ -476,8 +494,23 @@ function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member
         </Stack>)}
         {!sessions.length ? <Typography variant="caption" color="text.secondary">No active sessions reported.</Typography> : null}
       </Stack>
-      <Divider sx={{ my: 1.6 }} />
     </> : null}
+    </Box>
+    <Box sx={{ display: detailTab === "sessions" ? "block" : "none", pt: 1.4 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 950, mb: 1 }}>Sessions</Typography>
+      {canManage ? <Stack sx={{ gap: 1 }}>
+        <Box><V2Button size="small" variant="outlined" onClick={() => revokeSession()}>Revoke All Sessions</V2Button></Box>
+        {sessions.map(session => <Stack key={session.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Typography variant="caption" color="text.secondary">Created {dateLabel(session.created_at)} - last seen {dateLabel(session.last_seen_at)}</Typography>
+          <Stack direction="row" sx={{ gap: 0.75 }}>
+            <Chip size="small" label={session.revoked_at ? "Revoked" : "Active"} color={session.revoked_at ? "default" : "success"} />
+            {!session.revoked_at ? <V2Button size="small" variant="outlined" onClick={() => revokeSession(session.id)}>Revoke Session</V2Button> : null}
+          </Stack>
+        </Stack>)}
+        {!sessions.length ? <Typography variant="caption" color="text.secondary">No active sessions reported.</Typography> : null}
+      </Stack> : <Typography variant="caption" color="text.secondary">Session management requires staff management access.</Typography>}
+    </Box>
+    <Box sx={{ display: detailTab === "permissions" ? "block" : "none", pt: 1.4 }}>
     <Typography variant="subtitle2" sx={{ fontWeight: 950, mb: 1 }}>Permissions</Typography>
     <Stack direction="row" sx={{ gap: 0.7, flexWrap: "wrap" }}>
       {permissionGroups.map(group => {
@@ -485,6 +518,10 @@ function StaffDetails({ member, canManage, onEdit, onNotice, onError }: { member
         return <Chip key={group.title} size="small" label={`${group.title}: ${count}`} sx={{ fontWeight: 800 }} />;
       })}
     </Stack>
+    </Box>
+    <Box sx={{ display: detailTab === "activity" ? "block" : "none", pt: 1.4 }}>
+      <Typography variant="caption" color="text.secondary">Recent staff activity is available in the Activity tab on the main workspace.</Typography>
+    </Box>
   </Box>;
 }
 

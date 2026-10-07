@@ -94,19 +94,20 @@ test("Owner is treated as full protected access", () => {
   const query = read("lib/admin-v2/permissions/permissions-query.ts");
   const view = read("components/admin-v2/views/permissions/AdminV2PermissionsView.tsx");
   assert.match(query, /if \(role === "owner"\) return true/);
-  assert.match(view, /Owner access is controlled by the protected admin authentication path/);
+  assert.match(view, /Protected Owner/);
+  assert.match(view, /Environment principal/);
   assert.equal(adminPermissionKeys.every((permission) => roleHasDefaultPermission("owner", permission)), true);
 });
 
-test("Matrix and filters are permission-centric and read-only", () => {
+test("Role Permissions is the primary workspace and Compare Access is secondary", () => {
   const view = read("components/admin-v2/views/permissions/AdminV2PermissionsView.tsx");
-  assert.match(view, /Permission Matrix/);
-  assert.match(view, /Search permission label or key/);
-  assert.match(view, /All Groups/);
-  assert.match(view, /Granted to any role/);
-  assert.match(view, /Owner-only \/ none/);
-  assert.match(view, /Widely granted/);
-  assert.doesNotMatch(view, /Save Permissions|Edit Permissions|Create Permission|Delete Permission|Custom Permission|Bulk grant|Bulk revoke/i);
+  assert.match(view, /type ViewMode = "roles" \| "overrides" \| "compare"/);
+  assert.match(view, /useState<ViewMode>\("roles"\)/);
+  assert.match(view, /<Tab value="roles" label="Role Permissions" \/>/);
+  assert.match(view, /<Tab value="overrides" label="Staff Overrides" \/>/);
+  assert.match(view, /<Tab value="compare" label="Compare Access" \/>/);
+  assert.match(view, /viewMode === "compare" \? <CompareMatrix roles=\{roles\} \/> : null/);
+  assert.doesNotMatch(view, /Create Permission|Delete Permission|Custom Permission|Bulk grant|Bulk revoke/i);
 });
 
 test("Real staff API is used for effective access and Manage Staff Access links to Staff", () => {
@@ -114,7 +115,7 @@ test("Real staff API is used for effective access and Manage Staff Access links 
   assert.match(view, /fetch\("\/api\/admin\/staff"/);
   assert.match(view, /Manage Staff Access/);
   assert.match(view, /href="\/admin-v2\/staff"/);
-  assert.match(view, /Real staff access/);
+  assert.match(view, /Staff Overrides/);
 });
 
 test("Effective access uses actual staff permission map, not role label inference", () => {
@@ -145,7 +146,20 @@ test("Unknown or malformed values are handled without granting unknown permissio
 test("Permission overrides persist through the staff override API only", () => {
   const view = read("components/admin-v2/views/permissions/AdminV2PermissionsView.tsx");
   assert.doesNotMatch(view, /\/api\/admin\/permissions/);
-  assert.match(view, /\/api\/admin\/staff\/\$\{encodeURIComponent\(staffId\)\}\/permissions/);
+  assert.match(view, /\/api\/admin\/staff\/\$\{encodeURIComponent\(selectedStaff\.id\)\}\/permissions/);
   assert.match(view, /method:\s*"PATCH"/);
-  assert.match(view, /Set Inherit|Allow|Deny/);
+  assert.match(view, /type OverrideChoice = "inherit" \| "allow" \| "deny"/);
+  assert.match(view, /<ToggleButton value="inherit">Inherit<\/ToggleButton><ToggleButton value="allow">Allow<\/ToggleButton><ToggleButton value="deny">Deny<\/ToggleButton>/);
+  assert.match(view, /Save Changes/);
+  assert.match(view, /Cancel Changes/);
+});
+
+test("Custom role permissions are editable through the real roles API only", () => {
+  const view = read("components/admin-v2/views/permissions/AdminV2PermissionsView.tsx");
+  assert.match(view, /Built-in role permissions are read-only/);
+  assert.match(view, /\/api\/admin\/roles\/\$\{encodeURIComponent\(selectedRole\.key\)\}/);
+  assert.match(view, /method:\s*"PATCH"/);
+  assert.match(view, /<Checkbox size="small" checked=\{Boolean\(values\[permission\]\)\}/);
+  assert.match(view, /Save Changes/);
+  assert.match(view, /Reset/);
 });

@@ -76,3 +76,13 @@ test("Activity logs sanitize metadata while Staff security uses real invite/rese
   assert.match(view, /\/api\/admin\/staff\/\$\{encodeURIComponent\(member\.id\)\}\/sessions/);
   assert.doesNotMatch(view, /Email sent|Invite by email|2FA enabled/i);
 });
+
+test("Staff page keeps one invite creation location and reflects server MFA state", () => {
+  const view = read("components/admin-v2/views/staff/AdminV2StaffView.tsx");
+  assert.match(view, /actions=\{permissions\.canManageStaff \? <V2Button variant="contained" startIcon=\{<UserPlus size=\{16\} \/>\} onClick=\{openCreate\}>Add Staff<\/V2Button> : undefined\}/);
+  assert.match(view, /Create Invite Link/);
+  assert.match(view, /const \[mfaStatus, setMfaStatus\] = useState<"enabled" \| "disabled" \| "unavailable">/);
+  assert.match(view, /\/api\/admin\/staff\/\$\{encodeURIComponent\(member\.id\)\}\/mfa/);
+  assert.match(view, /MFA: \$\{mfaStatus === "enabled" \? "Enabled" : mfaStatus === "disabled" \? "Disabled" : "Unavailable"\}/);
+  assert.match(view, /mfaStatus === "enabled" \? <V2Button size="small" variant="outlined" onClick=\{resetMfa\}>Disable MFA<\/V2Button> : null/);
+});
