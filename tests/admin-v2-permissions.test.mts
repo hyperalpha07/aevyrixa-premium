@@ -87,6 +87,11 @@ test("Permissions workspace uses existing permission source of truth", () => {
   assert.ok(permissionGroups.some((group) => group.title === "Support"));
   assert.ok(roleDefaultPermissions.manager.includes("support.reply"));
   assert.ok(roleDefaultPermissions.manager.includes("support.manage"));
+  assert.ok(roleDefaultPermissions.manager.includes("reports.export"));
+  assert.equal(roleDefaultPermissions.order_staff.includes("reports.export"), false);
+  assert.equal(roleDefaultPermissions.product_staff.includes("reports.export"), false);
+  assert.equal(roleDefaultPermissions.support_staff.includes("reports.export"), false);
+  assert.equal(roleDefaultPermissions.viewer.includes("reports.export"), false);
   assert.ok(roleDefaultPermissions.support_staff.includes("support.manage"));
 });
 

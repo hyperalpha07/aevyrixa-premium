@@ -72,6 +72,11 @@ test("Roles source uses existing role labels, default permissions and permission
   assert.match(view, /permissionLabels/);
   assert.equal(roleLabels.manager, "Manager");
   assert.ok(roleDefaultPermissions.manager.includes("orders.view"));
+  assert.ok(roleDefaultPermissions.manager.includes("reports.export"));
+  assert.equal(roleDefaultPermissions.order_staff.includes("reports.export"), false);
+  assert.equal(roleDefaultPermissions.product_staff.includes("reports.export"), false);
+  assert.equal(roleDefaultPermissions.support_staff.includes("reports.export"), false);
+  assert.equal(roleDefaultPermissions.viewer.includes("reports.export"), false);
   assert.ok(permissionGroups.some((group) => group.title === "Orders"));
   assert.equal(permissionLabels["staff.manage"], "Manage staff");
 });

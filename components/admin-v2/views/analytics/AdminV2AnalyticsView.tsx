@@ -98,7 +98,7 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
         title="Analytics"
         titleId="admin-v2-analytics-title"
         titleComponent="h1"
-        description="Read-only commerce analytics derived from existing orders, customers, products, and reviews."
+        description="Read-only commerce analytics derived from existing orders, customer accounts, and reviews."
         breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Analytics" }]}
       />
 
@@ -129,7 +129,7 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
         {data.limitation ? <Alert severity="warning">{data.limitation}</Alert> : null}
 
         <Alert severity="info">
-          Payable sales represents non-cancelled, non-test order value and is not necessarily settled cash revenue.
+          Payable sales represents non-cancelled order value and is not necessarily settled cash revenue.
         </Alert>
 
         <Grid container spacing={2}>
@@ -143,7 +143,7 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
             <V2MetricCard label="Average Order Value" value={formatCurrency(data.kpis.averageOrderValue)} icon={BarChart3} tone="info" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 2.4 }}>
-            <V2MetricCard label="New Customers" value={String(data.kpis.newCustomers)} animatedValue={data.kpis.newCustomers} icon={Users} tone="success" />
+            <V2MetricCard label="New Accounts" value={data.sources.customers.available ? String(data.kpis.newAccounts) : "Unavailable"} animatedValue={data.sources.customers.available ? data.kpis.newAccounts : undefined} icon={Users} tone="success" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 2.4 }}>
             <V2MetricCard label="Reviews" value={String(data.kpis.reviews)} animatedValue={data.kpis.reviews} icon={HeartHandshake} tone="info" />
@@ -216,7 +216,7 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
                 {data.trend.slice(-8).map((bucket) => (
                   <Stack key={bucket.key} direction="row" sx={{ justifyContent: "space-between" }}>
                     <Typography variant="body2" color="text.secondary">{bucket.label}</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 800 }}>{bucket.newCustomers} new customers</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 800 }}>{bucket.newCustomers} new accounts</Typography>
                   </Stack>
                 ))}
               </Stack>
@@ -234,12 +234,14 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
                 </Box>
                 <Star size={22} />
               </Stack>
-              <Grid container spacing={1.5} sx={{ mt: 1 }}>
-                <Grid size={{ xs: 6 }}><MiniStat label="Average rating" value={data.reviewSummary.averageRating.toFixed(1)} /></Grid>
-                <Grid size={{ xs: 6 }}><MiniStat label="Reviews" value={data.reviewSummary.total} /></Grid>
-                <Grid size={{ xs: 6 }}><MiniStat label="Approved" value={data.reviewSummary.approved} /></Grid>
-                <Grid size={{ xs: 6 }}><MiniStat label="Pending" value={data.reviewSummary.pending} /></Grid>
-              </Grid>
+              {data.sources.reviews.available ? (
+                <Grid container spacing={1.5} sx={{ mt: 1 }}>
+                  <Grid size={{ xs: 6 }}><MiniStat label="Average rating" value={data.reviewSummary.averageRating.toFixed(1)} /></Grid>
+                  <Grid size={{ xs: 6 }}><MiniStat label="Reviews" value={data.reviewSummary.total} /></Grid>
+                  <Grid size={{ xs: 6 }}><MiniStat label="Approved" value={data.reviewSummary.approved} /></Grid>
+                  <Grid size={{ xs: 6 }}><MiniStat label="Pending" value={data.reviewSummary.pending} /></Grid>
+                </Grid>
+              ) : <Alert severity="warning" sx={{ mt: 1.5 }}>Review source unavailable. Review metrics are not shown as zero.</Alert>}
             </V2Card>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>

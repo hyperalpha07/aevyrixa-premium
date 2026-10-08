@@ -1,5 +1,6 @@
 import type { OrderCartItem, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import type { ProductReview, ReviewStatus } from "@/app/lib/review-types";
+import type { AnalyticsSourceState } from "@/lib/admin-v2/analytics/analytics-source";
 import { getAdminV2OrderAmounts } from "@/lib/admin-v2/orders/order-amounts";
 
 export const analyticsPresetRanges = ["7d", "30d", "90d", "year", "custom"] as const;
@@ -75,8 +76,13 @@ export type AdminV2AnalyticsResult = {
     orders: number;
     payableSales: number;
     averageOrderValue: number;
-    newCustomers: number;
+    newAccounts: number;
     reviews: number;
+  };
+  sources: {
+    orders: AnalyticsSourceState;
+    customers: AnalyticsSourceState;
+    reviews: AnalyticsSourceState;
   };
   trend: AnalyticsTrendBucket[];
   orderStatus: AnalyticsStatusSlice[];
@@ -110,7 +116,7 @@ function startOfUtcDay(date: Date) {
 function parseDateInput(value: string | null | undefined) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const parsed = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(parsed.getTime()) ? parsed : null;
+  return Number.isFinite(parsed.getTime()) && dateKey(parsed) === value ? parsed : null;
 }
 
 function isoDateInput(date: Date) {
@@ -265,13 +271,15 @@ export function buildAdminV2AnalyticsResult(input: {
   orders: OrderRecord[];
   customers: AnalyticsCustomerRow[];
   reviews: ProductReview[];
+  sources?: AdminV2AnalyticsResult["sources"];
   sourceNotes?: string[];
   limitation?: string | null;
 }): AdminV2AnalyticsResult {
   const rangeOrders = input.orders.filter((order) => isVisibleAnalyticsOrder(order) && dateInRange(order.createdAt, input.range));
   const qualifyingOrders = rangeOrders.filter(isQualifyingAnalyticsOrder);
   const payableSales = qualifyingOrders.reduce((sum, order) => sum + payableOrderValue(order), 0);
-  const newCustomers = input.customers.filter((customer) => dateInRange(customer.createdAt, input.range));
+  const newAccounts = input.customers.filter((customer) => dateInRange(customer.createdAt, input.range));
+  const newAccountIds = new Set(newAccounts.map((customer) => customer.id));
   const rangeReviews = input.reviews.filter((review) => dateInRange(review.createdAt, input.range));
   const trend = createTrendBuckets(input.range);
   const trendMap = new Map(trend.map((bucket) => [bucket.key, bucket]));
@@ -282,7 +290,7 @@ export function buildAdminV2AnalyticsResult(input: {
       bucket.payableSales += payableOrderValue(order);
     });
   }
-  for (const customer of newCustomers) {
+  for (const customer of newAccounts) {
     addToBucket(trendMap, customer.createdAt, input.range, (bucket) => {
       bucket.newCustomers += 1;
     });
@@ -356,8 +364,13 @@ export function buildAdminV2AnalyticsResult(input: {
       orders: qualifyingOrders.length,
       payableSales,
       averageOrderValue: qualifyingOrders.length ? payableSales / qualifyingOrders.length : 0,
-      newCustomers: newCustomers.length,
+      newAccounts: newAccounts.length,
       reviews: rangeReviews.length,
+    },
+    sources: input.sources ?? {
+      orders: { available: true, complete: true, totalCount: input.orders.length, loadedCount: input.orders.length },
+      customers: { available: true, complete: true, totalCount: input.customers.length, loadedCount: input.customers.length },
+      reviews: { available: true, complete: true, totalCount: input.reviews.length, loadedCount: input.reviews.length },
     },
     trend,
     orderStatus,
@@ -365,7 +378,7 @@ export function buildAdminV2AnalyticsResult(input: {
     topProductsByValue: [...products].sort((a, b) => b.orderValue - a.orderValue).slice(0, 8),
     linkedCustomers: {
       linkedCustomers: linkedMap.size,
-      newLinkedCustomers: Array.from(linkedMap.values()).filter((count) => count === 1).length,
+      newLinkedCustomers: Array.from(linkedMap.keys()).filter((customerId) => newAccountIds.has(customerId)).length,
       repeatLinkedCustomers: Array.from(linkedMap.values()).filter((count) => count > 1).length,
       linkedOrders: Array.from(linkedMap.values()).reduce((sum, count) => sum + count, 0),
     },

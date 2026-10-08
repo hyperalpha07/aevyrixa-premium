@@ -62,7 +62,7 @@ function displayValue(value: string | number, money = false) {
   return value ? String(value) : "—";
 }
 
-export function AdminV2ReportsView({ data }: { data: AdminV2ReportResult }) {
+export function AdminV2ReportsView({ data, permissions }: { data: AdminV2ReportResult; permissions: { canExport: boolean; canViewCustomers: boolean } }) {
   const Icon = icons[data.type];
 
   return (
@@ -74,7 +74,7 @@ export function AdminV2ReportsView({ data }: { data: AdminV2ReportResult }) {
         description="Generate operational reports from real store data."
         breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Reports" }]}
         actions={
-          data.exportable ? (
+          data.exportable && permissions.canExport ? (
             <Button href={exportHref(data)} variant="contained">
               Export CSV
             </Button>
@@ -90,7 +90,7 @@ export function AdminV2ReportsView({ data }: { data: AdminV2ReportResult }) {
         <V2Card>
           <Stack component="form" action="/admin-v2/reports" method="get" direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ alignItems: { lg: "center" } }}>
             <TextField select name="type" label="Report Type" size="small" defaultValue={data.type} sx={{ minWidth: { lg: 240 } }}>
-              {adminV2ReportTypes.map((type) => <MenuItem key={type} value={type}>{adminV2ReportLabels[type]}</MenuItem>)}
+              {adminV2ReportTypes.map((type) => <MenuItem key={type} value={type} disabled={type === "customers" && !permissions.canViewCustomers}>{adminV2ReportLabels[type]}</MenuItem>)}
             </TextField>
             <TextField select name="range" label="Date Range" size="small" defaultValue={data.range.preset} sx={{ minWidth: { lg: 180 } }}>
               {analyticsPresetRanges.map((range) => <MenuItem key={range} value={range}>{rangeLabels[range]}</MenuItem>)}
@@ -112,7 +112,7 @@ export function AdminV2ReportsView({ data }: { data: AdminV2ReportResult }) {
         {data.limitation ? <Alert severity="warning">{data.limitation}</Alert> : null}
         {!data.exportable ? <Alert severity="info">{data.exportDisabledReason}</Alert> : null}
         <Alert severity="info">
-          Payable Sales excludes cancelled, test, archived, deleted and soft-deleted orders and is not settled revenue.
+          Payable Sales excludes cancelled and archived orders and is not settled revenue.
         </Alert>
 
         <Grid container spacing={2}>
@@ -167,7 +167,7 @@ export function AdminV2ReportsView({ data }: { data: AdminV2ReportResult }) {
             <V2Card sx={{ height: "100%" }}>
               <Typography component="h2" variant="h6">Report scope</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                Phase 1 reports are on-demand snapshots derived from existing operational records and Analytics aggregation.
+                Reports are on-demand operational summaries derived from current store records and Analytics aggregation.
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Stack component="ul" spacing={1} sx={{ pl: 2.5, mb: 0 }}>

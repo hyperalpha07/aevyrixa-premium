@@ -31,9 +31,11 @@ hooks.deregister();
 
 const reportsPage = readFileSync(new URL("../app/admin-v2/reports/page.tsx", import.meta.url), "utf8");
 const reportsQuery = readFileSync(new URL("../lib/admin-v2/reports/reports-query.ts", import.meta.url), "utf8");
+const analyticsSource = readFileSync(new URL("../lib/admin-v2/analytics/analytics-source.ts", import.meta.url), "utf8");
 const reportsExport = readFileSync(new URL("../lib/admin-v2/reports/reports-export.ts", import.meta.url), "utf8");
 const reportsView = readFileSync(new URL("../components/admin-v2/views/reports/AdminV2ReportsView.tsx", import.meta.url), "utf8");
 const exportRoute = readFileSync(new URL("../app/api/admin/reports/export/route.ts", import.meta.url), "utf8");
+const reportsMigration = readFileSync(new URL("../supabase/migrations/20261009090000_admin_analytics_reports_finalization.sql", import.meta.url), "utf8");
 
 function order(overrides: Partial<OrderRecord>): OrderRecord {
   return {
@@ -110,6 +112,8 @@ test("Reports route is implemented, analytics and approvals remain implemented, 
   assert.equal(findAdminV2Route("approvals")?.implemented, true);
   assert.equal(adminV2AccessRules.reports.section, "analytics");
   assert.match(reportsPage, /requireAdminV2RouteAccess\(session,\s*"reports"\)/);
+  assert.match(reportsPage, /canExport: hasPermission\(session, "reports\.export"\)/);
+  assert.match(reportsPage, /canViewCustomers: hasPermission\(session, "customers\.view"\)/);
   assert.doesNotMatch(reportsPage, /AdminV2ModulePage/);
 });
 
@@ -165,11 +169,24 @@ test("Reports date range semantics reuse Analytics validation", () => {
 test("CSV export is server-side, range-scoped, sanitized and escaped", () => {
   const report = sampleReport("orders");
   report.rows.push({ orderReference: 'AEV-"QUOTE"', createdAt: "2026-09-12", status: "Pending", items: 1, payableTotal: 25 });
+  report.rows.push({ orderReference: "  =HYPERLINK(1)", createdAt: "2026-09-12", status: "Pending", items: 1, payableTotal: 25 });
   const csv = exports.adminV2ReportToCsv(report);
   assert.match(exportRoute, /getFreshAdminRequestSession/);
   assert.match(exportRoute, /analytics\.view/);
-  assert.match(exportRoute, /getAdminV2Report\(url\.searchParams,\s*\{\s*previewLimit:\s*Number\.MAX_SAFE_INTEGER/);
+  assert.match(exportRoute, /reports\.export/);
+  assert.match(exportRoute, /Invalid report type/);
+  assert.match(exportRoute, /canAccessAdminV2ReportType\(session, type\)/);
+  assert.match(exportRoute, /previewLimit: reportExportRowLimit/);
+  assert.match(exportRoute, /report\.exported/);
+  assert.match(exportRoute, /requireRecorded: true/);
+  assert.match(exportRoute, /Report export audit could not be recorded/);
+  assert.doesNotMatch(exportRoute, /logStaffActivity\([\s\S]+?\)\.catch/);
+  assert.match(reportsQuery, /reportExportRowLimit = analyticsSourceRowLimit/);
   assert.match(csv, /"AEV-""QUOTE"""/);
+  assert.match(csv, /"'  =HYPERLINK\(1\)"/);
+  assert.match(exports.adminV2ReportToCsv({ ...report, rows: [{ orderReference: "\t@cmd", createdAt: "2026-09-12", status: "Pending", items: 1, payableTotal: 25 }] }), /"'\t@cmd"/);
+  assert.match(exports.adminV2ReportToCsv({ ...report, rows: [{ orderReference: "\n-1", createdAt: "2026-09-12", status: "Pending", items: 1, payableTotal: 25 }] }), /"'\n-1"/);
+  assert.match(exports.adminV2ReportToCsv({ ...report, rows: [{ orderReference: '"+1"', createdAt: "2026-09-12", status: "Pending", items: 1, payableTotal: 25 }] }), /"""\+1"""/);
   assert.match(csv, /"Date Range","Custom: 2026-09-01 to 2026-09-30"/);
   assert.match(csv, /"AEV-VALID"/);
   assert.doesNotMatch(csv, /01700000000|Dhaka|customer_email|delivery_address|password|token/i);
@@ -181,8 +198,29 @@ test("Unsupported fake report capabilities and database migrations are not intro
   assert.match(reportsView, /No traffic, conversion, visitor, ROAS, CAC, forecast, XLSX, PDF, saved report or scheduled report capability is shown/);
   assert.doesNotMatch(reportsQuery, /Math\.random|faker|mock|analytics_events|report_history|scheduled_reports/i);
   const migrationNames = readdirSync(new URL("../supabase/migrations", import.meta.url)).join("\n");
-  assert.doesNotMatch(migrationNames, /report/i);
+  assert.match(migrationNames, /20261009090000_admin_analytics_reports_finalization\.sql/);
+  assert.match(reportsMigration, /permissions = coalesce\(permissions, '\{\}'::jsonb\) \|\| '\{"reports\.export": true\}'::jsonb/);
+  assert.match(reportsMigration, /where key = 'manager' and is_system = true/);
+  assert.doesNotMatch(reportsMigration, /create table|alter table public\.orders|is_test_order|test_order|grant all|truncate|drop table|delete from/i);
+  assert.doesNotMatch(reportsMigration, /order_staff|product_staff|support_staff|viewer|admin_staff/);
+  assert.match(analyticsSource, /export const reportCustomerProfileSelect = "id,full_name,created_at"/);
   for (const module of ["staff", "roles", "permissions", "auditLogs", "analytics"] as const) {
     assert.equal(findAdminV2Route(module)?.implemented, true);
   }
+});
+
+test("Reports enforce customer privacy and report-specific source loading", () => {
+  assert.match(reportsQuery, /canAccessAdminV2ReportType/);
+  assert.match(reportsQuery, /type !== "customers" \|\| hasPermission\(session, "customers\.view"\)/);
+  assert.match(reportsQuery, /type === "customers" \? listReportCustomerProfiles/);
+  assert.match(reportsQuery, /needsReviews \? listAnalyticsReviews/);
+  assert.match(reportsQuery, /orderReportTypes\.has\(type\)/);
+  assert.match(exportRoute, /Object\.values\(report\.sources\)\.some\(\(source\) => !source\.available\)/);
+  assert.match(analyticsSource, /linkedIdLimited/);
+  assert.match(reportsView, /disabled=\{type === "customers" && !permissions\.canViewCustomers\}/);
+  const orders = sampleReport("orders");
+  assert.equal(orders.columns.some((column) => column.key === "customer"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(orders.rows[0] ?? {}, "customer"), false);
+  const customerCsv = exports.adminV2ReportToCsv(sampleReport("customers"));
+  assert.doesNotMatch(customerCsv, /Customer A/);
 });

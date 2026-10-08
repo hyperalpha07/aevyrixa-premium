@@ -394,6 +394,7 @@ export async function logStaffActivity(input: {
   targetType?: string;
   targetId?: string;
   metadata?: Record<string, unknown>;
+  requireRecorded?: boolean;
 }) {
   if (!hasSupabaseConfig()) return;
 
@@ -408,9 +409,15 @@ export async function logStaffActivity(input: {
     metadata: input.metadata ?? {},
   };
 
-  await fetch(supabaseEndpoint(ACTIVITY_TABLE), {
+  const response = await fetch(supabaseEndpoint(ACTIVITY_TABLE), {
     method: "POST",
     headers: supabaseHeaders(),
     body: JSON.stringify(payload),
-  }).catch(() => null);
+  }).catch((error: unknown) => {
+    if (input.requireRecorded) throw error;
+    return null;
+  });
+  if (input.requireRecorded && response && !response.ok) {
+    throw new Error("Activity log write failed.");
+  }
 }

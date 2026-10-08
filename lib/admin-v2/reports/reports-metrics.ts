@@ -1,5 +1,6 @@
 import type { OrderRecord } from "@/app/lib/order-types";
 import type { ProductReview } from "@/app/lib/review-types";
+import type { AnalyticsSourceState } from "@/lib/admin-v2/analytics/analytics-source";
 import {
   buildAdminV2AnalyticsResult,
   isQualifyingAnalyticsOrder,
@@ -47,6 +48,11 @@ export type AdminV2ReportResult = {
   exportDisabledReason?: string;
   complete: boolean;
   limitation: string | null;
+  sources: {
+    orders: AnalyticsSourceState;
+    customers: AnalyticsSourceState;
+    reviews: AnalyticsSourceState;
+  };
 };
 
 const maxPreviewRows = 24;
@@ -150,8 +156,12 @@ function reviewRows(reviews: ProductReview[], range: AnalyticsDateRange) {
     }));
 }
 
+export function isAdminV2ReportType(value: string | null | undefined): value is AdminV2ReportType {
+  return adminV2ReportTypes.includes(value as AdminV2ReportType);
+}
+
 export function parseAdminV2ReportType(value: string | null | undefined): AdminV2ReportType {
-  return adminV2ReportTypes.includes(value as AdminV2ReportType) ? (value as AdminV2ReportType) : "sales";
+  return isAdminV2ReportType(value) ? value : "sales";
 }
 
 export function buildAdminV2Report(input: {
@@ -163,6 +173,7 @@ export function buildAdminV2Report(input: {
   previewLimit?: number;
   complete?: boolean;
   limitation?: string | null;
+  sources?: AdminV2ReportResult["sources"];
 }): AdminV2ReportResult {
   const analytics = buildAdminV2AnalyticsResult({
     range: input.range,
@@ -171,9 +182,10 @@ export function buildAdminV2Report(input: {
     reviews: input.reviews,
     limitation: input.limitation,
     sourceNotes: [
-      "Payable sales represents non-cancelled, non-test order value and is not necessarily settled cash revenue.",
+      "Payable sales represents non-cancelled order value and is not necessarily settled cash revenue.",
       "Traffic, conversion, visitor, attribution, ROAS and CAC metrics are not stored and are intentionally omitted.",
     ],
+    sources: input.sources,
   });
   const qOrders = qualifyingOrders(input.orders, input.range);
   const allRangeOrders = rangeOrders(input.orders, input.range);
@@ -190,9 +202,14 @@ export function buildAdminV2Report(input: {
     analytics,
     notes: ["Saved and scheduled reports are not available yet."],
     exportable: Boolean(input.complete),
-    exportDisabledReason: input.complete ? undefined : "Export is disabled because the selected range hit the safe server-side data cap.",
+    exportDisabledReason: input.complete ? undefined : "Export is disabled because a required report source is unavailable or incomplete.",
     complete: input.complete !== false,
     limitation: input.limitation ?? null,
+    sources: input.sources ?? {
+      orders: { available: true, complete: true, totalCount: input.orders.length, loadedCount: input.orders.length },
+      customers: { available: true, complete: true, totalCount: input.customers.length, loadedCount: input.customers.length },
+      reviews: { available: true, complete: true, totalCount: input.reviews.length, loadedCount: input.reviews.length },
+    },
   };
 
   if (input.type === "orders") {
@@ -208,7 +225,6 @@ export function buildAdminV2Report(input: {
         { key: "orderReference", label: "Order" },
         { key: "createdAt", label: "Created" },
         { key: "status", label: "Status" },
-        { key: "customer", label: "Customer" },
         { key: "items", label: "Items", align: "right" },
         { key: "payableTotal", label: "Payable Total", align: "right" },
       ],
@@ -216,11 +232,10 @@ export function buildAdminV2Report(input: {
         orderReference: order.orderReference,
         createdAt: dateOnly(order.createdAt),
         status: order.status,
-        customer: safeText(order.customer.fullName),
         items: itemCount(order),
         payableTotal: payableOrderValue(order),
       })),
-      notes: [...base.notes, "Order rows are range-scoped and omit phone, email, address, auth metadata, passwords and tokens."],
+      notes: [...base.notes, "Order rows are range-scoped and omit customer identity, phone, email, address, payment identifiers, notes, auth metadata, passwords and tokens."],
     };
   }
 
@@ -248,7 +263,7 @@ export function buildAdminV2Report(input: {
     return {
       ...base,
       kpis: [
-        { label: "New accounts", value: analytics.kpis.newCustomers },
+        { label: "New accounts", value: analytics.kpis.newAccounts },
         { label: "Linked customers", value: analytics.linkedCustomers.linkedCustomers },
         { label: "Repeat linked", value: analytics.linkedCustomers.repeatLinkedCustomers },
         { label: "Linked order value", value: customers.reduce((sum, row) => sum + row.orderValue, 0) },
@@ -332,7 +347,7 @@ export function buildAdminV2Report(input: {
       { metric: "Discounts", value: discounts },
       { metric: "Delivery Fees", value: deliveryFees },
     ],
-    notes: [...base.notes, "Payable Sales excludes cancelled, test, archived, deleted and soft-deleted orders."],
+    notes: [...base.notes, "Payable Sales excludes cancelled and archived orders. No standalone production test-order flag is assumed."],
   };
 }
 

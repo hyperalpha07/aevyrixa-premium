@@ -38,6 +38,13 @@ test("new security permissions are explicit and not assigned to manager by defau
     assert.equal(normalizePermissions("manager", {})[permission], false);
     assert.equal(normalizePermissions("viewer", {})[permission], false);
   }
+  assert.ok(adminPermissionKeys.includes("reports.export"));
+  assert.equal(normalizePermissions("owner", {})["reports.export"], true);
+  assert.equal(normalizePermissions("manager", {})["reports.export"], true);
+  assert.equal(normalizePermissions("order_staff", {})["reports.export"], false);
+  assert.equal(normalizePermissions("product_staff", {})["reports.export"], false);
+  assert.equal(normalizePermissions("support_staff", {})["reports.export"], false);
+  assert.equal(normalizePermissions("viewer", {})["reports.export"], false);
 });
 
 test("permission overrides support inherit allow and deny without unknown grants", () => {
