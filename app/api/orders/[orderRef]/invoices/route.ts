@@ -4,6 +4,7 @@ import {
   unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
 import { hasPermission } from "@/app/lib/admin-permissions";
+import { logStaffActivity } from "@/app/lib/admin-staff";
 import {
   AdminV2ActorIdentityError,
   getOrderByReference,
@@ -94,6 +95,13 @@ export async function POST(
 
   try {
     const invoice = await issueOrderInvoice({ order: existing.order, actor: session });
+    await logStaffActivity({
+      actor: session,
+      action: "invoice.issued",
+      targetType: "invoice",
+      targetId: invoice.invoiceNumber,
+      metadata: { order_ref: orderRef, invoice_number: invoice.invoiceNumber, status: invoice.status },
+    });
     return Response.json({ invoice }, { status: 201 });
   } catch (error) {
     logOrderInvoiceError("issue", orderRef, error);

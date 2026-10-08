@@ -38,7 +38,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   roles: { permission: "roles.manage" },
   permissions: { permission: "permissions.manage" },
   auditLogs: { permission: "activity.view" },
-  approvals: { section: "staff" },
+  approvals: { permission: "approvals.view" },
   analytics: { section: "analytics" },
   reports: { section: "analytics" },
   invoices: { permission: "orders.viewInvoice" },

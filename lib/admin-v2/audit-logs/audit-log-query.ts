@@ -10,7 +10,7 @@ export type AuditLogFilters = {
   timeRange: AuditLogTimeRange;
 };
 
-const secretKeyPattern = /password|password_hash|token|secret|authorization|cookie|apikey|api_key|service_role|access_token|refresh_token/i;
+const secretKeyPattern = /password|password_hash|secret|token|token_hash|api_key|apikey|authorization|cookie|session|recovery_code|otp|totp|encryption_key|service_role|access_token|refresh_token/i;
 const securityActionPattern = /permission\.denied|denied|unauthorized|forbidden|security|auth/i;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

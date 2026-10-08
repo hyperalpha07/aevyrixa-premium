@@ -39,6 +39,9 @@ export const adminPermissionKeys = [
   "permissions.manage",
   "security.manage",
   "activity.view",
+  "approvals.view",
+  "approvals.request",
+  "approvals.decide",
 ] as const;
 
 export type AdminPermission = (typeof adminPermissionKeys)[number];
@@ -138,6 +141,9 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "permissions.manage": "Manage permission policy",
   "security.manage": "Manage admin sessions and MFA",
   "activity.view": "View activity logs",
+  "approvals.view": "View approvals",
+  "approvals.request": "Request approvals",
+  "approvals.decide": "Approve or reject approvals",
 };
 
 export const permissionGroups = [
@@ -200,6 +206,9 @@ export const permissionGroups = [
       "security.manage",
       "activity.view",
       "analytics.view",
+      "approvals.view",
+      "approvals.request",
+      "approvals.decide",
     ],
   },
 ] satisfies Array<{ title: string; permissions: AdminPermission[] }>;
@@ -237,6 +246,9 @@ export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
     "support.manage",
     "analytics.view",
     "activity.view",
+    "approvals.view",
+    "approvals.request",
+    "approvals.decide",
   ],
   order_staff: [
     "dashboard.view",
@@ -247,6 +259,8 @@ export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
     "orders.issueInvoice",
     "orders.addNote",
     "orders.export",
+    "approvals.view",
+    "approvals.request",
   ],
   product_staff: [
     "dashboard.view",
@@ -259,8 +273,10 @@ export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
     "reviews.moderate",
     "reviews.feature",
     "categories.manage",
+    "approvals.view",
+    "approvals.request",
   ],
-  support_staff: ["dashboard.view", "support.view", "support.reply", "support.close", "support.manage"],
+  support_staff: ["dashboard.view", "support.view", "support.reply", "support.close", "support.manage", "approvals.view", "approvals.request"],
   viewer: [
     "dashboard.view",
     "orders.view",

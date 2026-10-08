@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { registerHooks } from "node:module";
+import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import type { StaffActivityLog } from "../app/lib/admin-staff.ts";
 import {
   auditLogMetrics,
@@ -14,6 +17,24 @@ import {
 } from "../lib/admin-v2/audit-logs/audit-log-query.ts";
 
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const hooks = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith("@/")) {
+      const target = path.join(repoRoot, specifier.slice(2));
+      return nextResolve(pathToFileURL(existsSync(target) ? target : `${target}.ts`).href, context);
+    }
+    if ((specifier.startsWith("./") || specifier.startsWith("../")) && context.parentURL) {
+      const target = path.resolve(path.dirname(fileURLToPath(context.parentURL)), specifier);
+      if (!path.extname(target) && existsSync(`${target}.ts`)) {
+        return nextResolve(pathToFileURL(`${target}.ts`).href, context);
+      }
+    }
+    return nextResolve(specifier, context);
+  },
+});
+const { __auditLogStoreTest } = await import("../lib/admin-v2/audit-logs/audit-log-store.ts");
+hooks.deregister();
 
 const logs = [
   {
@@ -51,7 +72,7 @@ test("Audit Logs route is implemented while related route flags stay scoped", ()
   assert.match(routes, /title: "Staff"[\s\S]+?module: "staff"[\s\S]+?implemented: true/);
   assert.match(routes, /title: "Roles"[\s\S]+?module: "roles"[\s\S]+?implemented: true/);
   assert.match(routes, /title: "Permissions"[\s\S]+?module: "permissions"[\s\S]+?implemented: true/);
-  assert.match(routes, /title: "Approvals"[\s\S]+?module: "approvals"[\s\S]+?implemented: false/);
+  assert.match(routes, /title: "Approvals"[\s\S]+?module: "approvals"[\s\S]+?implemented: true/);
 });
 
 test("Audit Logs access requires activity.view and uses the Admin V2 server boundary", () => {
@@ -63,11 +84,16 @@ test("Audit Logs access requires activity.view and uses the Admin V2 server boun
   assert.doesNotMatch(permissions, /auditLogs:\s*\{\s*section: "staff"\s*\}/);
 });
 
-test("Audit Logs workspace uses real staff activity API and no fake audit data", () => {
+test("Audit Logs workspace uses dedicated audit API and no fake audit data", () => {
   const view = read("components/admin-v2/views/audit-logs/AdminV2AuditLogsView.tsx");
   const staffApi = read("app/api/admin/staff/route.ts");
-  assert.match(view, /fetch\("\/api\/admin\/staff"/);
-  assert.match(view, /activityLogs/);
+  const auditApi = read("app/api/admin/audit-logs/route.ts");
+  const exportApi = read("app/api/admin/audit-logs/export/route.ts");
+  assert.match(view, /fetch\(`\/api\/admin\/audit-logs\?/);
+  assert.doesNotMatch(view, /fetch\("\/api\/admin\/staff"/);
+  assert.match(view, /Export CSV/);
+  assert.match(auditApi, /hasPermission\(session, "activity\.view"\)/);
+  assert.match(exportApi, /auditLogsCsv/);
   assert.match(staffApi, /hasPermission\(session, "activity\.view"\) \? listActivityLogs\(\)/);
   assert.doesNotMatch(view, /mock|fixture|demo audit|sample log|fake/i);
 });
@@ -117,5 +143,36 @@ test("detail view is read-only and exposes no mutation controls", () => {
   const view = read("components/admin-v2/views/audit-logs/AdminV2AuditLogsView.tsx");
   assert.match(view, /Audit logs are read-only in Admin V2/);
   assert.match(view, /Safe metadata/);
-  assert.doesNotMatch(view, /Delete Log|Clear Logs|Edit Event|Replay Event|Export CSV|Export Logs|Retention|method:\s*"(POST|PATCH|DELETE)"/i);
+  assert.doesNotMatch(view, /Delete Log|Clear Logs|Edit Event|Replay Event|Retention|method:\s*"(POST|PATCH|DELETE)"/i);
+});
+
+test("dedicated Audit API supports cursor pagination, bounds, filters, CSV and server sanitization", () => {
+  const store = read("lib/admin-v2/audit-logs/audit-log-store.ts");
+  const auditApi = read("app/api/admin/audit-logs/route.ts");
+  const exportApi = read("app/api/admin/audit-logs/export/route.ts");
+  assert.match(store, /Math\.min\(Math\.max\(Number\(input\.limit\) \|\| 50, 1\), 100\)/);
+  assert.match(store, /order", "created_at\.desc,id\.desc"/);
+  assert.match(store, /Buffer\.from\(JSON\.stringify\(\{ createdAt: row\.createdAt, id: row\.id \}\)\)\.toString\("base64url"\)/);
+  assert.match(store, /sanitizeMetadata\(row\.metadata/);
+  assert.match(store, /\^\\s\*\[=\+\\-@\]/);
+  assert.match(store, /while \(pages\.length < 10000\)/);
+  assert.match(auditApi, /query: url\.searchParams\.get\("query"\)/);
+  assert.match(auditApi, /cursor: url\.searchParams\.get\("cursor"\)/);
+  assert.match(exportApi, /content-type": "text\/csv; charset=utf-8"/);
+});
+
+test("dedicated Audit API helpers reject malformed cursors and escape spreadsheet formulas", () => {
+  assert.throws(() => __auditLogStoreTest.parseCursor("not-a-valid-cursor"), /Invalid audit cursor/);
+  assert.equal(__auditLogStoreTest.csvEscape("=1+1"), "\"'=1+1\"");
+  assert.equal(__auditLogStoreTest.csvEscape("  @cmd"), "\"'  @cmd\"");
+});
+
+test("audit sanitizer covers explicit secret metadata key families and new actor identity", () => {
+  const query = read("lib/admin-v2/audit-logs/audit-log-query.ts");
+  const staff = read("app/lib/admin-staff.ts");
+  for (const token of ["password_hash", "token_hash", "api_key", "authorization", "cookie", "session", "recovery_code", "otp", "totp", "encryption_key"]) {
+    assert.match(query, new RegExp(token));
+  }
+  assert.match(staff, /actor_type: input\.actor\?\.userType \?\? "system"/);
+  assert.match(staff, /actor_id:/);
 });
