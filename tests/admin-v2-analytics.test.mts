@@ -35,6 +35,7 @@ aliasHooks.deregister();
 
 const analyticsPageSource = readFileSync(new URL("../app/admin-v2/analytics/page.tsx", import.meta.url), "utf8");
 const analyticsQuerySource = readFileSync(new URL("../lib/admin-v2/analytics/analytics-query.ts", import.meta.url), "utf8");
+const analyticsSource = readFileSync(new URL("../lib/admin-v2/analytics/analytics-source.ts", import.meta.url), "utf8");
 const analyticsMetricsSource = readFileSync(new URL("../lib/admin-v2/analytics/analytics-metrics.ts", import.meta.url), "utf8");
 const analyticsViewSource = readFileSync(new URL("../components/admin-v2/views/analytics/AdminV2AnalyticsView.tsx", import.meta.url), "utf8");
 
@@ -159,7 +160,7 @@ test("Analytics derives trends, product ranks, customers, and reviews from opera
   });
 
   assert.equal(result.kpis.orders, 2);
-  assert.equal(result.kpis.newCustomers, 2);
+  assert.equal(result.kpis.newAccounts, 2);
   assert.equal(result.kpis.reviews, 2);
   assert.equal(result.trend.length, 3);
   assert.deepEqual(result.trend.map((bucket) => bucket.orders), [1, 1, 0]);
@@ -167,7 +168,7 @@ test("Analytics derives trends, product ranks, customers, and reviews from opera
   assert.equal(result.topProductsByValue[0]?.orderValue, 120);
   assert.deepEqual(result.linkedCustomers, {
     linkedCustomers: 1,
-    newLinkedCustomers: 0,
+    newLinkedCustomers: 1,
     repeatLinkedCustomers: 1,
     linkedOrders: 2,
   });
@@ -185,14 +186,34 @@ test("Analytics date ranges are timezone-safe and custom ranges are capped", () 
   const capped = resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2025-01-01&to=2026-10-03"));
   assert.equal(capped.warnings.length, 1);
   assert.equal(capped.granularity, "month");
+  const impossible = resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2026-02-31&to=2026-03-02"));
+  assert.match(impossible.warnings.join(" "), /Invalid custom date range/);
+  for (const invalid of ["2026-02-29", "2026-02-30", "2026-13-01", "2026-00-10", "2026-04-31"]) {
+    assert.match(
+      resolveAnalyticsDateRange(new URLSearchParams(`range=custom&from=${invalid}&to=2026-05-01`)).warnings.join(" "),
+      /Invalid custom date range/,
+      invalid
+    );
+  }
+  const leap = resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2028-02-29&to=2028-03-01"));
+  assert.equal(leap.from, "2028-02-29");
 });
 
 test("Analytics UI and query source avoid fabricated traffic, conversion, and growth metrics", () => {
   assert.match(analyticsMetricsSource, /getAdminV2OrderAmounts/);
-  assert.match(analyticsQuerySource, /queryOrders/);
-  assert.match(analyticsQuerySource, /customer_accounts/);
-  assert.match(analyticsQuerySource, /product_reviews/);
-  assert.match(analyticsQuerySource, /Traffic, conversion, visitor, and attribution metrics are intentionally omitted/);
+  assert.match(analyticsQuerySource, /listAnalyticsOrders/);
+  assert.match(analyticsSource, /select: analyticsOrderSelect/);
+  assert.match(analyticsSource, /export const analyticsOrderSelect = \[/);
+  assert.doesNotMatch(analyticsSource, /customer_phone|customer_email|delivery_address|wallet_provider|receiver_number|sender_number|transaction_id|payment_reference|admin_internal_note/);
+  assert.match(analyticsSource, /export const analyticsReviewSelect = \[/);
+  const reviewSelect = analyticsSource.match(/export const analyticsReviewSelect = \[[\s\S]+?\]\.join\(","\);/)?.[0] ?? "";
+  assert.doesNotMatch(reviewSelect, /customer_phone|customer_name|body|title|admin_note|media_urls|order_reference/);
+  const customerAccountSelect =
+    analyticsSource.match(/export const analyticsCustomerAccountSelect = "id,created_at"/)?.[0] ?? "";
+  assert.match(customerAccountSelect, /id,created_at/);
+  assert.doesNotMatch(customerAccountSelect, /password_hash|phone|email/);
+  assert.doesNotMatch(analyticsQuerySource, /listProducts|queryOrders/);
+  assert.match(analyticsQuerySource, /Traffic, conversion, visitor, attribution, ROAS and CAC metrics are intentionally omitted/);
   assert.doesNotMatch(analyticsViewSource, /Conversion Rate|Visitors|Sessions|Page Views|ROAS|CAC|Traffic Source|Growth/);
   assert.doesNotMatch(analyticsQuerySource, /analytics_events|analytics_snapshots|Math\.random|faker|mock/i);
 });

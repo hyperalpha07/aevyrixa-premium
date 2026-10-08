@@ -10,7 +10,9 @@ const exportedColumns: Record<string, string[]> = {
 };
 
 function csvCell(value: unknown) {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const raw = String(value ?? "");
+  const safe = /^\s*[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  return `"${safe.replace(/"/g, '""')}"`;
 }
 
 function slug(value: string) {
@@ -44,7 +46,7 @@ export function adminV2ReportToCsv(report: AdminV2ReportResult) {
     ["Report", report.label],
     ["Date Range", report.range.label],
     ["Generated From", "Existing operational data"],
-    ["Definition", "Payable Sales excludes cancelled, test, archived, deleted and soft-deleted orders and is not settled revenue."],
+    ["Definition", "Payable Sales excludes cancelled and archived orders and is not settled revenue."],
     [],
   ];
   return [...notes, headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
