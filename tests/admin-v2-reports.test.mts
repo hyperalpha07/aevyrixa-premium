@@ -104,10 +104,10 @@ function sampleReport(type: reports.AdminV2ReportType = "sales") {
   });
 }
 
-test("Reports route is implemented, analytics remains implemented, approvals remain coming soon, and access stays analytics.view", () => {
+test("Reports route is implemented, analytics and approvals remain implemented, and access stays analytics.view", () => {
   assert.equal(findAdminV2Route("reports")?.implemented, true);
   assert.equal(findAdminV2Route("analytics")?.implemented, true);
-  assert.equal(findAdminV2Route("approvals")?.implemented, false);
+  assert.equal(findAdminV2Route("approvals")?.implemented, true);
   assert.equal(adminV2AccessRules.reports.section, "analytics");
   assert.match(reportsPage, /requireAdminV2RouteAccess\(session,\s*"reports"\)/);
   assert.doesNotMatch(reportsPage, /AdminV2ModulePage/);

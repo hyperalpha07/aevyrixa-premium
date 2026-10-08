@@ -31,6 +31,8 @@ export type AdminStaffRecord = {
 export type StaffActivityLog = {
   id: string;
   staffId?: string;
+  actorType?: string;
+  actorId?: string;
   actorName?: string;
   action: string;
   targetType?: string;
@@ -58,6 +60,8 @@ type StaffRow = {
 type ActivityRow = {
   id?: string;
   staff_id?: string | null;
+  actor_type?: string | null;
+  actor_id?: string | null;
   actor_name?: string | null;
   action?: string | null;
   target_type?: string | null;
@@ -200,6 +204,8 @@ function mapActivity(row: ActivityRow, index = 0): StaffActivityLog {
   return {
     id: row.id || fallbackId,
     staffId: row.staff_id ?? undefined,
+    actorType: row.actor_type ?? undefined,
+    actorId: row.actor_id ?? undefined,
     actorName: row.actor_name ?? undefined,
     action: row.action ?? "",
     targetType: row.target_type ?? undefined,
@@ -393,6 +399,8 @@ export async function logStaffActivity(input: {
 
   const payload = {
     staff_id: input.actor?.staffId ?? null,
+    actor_type: input.actor?.userType ?? "system",
+    actor_id: input.actor?.userType === "staff" ? input.actor.staffId ?? null : input.actor?.userType === "owner" ? input.actor.username : null,
     actor_name: input.actor?.displayName ?? input.actor?.username ?? "Owner",
     action: input.action,
     target_type: input.targetType ?? null,

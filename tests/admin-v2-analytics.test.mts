@@ -86,7 +86,7 @@ function review(overrides: Partial<ProductReview>): ProductReview {
 
 test("Admin V2 Analytics is a real implemented route protected by analytics.view", () => {
   assert.equal(findAdminV2Route("analytics")?.implemented, true);
-  assert.equal(findAdminV2Route("approvals")?.implemented, false);
+  assert.equal(findAdminV2Route("approvals")?.implemented, true);
   assert.equal(adminV2AccessRules.analytics.section, "analytics");
   assert.match(analyticsPageSource, /requireAdminV2RouteAccess\(session,\s*"analytics"\)/);
   assert.match(analyticsPageSource, /getAdminV2Analytics\(params\)/);

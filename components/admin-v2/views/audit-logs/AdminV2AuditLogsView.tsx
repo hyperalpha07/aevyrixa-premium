@@ -36,7 +36,9 @@ import {
 } from "@/lib/admin-v2/audit-logs/audit-log-query";
 
 type StaffPayload = {
-  activityLogs?: StaffActivityLog[];
+  logs?: StaffActivityLog[];
+  nextCursor?: string | null;
+  filters?: { actions: string[]; actors: string[]; targetTypes: string[] };
   errors?: string[];
 };
 
@@ -60,11 +62,20 @@ function dateLabel(value?: string) {
   }).format(date);
 }
 
-async function readAuditLogs(): Promise<StaffActivityLog[]> {
-  const response = await fetch("/api/admin/staff", { cache: "no-store" });
+async function readAuditLogs(filters: AuditLogFilters, cursor?: string | null): Promise<StaffPayload> {
+  const params = new URLSearchParams({
+    query: filters.query,
+    action: filters.action,
+    actor: filters.actor,
+    targetType: filters.targetType,
+    timeRange: filters.timeRange,
+    limit: "50",
+  });
+  if (cursor) params.set("cursor", cursor);
+  const response = await fetch(`/api/admin/audit-logs?${params.toString()}`, { cache: "no-store" });
   const data = (await response.json()) as StaffPayload;
   if (!response.ok) throw new Error((data.errors ?? ["Audit logs could not be loaded."]).join(" "));
-  return sortAuditLogsNewestFirst(data.activityLogs ?? []);
+  return data;
 }
 
 function metadataText(metadata: unknown) {
@@ -77,6 +88,8 @@ export function AdminV2AuditLogsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState("");
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [serverOptions, setServerOptions] = useState<{ actions: string[]; actors: string[]; targetTypes: string[] }>({ actions: [], actors: [], targetTypes: [] });
   const [filters, setFilters] = useState<AuditLogFilters>({
     query: "",
     action: "all",
@@ -85,12 +98,15 @@ export function AdminV2AuditLogsView() {
     timeRange: "all",
   });
 
-  async function load() {
+  async function load(cursor?: string | null) {
     setLoading(true);
     setError("");
     try {
-      const next = await readAuditLogs();
-      setLogs(next);
+      const data = await readAuditLogs(filters, cursor);
+      const next = sortAuditLogsNewestFirst(data.logs ?? []);
+      setLogs((current) => cursor ? [...current, ...next] : next);
+      setNextCursor(data.nextCursor ?? null);
+      if (data.filters) setServerOptions(data.filters);
       setSelectedId((current) => current || next[0]?.id || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Audit logs could not be loaded.");
@@ -101,9 +117,16 @@ export function AdminV2AuditLogsView() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [filters.action, filters.actor, filters.targetType, filters.timeRange]);
 
-  const options = useMemo(() => auditFilterOptions(logs), [logs]);
+  const options = useMemo(() => {
+    const local = auditFilterOptions(logs);
+    return {
+      actions: serverOptions.actions.length ? serverOptions.actions : local.actions,
+      actors: serverOptions.actors.length ? serverOptions.actors : local.actors,
+      targetTypes: serverOptions.targetTypes.length ? serverOptions.targetTypes : local.targetTypes,
+    };
+  }, [logs, serverOptions]);
   const metrics = useMemo(() => auditLogMetrics(logs), [logs]);
   const filtered = useMemo(() => queryAuditLogs(logs, filters), [logs, filters]);
   const selected = logs.find((log) => log.id === selectedId) ?? null;
@@ -121,7 +144,7 @@ export function AdminV2AuditLogsView() {
       <V2PageHeader
         title="Audit Logs"
         description="Review administrative activity, security events, and staff changes."
-        actions={<V2Button href="/admin-v2/staff" variant="outlined">View Staff</V2Button>}
+        actions={<Stack direction="row" sx={{ gap: 1 }}><V2Button href="/admin-v2/staff" variant="outlined">View Staff</V2Button><V2Button href={`/api/admin/audit-logs/export?${new URLSearchParams(filters).toString()}`} variant="outlined">Export CSV</V2Button></Stack>}
       />
 
       {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
@@ -293,6 +316,7 @@ export function AdminV2AuditLogsView() {
                   <Typography color="text.secondary">{logs.length ? "Try another search or filter." : "Real administrative activity will appear here."}</Typography>
                 </Box>
               ) : null}
+              {nextCursor ? <Box sx={{ py: 1.5, textAlign: "center", borderTop: 1, borderColor: "divider" }}><V2Button variant="outlined" loading={loading} onClick={() => { void load(nextCursor); }}>Load More</V2Button></Box> : null}
             </Box>
             </Box>
           </Box>

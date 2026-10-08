@@ -7,6 +7,8 @@ const migrationPath = "supabase/migrations/20261005093000_p0_database_access_sec
 const migration = read(migrationPath);
 const supportFinalizationMigrationPath = "supabase/migrations/20261006090000_support_finalization.sql";
 const supportFinalizationMigration = read(supportFinalizationMigrationPath);
+const adminAuditApprovalsMigrationPath = "supabase/migrations/20261008090000_admin_audit_approvals_finalization.sql";
+const adminAuditApprovalsMigration = read(adminAuditApprovalsMigrationPath);
 
 const requiredTables = [
   "products",
@@ -286,4 +288,23 @@ test("Support finalization migration grants only the required service-role Suppo
   assert.doesNotMatch(supportFinalizationMigration, /grant\s+all\s+on\s+table/i);
   assert.doesNotMatch(supportFinalizationMigration, /grant\s+[^;]*(?:truncate|trigger|references)[^;]*\s+on\s+table/i);
   assert.doesNotMatch(supportFinalizationMigration, /grant\s+(?:select|insert|update|delete|all)[^;]+to\s+(?:anon|authenticated)\b/i);
+});
+
+test("Admin audit/approvals finalization preserves least-privilege ACL and RLS", () => {
+  assert.ok(existsSync(new URL(`../${adminAuditApprovalsMigrationPath}`, import.meta.url)));
+
+  assertContainsSql(adminAuditApprovalsMigration, "alter table public.admin_staff_activity_logs enable row level security;");
+  assertContainsSql(adminAuditApprovalsMigration, "revoke all on table public.admin_staff_activity_logs from public, anon, authenticated, service_role;");
+  assertContainsSql(adminAuditApprovalsMigration, "grant select, insert on table public.admin_staff_activity_logs to service_role;");
+
+  for (const table of ["admin_approval_requests", "admin_approval_events"]) {
+    assertContainsSql(adminAuditApprovalsMigration, `alter table public.${table} enable row level security;`);
+    assertContainsSql(adminAuditApprovalsMigration, `revoke all on table public.${table} from public, anon, authenticated, service_role;`);
+  }
+
+  assertContainsSql(adminAuditApprovalsMigration, "grant select, insert, update on table public.admin_approval_requests to service_role;");
+  assertContainsSql(adminAuditApprovalsMigration, "grant select, insert on table public.admin_approval_events to service_role;");
+  assert.doesNotMatch(adminAuditApprovalsMigration, /grant\s+all\s+on\s+table/i);
+  assert.doesNotMatch(adminAuditApprovalsMigration, /grant\s+[^;]*(?:delete|truncate|trigger|references)[^;]*\s+on\s+table\s+public\.(?:admin_staff_activity_logs|admin_approval_requests|admin_approval_events)/i);
+  assert.doesNotMatch(adminAuditApprovalsMigration, /grant\s+(?:select|insert|update|delete|all)[^;]+to\s+(?:public|anon|authenticated)\b/i);
 });
