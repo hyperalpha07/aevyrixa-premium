@@ -1,4 +1,4 @@
-import type { PaymentMethod, PaymentStatus } from "@/app/lib/order-types";
+import type { PaymentMethod } from "@/app/lib/order-types";
 import { buildAdminV2MoneyAggregate, type AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
 export const adminV2RefundPaymentMethods = [
@@ -7,20 +7,15 @@ export const adminV2RefundPaymentMethods = [
   "Bank Transfer",
 ] as const satisfies readonly PaymentMethod[];
 
-export const adminV2RefundClassifications = [
-  "full",
-  "partial",
-  "inconsistent",
-  "request_only",
-] as const;
+export const adminV2RefundLedgerStatuses = ["recorded", "void"] as const;
 
-export type AdminV2RefundClassification = (typeof adminV2RefundClassifications)[number];
-export type AdminV2RefundClassificationFilter = AdminV2RefundClassification | "all";
+export type AdminV2RefundLedgerStatus = (typeof adminV2RefundLedgerStatuses)[number];
+export type AdminV2RefundLedgerStatusFilter = AdminV2RefundLedgerStatus | "all";
 export type AdminV2RefundMethodFilter = PaymentMethod | "all";
 
 export type AdminV2RefundQuery = {
   q: string;
-  classification: AdminV2RefundClassificationFilter;
+  status: AdminV2RefundLedgerStatusFilter;
   method: AdminV2RefundMethodFilter;
   from: string;
   to: string;
@@ -30,29 +25,26 @@ export type AdminV2RefundQuery = {
 
 export type AdminV2RefundRow = {
   id: string;
-  orderReference: string;
-  classification: AdminV2RefundClassification;
-  paymentStatus: PaymentStatus | "";
-  paymentMethod: string;
-  walletProvider: string;
-  paymentType: string;
   reference: string;
-  requestNote: string;
-  refundedAmount: number | null;
-  payableAmount: number | null;
+  orderReference: string;
+  amount: number | null;
   currencyCode: string;
-  orderStatus: string;
-  createdAt: string;
-  updatedAt: string;
+  refundMethod: string;
+  externalReference: string;
+  reason: string;
+  source: string;
+  status: AdminV2RefundLedgerStatus | string;
+  occurredAt: string;
+  recordedAt: string;
+  voidedAt: string;
+  voidReason: string;
 };
 
 export type AdminV2RefundMetrics = {
-  refundedOrders: number;
-  refundedAmount: number;
-  refundedAmountSummary: AdminV2MoneyAggregate;
-  fullRefunds: number;
-  partialRefunds: number;
-  refundRequests: number;
+  totalLedgerEntries: number;
+  recordedRefunds: number;
+  recordedAmountSummary: AdminV2MoneyAggregate;
+  voidedRefunds: number;
 };
 
 export type AdminV2RefundQueryResult = {
@@ -66,16 +58,13 @@ export type AdminV2RefundQueryResult = {
   limitation: string | null;
 };
 
-export const adminV2RefundClassificationLabels: Record<AdminV2RefundClassification, string> = {
-  full: "Full refund",
-  partial: "Partial refund",
-  inconsistent: "Inconsistent amount",
-  request_only: "Refund request only",
+export const adminV2RefundLedgerStatusLabels: Record<AdminV2RefundLedgerStatus, string> = {
+  recorded: "Recorded",
+  void: "Void",
 };
 
 const defaultPageSize = 20;
 const maxPageSize = 50;
-const amountTolerance = 1;
 
 function positiveInt(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -96,7 +85,7 @@ function oneOf<T extends readonly string[]>(value: string | null, values: T) {
 export function parseAdminV2RefundQuery(searchParams: URLSearchParams): AdminV2RefundQuery {
   return {
     q: (searchParams.get("q") ?? "").trim().slice(0, 120),
-    classification: oneOf(searchParams.get("classification"), adminV2RefundClassifications) as AdminV2RefundClassificationFilter,
+    status: oneOf(searchParams.get("status"), adminV2RefundLedgerStatuses) as AdminV2RefundLedgerStatusFilter,
     method: oneOf(searchParams.get("method"), adminV2RefundPaymentMethods) as AdminV2RefundMethodFilter,
     from: cleanDate(searchParams.get("from")),
     to: cleanDate(searchParams.get("to")),
@@ -109,58 +98,12 @@ export function adminV2RefundTotalPages(totalCount: number, pageSize: number) {
   return Math.max(1, Math.ceil(Math.max(0, totalCount) / Math.max(1, pageSize)));
 }
 
-function safeAmount(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : 0;
-}
-
-export function classifyAdminV2Refund(input: {
-  refundedAmount: number | null;
-  payableAmount: number | null;
-  paymentStatus: PaymentStatus | "";
-  requestNote: string;
-}): AdminV2RefundClassification {
-  const refundedAmount = safeAmount(input.refundedAmount);
-  const payableAmount = safeAmount(input.payableAmount);
-
-  if (refundedAmount > 0 && (payableAmount <= 0 || refundedAmount > payableAmount + amountTolerance)) {
-    return "inconsistent";
-  }
-
-  if (refundedAmount > 0 && Math.abs(refundedAmount - payableAmount) <= amountTolerance) {
-    return "full";
-  }
-
-  if (refundedAmount > 0 && refundedAmount < payableAmount) {
-    return "partial";
-  }
-
-  return "request_only";
-}
-
-export function hasAdminV2RefundSignal(row: {
-  paymentStatus: PaymentStatus | "";
-  refundedAmount: number | null;
-  requestNote: string;
-}) {
-  return row.paymentStatus === "refunded" || safeAmount(row.refundedAmount) > 0 || Boolean(row.requestNote.trim());
-}
-
 export function buildAdminV2RefundMetrics(rows: AdminV2RefundRow[]): AdminV2RefundMetrics {
-  const metrics = rows.reduce(
-    (metrics, row) => {
-      if (row.paymentStatus === "refunded" || safeAmount(row.refundedAmount) > 0) {
-        metrics.refundedOrders += 1;
-      }
-      metrics.refundedAmount += safeAmount(row.refundedAmount);
-      if (row.classification === "full") metrics.fullRefunds += 1;
-      if (row.classification === "partial") metrics.partialRefunds += 1;
-      if (row.requestNote && row.classification === "request_only") metrics.refundRequests += 1;
-      return metrics;
-    },
-    { refundedOrders: 0, refundedAmount: 0, fullRefunds: 0, partialRefunds: 0, refundRequests: 0 }
-  );
+  const recordedRows = rows.filter((row) => row.status === "recorded");
   return {
-    ...metrics,
-    refundedAmountSummary: buildAdminV2MoneyAggregate(rows.map((row) => ({ amount: row.refundedAmount, currencyCode: row.currencyCode }))),
+    totalLedgerEntries: rows.length,
+    recordedRefunds: recordedRows.length,
+    recordedAmountSummary: buildAdminV2MoneyAggregate(recordedRows.map((row) => ({ amount: row.amount, currencyCode: row.currencyCode }))),
+    voidedRefunds: rows.filter((row) => row.status === "void").length,
   };
 }

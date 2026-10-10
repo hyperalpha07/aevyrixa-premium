@@ -2,19 +2,18 @@
 
 import { FormEvent, useState } from "react";
 import { Alert, Box, Button, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
-import { Banknote, CircleDollarSign, FileQuestion, Info, ReceiptText, RotateCcw } from "lucide-react";
+import { Banknote, Info, ReceiptText, RotateCcw } from "lucide-react";
 import { formatCurrency } from "@/app/lib/currency";
 import { V2Breadcrumbs } from "@/components/admin-v2/shared/V2Breadcrumbs";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Chip } from "@/components/admin-v2/shared/V2Chip";
 import {
-  adminV2RefundClassificationLabels,
-  adminV2RefundClassifications,
+  adminV2RefundLedgerStatusLabels,
+  adminV2RefundLedgerStatuses,
   adminV2RefundPaymentMethods,
-  type AdminV2RefundClassification,
+  type AdminV2RefundLedgerStatus,
   type AdminV2RefundQueryResult,
-  type AdminV2RefundRow,
 } from "@/lib/admin-v2/refunds/refund-metrics";
 import type { AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
@@ -23,7 +22,7 @@ const allOption = { label: "All", value: "all" };
 function pageHref(data: AdminV2RefundQueryResult, page: number) {
   const params = new URLSearchParams();
   if (data.query.q) params.set("q", data.query.q);
-  if (data.query.classification !== "all") params.set("classification", data.query.classification);
+  if (data.query.status !== "all") params.set("status", data.query.status);
   if (data.query.method !== "all") params.set("method", data.query.method);
   if (data.query.from) params.set("from", data.query.from);
   if (data.query.to) params.set("to", data.query.to);
@@ -53,17 +52,14 @@ async function submitFinanceJson(url: string, payload: Record<string, unknown>) 
   if (!response.ok) throw new Error(Array.isArray(body.errors) ? body.errors[0] : "Finance action failed.");
 }
 
-function classificationColor(value: AdminV2RefundClassification): "success" | "warning" | "error" | "info" | "default" {
-  if (value === "full") return "success";
-  if (value === "partial") return "info";
-  if (value === "inconsistent") return "error";
-  if (value === "request_only") return "warning";
+function statusColor(value: string): "success" | "warning" | "error" | "info" | "default" {
+  if (value === "recorded") return "success";
+  if (value === "void") return "warning";
   return "default";
 }
 
-function methodLabel(row: AdminV2RefundRow) {
-  const details = [row.walletProvider, row.paymentType].filter(Boolean).join(" / ");
-  return details ? `${row.paymentMethod} - ${details}` : row.paymentMethod;
+function statusLabel(value: string) {
+  return adminV2RefundLedgerStatusLabels[value as AdminV2RefundLedgerStatus] ?? (value || "Not provided");
 }
 
 function MetricCell({
@@ -130,8 +126,8 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
   const [actionError, setActionError] = useState("");
   const [saving, setSaving] = useState(false);
   const [voiding, setVoiding] = useState<string | null>(null);
-  const hasFilters = Boolean(data.query.q || data.query.classification !== "all" || data.query.method !== "all" || data.query.from || data.query.to);
-  const emptyMessage = hasFilters ? "No orders match these refund filters." : "No refund-related orders found.";
+  const hasFilters = Boolean(data.query.q || data.query.status !== "all" || data.query.method !== "all" || data.query.from || data.query.to);
+  const emptyMessage = hasFilters ? "No refund records match these filters." : "No refund records found.";
   const inputSx = {
     "& .MuiInputBase-root": { minHeight: 38 },
     "& .MuiInputBase-input": { py: 0.85 },
@@ -139,7 +135,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
   const exportHref = `/api/admin/finance/refunds/export?${new URLSearchParams({
     ...(data.query.q ? { q: data.query.q } : {}),
     ...(data.query.method !== "all" ? { method: data.query.method } : {}),
-    ...(data.query.classification !== "all" ? { classification: data.query.classification } : {}),
+    ...(data.query.status !== "all" ? { status: data.query.status } : {}),
     ...(data.query.from ? { from: data.query.from } : {}),
     ...(data.query.to ? { to: data.query.to } : {}),
   }).toString()}`;
@@ -199,11 +195,10 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
         {!data.queryFailed ? (
           <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1, md: 1.15 }, "&:last-child": { pb: { xs: 1, md: 1.15 } } } }}>
             <Grid container columns={{ xs: 12, lg: 12 }}>
-              <MetricCell label="Refunded Orders" value={String(data.metrics.refundedOrders)} icon={ReceiptText} tone="success" />
-              <MetricCell label="Refunded Amount" value={moneyAggregate(data.metrics.refundedAmountSummary)} icon={Banknote} helper={data.metrics.refundedAmountSummary.kind === "mixed" ? "Unavailable as a single total." : "Active refund ledger amount."} />
-              <MetricCell label="Full Refunds" value={String(data.metrics.fullRefunds)} icon={CircleDollarSign} tone="info" />
-              <MetricCell label="Partial Refunds" value={String(data.metrics.partialRefunds)} icon={RotateCcw} tone="warning" />
-              <MetricCell label="Refund Requests" value={String(data.metrics.refundRequests)} icon={FileQuestion} tone="error" helper="Request note only." />
+              <MetricCell label="Recorded Refunds" value={String(data.metrics.recordedRefunds)} icon={ReceiptText} tone="success" />
+              <MetricCell label="Recorded Amount" value={moneyAggregate(data.metrics.recordedAmountSummary)} icon={Banknote} helper={data.metrics.recordedAmountSummary.kind === "mixed" ? "Unavailable as a single total." : "Recorded refund ledger amount."} />
+              <MetricCell label="Voided Refunds" value={String(data.metrics.voidedRefunds)} icon={RotateCcw} tone="warning" />
+              <MetricCell label="Total Ledger Entries" value={String(data.metrics.totalLedgerEntries)} icon={ReceiptText} tone="info" />
             </Grid>
           </V2Card>
         ) : null}
@@ -211,10 +206,10 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.35 }, "&:last-child": { pb: { xs: 1.25, md: 1.35 } } } }}>
           <Stack component="form" action="/admin-v2/refunds" method="get" direction={{ xs: "column", xl: "row" }} spacing={1} sx={{ alignItems: { xl: "center" } }}>
             <TextField name="q" label="Search refund, order, reference, or reason" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 305 }, ...inputSx }} />
-            <TextField select name="classification" label="Classification" size="small" defaultValue={data.query.classification} sx={{ minWidth: { xl: 185 }, ...inputSx }}>
-              {[allOption, ...adminV2RefundClassifications.map((classification) => ({ label: adminV2RefundClassificationLabels[classification], value: classification }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+            <TextField select name="status" label="Ledger status" size="small" defaultValue={data.query.status} sx={{ minWidth: { xl: 165 }, ...inputSx }}>
+              {[allOption, ...adminV2RefundLedgerStatuses.map((status) => ({ label: adminV2RefundLedgerStatusLabels[status], value: status }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
             </TextField>
-            <TextField select name="method" label="Payment method" size="small" defaultValue={data.query.method} sx={{ minWidth: { xl: 175 }, ...inputSx }}>
+            <TextField select name="method" label="Refund method" size="small" defaultValue={data.query.method} sx={{ minWidth: { xl: 175 }, ...inputSx }}>
               {[allOption, ...adminV2RefundPaymentMethods.map((method) => ({ label: method, value: method }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
             </TextField>
             <TextField name="from" type="date" size="small" label="From" defaultValue={data.query.from} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
@@ -276,13 +271,14 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
               }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: 150 }}>Refund / Order</TableCell>
-                    <TableCell sx={{ width: 155 }}>Refund Classification</TableCell>
-                    <TableCell align="right" sx={{ width: 130 }}>Refunded Amount</TableCell>
-                    <TableCell align="right" sx={{ width: 125 }}>Payable Amount</TableCell>
-                    <TableCell sx={{ width: 165 }}>Payment Method</TableCell>
+                    <TableCell sx={{ width: 150 }}>Refund reference</TableCell>
+                    <TableCell sx={{ width: 145 }}>Order reference</TableCell>
+                    <TableCell align="right" sx={{ width: 130 }}>Amount</TableCell>
+                    <TableCell sx={{ width: 165 }}>Refund method</TableCell>
                     <TableCell sx={{ width: 145 }}>External Reference</TableCell>
-                    <TableCell sx={{ width: 210 }}>Request / Note</TableCell>
+                    <TableCell sx={{ width: 210 }}>Reason</TableCell>
+                    <TableCell sx={{ width: 105 }}>Status</TableCell>
+                    <TableCell sx={{ width: 145 }}>Occurred at</TableCell>
                     <TableCell align="right" sx={{ width: 105 }}>Action</TableCell>
                   </TableRow>
                 </TableHead>
@@ -291,25 +287,27 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
                     <TableRow key={row.id || row.orderReference}>
                       <TableCell>
                         <Typography variant="body2" noWrap sx={{ fontWeight: 900 }}>{row.reference || "Not provided"}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.orderReference || "Order not provided"}</Typography>
                       </TableCell>
                       <TableCell>
-                        <V2Chip label={adminV2RefundClassificationLabels[row.classification]} color={classificationColor(row.classification)} size="small" sx={{ height: 22 }} />
+                        <Typography variant="body2" noWrap>{row.orderReference || "Not provided"}</Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 800 }}>{amount(row.refundedAmount, row.currencyCode)}</Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" noWrap>{amount(row.payableAmount, row.currencyCode)}</Typography>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 800 }}>{amount(row.amount, row.currencyCode)}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" noWrap>{methodLabel(row)}</Typography>
+                        <Typography variant="body2" noWrap>{row.refundMethod}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" noWrap>{row.reference}</Typography>
+                        <Typography variant="body2" noWrap>{row.externalReference || "Not provided"}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" noWrap>{row.requestNote || "Not provided"}</Typography>
+                        <Typography variant="body2" noWrap>{row.reason || row.voidReason || "Not provided"}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <V2Chip label={statusLabel(row.status)} color={statusColor(row.status)} size="small" sx={{ height: 22 }} />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap>{row.occurredAt || "Not provided"}</Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
@@ -318,7 +316,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
                               View Order
                             </V2Button>
                           ) : null}
-                          {capabilities.canRecordRefund && row.orderStatus === "recorded" ? (
+                          {capabilities.canRecordRefund && row.status === "recorded" ? (
                             <Button size="small" variant="text" color="warning" disabled={voiding === row.reference} onClick={() => voidRefund(row.reference)} sx={{ minHeight: 28, px: 1 }}>
                               Void
                             </Button>

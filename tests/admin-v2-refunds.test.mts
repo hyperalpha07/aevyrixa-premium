@@ -89,12 +89,29 @@ test("Partial and full refund status semantics are recomputed from active ledger
   assert.match(migration, /due_amount = greatest\(v_payable - v_paid, 0\)/);
 });
 
-test("Refund metrics are clearly ledger-based and do not infer refunds from cancelled orders", () => {
-  assert.match(metrics, /refundedAmount/);
-  assert.match(metrics, /refundedAmountSummary/);
+test("Refund metrics are ledger-native and do not infer requests or classifications", () => {
+  assert.match(metrics, /recordedRefunds/);
+  assert.match(metrics, /recordedAmountSummary/);
+  assert.match(metrics, /voidedRefunds/);
+  assert.match(metrics, /totalLedgerEntries/);
   assert.match(view, /Mixed currencies/);
-  assert.match(metrics, /request_only/);
+  assert.doesNotMatch(metrics + query + view, /request_only|Full Refunds|Partial Refunds|Refund Requests|classifyAdminV2Refund|classification|payableAmount/);
   assert.doesNotMatch(metrics + query, /Cancelled.*refund|orderStatus.*Cancelled.*refund/s);
+});
+
+test("Refund filters and rows use actual refund ledger status and method", () => {
+  assert.match(metrics, /adminV2RefundLedgerStatuses = \["recorded", "void"\]/);
+  assert.match(query, /status.*eq/);
+  assert.match(view, /Ledger status/);
+  assert.match(view, /Refund method/);
+  assert.match(view, /Recorded Refunds/);
+  assert.match(view, /Recorded Amount/);
+  assert.match(view, /Voided Refunds/);
+  assert.match(view, /Total Ledger Entries/);
+  assert.match(view, /No refund records found/);
+  assert.match(view, /No refund records match these filters/);
+  assert.doesNotMatch(view, /Payment method|Refund Classification|Payable Amount|Request \/ Note|No refund-related orders|No orders match these refund filters/);
+  assert.doesNotMatch(query + metrics, /refund_exchange_request|requestNote|paymentStatus|walletProvider|paymentType/);
 });
 
 test("Refund export is permissioned, audited fail-closed, capped and CSV-safe", () => {
@@ -105,8 +122,10 @@ test("Refund export is permissioned, audited fail-closed, capped and CSV-safe", 
   assert.match(route, /finance\.refunds\.exported/);
   assert.match(route, /requireRecorded:\s*true/);
   assert.match(route, /status:\s*500/);
+  assert.match(route, /External Reference/);
+  assert.match(route, /filters:\s*\{ q: Boolean\(result\.query\.q\), method: result\.query\.method, status: result\.query\.status \}/);
   assert.match(query, /adminV2RefundExportLimit = 10000/);
   assert.match(query, /count > adminV2RefundExportLimit/);
   assert.match(csv, /neutralizeSpreadsheetFormula/);
-  assert.doesNotMatch(route, /customerName|customerContact|phone|email|address/i);
+  assert.doesNotMatch(route + query, /classification|customerName|customerContact|phone|email|address/i);
 });

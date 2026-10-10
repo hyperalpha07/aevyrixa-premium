@@ -28,21 +28,22 @@ export async function GET(request: Request) {
   const rows = result.rows.map((row) => [
     row.reference,
     row.orderReference,
-    row.refundedAmount ?? "",
+    row.amount ?? "",
     row.currencyCode,
-    row.paymentMethod,
-    row.classification,
-    row.orderStatus,
-    row.createdAt,
+    row.refundMethod,
+    row.externalReference,
+    row.reason,
+    row.status,
+    row.occurredAt,
   ]);
-  const csv = adminV2RowsToCsv(["Refund Reference", "Order Reference", "Amount", "Currency", "Refund Method", "Classification", "Status", "Occurred At"], rows);
+  const csv = adminV2RowsToCsv(["Refund Reference", "Order Reference", "Amount", "Currency", "Refund Method", "External Reference", "Reason", "Status", "Occurred At"], rows);
   try {
     await logStaffActivity({
       actor: session,
       action: "finance.refunds.exported",
       targetType: "finance_refunds",
       targetId: "csv",
-      metadata: { type: "refunds", from: result.query.from, to: result.query.to, row_count: result.rows.length, filters: { q: Boolean(result.query.q), method: result.query.method, classification: result.query.classification } },
+      metadata: { type: "refunds", from: result.query.from, to: result.query.to, row_count: result.rows.length, filters: { q: Boolean(result.query.q), method: result.query.method, status: result.query.status } },
       requireRecorded: true,
     });
   } catch {
