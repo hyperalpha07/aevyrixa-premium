@@ -10,6 +10,13 @@ type OrderRow = {
   currency_code?: string | null;
 };
 
+type LedgerSummary = {
+  order_ref?: string | null;
+  amount?: number | string | null;
+  currency_code?: string | null;
+  status?: string | null;
+};
+
 function amount(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim()) {
@@ -48,6 +55,47 @@ async function main() {
   }
 
   const rows = (await response.json()) as OrderRow[];
+  const [paymentResponse, refundResponse] = await Promise.all([
+    fetch(`${base}/rest/v1/finance_payment_transactions?select=order_ref,amount,currency_code,status&status=eq.recorded&limit=10000`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    }),
+    fetch(`${base}/rest/v1/finance_refunds?select=order_ref,amount,currency_code,status&status=eq.recorded&limit=10000`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    }),
+  ]);
+
+  if (!paymentResponse.ok) {
+    throw new Error(`Payment ledger read failed with ${paymentResponse.status}: ${await paymentResponse.text()}`);
+  }
+  if (!refundResponse.ok) {
+    throw new Error(`Refund ledger read failed with ${refundResponse.status}: ${await refundResponse.text()}`);
+  }
+
+  const payments = (await paymentResponse.json()) as LedgerSummary[];
+  const refunds = (await refundResponse.json()) as LedgerSummary[];
+  const orderRefs = new Set(rows.map((row) => row.order_ref ?? "").filter(Boolean));
+  const paymentTotals = new Map<string, number>();
+  const refundTotals = new Map<string, number>();
+  const ledgerCurrencies = new Map<string, Set<string>>();
+  for (const row of payments) {
+    const orderRef = row.order_ref ?? "";
+    paymentTotals.set(orderRef, (paymentTotals.get(orderRef) ?? 0) + (amount(row.amount) ?? 0));
+    if (row.currency_code) {
+      const currencies = ledgerCurrencies.get(orderRef) ?? new Set<string>();
+      currencies.add(row.currency_code);
+      ledgerCurrencies.set(orderRef, currencies);
+    }
+  }
+  for (const row of refunds) {
+    const orderRef = row.order_ref ?? "";
+    refundTotals.set(orderRef, (refundTotals.get(orderRef) ?? 0) + (amount(row.amount) ?? 0));
+    if (row.currency_code) {
+      const currencies = ledgerCurrencies.get(orderRef) ?? new Set<string>();
+      currencies.add(row.currency_code);
+      ledgerCurrencies.set(orderRef, currencies);
+    }
+  }
+
   const report = rows
     .map((row) => {
       const subtotal = amount(row.subtotal);
@@ -68,19 +116,49 @@ async function main() {
         storedTotal !== null && calculatedPayable !== null
           ? Number((storedTotal - calculatedPayable).toFixed(2))
           : null;
+      const paymentLedger = paymentTotals.get(row.order_ref ?? "") ?? 0;
+      const refundLedger = refundTotals.get(row.order_ref ?? "") ?? 0;
+      const paidSnapshot = amount(row.paid_amount);
+      const refundSnapshot = amount(row.refunded_amount);
+      const paidLedgerDifference =
+        paidSnapshot !== null ? Number((paidSnapshot - paymentLedger).toFixed(2)) : null;
+      const refundLedgerDifference =
+        refundSnapshot !== null ? Number((refundSnapshot - refundLedger).toFixed(2)) : null;
+      const orderCurrencies = ledgerCurrencies.get(row.order_ref ?? "") ?? new Set<string>();
+      if (row.currency_code) orderCurrencies.add(row.currency_code);
+      const mixedCurrencies = orderCurrencies.size > 1;
+      const refundExceedsPayment = refundLedger > paymentLedger + 0.01;
 
       return {
         order_ref: row.order_ref ?? "",
         stored_total: storedTotal,
         calculated_payable: calculatedPayable,
         difference,
+        paid_snapshot: paidSnapshot,
+        payment_ledger: paymentLedger,
+        paid_ledger_difference: paidLedgerDifference,
+        refund_snapshot: refundSnapshot,
+        refund_ledger: refundLedger,
+        refund_ledger_difference: refundLedgerDifference,
+        refund_exceeds_payment: refundExceedsPayment ? "yes" : "",
+        mixed_currencies: mixedCurrencies ? Array.from(orderCurrencies).join("|") : "",
         missing_fields: missingFields.join("|"),
       };
     })
-    .filter((row) => row.difference !== 0 || row.missing_fields);
+    .filter((row) => row.difference !== 0 || row.paid_ledger_difference !== 0 || row.refund_ledger_difference !== 0 || row.refund_exceeds_payment || row.mixed_currencies || row.missing_fields);
+
+  const orphanFinanceRefs = [...payments.map((row) => ({ kind: "payment", row })), ...refunds.map((row) => ({ kind: "refund", row }))]
+    .filter((entry) => !orderRefs.has(entry.row.order_ref ?? ""))
+    .map((entry) => ({
+      order_ref: entry.row.order_ref ?? "",
+      issue: `orphan_${entry.kind}_finance_reference`,
+      amount: amount(entry.row.amount),
+      currency_code: entry.row.currency_code ?? "",
+    }));
 
   console.table(report);
-  console.log(`Read-only audit complete. Checked ${rows.length} orders. Flagged ${report.length}.`);
+  if (orphanFinanceRefs.length) console.table(orphanFinanceRefs);
+  console.log(`Read-only audit complete. Checked ${rows.length} orders, ${payments.length} active payment rows, and ${refunds.length} active refund rows. Flagged ${report.length + orphanFinanceRefs.length}.`);
 }
 
 main().catch((error) => {

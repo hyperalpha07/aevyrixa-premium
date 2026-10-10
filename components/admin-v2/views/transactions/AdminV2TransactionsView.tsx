@@ -1,3 +1,6 @@
+"use client";
+
+import { FormEvent, useState } from "react";
 import { Alert, Box, Button, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { AlertTriangle, Banknote, CircleDollarSign, Clock3, Info, ReceiptText } from "lucide-react";
 import { formatCurrency } from "@/app/lib/currency";
@@ -12,6 +15,7 @@ import {
   type AdminV2TransactionQueryResult,
   type AdminV2TransactionRow,
 } from "@/lib/admin-v2/transactions/transaction-metrics";
+import type { AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
 const allOption = { label: "All", value: "all" };
 
@@ -46,8 +50,21 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-function amount(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? formatCurrency(value) : "Not provided";
+function amount(value: number | null | undefined, currencyCode = "BDT") {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "Not provided";
+  return currencyCode === "BDT" ? formatCurrency(value) : `${currencyCode} ${value.toLocaleString("en-US")}`;
+}
+
+function moneyAggregate(summary: AdminV2MoneyAggregate) {
+  if (summary.kind === "mixed") return "Mixed currencies";
+  if (summary.kind === "none") return formatCurrency(0);
+  return summary.currencyCode === "BDT" ? formatCurrency(summary.amount) : `${summary.currencyCode} ${summary.amount.toLocaleString("en-US")}`;
+}
+
+async function submitFinanceJson(url: string, payload: Record<string, unknown>) {
+  const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(Array.isArray(body.errors) ? body.errors[0] : "Finance action failed.");
 }
 
 function statusColor(value: string): "success" | "warning" | "error" | "info" | "default" {
@@ -133,13 +150,61 @@ function MetricCell({
   );
 }
 
-export function AdminV2TransactionsView({ data }: { data: AdminV2TransactionQueryResult }) {
+export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2TransactionQueryResult; capabilities: { canRecordPayment: boolean; canExport: boolean; canViewOrder: boolean } }) {
+  const [recordError, setRecordError] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [voiding, setVoiding] = useState<string | null>(null);
   const hasFilters = Boolean(data.query.q || data.query.method !== "all" || data.query.status !== "all" || data.query.verification !== "all" || data.query.from || data.query.to);
   const emptyMessage = hasFilters ? "No orders match these payment filters." : "No payment records found.";
   const inputSx = {
     "& .MuiInputBase-root": { minHeight: 38 },
     "& .MuiInputBase-input": { py: 0.85 },
   };
+  const exportHref = `/api/admin/finance/transactions/export?${new URLSearchParams({
+    ...(data.query.q ? { q: data.query.q } : {}),
+    ...(data.query.method !== "all" ? { method: data.query.method } : {}),
+    ...(data.query.status !== "all" ? { status: data.query.status } : {}),
+    ...(data.query.from ? { from: data.query.from } : {}),
+    ...(data.query.to ? { to: data.query.to } : {}),
+  }).toString()}`;
+
+  async function recordPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRecordError("");
+    setRecording(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      await submitFinanceJson("/api/admin/finance/payments", {
+        orderRef: form.get("orderRef"),
+        amount: Number(form.get("amount")),
+        currencyCode: form.get("currencyCode"),
+        paymentMethod: form.get("paymentMethod"),
+        occurredAt: form.get("occurredAt"),
+        externalReference: form.get("externalReference"),
+        note: form.get("note"),
+        requestKey: crypto.randomUUID(),
+      });
+      window.location.reload();
+    } catch (error) {
+      setRecordError(error instanceof Error ? error.message : "Payment could not be recorded.");
+    } finally {
+      setRecording(false);
+    }
+  }
+
+  async function voidPayment(reference: string) {
+    const reason = window.prompt("Void reason is required.");
+    if (!reason?.trim()) return;
+    setVoiding(reference);
+    try {
+      await submitFinanceJson(`/api/admin/finance/payments/${encodeURIComponent(reference)}/void`, { reason });
+      window.location.reload();
+    } catch (error) {
+      setRecordError(error instanceof Error ? error.message : "Payment could not be voided.");
+    } finally {
+      setVoiding(null);
+    }
+  }
 
   return (
     <Box component="section" aria-labelledby="admin-v2-transactions-title">
@@ -157,9 +222,9 @@ export function AdminV2TransactionsView({ data }: { data: AdminV2TransactionQuer
           <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1, md: 1.15 }, "&:last-child": { pb: { xs: 1, md: 1.15 } } } }}>
             <Grid container columns={{ xs: 12, lg: 12 }}>
               <MetricCell label="Verified Payments" value={String(data.metrics.verifiedPayments)} icon={ReceiptText} tone="success" />
-              <MetricCell label="Verified Amount" value={formatCurrency(data.metrics.verifiedAmount)} icon={Banknote} helper="Persisted paid amount." />
+              <MetricCell label="Verified Amount" value={moneyAggregate(data.metrics.verifiedAmountSummary)} icon={Banknote} helper={data.metrics.verifiedAmountSummary.kind === "mixed" ? "Unavailable as a single total." : "Persisted paid amount."} />
               <MetricCell label="Pending Payments" value={String(data.metrics.pendingPayments)} icon={Clock3} tone="warning" />
-              <MetricCell label="COD Due" value={formatCurrency(data.metrics.codDue)} icon={CircleDollarSign} tone="info" helper="Cash on Delivery due." />
+              <MetricCell label="COD Due" value={moneyAggregate(data.metrics.codDueSummary)} icon={CircleDollarSign} tone="info" helper={data.metrics.codDueSummary.kind === "mixed" ? "Unavailable as a single total." : "Cash on Delivery due."} />
               <MetricCell label="Failed / Refunded" value={String(data.metrics.failedOrRefunded)} icon={AlertTriangle} tone="error" />
             </Grid>
           </V2Card>
@@ -182,8 +247,26 @@ export function AdminV2TransactionsView({ data }: { data: AdminV2TransactionQuer
             <input type="hidden" name="pageSize" value={data.query.pageSize} />
             <Button type="submit" variant="contained" sx={{ minHeight: 38, px: 2 }}>Apply</Button>
             {hasFilters ? <Button href="/admin-v2/transactions" variant="outlined" sx={{ minHeight: 38, px: 2 }}>Reset</Button> : null}
+            {capabilities.canExport ? <Button href={exportHref} variant="outlined" sx={{ minHeight: 38, px: 2 }}>Export CSV</Button> : null}
           </Stack>
         </V2Card>
+
+        {capabilities.canRecordPayment ? (
+          <V2Card>
+            <Stack component="form" onSubmit={recordPayment} direction={{ xs: "column", lg: "row" }} spacing={1} sx={{ alignItems: { lg: "center" } }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 900, minWidth: 118 }}>Record Payment</Typography>
+              <TextField required name="orderRef" label="Order reference" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} />
+              <TextField required name="amount" label="Amount" type="number" size="small" slotProps={{ htmlInput: { min: 0.01, step: "0.01" } }} />
+              <TextField required name="currencyCode" label="Currency" size="small" defaultValue="BDT" slotProps={{ htmlInput: { maxLength: 3 } }} sx={{ width: 100 }} />
+              <TextField required name="paymentMethod" label="Payment method" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} />
+              <TextField required name="occurredAt" label="Occurred at" type="datetime-local" size="small" slotProps={{ inputLabel: { shrink: true } }} />
+              <TextField name="externalReference" label="External ref" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} />
+              <TextField name="note" label="Note" size="small" slotProps={{ htmlInput: { maxLength: 2000 } }} />
+              <Button type="submit" disabled={recording} variant="contained">{recording ? "Saving..." : "Record"}</Button>
+            </Stack>
+            {recordError ? <Alert severity="warning" sx={{ mt: 1 }}>{recordError}</Alert> : null}
+          </V2Card>
+        ) : null}
 
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.5, md: 1.75 }, "&:last-child": { pb: { xs: 1.5, md: 1.75 } } } }}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ justifyContent: "space-between", alignItems: { sm: "flex-start" }, mb: 1.25 }}>
@@ -252,9 +335,9 @@ export function AdminV2TransactionsView({ data }: { data: AdminV2TransactionQuer
                       </TableCell>
                       <TableCell align="right">
                         <Stack spacing={0} sx={{ lineHeight: 1.15 }}>
-                          <Typography variant="caption">Paid: <strong>{amount(row.paidAmount)}</strong></Typography>
-                          <Typography variant="caption">Due: <strong>{amount(row.dueAmount)}</strong></Typography>
-                          <Typography variant="caption">Refunded: <strong>{amount(row.refundedAmount)}</strong></Typography>
+                          <Typography variant="caption">Paid: <strong>{amount(row.paidAmount, row.currencyCode)}</strong></Typography>
+                          <Typography variant="caption">Due: <strong>{amount(row.dueAmount, row.currencyCode)}</strong></Typography>
+                          <Typography variant="caption">Refunded: <strong>{amount(row.refundedAmount, row.currencyCode)}</strong></Typography>
                         </Stack>
                       </TableCell>
                       <TableCell>
@@ -262,9 +345,18 @@ export function AdminV2TransactionsView({ data }: { data: AdminV2TransactionQuer
                         <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.paymentVerifiedAt ? "Verified time" : "Order created"}</Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <V2Button size="small" variant="outlined" href={row.orderReference ? orderHref(row.orderReference) : undefined} disabled={!row.orderReference} sx={{ minHeight: 30, px: 1.25 }}>
-                          View Order
-                        </V2Button>
+                        <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
+                          {capabilities.canViewOrder ? (
+                            <V2Button size="small" variant="outlined" href={row.orderReference ? orderHref(row.orderReference) : undefined} disabled={!row.orderReference} sx={{ minHeight: 30, px: 1.25 }}>
+                              View Order
+                            </V2Button>
+                          ) : null}
+                          {capabilities.canRecordPayment && row.orderStatus === "recorded" ? (
+                            <Button size="small" variant="text" color="warning" disabled={voiding === row.transactionReference} onClick={() => voidPayment(row.transactionReference)} sx={{ minHeight: 28, px: 1 }}>
+                              Void
+                            </Button>
+                          ) : null}
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   ))}

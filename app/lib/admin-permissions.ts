@@ -35,6 +35,14 @@ export const adminPermissionKeys = [
   "support.manage",
   "analytics.view",
   "reports.export",
+  "finance.overview.view",
+  "finance.transactions.view",
+  "finance.payments.record",
+  "finance.refunds.view",
+  "finance.refunds.record",
+  "finance.expenses.view",
+  "finance.expenses.manage",
+  "finance.export",
   "staff.manage",
   "roles.manage",
   "permissions.manage",
@@ -138,6 +146,14 @@ export const permissionLabels: Record<AdminPermission, string> = {
   "support.manage": "Manage support assignment, labels, saved replies, priority, and escalation",
   "analytics.view": "View analytics",
   "reports.export": "Export analytics reports CSV",
+  "finance.overview.view": "View finance overview",
+  "finance.transactions.view": "View payment transactions",
+  "finance.payments.record": "Record and void payments",
+  "finance.refunds.view": "View refunds",
+  "finance.refunds.record": "Record and void refunds",
+  "finance.expenses.view": "View expenses",
+  "finance.expenses.manage": "Create and void expenses",
+  "finance.export": "Export finance CSV",
   "staff.manage": "Manage staff",
   "roles.manage": "Manage roles",
   "permissions.manage": "Manage permission policy",
@@ -214,6 +230,19 @@ export const permissionGroups = [
       "approvals.decide",
     ],
   },
+  {
+    title: "Finance",
+    permissions: [
+      "finance.overview.view",
+      "finance.transactions.view",
+      "finance.payments.record",
+      "finance.refunds.view",
+      "finance.refunds.record",
+      "finance.expenses.view",
+      "finance.expenses.manage",
+      "finance.export",
+    ],
+  },
 ] satisfies Array<{ title: string; permissions: AdminPermission[] }>;
 
 export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
@@ -249,6 +278,14 @@ export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
     "support.manage",
     "analytics.view",
     "reports.export",
+    "finance.overview.view",
+    "finance.transactions.view",
+    "finance.payments.record",
+    "finance.refunds.view",
+    "finance.refunds.record",
+    "finance.expenses.view",
+    "finance.expenses.manage",
+    "finance.export",
     "activity.view",
     "approvals.view",
     "approvals.request",
@@ -263,6 +300,9 @@ export const roleDefaultPermissions: Record<string, AdminPermission[]> = {
     "orders.issueInvoice",
     "orders.addNote",
     "orders.export",
+    "finance.transactions.view",
+    "finance.payments.record",
+    "finance.refunds.view",
     "approvals.view",
     "approvals.request",
   ],
@@ -399,7 +439,7 @@ export function canAccessSection(
   if (section === "integrations") {
     return hasPermission(session, "settings.view") || hasPermission(session, "settings.editSensitive");
   }
-  if (section === "billing") return hasPermission(session, "analytics.view") || hasPermission(session, "orders.view");
+  if (section === "billing") return hasPermission(session, "finance.overview.view");
 
   return false;
 }

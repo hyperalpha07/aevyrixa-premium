@@ -17,15 +17,11 @@ import {
   deliveryStatuses,
   orderSources,
   orderStatuses,
-  paymentStatuses,
-  paymentVerificationStatuses,
   proofReceivedStatuses,
   type DeliveryStatus,
   type OrderOperationsUpdate,
   type OrderSource,
   type OrderStatus,
-  type PaymentStatus,
-  type PaymentVerificationStatus,
   type ProofReceivedStatus,
 } from "@/app/lib/order-types";
 
@@ -63,6 +59,19 @@ function validateOperationsPayload(payload: unknown): {
 
   const updates: OrderOperationsUpdate = {};
   const errors: string[] = [];
+  const financeDerivedFields = [
+    "paymentStatus",
+    "paymentVerificationStatus",
+    "paymentReference",
+    "paidAmount",
+    "dueAmount",
+    "refundedAmount",
+    "paymentVerifiedAt",
+  ];
+  const blockedFinanceFields = financeDerivedFields.filter((field) => field in payload);
+  if (blockedFinanceFields.length > 0) {
+    errors.push("Ledger-derived payment fields must be changed through the dedicated finance workflow.");
+  }
 
   if ("status" in payload) {
     if (!orderStatuses.includes(payload.status as OrderStatus)) {
@@ -79,7 +88,6 @@ function validateOperationsPayload(payload: unknown): {
     ["deliveryZone", "deliveryZone"],
     ["deliveryNote", "deliveryNote"],
     ["customerConfirmationNote", "customerConfirmationNote"],
-    ["paymentReference", "paymentReference"],
     ["paymentNote", "paymentNote"],
     ["refundExchangeRequest", "refundExchangeRequest"],
     ["sizeIssueReport", "sizeIssueReport"],
@@ -111,27 +119,6 @@ function validateOperationsPayload(payload: unknown): {
       errors.push("Delivery status is invalid.");
     } else {
       updates.deliveryStatus = payload.deliveryStatus as DeliveryStatus;
-    }
-  }
-
-  if ("paymentStatus" in payload) {
-    if (!paymentStatuses.includes(payload.paymentStatus as PaymentStatus)) {
-      errors.push("Payment status is invalid.");
-    } else {
-      updates.paymentStatus = payload.paymentStatus as PaymentStatus;
-    }
-  }
-
-  if ("paymentVerificationStatus" in payload) {
-    if (
-      !paymentVerificationStatuses.includes(
-        payload.paymentVerificationStatus as PaymentVerificationStatus
-      )
-    ) {
-      errors.push("Payment verification status is invalid.");
-    } else {
-      updates.paymentVerificationStatus =
-        payload.paymentVerificationStatus as PaymentVerificationStatus;
     }
   }
 

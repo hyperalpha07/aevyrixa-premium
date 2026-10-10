@@ -209,6 +209,38 @@ test("financial audit detection flags stored total differences without mutation"
   assert.equal(hasAdminV2TotalMismatch(100, calculated), true);
 });
 
+test("financial audit script remains read-only and checks ledger edge cases", () => {
+  const script = readFileSync(new URL("../scripts/audit-order-financials.mts", import.meta.url), "utf8");
+  assert.doesNotMatch(script, /\bmethod:\s*["'](?:POST|PATCH|PUT|DELETE)["']/i);
+  assert.doesNotMatch(script, /\.rpc\(/i);
+  assert.match(script, /refund_exceeds_payment/);
+  assert.match(script, /mixed_currencies/);
+  assert.match(script, /orphan_\$\{entry\.kind\}_finance_reference/);
+  assert.match(script, /paid_ledger_difference/);
+  assert.match(script, /refund_ledger_difference/);
+});
+
+test("generic order PATCH rejects ledger-derived finance fields and keeps operational notes editable", () => {
+  const route = readFileSync(new URL("../app/api/orders/[orderRef]/route.ts", import.meta.url), "utf8");
+  for (const field of [
+    "paymentStatus",
+    "paymentVerificationStatus",
+    "paymentReference",
+    "paidAmount",
+    "dueAmount",
+    "refundedAmount",
+    "paymentVerifiedAt",
+  ]) {
+    assert.match(route, new RegExp(`"${field}"`));
+  }
+  assert.match(route, /Ledger-derived payment fields must be changed through the dedicated finance workflow/);
+  assert.doesNotMatch(route, /updates\.paymentStatus\s*=/);
+  assert.doesNotMatch(route, /updates\.paymentVerificationStatus\s*=/);
+  assert.doesNotMatch(route, /updates\.paymentReference\s*=/);
+  assert.match(route, /"refundExchangeRequest"/);
+  assert.match(route, /"paymentNote"/);
+});
+
 test("invoice and note capabilities use dedicated role permissions", () => {
   const orderStaff = normalizePermissions("order_staff", {});
   assert.equal(orderStaff["orders.viewInvoice"], true);

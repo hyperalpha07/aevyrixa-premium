@@ -1,4 +1,5 @@
 import type { PaymentMethod, PaymentStatus } from "@/app/lib/order-types";
+import { buildAdminV2MoneyAggregate, type AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
 export const adminV2RefundPaymentMethods = [
   "Cash on Delivery",
@@ -50,6 +51,7 @@ export type AdminV2RefundRow = {
 export type AdminV2RefundMetrics = {
   refundedOrders: number;
   refundedAmount: number;
+  refundedAmountSummary: AdminV2MoneyAggregate;
   fullRefunds: number;
   partialRefunds: number;
   refundRequests: number;
@@ -83,8 +85,9 @@ function positiveInt(value: string | null, fallback: number) {
 }
 
 function cleanDate(value: string | null) {
-  if (!value) return "";
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : "";
 }
 
 function oneOf<T extends readonly string[]>(value: string | null, values: T) {
@@ -145,7 +148,7 @@ export function hasAdminV2RefundSignal(row: {
 }
 
 export function buildAdminV2RefundMetrics(rows: AdminV2RefundRow[]): AdminV2RefundMetrics {
-  return rows.reduce(
+  const metrics = rows.reduce(
     (metrics, row) => {
       if (row.paymentStatus === "refunded" || safeAmount(row.refundedAmount) > 0) {
         metrics.refundedOrders += 1;
@@ -158,4 +161,8 @@ export function buildAdminV2RefundMetrics(rows: AdminV2RefundRow[]): AdminV2Refu
     },
     { refundedOrders: 0, refundedAmount: 0, fullRefunds: 0, partialRefunds: 0, refundRequests: 0 }
   );
+  return {
+    ...metrics,
+    refundedAmountSummary: buildAdminV2MoneyAggregate(rows.map((row) => ({ amount: row.refundedAmount, currencyCode: row.currencyCode }))),
+  };
 }

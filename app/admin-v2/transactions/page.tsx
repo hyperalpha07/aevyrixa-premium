@@ -1,4 +1,5 @@
 import { AdminV2TransactionsView } from "@/components/admin-v2/views/transactions/AdminV2TransactionsView";
+import { hasPermission } from "@/app/lib/admin-permissions";
 import { requireAdminV2Session } from "@/lib/admin-v2/auth";
 import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
 import { getAdminV2Transactions } from "@/lib/admin-v2/transactions/transactions-query";
@@ -14,5 +15,9 @@ export default async function AdminV2TransactionsPage(props: PageProps<"/admin-v
   });
   const data = await getAdminV2Transactions(params);
 
-  return <AdminV2TransactionsView data={data} />;
+  return <AdminV2TransactionsView data={data} capabilities={{
+    canRecordPayment: hasPermission(session, "finance.payments.record"),
+    canExport: hasPermission(session, "finance.transactions.view") && hasPermission(session, "finance.export"),
+    canViewOrder: hasPermission(session, "orders.view"),
+  }} />;
 }

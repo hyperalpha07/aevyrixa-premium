@@ -1,4 +1,5 @@
 import { AdminV2RefundsView } from "@/components/admin-v2/views/refunds/AdminV2RefundsView";
+import { hasPermission } from "@/app/lib/admin-permissions";
 import { requireAdminV2Session } from "@/lib/admin-v2/auth";
 import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
 import { getAdminV2Refunds } from "@/lib/admin-v2/refunds/refunds-query";
@@ -14,5 +15,9 @@ export default async function AdminV2RefundsPage(props: PageProps<"/admin-v2/ref
   });
   const data = await getAdminV2Refunds(params);
 
-  return <AdminV2RefundsView data={data} />;
+  return <AdminV2RefundsView data={data} capabilities={{
+    canRecordRefund: hasPermission(session, "finance.refunds.record"),
+    canExport: hasPermission(session, "finance.refunds.view") && hasPermission(session, "finance.export"),
+    canViewOrder: hasPermission(session, "orders.view"),
+  }} />;
 }
