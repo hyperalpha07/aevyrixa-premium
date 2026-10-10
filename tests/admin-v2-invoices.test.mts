@@ -42,16 +42,15 @@ const invoiceMigrationName = "20261005090000_invoice_schema_reproducibility.sql"
 const invoiceMigration = readFileSync(new URL(`../supabase/migrations/${invoiceMigrationName}`, import.meta.url), "utf8");
 const migrationNames = readdirSync(new URL("../supabase/migrations", import.meta.url));
 
-test("Invoices route is real, protected by orders.viewInvoice, and related unfinished modules stay coming soon", () => {
+test("Invoices route is real, protected by orders.viewInvoice, and related finance modules stay truthful", () => {
   assert.equal(findAdminV2Route("invoices")?.implemented, true);
   assert.equal(findAdminV2Route("analytics")?.implemented, true);
   assert.equal(findAdminV2Route("reports")?.implemented, true);
   assert.equal(findAdminV2Route("transactions")?.implemented, true);
   assert.equal(findAdminV2Route("refunds")?.implemented, true);
   assert.equal(findAdminV2Route("billing")?.implemented, true);
-  for (const module of ["expenses", "tax"] as const) {
-    assert.equal(findAdminV2Route(module)?.implemented, false);
-  }
+  assert.equal(findAdminV2Route("expenses")?.implemented, true);
+  assert.equal(findAdminV2Route("tax")?.implemented, false);
   assert.equal(adminV2AccessRules.invoices.permission, "orders.viewInvoice");
   assert.equal(adminV2AccessRules.invoices.section, undefined);
   assert.match(invoicesPage, /requireAdminV2RouteAccess\(session,\s*"invoices"\)/);

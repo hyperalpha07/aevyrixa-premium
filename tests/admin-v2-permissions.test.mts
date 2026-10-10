@@ -95,6 +95,44 @@ test("Permissions workspace uses existing permission source of truth", () => {
   assert.ok(roleDefaultPermissions.support_staff.includes("support.manage"));
 });
 
+test("Finance permissions are explicit, grouped, and least-privilege by role", () => {
+  const financePermissions = [
+    "finance.overview.view",
+    "finance.transactions.view",
+    "finance.payments.record",
+    "finance.refunds.view",
+    "finance.refunds.record",
+    "finance.expenses.view",
+    "finance.expenses.manage",
+    "finance.export",
+  ] as const;
+
+  for (const permission of financePermissions) {
+    assert.ok(adminPermissionKeys.includes(permission));
+    assert.ok(permissionLabels[permission]);
+    assert.equal(normalizePermissions("owner", {})[permission], true);
+  }
+
+  assert.ok(permissionGroups.some((group) => group.title === "Finance" && financePermissions.every((permission) => group.permissions.includes(permission))));
+  assert.equal(financePermissions.every((permission) => normalizePermissions("manager", {})[permission] === true), true);
+
+  const orderStaff = normalizePermissions("order_staff", {});
+  assert.equal(orderStaff["finance.transactions.view"], true);
+  assert.equal(orderStaff["finance.payments.record"], true);
+  assert.equal(orderStaff["finance.refunds.view"], true);
+  assert.equal(orderStaff["finance.refunds.record"], false);
+  assert.equal(orderStaff["finance.expenses.view"], false);
+  assert.equal(orderStaff["finance.expenses.manage"], false);
+  assert.equal(orderStaff["finance.export"], false);
+
+  for (const role of ["product_staff", "support_staff", "viewer"] as const) {
+    const permissions = normalizePermissions(role, {});
+    for (const permission of financePermissions) {
+      assert.equal(permissions[permission], false);
+    }
+  }
+});
+
 test("Owner is treated as full protected access", () => {
   const query = read("lib/admin-v2/permissions/permissions-query.ts");
   const view = read("components/admin-v2/views/permissions/AdminV2PermissionsView.tsx");

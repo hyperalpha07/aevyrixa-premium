@@ -1,4 +1,5 @@
 import type { PaymentMethod, PaymentStatus, PaymentVerificationStatus } from "@/app/lib/order-types";
+import { buildAdminV2MoneyAggregate, type AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
 export const adminV2TransactionPaymentMethods = [
   "Cash on Delivery",
@@ -56,8 +57,10 @@ export type AdminV2TransactionRow = {
 export type AdminV2TransactionMetrics = {
   verifiedPayments: number;
   verifiedAmount: number;
+  verifiedAmountSummary: AdminV2MoneyAggregate;
   pendingPayments: number;
   codDue: number;
+  codDueSummary: AdminV2MoneyAggregate;
   failedOrRefunded: number;
 };
 
@@ -81,8 +84,9 @@ function positiveInt(value: string | null, fallback: number) {
 }
 
 function cleanDate(value: string | null) {
-  if (!value) return "";
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : "";
 }
 
 function oneOf<T extends readonly string[]>(value: string | null, values: T) {
@@ -112,7 +116,7 @@ function safeAmount(value: number | null | undefined) {
 }
 
 export function buildAdminV2TransactionMetrics(rows: AdminV2TransactionRow[]): AdminV2TransactionMetrics {
-  return rows.reduce(
+  const metrics = rows.reduce(
     (metrics, row) => {
       if (row.paymentStatus === "verified") {
         metrics.verifiedPayments += 1;
@@ -127,4 +131,9 @@ export function buildAdminV2TransactionMetrics(rows: AdminV2TransactionRow[]): A
     },
     { verifiedPayments: 0, verifiedAmount: 0, pendingPayments: 0, codDue: 0, failedOrRefunded: 0 }
   );
+  return {
+    ...metrics,
+    verifiedAmountSummary: buildAdminV2MoneyAggregate(rows.filter((row) => row.paymentStatus === "verified").map((row) => ({ amount: row.paidAmount, currencyCode: row.currencyCode }))),
+    codDueSummary: buildAdminV2MoneyAggregate(rows.filter((row) => row.paymentMethod === "Cash on Delivery").map((row) => ({ amount: row.dueAmount, currencyCode: row.currencyCode }))),
+  };
 }

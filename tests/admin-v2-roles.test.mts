@@ -81,6 +81,35 @@ test("Roles source uses existing role labels, default permissions and permission
   assert.equal(permissionLabels["staff.manage"], "Manage staff");
 });
 
+test("Finance role defaults mirror the least-privilege finance model", () => {
+  const financePermissions = [
+    "finance.overview.view",
+    "finance.transactions.view",
+    "finance.payments.record",
+    "finance.refunds.view",
+    "finance.refunds.record",
+    "finance.expenses.view",
+    "finance.expenses.manage",
+    "finance.export",
+  ] as const;
+
+  assert.ok(permissionGroups.some((group) => group.title === "Finance"));
+  assert.equal(financePermissions.every((permission) => roleDefaultPermissions.manager.includes(permission)), true);
+  assert.ok(roleDefaultPermissions.order_staff.includes("finance.transactions.view"));
+  assert.ok(roleDefaultPermissions.order_staff.includes("finance.payments.record"));
+  assert.ok(roleDefaultPermissions.order_staff.includes("finance.refunds.view"));
+  assert.equal(roleDefaultPermissions.order_staff.includes("finance.refunds.record"), false);
+  assert.equal(roleDefaultPermissions.order_staff.includes("finance.expenses.view"), false);
+  assert.equal(roleDefaultPermissions.order_staff.includes("finance.expenses.manage"), false);
+  assert.equal(roleDefaultPermissions.order_staff.includes("finance.export"), false);
+
+  for (const role of ["product_staff", "support_staff", "viewer"] as const) {
+    for (const permission of financePermissions) {
+      assert.equal(roleDefaultPermissions[role].includes(permission), false);
+    }
+  }
+});
+
 test("Owner is displayed as protected full-access system role", () => {
   const view = read("components/admin-v2/views/roles/AdminV2RolesView.tsx");
   const query = read("lib/admin-v2/roles/roles-query.ts");

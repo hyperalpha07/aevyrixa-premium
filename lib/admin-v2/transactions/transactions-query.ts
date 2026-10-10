@@ -10,53 +10,37 @@ import {
 } from "@/lib/admin-v2/transactions/transaction-metrics";
 
 const maxMetricRows = 10000;
-const orderSelect = [
+export const adminV2TransactionExportLimit = 10000;
+const paymentSelect = [
   "id",
+  "reference",
   "order_ref",
-  "customer_name",
-  "customer_phone",
-  "customer_email",
-  "total",
-  "paid_amount",
-  "due_amount",
-  "refunded_amount",
+  "amount",
   "currency_code",
   "payment_method",
-  "wallet_provider",
-  "payment_type",
-  "transaction_id",
-  "payment_status",
-  "payment_verified_at",
-  "payment_verification_status",
-  "payment_reference",
-  "refund_exchange_request",
+  "external_reference",
+  "source",
   "status",
-  "created_at",
-  "archived_at",
+  "occurred_at",
+  "recorded_at",
+  "voided_at",
+  "void_reason",
 ].join(",");
 
-type SupabaseTransactionOrderRow = {
+type FinancePaymentTransactionRow = {
   id?: string | null;
+  reference?: string | null;
   order_ref?: string | null;
-  customer_name?: string | null;
-  customer_phone?: string | null;
-  customer_email?: string | null;
-  total?: number | string | null;
-  paid_amount?: number | string | null;
-  due_amount?: number | string | null;
-  refunded_amount?: number | string | null;
+  amount?: number | string | null;
   currency_code?: string | null;
   payment_method?: string | null;
-  wallet_provider?: string | null;
-  payment_type?: string | null;
-  transaction_id?: string | null;
-  payment_status?: string | null;
-  payment_verified_at?: string | null;
-  payment_verification_status?: string | null;
-  payment_reference?: string | null;
-  refund_exchange_request?: string | null;
+  external_reference?: string | null;
+  source?: string | null;
   status?: string | null;
-  created_at?: string | null;
+  occurred_at?: string | null;
+  recorded_at?: string | null;
+  voided_at?: string | null;
+  void_reason?: string | null;
 };
 
 function hasSupabaseConfig() {
@@ -88,36 +72,29 @@ function numberValue(value: unknown): number | null {
   return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
 }
 
-function paymentStatus(value: unknown): AdminV2TransactionRow["paymentStatus"] {
-  return value === "pending" || value === "verified" || value === "failed" || value === "refunded" ? value : "";
-}
-
-function verificationStatus(value: unknown): AdminV2TransactionRow["verificationStatus"] {
-  return value === "Pending" || value === "Verified" || value === "Failed" || value === "Not Required" ? value : "";
-}
-
-export function mapAdminV2TransactionRow(row: SupabaseTransactionOrderRow): AdminV2TransactionRow {
+export function mapAdminV2TransactionRow(row: FinancePaymentTransactionRow): AdminV2TransactionRow {
+  const status = row.status === "recorded" || row.status === "void" ? row.status : "";
   return {
     id: text(row.id),
     orderReference: text(row.order_ref),
-    customerName: text(row.customer_name) || "Not provided",
-    customerContact: text(row.customer_phone) || text(row.customer_email) || "Not provided",
+    customerName: "Not exposed",
+    customerContact: "Not exposed",
     paymentMethod: text(row.payment_method) || "Not provided",
-    walletProvider: text(row.wallet_provider),
-    paymentType: text(row.payment_type),
-    paymentStatus: paymentStatus(row.payment_status),
-    verificationStatus: verificationStatus(row.payment_verification_status),
-    transactionReference: text(row.transaction_id),
-    paymentReference: text(row.payment_reference),
-    paidAmount: numberValue(row.paid_amount),
-    dueAmount: numberValue(row.due_amount),
-    refundedAmount: numberValue(row.refunded_amount),
-    totalAmount: numberValue(row.total),
+    walletProvider: "",
+    paymentType: text(row.source) || "manual",
+    paymentStatus: status === "recorded" ? "verified" : "",
+    verificationStatus: status === "recorded" ? "Verified" : "",
+    transactionReference: text(row.reference),
+    paymentReference: text(row.external_reference),
+    paidAmount: status === "recorded" ? numberValue(row.amount) : 0,
+    dueAmount: null,
+    refundedAmount: null,
+    totalAmount: numberValue(row.amount),
     currencyCode: text(row.currency_code) || "BDT",
-    orderStatus: text(row.status) || "Not provided",
-    createdAt: text(row.created_at),
-    paymentVerifiedAt: text(row.payment_verified_at),
-    refundExchangeRequest: text(row.refund_exchange_request),
+    orderStatus: status || "Not provided",
+    createdAt: text(row.occurred_at) || text(row.recorded_at),
+    paymentVerifiedAt: text(row.occurred_at) || text(row.recorded_at),
+    refundExchangeRequest: text(row.void_reason),
   };
 }
 
@@ -125,57 +102,66 @@ function appendFilter(params: string[], key: string, operator: string, value: st
   params.push(`${key}=${operator}.${encodeURIComponent(value)}`);
 }
 
-function transactionParams(query: AdminV2TransactionQuery, includeOrder = true) {
-  const params = [`select=${orderSelect}`, "archived_at=is.null"];
+export function adminV2TransactionParams(query: AdminV2TransactionQuery, includeOrder = true) {
+  const params = [`select=${paymentSelect}`];
   if (query.method !== "all") appendFilter(params, "payment_method", "eq", query.method);
-  if (query.status !== "all") appendFilter(params, "payment_status", "eq", query.status);
-  if (query.verification !== "all") appendFilter(params, "payment_verification_status", "eq", query.verification);
-  if (query.from) appendFilter(params, "created_at", "gte", `${query.from}T00:00:00.000Z`);
-  if (query.to) appendFilter(params, "created_at", "lte", `${query.to}T23:59:59.999Z`);
+  if (query.status !== "all") appendFilter(params, "status", "eq", query.status === "verified" ? "recorded" : query.status);
+  if (query.from) appendFilter(params, "occurred_at", "gte", `${query.from}T00:00:00.000Z`);
+  if (query.to) appendFilter(params, "occurred_at", "lte", `${query.to}T23:59:59.999Z`);
   if (query.q) {
     const safeSearch = query.q.replace(/[%,()]/g, " ").trim();
     if (safeSearch) {
       const encoded = encodeURIComponent(`*${safeSearch}*`);
-      params.push(
-        `or=(order_ref.ilike.${encoded},customer_name.ilike.${encoded},customer_phone.ilike.${encoded},customer_email.ilike.${encoded},transaction_id.ilike.${encoded},payment_reference.ilike.${encoded})`
-      );
+      params.push(`or=(reference.ilike.${encoded},order_ref.ilike.${encoded},external_reference.ilike.${encoded})`);
     }
   }
-  if (includeOrder) params.push("order=created_at.desc.nullslast");
+  if (includeOrder) params.push("order=occurred_at.desc.nullslast,id.desc");
   return params;
 }
 
 async function fetchTransactionPage(query: AdminV2TransactionQuery) {
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
-  const response = await fetch(supabaseEndpoint(`orders?${transactionParams(query).join("&")}`), {
-    headers: {
-      ...supabaseHeaders(),
-      prefer: "count=exact",
-      range: `${from}-${to}`,
-    },
+  const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query).join("&")}`), {
+    headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
     cache: "no-store",
   });
-  if (!response.ok) throw new Error(`Transactions order-payment query failed with ${response.status}.`);
-  const rows = ((await response.json()) as SupabaseTransactionOrderRow[]).map(mapAdminV2TransactionRow);
+  if (!response.ok) throw new Error("Transactions ledger query failed.");
+  const rows = ((await response.json()) as FinancePaymentTransactionRow[]).map(mapAdminV2TransactionRow);
   const count = Number((response.headers.get("content-range") ?? "").split("/")[1]);
   return { rows, totalCount: Number.isFinite(count) ? count : rows.length };
 }
 
 async function fetchMetricRows(query: AdminV2TransactionQuery) {
   const rows: AdminV2TransactionRow[] = [];
+  let totalCount: number | null = null;
   for (let from = 0; from < maxMetricRows; from += 1000) {
     const to = Math.min(from + 999, maxMetricRows - 1);
-    const response = await fetch(supabaseEndpoint(`orders?${transactionParams(query).join("&")}`), {
-      headers: { ...supabaseHeaders(), range: `${from}-${to}` },
+    const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query).join("&")}`), {
+      headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
       cache: "no-store",
     });
-    if (!response.ok) throw new Error(`Transactions metrics query failed with ${response.status}.`);
-    const batch = ((await response.json()) as SupabaseTransactionOrderRow[]).map(mapAdminV2TransactionRow);
+    if (!response.ok) throw new Error("Transactions metrics query failed.");
+    totalCount ??= Number((response.headers.get("content-range") ?? "").split("/")[1]);
+    const batch = ((await response.json()) as FinancePaymentTransactionRow[]).map(mapAdminV2TransactionRow);
     rows.push(...batch);
     if (batch.length < 1000) break;
   }
-  return { rows, capped: rows.length >= maxMetricRows };
+  return { rows, capped: Number.isFinite(totalCount) ? Number(totalCount) > maxMetricRows : rows.length >= maxMetricRows };
+}
+
+export async function getAdminV2TransactionExportRows(searchParams = new URLSearchParams()) {
+  const query = parseAdminV2TransactionQuery(searchParams);
+  if (!hasSupabaseConfig()) return { ok: false as const, status: 503, errors: ["Payment transaction ledger is unavailable."] };
+  const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query).join("&")}`), {
+    headers: { ...supabaseHeaders(), prefer: "count=exact", range: `0-${adminV2TransactionExportLimit - 1}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return { ok: false as const, status: 503, errors: ["Payment transaction export source is unavailable."] };
+  const count = Number((response.headers.get("content-range") ?? "").split("/")[1]);
+  if (Number.isFinite(count) && count > adminV2TransactionExportLimit) return { ok: false as const, status: 409, errors: ["Export exceeds the 10,000 row limit. Narrow the filters and retry."] };
+  const rows = ((await response.json()) as FinancePaymentTransactionRow[]).map(mapAdminV2TransactionRow);
+  return { ok: true as const, rows, query, rowCount: Number.isFinite(count) ? count : rows.length };
 }
 
 export async function getAdminV2Transactions(searchParams = new URLSearchParams()): Promise<AdminV2TransactionQueryResult> {
@@ -189,7 +175,7 @@ export async function getAdminV2Transactions(searchParams = new URLSearchParams(
       totalPages: 1,
       storageAvailable: false,
       queryFailed: true,
-      limitation: "Supabase is not configured. Payment reconciliation cannot be loaded from fake transaction data.",
+      limitation: "Supabase is not configured. Payment transaction ledger cannot be loaded from fake data.",
     };
   }
 
@@ -203,7 +189,7 @@ export async function getAdminV2Transactions(searchParams = new URLSearchParams(
       totalPages: adminV2TransactionTotalPages(page.totalCount, query.pageSize),
       storageAvailable: true,
       queryFailed: false,
-      limitation: metricRows.capped ? "Payment reconciliation metrics reached the safe server-side row cap." : null,
+      limitation: metricRows.capped ? "Payment transaction ledger reached the safe server-side row cap." : null,
     };
   } catch {
     return {
@@ -214,7 +200,7 @@ export async function getAdminV2Transactions(searchParams = new URLSearchParams(
       totalPages: 1,
       storageAvailable: false,
       queryFailed: true,
-      limitation: "Payment reconciliation could not be loaded from the existing order payment backend.",
+      limitation: "Payment transaction ledger could not be loaded.",
     };
   }
 }

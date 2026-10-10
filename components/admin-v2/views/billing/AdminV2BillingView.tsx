@@ -16,13 +16,15 @@ const moduleIcons = {
   Transactions: Receipt,
   Refunds: RefreshCcw,
   Reports: FileBarChart,
+  Expenses: Banknote,
 } as const;
 
 const kpiIcons = {
   "Payable Sales": Banknote,
-  "Verified Payments": Receipt,
-  "Amount Still Due": Banknote,
-  "Refunded Amount": RefreshCcw,
+  "Recorded Payments": Receipt,
+  "Recorded Due": Banknote,
+  "Recorded Refunds": RefreshCcw,
+  "Recorded Expenses": Banknote,
   "Issued Invoices": FileText,
 } as const;
 
@@ -31,6 +33,7 @@ const moduleSource = {
   Transactions: "transactions",
   Refunds: "refunds",
   Reports: "analytics",
+  Expenses: "expenses",
 } as const satisfies Record<BillingModuleTitle, keyof AdminV2BillingResult["sources"]>;
 
 const reportCapabilities = ["Sales", "Orders", "Products", "Customers", "Reviews", "Discounts & delivery fees"];
@@ -41,8 +44,8 @@ const moduleMetricLabels: Partial<Record<BillingModuleTitle, Record<string, stri
     "Invoiced value": "Total invoiced value",
   },
   Transactions: {
-    Verified: "Verified payments",
-    Pending: "Pending payments",
+    Recorded: "Recorded payments",
+    "Voided / failed": "Voided payments",
   },
 };
 
@@ -52,16 +55,21 @@ const moduleMetricSupport: Partial<Record<BillingModuleTitle, Record<string, str
     "Invoiced value": "Issued invoice totals",
   },
   Transactions: {
-    Verified: "Orders marked paid",
-    Pending: "Orders awaiting payment signal",
+    Recorded: "Active payment ledger",
+    "Voided / failed": "Historical corrections",
   },
   Refunds: {
     "Refunded orders": "Orders with refund state",
     "Refunded amount": "Recorded refund value",
   },
+  Expenses: {
+    Active: "Active expense ledger",
+    "Expense value": "Recorded expense value",
+  },
 };
 
-function formatMetric(metric: Pick<AdminV2BillingSummaryMetric, "value" | "kind" | "available">) {
+function formatMetric(metric: Pick<AdminV2BillingSummaryMetric, "value" | "kind" | "available" | "displayValue">) {
+  if (metric.displayValue) return metric.displayValue;
   if (!metric.available) return "Unavailable";
   if (metric.value === null) return "Available";
   return metric.kind === "currency" ? formatCurrency(metric.value) : metric.value.toLocaleString("en-US");
