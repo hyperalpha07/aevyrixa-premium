@@ -38,8 +38,9 @@ test("Refund query reads the refund ledger and avoids customer PII and synthetic
 });
 
 test("Refund display keeps PII out and gates actual refund actions", () => {
-  assert.match(query, /customerName:\s*"Not exposed"/);
-  assert.match(query, /customerContact:\s*"Not exposed"/);
+  assert.doesNotMatch(metrics + query + view, /customerName|customerContact|Search order, customer/);
+  assert.match(view, /Search refund, order, reference, or reason/);
+  assert.match(view, /Recorded refund ledger entries\. Gateway processor refund history is not tracked\./);
   assert.match(view, /View Order/);
   assert.match(view, /Record Refund/);
   assert.match(view, /canRecordRefund/);

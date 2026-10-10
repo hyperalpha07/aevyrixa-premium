@@ -210,7 +210,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
 
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.35 }, "&:last-child": { pb: { xs: 1.25, md: 1.35 } } } }}>
           <Stack component="form" action="/admin-v2/refunds" method="get" direction={{ xs: "column", xl: "row" }} spacing={1} sx={{ alignItems: { xl: "center" } }}>
-            <TextField name="q" label="Search order, customer, reference, or note" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 305 }, ...inputSx }} />
+            <TextField name="q" label="Search refund, order, reference, or reason" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 305 }, ...inputSx }} />
             <TextField select name="classification" label="Classification" size="small" defaultValue={data.query.classification} sx={{ minWidth: { xl: 185 }, ...inputSx }}>
               {[allOption, ...adminV2RefundClassifications.map((classification) => ({ label: adminV2RefundClassificationLabels[classification], value: classification }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
             </TextField>
@@ -251,11 +251,11 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
               <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
                 <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 900 }}>Refund reconciliation</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {data.totalCount} refund-related orders
+                  {data.totalCount} refund records
                 </Typography>
               </Stack>
               <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
-                <Info size={13} /> Order-level refund signals only - no gateway refund ledger or refund history is stored.
+                <Info size={13} /> Recorded refund ledger entries. Gateway processor refund history is not tracked.
               </Typography>
             </Box>
             <V2Chip label={`Page ${data.query.page} of ${data.totalPages}`} color="primary" />
@@ -276,13 +276,12 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
               }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: 150 }}>Order</TableCell>
-                    <TableCell sx={{ width: 160 }}>Customer</TableCell>
+                    <TableCell sx={{ width: 150 }}>Refund / Order</TableCell>
                     <TableCell sx={{ width: 155 }}>Refund Classification</TableCell>
                     <TableCell align="right" sx={{ width: 130 }}>Refunded Amount</TableCell>
                     <TableCell align="right" sx={{ width: 125 }}>Payable Amount</TableCell>
                     <TableCell sx={{ width: 165 }}>Payment Method</TableCell>
-                    <TableCell sx={{ width: 145 }}>Reference</TableCell>
+                    <TableCell sx={{ width: 145 }}>External Reference</TableCell>
                     <TableCell sx={{ width: 210 }}>Request / Note</TableCell>
                     <TableCell align="right" sx={{ width: 105 }}>Action</TableCell>
                   </TableRow>
@@ -291,12 +290,8 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
                   {data.rows.map((row) => (
                     <TableRow key={row.id || row.orderReference}>
                       <TableCell>
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 900 }}>{row.orderReference || "Not provided"}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.paymentStatus || "Payment state unavailable"}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{row.customerName}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.customerContact}</Typography>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 900 }}>{row.reference || "Not provided"}</Typography>
+                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.orderReference || "Order not provided"}</Typography>
                       </TableCell>
                       <TableCell>
                         <V2Chip label={adminV2RefundClassificationLabels[row.classification]} color={classificationColor(row.classification)} size="small" sx={{ height: 22 }} />

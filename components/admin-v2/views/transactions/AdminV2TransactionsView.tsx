@@ -2,16 +2,15 @@
 
 import { FormEvent, useState } from "react";
 import { Alert, Box, Button, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
-import { AlertTriangle, Banknote, CircleDollarSign, Clock3, Info, ReceiptText } from "lucide-react";
+import { Banknote, Info, ReceiptText, RotateCcw } from "lucide-react";
 import { formatCurrency } from "@/app/lib/currency";
 import { V2Breadcrumbs } from "@/components/admin-v2/shared/V2Breadcrumbs";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Chip } from "@/components/admin-v2/shared/V2Chip";
 import {
+  adminV2TransactionLedgerStatuses,
   adminV2TransactionPaymentMethods,
-  adminV2TransactionPaymentStatuses,
-  adminV2TransactionVerificationStatuses,
   type AdminV2TransactionQueryResult,
   type AdminV2TransactionRow,
 } from "@/lib/admin-v2/transactions/transaction-metrics";
@@ -24,7 +23,6 @@ function pageHref(data: AdminV2TransactionQueryResult, page: number) {
   if (data.query.q) params.set("q", data.query.q);
   if (data.query.method !== "all") params.set("method", data.query.method);
   if (data.query.status !== "all") params.set("status", data.query.status);
-  if (data.query.verification !== "all") params.set("verification", data.query.verification);
   if (data.query.from) params.set("from", data.query.from);
   if (data.query.to) params.set("to", data.query.to);
   params.set("page", String(page));
@@ -38,10 +36,7 @@ function orderHref(orderReference: string) {
 
 function label(value: string) {
   if (!value) return "Not provided";
-  return value
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+  return value.split("_").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
 }
 
 function formatDateTime(value: string) {
@@ -68,26 +63,17 @@ async function submitFinanceJson(url: string, payload: Record<string, unknown>) 
 }
 
 function statusColor(value: string): "success" | "warning" | "error" | "info" | "default" {
-  if (value === "verified" || value === "Verified") return "success";
-  if (value === "failed" || value === "Failed") return "error";
-  if (value === "refunded") return "info";
-  if (value === "pending" || value === "Pending") return "warning";
+  if (value === "recorded") return "success";
+  if (value === "void") return "warning";
   return "default";
 }
 
-function methodLabel(row: AdminV2TransactionRow) {
-  return [row.walletProvider, row.paymentType].filter(Boolean).length
-    ? `${row.paymentMethod} · ${[row.walletProvider, row.paymentType].filter(Boolean).join(" / ")}`
-    : row.paymentMethod;
-}
-
 function paymentReference(row: AdminV2TransactionRow) {
-  return row.paymentReference || row.transactionReference || "Not provided";
+  return row.externalReference || row.transactionReference || "Not provided";
 }
 
-function compactMethodLabel(row: AdminV2TransactionRow) {
-  const details = [row.walletProvider, row.paymentType].filter(Boolean).join(" / ");
-  return details ? `${row.paymentMethod} - ${details}` : row.paymentMethod;
+function methodLabel(row: AdminV2TransactionRow) {
+  return row.source ? `${row.paymentMethod} - ${row.source}` : row.paymentMethod;
 }
 
 function MetricCell({
@@ -104,7 +90,7 @@ function MetricCell({
   tone?: "primary" | "success" | "warning" | "info" | "error";
 }) {
   return (
-    <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+    <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
       <Stack
         direction="row"
         spacing={1.25}
@@ -154,8 +140,8 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
   const [recordError, setRecordError] = useState("");
   const [recording, setRecording] = useState(false);
   const [voiding, setVoiding] = useState<string | null>(null);
-  const hasFilters = Boolean(data.query.q || data.query.method !== "all" || data.query.status !== "all" || data.query.verification !== "all" || data.query.from || data.query.to);
-  const emptyMessage = hasFilters ? "No orders match these payment filters." : "No payment records found.";
+  const hasFilters = Boolean(data.query.q || data.query.method !== "all" || data.query.status !== "all" || data.query.from || data.query.to);
+  const emptyMessage = hasFilters ? "No payment records match these ledger filters." : "No payment records found.";
   const inputSx = {
     "& .MuiInputBase-root": { minHeight: 38 },
     "& .MuiInputBase-input": { py: 0.85 },
@@ -221,26 +207,22 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
         {!data.queryFailed ? (
           <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1, md: 1.15 }, "&:last-child": { pb: { xs: 1, md: 1.15 } } } }}>
             <Grid container columns={{ xs: 12, lg: 12 }}>
-              <MetricCell label="Verified Payments" value={String(data.metrics.verifiedPayments)} icon={ReceiptText} tone="success" />
-              <MetricCell label="Verified Amount" value={moneyAggregate(data.metrics.verifiedAmountSummary)} icon={Banknote} helper={data.metrics.verifiedAmountSummary.kind === "mixed" ? "Unavailable as a single total." : "Persisted paid amount."} />
-              <MetricCell label="Pending Payments" value={String(data.metrics.pendingPayments)} icon={Clock3} tone="warning" />
-              <MetricCell label="COD Due" value={moneyAggregate(data.metrics.codDueSummary)} icon={CircleDollarSign} tone="info" helper={data.metrics.codDueSummary.kind === "mixed" ? "Unavailable as a single total." : "Cash on Delivery due."} />
-              <MetricCell label="Failed / Refunded" value={String(data.metrics.failedOrRefunded)} icon={AlertTriangle} tone="error" />
+              <MetricCell label="Recorded Payments" value={String(data.metrics.recordedPayments)} icon={ReceiptText} tone="success" />
+              <MetricCell label="Recorded Amount" value={moneyAggregate(data.metrics.recordedAmountSummary)} icon={Banknote} helper={data.metrics.recordedAmountSummary.kind === "mixed" ? "Unavailable as a single total." : "Recorded payment ledger amount."} />
+              <MetricCell label="Voided Payments" value={String(data.metrics.voidedPayments)} icon={RotateCcw} tone="warning" />
+              <MetricCell label="Total Ledger Entries" value={String(data.metrics.totalLedgerEntries)} icon={ReceiptText} tone="info" />
             </Grid>
           </V2Card>
         ) : null}
 
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.35 }, "&:last-child": { pb: { xs: 1.25, md: 1.35 } } } }}>
           <Stack component="form" action="/admin-v2/transactions" method="get" direction={{ xs: "column", xl: "row" }} spacing={1} sx={{ alignItems: { xl: "center" } }}>
-            <TextField name="q" label="Search order, customer, or reference" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 285 }, ...inputSx }} />
+            <TextField name="q" label="Search transaction, order, or external reference" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 285 }, ...inputSx }} />
             <TextField select name="method" label="Payment method" size="small" defaultValue={data.query.method} sx={{ minWidth: { xl: 170 }, ...inputSx }}>
               {[allOption, ...adminV2TransactionPaymentMethods.map((method) => ({ label: method, value: method }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
             </TextField>
-            <TextField select name="status" label="Payment status" size="small" defaultValue={data.query.status} sx={{ minWidth: { xl: 150 }, ...inputSx }}>
-              {[allOption, ...adminV2TransactionPaymentStatuses.map((status) => ({ label: label(status), value: status }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
-            </TextField>
-            <TextField select name="verification" label="Verification" size="small" defaultValue={data.query.verification} sx={{ minWidth: { xl: 145 }, ...inputSx }}>
-              {[allOption, ...adminV2TransactionVerificationStatuses.map((status) => ({ label: status, value: status }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
+            <TextField select name="status" label="Ledger status" size="small" defaultValue={data.query.status} sx={{ minWidth: { xl: 150 }, ...inputSx }}>
+              {[allOption, ...adminV2TransactionLedgerStatuses.map((status) => ({ label: label(status), value: status }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
             </TextField>
             <TextField name="from" type="date" size="small" label="From" defaultValue={data.query.from} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
             <TextField name="to" type="date" size="small" label="To" defaultValue={data.query.to} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
@@ -272,20 +254,20 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ justifyContent: "space-between", alignItems: { sm: "flex-start" }, mb: 1.25 }}>
             <Box sx={{ minWidth: 0 }}>
               <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
-                <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 900 }}>Payment reconciliation</Typography>
+                <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 900 }}>Payment ledger</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {data.totalCount} payment records
                 </Typography>
               </Stack>
               <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
-                <Info size={13} /> Order-based payment records - gateway settlement/payout data unavailable.
+                <Info size={13} /> Recorded payment ledger entries. Gateway settlement and payout data are not tracked.
               </Typography>
             </Box>
             <V2Chip label={`Page ${data.query.page} of ${data.totalPages}`} color="primary" />
           </Stack>
 
           {data.queryFailed ? (
-            <Alert severity="error">Payment records could not be loaded. Please retry after the order payment backend is available.</Alert>
+            <Alert severity="error">Payment records could not be loaded. Please retry after the payment ledger backend is available.</Alert>
           ) : data.rows.length === 0 ? (
             <Alert severity="info">{emptyMessage}</Alert>
           ) : (
@@ -299,50 +281,48 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
               }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: 160 }}>Payment / Order</TableCell>
-                    <TableCell sx={{ width: 160 }}>Customer</TableCell>
+                    <TableCell sx={{ width: 170 }}>Transaction reference</TableCell>
+                    <TableCell sx={{ width: 150 }}>Order reference</TableCell>
+                    <TableCell align="right" sx={{ width: 120 }}>Amount</TableCell>
+                    <TableCell sx={{ width: 90 }}>Currency</TableCell>
                     <TableCell sx={{ width: 170 }}>Method</TableCell>
-                    <TableCell sx={{ width: 116 }}>Payment Status</TableCell>
-                    <TableCell sx={{ width: 112 }}>Verification</TableCell>
-                    <TableCell sx={{ width: 150 }}>Reference</TableCell>
-                    <TableCell align="right" sx={{ width: 145 }}>Amounts</TableCell>
-                    <TableCell sx={{ width: 150 }}>Date</TableCell>
+                    <TableCell sx={{ width: 150 }}>External reference</TableCell>
+                    <TableCell sx={{ width: 110 }}>Status</TableCell>
+                    <TableCell sx={{ width: 150 }}>Occurred at</TableCell>
+                    <TableCell sx={{ width: 130 }}>Recorded by</TableCell>
                     <TableCell align="right" sx={{ width: 105 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {data.rows.map((row) => (
-                    <TableRow key={row.id || row.orderReference}>
+                    <TableRow key={row.id || row.transactionReference}>
                       <TableCell>
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 900 }}>{row.orderReference || "Not provided"}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{paymentReference(row)}</Typography>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 900 }}>{row.transactionReference || "Not provided"}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{row.customerName}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.customerContact}</Typography>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{row.orderReference || "Not provided"}</Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 800 }}>{amount(row.amount, row.currencyCode)}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" noWrap>{compactMethodLabel(row)}</Typography>
+                        <Typography variant="body2" noWrap>{row.currencyCode}</Typography>
                       </TableCell>
                       <TableCell>
-                        <V2Chip label={label(row.paymentStatus)} color={statusColor(row.paymentStatus)} size="small" sx={{ height: 22 }} />
-                      </TableCell>
-                      <TableCell>
-                        <V2Chip label={row.verificationStatus || "Not provided"} color={statusColor(row.verificationStatus)} size="small" sx={{ height: 22 }} />
+                        <Typography variant="body2" noWrap>{methodLabel(row)}</Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" noWrap>{paymentReference(row)}</Typography>
                       </TableCell>
-                      <TableCell align="right">
-                        <Stack spacing={0} sx={{ lineHeight: 1.15 }}>
-                          <Typography variant="caption">Paid: <strong>{amount(row.paidAmount, row.currencyCode)}</strong></Typography>
-                          <Typography variant="caption">Due: <strong>{amount(row.dueAmount, row.currencyCode)}</strong></Typography>
-                          <Typography variant="caption">Refunded: <strong>{amount(row.refundedAmount, row.currencyCode)}</strong></Typography>
-                        </Stack>
+                      <TableCell>
+                        <V2Chip label={label(row.status)} color={statusColor(row.status)} size="small" sx={{ height: 22 }} />
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" noWrap>{row.paymentVerifiedAt ? formatDateTime(row.paymentVerifiedAt) : formatDateTime(row.createdAt)}</Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>{row.paymentVerifiedAt ? "Verified time" : "Order created"}</Typography>
+                        <Typography variant="body2" noWrap>{formatDateTime(row.occurredAt || row.recordedAt)}</Typography>
+                        {row.voidedAt ? <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>Voided {formatDateTime(row.voidedAt)}</Typography> : null}
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap>{row.recordedBy}</Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
@@ -351,7 +331,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
                               View Order
                             </V2Button>
                           ) : null}
-                          {capabilities.canRecordPayment && row.orderStatus === "recorded" ? (
+                          {capabilities.canRecordPayment && row.status === "recorded" ? (
                             <Button size="small" variant="text" color="warning" disabled={voiding === row.transactionReference} onClick={() => voidPayment(row.transactionReference)} sx={{ minHeight: 28, px: 1 }}>
                               Void
                             </Button>

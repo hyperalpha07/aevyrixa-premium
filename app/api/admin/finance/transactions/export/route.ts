@@ -28,15 +28,14 @@ export async function GET(request: Request) {
   const rows = result.rows.map((row) => [
     row.transactionReference,
     row.orderReference,
-    row.paidAmount ?? "",
+    row.amount ?? "",
     row.currencyCode,
     row.paymentMethod,
-    row.paymentReference,
-    row.orderStatus,
-    row.paymentVerifiedAt || row.createdAt,
-    row.paymentStatus,
+    row.externalReference,
+    row.status,
+    row.occurredAt || row.recordedAt,
   ]);
-  const csv = adminV2RowsToCsv(["Transaction Reference", "Order Reference", "Amount", "Currency", "Payment Method", "External Reference", "Status", "Occurred At", "Payment Status"], rows);
+  const csv = adminV2RowsToCsv(["Transaction Reference", "Order Reference", "Amount", "Currency", "Payment Method", "External Reference", "Status", "Occurred At"], rows);
   try {
     await logStaffActivity({
       actor: session,

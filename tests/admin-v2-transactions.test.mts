@@ -37,8 +37,12 @@ test("Transactions query reads the payment ledger, not order/customer PII or fak
 });
 
 test("Transactions display keeps customer PII out and gates finance/order actions", () => {
-  assert.match(query, /customerName:\s*"Not exposed"/);
-  assert.match(query, /customerContact:\s*"Not exposed"/);
+  assert.doesNotMatch(metrics + query + view, /customerName|customerContact|Verification|COD Due|Pending Payments|Failed \/ Refunded/);
+  assert.match(view, /Search transaction, order, or external reference/);
+  assert.match(view, /Ledger status/);
+  assert.match(view, /Recorded Payments/);
+  assert.match(view, /Recorded Amount/);
+  assert.match(view, /Voided Payments/);
   assert.match(view, /View Order/);
   assert.match(view, /canRecordPayment/);
   assert.match(view, /canExport/);
@@ -99,11 +103,12 @@ test("Finance references are generated against existing ledger tables instead of
 });
 
 test("Transaction metrics use active ledger amounts and do not infer gateway settlement state", () => {
-  assert.match(metrics, /verifiedAmount/);
-  assert.match(metrics, /verifiedAmountSummary/);
+  assert.match(metrics, /recordedPayments/);
+  assert.match(metrics, /recordedAmountSummary/);
+  assert.match(metrics, /voidedPayments/);
   assert.match(view, /Mixed currencies/);
-  assert.match(metrics, /codDue/);
-  assert.doesNotMatch(metrics + query + view, /available_balance|gateway_fee|settlement_id|payout_id|processor_fee|card_last4/i);
+  assert.match(metrics, /adminV2TransactionLedgerStatuses = \["recorded", "void"\]/);
+  assert.doesNotMatch(metrics + query + view, /available_balance|gateway_fee|settlement_id|payout_id|processor_fee|card_last4|codDue|verification/i);
 });
 
 test("Transaction export is permissioned, audited fail-closed, capped and CSV-safe", () => {

@@ -56,6 +56,8 @@ test("Expense page exposes only scoped create, void and export finance controls"
   assert.match(view, /Create Expense/);
   assert.match(view, /Export CSV/);
   assert.match(view, /Void/);
+  assert.match(view, /Operational expense ledger with controlled create and void workflows/);
+  assert.doesNotMatch(view, /Read-only operational expense ledger/);
   assert.match(view, /canManageExpenses/);
   assert.match(view, /canExport/);
   assert.doesNotMatch(view, /Upload Receipt|Attach Receipt|Pay Vendor|Bank Account|Delete Expense/i);

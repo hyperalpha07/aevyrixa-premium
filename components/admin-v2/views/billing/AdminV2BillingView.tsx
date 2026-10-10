@@ -45,7 +45,7 @@ const moduleMetricLabels: Partial<Record<BillingModuleTitle, Record<string, stri
   },
   Transactions: {
     Recorded: "Recorded payments",
-    "Voided / failed": "Voided payments",
+    Voided: "Voided payments",
   },
 };
 
@@ -56,7 +56,7 @@ const moduleMetricSupport: Partial<Record<BillingModuleTitle, Record<string, str
   },
   Transactions: {
     Recorded: "Active payment ledger",
-    "Voided / failed": "Historical corrections",
+    Voided: "Historical corrections",
   },
   Refunds: {
     "Refunded orders": "Orders with refund state",
@@ -266,7 +266,7 @@ export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
         title="Billing"
         titleId="admin-v2-billing-title"
         titleComponent="h1"
-        description="Finance overview across invoices, payments, refunds and reporting."
+        description="Finance overview across invoices, payments, refunds, expenses and reporting."
         breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Billing" }]}
       />
 
@@ -301,7 +301,7 @@ export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
                   Main Financial Overview
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Focused read-only preview across invoices, payments, refunds and reports.
+                  Focused read-only preview across invoices, payments, refunds, expenses and reports.
                 </Typography>
               </Box>
             </Stack>
