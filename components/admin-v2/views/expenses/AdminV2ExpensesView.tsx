@@ -85,7 +85,7 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
         title="Expenses"
         titleId="admin-v2-expenses-title"
         titleComponent="h1"
-        description="Read-only operational expense ledger. Create and void workflows use dedicated finance RPCs; no receipt upload or fake vendor system is included."
+        description="Operational expense ledger with controlled create and void workflows; no receipt upload or fake vendor system is included."
         breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Expenses" }]}
       />
       <Stack spacing={2}>

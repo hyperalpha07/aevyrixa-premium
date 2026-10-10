@@ -31,8 +31,6 @@ export type AdminV2RefundQuery = {
 export type AdminV2RefundRow = {
   id: string;
   orderReference: string;
-  customerName: string;
-  customerContact: string;
   classification: AdminV2RefundClassification;
   paymentStatus: PaymentStatus | "";
   paymentMethod: string;

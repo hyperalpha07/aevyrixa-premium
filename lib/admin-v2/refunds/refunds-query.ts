@@ -86,8 +86,6 @@ export function mapAdminV2RefundRow(row: FinanceRefundRow): AdminV2RefundRow {
   return {
     id: text(row.id),
     orderReference: text(row.order_ref),
-    customerName: "Not exposed",
-    customerContact: "Not exposed",
     classification,
     paymentStatus: refundedAmount && refundedAmount > 0 ? "refunded" : "",
     paymentMethod: text(row.refund_method) || "Not provided",

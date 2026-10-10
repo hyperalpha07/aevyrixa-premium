@@ -4,6 +4,7 @@ import type { AdminV2ExpenseQueryResult } from "@/lib/admin-v2/expenses/expense-
 import type { AdminV2RefundQueryResult } from "@/lib/admin-v2/refunds/refund-metrics";
 import type { AdminV2TransactionQueryResult } from "@/lib/admin-v2/transactions/transaction-metrics";
 import { adminV2MoneyAggregateUnavailable, adminV2MoneyAggregateValue } from "@/lib/admin-v2/finance/money";
+import type { AdminV2OrderDueSnapshotResult } from "@/lib/admin-v2/billing/order-due-source";
 
 export type AdminV2BillingSourceState = {
   available: boolean;
@@ -15,7 +16,7 @@ export type AdminV2BillingSummaryMetric = {
   value: number | null;
   kind: "currency" | "count";
   helper: string;
-  source: "analytics" | "transactions" | "refunds" | "expenses" | "invoices";
+  source: "analytics" | "transactions" | "orderDue" | "refunds" | "expenses" | "invoices";
   available: boolean;
   displayValue?: string;
 };
@@ -31,7 +32,7 @@ export type AdminV2BillingModuleCard = {
 export type AdminV2BillingResult = {
   summary: AdminV2BillingSummaryMetric[];
   modules: AdminV2BillingModuleCard[];
-  sources: Record<"analytics" | "transactions" | "refunds" | "expenses" | "invoices", AdminV2BillingSourceState>;
+  sources: Record<"analytics" | "transactions" | "orderDue" | "refunds" | "expenses" | "invoices", AdminV2BillingSourceState>;
   notes: string[];
 };
 
@@ -46,12 +47,14 @@ function amount(value: number | null | undefined, available: boolean) {
 export function buildAdminV2BillingResult(input: {
   analytics: AdminV2AnalyticsResult;
   transactions: AdminV2TransactionQueryResult;
+  orderDue: AdminV2OrderDueSnapshotResult;
   refunds: AdminV2RefundQueryResult;
   expenses: AdminV2ExpenseQueryResult;
   invoices: AdminV2InvoiceQueryResult;
 }): AdminV2BillingResult {
   const analyticsAvailable = input.analytics.available;
   const transactionsAvailable = !input.transactions.queryFailed;
+  const orderDueAvailable = input.orderDue.available;
   const refundsAvailable = !input.refunds.queryFailed;
   const expensesAvailable = !input.expenses.queryFailed;
   const invoicesAvailable = input.invoices.storageAvailable;
@@ -60,6 +63,7 @@ export function buildAdminV2BillingResult(input: {
     sources: {
       analytics: sourceState(analyticsAvailable, input.analytics.limitation),
       transactions: sourceState(transactionsAvailable, input.transactions.limitation),
+      orderDue: sourceState(orderDueAvailable, input.orderDue.limitation),
       refunds: sourceState(refundsAvailable, input.refunds.limitation),
       expenses: sourceState(expensesAvailable, input.expenses.limitation),
       invoices: sourceState(invoicesAvailable, input.invoices.limitation),
@@ -75,21 +79,23 @@ export function buildAdminV2BillingResult(input: {
       },
       {
         label: "Recorded Payments",
-        value: amount(adminV2MoneyAggregateValue(input.transactions.metrics.verifiedAmountSummary), transactionsAvailable),
+        value: amount(adminV2MoneyAggregateValue(input.transactions.metrics.recordedAmountSummary), transactionsAvailable),
         kind: "currency",
         source: "transactions",
         available: transactionsAvailable,
-        displayValue: adminV2MoneyAggregateUnavailable(input.transactions.metrics.verifiedAmountSummary) ? "Mixed currencies" : undefined,
-        helper: adminV2MoneyAggregateUnavailable(input.transactions.metrics.verifiedAmountSummary) ? "Unavailable as a single total; multiple currencies are present." : "Active finance payment ledger entries.",
+        displayValue: adminV2MoneyAggregateUnavailable(input.transactions.metrics.recordedAmountSummary) ? "Mixed currencies" : undefined,
+        helper: adminV2MoneyAggregateUnavailable(input.transactions.metrics.recordedAmountSummary) ? "Unavailable as a single total; multiple currencies are present." : "Active finance payment ledger entries.",
       },
       {
         label: "Recorded Due",
-        value: amount(adminV2MoneyAggregateValue(input.transactions.metrics.codDueSummary), transactionsAvailable),
+        value: amount(adminV2MoneyAggregateValue(input.orderDue.summary), orderDueAvailable),
         kind: "currency",
-        source: "transactions",
-        available: transactionsAvailable,
-        displayValue: adminV2MoneyAggregateUnavailable(input.transactions.metrics.codDueSummary) ? "Mixed currencies" : undefined,
-        helper: adminV2MoneyAggregateUnavailable(input.transactions.metrics.codDueSummary) ? "Unavailable as a single total; multiple currencies are present." : "Persisted order due snapshots; not an accounts receivable balance.",
+        source: "orderDue",
+        available: orderDueAvailable,
+        displayValue: adminV2MoneyAggregateUnavailable(input.orderDue.summary) ? "Mixed currencies" : undefined,
+        helper: adminV2MoneyAggregateUnavailable(input.orderDue.summary)
+          ? "Unavailable as a single total; multiple currencies are present."
+          : input.orderDue.limitation ?? `Recorded due from ${input.orderDue.knownCount.toLocaleString("en")} orders with persisted due snapshots.`,
       },
       {
         label: "Recorded Refunds",
@@ -135,8 +141,8 @@ export function buildAdminV2BillingResult(input: {
         cta: "Open Transactions",
         description: "Payment transaction ledger entries.",
         figures: [
-          { label: "Recorded", value: amount(input.transactions.metrics.verifiedPayments, transactionsAvailable), kind: "count", available: transactionsAvailable },
-          { label: "Voided / failed", value: amount(input.transactions.metrics.failedOrRefunded, transactionsAvailable), kind: "count", available: transactionsAvailable },
+          { label: "Recorded", value: amount(input.transactions.metrics.recordedPayments, transactionsAvailable), kind: "count", available: transactionsAvailable },
+          { label: "Voided", value: amount(input.transactions.metrics.voidedPayments, transactionsAvailable), kind: "count", available: transactionsAvailable },
         ],
       },
       {

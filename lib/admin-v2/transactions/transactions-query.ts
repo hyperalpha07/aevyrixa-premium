@@ -23,6 +23,8 @@ const paymentSelect = [
   "status",
   "occurred_at",
   "recorded_at",
+  "recorded_by_name",
+  "recorded_by_type",
   "voided_at",
   "void_reason",
 ].join(",");
@@ -39,6 +41,8 @@ type FinancePaymentTransactionRow = {
   status?: string | null;
   occurred_at?: string | null;
   recorded_at?: string | null;
+  recorded_by_name?: string | null;
+  recorded_by_type?: string | null;
   voided_at?: string | null;
   void_reason?: string | null;
 };
@@ -76,25 +80,19 @@ export function mapAdminV2TransactionRow(row: FinancePaymentTransactionRow): Adm
   const status = row.status === "recorded" || row.status === "void" ? row.status : "";
   return {
     id: text(row.id),
-    orderReference: text(row.order_ref),
-    customerName: "Not exposed",
-    customerContact: "Not exposed",
-    paymentMethod: text(row.payment_method) || "Not provided",
-    walletProvider: "",
-    paymentType: text(row.source) || "manual",
-    paymentStatus: status === "recorded" ? "verified" : "",
-    verificationStatus: status === "recorded" ? "Verified" : "",
     transactionReference: text(row.reference),
-    paymentReference: text(row.external_reference),
-    paidAmount: status === "recorded" ? numberValue(row.amount) : 0,
-    dueAmount: null,
-    refundedAmount: null,
-    totalAmount: numberValue(row.amount),
+    orderReference: text(row.order_ref),
+    amount: numberValue(row.amount),
     currencyCode: text(row.currency_code) || "BDT",
-    orderStatus: status || "Not provided",
-    createdAt: text(row.occurred_at) || text(row.recorded_at),
-    paymentVerifiedAt: text(row.occurred_at) || text(row.recorded_at),
-    refundExchangeRequest: text(row.void_reason),
+    paymentMethod: text(row.payment_method) || "Not provided",
+    externalReference: text(row.external_reference),
+    source: text(row.source) || "manual",
+    status,
+    occurredAt: text(row.occurred_at),
+    recordedAt: text(row.recorded_at),
+    recordedBy: text(row.recorded_by_name) || text(row.recorded_by_type) || "Not provided",
+    voidedAt: text(row.voided_at),
+    voidReason: text(row.void_reason),
   };
 }
 
@@ -105,7 +103,7 @@ function appendFilter(params: string[], key: string, operator: string, value: st
 export function adminV2TransactionParams(query: AdminV2TransactionQuery, includeOrder = true) {
   const params = [`select=${paymentSelect}`];
   if (query.method !== "all") appendFilter(params, "payment_method", "eq", query.method);
-  if (query.status !== "all") appendFilter(params, "status", "eq", query.status === "verified" ? "recorded" : query.status);
+  if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.from) appendFilter(params, "occurred_at", "gte", `${query.from}T00:00:00.000Z`);
   if (query.to) appendFilter(params, "occurred_at", "lte", `${query.to}T23:59:59.999Z`);
   if (query.q) {
