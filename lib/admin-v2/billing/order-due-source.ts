@@ -49,7 +49,9 @@ function contentRangeTotal(value: string | null) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function numberValue(value: unknown): number | null {
+export function parseAdminV2OrderDueAmount(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
 }
@@ -91,7 +93,7 @@ export async function getAdminV2OrderDueSnapshots(): Promise<AdminV2OrderDueSnap
 
     const complete = totalCount === null ? rows.length < orderDueRowLimit : totalCount <= rows.length;
     const knownRows = rows
-      .map((row) => ({ amount: numberValue(row.due_amount), currencyCode: row.currency_code || "BDT" }))
+      .map((row) => ({ amount: parseAdminV2OrderDueAmount(row.due_amount), currencyCode: row.currency_code || "BDT" }))
       .filter((row) => row.amount !== null);
     const eligibleOrderCount = Number.isFinite(totalCount) ? Number(totalCount) : rows.length;
     const missingCount = Math.max(0, eligibleOrderCount - knownRows.length);

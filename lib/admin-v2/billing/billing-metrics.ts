@@ -99,12 +99,12 @@ export function buildAdminV2BillingResult(input: {
       },
       {
         label: "Recorded Refunds",
-        value: amount(adminV2MoneyAggregateValue(input.refunds.metrics.refundedAmountSummary), refundsAvailable),
+        value: amount(adminV2MoneyAggregateValue(input.refunds.metrics.recordedAmountSummary), refundsAvailable),
         kind: "currency",
         source: "refunds",
         available: refundsAvailable,
-        displayValue: adminV2MoneyAggregateUnavailable(input.refunds.metrics.refundedAmountSummary) ? "Mixed currencies" : undefined,
-        helper: adminV2MoneyAggregateUnavailable(input.refunds.metrics.refundedAmountSummary) ? "Unavailable as a single total; multiple currencies are present." : "Active finance refund ledger entries.",
+        displayValue: adminV2MoneyAggregateUnavailable(input.refunds.metrics.recordedAmountSummary) ? "Mixed currencies" : undefined,
+        helper: adminV2MoneyAggregateUnavailable(input.refunds.metrics.recordedAmountSummary) ? "Unavailable as a single total; multiple currencies are present." : "Active finance refund ledger entries.",
       },
       {
         label: "Recorded Expenses",
@@ -151,8 +151,8 @@ export function buildAdminV2BillingResult(input: {
         cta: "Open Refunds",
         description: "Recorded refund ledger entries.",
         figures: [
-          { label: "Refunded orders", value: amount(input.refunds.metrics.refundedOrders, refundsAvailable), kind: "count", available: refundsAvailable },
-          { label: "Refunded amount", value: amount(adminV2MoneyAggregateValue(input.refunds.metrics.refundedAmountSummary), refundsAvailable), kind: "currency", available: refundsAvailable, displayValue: adminV2MoneyAggregateUnavailable(input.refunds.metrics.refundedAmountSummary) ? "Mixed currencies" : undefined },
+          { label: "Recorded refunds", value: amount(input.refunds.metrics.recordedRefunds, refundsAvailable), kind: "count", available: refundsAvailable },
+          { label: "Recorded amount", value: amount(adminV2MoneyAggregateValue(input.refunds.metrics.recordedAmountSummary), refundsAvailable), kind: "currency", available: refundsAvailable, displayValue: adminV2MoneyAggregateUnavailable(input.refunds.metrics.recordedAmountSummary) ? "Mixed currencies" : undefined },
         ],
       },
       {

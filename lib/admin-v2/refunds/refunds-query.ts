@@ -3,7 +3,6 @@ import "server-only";
 import {
   adminV2RefundTotalPages,
   buildAdminV2RefundMetrics,
-  classifyAdminV2Refund,
   parseAdminV2RefundQuery,
   type AdminV2RefundQuery,
   type AdminV2RefundQueryResult,
@@ -71,34 +70,28 @@ function text(value: unknown) {
 }
 
 function numberValue(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
 }
 
 export function mapAdminV2RefundRow(row: FinanceRefundRow): AdminV2RefundRow {
-  const refundedAmount = row.status === "recorded" ? numberValue(row.amount) : 0;
-  const classification = classifyAdminV2Refund({
-    refundedAmount,
-    payableAmount: refundedAmount,
-    paymentStatus: refundedAmount && refundedAmount > 0 ? "refunded" : "",
-    requestNote: "",
-  });
   return {
     id: text(row.id),
-    orderReference: text(row.order_ref),
-    classification,
-    paymentStatus: refundedAmount && refundedAmount > 0 ? "refunded" : "",
-    paymentMethod: text(row.refund_method) || "Not provided",
-    walletProvider: "",
-    paymentType: text(row.source) || "manual",
     reference: text(row.reference) || text(row.external_reference) || "Not provided",
-    requestNote: text(row.reason) || text(row.void_reason),
-    refundedAmount,
-    payableAmount: refundedAmount,
+    orderReference: text(row.order_ref),
+    amount: row.status === "recorded" ? numberValue(row.amount) : 0,
     currencyCode: text(row.currency_code) || "BDT",
-    orderStatus: text(row.status) || "Not provided",
-    createdAt: text(row.occurred_at) || text(row.recorded_at),
-    updatedAt: text(row.voided_at) || text(row.recorded_at),
+    refundMethod: text(row.refund_method) || "Not provided",
+    externalReference: text(row.external_reference),
+    reason: text(row.reason),
+    source: text(row.source) || "manual",
+    status: text(row.status) || "Not provided",
+    occurredAt: text(row.occurred_at) || text(row.recorded_at),
+    recordedAt: text(row.recorded_at),
+    voidedAt: text(row.voided_at),
+    voidReason: text(row.void_reason),
   };
 }
 
@@ -109,6 +102,7 @@ function appendFilter(params: string[], key: string, operator: string, value: st
 export function adminV2RefundParams(query: AdminV2RefundQuery, includeOrder = true) {
   const params = [`select=${refundSelect}`];
   if (query.method !== "all") appendFilter(params, "refund_method", "eq", query.method);
+  if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.from) appendFilter(params, "occurred_at", "gte", `${query.from}T00:00:00.000Z`);
   if (query.to) appendFilter(params, "occurred_at", "lte", `${query.to}T23:59:59.999Z`);
   if (query.q) {
@@ -130,7 +124,7 @@ async function fetchRefundPage(query: AdminV2RefundQuery) {
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Refund ledger query failed.");
-  const rows = ((await response.json()) as FinanceRefundRow[]).map(mapAdminV2RefundRow).filter((row) => query.classification === "all" || row.classification === query.classification);
+  const rows = ((await response.json()) as FinanceRefundRow[]).map(mapAdminV2RefundRow);
   const count = Number((response.headers.get("content-range") ?? "").split("/")[1]);
   return { rows, totalCount: Number.isFinite(count) ? count : rows.length };
 }
@@ -146,7 +140,7 @@ async function fetchMetricRows(query: AdminV2RefundQuery) {
     });
     if (!response.ok) throw new Error("Refund metrics query failed.");
     totalCount ??= Number((response.headers.get("content-range") ?? "").split("/")[1]);
-    const batch = ((await response.json()) as FinanceRefundRow[]).map(mapAdminV2RefundRow).filter((row) => query.classification === "all" || row.classification === query.classification);
+    const batch = ((await response.json()) as FinanceRefundRow[]).map(mapAdminV2RefundRow);
     rows.push(...batch);
     if (batch.length < 1000) break;
   }
@@ -163,7 +157,7 @@ export async function getAdminV2RefundExportRows(searchParams = new URLSearchPar
   if (!response.ok) return { ok: false as const, status: 503, errors: ["Refund export source is unavailable."] };
   const count = Number((response.headers.get("content-range") ?? "").split("/")[1]);
   if (Number.isFinite(count) && count > adminV2RefundExportLimit) return { ok: false as const, status: 409, errors: ["Export exceeds the 10,000 row limit. Narrow the filters and retry."] };
-  const rows = ((await response.json()) as FinanceRefundRow[]).map(mapAdminV2RefundRow).filter((row) => query.classification === "all" || row.classification === query.classification);
+  const rows = ((await response.json()) as FinanceRefundRow[]).map(mapAdminV2RefundRow);
   return { ok: true as const, rows, query, rowCount: Number.isFinite(count) ? count : rows.length };
 }
 
