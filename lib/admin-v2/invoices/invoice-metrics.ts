@@ -41,6 +41,8 @@ export type AdminV2InvoiceMetrics = {
   totalInvoicedValue: number;
   issuedThisMonth: number;
   voidInvoices: number;
+  issuedInvoicesOnCancelledOrders: number;
+  issuedCancelledOrderValue: number;
 };
 
 export type AdminV2InvoiceQueryResult = {
@@ -102,6 +104,13 @@ export function buildAdminV2InvoiceMetrics(rows: AdminV2InvoiceRow[], now = new 
       if (row.status === "void") metrics.voidInvoices += 1;
       return metrics;
     },
-    { issuedInvoices: 0, totalInvoicedValue: 0, issuedThisMonth: 0, voidInvoices: 0 }
+    {
+      issuedInvoices: 0,
+      totalInvoicedValue: 0,
+      issuedThisMonth: 0,
+      voidInvoices: 0,
+      issuedInvoicesOnCancelledOrders: 0,
+      issuedCancelledOrderValue: 0,
+    }
   );
 }

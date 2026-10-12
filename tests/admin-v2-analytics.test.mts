@@ -94,7 +94,7 @@ test("Admin V2 Analytics is a real implemented route protected by analytics.view
   assert.doesNotMatch(analyticsPageSource, /AdminV2ModulePage/);
 });
 
-test("Analytics aggregation excludes cancelled, test, archived, deleted, and soft-deleted orders from payable sales", () => {
+test("Analytics aggregation excludes cancelled, test, archived, deleted, and soft-deleted orders from eligible order value", () => {
   const range = resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2026-10-01&to=2026-10-02"));
   const result = buildAdminV2AnalyticsResult({
     range,
@@ -119,10 +119,10 @@ test("Analytics aggregation excludes cancelled, test, archived, deleted, and sof
     reviews: [],
   });
 
-  assert.equal(payableOrderValue(order({ totals: { totalItems: 2, subtotal: 200 }, discountAmount: 20, deliveryCharge: 30, totalAmount: 999 })), 210);
+  assert.equal(payableOrderValue(order({ totals: { totalItems: 2, subtotal: 200 }, discountAmount: 20, deliveryCharge: 30, totalAmount: 999 })), 999);
   assert.equal(result.kpis.orders, 1);
-  assert.equal(result.kpis.payableSales, 210);
-  assert.equal(result.kpis.averageOrderValue, 210);
+  assert.equal(result.kpis.payableSales, 999);
+  assert.equal(result.kpis.averageOrderValue, 999);
   assert.equal(result.orderStatus.find((slice) => slice.status === "Cancelled")?.count, 1);
   assert.equal(isQualifyingAnalyticsOrder(order({ status: "Cancelled" })), false);
 });

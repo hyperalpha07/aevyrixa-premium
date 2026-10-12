@@ -1,11 +1,11 @@
 import { Alert, Box, Button, Divider, Grid, LinearProgress, Stack, TextField, Typography } from "@mui/material";
 import { BarChart3, ClipboardList, HeartHandshake, ShoppingBag, Star, Users } from "lucide-react";
-import { formatCurrency } from "@/app/lib/currency";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Chip } from "@/components/admin-v2/shared/V2Chip";
 import { V2MetricCard } from "@/components/admin-v2/shared/V2MetricCard";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { analyticsPresetRanges, type AdminV2AnalyticsResult, type AnalyticsProductRank, type AnalyticsTrendBucket } from "@/lib/admin-v2/analytics/analytics-metrics";
+import { formatAdminV2Money } from "@/lib/admin-v2/finance/money";
 
 const rangeLabels = {
   "7d": "7 days",
@@ -78,7 +78,7 @@ function ProductRows({ rows, mode }: { rows: AnalyticsProductRank[]; mode: "quan
                 <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{row.name}</Typography>
                 <Typography variant="caption" color="text.secondary" noWrap>{row.slug || row.productId || "Snapshot only"}</Typography>
               </Box>
-              <Typography variant="body2" sx={{ fontWeight: 900 }}>{mode === "quantity" ? value : formatCurrency(value)}</Typography>
+              <Typography variant="body2" sx={{ fontWeight: 900 }}>{mode === "quantity" ? value : formatAdminV2Money(value)}</Typography>
             </Stack>
             <LinearProgress variant="determinate" value={(value / max) * 100} sx={{ mt: 0.75, height: 6, borderRadius: 999 }} />
           </Box>
@@ -129,7 +129,7 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
         {data.limitation ? <Alert severity="warning">{data.limitation}</Alert> : null}
 
         <Alert severity="info">
-          Payable sales represents non-cancelled order value and is not necessarily settled cash revenue.
+          Eligible order value uses persisted non-cancelled order totals and is not settled cash revenue; arithmetic payable mismatches are reconciled in Billing and Order Detail.
         </Alert>
 
         <Grid container spacing={2}>
@@ -137,10 +137,10 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
             <V2MetricCard label="Orders" value={String(data.kpis.orders)} animatedValue={data.kpis.orders} icon={ClipboardList} tone="warning" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 2.4 }}>
-            <V2MetricCard label="Payable Sales" value={formatCurrency(data.kpis.payableSales)} icon={ShoppingBag} tone="primary" />
+            <V2MetricCard label="Eligible Order Value" value={formatAdminV2Money(data.kpis.payableSales)} icon={ShoppingBag} tone="primary" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 2.4 }}>
-            <V2MetricCard label="Average Order Value" value={formatCurrency(data.kpis.averageOrderValue)} icon={BarChart3} tone="info" />
+            <V2MetricCard label="Average Order Value" value={formatAdminV2Money(data.kpis.averageOrderValue)} icon={BarChart3} tone="info" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 2.4 }}>
             <V2MetricCard label="New Accounts" value={data.sources.customers.available ? String(data.kpis.newAccounts) : "Unavailable"} animatedValue={data.sources.customers.available ? data.kpis.newAccounts : undefined} icon={Users} tone="success" />
@@ -251,8 +251,8 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
                 Uses available discount_amount and delivery_charge fields. Older rows may not include both fields.
               </Typography>
               <Grid container spacing={1.5}>
-                <Grid size={{ xs: 6 }}><MiniStat label="Discounts" value={formatCurrency(data.valueBreakdown.discounts)} /></Grid>
-                <Grid size={{ xs: 6 }}><MiniStat label="Delivery fees" value={formatCurrency(data.valueBreakdown.deliveryFees)} /></Grid>
+                <Grid size={{ xs: 6 }}><MiniStat label="Discounts" value={formatAdminV2Money(data.valueBreakdown.discounts)} /></Grid>
+                <Grid size={{ xs: 6 }}><MiniStat label="Delivery fees" value={formatAdminV2Money(data.valueBreakdown.deliveryFees)} /></Grid>
                 <Grid size={{ xs: 6 }}><MiniStat label="Discount rows" value={data.valueBreakdown.discountRows} /></Grid>
                 <Grid size={{ xs: 6 }}><MiniStat label="Delivery rows" value={data.valueBreakdown.deliveryRows} /></Grid>
               </Grid>

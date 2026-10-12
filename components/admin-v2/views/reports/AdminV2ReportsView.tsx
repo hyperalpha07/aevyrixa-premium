@@ -1,6 +1,5 @@
 import { Alert, Box, Button, Divider, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { BarChart3, FileBarChart, PackageSearch, ReceiptText, Star, Truck, Users } from "lucide-react";
-import { formatCurrency } from "@/app/lib/currency";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2MetricCard } from "@/components/admin-v2/shared/V2MetricCard";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
@@ -11,6 +10,7 @@ import {
   type AdminV2ReportType,
 } from "@/lib/admin-v2/reports/reports-metrics";
 import { analyticsPresetRanges } from "@/lib/admin-v2/analytics/analytics-metrics";
+import { formatAdminV2Money } from "@/lib/admin-v2/finance/money";
 
 const rangeLabels = {
   "7d": "7 days",
@@ -57,7 +57,7 @@ function isMoneyColumn(key: string) {
 
 function displayValue(value: string | number, money = false) {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return money ? formatCurrency(value) : new Intl.NumberFormat("en").format(value);
+    return money ? formatAdminV2Money(value) : new Intl.NumberFormat("en").format(value);
   }
   return value ? String(value) : "—";
 }
@@ -112,7 +112,7 @@ export function AdminV2ReportsView({ data, permissions }: { data: AdminV2ReportR
         {data.limitation ? <Alert severity="warning">{data.limitation}</Alert> : null}
         {!data.exportable ? <Alert severity="info">{data.exportDisabledReason}</Alert> : null}
         <Alert severity="info">
-          Payable Sales excludes cancelled and archived orders and is not settled revenue.
+          Eligible order value uses persisted non-cancelled order totals and is not settled revenue.
         </Alert>
 
         <Grid container spacing={2}>

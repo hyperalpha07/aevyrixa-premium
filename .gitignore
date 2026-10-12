@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/.ms-playwright/
+/.npm-cache/
 
 # next.js
 /.next/

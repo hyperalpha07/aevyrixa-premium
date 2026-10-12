@@ -1,9 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Alert, Box, Button, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { Banknote, Info, ReceiptText, RotateCcw } from "lucide-react";
-import { formatCurrency } from "@/app/lib/currency";
 import { V2Breadcrumbs } from "@/components/admin-v2/shared/V2Breadcrumbs";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
@@ -15,7 +14,7 @@ import {
   type AdminV2RefundLedgerStatus,
   type AdminV2RefundQueryResult,
 } from "@/lib/admin-v2/refunds/refund-metrics";
-import type { AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
+import { formatAdminV2Money, type AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
 const allOption = { label: "All", value: "all" };
 
@@ -37,13 +36,13 @@ function orderHref(orderReference: string) {
 
 function amount(value: number | null | undefined, currencyCode = "BDT") {
   if (typeof value !== "number" || !Number.isFinite(value)) return "Not provided";
-  return currencyCode === "BDT" ? formatCurrency(value) : `${currencyCode} ${value.toLocaleString("en-US")}`;
+  return formatAdminV2Money(value, currencyCode);
 }
 
 function moneyAggregate(summary: AdminV2MoneyAggregate) {
   if (summary.kind === "mixed") return "Mixed currencies";
-  if (summary.kind === "none") return formatCurrency(0);
-  return summary.currencyCode === "BDT" ? formatCurrency(summary.amount) : `${summary.currencyCode} ${summary.amount.toLocaleString("en-US")}`;
+  if (summary.kind === "none") return formatAdminV2Money(0);
+  return formatAdminV2Money(summary.amount, summary.currencyCode);
 }
 
 async function submitFinanceJson(url: string, payload: Record<string, unknown>) {
@@ -124,6 +123,7 @@ function MetricCell({
 
 export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2RefundQueryResult; capabilities: { canRecordRefund: boolean; canExport: boolean; canViewOrder: boolean } }) {
   const [actionError, setActionError] = useState("");
+  const [recordOpen, setRecordOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [voiding, setVoiding] = useState<string | null>(null);
   const hasFilters = Boolean(data.query.q || data.query.status !== "all" || data.query.method !== "all" || data.query.from || data.query.to);
@@ -158,6 +158,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
         occurredAt: form.get("occurredAt"),
         requestKey: crypto.randomUUID(),
       });
+      setRecordOpen(false);
       window.location.reload();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "Refund could not be recorded.");
@@ -222,23 +223,41 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
         </V2Card>
 
         {capabilities.canRecordRefund ? (
-          <V2Card>
-            <Stack component="form" onSubmit={recordRefund} direction={{ xs: "column", lg: "row" }} spacing={1} sx={{ alignItems: { lg: "center" } }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 900, minWidth: 112 }}>Record Refund</Typography>
-              <TextField required name="orderRef" label="Order reference" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} />
-              <TextField name="paymentTransactionId" label="Payment txn ID" size="small" slotProps={{ htmlInput: { maxLength: 64 } }} />
-              <TextField required name="amount" label="Amount" type="number" size="small" slotProps={{ htmlInput: { min: 0.01, step: "0.01" } }} />
-              <TextField required name="currencyCode" label="Currency" size="small" defaultValue="BDT" slotProps={{ htmlInput: { maxLength: 3 } }} sx={{ width: 100 }} />
-              <TextField name="refundMethod" label="Refund method" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} />
-              <TextField required name="occurredAt" label="Occurred at" type="datetime-local" size="small" slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField required name="reason" label="Reason" size="small" slotProps={{ htmlInput: { maxLength: 1000 } }} />
-              <TextField name="externalReference" label="External ref" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} />
-              <TextField name="note" label="Note" size="small" slotProps={{ htmlInput: { maxLength: 2000 } }} />
-              <Button type="submit" disabled={saving} variant="contained">{saving ? "Saving..." : "Record"}</Button>
+          <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.5 }, "&:last-child": { pb: { xs: 1.25, md: 1.5 } } } }}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}>
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Record a refund</Typography>
+                <Typography variant="caption" color="text.secondary">Real active payment validation remains server-enforced.</Typography>
+              </Box>
+              <Button variant="contained" onClick={() => setRecordOpen(true)} sx={{ minHeight: 38, px: 2.5 }}>Record Refund</Button>
             </Stack>
             {actionError ? <Alert severity="warning" sx={{ mt: 1 }}>{actionError}</Alert> : null}
           </V2Card>
         ) : null}
+
+        <Dialog open={recordOpen} onClose={() => !saving && setRecordOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: { borderRadius: 3 } } }}>
+          <DialogTitle sx={{ pb: 0.75, fontWeight: 950 }}>Record Refund</DialogTitle>
+          <DialogContent sx={{ pt: 1.5 }}>
+            <Stack id="admin-v2-record-refund-form" component="form" onSubmit={recordRefund} spacing={2}>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth required name="orderRef" label="Order reference" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="paymentTransactionId" label="Payment transaction ID" size="small" slotProps={{ htmlInput: { maxLength: 64 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth required name="amount" label="Amount" type="number" size="small" slotProps={{ htmlInput: { min: 0.01, step: "0.01" } }} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth required name="currencyCode" label="Currency" size="small" defaultValue="BDT" slotProps={{ htmlInput: { maxLength: 3 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth required name="occurredAt" label="Occurred at" type="datetime-local" size="small" slotProps={{ inputLabel: { shrink: true } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="refundMethod" label="Refund method" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="externalReference" label="External reference" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth required name="reason" label="Reason" size="small" multiline minRows={2} slotProps={{ htmlInput: { maxLength: 1000 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="note" label="Internal note" size="small" multiline minRows={2} slotProps={{ htmlInput: { maxLength: 2000 } }} /></Grid>
+              </Grid>
+              {actionError ? <Alert severity="warning">{actionError}</Alert> : null}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2.25 }}>
+            <Button variant="outlined" disabled={saving} onClick={() => setRecordOpen(false)}>Cancel</Button>
+            <Button type="submit" form="admin-v2-record-refund-form" disabled={saving} variant="contained">{saving ? "Saving..." : "Save Refund"}</Button>
+          </DialogActions>
+        </Dialog>
 
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.5, md: 1.75 }, "&:last-child": { pb: { xs: 1.5, md: 1.75 } } } }}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ justifyContent: "space-between", alignItems: { sm: "flex-start" }, mb: 1.25 }}>

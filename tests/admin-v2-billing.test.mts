@@ -29,6 +29,8 @@ const view = read("components/admin-v2/views/billing/AdminV2BillingView.tsx");
 const query = read("lib/admin-v2/billing/billing-query.ts");
 const metricsSource = read("lib/admin-v2/billing/billing-metrics.ts");
 const dueSource = read("lib/admin-v2/billing/order-due-source.ts");
+const moneySource = read("lib/admin-v2/finance/money.ts");
+const invoiceQuerySource = read("lib/admin-v2/invoices/invoices-query.ts");
 
 const available = { storageAvailable: true, queryFailed: false, limitation: null, totalCount: 0, totalPages: 1, rows: [], query: {} };
 const singleBdt = (amount: number) => ({ kind: "single", amount, currencyCode: "BDT", currencies: ["BDT"] });
@@ -49,38 +51,46 @@ test("Billing composes real analytics, ledger, expense, refund, and invoice sour
   assert.match(query, /getAdminV2Expenses/);
   assert.match(query, /getAdminV2Invoices/);
   assert.match(dueSource, /select: orderDueSelect/);
+  assert.match(dueSource, /subtotal,discount_amount,delivery_charge,total,due_amount/);
   assert.match(dueSource, /status: "neq\.Cancelled"/);
   assert.match(dueSource, /archived_at: "is\.null"/);
   assert.match(dueSource, /currencyCode: row\.currency_code \|\| "BDT"/);
   assert.doesNotMatch(dueSource, /customer|phone|email|address/i);
   assert.doesNotMatch(query + metricsSource + view, /Bank Balance|Net Profit|Available Balance/i);
+  assert.match(moneySource, /minimumFractionDigits:\s*2/);
+  assert.match(moneySource, /maximumFractionDigits:\s*2/);
+  assert.match(invoiceQuerySource, /issuedInvoicesOnCancelledOrders/);
+  assert.match(invoiceQuerySource, /statuses\.get\(row\.orderReference\) === "Cancelled"/);
 });
 
 test("Billing summary labels are truthful to available persisted sources", () => {
   const result = billingMetrics.buildAdminV2BillingResult({
     analytics: { available: true, limitation: null, kpis: { payableSales: 1000 } } as never,
     transactions: { ...available, metrics: { totalLedgerEntries: 3, recordedPayments: 2, recordedAmountSummary: singleBdt(700), voidedPayments: 1 } } as never,
-    orderDue: { available: true, complete: false, knownCount: 2, eligibleOrderCount: 21, summary: singleBdt(2840), limitation: "Recorded due from 2 orders with persisted due snapshots; 19 eligible older orders without a due snapshot are excluded." } as never,
+    orderDue: { available: true, complete: false, knownCount: 2, eligibleOrderCount: 21, summary: singleBdt(2840), orderValueKnownCount: 8, orderValueSummary: singleBdt(5181.34), calculatedPayableKnownCount: 8, calculatedPayableSummary: singleBdt(5261.34), arithmeticMismatchCount: 1, arithmeticMismatchDifferenceSummary: singleBdt(80), limitation: "Recorded due from 2 orders with persisted due snapshots; 19 eligible older orders without a due snapshot are excluded." } as never,
     refunds: { ...available, metrics: { recordedRefunds: 1, recordedAmountSummary: singleBdt(100), voidedRefunds: 0, totalLedgerEntries: 1 } } as never,
     expenses: { ...available, metrics: { activeExpenses: 3, activeAmount: 250, activeAmountSummary: singleBdt(250), voidExpenses: 0, linkedOrders: 1 } } as never,
-    invoices: { ...available, metrics: { issuedInvoices: 4, totalInvoicedValue: 900 } } as never,
+    invoices: { ...available, metrics: { issuedInvoices: 4, totalInvoicedValue: 900, issuedInvoicesOnCancelledOrders: 1, issuedCancelledOrderValue: 92 } } as never,
   });
   assert.deepEqual(result.summary.map((item) => item.label), [
-    "Payable Sales",
+    "Eligible Order Value",
     "Recorded Payments",
-    "Recorded Due",
+    "Known Due",
     "Recorded Refunds",
     "Recorded Expenses",
     "Issued Invoices",
   ]);
   assert.deepEqual(result.modules.map((item) => item.title), ["Invoices", "Transactions", "Refunds", "Expenses", "Reports"]);
+  assert.match(result.notes.join("\n"), /1 eligible order total differs from the arithmetic payable calculation/);
+  assert.match(result.notes.join("\n"), /payment RPC calculates payable from subtotal minus discount plus delivery/);
+  assert.match(result.notes.join("\n"), /1 issued invoice is associated with cancelled orders/);
 });
 
 test("Billing does not collapse mixed finance currencies into one BDT value", () => {
   const result = billingMetrics.buildAdminV2BillingResult({
     analytics: { available: true, limitation: null, kpis: { payableSales: 1000 } } as never,
     transactions: { ...available, metrics: { totalLedgerEntries: 2, recordedPayments: 2, recordedAmountSummary: { kind: "mixed", amount: null, currencyCode: null, currencies: ["BDT", "USD"] }, voidedPayments: 0 } } as never,
-    orderDue: { available: true, complete: true, knownCount: 0, eligibleOrderCount: 0, summary: noneMoney, limitation: null } as never,
+    orderDue: { available: true, complete: true, knownCount: 0, eligibleOrderCount: 0, summary: noneMoney, orderValueKnownCount: 0, orderValueSummary: noneMoney, limitation: null } as never,
     refunds: { ...available, metrics: { recordedRefunds: 1, recordedAmountSummary: { kind: "mixed", amount: null, currencyCode: null, currencies: ["BDT", "USD"] }, voidedRefunds: 0, totalLedgerEntries: 1 } } as never,
     expenses: { ...available, metrics: { activeExpenses: 2, activeAmount: 250, activeAmountSummary: { kind: "mixed", amount: null, currencyCode: null, currencies: ["BDT", "LKR"] }, voidExpenses: 0, linkedOrders: 1 } } as never,
     invoices: { ...available, metrics: { issuedInvoices: 4, totalInvoicedValue: 900 } } as never,
@@ -90,16 +100,16 @@ test("Billing does not collapse mixed finance currencies into one BDT value", ()
   assert.equal(result.summary.find((item) => item.label === "Recorded Expenses")?.displayValue, "Mixed currencies");
 });
 
-test("Billing Recorded Due comes from dedicated persisted order snapshots", () => {
+test("Billing Known Due comes from dedicated persisted order snapshots", () => {
   const result = billingMetrics.buildAdminV2BillingResult({
     analytics: { available: true, limitation: null, kpis: { payableSales: 2840 } } as never,
     transactions: { ...available, metrics: { totalLedgerEntries: 0, recordedPayments: 0, recordedAmountSummary: noneMoney, voidedPayments: 0 } } as never,
-    orderDue: { available: true, complete: false, knownCount: 2, eligibleOrderCount: 21, summary: singleBdt(2840), limitation: "Recorded due from 2 orders with persisted due snapshots; 19 eligible older orders without a due snapshot are excluded." } as never,
+    orderDue: { available: true, complete: false, knownCount: 2, eligibleOrderCount: 21, summary: singleBdt(2840), orderValueKnownCount: 8, orderValueSummary: singleBdt(5181.34), limitation: "Recorded due from 2 orders with persisted due snapshots; 19 eligible older orders without a due snapshot are excluded." } as never,
     refunds: { ...available, metrics: { recordedRefunds: 0, recordedAmountSummary: noneMoney, voidedRefunds: 0, totalLedgerEntries: 0 } } as never,
     expenses: { ...available, metrics: { activeExpenses: 0, activeAmount: 0, activeAmountSummary: noneMoney, voidExpenses: 0, linkedOrders: 0 } } as never,
     invoices: { ...available, metrics: { issuedInvoices: 3, totalInvoicedValue: 2840 } } as never,
   });
-  const due = result.summary.find((item) => item.label === "Recorded Due");
+  const due = result.summary.find((item) => item.label === "Known Due");
   assert.equal(due?.value, 2840);
   assert.equal(due?.source, "orderDue");
   assert.match(due?.helper ?? "", /2 orders with persisted due snapshots/);
@@ -114,12 +124,12 @@ test("Billing due distinguishes unavailable, legitimate zero, and mixed currenci
     expenses: { ...available, metrics: { activeExpenses: 0, activeAmount: 0, activeAmountSummary: noneMoney, voidExpenses: 0, linkedOrders: 0 } } as never,
     invoices: { ...available, metrics: { issuedInvoices: 0, totalInvoicedValue: 0 } } as never,
   };
-  const unavailable = billingMetrics.buildAdminV2BillingResult({ ...base, orderDue: { available: false, complete: false, knownCount: 0, eligibleOrderCount: 0, summary: noneMoney, limitation: "Recorded due snapshots could not be loaded." } as never });
-  assert.equal(unavailable.summary.find((item) => item.label === "Recorded Due")?.available, false);
-  const zero = billingMetrics.buildAdminV2BillingResult({ ...base, orderDue: { available: true, complete: true, knownCount: 2, eligibleOrderCount: 2, summary: noneMoney, limitation: null } as never });
-  assert.equal(zero.summary.find((item) => item.label === "Recorded Due")?.value, 0);
-  const mixed = billingMetrics.buildAdminV2BillingResult({ ...base, orderDue: { available: true, complete: true, knownCount: 2, eligibleOrderCount: 2, summary: { kind: "mixed", amount: null, currencyCode: null, currencies: ["BDT", "USD"] }, limitation: null } as never });
-  assert.equal(mixed.summary.find((item) => item.label === "Recorded Due")?.displayValue, "Mixed currencies");
+  const unavailable = billingMetrics.buildAdminV2BillingResult({ ...base, orderDue: { available: false, complete: false, knownCount: 0, eligibleOrderCount: 0, summary: noneMoney, orderValueKnownCount: 0, orderValueSummary: noneMoney, limitation: "Recorded due snapshots could not be loaded." } as never });
+  assert.equal(unavailable.summary.find((item) => item.label === "Known Due")?.available, false);
+  const zero = billingMetrics.buildAdminV2BillingResult({ ...base, orderDue: { available: true, complete: true, knownCount: 2, eligibleOrderCount: 2, summary: noneMoney, orderValueKnownCount: 0, orderValueSummary: noneMoney, limitation: null } as never });
+  assert.equal(zero.summary.find((item) => item.label === "Known Due")?.value, 0);
+  const mixed = billingMetrics.buildAdminV2BillingResult({ ...base, orderDue: { available: true, complete: true, knownCount: 2, eligibleOrderCount: 2, summary: { kind: "mixed", amount: null, currencyCode: null, currencies: ["BDT", "USD"] }, orderValueKnownCount: 2, orderValueSummary: { kind: "mixed", amount: null, currencyCode: null, currencies: ["BDT", "USD"] }, limitation: null } as never });
+  assert.equal(mixed.summary.find((item) => item.label === "Known Due")?.displayValue, "Mixed currencies");
 });
 
 test("Billing due parser treats missing values as unknown and preserves known zero", () => {
@@ -137,12 +147,12 @@ test("Billing partial due coverage retains known amount and exposes limitation",
   const result = billingMetrics.buildAdminV2BillingResult({
     analytics: { available: true, limitation: null, kpis: { payableSales: 2840 } } as never,
     transactions: { ...available, metrics: { totalLedgerEntries: 0, recordedPayments: 0, recordedAmountSummary: noneMoney, voidedPayments: 0 } } as never,
-    orderDue: { available: true, complete: false, knownCount: 2, eligibleOrderCount: 8, summary: singleBdt(2840), limitation: "Recorded due from 2 orders with persisted due snapshots; 6 eligible older orders without a due snapshot are excluded." } as never,
+    orderDue: { available: true, complete: false, knownCount: 2, eligibleOrderCount: 8, summary: singleBdt(2840), orderValueKnownCount: 8, orderValueSummary: singleBdt(5181.34), limitation: "Recorded due from 2 orders with persisted due snapshots; 6 eligible older orders without a due snapshot are excluded." } as never,
     refunds: { ...available, metrics: { recordedRefunds: 0, recordedAmountSummary: noneMoney, voidedRefunds: 0, totalLedgerEntries: 0 } } as never,
     expenses: { ...available, metrics: { activeExpenses: 0, activeAmount: 0, activeAmountSummary: noneMoney, voidExpenses: 0, linkedOrders: 0 } } as never,
     invoices: { ...available, metrics: { issuedInvoices: 0, totalInvoicedValue: 0 } } as never,
   });
-  const due = result.summary.find((item) => item.label === "Recorded Due");
+  const due = result.summary.find((item) => item.label === "Known Due");
   assert.equal(due?.value, 2840);
   assert.equal(due?.available, true);
   assert.match(due?.helper ?? "", /6 eligible older orders without a due snapshot are excluded/);
@@ -155,14 +165,14 @@ test("Billing due source excludes null rows from known coverage while retaining 
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test";
   globalThis.fetch = (async () => new Response(JSON.stringify([
-    { id: "1", due_amount: 1000, currency_code: "BDT" },
-    { id: "2", due_amount: "1840", currency_code: "BDT" },
-    { id: "3", due_amount: null, currency_code: "BDT" },
-    { id: "4", due_amount: undefined, currency_code: "BDT" },
-    { id: "5", due_amount: "", currency_code: "BDT" },
-    { id: "6", due_amount: "   ", currency_code: "BDT" },
-    { id: "7", due_amount: null, currency_code: "BDT" },
-    { id: "8", due_amount: null, currency_code: "BDT" },
+    { id: "1", subtotal: 1000, delivery_charge: 0, discount_amount: 0, total: 1000, due_amount: 1000, currency_code: "BDT" },
+    { id: "2", subtotal: 42, delivery_charge: 80, discount_amount: 0, total: "42", due_amount: "1840", currency_code: "BDT" },
+    { id: "3", subtotal: 500, delivery_charge: 0, discount_amount: 0, total: 500, due_amount: null, currency_code: "BDT" },
+    { id: "4", subtotal: 600, delivery_charge: 0, discount_amount: 0, total: 600, due_amount: undefined, currency_code: "BDT" },
+    { id: "5", subtotal: 700, delivery_charge: 0, discount_amount: 0, total: 700, due_amount: "", currency_code: "BDT" },
+    { id: "6", subtotal: 800, delivery_charge: 0, discount_amount: 0, total: 800, due_amount: "   ", currency_code: "BDT" },
+    { id: "7", subtotal: 900, delivery_charge: 0, discount_amount: 0, total: 900, due_amount: null, currency_code: "BDT" },
+    { id: "8", subtotal: 639.34, delivery_charge: 0, discount_amount: 0, total: 639.34, due_amount: null, currency_code: "BDT" },
   ]), { headers: { "content-range": "0-7/8" } })) as typeof fetch;
   try {
     const result = await orderDueSource.getAdminV2OrderDueSnapshots();
@@ -170,6 +180,12 @@ test("Billing due source excludes null rows from known coverage while retaining 
     assert.equal(result.eligibleOrderCount, 8);
     assert.equal(result.complete, false);
     assert.deepEqual(result.summary, singleBdt(2840));
+    assert.equal(result.orderValueKnownCount, 8);
+    assert.deepEqual(result.orderValueSummary, singleBdt(5181.34));
+    assert.equal(result.calculatedPayableKnownCount, 8);
+    assert.deepEqual(result.calculatedPayableSummary, singleBdt(5261.34));
+    assert.equal(result.arithmeticMismatchCount, 1);
+    assert.deepEqual(result.arithmeticMismatchDifferenceSummary, singleBdt(80));
     assert.match(result.limitation ?? "", /6 eligible older orders without a due snapshot are excluded/);
   } finally {
     if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;

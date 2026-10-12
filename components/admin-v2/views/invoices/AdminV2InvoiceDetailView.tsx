@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import { Box, Divider, GlobalStyles, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import { formatCurrency } from "@/app/lib/currency";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Chip } from "@/components/admin-v2/shared/V2Chip";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { brandName, noromiAssets } from "@/configs/brand/noromi";
+import { formatAdminV2Money } from "@/lib/admin-v2/finance/money";
 import type { AdminV2InvoiceRow } from "@/lib/admin-v2/invoices/invoice-metrics";
 
 type AdminV2InvoiceDetailViewProps = {
@@ -209,8 +209,8 @@ export function AdminV2InvoiceDetailView({ invoice, autoPrint = false }: AdminV2
                       <Typography variant="caption" color="text.secondary">{text(item.sku) || text(item.variant) || "Snapshot item"}</Typography>
                     </TableCell>
                     <TableCell align="right">{numberValue(item.quantity) || 1}</TableCell>
-                    <TableCell align="right">{formatCurrency(numberValue(item.unitPrice ?? item.unit_price ?? item.price))}</TableCell>
-                    <TableCell align="right">{formatCurrency(numberValue(item.lineTotal ?? item.line_total ?? item.total))}</TableCell>
+                    <TableCell align="right">{formatAdminV2Money(numberValue(item.unitPrice ?? item.unit_price ?? item.price), invoice.currencyCode)}</TableCell>
+                    <TableCell align="right">{formatAdminV2Money(numberValue(item.lineTotal ?? item.line_total ?? item.total), invoice.currencyCode)}</TableCell>
                   </TableRow>
                 )) : (
                   <TableRow>
@@ -224,20 +224,20 @@ export function AdminV2InvoiceDetailView({ invoice, autoPrint = false }: AdminV2
           <Stack spacing={1} sx={{ alignSelf: "flex-end", minWidth: { xs: "100%", sm: 320 } }}>
             <Stack direction="row" sx={{ justifyContent: "space-between" }}>
               <Typography color="text.secondary">Subtotal</Typography>
-              <Typography sx={{ fontWeight: 800 }}>{formatCurrency(invoice.subtotalAmount)}</Typography>
+              <Typography sx={{ fontWeight: 800 }}>{formatAdminV2Money(invoice.subtotalAmount, invoice.currencyCode)}</Typography>
             </Stack>
             <Stack direction="row" sx={{ justifyContent: "space-between" }}>
               <Typography color="text.secondary">Discounts</Typography>
-              <Typography sx={{ fontWeight: 800 }}>-{formatCurrency(invoice.discountAmount)}</Typography>
+              <Typography sx={{ fontWeight: 800 }}>-{formatAdminV2Money(invoice.discountAmount, invoice.currencyCode)}</Typography>
             </Stack>
             <Stack direction="row" sx={{ justifyContent: "space-between" }}>
               <Typography color="text.secondary">Delivery</Typography>
-              <Typography sx={{ fontWeight: 800 }}>{formatCurrency(invoice.deliveryAmount)}</Typography>
+              <Typography sx={{ fontWeight: 800 }}>{formatAdminV2Money(invoice.deliveryAmount, invoice.currencyCode)}</Typography>
             </Stack>
             <Divider />
             <Stack direction="row" sx={{ justifyContent: "space-between" }}>
               <Typography variant="h6">Total</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 950 }}>{formatCurrency(invoice.totalAmount)}</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 950 }}>{formatAdminV2Money(invoice.totalAmount, invoice.currencyCode)}</Typography>
             </Stack>
           </Stack>
         </Stack>

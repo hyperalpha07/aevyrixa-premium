@@ -33,3 +33,13 @@ export function adminV2MoneyAggregateUnavailable(aggregate: AdminV2MoneyAggregat
   if (!aggregate) return false;
   return aggregate.kind === "mixed";
 }
+
+const adminV2MoneyFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export function formatAdminV2Money(value: number | null | undefined, currencyCode = "BDT") {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "Not provided";
+  return `${currencyCode} ${adminV2MoneyFormatter.format(value)}`;
+}

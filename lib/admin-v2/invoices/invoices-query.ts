@@ -29,6 +29,11 @@ type SupabaseInvoiceRow = {
   created_at?: string | null;
 };
 
+type SupabaseInvoiceOrderStatusRow = {
+  order_ref?: string | null;
+  status?: string | null;
+};
+
 function hasSupabaseConfig() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
@@ -140,6 +145,37 @@ async function fetchMetricRows(query: AdminV2InvoiceQuery) {
   return { rows, capped: rows.length >= maxMetricRows };
 }
 
+async function fetchInvoiceOrderStatuses(orderRefs: string[]) {
+  const statuses = new Map<string, string>();
+  const uniqueRefs = [...new Set(orderRefs.map(text).filter(Boolean))];
+  for (let index = 0; index < uniqueRefs.length; index += 100) {
+    const batch = uniqueRefs.slice(index, index + 100);
+    const inList = batch.map((ref) => encodeURIComponent(ref)).join(",");
+    const response = await fetch(supabaseEndpoint(`orders?select=order_ref,status&order_ref=in.(${inList})`), {
+      headers: supabaseHeaders(),
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Invoice order status query failed with ${response.status}.`);
+    const rows = (await response.json()) as SupabaseInvoiceOrderStatusRow[];
+    for (const row of rows) {
+      const ref = text(row.order_ref);
+      if (ref) statuses.set(ref, text(row.status));
+    }
+  }
+  return statuses;
+}
+
+function withCancelledOrderInvoiceMetrics(rows: AdminV2InvoiceRow[], statuses: Map<string, string>) {
+  const metrics = buildAdminV2InvoiceMetrics(rows);
+  for (const row of rows) {
+    if (row.status === "issued" && statuses.get(row.orderReference) === "Cancelled") {
+      metrics.issuedInvoicesOnCancelledOrders += 1;
+      metrics.issuedCancelledOrderValue += Number.isFinite(row.totalAmount) ? Math.max(0, row.totalAmount) : 0;
+    }
+  }
+  return metrics;
+}
+
 export async function getAdminV2Invoices(searchParams = new URLSearchParams()): Promise<AdminV2InvoiceQueryResult> {
   const query = parseAdminV2InvoiceQuery(searchParams);
   if (!hasSupabaseConfig()) {
@@ -156,9 +192,10 @@ export async function getAdminV2Invoices(searchParams = new URLSearchParams()): 
 
   try {
     const [page, metricRows] = await Promise.all([fetchInvoicePage(query), fetchMetricRows(query)]);
+    const orderStatuses = await fetchInvoiceOrderStatuses(metricRows.rows.map((row) => row.orderReference));
     return {
       rows: page.rows,
-      metrics: buildAdminV2InvoiceMetrics(metricRows.rows),
+      metrics: withCancelledOrderInvoiceMetrics(metricRows.rows, orderStatuses),
       query,
       totalCount: page.totalCount,
       totalPages: adminV2InvoiceTotalPages(page.totalCount, query.pageSize),

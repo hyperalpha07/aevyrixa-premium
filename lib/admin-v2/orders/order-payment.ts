@@ -16,6 +16,10 @@ function cleanText(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function cleanAmount(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : null;
+}
+
 function readableStatus(value: string) {
   return value
     .split("_")
@@ -37,7 +41,7 @@ export function getAdminV2PaymentLabels(order: OrderRecord): AdminV2PaymentLabel
       cleanText(order.paymentReference) ??
       cleanText(order.paymentDetails.transactionReference) ??
       missing,
-    paidAmount: null,
-    dueAmount: null,
+    paidAmount: cleanAmount(order.paidAmount),
+    dueAmount: cleanAmount(order.dueAmount),
   };
 }

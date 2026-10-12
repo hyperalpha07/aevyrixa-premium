@@ -54,6 +54,13 @@ test("Expense query reads only the expense ledger with exact count and stable fi
 
 test("Expense page exposes only scoped create, void and export finance controls", () => {
   assert.match(view, /Create Expense/);
+  assert.match(view, /Dialog/);
+  assert.match(view, /admin-v2-create-expense-form/);
+  for (const field of ["occurredAt", "category", "amount", "currencyCode", "description", "payee", "paymentMethod", "externalReference", "orderRef", "note"]) {
+    assert.match(view, new RegExp(`name="${field}"|name='${field}'`));
+  }
+  assert.match(view, /No expense records found/);
+  assert.match(view, /No expense records match these filters/);
   assert.match(view, /Export CSV/);
   assert.match(view, /Void/);
   assert.match(view, /Operational expense ledger with controlled create and void workflows/);
