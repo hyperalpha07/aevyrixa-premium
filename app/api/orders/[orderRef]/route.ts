@@ -51,8 +51,22 @@ function optionalBoolean(value: unknown) {
   return undefined;
 }
 
+type LoadedOrder = NonNullable<Awaited<ReturnType<typeof getOrderByReference>>["order"]>;
+
+function isCodOrder(order: LoadedOrder) {
+  return order.paymentDetails.paymentMethod === "Cash on Delivery";
+}
+
+function hasVerifiedPayment(order: LoadedOrder) {
+  const paid = typeof order.paidAmount === "number" ? order.paidAmount : null;
+  const due = typeof order.dueAmount === "number" ? order.dueAmount : null;
+  return order.paymentStatus === "verified" || (paid !== null && paid > 0 && due !== null && due <= 0);
+}
+
 function validateOperationsPayload(payload: unknown): {
   updates?: OrderOperationsUpdate;
+  statusReason?: string;
+  paymentSettlementDecision?: string;
   errors: string[];
 } {
   if (!isRecord(payload)) return { errors: ["Invalid order operations payload."] };
@@ -80,6 +94,9 @@ function validateOperationsPayload(payload: unknown): {
       updates.status = payload.status as OrderStatus;
     }
   }
+  const statusReason = "statusReason" in payload ? optionalText(payload.statusReason) : undefined;
+  const paymentSettlementDecision =
+    "paymentSettlementDecision" in payload ? optionalText(payload.paymentSettlementDecision) : undefined;
 
   const textFields = [
     ["courierName", "courierName"],
@@ -151,7 +168,7 @@ function validateOperationsPayload(payload: unknown): {
     errors.push("At least one order operation field is required.");
   }
 
-  return errors.length > 0 ? { errors } : { updates, errors };
+  return errors.length > 0 ? { errors } : { updates, statusReason, paymentSettlementDecision, errors };
 }
 
 export async function PATCH(
@@ -170,7 +187,7 @@ export async function PATCH(
     return Response.json({ errors: ["Invalid JSON body."] }, { status: 400 });
   }
 
-  const { updates, errors } = validateOperationsPayload(payload);
+  const { updates, statusReason, paymentSettlementDecision, errors } = validateOperationsPayload(payload);
   if (!updates) return Response.json({ errors }, { status: 400 });
 
   const needsArchivePermission = "archivedAt" in updates || "isTestOrder" in updates;
@@ -205,6 +222,14 @@ export async function PATCH(
 
   try {
     let previousStatus: OrderStatus | undefined;
+    let eventReason = statusReason ?? updates.cancelledReason;
+    let atomicDeliveryStatus: DeliveryStatus | undefined;
+    let codCollectionStatus:
+      | "courier_collected_unsettled"
+      | "merchant_received_verified"
+      | "no_payment_received"
+      | undefined;
+    let codAmount: number | null | undefined;
     if ("status" in updates) {
       const existing = await getOrderByReference(orderRef);
       if (!existing.order) {
@@ -227,6 +252,73 @@ export async function PATCH(
           { status: 400 }
         );
       }
+      if (updates.status === "Shipped") {
+        const hasCourier = Boolean(
+          existing.order.courierName?.trim() ||
+          existing.order.trackingId?.trim()
+        );
+        if (!hasCourier && !statusReason?.trim()) {
+          return Response.json(
+            { errors: ["Shipping requires courier/tracking information or a documented manual-delivery exception."] },
+            { status: 400 }
+          );
+        }
+        if ("courierName" in updates || "trackingId" in updates) {
+          return Response.json(
+            {
+              errors: [
+                "Courier fields must be saved before changing order status so the dedicated status/event RPC remains atomic.",
+              ],
+            },
+            { status: 409 }
+          );
+        }
+        atomicDeliveryStatus = updates.deliveryStatus ?? "in_transit";
+      }
+      if (updates.status === "Delivered") {
+        atomicDeliveryStatus = updates.deliveryStatus ?? "delivered";
+
+        if (isCodOrder(existing.order) && !hasVerifiedPayment(existing.order)) {
+          if (paymentSettlementDecision === "merchant_received") {
+            return Response.json(
+              { errors: ["Record the verified merchant-received COD payment before marking this order delivered as paid."] },
+              { status: 409 }
+            );
+          }
+          if (paymentSettlementDecision === "courier_collected_unsettled") {
+            codCollectionStatus = "courier_collected_unsettled";
+            codAmount = typeof existing.order.dueAmount === "number" ? existing.order.dueAmount : null;
+          }
+          if (
+            paymentSettlementDecision !== "courier_collected_unsettled" &&
+            paymentSettlementDecision !== "no_payment_received"
+          ) {
+            return Response.json(
+              {
+                errors: [
+                  "Unpaid COD delivery requires an explicit payment decision and follow-up reason. No payment ledger row will be created automatically.",
+                ],
+              },
+              { status: 400 }
+            );
+          }
+          if (paymentSettlementDecision === "no_payment_received" && !statusReason?.trim()) {
+            return Response.json(
+              {
+                errors: [
+                  "No-payment COD delivery requires a follow-up reason. No payment ledger row will be created automatically.",
+                ],
+              },
+              { status: 400 }
+            );
+          }
+          if (paymentSettlementDecision === "no_payment_received") {
+            codCollectionStatus = "no_payment_received";
+            codAmount = null;
+          }
+          eventReason = statusReason;
+        }
+      }
     }
 
     const result =
@@ -234,9 +326,13 @@ export async function PATCH(
         ? await updateOrderStatusWithEvent({
             orderRef,
             status: updates.status,
-            cancelledReason: updates.cancelledReason,
+            cancelledReason: eventReason,
             previousStatus,
             actor: session,
+            deliveryStatus: atomicDeliveryStatus,
+            codCollectionStatus,
+            codAmount,
+            codNote: eventReason,
           })
         : await updateOrderOperations(orderRef, updates);
 
@@ -261,7 +357,7 @@ export async function PATCH(
         eventType: eventTypeForStatusChange(updates.status),
         fromStatus: previousStatus,
         toStatus: updates.status,
-        reason: updates.cancelledReason,
+        reason: eventReason,
         actor: session,
         metadata: { fields: Object.keys(updates) },
       }).catch((eventError) => {

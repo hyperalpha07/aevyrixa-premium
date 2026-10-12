@@ -1,23 +1,22 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Alert, Box, Button, Chip, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
-import { formatCurrency } from "@/app/lib/currency";
+import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { adminV2ExpenseCategories, type AdminV2ExpenseQueryResult } from "@/lib/admin-v2/expenses/expense-metrics";
-import type { AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
+import { formatAdminV2Money, type AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 
 function fmt(value: number | null, currencyCode = "BDT") {
   if (typeof value !== "number") return "Unavailable";
-  return currencyCode === "BDT" ? formatCurrency(value) : `${currencyCode} ${value.toLocaleString("en-US")}`;
+  return formatAdminV2Money(value, currencyCode);
 }
 
 function moneyAggregate(summary: AdminV2MoneyAggregate) {
   if (summary.kind === "mixed") return "Mixed currencies";
-  if (summary.kind === "none") return formatCurrency(0);
-  return summary.currencyCode === "BDT" ? formatCurrency(summary.amount) : `${summary.currencyCode} ${summary.amount.toLocaleString("en-US")}`;
+  if (summary.kind === "none") return formatAdminV2Money(0);
+  return formatAdminV2Money(summary.amount, summary.currencyCode);
 }
 
 async function submitFinanceJson(url: string, payload: Record<string, unknown>) {
@@ -28,8 +27,11 @@ async function submitFinanceJson(url: string, payload: Record<string, unknown>) 
 
 export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2ExpenseQueryResult; capabilities: { canManageExpenses: boolean; canExport: boolean; canViewOrder: boolean } }) {
   const [actionError, setActionError] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [voiding, setVoiding] = useState<string | null>(null);
+  const hasFilters = Boolean(data.query.q || data.query.category !== "all" || data.query.status !== "all" || data.query.from || data.query.to);
+  const emptyMessage = hasFilters ? "No expense records match these filters." : "No expense records found.";
   const exportHref = `/api/admin/finance/expenses/export?${new URLSearchParams({
     ...(data.query.q ? { q: data.query.q } : {}),
     ...(data.query.category !== "all" ? { category: data.query.category } : {}),
@@ -57,6 +59,7 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
         note: form.get("note"),
         requestKey: crypto.randomUUID(),
       });
+      setCreateOpen(false);
       window.location.reload();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "Expense could not be created.");
@@ -125,25 +128,41 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
         </V2Card>
         {capabilities.canManageExpenses ? (
           <V2Card>
-            <Stack component="form" onSubmit={createExpense} direction={{ xs: "column", lg: "row" }} spacing={1} sx={{ alignItems: { lg: "center" } }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 900, minWidth: 112 }}>Create Expense</Typography>
-              <TextField required name="occurredAt" label="Occurred at" type="datetime-local" size="small" slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField required select name="category" label="Category" size="small" defaultValue="other" sx={{ minWidth: 140 }}>
-                {adminV2ExpenseCategories.map((category) => <MenuItem key={category} value={category}>{category}</MenuItem>)}
-              </TextField>
-              <TextField required name="amount" label="Amount" type="number" size="small" slotProps={{ htmlInput: { min: 0.01, step: "0.01" } }} />
-              <TextField required name="currencyCode" label="Currency" size="small" defaultValue="BDT" slotProps={{ htmlInput: { maxLength: 3 } }} sx={{ width: 100 }} />
-              <TextField required name="description" label="Description" size="small" slotProps={{ htmlInput: { maxLength: 2000 } }} />
-              <TextField name="payee" label="Payee" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} />
-              <TextField name="paymentMethod" label="Payment method" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} />
-              <TextField name="externalReference" label="External ref" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} />
-              <TextField name="orderRef" label="Order ref" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} />
-              <TextField name="note" label="Note" size="small" slotProps={{ htmlInput: { maxLength: 2000 } }} />
-              <Button type="submit" disabled={saving} variant="contained">{saving ? "Saving..." : "Create"}</Button>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}>
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Create an expense</Typography>
+                <Typography variant="caption" color="text.secondary">Controlled expense ledger creation with all audit fields preserved.</Typography>
+              </Box>
+              <Button variant="contained" onClick={() => setCreateOpen(true)}>Create Expense</Button>
             </Stack>
             {actionError ? <Alert severity="warning" sx={{ mt: 1 }}>{actionError}</Alert> : null}
           </V2Card>
         ) : null}
+
+        <Dialog open={createOpen} onClose={() => !saving && setCreateOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: { borderRadius: 3 } } }}>
+          <DialogTitle sx={{ pb: 0.75, fontWeight: 950 }}>Create Expense</DialogTitle>
+          <DialogContent sx={{ pt: 1.5 }}>
+            <Stack id="admin-v2-create-expense-form" component="form" onSubmit={createExpense} spacing={2}>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth required name="occurredAt" label="Occurred at" type="datetime-local" size="small" slotProps={{ inputLabel: { shrink: true } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth required select name="category" label="Category" size="small" defaultValue="other">{adminV2ExpenseCategories.map((category) => <MenuItem key={category} value={category}>{category}</MenuItem>)}</TextField></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth required name="amount" label="Amount" type="number" size="small" slotProps={{ htmlInput: { min: 0.01, step: "0.01" } }} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth required name="currencyCode" label="Currency" size="small" defaultValue="BDT" slotProps={{ htmlInput: { maxLength: 3 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 4 }}><TextField fullWidth name="paymentMethod" label="Payment method" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} /></Grid>
+                <Grid size={{ xs: 12 }}><TextField fullWidth required name="description" label="Description" size="small" multiline minRows={2} slotProps={{ htmlInput: { maxLength: 2000 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="payee" label="Payee" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="orderRef" label="Order reference" size="small" slotProps={{ htmlInput: { maxLength: 128 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="externalReference" label="External reference" size="small" slotProps={{ htmlInput: { maxLength: 256 } }} /></Grid>
+                <Grid size={{ xs: 12, md: 6 }}><TextField fullWidth name="note" label="Internal note" size="small" multiline minRows={2} slotProps={{ htmlInput: { maxLength: 2000 } }} /></Grid>
+              </Grid>
+              {actionError ? <Alert severity="warning">{actionError}</Alert> : null}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2.25 }}>
+            <Button variant="outlined" disabled={saving} onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button type="submit" form="admin-v2-create-expense-form" disabled={saving} variant="contained">{saving ? "Saving..." : "Save Expense"}</Button>
+          </DialogActions>
+        </Dialog>
         <V2Card>
           <Table size="small" stickyHeader sx={{ tableLayout: "fixed" }}>
             <TableHead>
@@ -172,7 +191,7 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
                 <TableRow>
                   <TableCell colSpan={7}>
                     <Typography variant="body2" color="text.secondary">
-                      {data.queryFailed ? "Expense ledger unavailable." : "No expenses match these filters."}
+                      {data.queryFailed ? "Expense ledger unavailable." : emptyMessage}
                     </Typography>
                   </TableCell>
                 </TableRow>

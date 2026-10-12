@@ -236,12 +236,22 @@ function FinancialSummary({ order, compact = false }: { order: OrderRecord; comp
         <Divider sx={{ my: 0.5 }} />
         <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, alignItems: "baseline" }}>
           <Typography variant="body2" sx={{ fontWeight: 850 }}>
-            Total payable
+            Stored order total
           </Typography>
           <Typography variant={compact ? "subtitle1" : "h6"} color="primary.main" sx={{ fontWeight: 900 }}>
             {formatAdminV2Amount(amounts.total)}
           </Typography>
         </Stack>
+        {amounts.discrepancy ? (
+          <Stack direction="row" sx={{ justifyContent: "space-between", gap: 2, alignItems: "baseline" }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 750 }}>
+              Calculated payable
+            </Typography>
+            <Typography variant="caption" sx={{ fontWeight: 850 }}>
+              {formatAdminV2Amount(amounts.calculatedPayable)}
+            </Typography>
+          </Stack>
+        ) : null}
       </Stack>
     </Box>
   );
@@ -287,7 +297,10 @@ export function AdminV2OrderPaymentCard({ order }: { order: OrderRecord }) {
         <DetailLine label="Subtotal" value={formatAdminV2Amount(amounts.subtotal)} important />
         <DetailLine label="Discount" value={formatAdminV2Amount(amounts.discount)} />
         <DetailLine label="Delivery charge" value={formatAdminV2Amount(amounts.deliveryCharge)} />
-        <DetailLine label="Total payable" value={formatAdminV2Amount(amounts.total)} important />
+        <DetailLine label="Stored order total" value={formatAdminV2Amount(amounts.total)} important />
+        {amounts.discrepancy ? (
+          <DetailLine label="Calculated payable" value={formatAdminV2Amount(amounts.calculatedPayable)} important />
+        ) : null}
       </Stack>
     </V2Card>
   );

@@ -1,12 +1,14 @@
 "use client";
 
 import { Alert, Box, Breadcrumbs, Chip, DialogActions, Divider, Snackbar, Stack, TextField, Tooltip, Typography } from "@mui/material";
-import { ArrowLeft, CircleDollarSign, Clock3, NotebookPen, Printer, RefreshCcw, ShieldAlert, Sparkles, SquarePen, TriangleAlert } from "lucide-react";
+import { ArrowLeft, CircleDollarSign, Clock3, NotebookPen, Printer, ReceiptText, RefreshCcw, ShieldAlert, Sparkles, SquarePen, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import type { OrderEventRecord, OrderInvoiceRecord, OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
+import type { FormEvent } from "react";
+import { paymentMethods, type OrderEventRecord, type OrderInvoiceRecord, type OrderNoteRecord, type OrderRecord, type OrderStatus } from "@/app/lib/order-types";
 import { getAdminV2OrderAmounts, formatAdminV2Amount } from "@/lib/admin-v2/orders/order-amounts";
+import type { AdminV2OrderPaymentHistoryResult } from "@/lib/admin-v2/transactions/transactions-query";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Dialog } from "@/components/admin-v2/forms/V2Dialog";
@@ -30,10 +32,13 @@ import {
 
 type Props = {
   order: OrderRecord;
+  paymentHistory: AdminV2OrderPaymentHistoryResult;
   storageMode: string;
   permissions: {
     canEditStatus: boolean;
     canEditCourier: boolean;
+    canRecordPayment: boolean;
+    canViewPaymentHistory: boolean;
     canViewInvoice: boolean;
     canIssueInvoice: boolean;
     canAddNote: boolean;
@@ -88,6 +93,20 @@ async function issueInvoice(orderRef: string) {
   return result.invoice as OrderInvoiceRecord;
 }
 
+async function recordPayment(payload: Record<string, unknown>) {
+  const response = await fetch("/api/admin/finance/payments", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = Array.isArray(result.errors) ? result.errors.join(" ") : "Payment could not be recorded.";
+    throw new Error(message);
+  }
+  return result.payment;
+}
+
 async function fetchIssuedInvoice(orderRef: string) {
   const response = await fetch(`/api/orders/${encodeURIComponent(orderRef)}/invoices`, {
     cache: "no-store",
@@ -99,7 +118,13 @@ async function fetchIssuedInvoice(orderRef: string) {
   return ((result.invoices ?? []) as OrderInvoiceRecord[]).find((invoice) => invoice.status === "issued") ?? null;
 }
 
-export function AdminV2OrderDetailView({ order, storageMode, permissions }: Props) {
+function localDateTimeValue(date = new Date()) {
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+export function AdminV2OrderDetailView({ order, paymentHistory, storageMode, permissions }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -117,12 +142,76 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
   const [invoiceIssueOpen, setInvoiceIssueOpen] = useState(false);
   const [issuedInvoice, setIssuedInvoice] = useState<OrderInvoiceRecord | null>(null);
   const [mutationPending, setMutationPending] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentRequestKey, setPaymentRequestKey] = useState("");
+  const [paymentFormSignature, setPaymentFormSignature] = useState("");
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [codDeliveryDecision, setCodDeliveryDecision] = useState("");
 
   const refresh = () => startTransition(() => router.refresh());
   const amounts = getAdminV2OrderAmounts(order);
   const backHref = searchParams.toString()
     ? `/admin-v2/orders?${searchParams.toString()}`
     : "/admin-v2/orders";
+
+  const isCod = order.paymentDetails.paymentMethod === "Cash on Delivery";
+  const paymentDue = typeof amounts.dueAmount === "number" ? amounts.dueAmount : null;
+  const canOpenPayment =
+    permissions.canRecordPayment &&
+    !amounts.discrepancy &&
+    order.status !== "Cancelled";
+
+  const openPayment = () => {
+    setPaymentError("");
+    setPaymentConfirmed(false);
+    setPaymentRequestKey(crypto.randomUUID());
+    setPaymentOpen(true);
+  };
+
+  const submitPayment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPaymentError("");
+    if (!paymentConfirmed) {
+      setPaymentError("Confirm that real money was independently received before recording a payment.");
+      return;
+    }
+    const form = new FormData(event.currentTarget);
+    const nextSignature = JSON.stringify({
+      amount: form.get("amount"),
+      currencyCode: form.get("currencyCode"),
+      paymentMethod: form.get("paymentMethod"),
+      occurredAt: form.get("occurredAt"),
+      externalReference: form.get("externalReference"),
+      note: form.get("note"),
+    });
+    let requestKey = paymentRequestKey;
+    if (paymentFormSignature && paymentFormSignature !== nextSignature) {
+      requestKey = crypto.randomUUID();
+      setPaymentRequestKey(requestKey);
+    }
+    setPaymentFormSignature(nextSignature);
+    try {
+      setMutationPending(true);
+      await recordPayment({
+        orderRef: order.orderReference,
+        amount: Number(form.get("amount")),
+        currencyCode: form.get("currencyCode"),
+        paymentMethod: form.get("paymentMethod"),
+        occurredAt: form.get("occurredAt"),
+        externalReference: form.get("externalReference"),
+        note: form.get("note"),
+        requestKey,
+      });
+      setToast({ message: "Payment recorded through the finance ledger.", severity: "success" });
+      setPaymentOpen(false);
+      refresh();
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : "Payment could not be recorded.");
+    } finally {
+      setMutationPending(false);
+    }
+  };
 
   const saveStatus = async () => {
     if (!nextStatus) return;
@@ -135,12 +224,20 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
       setToast({ message: "A reason is required for this status change.", severity: "warning" });
       return;
     }
+    if (nextStatus === "Delivered" && isCod && order.paymentStatus !== "verified" && !codDeliveryDecision) {
+      setToast({ message: "Unpaid COD delivery requires an explicit payment decision.", severity: "warning" });
+      return;
+    }
 
     try {
       setMutationPending(true);
       await patchOrder(order.orderReference, {
         status: nextStatus,
         ...(nextStatus === "Cancelled" ? { cancelledReason: reason.trim() } : {}),
+        ...(nextStatus !== "Cancelled" && reason.trim() ? { statusReason: reason.trim() } : {}),
+        ...(nextStatus === "Delivered" && isCod && order.paymentStatus !== "verified"
+          ? { paymentSettlementDecision: codDeliveryDecision }
+          : {}),
       });
       setToast({ message: "Order status updated.", severity: "success" });
       setStatusOpen(false);
@@ -354,13 +451,18 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
                     <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                       <CircleDollarSign size={20} color="#9d2fff" />
                       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850, textTransform: "uppercase" }}>
-                        Canonical payable
+                        Stored order total
                       </Typography>
                     </Stack>
                     <Typography variant="h5" color="primary.main" sx={{ fontWeight: 950 }}>
                       {formatAdminV2Amount(amounts.total)}
                     </Typography>
                   </Stack>
+                  {amounts.discrepancy ? (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75, fontWeight: 750 }}>
+                      Calculated payable: {formatAdminV2Amount(amounts.calculatedPayable)}
+                    </Typography>
+                  ) : null}
                   <Divider sx={{ my: 1.4 }} />
                   <Stack direction="row" spacing={1.5} sx={{ justifyContent: "space-between" }}>
                     <Typography variant="caption" color="text.secondary">Phone</Typography>
@@ -378,8 +480,28 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
                     </span>
                   </Tooltip>
                   <V2Button variant="outlined" startIcon={<Printer size={16} />} disabled={!permissions.canIssueInvoice} onClick={() => setInvoiceIssueOpen(true)}>Issue invoice</V2Button>
+                  <Tooltip
+                    title={
+                      amounts.discrepancy
+                        ? "Payment recording is blocked until the stored-total mismatch is resolved."
+                        : permissions.canRecordPayment
+                          ? "Record verified merchant-received payment through the secured finance RPC."
+                          : "Requires finance.payments.record permission."
+                    }
+                  >
+                    <span>
+                      <V2Button
+                        variant="outlined"
+                        startIcon={<ReceiptText size={16} />}
+                        disabled={!canOpenPayment}
+                        onClick={openPayment}
+                      >
+                        Record Payment
+                      </V2Button>
+                    </span>
+                  </Tooltip>
                   <V2Button variant="outlined" startIcon={<RefreshCcw size={16} />} loading={isPending} onClick={refresh}>Refresh</V2Button>
-                  <V2Button variant="contained" startIcon={<SquarePen size={16} />} disabled={!permissions.canEditStatus} onClick={() => { setNextStatus(""); setReason(""); setStatusOpen(true); }}>Update Status</V2Button>
+                  <V2Button variant="contained" startIcon={<SquarePen size={16} />} disabled={!permissions.canEditStatus} onClick={() => { setNextStatus(""); setReason(""); setCodDeliveryDecision(""); setStatusOpen(true); }}>Update Status</V2Button>
                 </Stack>
               </Stack>
             </Stack>
@@ -399,17 +521,17 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
             }}
           >
             <Typography variant="body2" sx={{ fontWeight: 850 }}>
-              Stored total differs from checkout payable.
+              Stored total differs from calculated payable.
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Admin V2 displays subtotal plus delivery as the payable total while preserving the stored total for audit.
+              Admin V2 keeps the stored order total and arithmetic payable calculation separate for reconciliation instead of substituting one value for the other.
             </Typography>
             <Box component="details" sx={{ mt: 0.75 }}>
               <Typography component="summary" variant="caption" sx={{ cursor: "pointer", fontWeight: 750 }}>
                 View stored-total details
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Stored total {formatAdminV2Amount(amounts.storedTotal)}. Displayed payable {formatAdminV2Amount(amounts.total)}.
+                Stored total {formatAdminV2Amount(amounts.storedTotal)}. Calculated payable {formatAdminV2Amount(amounts.calculatedPayable)}.
               </Typography>
             </Box>
           </Alert>
@@ -427,6 +549,66 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
           <Stack spacing={2.5} sx={{ minWidth: 0 }}>
             <AdminV2OrderItemsTable order={order} />
             <AdminV2OrderFinancialMeta order={order} />
+            <V2Card
+              sx={{
+                borderColor: "rgba(157,47,255,0.14)",
+                bgcolor: "rgba(255,255,255,0.78)",
+                "& .MuiCardContent-root": { p: 2 },
+              }}
+            >
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ justifyContent: "space-between", mb: 1.25 }}>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Payment ledger history</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Real finance transactions only. Checkout references are evidence, not verified payments.
+                  </Typography>
+                </Box>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={permissions.canViewPaymentHistory ? `${paymentHistory.rows.length} ledger item${paymentHistory.rows.length === 1 ? "" : "s"}` : "Restricted"}
+                />
+              </Stack>
+              {!permissions.canViewPaymentHistory ? (
+                <Alert severity="info" sx={{ py: 0.5 }}>{paymentHistory.limitation}</Alert>
+              ) : paymentHistory.queryFailed ? (
+                <Alert severity="warning" sx={{ py: 0.5 }}>{paymentHistory.limitation}</Alert>
+              ) : paymentHistory.rows.length === 0 ? (
+                <Alert severity="info" sx={{ py: 0.5 }}>No payment ledger entries have been recorded for this order.</Alert>
+              ) : (
+                <Stack spacing={0.9}>
+                  {paymentHistory.truncated ? (
+                    <Alert severity="info" sx={{ py: 0.5 }}>{paymentHistory.limitation}</Alert>
+                  ) : null}
+                  {paymentHistory.rows.map((row) => (
+                    <Stack
+                      key={row.id || row.transactionReference}
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={1}
+                      sx={{
+                        justifyContent: "space-between",
+                        p: 1.15,
+                        borderRadius: 2,
+                        border: "1px solid rgba(157,47,255,0.1)",
+                        bgcolor: "rgba(157,47,255,0.035)",
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 850, overflowWrap: "anywhere" }}>
+                          {row.transactionReference || "Payment record"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {row.paymentMethod} - {row.status || "unknown"} - {formatDateTime(row.occurredAt || row.recordedAt)}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 900, color: row.status === "void" ? "text.secondary" : "success.main" }}>
+                        {formatAdminV2Amount(row.amount)}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              )}
+            </V2Card>
             <AdminV2ActivityTimeline order={order} events={events} error={eventsError} />
           </Stack>
           <Stack spacing={2.5} sx={{ minWidth: 0 }}>
@@ -474,6 +656,47 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
           {nextStatus && isSensitiveOrderTransition(order.status, nextStatus) ? (
             <TextField fullWidth multiline minRows={3} label="Reason required" value={reason} onChange={(event) => setReason(event.target.value)} />
           ) : null}
+          {nextStatus === "Shipped" && !order.courierName && !order.trackingId ? (
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              label="Manual delivery exception required"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              helperText="Shipping requires courier/tracking information or a documented manual-delivery exception."
+            />
+          ) : null}
+          {nextStatus === "Delivered" && isCod && order.paymentStatus !== "verified" ? (
+            <Alert severity="warning">
+              COD payment is not verified. Saving Delivered will preserve payment as pending and requires a follow-up reason.
+              Use Record Payment first if the merchant has actually received and verified the money.
+            </Alert>
+          ) : null}
+          {nextStatus === "Delivered" && isCod && order.paymentStatus !== "verified" ? (
+            <V2Select
+              label="COD delivery payment decision"
+              value={codDeliveryDecision}
+              onChange={(event) => setCodDeliveryDecision(event.target.value)}
+              options={[
+                { label: "Select COD decision", value: "" },
+                { label: "Merchant received and verified", value: "merchant_received" },
+                { label: "Courier collected, awaiting merchant settlement", value: "courier_collected_unsettled" },
+                { label: "No payment received / follow-up needed", value: "no_payment_received" },
+              ]}
+            />
+          ) : null}
+          {nextStatus === "Delivered" && isCod && order.paymentStatus !== "verified" ? (
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              label="Unpaid COD follow-up reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              helperText="No payment ledger row will be created from a delivery status change."
+            />
+          ) : null}
           <Alert severity={nextStatus === "Cancelled" || order.status === "Delivered" ? "warning" : "info"}>
             Status changes are saved only after the existing order operations API confirms success.
           </Alert>
@@ -484,6 +707,63 @@ export function AdminV2OrderDetailView({ order, storageMode, permissions }: Prop
             </V2Button>
             <V2Button variant="contained" loading={mutationPending} disabled={!permissions.canEditStatus || !nextStatus} onClick={saveStatus}>
               Save status
+            </V2Button>
+          </DialogActions>
+        </Stack>
+      </V2Dialog>
+
+      <V2Dialog title="Record verified payment" open={paymentOpen} onClose={() => !mutationPending && setPaymentOpen(false)} maxWidth="md">
+        <Stack id="admin-v2-order-record-payment-form" component="form" onSubmit={submitPayment} spacing={2}>
+          <Alert severity="info">
+            Record only money independently verified as received by Noromi Care. Customer-submitted transaction IDs and courier-held cash are not proof of merchant receipt.
+          </Alert>
+          {amounts.discrepancy ? (
+            <Alert severity="error">
+              Payment recording is blocked for this order because stored total and calculated payable differ.
+            </Alert>
+          ) : null}
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+            <TextField fullWidth label="Order reference" size="small" value={order.orderReference} disabled />
+            <TextField fullWidth label="Currency" name="currencyCode" size="small" defaultValue={amounts.currency} slotProps={{ htmlInput: { maxLength: 3 } }} />
+          </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+            <TextField
+              fullWidth
+              required
+              label="Amount actually received"
+              name="amount"
+              type="number"
+              size="small"
+              defaultValue={paymentDue && paymentDue > 0 ? paymentDue.toFixed(2) : ""}
+              slotProps={{ htmlInput: { min: 0.01, step: "0.01" } }}
+              helperText={paymentDue === null ? "Due snapshot is unknown; enter the verified amount manually." : `Current due snapshot: ${formatAdminV2Amount(paymentDue)}`}
+            />
+            <V2Select
+              required
+              label="Payment method"
+              name="paymentMethod"
+              defaultValue={order.paymentDetails.paymentMethod || "Cash on Delivery"}
+              options={paymentMethods.map((method) => ({ label: method, value: method }))}
+            />
+          </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+            <TextField fullWidth required name="occurredAt" label="Received at" type="datetime-local" size="small" defaultValue={localDateTimeValue()} slotProps={{ inputLabel: { shrink: true } }} />
+            <TextField fullWidth name="externalReference" label="Verified external reference" size="small" defaultValue={order.paymentReference || order.paymentDetails.transactionReference || ""} />
+          </Stack>
+          <TextField fullWidth name="note" label="Internal payment note" size="small" multiline minRows={2} />
+          <Alert severity={paymentConfirmed ? "success" : "warning"} action={<V2Button size="small" variant="outlined" onClick={() => setPaymentConfirmed((value) => !value)}>{paymentConfirmed ? "Confirmed" : "Confirm receipt"}</V2Button>}>
+            I confirm an authorized admin independently verified real merchant receipt. This will create a finance ledger entry.
+          </Alert>
+          {paymentError ? <Alert severity="error">{paymentError}</Alert> : null}
+          <DialogActions sx={{ px: 0, pb: 0 }}>
+            <V2Button disabled={mutationPending} onClick={() => setPaymentOpen(false)}>Cancel</V2Button>
+            <V2Button
+              type="submit"
+              variant="contained"
+              loading={mutationPending}
+              disabled={!permissions.canRecordPayment || Boolean(amounts.discrepancy) || !paymentConfirmed}
+            >
+              Save payment
             </V2Button>
           </DialogActions>
         </Stack>

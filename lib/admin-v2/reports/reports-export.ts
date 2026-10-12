@@ -23,7 +23,7 @@ function fullRows(report: AdminV2ReportResult): ReportTableRow[] {
   if (report.type !== "sales") return report.rows;
   return [
     { metric: "Orders", value: report.analytics.kpis.orders },
-    { metric: "Payable Sales", value: report.analytics.kpis.payableSales },
+    { metric: "Eligible Order Value", value: report.analytics.kpis.payableSales },
     { metric: "Average Order Value", value: report.analytics.kpis.averageOrderValue },
     { metric: "Discounts", value: report.analytics.valueBreakdown.discounts },
     { metric: "Delivery Fees", value: report.analytics.valueBreakdown.deliveryFees },
@@ -46,7 +46,7 @@ export function adminV2ReportToCsv(report: AdminV2ReportResult) {
     ["Report", report.label],
     ["Date Range", report.range.label],
     ["Generated From", "Existing operational data"],
-    ["Definition", "Payable Sales excludes cancelled and archived orders and is not settled revenue."],
+    ["Definition", "Eligible Order Value uses persisted non-cancelled order totals and is not settled revenue."],
     [],
   ];
   return [...notes, headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");

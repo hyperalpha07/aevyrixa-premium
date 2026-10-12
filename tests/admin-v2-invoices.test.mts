@@ -75,7 +75,8 @@ test("Invoice query uses the real invoices backend with exact pagination, status
   assert.match(invoicesQuerySource, /issued_at",\s*"gte"/);
   assert.match(invoicesQuerySource, /issued_at",\s*"lte"/);
   assert.match(invoicesQuerySource, /order=issued_at\.desc\.nullslast/);
-  assert.doesNotMatch(invoicesQuerySource, /queryOrders|listOrders|orders\?/);
+  assert.match(invoicesQuerySource, /orders\?select=order_ref,status/);
+  assert.doesNotMatch(invoicesQuerySource, /queryOrders|listOrders|getAdminV2OrderAmounts|createOrderInvoiceSnapshot|calculateAdminV2PayableTotal|current order total/i);
 });
 
 test("Invoice parser supports search, status, date filtering and pagination without unsafe values", () => {
@@ -135,6 +136,8 @@ test("Invoice metrics use complete server invoice rows and real issued/void stat
     totalInvoicedValue: 150,
     issuedThisMonth: 1,
     voidInvoices: 1,
+    issuedInvoicesOnCancelledOrders: 0,
+    issuedCancelledOrderValue: 0,
   });
   assert.match(invoicesView, /Issued Invoices/);
   assert.match(invoicesView, /Total Invoiced Value/);

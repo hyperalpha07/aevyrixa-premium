@@ -1,9 +1,10 @@
-import { SITE_CURRENCY, formatCurrency } from "@/app/lib/currency";
+import { SITE_CURRENCY } from "@/app/lib/currency";
 import type { OrderRecord } from "@/app/lib/order-types";
 import {
   calculateAdminV2PayableTotal,
   hasAdminV2TotalMismatch,
 } from "@/lib/admin-v2/orders/order-financials";
+import { formatAdminV2Money } from "@/lib/admin-v2/finance/money";
 
 export type AdminV2OrderAmounts = {
   subtotal: number | null;
@@ -15,6 +16,7 @@ export type AdminV2OrderAmounts = {
   refundAmount: number | null;
   currency: string;
   storedTotal: number | null;
+  calculatedPayable: number | null;
   discrepancy: string | null;
 };
 
@@ -32,23 +34,19 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
   const deliveryCharge = cleanAmount(order.deliveryCharge);
   const storedTotal = cleanAmount(order.totalAmount);
   const discount = cleanAmount(order.discountAmount) ?? 0;
-  const checkoutTotal =
-    calculateAdminV2PayableTotal({ subtotal, discount, deliveryCharge }) ?? storedTotal;
+  const calculatedPayable = calculateAdminV2PayableTotal({ subtotal, discount, deliveryCharge });
 
-  let total = storedTotal;
+  let total = storedTotal ?? calculatedPayable;
   let discrepancy: string | null = null;
 
   if (
     subtotal !== null &&
     storedTotal !== null &&
-    checkoutTotal !== null &&
-    hasAdminV2TotalMismatch(storedTotal, checkoutTotal)
+    calculatedPayable !== null &&
+    hasAdminV2TotalMismatch(storedTotal, calculatedPayable)
   ) {
     discrepancy =
-      "Stored order total differs from checkout payable calculation. Admin V2 displays checkout payable while preserving the stored total for audit.";
-    total = checkoutTotal;
-  } else if (total === null) {
-    total = checkoutTotal;
+      "Stored order total differs from the arithmetic payable calculation. Admin V2 keeps both values separate for audit instead of substituting one for the other.";
   }
 
   const paidAmount = cleanAmount(order.paidAmount);
@@ -65,14 +63,13 @@ export function getAdminV2OrderAmounts(order: OrderRecord): AdminV2OrderAmounts 
     refundAmount,
     currency: order.currencyCode || SITE_CURRENCY,
     storedTotal,
+    calculatedPayable,
     discrepancy,
   };
 }
 
 export function formatAdminV2Amount(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? formatCurrency(value)
-    : "Not provided";
+  return formatAdminV2Money(value);
 }
 
 export function warnAdminV2OrderAmountDiscrepancy(order: OrderRecord) {
@@ -86,6 +83,6 @@ export function warnAdminV2OrderAmountDiscrepancy(order: OrderRecord) {
     subtotal: amounts.subtotal,
     deliveryCharge: amounts.deliveryCharge,
     storedTotal: amounts.storedTotal,
-    calculatedTotal: amounts.total,
+    calculatedPayable: amounts.calculatedPayable,
   });
 }

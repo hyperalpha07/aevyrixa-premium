@@ -2,6 +2,8 @@ import { forbiddenAdminResponse, getFreshAdminRequestSession, unauthorizedAdminR
 import { adminFinanceActor, callAdminFinanceRpc } from "@/app/lib/admin-finance";
 import { validateFinancePaymentPayload } from "@/app/lib/admin-finance-validation";
 import { hasPermission } from "@/app/lib/admin-permissions";
+import { getOrderByReference } from "@/app/lib/order-store";
+import { getAdminV2OrderAmounts } from "@/lib/admin-v2/orders/order-amounts";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,22 @@ export async function POST(request: Request) {
   const payload = validateFinancePaymentPayload(input);
   if (!payload.ok) return Response.json({ errors: payload.errors }, { status: 400 });
   try {
+    const orderRef = payload.value.orderRef ?? "";
+    const existing = await getOrderByReference(orderRef);
+    if (!existing.order) {
+      return Response.json({ errors: ["Order was not found."] }, { status: 404 });
+    }
+    const amounts = getAdminV2OrderAmounts(existing.order);
+    if (amounts.discrepancy) {
+      return Response.json(
+        {
+          errors: [
+            "Payment recording is blocked because this order has a stored-total mismatch. Resolve the reconciliation discrepancy before creating a finance ledger entry.",
+          ],
+        },
+        { status: 409 }
+      );
+    }
     const result = await callAdminFinanceRpc("admin_v2_record_payment", {
       p_order_ref: payload.value.orderRef,
       p_amount: payload.value.amount,

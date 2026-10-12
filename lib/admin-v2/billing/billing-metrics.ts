@@ -58,6 +58,26 @@ export function buildAdminV2BillingResult(input: {
   const refundsAvailable = !input.refunds.queryFailed;
   const expensesAvailable = !input.expenses.queryFailed;
   const invoicesAvailable = input.invoices.storageAvailable;
+  const notes = [
+    "Billing is a read-only finance hub.",
+    "All headline finance metrics are all-time operational sources unless a module states otherwise.",
+    "Order totals are operational order values, known due is incomplete where legacy due snapshots are missing, and payment status is not gateway settlement state.",
+  ];
+  if (input.orderDue.arithmeticMismatchCount > 0) {
+    notes.push(
+      `${input.orderDue.arithmeticMismatchCount.toLocaleString("en")} eligible order total${input.orderDue.arithmeticMismatchCount === 1 ? " differs" : "s differ"} from the arithmetic payable calculation; Billing keeps stored order totals and calculated payable separate for reconciliation.`
+    );
+  }
+  if (input.orderDue.calculatedPayableKnownCount > 0) {
+    notes.push(
+      "The applied payment RPC calculates payable from subtotal minus discount plus delivery, so legacy orders with stored-total mismatches require review before recording payments."
+    );
+  }
+  if (input.invoices.metrics.issuedInvoicesOnCancelledOrders > 0) {
+    notes.push(
+      `${input.invoices.metrics.issuedInvoicesOnCancelledOrders.toLocaleString("en")} issued invoice${input.invoices.metrics.issuedInvoicesOnCancelledOrders === 1 ? " is" : "s are"} associated with cancelled orders; historical invoice value is shown separately from eligible order value.`
+    );
+  }
 
   return {
     sources: {
@@ -70,12 +90,15 @@ export function buildAdminV2BillingResult(input: {
     },
     summary: [
       {
-        label: "Payable Sales",
-        value: amount(input.analytics.kpis.payableSales, analyticsAvailable),
+        label: "Eligible Order Value",
+        value: amount(adminV2MoneyAggregateValue(input.orderDue.orderValueSummary), orderDueAvailable),
         kind: "currency",
-        source: "analytics",
-        available: analyticsAvailable,
-        helper: "Canonical analytics payable-sales semantics.",
+        source: "orderDue",
+        available: orderDueAvailable,
+        displayValue: adminV2MoneyAggregateUnavailable(input.orderDue.orderValueSummary) ? "Mixed currencies" : undefined,
+        helper: adminV2MoneyAggregateUnavailable(input.orderDue.orderValueSummary)
+          ? "Unavailable as a single total; multiple currencies are present."
+          : `All-time non-archived, non-cancelled order totals from ${input.orderDue.orderValueKnownCount.toLocaleString("en")} eligible orders. Test-order classification is not independently persisted.`,
       },
       {
         label: "Recorded Payments",
@@ -87,7 +110,7 @@ export function buildAdminV2BillingResult(input: {
         helper: adminV2MoneyAggregateUnavailable(input.transactions.metrics.recordedAmountSummary) ? "Unavailable as a single total; multiple currencies are present." : "Active finance payment ledger entries.",
       },
       {
-        label: "Recorded Due",
+        label: "Known Due",
         value: amount(adminV2MoneyAggregateValue(input.orderDue.summary), orderDueAvailable),
         kind: "currency",
         source: "orderDue",
@@ -95,7 +118,7 @@ export function buildAdminV2BillingResult(input: {
         displayValue: adminV2MoneyAggregateUnavailable(input.orderDue.summary) ? "Mixed currencies" : undefined,
         helper: adminV2MoneyAggregateUnavailable(input.orderDue.summary)
           ? "Unavailable as a single total; multiple currencies are present."
-          : input.orderDue.limitation ?? `Recorded due from ${input.orderDue.knownCount.toLocaleString("en")} orders with persisted due snapshots.`,
+          : input.orderDue.limitation ?? `Known due from ${input.orderDue.knownCount.toLocaleString("en")} orders with persisted due snapshots.`,
       },
       {
         label: "Recorded Refunds",
@@ -175,9 +198,6 @@ export function buildAdminV2BillingResult(input: {
         ],
       },
     ],
-    notes: [
-      "Billing is a read-only finance hub.",
-      "Sales are not settled cash, due amounts are not accounts receivable, and payment status is not gateway settlement state.",
-    ],
+    notes,
   };
 }

@@ -217,7 +217,7 @@ export function buildAdminV2Report(input: {
       ...base,
       kpis: [
         { label: "Orders", value: qOrders.length },
-        { label: "Payable Sales", value: analytics.kpis.payableSales },
+        { label: "Eligible Order Value", value: analytics.kpis.payableSales },
         { label: "AOV", value: analytics.kpis.averageOrderValue },
         { label: "Cancelled in range", value: allRangeOrders.filter((order) => order.status === "Cancelled").length },
       ],
@@ -331,7 +331,7 @@ export function buildAdminV2Report(input: {
     ...base,
     kpis: [
       { label: "Orders", value: analytics.kpis.orders },
-      { label: "Payable Sales", value: analytics.kpis.payableSales },
+      { label: "Eligible Order Value", value: analytics.kpis.payableSales },
       { label: "Average Order Value", value: analytics.kpis.averageOrderValue },
       { label: "Discounts", value: discounts },
       { label: "Delivery Fees", value: deliveryFees },
@@ -342,12 +342,12 @@ export function buildAdminV2Report(input: {
     ],
     rows: [
       { metric: "Orders", value: analytics.kpis.orders },
-      { metric: "Payable Sales", value: analytics.kpis.payableSales },
+      { metric: "Eligible Order Value", value: analytics.kpis.payableSales },
       { metric: "Average Order Value", value: analytics.kpis.averageOrderValue },
       { metric: "Discounts", value: discounts },
       { metric: "Delivery Fees", value: deliveryFees },
     ],
-    notes: [...base.notes, "Payable Sales excludes cancelled and archived orders. No standalone production test-order flag is assumed."],
+    notes: [...base.notes, "Eligible Order Value uses persisted non-cancelled order totals. No standalone production test-order flag is assumed."],
   };
 }
 

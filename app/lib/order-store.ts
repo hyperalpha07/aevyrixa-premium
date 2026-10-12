@@ -25,6 +25,7 @@ import type {
   OrderSaveResult,
   OrderStorageMode,
   OrderStatus,
+  DeliveryStatus,
   OrderSubmissionInput,
 } from "@/app/lib/order-types";
 
@@ -771,22 +772,51 @@ async function updateOrderStatusWithEventInSupabase(input: {
   cancelledReason?: string;
   previousStatus?: OrderStatus;
   actor?: AdminSessionUser | null;
+  deliveryStatus?: DeliveryStatus;
+  codCollectionStatus?: "courier_collected_unsettled" | "merchant_received_verified" | "no_payment_received";
+  codAmount?: number | null;
+  codNote?: string | null;
+  codPaymentTransactionId?: string | null;
 }) {
   const actor = resolveTrustedAdminActor(input.actor);
-  const response = await fetch(supabaseEndpoint("rpc/admin_v2_update_order_status_with_event"), {
+  const usesAtomicDeliveryRpc = Boolean(input.deliveryStatus || input.codCollectionStatus);
+  const response = await fetch(
+    supabaseEndpoint(
+      usesAtomicDeliveryRpc
+        ? "rpc/admin_v2_update_order_status_delivery_with_event"
+        : "rpc/admin_v2_update_order_status_with_event"
+    ),
+    {
     method: "POST",
     headers: { ...supabaseHeaders(), prefer: "return=representation" },
-    body: JSON.stringify({
-      p_order_ref: input.orderRef,
-      p_to_status: input.status,
-      p_reason: input.cancelledReason ?? null,
-      p_actor_admin_id: actor.adminId,
-      p_actor_name: actor.name,
-      p_metadata: { fields: ["status", ...(input.cancelledReason ? ["cancelledReason"] : [])] },
-      p_actor_source: actor.source,
-      p_sensitive_authorization_reason: input.cancelledReason ?? null,
-    }),
-  });
+      body: JSON.stringify({
+        p_order_ref: input.orderRef,
+        p_to_status: input.status,
+        p_reason: input.cancelledReason ?? null,
+        p_actor_admin_id: actor.adminId,
+        p_actor_name: actor.name,
+        p_metadata: {
+          fields: [
+            "status",
+            ...(input.deliveryStatus ? ["deliveryStatus"] : []),
+            ...(input.codCollectionStatus ? ["codCollectionStatus"] : []),
+            ...(input.cancelledReason ? ["cancelledReason"] : []),
+          ],
+        },
+        p_actor_source: actor.source,
+        p_sensitive_authorization_reason: input.cancelledReason ?? null,
+        ...(usesAtomicDeliveryRpc
+          ? {
+              p_delivery_status: input.deliveryStatus ?? null,
+              p_cod_collection_status: input.codCollectionStatus ?? null,
+              p_cod_amount: input.codAmount ?? null,
+              p_cod_note: input.codNote ?? null,
+              p_cod_payment_transaction_id: input.codPaymentTransactionId ?? null,
+            }
+          : {}),
+      }),
+    }
+  );
 
   if (!response.ok) throw await supabaseError(response, "atomic order status update");
   const rows = (await response.json()) as SupabaseOrderRow[];
@@ -1059,6 +1089,11 @@ export async function updateOrderStatusWithEvent(input: {
   cancelledReason?: string;
   previousStatus?: OrderStatus;
   actor?: AdminSessionUser | null;
+  deliveryStatus?: DeliveryStatus;
+  codCollectionStatus?: "courier_collected_unsettled" | "merchant_received_verified" | "no_payment_received";
+  codAmount?: number | null;
+  codNote?: string | null;
+  codPaymentTransactionId?: string | null;
 }) {
   const storageMode = getStorageMode();
 
@@ -1069,6 +1104,7 @@ export async function updateOrderStatusWithEvent(input: {
 
   const result = await updateOrderOperations(input.orderRef, {
     status: input.status,
+    deliveryStatus: input.deliveryStatus,
     cancelledReason: input.cancelledReason,
   });
 

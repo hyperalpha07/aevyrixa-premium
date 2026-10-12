@@ -1,11 +1,11 @@
 import { Alert, Box, Button, Grid, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { CalendarDays, CircleSlash, FileText, ReceiptText } from "lucide-react";
-import { formatCurrency } from "@/app/lib/currency";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Chip } from "@/components/admin-v2/shared/V2Chip";
 import { V2MetricCard } from "@/components/admin-v2/shared/V2MetricCard";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
+import { formatAdminV2Money } from "@/lib/admin-v2/finance/money";
 import type { AdminV2InvoiceQueryResult, AdminV2InvoiceStatusFilter } from "@/lib/admin-v2/invoices/invoice-metrics";
 
 const statusLabels: Record<AdminV2InvoiceStatusFilter, string> = {
@@ -64,7 +64,7 @@ export function AdminV2InvoicesView({ data }: { data: AdminV2InvoiceQueryResult 
             <V2MetricCard label="Issued Invoices" value={String(data.metrics.issuedInvoices)} animatedValue={data.metrics.issuedInvoices} icon={ReceiptText} tone="primary" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-            <V2MetricCard label="Total Invoiced Value" value={formatCurrency(data.metrics.totalInvoicedValue)} icon={FileText} tone="success" />
+            <V2MetricCard label="Total Invoiced Value" value={formatAdminV2Money(data.metrics.totalInvoicedValue)} icon={FileText} tone="success" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
             <V2MetricCard label="Issued This Month" value={String(data.metrics.issuedThisMonth)} animatedValue={data.metrics.issuedThisMonth} icon={CalendarDays} tone="info" />
@@ -126,7 +126,7 @@ export function AdminV2InvoicesView({ data }: { data: AdminV2InvoiceQueryResult 
                         <TableCell>{invoice.orderReference || "Not provided"}</TableCell>
                         <TableCell>{invoice.customerName}</TableCell>
                         <TableCell>{formatDateTime(invoice.issuedAt)}</TableCell>
-                        <TableCell align="right">{formatCurrency(invoice.totalAmount)}</TableCell>
+                        <TableCell align="right">{formatAdminV2Money(invoice.totalAmount, invoice.currencyCode)}</TableCell>
                         <TableCell>
                           <V2Chip label={invoice.status === "void" ? "Void" : "Issued"} color={invoice.status === "void" ? "warning" : "success"} size="small" />
                         </TableCell>

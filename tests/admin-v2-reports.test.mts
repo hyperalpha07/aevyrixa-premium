@@ -120,9 +120,9 @@ test("Reports route is implemented, analytics and approvals remain implemented, 
 test("Sales report reuses canonical payable-sales semantics and excludes cancelled/test orders", () => {
   const report = sampleReport("sales");
   assert.equal(report.analytics.kpis.orders, 1);
-  assert.equal(report.analytics.kpis.payableSales, 210);
-  assert.equal(report.analytics.kpis.averageOrderValue, 210);
-  assert.match(reportsQuery + reportsView, /Payable Sales/);
+  assert.equal(report.analytics.kpis.payableSales, 999);
+  assert.equal(report.analytics.kpis.averageOrderValue, 999);
+  assert.match(reportsQuery + reportsView + readFileSync(new URL("../lib/admin-v2/reports/reports-metrics.ts", import.meta.url), "utf8"), /Eligible Order Value/);
   assert.match(readFileSync(new URL("../lib/admin-v2/reports/reports-metrics.ts", import.meta.url), "utf8"), /payableOrderValue|isQualifyingAnalyticsOrder/);
 });
 
@@ -136,7 +136,7 @@ test("Product, customer, review, and fee reports derive from real operational ro
   const customer = sampleReport("customers");
   assert.match(customer.notes.join(" "), /linked customer accounts only/i);
   assert.equal(customer.rows[0]?.customerId, "cust-a");
-  assert.equal(customer.rows[0]?.orderValue, 210);
+  assert.equal(customer.rows[0]?.orderValue, 999);
   const missingNameReport = reports.buildAdminV2Report({
     type: "customers",
     range: analytics.resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2026-09-01&to=2026-09-30")),

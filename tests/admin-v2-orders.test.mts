@@ -71,6 +71,17 @@ import {
   validateUnpublishConfirmation,
 } from "../lib/admin-v2/product-unpublish.ts";
 
+const orderAmountHooks = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith("@/")) {
+      return nextResolve(new URL(`../${specifier.slice(2)}.ts`, import.meta.url).href, context);
+    }
+    return nextResolve(specifier, context);
+  },
+});
+const { formatAdminV2Amount, getAdminV2OrderAmounts } = await import("../lib/admin-v2/orders/order-amounts.ts");
+orderAmountHooks.deregister();
+
 // Resolve the one extensionless application import for Node's native TS test runner.
 const editModuleHooks = registerHooks({ resolve(specifier, context, nextResolve) {
   if (specifier === "./product-create" && context.parentURL?.endsWith("/lib/admin-v2/product-edit.ts")) {
@@ -164,6 +175,27 @@ test("COD payment labels do not infer completed payment", () => {
   );
 });
 
+test("payment labels expose persisted ledger snapshots without inventing unknown values", () => {
+  assert.deepEqual(
+    getAdminV2PaymentLabels({
+      ...baseOrder,
+      paymentDetails: { paymentMethod: "Cash on Delivery" },
+      paymentStatus: "pending",
+      paidAmount: 0,
+      dueAmount: 1020,
+    } as never),
+    {
+      method: "Cash on Delivery",
+      status: "Pending",
+      verification: "Not provided",
+      provider: "Not provided",
+      transactionReference: "Not provided",
+      paidAmount: 0,
+      dueAmount: 1020,
+    }
+  );
+});
+
 test("status transition helpers expose valid next states and sensitive transitions", () => {
   assert.deepEqual(validNextAdminV2OrderStatuses("Pending"), ["Confirmed", "Cancelled"]);
   assert.equal(validNextAdminV2OrderStatuses("Pending").includes("Delivered"), false);
@@ -207,6 +239,31 @@ test("financial audit detection flags stored total differences without mutation"
   const calculated = calculateAdminV2PayableTotal({ subtotal: 100, deliveryCharge: 20 });
   assert.equal(calculated, 120);
   assert.equal(hasAdminV2TotalMismatch(100, calculated), true);
+  const amounts = getAdminV2OrderAmounts({
+    ...baseOrder,
+    orderReference: "AEV-MPBPKXLD-K4B8",
+    totals: { ...baseOrder.totals, subtotal: 42 },
+    totalAmount: 42,
+    deliveryCharge: 80,
+  } as never);
+  assert.equal(amounts.storedTotal, 42);
+  assert.equal(amounts.calculatedPayable, 122);
+  assert.equal(amounts.total, 42);
+  assert.match(amounts.discrepancy ?? "", /keeps both values separate/i);
+  assert.equal(formatAdminV2Amount(42), "BDT 42.00");
+  assert.equal(formatAdminV2Amount(122), "BDT 122.00");
+});
+
+test("payment RPC still uses arithmetic payable and is flagged for legacy mismatch review", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/20261009110000_admin_finance_finalization.sql", import.meta.url), "utf8");
+  const atomicMigration = readFileSync(new URL("../supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql", import.meta.url), "utf8");
+  assert.match(migration, /create or replace function public\.admin_v2_finance_payable/);
+  assert.match(migration, /coalesce\(p_subtotal,\s*p_total,\s*0\)\s*-\s*coalesce\(p_discount,\s*0\)\s*\+\s*coalesce\(p_delivery,\s*0\)/);
+  assert.match(atomicMigration, /v_payable := public\.admin_v2_finance_payable\(v_order\.subtotal,\s*v_order\.discount_amount,\s*v_order\.delivery_charge,\s*v_order\.total\)/);
+  assert.match(atomicMigration, /v_stored_total := case when v_order\.total is null then null else round\(v_order\.total::numeric, 2\)::numeric\(14,2\) end/);
+  assert.match(atomicMigration, /v_stored_total is distinct from v_payable/);
+  assert.match(atomicMigration, /Order payable mismatch requires reconciliation/);
+  assert.match(atomicMigration, /Payment exceeds payable amount/);
 });
 
 test("financial audit script remains read-only and checks ledger edge cases", () => {
@@ -239,6 +296,117 @@ test("generic order PATCH rejects ledger-derived finance fields and keeps operat
   assert.doesNotMatch(route, /updates\.paymentReference\s*=/);
   assert.match(route, /"refundExchangeRequest"/);
   assert.match(route, /"paymentNote"/);
+});
+
+test("order status workflow validates delivery consistency without creating fake payments", () => {
+  const route = readFileSync(new URL("../app/api/orders/[orderRef]/route.ts", import.meta.url), "utf8");
+  const migration = readFileSync(new URL("../supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql", import.meta.url), "utf8");
+  assert.match(route, /Shipping requires courier\/tracking information or a documented manual-delivery exception/);
+  assert.match(route, /atomicDeliveryStatus = updates\.deliveryStatus \?\? "in_transit"/);
+  assert.match(route, /atomicDeliveryStatus = updates\.deliveryStatus \?\? "delivered"/);
+  assert.match(route, /updateOrderStatusWithEvent/);
+  assert.match(route, /Record the verified merchant-received COD payment before marking this order delivered as paid/);
+  assert.match(route, /courier_collected_unsettled/);
+  assert.match(route, /codCollectionStatus = "courier_collected_unsettled"/);
+  assert.match(route, /codCollectionStatus = "no_payment_received"/);
+  assert.match(route, /No payment ledger row will be created automatically/);
+  assert.match(route, /due !== null && due <= 0/);
+  assert.doesNotMatch(route, /due <= 0\.01/);
+  assert.match(migration, /create or replace function public\.admin_v2_update_order_status_delivery_with_event/);
+  assert.match(migration, /returns setof public\.orders/);
+  assert.match(migration, /select \* into v_order[\s\S]*for update/i);
+  assert.match(migration, /update public\.orders[\s\S]*delivery_status = coalesce\(v_delivery_status, delivery_status\)/);
+  assert.match(migration, /insert into public\.order_events/);
+  assert.match(migration, /order_cod_collections/);
+  assert.match(migration, /Merchant-received COD requires an actual recorded finance payment/);
+  assert.doesNotMatch(route, /updates\.paymentStatus\s*=/);
+});
+
+test("atomic order delivery migration safely binds delivery statuses and actor identities", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql", import.meta.url), "utf8");
+  assert.match(migration, /create or replace function public\.admin_v2_update_order_status_delivery_with_event/);
+  assert.match(migration, /for update/);
+  assert.match(migration, /Pending orders can only have pending delivery status/);
+  assert.match(migration, /Confirmed orders require pending, processing, or packed delivery status/);
+  assert.match(migration, /Shipped orders require dispatched or in-transit delivery status/);
+  assert.match(migration, /Delivered orders require delivered delivery status/);
+  assert.match(migration, /p_to_status = 'Delivered' and v_effective_delivery_status is distinct from 'delivered'/);
+  assert.match(migration, /p_to_status = 'Shipped' and v_effective_delivery_status is distinct from 'dispatched' and v_effective_delivery_status is distinct from 'in_transit'/);
+  assert.doesNotMatch(migration, /p_to_status = 'Delivered' and v_effective_delivery_status <> 'delivered'/);
+  assert.match(migration, /Cancelled orders cannot have delivered delivery status/);
+  assert.match(migration, /v_actor_admin_id ~\* '\^\[0-9a-f\]/);
+  assert.match(migration, /v_audit_staff_id := v_actor_admin_id::uuid/);
+  assert.doesNotMatch(migration, /v_actor_admin_id::uuid else null/);
+  assert.doesNotMatch(migration, /p_actor_id::uuid else null/);
+});
+
+test("COD collection migration tracks courier settlement through real finance rows only", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql", import.meta.url), "utf8");
+  assert.match(migration, /settled_collection_id uuid null/);
+  assert.match(migration, /finance_payment_transaction_id uuid null/);
+  assert.match(migration, /settled_at timestamptz null/);
+  assert.match(migration, /reversed_at timestamptz null/);
+  assert.match(migration, /order_cod_collections_one_open_courier_idx/);
+  assert.match(migration, /order_cod_collections_one_payment_receipt_idx/);
+  assert.match(migration, /where collection_status = 'merchant_received_verified' and finance_payment_transaction_id is not null and reversed_at is null/);
+  assert.match(migration, /Merchant-received COD requires an actual recorded finance payment/);
+  assert.match(migration, /p_cod_payment_transaction_id uuid default null/);
+  assert.match(migration, /Merchant COD settlement requires an explicit finance payment transaction/);
+  assert.match(migration, /where id = p_cod_payment_transaction_id[\s\S]*and order_ref = v_order\.order_ref[\s\S]*and status = 'recorded'/);
+  assert.match(migration, /collection_status = 'merchant_received_verified' and amount is not null and finance_payment_transaction_id is not null and settled_at is not null/);
+  assert.match(migration, /v_settlement_amount := coalesce\(p_cod_amount, v_payment_row\.amount\)::numeric\(14,2\)/);
+  assert.match(migration, /Merchant COD settlement amount must match the finance payment transaction amount/);
+  assert.match(migration, /v_remaining_courier_amount := greatest\(v_open_courier_collection\.amount - v_settled_amount, 0\)::numeric\(14,2\)/);
+  assert.match(migration, /Merchant COD settlement exceeds remaining courier-held amount/);
+  assert.match(migration, /update public\.order_cod_collections[\s\S]*set settled_at = now\(\)/);
+  assert.match(migration, /v_remaining_courier_amount - v_settlement_amount <= 0/);
+  assert.doesNotMatch(migration, /v_remaining_courier_amount - v_settlement_amount <= 0\.01/);
+  assert.doesNotMatch(migration, /if found then\s*update public\.order_cod_collections\s*set settled_at = now\(\)/);
+  assert.match(migration, /if v_order\.payment_method = 'Cash on Delivery' and v_order\.status = 'Delivered' then/);
+  assert.match(migration, /v_remaining_courier_amount - v_row\.amount <= 0/);
+  assert.doesNotMatch(migration, /v_remaining_courier_amount - v_row\.amount <= 0\.01/);
+  assert.match(migration, /exception when unique_violation then\s*null/);
+  assert.match(migration, /Merchant receipt verified through finance payment transaction/);
+  assert.match(migration, /grant select, insert, update on table public\.order_cod_collections to service_role/);
+  assert.doesNotMatch(migration, /payment_status,?\s*=\s*'verified'/);
+});
+
+test("COD settlement reversal restores courier-held balance when a payment is voided", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql", import.meta.url), "utf8");
+  assert.match(migration, /create or replace function public\.admin_v2_void_payment/);
+  assert.match(migration, /where finance_payment_transaction_id = v_row\.id[\s\S]*collection_status = 'merchant_received_verified'[\s\S]*reversed_at is null[\s\S]*for update/);
+  assert.match(migration, /set reversed_at = now\(\),[\s\S]*reversed_by_type = p_actor_type/);
+  assert.match(migration, /where settled_collection_id = v_settlement\.settled_collection_id[\s\S]*and reversed_at is null/);
+  assert.match(migration, /set settled_at = case when v_open_balance >= amount then settled_at else null end/);
+  assert.match(migration, /perform public\.admin_v2_recompute_order_finance\(v_row\.order_ref\)/);
+  assert.match(migration, /cod_settlement_reversed/);
+});
+
+test("payment and COD settlement precision are exact two-decimal checks without penny tolerance", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql", import.meta.url), "utf8");
+  assert.match(migration, /p_cod_amount::numeric is distinct from round\(p_cod_amount::numeric, 2\)/);
+  assert.match(migration, /p_amount::numeric is distinct from round\(p_amount::numeric, 2\)/);
+  assert.match(migration, /if v_paid \+ p_amount > v_payable then raise exception 'Payment exceeds payable amount'/);
+  assert.match(migration, /if v_row\.amount > v_remaining_courier_amount then/);
+  assert.doesNotMatch(migration, /\+\s*0\.01/);
+  assert.doesNotMatch(migration, /<=\s*0\.01/);
+});
+
+test("order detail exposes contextual payment recording and ledger history without direct payment-status editing", () => {
+  const page = readFileSync(new URL("../app/admin-v2/orders/[orderRef]/page.tsx", import.meta.url), "utf8");
+  const view = readFileSync(new URL("../components/admin-v2/views/orders/detail/AdminV2OrderDetailView.tsx", import.meta.url), "utf8");
+  assert.match(page, /getAdminV2OrderPaymentHistory/);
+  assert.match(page, /canViewPaymentHistory/);
+  assert.match(page, /finance\.transactions\.view/);
+  assert.match(page, /canRecordPayment: hasPermission\(session, "finance\.payments\.record"\)/);
+  assert.match(view, /Payment ledger history/);
+  assert.match(view, /Merchant received and verified/);
+  assert.match(view, /Courier collected, awaiting merchant settlement/);
+  assert.doesNotMatch(view, /paymentSettlementDecision: "no_payment_received"/);
+  assert.match(view, /Record verified payment/);
+  assert.match(view, /Confirm receipt/);
+  assert.match(view, /\/api\/admin\/finance\/payments/);
+  assert.doesNotMatch(view, /name="paymentStatus"|name='paymentStatus'/);
 });
 
 test("invoice and note capabilities use dedicated role permissions", () => {

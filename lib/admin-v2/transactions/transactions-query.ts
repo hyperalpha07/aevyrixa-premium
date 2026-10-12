@@ -162,6 +162,55 @@ export async function getAdminV2TransactionExportRows(searchParams = new URLSear
   return { ok: true as const, rows, query, rowCount: Number.isFinite(count) ? count : rows.length };
 }
 
+export type AdminV2OrderPaymentHistoryResult = {
+  rows: AdminV2TransactionRow[];
+  queryFailed: boolean;
+  truncated: boolean;
+  limitation: string | null;
+};
+
+export async function getAdminV2OrderPaymentHistory(orderRef: string): Promise<AdminV2OrderPaymentHistoryResult> {
+  const cleanOrderRef = orderRef.trim();
+  if (!cleanOrderRef || !hasSupabaseConfig()) {
+    return {
+      rows: [],
+      queryFailed: true,
+      truncated: false,
+      limitation: "Payment transaction ledger is unavailable.",
+    };
+  }
+
+  const params = [
+    `select=${paymentSelect}`,
+    `order_ref=eq.${encodeURIComponent(cleanOrderRef)}`,
+    "order=occurred_at.desc.nullslast,id.desc",
+  ];
+
+  try {
+    const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${params.join("&")}`), {
+      headers: { ...supabaseHeaders(), prefer: "count=exact", range: "0-49" },
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Order payment history query failed.");
+    const rows = ((await response.json()) as FinancePaymentTransactionRow[]).map(mapAdminV2TransactionRow);
+    const count = Number((response.headers.get("content-range") ?? "").split("/")[1]);
+    const truncated = Number.isFinite(count) ? Number(count) > 50 : rows.length >= 50;
+    return {
+      rows,
+      queryFailed: false,
+      truncated,
+      limitation: truncated ? "Showing the latest 50 payment ledger records for this order." : null,
+    };
+  } catch {
+    return {
+      rows: [],
+      queryFailed: true,
+      truncated: false,
+      limitation: "Payment transaction history could not be loaded.",
+    };
+  }
+}
+
 export async function getAdminV2Transactions(searchParams = new URLSearchParams()): Promise<AdminV2TransactionQueryResult> {
   const query = parseAdminV2TransactionQuery(searchParams);
   if (!hasSupabaseConfig()) {

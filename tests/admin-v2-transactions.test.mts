@@ -11,6 +11,7 @@ const view = read("components/admin-v2/views/transactions/AdminV2TransactionsVie
 const query = read("lib/admin-v2/transactions/transactions-query.ts");
 const metrics = read("lib/admin-v2/transactions/transaction-metrics.ts");
 const migration = read("supabase/migrations/20261009110000_admin_finance_finalization.sql");
+const atomicityMigration = read("supabase/migrations/20261012120000_admin_v2_order_delivery_payment_atomicity.sql");
 const paymentApi = read("app/api/admin/finance/payments/route.ts");
 const voidApi = read("app/api/admin/finance/payments/[reference]/void/route.ts");
 
@@ -48,6 +49,11 @@ test("Transactions display keeps customer PII out and gates finance/order action
   assert.match(view, /canExport/);
   assert.match(view, /canViewOrder/);
   assert.match(view, /Record Payment/);
+  assert.match(view, /Dialog/);
+  assert.match(view, /admin-v2-record-payment-form/);
+  for (const field of ["orderRef", "amount", "currencyCode", "paymentMethod", "occurredAt", "externalReference", "note"]) {
+    assert.match(view, new RegExp(`name="${field}"|name='${field}'`));
+  }
   assert.match(view, /Export CSV/);
   assert.match(view, /\/admin-v2\/orders\/\$\{encodeURIComponent\(orderReference\)\}/);
   assert.doesNotMatch(view, />\s*(Mark Paid|Refund Now|Capture|Settle|Retry|Delete Transaction|View Gateway|Edit)\s*</i);
@@ -55,11 +61,25 @@ test("Transactions display keeps customer PII out and gates finance/order action
 
 test("Payment mutation APIs are dedicated finance routes with scoped permission and server RPC actor", () => {
   assert.match(paymentApi, /hasPermission\(session,\s*"finance\.payments\.record"\)/);
+  assert.match(paymentApi, /getAdminV2OrderAmounts/);
+  assert.match(paymentApi, /Payment recording is blocked because this order has a stored-total mismatch/);
+  assert.match(paymentApi, /callAdminFinanceRpc\("admin_v2_record_payment"/);
   assert.match(paymentApi, /adminFinanceActor\(session\)/);
-  assert.match(paymentApi, /admin_v2_record_payment/);
+  assert.match(atomicityMigration, /create or replace function public\.admin_v2_record_payment/);
+  assert.match(atomicityMigration, /select \* into v_order from public\.orders where order_ref = p_order_ref for update/i);
+  assert.match(atomicityMigration, /v_stored_total is distinct from v_payable/);
+  assert.match(atomicityMigration, /Order payable mismatch requires reconciliation/);
   assert.match(voidApi, /hasPermission\(session,\s*"finance\.payments\.record"\)/);
   assert.match(voidApi, /Void reason is required/);
   assert.match(voidApi, /admin_v2_void_payment/);
+});
+
+test("Order detail payment history reads real finance ledger rows by order reference", () => {
+  assert.match(query, /getAdminV2OrderPaymentHistory/);
+  assert.match(query, /finance_payment_transactions\?\$\{params\.join\("&"\)\}/);
+  assert.match(query, /order_ref=eq\.\$\{encodeURIComponent\(cleanOrderRef\)\}/);
+  assert.match(query, /Showing the latest 50 payment ledger records for this order/);
+  assert.doesNotMatch(query, /faker|mock|Math\.random/);
 });
 
 test("Payment ledger migration is service-role only, idempotent, audited, and order-snapshot recomputed", () => {

@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Alert, Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { Banknote, FileBarChart, FileText, Receipt, RefreshCcw } from "lucide-react";
-import { formatCurrency } from "@/app/lib/currency";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import type { AdminV2BillingModuleCard, AdminV2BillingResult, AdminV2BillingSummaryMetric } from "@/lib/admin-v2/billing/billing-metrics";
+import { formatAdminV2Money } from "@/lib/admin-v2/finance/money";
 
 type BillingModuleTitle = AdminV2BillingModuleCard["title"];
 
@@ -20,9 +20,9 @@ const moduleIcons = {
 } as const;
 
 const kpiIcons = {
-  "Payable Sales": Banknote,
+  "Eligible Order Value": Banknote,
   "Recorded Payments": Receipt,
-  "Recorded Due": Banknote,
+  "Known Due": Banknote,
   "Recorded Refunds": RefreshCcw,
   "Recorded Expenses": Banknote,
   "Issued Invoices": FileText,
@@ -72,7 +72,7 @@ function formatMetric(metric: Pick<AdminV2BillingSummaryMetric, "value" | "kind"
   if (metric.displayValue) return metric.displayValue;
   if (!metric.available) return "Unavailable";
   if (metric.value === null) return "Available";
-  return metric.kind === "currency" ? formatCurrency(metric.value) : metric.value.toLocaleString("en-US");
+  return metric.kind === "currency" ? formatAdminV2Money(metric.value) : metric.value.toLocaleString("en-US");
 }
 
 function sourceAlerts(data: AdminV2BillingResult) {
@@ -301,12 +301,22 @@ export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
                   Main Financial Overview
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Focused read-only preview across invoices, payments, refunds, expenses and reports.
+                  All-time operational preview across order value, known due, invoices, payments, refunds, expenses and reports.
                 </Typography>
               </Box>
             </Stack>
 
             {selectedModule ? <ModulePreview module={selectedModule} unavailable={Boolean(selectedSource && !selectedSource.available)} /> : null}
+
+            {data.notes.length > 0 ? (
+              <Stack spacing={0.65}>
+                {data.notes.map((note) => (
+                  <Alert key={note} severity={/differ|RPC|incomplete/i.test(note) ? "warning" : "info"} sx={{ py: 0.35 }}>
+                    {note}
+                  </Alert>
+                ))}
+              </Stack>
+            ) : null}
 
             <Divider sx={{ borderColor: "rgba(124,58,237,0.10)" }} />
 
@@ -365,7 +375,7 @@ export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
             </Box>
 
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", pt: 0.15, maxWidth: 900 }}>
-              Operational finance summary only — order due amounts are not an accounting receivables ledger, and payment status is not gateway settlement.
+              Operational finance summary only — known due is incomplete when legacy snapshots are missing, order totals are not settled cash, and payment status is not gateway settlement.
             </Typography>
           </Stack>
         </V2Card>

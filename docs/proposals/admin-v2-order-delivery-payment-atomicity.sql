@@ -1,0 +1,98 @@
+-- Proposal only. Do not apply without review.
+--
+-- Purpose:
+-- 1. Preserve the existing atomic order status + event guarantee while also
+--    updating delivery_status in the same database transaction.
+-- 2. Add an authoritative stored-total mismatch guard inside the
+--    admin_v2_record_payment row lock before any finance ledger insert.
+-- 3. Add explicit COD collection/settlement persistence so courier-held cash
+--    is not misrepresented as merchant-received payment.
+--
+-- Required shape:
+--
+-- create or replace function public.admin_v2_update_order_status_delivery_with_event(
+--   p_order_ref text,
+--   p_to_status text,
+--   p_reason text,
+--   p_actor_admin_id text,
+--   p_actor_name text,
+--   p_metadata jsonb,
+--   p_actor_source text,
+--   p_sensitive_authorization_reason text,
+--   p_delivery_status text default null,
+--   p_cod_collection_status text default null,
+--   p_cod_amount numeric default null,
+--   p_cod_note text default null,
+--   p_cod_payment_transaction_id uuid default null
+-- ) returns setof public.orders
+-- language plpgsql
+-- security definer
+-- set search_path = public, pg_temp
+-- as $$
+--   -- Lock the target order with FOR UPDATE.
+--   -- Validate the same status transitions as the current production RPC.
+--   -- Validate order status and delivery status as a consistent pair.
+--   -- Shipped requires dispatched/in_transit and Delivered requires delivered.
+--   -- If a COD collection decision is supplied, bind it to the delivered
+--   -- status change in the same transaction.
+--   -- Insert the order_events row in the same function body after the order
+--   -- update succeeds.
+-- $$;
+--
+-- create or replace function public.admin_v2_record_payment(
+--   p_order_ref text,
+--   p_amount numeric,
+--   p_currency_code text,
+--   p_payment_method text,
+--   p_external_reference text,
+--   p_note text,
+--   p_occurred_at timestamptz,
+--   p_request_key uuid,
+--   p_actor_type text,
+--   p_actor_id text,
+--   p_actor_name text
+-- ) returns public.finance_payment_transactions
+-- language plpgsql
+-- security definer
+-- set search_path = public, pg_temp
+-- as $$
+--   -- Preserve all current idempotency, currency, overpayment, refund,
+--   -- recompute and audit behavior.
+--   -- After SELECT * FROM public.orders WHERE order_ref = p_order_ref FOR UPDATE:
+--   -- compute v_payable := admin_v2_finance_payable(...).
+--   -- if v_order.total is not null and round(v_order.total::numeric, 2)::numeric(14,2) is distinct from v_payable then
+--   --   raise exception 'Order payable mismatch requires reconciliation';
+--   -- end if;
+--   -- Only then insert finance_payment_transactions.
+--   -- If the order is delivered COD with courier-held cash, settle only the
+--   -- exact recorded payment amount against the open courier collection.
+-- $$;
+--
+-- create table if not exists public.order_cod_collections (
+--   id uuid primary key default gen_random_uuid(),
+--   order_ref text not null references public.orders(order_ref) on update cascade on delete restrict,
+--   collection_status text not null check (collection_status in (
+--     'courier_collected_unsettled',
+--     'merchant_received_verified',
+--     'no_payment_received'
+--   )),
+--   amount numeric(14,2) null check (amount is null or amount >= 0),
+--   currency_code text not null default 'BDT' check (currency_code ~ '^[A-Z]{3}$'),
+--   note text null check (note is null or length(note) <= 2000),
+--   settled_collection_id uuid null references public.order_cod_collections(id) on update cascade on delete restrict,
+--   finance_payment_transaction_id uuid null references public.finance_payment_transactions(id) on update cascade on delete restrict,
+--   settled_at timestamptz null,
+--   reversed_at timestamptz null,
+--   recorded_by_type text not null,
+--   recorded_by_id text not null,
+--   recorded_by_name text not null,
+--   created_at timestamptz not null default now()
+-- );
+--
+-- Security requirements:
+-- - Enable RLS.
+-- - Revoke public, anon and authenticated.
+-- - Grant service_role only.
+-- - Add service_role-only policies.
+-- - Log admin_staff_activity_logs events for every COD collection decision.
+

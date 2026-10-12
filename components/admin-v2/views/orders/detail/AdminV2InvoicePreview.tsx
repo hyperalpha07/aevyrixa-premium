@@ -10,6 +10,7 @@ import { brandName } from "@/configs/brand/noromi";
 
 export function AdminV2InvoicePreview({ order, invoice }: { order: OrderRecord; invoice?: OrderInvoiceRecord | null }) {
   const amounts = getAdminV2OrderAmounts(order);
+  const invoiceTotal = amounts.calculatedPayable ?? amounts.total;
   const items = normalizeAdminV2OrderItems(order.items);
   const payment = getAdminV2PaymentLabels(order);
 
@@ -134,7 +135,7 @@ export function AdminV2InvoicePreview({ order, invoice }: { order: OrderRecord; 
         </Stack>
         <Stack direction="row" sx={{ justifyContent: "space-between" }}>
           <Typography variant="subtitle1">Total</Typography>
-          <Typography variant="subtitle1">{formatAdminV2Amount(amounts.total)}</Typography>
+          <Typography variant="subtitle1">{formatAdminV2Amount(invoiceTotal)}</Typography>
         </Stack>
       </Stack>
       </Box>

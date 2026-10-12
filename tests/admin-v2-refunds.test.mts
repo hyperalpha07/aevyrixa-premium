@@ -43,6 +43,11 @@ test("Refund display keeps PII out and gates actual refund actions", () => {
   assert.match(view, /Recorded refund ledger entries\. Gateway processor refund history is not tracked\./);
   assert.match(view, /View Order/);
   assert.match(view, /Record Refund/);
+  assert.match(view, /Dialog/);
+  assert.match(view, /admin-v2-record-refund-form/);
+  for (const field of ["orderRef", "paymentTransactionId", "amount", "currencyCode", "refundMethod", "occurredAt", "reason", "externalReference", "note"]) {
+    assert.match(view, new RegExp(`name="${field}"|name='${field}'`));
+  }
   assert.match(view, /canRecordRefund/);
   assert.match(view, /canExport/);
   assert.match(view, /canViewOrder/);
