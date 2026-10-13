@@ -33,6 +33,18 @@ export type AdminV2BillingResult = {
   summary: AdminV2BillingSummaryMetric[];
   modules: AdminV2BillingModuleCard[];
   sources: Record<"analytics" | "transactions" | "orderDue" | "refunds" | "expenses" | "invoices", AdminV2BillingSourceState>;
+  reconciliation: {
+    issueCount: number;
+    arithmeticMismatchCount: number;
+    missingDueSnapshotCount: number;
+    deliveryStatusMismatchCount: number;
+    codDeliveredUnpaidCount: number;
+    items: AdminV2OrderDueSnapshotResult["reconciliationIssues"];
+  };
+  tables: {
+    invoices: AdminV2InvoiceQueryResult["rows"];
+    transactions: AdminV2TransactionQueryResult["rows"];
+  };
   notes: string[];
 };
 
@@ -52,6 +64,10 @@ export function buildAdminV2BillingResult(input: {
   expenses: AdminV2ExpenseQueryResult;
   invoices: AdminV2InvoiceQueryResult;
 }): AdminV2BillingResult {
+  const reconciliationIssues = input.orderDue.reconciliationIssues ?? [];
+  const missingDueSnapshotCount = input.orderDue.missingDueSnapshotCount ?? 0;
+  const deliveryStatusMismatchCount = input.orderDue.deliveryStatusMismatchCount ?? 0;
+  const codDeliveredUnpaidCount = input.orderDue.codDeliveredUnpaidCount ?? 0;
   const analyticsAvailable = input.analytics.available;
   const transactionsAvailable = !input.transactions.queryFailed;
   const orderDueAvailable = input.orderDue.available;
@@ -66,6 +82,21 @@ export function buildAdminV2BillingResult(input: {
   if (input.orderDue.arithmeticMismatchCount > 0) {
     notes.push(
       `${input.orderDue.arithmeticMismatchCount.toLocaleString("en")} eligible order total${input.orderDue.arithmeticMismatchCount === 1 ? " differs" : "s differ"} from the arithmetic payable calculation; Billing keeps stored order totals and calculated payable separate for reconciliation.`
+    );
+  }
+  if (missingDueSnapshotCount > 0) {
+    notes.push(
+      `${missingDueSnapshotCount.toLocaleString("en")} eligible order${missingDueSnapshotCount === 1 ? " is" : "s are"} missing persisted due snapshots; Billing shows known due separately and does not infer received cash.`
+    );
+  }
+  if (deliveryStatusMismatchCount > 0) {
+    notes.push(
+      `${deliveryStatusMismatchCount.toLocaleString("en")} order${deliveryStatusMismatchCount === 1 ? " has" : "s have"} order/delivery status mismatches that require operational reconciliation.`
+    );
+  }
+  if (codDeliveredUnpaidCount > 0) {
+    notes.push(
+      `${codDeliveredUnpaidCount.toLocaleString("en")} delivered COD order${codDeliveredUnpaidCount === 1 ? " remains" : "s remain"} unpaid or unverified; courier-held cash is not treated as merchant-received payment.`
     );
   }
   if (input.orderDue.calculatedPayableKnownCount > 0) {
@@ -198,6 +229,18 @@ export function buildAdminV2BillingResult(input: {
         ],
       },
     ],
+    reconciliation: {
+      issueCount: reconciliationIssues.length + input.invoices.metrics.issuedInvoicesOnCancelledOrders,
+      arithmeticMismatchCount: input.orderDue.arithmeticMismatchCount,
+      missingDueSnapshotCount,
+      deliveryStatusMismatchCount,
+      codDeliveredUnpaidCount,
+      items: reconciliationIssues.slice(0, 12),
+    },
+    tables: {
+      invoices: input.invoices.rows.slice(0, 6),
+      transactions: input.transactions.rows.slice(0, 6),
+    },
     notes,
   };
 }

@@ -51,7 +51,8 @@ test("Billing composes real analytics, ledger, expense, refund, and invoice sour
   assert.match(query, /getAdminV2Expenses/);
   assert.match(query, /getAdminV2Invoices/);
   assert.match(dueSource, /select: orderDueSelect/);
-  assert.match(dueSource, /subtotal,discount_amount,delivery_charge,total,due_amount/);
+  assert.match(dueSource, /"subtotal"[\s\S]*"discount_amount"[\s\S]*"delivery_charge"[\s\S]*"total"[\s\S]*"due_amount"/);
+  assert.match(dueSource, /"order_ref"[\s\S]*"delivery_status"[\s\S]*"payment_status"[\s\S]*"payment_method"/);
   assert.match(dueSource, /status: "neq\.Cancelled"/);
   assert.match(dueSource, /archived_at: "is\.null"/);
   assert.match(dueSource, /currencyCode: row\.currency_code \|\| "BDT"/);
@@ -187,6 +188,88 @@ test("Billing due source excludes null rows from known coverage while retaining 
     assert.equal(result.arithmeticMismatchCount, 1);
     assert.deepEqual(result.arithmeticMismatchDifferenceSummary, singleBdt(80));
     assert.match(result.limitation ?? "", /6 eligible older orders without a due snapshot are excluded/);
+  } finally {
+    if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
+    if (originalKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    else process.env.SUPABASE_SERVICE_ROLE_KEY = originalKey;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("Billing reconciliation exposes amount, delivery, COD, and missing snapshot issues", async () => {
+  const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const originalKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const originalFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test";
+  globalThis.fetch = (async () => new Response(JSON.stringify([
+    {
+      id: "1",
+      order_ref: "AEV-MISMATCH",
+      subtotal: 42,
+      delivery_charge: 80,
+      discount_amount: 0,
+      total: 42,
+      paid_amount: 0,
+      due_amount: null,
+      currency_code: "BDT",
+      status: "Confirmed",
+      delivery_status: "pending",
+      payment_status: "pending",
+      payment_method: "Cash on Delivery",
+    },
+    {
+      id: "2",
+      order_ref: "AEV-DELIVERED-COD",
+      subtotal: 1020,
+      delivery_charge: 0,
+      discount_amount: 0,
+      total: 1020,
+      paid_amount: 0,
+      due_amount: 1020,
+      currency_code: "BDT",
+      status: "Delivered",
+      delivery_status: null,
+      payment_status: "pending",
+      payment_method: "Cash on Delivery",
+    },
+    {
+      id: "3",
+      order_ref: "AEV-SHIPPED",
+      subtotal: 25,
+      delivery_charge: 0,
+      discount_amount: 0,
+      total: 25,
+      paid_amount: null,
+      due_amount: null,
+      currency_code: "BDT",
+      status: "Shipped",
+      delivery_status: null,
+      payment_status: "pending",
+      payment_method: "Cash on Delivery",
+    },
+  ]), { headers: { "content-range": "0-2/3" } })) as typeof fetch;
+  try {
+    const due = await orderDueSource.getAdminV2OrderDueSnapshots();
+    assert.equal(due.arithmeticMismatchCount, 1);
+    assert.equal(due.missingDueSnapshotCount, 2);
+    assert.equal(due.deliveryStatusMismatchCount, 2);
+    assert.equal(due.codDeliveredUnpaidCount, 1);
+    assert.deepEqual(
+      due.reconciliationIssues.map((issue) => issue.kind),
+      ["total_mismatch", "delivery_status_mismatch", "delivery_status_mismatch", "cod_delivered_unpaid", "missing_due_snapshot", "missing_due_snapshot"]
+    );
+    const result = billingMetrics.buildAdminV2BillingResult({
+      analytics: { available: true, limitation: null, kpis: { payableSales: 0 } } as never,
+      transactions: { ...available, metrics: { totalLedgerEntries: 0, recordedPayments: 0, recordedAmountSummary: noneMoney, voidedPayments: 0 } } as never,
+      orderDue: due,
+      refunds: { ...available, metrics: { recordedRefunds: 0, recordedAmountSummary: noneMoney, voidedRefunds: 0, totalLedgerEntries: 0 } } as never,
+      expenses: { ...available, metrics: { activeExpenses: 0, activeAmount: 0, activeAmountSummary: noneMoney, voidExpenses: 0, linkedOrders: 0 } } as never,
+      invoices: { ...available, metrics: { issuedInvoices: 0, totalInvoicedValue: 0, issuedInvoicesOnCancelledOrders: 0 } } as never,
+    });
+    assert.equal(result.reconciliation.issueCount, 6);
+    assert.match(result.notes.join("\n"), /courier-held cash is not treated as merchant-received payment/);
   } finally {
     if (originalUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     else process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
