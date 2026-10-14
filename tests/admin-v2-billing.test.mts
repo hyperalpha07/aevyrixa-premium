@@ -25,6 +25,7 @@ hooks.deregister();
 const read = (file: string) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 
 const page = read("app/admin-v2/billing/page.tsx");
+const diagnosticsPage = read("app/admin-v2/billing/diagnostics/page.tsx");
 const view = read("components/admin-v2/views/billing/AdminV2BillingView.tsx");
 const query = read("lib/admin-v2/billing/billing-query.ts");
 const metricsSource = read("lib/admin-v2/billing/billing-metrics.ts");
@@ -344,4 +345,23 @@ test("Billing financial notices use truthful notice semantics behind an accessib
   assert.match(view, /<Collapse in=\{detailsOpen\}/);
   assert.match(view, /findIndex\(\(candidate\) => candidate\.message === notice\.message\)/);
   assert.doesNotMatch(view, /data\.notes\.map\(\(note\) => \(\s*<Alert/);
+});
+
+
+test("Billing keeps overview concise and moves detailed finance exceptions to the secured diagnostics page", () => {
+  assert.match(diagnosticsPage, /requireAdminV2Session\(\)/);
+  assert.match(diagnosticsPage, /requireAdminV2RouteAccess\(session, "billing"\)/);
+  assert.match(diagnosticsPage, /getAdminV2BillingOverview\(\)/);
+  assert.match(diagnosticsPage, /mode="diagnostics"/);
+  assert.match(view, /isDiagnostics = mode === "diagnostics"/);
+  assert.match(view, /href="\/admin-v2\/billing\/diagnostics"/);
+  assert.match(view, /View Diagnostics/);
+  assert.match(view, /\{isDiagnostics \? \(/);
+  assert.match(view, /<ReconciliationWorkspace data=\{data\} \/>/);
+  assert.match(view, /<FinancialNotices notes=\{data\.notes\} sources=\{alerts\} \/>/);
+  assert.match(view, /reconciliation flags/);
+  assert.match(view, /filteredIssues\.slice\(0, visibleCount\)/);
+  assert.match(view, /setVisibleCount\(\(current\) => current \+ 50\)/);
+  assert.match(view, /owner-confirmed test records/);
+  assert.equal(adminV2AccessRules.billing.permission, "finance.overview.view");
 });
