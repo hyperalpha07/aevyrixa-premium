@@ -311,3 +311,33 @@ test("Billing preview routes to full modules without creating local fake finance
   }
   assert.doesNotMatch(view + page, />\s*(Mark Paid|Capture|Settle|Refund Now|Create Expense|Save|Submit|Delete)\s*</i);
 });
+
+test("Billing V3 presentation uses existing Noromi artwork and truthful trend empty state", () => {
+  assert.match(view, /aev-admin-v2-billing-v3/);
+  assert.match(view, /ethereal_plum_floral_ribbon_frame\.avif/);
+  assert.match(view, /ethereal_plum_floral_ribbon_frame\.webp/);
+  assert.match(view, /dreamy_plum_floral_silk_bloom\.avif/);
+  assert.match(view, /dreamy_plum_floral_silk_bloom\.webp/);
+  assert.match(view, /Real all-time snapshots are available/);
+  assert.match(view, /No trend line or growth history is inferred/);
+  assert.match(view, /moduleDisplayLabels[\s\S]*Transactions:\s*"Payments"/);
+  assert.doesNotMatch(view, /trendPercentage|growthRate|sparklineData|fakeTrend/i);
+});
+
+test("Billing financial notices use truthful notice semantics behind an accessible detail control", () => {
+  assert.match(view, /function FinancialNotices/);
+  assert.match(view, /sourceAlerts\(data\)/);
+  assert.match(view, /highlightedNotices\.length/);
+  assert.match(view, /Financial notices/);
+  assert.match(view, /highlightedNotices\.length === 1 \? "notice" : "notices"/);
+  assert.match(view, /actionable reconciliation counts remain in the control center above/);
+  assert.doesNotMatch(view, /active \$\{[^}]+\}[^`]*(?:issue|issues)/);
+  assert.doesNotMatch(view, /No active discrepancy warning/);
+  assert.match(view, /Show details/);
+  assert.match(view, /Hide details/);
+  assert.match(view, /aria-expanded=\{detailsOpen\}/);
+  assert.match(view, /aria-controls="billing-financial-notices-details"/);
+  assert.match(view, /<Collapse in=\{detailsOpen\}/);
+  assert.match(view, /findIndex\(\(candidate\) => candidate\.message === notice\.message\)/);
+  assert.doesNotMatch(view, /data\.notes\.map\(\(note\) => \(\s*<Alert/);
+});
