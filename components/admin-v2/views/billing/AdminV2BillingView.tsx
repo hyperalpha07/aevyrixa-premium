@@ -173,7 +173,7 @@ function FinancialNotices({
                 </Typography>
                 <Chip
                   size="small"
-                  label={`${highlightedNotices.length} ${highlightedNotices.length === 1 ? "notice" : "notices"}`}
+                  label={`${notices.length} ${notices.length === 1 ? "notice" : "notices"}`}
                   sx={{
                     height: 24,
                     color: highlightedNotices.length > 0 ? "rgba(255,237,213,0.95)" : "rgba(207,250,254,0.92)",
@@ -216,9 +216,9 @@ function FinancialNotices({
           </Button>
         </Stack>
 
-        {highlightedNotices.length > 0 ? (
+        {!detailsOpen && highlightedNotices.length > 0 ? (
           <Stack component="ul" spacing={0} sx={{ p: 0, m: 0, listStyle: "none" }}>
-            {highlightedNotices.map((notice) => (
+            {highlightedNotices.slice(0, 2).map((notice) => (
               <Stack
                 component="li"
                 key={notice.message}
@@ -232,6 +232,11 @@ function FinancialNotices({
                 </Typography>
               </Stack>
             ))}
+            {highlightedNotices.length > 2 ? (
+              <Typography component="li" variant="caption" sx={{ py: 0.75, color: "rgba(255,237,213,0.78)" }}>
+                +{highlightedNotices.length - 2} additional highlighted notices. Show details to review all guidance.
+              </Typography>
+            ) : null}
           </Stack>
         ) : null}
 
