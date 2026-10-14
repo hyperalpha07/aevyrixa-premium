@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Alert, Box, Button, Chip, Collapse, Stack, Typography } from "@mui/material";
 import {
-  ArrowUpRight,
   Banknote,
   BarChart3,
   ChevronDown,
@@ -478,6 +477,7 @@ function LedgerPreview({ data }: { data: AdminV2BillingResult }) {
 
 function ReconciliationWorkspace({ data }: { data: AdminV2BillingResult }) {
   const [issueFilter, setIssueFilter] = useState<IssueFilter>("all");
+  const [visibleCount, setVisibleCount] = useState(50);
   const filteredIssues = useMemo(
     () => data.reconciliation.items.filter((issue) => issueFilter === "all" || issue.kind === issueFilter),
     [data.reconciliation.items, issueFilter]
@@ -572,7 +572,7 @@ function ReconciliationWorkspace({ data }: { data: AdminV2BillingResult }) {
           </Alert>
         ) : (
           <Stack component="ul" spacing={0} sx={{ p: 0, m: 0, listStyle: "none" }}>
-            {filteredIssues.slice(0, 8).map((issue) => (
+            {filteredIssues.slice(0, visibleCount).map((issue) => (
               <Stack
                 component="li"
                 key={`${issue.orderReference}-${issue.kind}`}
@@ -600,6 +600,15 @@ function ReconciliationWorkspace({ data }: { data: AdminV2BillingResult }) {
             ))}
           </Stack>
         )}
+        {filteredIssues.length > visibleCount ? (
+          <Button
+            type="button"
+            onClick={() => setVisibleCount((current) => current + 50)}
+            sx={{ alignSelf: "flex-start", color: "rgba(255,113,205,0.96)", textTransform: "none", fontWeight: 850 }}
+          >
+            Show more ({(filteredIssues.length - visibleCount).toLocaleString("en-US")} remaining)
+          </Button>
+        ) : null}
       </Stack>
     </GlassSection>
   );
@@ -697,7 +706,8 @@ function ModulePreview({
   );
 }
 
-export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
+export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2BillingResult; mode?: "overview" | "diagnostics" }) {
+  const isDiagnostics = mode === "diagnostics";
   const alerts = sourceAlerts(data);
   const allFailed = Object.values(data.sources).every((source) => !source.available);
   const [activeModule, setActiveModule] = useState<BillingModuleTitle>(data.modules[0]?.title ?? "Invoices");
@@ -760,25 +770,43 @@ export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
         <Stack direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ justifyContent: "space-between", alignItems: { lg: "flex-end" } }}>
           <Box sx={{ maxWidth: 780 }}>
             <Typography variant="overline" sx={{ color: "rgba(49,230,212,0.78)", fontWeight: 950, letterSpacing: "0.18em" }}>
-              Admin V2 · Finance workspace
+              Admin V2 · {isDiagnostics ? "Finance diagnostics" : "Finance workspace"}
             </Typography>
             <Typography id="admin-v2-billing-title" component="h1" variant="h3" sx={{ mt: 0.5, color: "rgba(255,255,255,0.99)", fontWeight: 950, letterSpacing: "-0.055em", lineHeight: 1 }}>
-              Billing & Finance
+              {isDiagnostics ? "Finance Diagnostics" : "Billing & Finance"}
             </Typography>
             <Typography variant="body2" sx={{ mt: 1, color: "rgba(235,224,243,0.72)", maxWidth: 700 }}>
-              A consolidated, read-only finance cockpit for invoices, payment ledgers, refunds, expenses, reports and order reconciliation. It never substitutes due amounts for received cash.
+              {isDiagnostics
+                ? "Review order reconciliation exceptions and finance source guidance. These are read-only findings, not automatic accounting corrections."
+                : "Invoices, payments, refunds, expenses and operational finance in one workspace."}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-            <V2Button href="/admin-v2/invoices" variant="outlined" startIcon={<FileText size={15} />}>Open Invoices</V2Button>
-            <V2Button href="/admin-v2/transactions" variant="contained" startIcon={<Receipt size={15} />}>Record Payment</V2Button>
-            <V2Button href="/admin-v2/reports" variant="outlined" startIcon={<Download size={15} />}>Export Reports</V2Button>
+            {isDiagnostics ? (
+              <V2Button href="/admin-v2/billing" variant="outlined">Back to Billing</V2Button>
+            ) : (
+              <>
+                <V2Button href="/admin-v2/invoices" variant="outlined" startIcon={<FileText size={15} />}>Open Invoices</V2Button>
+                <V2Button href="/admin-v2/transactions" variant="contained" startIcon={<Receipt size={15} />}>Record Payment</V2Button>
+                <V2Button href="/admin-v2/reports" variant="outlined" startIcon={<Download size={15} />}>Export Reports</V2Button>
+              </>
+            )}
           </Stack>
         </Stack>
 
         {allFailed ? (
           <Alert severity="error">Finance data is unavailable. Billing does not substitute fake zeroes for failed sources.</Alert>
         ) : null}
+        {isDiagnostics ? (
+          <>
+            <ReconciliationWorkspace data={data} />
+            <FinancialNotices notes={data.notes} sources={alerts} />
+            <Typography variant="caption" sx={{ color: "rgba(222,208,232,0.70)" }}>
+              Existing historical orders are owner-confirmed test records. No per-order test/live designation is persisted; never treat these records as verified sales.
+            </Typography>
+          </>
+        ) : (
+          <>
         <KpiStrip metrics={data.summary} />
 
         <TruthfulTrendPanel />
@@ -832,14 +860,23 @@ export function AdminV2BillingView({ data }: { data: AdminV2BillingResult }) {
 
         <LedgerPreview data={data} />
 
-        <ReconciliationWorkspace data={data} />
-
-        <FinancialNotices notes={data.notes} sources={alerts} />
-
-        <Typography variant="caption" sx={{ display: "flex", gap: 0.6, alignItems: "center", color: "rgba(222,208,232,0.62)", maxWidth: 1020 }}>
-          <ArrowUpRight size={13} />
-          Operational finance summary only — known due is incomplete when legacy snapshots are missing, order totals are not settled cash, and payment status is not gateway settlement.
-        </Typography>
+        <Box component="section" aria-label="Finance diagnostics access" sx={{ borderTop: "1px solid rgba(255,255,255,0.10)", pt: 1.5 }}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.4} sx={{ justifyContent: "space-between", alignItems: { md: "center" } }}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ color: "rgba(255,255,255,0.94)", fontWeight: 900 }}>
+                Finance diagnostics
+              </Typography>
+              <Typography variant="caption" sx={{ color: "rgba(222,208,232,0.68)" }}>
+                {data.reconciliation.issueCount.toLocaleString("en-US")} reconciliation flags · Historical test records are included in these totals.
+              </Typography>
+            </Box>
+            <V2Button href="/admin-v2/billing/diagnostics" variant="outlined" size="small" startIcon={<ShieldAlert size={15} />}>
+              View Diagnostics
+            </V2Button>
+          </Stack>
+        </Box>
+          </>
+        )}
       </Stack>
     </Box>
   );
