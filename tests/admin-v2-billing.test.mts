@@ -329,7 +329,7 @@ test("Billing financial notices use truthful notice semantics behind an accessib
   assert.match(view, /sourceAlerts\(data\)/);
   assert.match(view, /highlightedNotices\.length/);
   assert.match(view, /Financial notices/);
-  assert.match(view, /highlightedNotices\.length === 1 \? "notice" : "notices"/);
+  assert.match(view, /notices\.length === 1 \? "notice" : "notices"/);
   assert.match(view, /actionable reconciliation counts remain in the control center above/);
   assert.doesNotMatch(view, /active \$\{[^}]+\}[^`]*(?:issue|issues)/);
   assert.doesNotMatch(view, /No active discrepancy warning/);
@@ -337,6 +337,10 @@ test("Billing financial notices use truthful notice semantics behind an accessib
   assert.match(view, /Hide details/);
   assert.match(view, /aria-expanded=\{detailsOpen\}/);
   assert.match(view, /aria-controls="billing-financial-notices-details"/);
+  assert.match(view, /\{!detailsOpen && highlightedNotices\.length > 0 \? \(/);
+  assert.match(view, /highlightedNotices\.slice\(0, 2\)\.map/);
+  assert.match(view, /highlightedNotices\.length - 2/);
+  assert.match(view, /\{notices\.map\(\(notice\) => \(/);
   assert.match(view, /<Collapse in=\{detailsOpen\}/);
   assert.match(view, /findIndex\(\(candidate\) => candidate\.message === notice\.message\)/);
   assert.doesNotMatch(view, /data\.notes\.map\(\(note\) => \(\s*<Alert/);
