@@ -75,6 +75,7 @@ const SUPABASE_ORDER_SELECT_COLUMNS = [
   "proof_received",
   "admin_internal_note",
   "order_source",
+  "record_scope",
   "archived_at",
   "cancelled_reason",
   "created_at",
@@ -126,6 +127,7 @@ type SupabaseOrderRow = {
   proof_received?: string | null;
   admin_internal_note?: string | null;
   order_source?: string | null;
+  record_scope?: "live" | "test" | null;
   is_test_order?: boolean | string | null;
   test_order?: boolean | string | null;
   archived_at?: string | null;
@@ -577,6 +579,7 @@ async function queryOrdersFromSupabase(query: AdminV2OrderQuery) {
   if (query.payment !== "all") appendFilter(params, "payment_method", "eq", query.payment);
   if (query.paymentStatus !== "all") appendFilter(params, "payment_status", "eq", query.paymentStatus);
   if (query.delivery !== "all") appendFilter(params, "delivery_status", "eq", query.delivery);
+  if (query.recordScope !== "all") appendFilter(params, "record_scope", "eq", query.recordScope);
   if (query.from) appendFilter(params, "created_at", "gte", `${query.from}T00:00:00.000Z`);
   if (query.to) appendFilter(params, "created_at", "lte", `${query.to}T23:59:59.999Z`);
 
@@ -909,7 +912,7 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     adminInternalNote: row.admin_internal_note ?? undefined,
     orderSource: normalizeOrderSource(row.order_source),
     assignedStaff: row.assigned_staff ?? undefined,
-    isTestOrder: booleanValue(row.is_test_order ?? row.test_order),
+    isTestOrder: row.record_scope === "test" || (row.record_scope == null && booleanValue(row.is_test_order ?? row.test_order)),
     archivedAt:
       row.archived_at ??
       (booleanValue(row.is_archived) ? row.updated_at ?? row.created_at ?? undefined : undefined),

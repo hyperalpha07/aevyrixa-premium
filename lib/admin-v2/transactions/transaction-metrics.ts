@@ -47,6 +47,7 @@ export type AdminV2TransactionMetrics = {
 };
 
 export type AdminV2TransactionQueryResult = {
+  dataScope?: "live" | "test";
   rows: AdminV2TransactionRow[];
   metrics: AdminV2TransactionMetrics;
   query: AdminV2TransactionQuery;

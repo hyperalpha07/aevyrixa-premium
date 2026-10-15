@@ -17,6 +17,7 @@ export type AdminV2OrderQuery = {
   payment: PaymentMethod | "all";
   paymentStatus: PaymentStatus | "all";
   delivery: DeliveryStatus | "all";
+  recordScope: "live" | "test" | "all";
   from: string;
   to: string;
   sort: AdminV2OrderSort;
@@ -64,6 +65,7 @@ export function parseAdminV2OrderQuery(searchParams: URLSearchParams): AdminV2Or
     payment: oneOf(searchParams.get("payment"), paymentMethods, "all") as PaymentMethod | "all",
     paymentStatus: oneOf(searchParams.get("paymentStatus"), paymentStatuses, "all") as PaymentStatus | "all",
     delivery: oneOf(searchParams.get("delivery"), deliveryStatuses, "all") as DeliveryStatus | "all",
+    recordScope: oneOf(searchParams.get("recordScope"), ["live", "test"] as const, "all") as "live" | "test" | "all",
     from: cleanDate(searchParams.get("from")),
     to: cleanDate(searchParams.get("to")),
     sort,

@@ -57,6 +57,7 @@ function readFilters(searchParams: URLSearchParams): AdminV2OrderFilters {
     payment: searchParams.get("payment") ?? "all",
     paymentStatus: searchParams.get("paymentStatus") ?? "all",
     delivery: searchParams.get("delivery") ?? "all",
+    recordScope: searchParams.get("recordScope") === "live" || searchParams.get("recordScope") === "test" ? searchParams.get("recordScope") as "live" | "test" : "all",
     from: searchParams.get("from") ?? "",
     to: searchParams.get("to") ?? "",
     sort: sort === "oldest" || sort === "highest" || sort === "lowest" ? (sort as AdminV2OrderSort) : "newest",

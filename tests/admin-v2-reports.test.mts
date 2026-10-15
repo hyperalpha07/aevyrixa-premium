@@ -224,3 +224,22 @@ test("Reports enforce customer privacy and report-specific source loading", () =
   const customerCsv = exports.adminV2ReportToCsv(sampleReport("customers"));
   assert.doesNotMatch(customerCsv, /Customer A/);
 });
+
+
+test("Test-scoped reports include test order values without mixing live or cancelled values", () => {
+  const range = analytics.resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2026-09-01&to=2026-09-30"));
+  const rows = [
+    order({ orderId: "live", orderReference: "LIVE-R", totalAmount: 110 }),
+    order({ orderId: "test", orderReference: "TEST-R", totalAmount: 240, isTestOrder: true }),
+    order({ orderId: "cancelled", orderReference: "TEST-CANCEL-R", totalAmount: 900, isTestOrder: true, status: "Cancelled" }),
+  ];
+  const input = { type: "orders" as const, range, orders: rows, customers: [], reviews: [], complete: true };
+  const live = reports.buildAdminV2Report({ ...input, dataScope: "live" });
+  const testsOnly = reports.buildAdminV2Report({ ...input, dataScope: "test" });
+  assert.equal(live.analytics.kpis.payableSales, 110);
+  assert.equal(testsOnly.analytics.kpis.payableSales, 240);
+  assert.equal(live.rows.length, 1);
+  assert.equal(testsOnly.rows.length, 1);
+  assert.equal(testsOnly.rows[0].orderReference, "TEST-R");
+  assert.match(exports.adminV2ReportToCsv(testsOnly), /TEST RECORDS/);
+});

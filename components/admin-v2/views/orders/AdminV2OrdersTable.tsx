@@ -141,6 +141,9 @@ export function AdminV2OrdersTable({
                   >
                     {order.orderReference}
                   </Typography>
+                  {order.isTestOrder ? (
+                    <Typography component="span" variant="caption" sx={{ display: "inline-block", ml: 1, fontWeight: 900, color: "#ad1b89" }}>TEST</Typography>
+                  ) : null}
                 </TableCell>
                 <TableCell>
                   <Box sx={{ minWidth: 160 }}>

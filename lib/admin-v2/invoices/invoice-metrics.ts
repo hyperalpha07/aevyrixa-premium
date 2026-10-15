@@ -46,6 +46,7 @@ export type AdminV2InvoiceMetrics = {
 };
 
 export type AdminV2InvoiceQueryResult = {
+  dataScope?: "live" | "test";
   rows: AdminV2InvoiceRow[];
   metrics: AdminV2InvoiceMetrics;
   query: AdminV2InvoiceQuery;

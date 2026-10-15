@@ -2,6 +2,7 @@ import { forbiddenAdminResponse, getFreshAdminRequestSession, unauthorizedAdminR
 import { hasPermission } from "@/app/lib/admin-permissions";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 import { adminV2FinanceCsvResponse, adminV2RowsToCsv } from "@/lib/admin-v2/finance/csv";
+import { parseAdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 import { getAdminV2ExpenseExportRows } from "@/lib/admin-v2/expenses/expenses-query";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export async function GET(request: Request) {
   if (!hasPermission(session, "finance.expenses.view") || !hasPermission(session, "finance.export")) return forbiddenAdminResponse();
 
   const url = new URL(request.url);
+  const recordScope = parseAdminV2FinancialDataScope(url.searchParams.get("scope"));
   if (hasInvalidDateFilter(url.searchParams)) return Response.json({ errors: ["Invalid date filter."] }, { status: 400 });
   const result = await getAdminV2ExpenseExportRows(url.searchParams);
   if (!result.ok) return Response.json({ errors: result.errors }, { status: result.status });
@@ -36,20 +38,21 @@ export async function GET(request: Request) {
     row.currencyCode,
     row.paymentMethod,
     row.status,
+    recordScope.toUpperCase(),
   ]);
-  const csv = adminV2RowsToCsv(["Expense Reference", "Date", "Category", "Description", "Payee", "Order Reference", "Amount", "Currency", "Payment Method", "Status"], rows);
+  const csv = adminV2RowsToCsv(["Expense Reference", "Date", "Category", "Description", "Payee", "Order Reference", "Amount", "Currency", "Payment Method", "Status", "Data Scope"], rows);
   try {
     await logStaffActivity({
       actor: session,
       action: "finance.expenses.exported",
       targetType: "finance_expenses",
       targetId: "csv",
-      metadata: { type: "expenses", from: result.query.from, to: result.query.to, row_count: result.rows.length, filters: { q: Boolean(result.query.q), category: result.query.category, status: result.query.status } },
+      metadata: { type: "expenses", from: result.query.from, to: result.query.to, row_count: result.rows.length, data_scope: recordScope, filters: { q: Boolean(result.query.q), category: result.query.category, status: result.query.status } },
       requireRecorded: true,
     });
   } catch {
     return Response.json({ errors: ["Expense export audit could not be recorded."] }, { status: 500 });
   }
 
-  return adminV2FinanceCsvResponse(csv, "admin-v2-finance-expenses.csv");
+  return adminV2FinanceCsvResponse(csv, `admin-v2-finance-expenses-${recordScope}.csv`);
 }

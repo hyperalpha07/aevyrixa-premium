@@ -1,4 +1,5 @@
 import "server-only";
+import { parseAdminV2FinancialDataScope, scopedOrderLinkedSelect, type AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import {
   adminV2RefundTotalPages,
@@ -99,8 +100,8 @@ function appendFilter(params: string[], key: string, operator: string, value: st
   params.push(`${key}=${operator}.${encodeURIComponent(value)}`);
 }
 
-export function adminV2RefundParams(query: AdminV2RefundQuery, includeOrder = true) {
-  const params = [`select=${refundSelect}`];
+export function adminV2RefundParams(query: AdminV2RefundQuery, includeOrder = true, scope: AdminV2FinancialDataScope = "live") {
+  const params = scopedOrderLinkedSelect(refundSelect, scope);
   if (query.method !== "all") appendFilter(params, "refund_method", "eq", query.method);
   if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.from) appendFilter(params, "occurred_at", "gte", `${query.from}T00:00:00.000Z`);
@@ -116,10 +117,10 @@ export function adminV2RefundParams(query: AdminV2RefundQuery, includeOrder = tr
   return params;
 }
 
-async function fetchRefundPage(query: AdminV2RefundQuery) {
+async function fetchRefundPage(query: AdminV2RefundQuery, scope: AdminV2FinancialDataScope) {
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
-  const response = await fetch(supabaseEndpoint(`finance_refunds?${adminV2RefundParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`finance_refunds?${adminV2RefundParams(query, true, scope).join("&")}`), {
     headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
     cache: "no-store",
   });
@@ -129,12 +130,12 @@ async function fetchRefundPage(query: AdminV2RefundQuery) {
   return { rows, totalCount: Number.isFinite(count) ? count : rows.length };
 }
 
-async function fetchMetricRows(query: AdminV2RefundQuery) {
+async function fetchMetricRows(query: AdminV2RefundQuery, scope: AdminV2FinancialDataScope) {
   const rows: AdminV2RefundRow[] = [];
   let totalCount: number | null = null;
   for (let from = 0; from < maxMetricRows; from += 1000) {
     const to = Math.min(from + 999, maxMetricRows - 1);
-    const response = await fetch(supabaseEndpoint(`finance_refunds?${adminV2RefundParams(query).join("&")}`), {
+    const response = await fetch(supabaseEndpoint(`finance_refunds?${adminV2RefundParams(query, true, scope).join("&")}`), {
       headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
       cache: "no-store",
     });
@@ -149,8 +150,9 @@ async function fetchMetricRows(query: AdminV2RefundQuery) {
 
 export async function getAdminV2RefundExportRows(searchParams = new URLSearchParams()) {
   const query = parseAdminV2RefundQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) return { ok: false as const, status: 503, errors: ["Refund ledger is unavailable."] };
-  const response = await fetch(supabaseEndpoint(`finance_refunds?${adminV2RefundParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`finance_refunds?${adminV2RefundParams(query, true, scope).join("&")}`), {
     headers: { ...supabaseHeaders(), prefer: "count=exact", range: `0-${adminV2RefundExportLimit - 1}` },
     cache: "no-store",
   });
@@ -163,11 +165,13 @@ export async function getAdminV2RefundExportRows(searchParams = new URLSearchPar
 
 export async function getAdminV2Refunds(searchParams = new URLSearchParams()): Promise<AdminV2RefundQueryResult> {
   const query = parseAdminV2RefundQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) {
     return {
       rows: [],
       metrics: buildAdminV2RefundMetrics([]),
       query,
+      dataScope: scope,
       totalCount: 0,
       totalPages: 1,
       storageAvailable: false,
@@ -177,11 +181,12 @@ export async function getAdminV2Refunds(searchParams = new URLSearchParams()): P
   }
 
   try {
-    const [page, metricRows] = await Promise.all([fetchRefundPage(query), fetchMetricRows(query)]);
+    const [page, metricRows] = await Promise.all([fetchRefundPage(query, scope), fetchMetricRows(query, scope)]);
     return {
       rows: page.rows,
       metrics: buildAdminV2RefundMetrics(metricRows.rows),
       query,
+      dataScope: scope,
       totalCount: page.totalCount,
       totalPages: adminV2RefundTotalPages(page.totalCount, query.pageSize),
       storageAvailable: true,
@@ -193,6 +198,7 @@ export async function getAdminV2Refunds(searchParams = new URLSearchParams()): P
       rows: [],
       metrics: buildAdminV2RefundMetrics([]),
       query,
+      dataScope: scope,
       totalCount: 0,
       totalPages: 1,
       storageAvailable: false,

@@ -1,4 +1,5 @@
 import "server-only";
+import { parseAdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import {
   listAnalyticsCustomerAccounts,
@@ -28,6 +29,7 @@ function fallbackResult(params: URLSearchParams, message: string): AdminV2Analyt
   const unavailable = sourceState(false, false, message);
   return buildAdminV2AnalyticsResult({
     range,
+    dataScope: parseAdminV2FinancialDataScope(params.get("scope")),
     orders: [],
     customers: [],
     reviews: [],
@@ -43,10 +45,11 @@ function fallbackResult(params: URLSearchParams, message: string): AdminV2Analyt
 
 export async function getAdminV2Analytics(searchParams = new URLSearchParams()): Promise<AdminV2AnalyticsResult> {
   const range = resolveAnalyticsDateRange(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
 
   try {
     const [orderResult, customerResult, reviewResult] = await Promise.all([
-      listAnalyticsOrders(range.fromIso, range.toIso),
+      listAnalyticsOrders(range.fromIso, range.toIso, scope),
       listAnalyticsCustomerAccounts(range.fromIso, range.toIso),
       listAnalyticsReviews(range.fromIso, range.toIso),
     ]);
@@ -66,6 +69,7 @@ export async function getAdminV2Analytics(searchParams = new URLSearchParams()):
 
     return buildAdminV2AnalyticsResult({
       range,
+      dataScope: scope,
       orders,
       customers,
       reviews,

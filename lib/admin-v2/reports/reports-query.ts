@@ -1,4 +1,5 @@
 import "server-only";
+import { parseAdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import { hasPermission, type AdminSessionUser } from "@/app/lib/admin-permissions";
 import {
@@ -39,6 +40,7 @@ export async function getAdminV2Report(
   options: { previewLimit?: number; session?: AdminSessionUser } = {}
 ): Promise<AdminV2ReportResult> {
   const { type, range } = reportSearchParams(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   const canViewCustomerReport = options.session ? canAccessAdminV2ReportType(options.session, type) : type !== "customers";
 
   if (!canViewCustomerReport) {
@@ -46,6 +48,7 @@ export async function getAdminV2Report(
     return buildAdminV2Report({
       type,
       range,
+      dataScope: scope,
       orders: [],
       customers: [],
       reviews: [],
@@ -59,7 +62,7 @@ export async function getAdminV2Report(
   try {
     const needsOrders = orderReportTypes.has(type);
     const needsReviews = type === "reviews";
-    const orderResult = needsOrders ? await listAnalyticsOrders(range.fromIso, range.toIso) : null;
+    const orderResult = needsOrders ? await listAnalyticsOrders(range.fromIso, range.toIso, scope) : null;
     const linkedIds = type === "customers" && orderResult?.available
       ? orderResult.rows.map((order) => order.customerId).filter((id): id is string => Boolean(id))
       : [];
@@ -89,6 +92,7 @@ export async function getAdminV2Report(
     return buildAdminV2Report({
       type,
       range,
+      dataScope: scope,
       orders,
       customers,
       reviews,
@@ -106,6 +110,7 @@ export async function getAdminV2Report(
     return buildAdminV2Report({
       type,
       range,
+      dataScope: scope,
       orders: [],
       customers: [],
       reviews: [],

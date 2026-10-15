@@ -1,4 +1,5 @@
 import "server-only";
+import type { AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import type { OrderCartItem, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { orderStatuses } from "@/app/lib/order-types";
@@ -17,6 +18,7 @@ export const analyticsOrderSelect = [
   "delivery_charge",
   "status",
   "archived_at",
+  "record_scope",
   "created_at",
   "currency_code",
 ].join(",");
@@ -67,6 +69,7 @@ type MinimalOrderRow = {
   delivery_charge?: number | string | null;
   status?: string | null;
   archived_at?: string | null;
+  record_scope?: string | null;
   created_at?: string | null;
   currency_code?: string | null;
 };
@@ -223,6 +226,7 @@ function mapOrder(row: MinimalOrderRow): OrderRecord {
     createdAt: row.created_at ?? "",
     deliveryCharge: numberValue(row.delivery_charge),
     archivedAt: row.archived_at ?? undefined,
+    isTestOrder: row.record_scope === "test",
   };
 }
 
@@ -252,9 +256,10 @@ function mapReview(row: MinimalReviewRow): ProductReview {
   };
 }
 
-export async function listAnalyticsOrders(fromIso: string, toIso: string) {
+export async function listAnalyticsOrders(fromIso: string, toIso: string, scope: AdminV2FinancialDataScope = "live") {
   const params = new URLSearchParams({
     select: analyticsOrderSelect,
+    record_scope: `eq.${scope}`,
     created_at: `gte.${fromIso}`,
     order: "created_at.asc,id.asc",
   });

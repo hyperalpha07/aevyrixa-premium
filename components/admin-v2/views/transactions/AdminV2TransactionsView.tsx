@@ -24,6 +24,7 @@ function pageHref(data: AdminV2TransactionQueryResult, page: number) {
   if (data.query.status !== "all") params.set("status", data.query.status);
   if (data.query.from) params.set("from", data.query.from);
   if (data.query.to) params.set("to", data.query.to);
+  if (data.dataScope === "test") params.set("scope", "test");
   params.set("page", String(page));
   params.set("pageSize", String(data.query.pageSize));
   return `/admin-v2/transactions?${params.toString()}`;
@@ -147,6 +148,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
     "& .MuiInputBase-input": { py: 0.85 },
   };
   const exportHref = `/api/admin/finance/transactions/export?${new URLSearchParams({
+    scope: data.dataScope ?? "live",
     ...(data.query.q ? { q: data.query.q } : {}),
     ...(data.query.method !== "all" ? { method: data.query.method } : {}),
     ...(data.query.status !== "all" ? { status: data.query.status } : {}),
@@ -156,6 +158,10 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
 
   async function recordPayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (data.dataScope === "test") {
+      setRecordError("Test payment history is read-only; do not record financial changes from a historical test view.");
+      return;
+    }
     setRecordError("");
     setRecording(true);
     const form = new FormData(event.currentTarget);
@@ -203,6 +209,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
       </Box>
 
       <Stack spacing={1.2}>
+        <Alert severity={data.dataScope === "test" ? "warning" : "info"}>{data.dataScope === "test" ? "TEST DATA ONLY — excluded from live business financial totals." : "LIVE BUSINESS DATA — historical test-order records excluded."}</Alert>
         {data.limitation ? <Alert severity={data.queryFailed ? "error" : "warning"} sx={{ py: 0.5 }}>{data.limitation}</Alert> : null}
 
         {!data.queryFailed ? (
@@ -218,6 +225,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
 
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.35 }, "&:last-child": { pb: { xs: 1.25, md: 1.35 } } } }}>
           <Stack component="form" action="/admin-v2/transactions" method="get" direction={{ xs: "column", xl: "row" }} spacing={1} sx={{ alignItems: { xl: "center" } }}>
+            <input type="hidden" name="scope" value={data.dataScope ?? "live"} />
             <TextField name="q" label="Search transaction, order, or external reference" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 285 }, ...inputSx }} />
             <TextField select name="method" label="Payment method" size="small" defaultValue={data.query.method} sx={{ minWidth: { xl: 170 }, ...inputSx }}>
               {[allOption, ...adminV2TransactionPaymentMethods.map((method) => ({ label: method, value: method }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
@@ -229,12 +237,12 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
             <TextField name="to" type="date" size="small" label="To" defaultValue={data.query.to} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
             <input type="hidden" name="pageSize" value={data.query.pageSize} />
             <Button type="submit" variant="contained" sx={{ minHeight: 38, px: 2 }}>Apply</Button>
-            {hasFilters ? <Button href="/admin-v2/transactions" variant="outlined" sx={{ minHeight: 38, px: 2 }}>Reset</Button> : null}
+            {hasFilters ? <Button href={data.dataScope === "test" ? "/admin-v2/transactions?scope=test" : "/admin-v2/transactions"} variant="outlined" sx={{ minHeight: 38, px: 2 }}>Reset</Button> : null}
             {capabilities.canExport ? <Button href={exportHref} variant="outlined" sx={{ minHeight: 38, px: 2 }}>Export CSV</Button> : null}
           </Stack>
         </V2Card>
 
-        {capabilities.canRecordPayment ? (
+        {capabilities.canRecordPayment && data.dataScope !== "test" ? (
           <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.5 }, "&:last-child": { pb: { xs: 1.25, md: 1.5 } } } }}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}>
               <Box>
@@ -350,7 +358,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
                               View Order
                             </V2Button>
                           ) : null}
-                          {capabilities.canRecordPayment && row.status === "recorded" ? (
+                          {capabilities.canRecordPayment && data.dataScope !== "test" && row.status === "recorded" ? (
                             <Button size="small" variant="text" color="warning" disabled={voiding === row.transactionReference} onClick={() => voidPayment(row.transactionReference)} sx={{ minHeight: 28, px: 1 }}>
                               Void
                             </Button>

@@ -37,6 +37,7 @@ export type AdminV2ExpenseMetrics = {
 };
 
 export type AdminV2ExpenseQueryResult = {
+  dataScope?: "live" | "test";
   rows: AdminV2ExpenseRow[];
   metrics: AdminV2ExpenseMetrics;
   query: AdminV2ExpenseQuery;

@@ -1,3 +1,4 @@
+import type { AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 import type { OrderRecord } from "@/app/lib/order-types";
 import type { ProductReview } from "@/app/lib/review-types";
 import type { AnalyticsSourceState } from "@/lib/admin-v2/analytics/analytics-source";
@@ -36,6 +37,7 @@ export type ReportTableColumn = {
 export type ReportTableRow = Record<string, string | number>;
 
 export type AdminV2ReportResult = {
+  dataScope: AdminV2FinancialDataScope;
   type: AdminV2ReportType;
   label: string;
   range: AnalyticsDateRange;
@@ -88,13 +90,13 @@ function rangeOrders(orders: OrderRecord[], range: AnalyticsDateRange) {
   return orders.filter((order) => inRange(order.createdAt, range) && !order.archivedAt && !order.deletedAt && !order.softDeletedAt);
 }
 
-function qualifyingOrders(orders: OrderRecord[], range: AnalyticsDateRange) {
-  return rangeOrders(orders, range).filter(isQualifyingAnalyticsOrder);
+function qualifyingOrders(orders: OrderRecord[], range: AnalyticsDateRange, scope: AdminV2FinancialDataScope = "live") {
+  return rangeOrders(orders, range).filter((order) => isQualifyingAnalyticsOrder(order, scope));
 }
 
-function productRows(orders: OrderRecord[], range: AnalyticsDateRange) {
+function productRows(orders: OrderRecord[], range: AnalyticsDateRange, scope: AdminV2FinancialDataScope = "live") {
   const products = new Map<string, { product: string; quantity: number; orderValue: number; orderRefs: Set<string> }>();
-  for (const order of qualifyingOrders(orders, range)) {
+  for (const order of qualifyingOrders(orders, range, scope)) {
     for (const item of order.items) {
       const key = item.productId || item.slug || item.name || item.id;
       if (!key) continue;
@@ -115,7 +117,7 @@ function productRows(orders: OrderRecord[], range: AnalyticsDateRange) {
     .map((row) => ({ product: row.product, quantity: row.quantity, orderValue: row.orderValue, orderCount: row.orderRefs.size }));
 }
 
-function customerRows(orders: OrderRecord[], customers: ReportCustomerRow[], range: AnalyticsDateRange) {
+function customerRows(orders: OrderRecord[], customers: ReportCustomerRow[], range: AnalyticsDateRange, scope: AdminV2FinancialDataScope = "live") {
   const map = new Map(customers.map((customer) => [customer.id, customer]));
   const aggregates = new Map<string, { customerId: string; customer: string; createdAt: string; orderCount: number; orderValue: number }>();
   for (const customer of customers.filter((item) => inRange(item.createdAt, range))) {
@@ -127,7 +129,7 @@ function customerRows(orders: OrderRecord[], customers: ReportCustomerRow[], ran
       orderValue: 0,
     });
   }
-  for (const order of qualifyingOrders(orders, range)) {
+  for (const order of qualifyingOrders(orders, range, scope)) {
     if (!order.customerId) continue;
     const customer = map.get(order.customerId);
     const current = aggregates.get(order.customerId) ?? {
@@ -167,6 +169,7 @@ export function parseAdminV2ReportType(value: string | null | undefined): AdminV
 export function buildAdminV2Report(input: {
   type: AdminV2ReportType;
   range: AnalyticsDateRange;
+  dataScope?: AdminV2FinancialDataScope;
   orders: OrderRecord[];
   customers: ReportCustomerRow[];
   reviews: ProductReview[];
@@ -177,6 +180,7 @@ export function buildAdminV2Report(input: {
 }): AdminV2ReportResult {
   const analytics = buildAdminV2AnalyticsResult({
     range: input.range,
+    dataScope: input.dataScope ?? "live",
     orders: input.orders,
     customers: input.customers,
     reviews: input.reviews,
@@ -187,20 +191,21 @@ export function buildAdminV2Report(input: {
     ],
     sources: input.sources,
   });
-  const qOrders = qualifyingOrders(input.orders, input.range);
+  const qOrders = qualifyingOrders(input.orders, input.range, input.dataScope ?? "live");
   const allRangeOrders = rangeOrders(input.orders, input.range);
-  const products = productRows(input.orders, input.range);
-  const customers = customerRows(input.orders, input.customers, input.range);
+  const products = productRows(input.orders, input.range, input.dataScope ?? "live");
+  const customers = customerRows(input.orders, input.customers, input.range, input.dataScope ?? "live");
   const reviews = reviewRows(input.reviews, input.range);
   const discounts = qOrders.reduce((sum, order) => sum + (typeof order.discountAmount === "number" && Number.isFinite(order.discountAmount) ? Math.max(0, order.discountAmount) : 0), 0);
   const deliveryFees = qOrders.reduce((sum, order) => sum + (typeof order.deliveryCharge === "number" && Number.isFinite(order.deliveryCharge) ? Math.max(0, order.deliveryCharge) : 0), 0);
   const limit = input.previewLimit ?? maxPreviewRows;
   const base = {
+    dataScope: input.dataScope ?? "live",
     type: input.type,
     label: adminV2ReportLabels[input.type],
     range: input.range,
     analytics,
-    notes: ["Saved and scheduled reports are not available yet."],
+    notes: ["Saved and scheduled reports are not available yet.", `Order-derived data scope: ${input.dataScope ?? "live"}. Customer-account and review sources are separate from order provenance.`],
     exportable: Boolean(input.complete),
     exportDisabledReason: input.complete ? undefined : "Export is disabled because a required report source is unavailable or incomplete.",
     complete: input.complete !== false,
@@ -347,7 +352,7 @@ export function buildAdminV2Report(input: {
       { metric: "Discounts", value: discounts },
       { metric: "Delivery Fees", value: deliveryFees },
     ],
-    notes: [...base.notes, "Eligible Order Value uses persisted non-cancelled order totals. No standalone production test-order flag is assumed."],
+    notes: [...base.notes, "Eligible Order Value uses persisted non-cancelled order totals within the selected order provenance scope."],
   };
 }
 

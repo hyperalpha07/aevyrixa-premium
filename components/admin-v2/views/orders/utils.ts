@@ -26,6 +26,7 @@ export type AdminV2OrderFilters = {
   payment: string;
   paymentStatus: string;
   delivery: string;
+  recordScope: "all" | "live" | "test";
   from: string;
   to: string;
   sort: AdminV2OrderSort;
@@ -37,6 +38,7 @@ export const emptyOrderFilters: AdminV2OrderFilters = {
   payment: "all",
   paymentStatus: "all",
   delivery: "all",
+  recordScope: "all",
   from: "",
   to: "",
   sort: "newest",
@@ -125,6 +127,7 @@ export function filterOrders(orders: OrderRecord[], filters: AdminV2OrderFilters
     if (filters.payment !== "all" && order.paymentDetails.paymentMethod !== filters.payment) return false;
     if (filters.paymentStatus !== "all" && (order.paymentStatus ?? "") !== filters.paymentStatus) return false;
     if (filters.delivery !== "all" && (order.deliveryStatus ?? "") !== filters.delivery) return false;
+    if (filters.recordScope !== "all" && (order.isTestOrder ? "test" : "live") !== filters.recordScope) return false;
     if (fromTime !== null && (Number.isNaN(created) || created < fromTime)) return false;
     if (toTime !== null && (Number.isNaN(created) || created > toTime)) return false;
     return true;
@@ -146,6 +149,7 @@ export function activeFilterCount(filters: AdminV2OrderFilters) {
     filters.payment !== "all" ? filters.payment : "",
     filters.paymentStatus !== "all" ? filters.paymentStatus : "",
     filters.delivery !== "all" ? filters.delivery : "",
+    filters.recordScope !== "all" ? filters.recordScope : "",
     filters.from,
     filters.to,
     filters.sort !== "newest" ? filters.sort : "",

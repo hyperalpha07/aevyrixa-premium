@@ -1,3 +1,4 @@
+import type { AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 import type { AdminV2AnalyticsResult } from "@/lib/admin-v2/analytics/analytics-metrics";
 import type { AdminV2InvoiceQueryResult } from "@/lib/admin-v2/invoices/invoice-metrics";
 import type { AdminV2ExpenseQueryResult } from "@/lib/admin-v2/expenses/expense-metrics";
@@ -30,6 +31,7 @@ export type AdminV2BillingModuleCard = {
 };
 
 export type AdminV2BillingResult = {
+  recordScope: AdminV2FinancialDataScope;
   summary: AdminV2BillingSummaryMetric[];
   modules: AdminV2BillingModuleCard[];
   sources: Record<"analytics" | "transactions" | "orderDue" | "refunds" | "expenses" | "invoices", AdminV2BillingSourceState>;
@@ -63,7 +65,7 @@ export function buildAdminV2BillingResult(input: {
   refunds: AdminV2RefundQueryResult;
   expenses: AdminV2ExpenseQueryResult;
   invoices: AdminV2InvoiceQueryResult;
-}): AdminV2BillingResult {
+}, scope: AdminV2FinancialDataScope = "live"): AdminV2BillingResult {
   const reconciliationIssues = input.orderDue.reconciliationIssues ?? [];
   const missingDueSnapshotCount = input.orderDue.missingDueSnapshotCount ?? 0;
   const deliveryStatusMismatchCount = input.orderDue.deliveryStatusMismatchCount ?? 0;
@@ -111,6 +113,7 @@ export function buildAdminV2BillingResult(input: {
   }
 
   return {
+    recordScope: scope,
     sources: {
       analytics: sourceState(analyticsAvailable, input.analytics.limitation),
       transactions: sourceState(transactionsAvailable, input.transactions.limitation),
@@ -129,7 +132,7 @@ export function buildAdminV2BillingResult(input: {
         displayValue: adminV2MoneyAggregateUnavailable(input.orderDue.orderValueSummary) ? "Mixed currencies" : undefined,
         helper: adminV2MoneyAggregateUnavailable(input.orderDue.orderValueSummary)
           ? "Unavailable as a single total; multiple currencies are present."
-          : `All-time non-archived, non-cancelled order totals from ${input.orderDue.orderValueKnownCount.toLocaleString("en")} eligible orders. Test-order classification is not independently persisted.`,
+          : `All-time non-archived, non-cancelled order totals from ${input.orderDue.orderValueKnownCount.toLocaleString("en")} eligible orders. This report includes only ${scope} orders.`,
       },
       {
         label: "Recorded Payments",

@@ -190,8 +190,8 @@ export function isVisibleAnalyticsOrder(order: OrderRecord) {
   return !order.archivedAt && !order.deletedAt && !order.softDeletedAt;
 }
 
-export function isQualifyingAnalyticsOrder(order: OrderRecord) {
-  return isVisibleAnalyticsOrder(order) && order.status !== "Cancelled" && !order.isTestOrder;
+export function isQualifyingAnalyticsOrder(order: OrderRecord, scope: "live" | "test" = "live") {
+  return isVisibleAnalyticsOrder(order) && order.status !== "Cancelled" && Boolean(order.isTestOrder) === (scope === "test");
 }
 
 function finiteAmount(value: unknown) {
@@ -269,6 +269,7 @@ function itemSnapshotValue(item: OrderCartItem) {
 export function buildAdminV2AnalyticsResult(input: {
   range: AnalyticsDateRange;
   orders: OrderRecord[];
+  dataScope?: "live" | "test";
   customers: AnalyticsCustomerRow[];
   reviews: ProductReview[];
   sources?: AdminV2AnalyticsResult["sources"];
@@ -276,7 +277,7 @@ export function buildAdminV2AnalyticsResult(input: {
   limitation?: string | null;
 }): AdminV2AnalyticsResult {
   const rangeOrders = input.orders.filter((order) => isVisibleAnalyticsOrder(order) && dateInRange(order.createdAt, input.range));
-  const qualifyingOrders = rangeOrders.filter(isQualifyingAnalyticsOrder);
+  const qualifyingOrders = rangeOrders.filter((order) => isQualifyingAnalyticsOrder(order, input.dataScope ?? "live"));
   const payableSales = qualifyingOrders.reduce((sum, order) => sum + payableOrderValue(order), 0);
   const newAccounts = input.customers.filter((customer) => dateInRange(customer.createdAt, input.range));
   const newAccountIds = new Set(newAccounts.map((customer) => customer.id));
