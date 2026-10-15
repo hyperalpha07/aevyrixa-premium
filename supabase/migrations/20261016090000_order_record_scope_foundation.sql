@@ -19,6 +19,8 @@ declare
   v_existing_column boolean;
   v_total bigint;
   v_expected bigint;
+  v_timestamp_trigger_mode "char";
+  v_history_timestamp_digest text;
 begin
   -- Prevent concurrent checkout inserts during the exactly-matched preflight.
   lock table public.orders in share row exclusive mode;
@@ -66,6 +68,24 @@ begin
     alter table public.orders
       add column record_scope text not null default 'live';
 
+    -- Provenance backfill is NOT a business-order update. Preserve original
+    -- updated_at so owner-confirmed test history cannot falsely appear edited
+    -- during release. In production orders_set_updated_at fires on ANY UPDATE.
+    select md5(string_agg(order_ref || ':' || updated_at::text, '|'
+      order by order_ref)) into v_history_timestamp_digest from public.orders;
+
+    select tgenabled into v_timestamp_trigger_mode
+    from pg_trigger
+    where tgrelid='public.orders'::regclass and tgname='orders_set_updated_at';
+
+    if v_timestamp_trigger_mode is not null and v_timestamp_trigger_mode <> 'O' then
+      raise exception 'Unexpected orders_set_updated_at trigger mode %. Stop migration rather than altering an existing trigger configuration.',
+        v_timestamp_trigger_mode;
+    end if;
+    if v_timestamp_trigger_mode = 'O' then
+      alter table public.orders disable trigger orders_set_updated_at;
+    end if;
+
     update public.orders
       set record_scope = 'test'
     where order_ref in (
@@ -91,6 +111,16 @@ begin
       'AEV-MUB2WPT4-T8TV',
       'AEV-MUC4VJUI-60BW'
     );
+
+    if v_timestamp_trigger_mode = 'O' then
+      alter table public.orders enable trigger orders_set_updated_at;
+    end if;
+
+    if v_history_timestamp_digest is distinct from
+       (select md5(string_agg(order_ref || ':' || updated_at::text, '|'
+         order by order_ref)) from public.orders) then
+      raise exception 'Historical order updated_at changed during scope backfill; rolling back migration';
+    end if;
 
     if (select count(*) from public.orders where record_scope = 'test') <> 21
        or (select count(*) from public.orders where record_scope = 'live') <> 0 then
