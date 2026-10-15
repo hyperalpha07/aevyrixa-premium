@@ -110,6 +110,7 @@ export async function getAdminV2Report(
     return buildAdminV2Report({
       type,
       range,
+      dataScope: scope,
       orders: [],
       customers: [],
       reviews: [],
