@@ -148,5 +148,62 @@ create trigger orders_protect_record_scope
 before update of record_scope on public.orders
 for each row execute function public.protect_order_record_scope();
 
+-- Expenses may not reference an order; give such rows an explicit scope.
+-- When there IS a linked order, provenance is inherited from that order.
+-- No existing expense amounts, statuses, or journal references are rewritten.
+alter table public.finance_expenses
+  add column if not exists record_scope text not null default 'live';
+
+do $expense_scope_constraint$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.finance_expenses'::regclass
+      and conname = 'finance_expenses_record_scope_valid'
+  ) then
+    alter table public.finance_expenses
+      add constraint finance_expenses_record_scope_valid
+      check (record_scope in ('live','test'));
+  end if;
+end;
+$expense_scope_constraint$;
+
+update public.finance_expenses e
+set record_scope = o.record_scope
+from public.orders o
+where e.order_ref = o.order_ref
+  and e.record_scope is distinct from o.record_scope;
+
+create index if not exists finance_expenses_record_scope_occurred_idx
+  on public.finance_expenses (record_scope, occurred_at desc);
+
+create or replace function public.set_linked_expense_record_scope()
+returns trigger language plpgsql
+set search_path = 'pg_catalog', 'public'
+as $scope$
+declare
+  v_order_scope text;
+begin
+  if new.order_ref is not null then
+    select record_scope into v_order_scope
+    from public.orders where order_ref = new.order_ref;
+    if v_order_scope is null then
+      raise exception 'Linked expense order is missing or unclassified'
+        using errcode='23503';
+    end if;
+    new.record_scope := v_order_scope;
+  end if;
+  return new;
+end;
+$scope$;
+
+drop trigger if exists finance_expenses_set_linked_scope on public.finance_expenses;
+create trigger finance_expenses_set_linked_scope
+before insert or update of order_ref, record_scope on public.finance_expenses
+for each row execute function public.set_linked_expense_record_scope();
+
+comment on column public.finance_expenses.record_scope is
+  'Explicit scope for unlinked expenses; linked expenses inherit their order provenance.';
+
 -- No financial ledger rows, invoice snapshots, prices, payment state, due,
 -- delivery history, or archived state are modified by this migration.
