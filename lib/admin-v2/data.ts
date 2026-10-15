@@ -1,5 +1,6 @@
 import { listAdminCustomerOverviews } from "@/app/lib/customer-account-store";
-import { listOrders } from "@/app/lib/order-store";
+import { queryOrders } from "@/app/lib/order-store";
+import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { listProducts } from "@/app/lib/product-store";
 import { listAllReviews } from "@/app/lib/review-store";
 import { getAllConversations } from "@/app/lib/support-store";
@@ -9,6 +10,34 @@ import type { AdminV2DashboardData } from "@/lib/admin-v2/types";
 
 function hasSupabaseConfig() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+const maxLiveDashboardOrders = 10000;
+const dashboardOrderPageSize = 50;
+
+async function listCompleteLiveDashboardOrders() {
+  const firstQuery = parseAdminV2OrderQuery(new URLSearchParams("recordScope=live&page=1&pageSize=50"));
+  const firstPage = await queryOrders(firstQuery);
+  if (firstPage.storageMode !== "supabase") {
+    return { storageMode: firstPage.storageMode, complete: false, orders: [] as typeof firstPage.rows };
+  }
+  if (firstPage.totalCount > maxLiveDashboardOrders) {
+    return { storageMode: "supabase" as const, complete: false, orders: [] as typeof firstPage.rows };
+  }
+
+  const orders = [...firstPage.rows];
+  const pages = firstPage.totalPages;
+  for (let page = 2; page <= pages; page += 5) {
+    const requests = Array.from({ length: Math.min(5, pages - page + 1) }, (_, index) =>
+      queryOrders({ ...firstQuery, page: page + index })
+    );
+    const results = await Promise.all(requests);
+    if (results.some((result) => result.storageMode !== "supabase" || result.totalCount !== firstPage.totalCount)) {
+      return { storageMode: "supabase" as const, complete: false, orders: [] as typeof firstPage.rows };
+    }
+    for (const result of results) orders.push(...result.rows);
+  }
+  return { storageMode: "supabase" as const, complete: orders.length === firstPage.totalCount, orders };
 }
 
 export async function getAdminV2DashboardData(
@@ -23,7 +52,7 @@ export async function getAdminV2DashboardData(
 
   const [ordersResult, productsResult, reviewsResult, customersResult, supportResult] =
     await Promise.allSettled([
-      canViewOrders ? listOrders() : Promise.resolve(null),
+      canViewOrders ? listCompleteLiveDashboardOrders() : Promise.resolve(null),
       canViewProducts
         ? listProducts({ includeDrafts: true, scope: "admin" })
         : Promise.resolve(null),
@@ -36,7 +65,7 @@ export async function getAdminV2DashboardData(
 
   const orderPayload = ordersResult.status === "fulfilled" ? ordersResult.value : null;
   const persistedOrders =
-    orderPayload?.storageMode === "supabase"
+    orderPayload?.storageMode === "supabase" && orderPayload.complete
       ? orderPayload.orders.filter((order) => !order.archivedAt && !order.deletedAt && !order.softDeletedAt)
       : [];
 
@@ -54,7 +83,7 @@ export async function getAdminV2DashboardData(
 
   return {
     orders: {
-      available: canViewOrders && orderPayload?.storageMode === "supabase",
+      available: canViewOrders && orderPayload?.storageMode === "supabase" && orderPayload.complete,
       count: liveOrders.length,
       revenue: liveOrders
         .filter((order) => order.status !== "Cancelled")
@@ -63,7 +92,7 @@ export async function getAdminV2DashboardData(
       recent: [...liveOrders]
         .sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt))
         .slice(0, 6),
-      source: canViewOrders ? orderPayload?.storageMode ?? "unavailable" : "unauthorized",
+      source: !canViewOrders ? "unauthorized" : orderPayload?.storageMode === "supabase" && orderPayload.complete ? "supabase" : "unavailable",
     },
     products: {
       available: canViewProducts && productPayload?.storageMode === "supabase",
