@@ -29,8 +29,8 @@ const icons: Record<AdminV2ReportType, typeof FileBarChart> = {
   fees: Truck,
 };
 
-function reportHref(type: AdminV2ReportType, range: string, from?: string, to?: string) {
-  const params = new URLSearchParams({ type, range });
+function reportHref(type: AdminV2ReportType, range: string, scope: "live" | "test", from?: string, to?: string) {
+  const params = new URLSearchParams({ type, range, scope });
   if (range === "custom") {
     if (from) params.set("from", from);
     if (to) params.set("to", to);
@@ -39,7 +39,7 @@ function reportHref(type: AdminV2ReportType, range: string, from?: string, to?: 
 }
 
 function exportHref(data: AdminV2ReportResult) {
-  const params = new URLSearchParams({ type: data.type, range: data.range.preset });
+  const params = new URLSearchParams({ type: data.type, range: data.range.preset, scope: data.dataScope });
   if (data.range.preset === "custom") {
     params.set("from", data.range.from);
     params.set("to", data.range.to);
@@ -89,6 +89,7 @@ export function AdminV2ReportsView({ data, permissions }: { data: AdminV2ReportR
       <Stack spacing={2.5}>
         <V2Card>
           <Stack component="form" action="/admin-v2/reports" method="get" direction={{ xs: "column", lg: "row" }} spacing={2} sx={{ alignItems: { lg: "center" } }}>
+            <input type="hidden" name="scope" value={data.dataScope} />
             <TextField select name="type" label="Report Type" size="small" defaultValue={data.type} sx={{ minWidth: { lg: 240 } }}>
               {adminV2ReportTypes.map((type) => <MenuItem key={type} value={type} disabled={type === "customers" && !permissions.canViewCustomers}>{adminV2ReportLabels[type]}</MenuItem>)}
             </TextField>
@@ -101,13 +102,14 @@ export function AdminV2ReportsView({ data, permissions }: { data: AdminV2ReportR
           </Stack>
           <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: "wrap", rowGap: 1 }}>
             {analyticsPresetRanges.filter((range) => range !== "custom").map((range) => (
-              <Button key={range} href={reportHref(data.type, range)} variant={data.range.preset === range ? "contained" : "outlined"} size="small">
+              <Button key={range} href={reportHref(data.type, range, data.dataScope)} variant={data.range.preset === range ? "contained" : "outlined"} size="small">
                 {rangeLabels[range]}
               </Button>
             ))}
           </Stack>
         </V2Card>
 
+        <Alert severity={data.dataScope === "test" ? "warning" : "info"}>{data.dataScope === "test" ? "TEST DATA ONLY — not business sales, settlement, or live revenue." : "LIVE BUSINESS DATA ONLY — historical test orders are excluded from order-derived figures."}</Alert>
         {data.range.warnings.map((warning) => <Alert key={warning} severity="warning">{warning}</Alert>)}
         {data.limitation ? <Alert severity="warning">{data.limitation}</Alert> : null}
         {!data.exportable ? <Alert severity="info">{data.exportDisabledReason}</Alert> : null}
