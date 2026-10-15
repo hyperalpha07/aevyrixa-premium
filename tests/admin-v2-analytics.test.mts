@@ -217,3 +217,25 @@ test("Analytics UI and query source avoid fabricated traffic, conversion, and gr
   assert.doesNotMatch(analyticsViewSource, /Conversion Rate|Visitors|Sessions|Page Views|ROAS|CAC|Traffic Source|Growth/);
   assert.doesNotMatch(analyticsQuerySource, /analytics_events|analytics_snapshots|Math\.random|faker|mock/i);
 });
+
+
+test("Explicit test scope reports test order value while live scope excludes it", () => {
+  const range = resolveAnalyticsDateRange(new URLSearchParams("range=custom&from=2026-10-01&to=2026-10-02"));
+  const rows = [
+    order({ orderId: "live-a", orderReference: "LIVE-001", totalAmount: 125, status: "Pending", isTestOrder: false }),
+    order({ orderId: "test-a", orderReference: "TEST-001", totalAmount: 260, status: "Pending", isTestOrder: true }),
+    order({ orderId: "test-cancel", orderReference: "TEST-CANCEL", totalAmount: 80, status: "Cancelled", isTestOrder: true }),
+  ];
+  const input = { range, orders: rows, customers: [], reviews: [] };
+  const live = buildAdminV2AnalyticsResult({ ...input, dataScope: "live" });
+  const testScope = buildAdminV2AnalyticsResult({ ...input, dataScope: "test" });
+  assert.equal(isQualifyingAnalyticsOrder(rows[0], "live"), true);
+  assert.equal(isQualifyingAnalyticsOrder(rows[0], "test"), false);
+  assert.equal(isQualifyingAnalyticsOrder(rows[1], "live"), false);
+  assert.equal(isQualifyingAnalyticsOrder(rows[1], "test"), true);
+  assert.equal(isQualifyingAnalyticsOrder(rows[2], "test"), false);
+  assert.equal(live.kpis.payableSales, 125);
+  assert.equal(testScope.kpis.payableSales, 260);
+  assert.equal(live.kpis.orders, 1);
+  assert.equal(testScope.kpis.orders, 1);
+});
