@@ -73,6 +73,9 @@ function FilterFields({ filters, onChange }: Pick<Props, "filters" | "onChange">
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+        <V2Select label="Data scope" value={filters.recordScope} onChange={(event) => update("recordScope", event.target.value)} options={[{ label: "All orders", value: "all" }, { label: "Live business", value: "live" }, { label: "Test records", value: "test" }]} />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 2 }}>
         <V2Input label="From" type="date" value={filters.from} onChange={(event) => update("from", event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 2 }}>
