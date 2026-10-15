@@ -45,6 +45,19 @@ D. **After launch:** re-check real test orders, customer-facing checkout orders,
 
 E. **Fallback:** do not drop the column or move orders back to `live` automatically. If read-path rollout fails, roll back application code to a maintenance/unavailable state for finance totals until safely fixed. Preserve classification and ledger history.
 
+## No-cost PostgreSQL integration completed (2026-10-16)
+
+Using the **existing** Supabase validation project (no new paid branch or service):
+
+- Its existing one-order baseline correctly rejected the historical migration's 21-reference preflight before applying any schema change.
+- A disposable isolated database schema with 21 synthetic matching references, linked expenses, and an unlinked expense was created. The production migration was adapted **only in the test harness** to target the disposable schema. PostgreSQL executed its actual DDL, updates, and triggers successfully.
+- Confirmed 21 test orders, a new default-live order, existing and newly linked test expenses, an unlinked default-live expense, and rejection of an attempted test-to-live order reclassification.
+- The disposable test schema was dropped; read-only verification confirmed it no longer exists, the validation project retained its one original order, and its public tables did not gain any scope columns.
+- Actual foreign keys exist from invoice, payment, refund, and expense order references to the orders table.
+- Read-only production simulation classified all existing 21 orders, 4 invoices, and 1 recorded payment as test, with zero live orders or linked ledger entries. No production rows were modified.
+
+**Remaining gates:** authenticated PostgREST join parity against a schema with real `record_scope`, full fixture-based 1440px/1920px desktop verification, permission and checkout checks, backup and coordinated production migration plus app deployment. GitHub CI and Vercel preview alone do not prove all runtime joins work.
+
 ## Current status
 
-The guarded schema migration, explicit finance/query scope implementation, and regression contracts are staged for code review. Deployment remains blocked on CI, end-to-end staging verification, expense scope coverage, and the coordinated release gates above. **No production migration, update, deletion, financial backfill, or release has been executed.**
+The guarded migration, scope-aware finance readers, UI/export propagation, and regression checks are staged for code review. **No production migration, update, deletion, financial backfill, or release has been executed.**
