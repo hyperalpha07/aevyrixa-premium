@@ -29,7 +29,9 @@ test("Classification is immutable through ordinary application writes", () => {
   assert.match(migration, /before update of record_scope on public\.orders/);
   assert.match(migration, /new\.record_scope is distinct from old\.record_scope/);
   assert.match(migration, /reviewed data migration/);
-  assert.match(migration, /No financial ledger rows, invoice snapshots/);
+  assert.match(migration, /Monetary amounts, ledger status, invoice snapshots/);
+  assert.match(migration, /new\.record_scope := v_order_scope/);
+  assert.match(migration, /finance_expenses_record_scope_valid/);
 });
 
 test("Data-scope runbook prevents unilateral deployment and cash-history modification", () => {
