@@ -158,6 +158,10 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
 
   async function recordPayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (data.dataScope === "test") {
+      setActionError("Test payment history is read-only; do not record financial changes from a historical test view.");
+      return;
+    }
     setRecordError("");
     setRecording(true);
     const form = new FormData(event.currentTarget);
@@ -238,7 +242,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
           </Stack>
         </V2Card>
 
-        {capabilities.canRecordPayment ? (
+        {capabilities.canRecordPayment && data.dataScope !== "test" ? (
           <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.5 }, "&:last-child": { pb: { xs: 1.25, md: 1.5 } } } }}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}>
               <Box>
@@ -354,7 +358,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
                               View Order
                             </V2Button>
                           ) : null}
-                          {capabilities.canRecordPayment && row.status === "recorded" ? (
+                          {capabilities.canRecordPayment && data.dataScope !== "test" && row.status === "recorded" ? (
                             <Button size="small" variant="text" color="warning" disabled={voiding === row.transactionReference} onClick={() => voidPayment(row.transactionReference)} sx={{ minHeight: 28, px: 1 }}>
                               Void
                             </Button>
