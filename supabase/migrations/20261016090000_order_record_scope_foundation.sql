@@ -102,8 +102,38 @@ begin
       where table_schema='public' and table_name='orders'
         and column_name='record_scope'
         and data_type='text' and is_nullable='NO'
+        and column_default like '%live%'
     ) then
       raise exception 'orders.record_scope already exists but does not match the expected contract';
+    end if;
+    -- A repeat execution must never quietly accept an incomplete or wrongly
+    -- reclassified historical set, even if the schema already exists.
+    select count(*) into v_expected from public.orders
+    where record_scope = 'test' and order_ref in (
+        'AEV-MP5UO6JY-AB9F',
+        'AEV-MP5V6YMA-OI0T',
+        'AEV-MP5WLSIS-V48T',
+        'AEV-MP5X5EOA-PDNE',
+        'AEV-MP78L3HS-T9QX',
+        'AEV-MP78WA7Z-3ZTO',
+        'PHASE161-20260516030256',
+        'AEV-MP7D7LPR-YZLT',
+        'AEV-MP7E1E6A-1J0Q',
+        'AEV-MP7EAAKS-F8OT',
+        'AEV-MP7EK525-47O2',
+        'AEV-MP7FCO2V-4AAV',
+        'AEV-MP7FKY3I-ARSK',
+        'AEV-MP7HRWFY-G2GL',
+        'AEV-MP9XZO2R-7BW3',
+        'AEV-MPBF81X6-5O8O',
+        'AEV-MPBH836H-2SCS',
+        'AEV-MPBPKXLD-K4B8',
+        'AEV-MPBTGMS2-UZXK',
+        'AEV-MUB2WPT4-T8TV',
+        'AEV-MUC4VJUI-60BW'
+    );
+    if v_expected <> 21 then
+      raise exception 'Existing record_scope migration is incomplete: only % of the 21 verified historical test orders remain classified as test', v_expected;
     end if;
   end if;
 end;
