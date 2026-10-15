@@ -191,7 +191,7 @@ export function isVisibleAnalyticsOrder(order: OrderRecord) {
 }
 
 export function isQualifyingAnalyticsOrder(order: OrderRecord, scope: "live" | "test" = "live") {
-  return isVisibleAnalyticsOrder(order) && order.status !== "Cancelled" && order.isTestOrder === (scope === "test");
+  return isVisibleAnalyticsOrder(order) && order.status !== "Cancelled" && Boolean(order.isTestOrder) === (scope === "test");
 }
 
 function finiteAmount(value: unknown) {
