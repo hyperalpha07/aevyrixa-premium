@@ -25,6 +25,7 @@ function pageHref(data: AdminV2RefundQueryResult, page: number) {
   if (data.query.method !== "all") params.set("method", data.query.method);
   if (data.query.from) params.set("from", data.query.from);
   if (data.query.to) params.set("to", data.query.to);
+  if (data.dataScope === "test") params.set("scope", "test");
   params.set("page", String(page));
   params.set("pageSize", String(data.query.pageSize));
   return `/admin-v2/refunds?${params.toString()}`;
@@ -133,6 +134,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
     "& .MuiInputBase-input": { py: 0.85 },
   };
   const exportHref = `/api/admin/finance/refunds/export?${new URLSearchParams({
+    scope: data.dataScope ?? "live",
     ...(data.query.q ? { q: data.query.q } : {}),
     ...(data.query.method !== "all" ? { method: data.query.method } : {}),
     ...(data.query.status !== "all" ? { status: data.query.status } : {}),
@@ -191,6 +193,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
       </Box>
 
       <Stack spacing={1.2}>
+        <Alert severity={data.dataScope === "test" ? "warning" : "info"}>{data.dataScope === "test" ? "TEST DATA ONLY — excluded from live business financial totals." : "LIVE BUSINESS DATA — historical test-order records excluded."}</Alert>
         {data.limitation ? <Alert severity={data.queryFailed ? "error" : "warning"} sx={{ py: 0.5 }}>{data.limitation}</Alert> : null}
 
         {!data.queryFailed ? (
@@ -206,6 +209,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
 
         <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.35 }, "&:last-child": { pb: { xs: 1.25, md: 1.35 } } } }}>
           <Stack component="form" action="/admin-v2/refunds" method="get" direction={{ xs: "column", xl: "row" }} spacing={1} sx={{ alignItems: { xl: "center" } }}>
+            <input type="hidden" name="scope" value={data.dataScope ?? "live"} />
             <TextField name="q" label="Search refund, order, reference, or reason" size="small" defaultValue={data.query.q} sx={{ minWidth: { xl: 305 }, ...inputSx }} />
             <TextField select name="status" label="Ledger status" size="small" defaultValue={data.query.status} sx={{ minWidth: { xl: 165 }, ...inputSx }}>
               {[allOption, ...adminV2RefundLedgerStatuses.map((status) => ({ label: adminV2RefundLedgerStatusLabels[status], value: status }))].map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
@@ -217,7 +221,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
             <TextField name="to" type="date" size="small" label="To" defaultValue={data.query.to} slotProps={{ inputLabel: { shrink: true } }} sx={inputSx} />
             <input type="hidden" name="pageSize" value={data.query.pageSize} />
             <Button type="submit" variant="contained" sx={{ minHeight: 38, px: 2 }}>Apply</Button>
-            {hasFilters ? <Button href="/admin-v2/refunds" variant="outlined" sx={{ minHeight: 38, px: 2 }}>Reset</Button> : null}
+            {hasFilters ? <Button href={data.dataScope === "test" ? "/admin-v2/refunds?scope=test" : "/admin-v2/refunds"} variant="outlined" sx={{ minHeight: 38, px: 2 }}>Reset</Button> : null}
             {capabilities.canExport ? <Button href={exportHref} variant="outlined" sx={{ minHeight: 38, px: 2 }}>Export CSV</Button> : null}
           </Stack>
         </V2Card>
