@@ -29,6 +29,7 @@ function fallbackResult(params: URLSearchParams, message: string): AdminV2Analyt
   const unavailable = sourceState(false, false, message);
   return buildAdminV2AnalyticsResult({
     range,
+    dataScope: parseAdminV2FinancialDataScope(params.get("scope")),
     orders: [],
     customers: [],
     reviews: [],
@@ -68,6 +69,7 @@ export async function getAdminV2Analytics(searchParams = new URLSearchParams()):
 
     return buildAdminV2AnalyticsResult({
       range,
+      dataScope: scope,
       orders,
       customers,
       reviews,
