@@ -25,16 +25,6 @@ type BillingModuleTitle = AdminV2BillingModuleCard["title"];
 type IssueKind = AdminV2BillingResult["reconciliation"]["items"][number]["kind"];
 type IssueFilter = "all" | IssueKind;
 
-const billingFrameArtwork = `image-set(
-  url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.avif") type("image/avif"),
-  url("/brand/noromi/backgrounds/ethereal_plum_floral_ribbon_frame.webp") type("image/webp")
-)`;
-
-const billingFloralArtwork = `image-set(
-  url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.avif") type("image/avif"),
-  url("/brand/noromi/backgrounds/dreamy_plum_floral_silk_bloom.webp") type("image/webp")
-)`;
-
 const moduleIcons = {
   Invoices: FileText,
   Transactions: Receipt,
@@ -363,7 +353,7 @@ function KpiStrip({ metrics }: { metrics: AdminV2BillingSummaryMetric[] }) {
   );
 }
 
-function TruthfulTrendPanel() {
+function TruthfulTrendPanel({ available }: { available: boolean }) {
   return (
     <GlassSection
       ariaLabel="Financial trends unavailable"
@@ -388,7 +378,9 @@ function TruthfulTrendPanel() {
           </Typography>
         </Stack>
         <Typography variant="body2" sx={{ color: "rgba(236,226,244,0.70)", maxWidth: 900 }}>
-          Real all-time snapshots are available, but a dated finance series is not. No trend line or growth history is inferred.
+          {available
+            ? "Real all-time snapshots are available, but a dated finance series is not. No trend line or growth history is inferred."
+            : "Finance snapshot sources are unavailable, so Billing cannot present a trend summary. No trend line or growth history is inferred."}
         </Typography>
       </Stack>
     </GlassSection>
@@ -408,8 +400,10 @@ function LedgerPreview({ data }: { data: AdminV2BillingResult }) {
             </Box>
             <V2Button href="/admin-v2/invoices" size="small" variant="outlined">Open Invoices</V2Button>
           </Stack>
-          {data.tables.invoices.length === 0 ? (
-            <Alert severity="info" sx={{ bgcolor: "rgba(56,189,248,0.10)", color: "rgba(239,248,255,0.92)" }}>No invoice records were loaded.</Alert>
+          {!data.sources.invoices.available ? (
+            <Alert severity="warning">Invoice data is unavailable. Billing cannot determine whether invoice records are empty.</Alert>
+          ) : data.tables.invoices.length === 0 ? (
+            <Alert severity="info" sx={{ bgcolor: "rgba(56,189,248,0.10)", color: "rgba(239,248,255,0.92)" }}>No invoice records exist yet.</Alert>
           ) : (
             <Stack component="ul" spacing={0} sx={{ p: 0, m: 0, listStyle: "none" }}>
               {data.tables.invoices.map((invoice) => (
@@ -447,7 +441,9 @@ function LedgerPreview({ data }: { data: AdminV2BillingResult }) {
             </Box>
             <V2Button href="/admin-v2/transactions" size="small" variant="outlined">Open Transactions</V2Button>
           </Stack>
-          {data.tables.transactions.length === 0 ? (
+          {!data.sources.transactions.available ? (
+            <Alert severity="warning">Payment ledger data is unavailable. Billing cannot determine whether ledger entries are empty.</Alert>
+          ) : data.tables.transactions.length === 0 ? (
             <Alert severity="info" sx={{ bgcolor: "rgba(56,189,248,0.10)", color: "rgba(239,248,255,0.92)" }}>No payment ledger entries exist yet.</Alert>
           ) : (
             <Stack component="ul" spacing={0} sx={{ p: 0, m: 0, listStyle: "none" }}>
@@ -732,12 +728,11 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
         backgroundImage: `
           radial-gradient(circle at 82% 12%, rgba(255,77,184,0.18), transparent 30%),
           radial-gradient(circle at 14% 2%, rgba(49,230,212,0.12), transparent 26%),
-          linear-gradient(180deg, rgba(5,7,18,0.40), rgba(5,7,18,0.92)),
-          ${billingFrameArtwork}
+          linear-gradient(180deg, rgba(5,7,18,0.40), rgba(5,7,18,0.92))
         `,
         backgroundRepeat: "no-repeat",
-        backgroundSize: "auto, auto, auto, cover",
-        backgroundPosition: "center, center, center, center top",
+        backgroundSize: "auto, auto, auto",
+        backgroundPosition: "center, center, center",
         "&::before": {
           content: '""',
           position: "absolute",
@@ -745,23 +740,6 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
           pointerEvents: "none",
           background:
             "linear-gradient(90deg, rgba(5,7,18,0.86) 0%, rgba(8,8,24,0.50) 38%, rgba(5,7,18,0.28) 100%), radial-gradient(circle at 76% 28%, rgba(255,77,184,0.18), transparent 35%)",
-        },
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          zIndex: 0,
-          pointerEvents: "none",
-          top: { xs: -18, md: -56 },
-          right: { xs: -90, md: -120, xl: -70 },
-          width: { xs: 330, md: 620, xl: 760 },
-          height: { xs: 300, md: 560, xl: 640 },
-          backgroundImage: billingFloralArtwork,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "left top",
-          transform: "scaleX(-1)",
-          opacity: { xs: 0.34, md: 0.58 },
-          maskImage: "linear-gradient(150deg, black 0%, rgba(0,0,0,0.92) 42%, transparent 82%)",
         },
         "& > *": { position: "relative", zIndex: 1 },
       }}
@@ -809,7 +787,7 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
           <>
         <KpiStrip metrics={data.summary} />
 
-        <TruthfulTrendPanel />
+        <TruthfulTrendPanel available={data.sources.analytics.available} />
 
         <Box
           role="tablist"

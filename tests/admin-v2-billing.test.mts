@@ -313,16 +313,30 @@ test("Billing preview routes to full modules without creating local fake finance
   assert.doesNotMatch(view + page, />\s*(Mark Paid|Capture|Settle|Refund Now|Create Expense|Save|Submit|Delete)\s*</i);
 });
 
-test("Billing V3 presentation uses existing Noromi artwork and truthful trend empty state", () => {
+test("Billing V3 presentation uses the restored atmospheric background and truthful trend empty state", () => {
   assert.match(view, /aev-admin-v2-billing-v3/);
-  assert.match(view, /ethereal_plum_floral_ribbon_frame\.avif/);
-  assert.match(view, /ethereal_plum_floral_ribbon_frame\.webp/);
-  assert.match(view, /dreamy_plum_floral_silk_bloom\.avif/);
-  assert.match(view, /dreamy_plum_floral_silk_bloom\.webp/);
+  assert.match(view, /radial-gradient\(circle at 82% 12%, rgba\(255,77,184,0\.18\), transparent 30%\)/);
+  assert.match(view, /radial-gradient\(circle at 14% 2%, rgba\(49,230,212,0\.12\), transparent 26%\)/);
+  assert.match(view, /linear-gradient\(180deg, rgba\(5,7,18,0\.40\), rgba\(5,7,18,0\.92\)\)/);
+  assert.doesNotMatch(view, /ethereal_plum_floral_ribbon_frame|dreamy_plum_floral_silk_bloom/);
   assert.match(view, /Real all-time snapshots are available/);
   assert.match(view, /No trend line or growth history is inferred/);
   assert.match(view, /moduleDisplayLabels[\s\S]*Transactions:\s*"Payments"/);
   assert.doesNotMatch(view, /trendPercentage|growthRate|sparklineData|fakeTrend/i);
+});
+
+test("Billing distinguishes unavailable finance sources from successful empty results", () => {
+  assert.match(view, /function TruthfulTrendPanel\(\{ available \}/);
+  assert.match(view, /<TruthfulTrendPanel available=\{data\.sources\.analytics\.available\} \/>/);
+  assert.match(view, /Finance snapshot sources are unavailable, so Billing cannot present a trend summary/);
+  assert.match(view, /Real all-time snapshots are available, but a dated finance series is not/);
+
+  assert.match(view, /!data\.sources\.invoices\.available \? \([\s\S]*Invoice data is unavailable[\s\S]*data\.tables\.invoices\.length === 0/);
+  assert.match(view, /No invoice records exist yet/);
+  assert.doesNotMatch(view, /No invoice records were loaded/);
+
+  assert.match(view, /!data\.sources\.transactions\.available \? \([\s\S]*Payment ledger data is unavailable[\s\S]*data\.tables\.transactions\.length === 0/);
+  assert.match(view, /No payment ledger entries exist yet/);
 });
 
 test("Billing financial notices use truthful notice semantics behind an accessible detail control", () => {
