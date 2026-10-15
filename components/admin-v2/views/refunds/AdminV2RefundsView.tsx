@@ -144,6 +144,10 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
 
   async function recordRefund(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (data.dataScope === "test") {
+      setActionError("Test refund history is read-only; do not record financial changes from a historical test view.");
+      return;
+    }
     setActionError("");
     setSaving(true);
     const form = new FormData(event.currentTarget);
@@ -226,7 +230,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
           </Stack>
         </V2Card>
 
-        {capabilities.canRecordRefund ? (
+        {capabilities.canRecordRefund && data.dataScope !== "test" ? (
           <V2Card sx={{ "& .MuiCardContent-root": { p: { xs: 1.25, md: 1.5 }, "&:last-child": { pb: { xs: 1.25, md: 1.5 } } } }}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}>
               <Box>
@@ -339,7 +343,7 @@ export function AdminV2RefundsView({ data, capabilities }: { data: AdminV2Refund
                               View Order
                             </V2Button>
                           ) : null}
-                          {capabilities.canRecordRefund && row.status === "recorded" ? (
+                          {capabilities.canRecordRefund && data.dataScope !== "test" && row.status === "recorded" ? (
                             <Button size="small" variant="text" color="warning" disabled={voiding === row.reference} onClick={() => voidRefund(row.reference)} sx={{ minHeight: 28, px: 1 }}>
                               Void
                             </Button>
