@@ -106,3 +106,10 @@ test("Finance exports permanently identify TEST versus LIVE rows and audit the s
     assert.match(route, /\$\{recordScope\}\.csv/);
   }
 });
+
+test("Test expense history never offers a create/void operation in its scoped UI", () => {
+  const view = read("components/admin-v2/views/expenses/AdminV2ExpensesView.tsx");
+  assert.match(view, /capabilities\.canManageExpenses && data\.dataScope !== "test"/);
+  assert.match(view, /Test expense history is read-only/);
+  assert.match(view, /data\.dataScope !== "test" && row\.status === "active"/);
+});
