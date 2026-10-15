@@ -43,6 +43,10 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
 
   async function createExpense(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (data.dataScope === "test") {
+      setActionError("Test expense history is read-only. Open the Live Expenses workspace to record new business expenses.");
+      return;
+    }
     setActionError("");
     setSaving(true);
     const form = new FormData(event.currentTarget);
@@ -129,7 +133,7 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
             {capabilities.canExport ? <Button href={exportHref} variant="outlined">Export CSV</Button> : null}
           </Stack>
         </V2Card>
-        {capabilities.canManageExpenses ? (
+        {capabilities.canManageExpenses && data.dataScope !== "test" ? (
           <V2Card>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}>
               <Box>
@@ -185,7 +189,7 @@ export function AdminV2ExpensesView({ data, capabilities }: { data: AdminV2Expen
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
                       {capabilities.canViewOrder && row.orderReference ? <V2Button size="small" variant="outlined" href={`/admin-v2/orders/${encodeURIComponent(row.orderReference)}`}>View Order</V2Button> : null}
-                      {capabilities.canManageExpenses && row.status === "active" ? <Button size="small" color="warning" disabled={voiding === row.reference} onClick={() => voidExpense(row.reference)}>Void</Button> : null}
+                      {capabilities.canManageExpenses && data.dataScope !== "test" && row.status === "active" ? <Button size="small" color="warning" disabled={voiding === row.reference} onClick={() => voidExpense(row.reference)}>Void</Button> : null}
                     </Stack>
                   </TableCell>
                 </TableRow>
