@@ -20,6 +20,7 @@ function pageHref(data: AdminV2InvoiceQueryResult, page: number) {
   if (data.query.status !== "all") params.set("status", data.query.status);
   if (data.query.from) params.set("from", data.query.from);
   if (data.query.to) params.set("to", data.query.to);
+  if (data.dataScope === "test") params.set("scope", "test");
   params.set("page", String(page));
   params.set("pageSize", String(data.query.pageSize));
   return `/admin-v2/invoices?${params.toString()}`;
@@ -54,6 +55,7 @@ export function AdminV2InvoicesView({ data }: { data: AdminV2InvoiceQueryResult 
       />
 
       <Stack spacing={2.5}>
+        <Alert severity={data.dataScope === "test" ? "warning" : "info"}>{data.dataScope === "test" ? "TEST DATA ONLY — excluded from live business financial totals." : "LIVE BUSINESS DATA — historical test-order records excluded."}</Alert>
         {data.limitation ? <Alert severity={data.storageAvailable ? "warning" : "error"}>{data.limitation}</Alert> : null}
         <Alert severity="info">
           Invoices are read-only Phase 1 records from the existing invoice table. Totals use persisted invoice values, not recalculated order totals.
@@ -76,6 +78,7 @@ export function AdminV2InvoicesView({ data }: { data: AdminV2InvoiceQueryResult 
 
         <V2Card>
           <Stack component="form" action="/admin-v2/invoices" method="get" direction={{ xs: "column", lg: "row" }} spacing={1.5} sx={{ alignItems: { lg: "center" } }}>
+            <input type="hidden" name="scope" value={data.dataScope ?? "live"} />
             <TextField name="q" label="Search invoice or order" size="small" defaultValue={data.query.q} sx={{ minWidth: { lg: 260 } }} />
             <TextField select name="status" label="Status" size="small" defaultValue={data.query.status} sx={{ minWidth: { lg: 150 } }}>
               {(["all", "issued", "void"] as const).map((status) => <MenuItem key={status} value={status}>{statusLabels[status]}</MenuItem>)}
@@ -84,7 +87,7 @@ export function AdminV2InvoicesView({ data }: { data: AdminV2InvoiceQueryResult 
             <TextField name="to" type="date" size="small" label="Issued to" defaultValue={data.query.to} slotProps={{ inputLabel: { shrink: true } }} />
             <input type="hidden" name="pageSize" value={data.query.pageSize} />
             <Button type="submit" variant="contained">Apply</Button>
-            {hasFilters ? <Button href="/admin-v2/invoices" variant="outlined">Reset</Button> : null}
+            {hasFilters ? <Button href={data.dataScope === "test" ? "/admin-v2/invoices?scope=test" : "/admin-v2/invoices"} variant="outlined">Reset</Button> : null}
           </Stack>
         </V2Card>
 
