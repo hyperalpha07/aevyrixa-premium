@@ -365,10 +365,10 @@ test("Billing financial notices use truthful notice semantics behind an accessib
 test("Billing keeps overview concise and moves detailed finance exceptions to the secured diagnostics page", () => {
   assert.match(diagnosticsPage, /requireAdminV2Session\(\)/);
   assert.match(diagnosticsPage, /requireAdminV2RouteAccess\(session, "billing"\)/);
-  assert.match(diagnosticsPage, /getAdminV2BillingOverview\(\)/);
+  assert.match(diagnosticsPage, /getAdminV2BillingOverview\(scope\)/);
   assert.match(diagnosticsPage, /mode="diagnostics"/);
   assert.match(view, /isDiagnostics = mode === "diagnostics"/);
-  assert.match(view, /href="\/admin-v2\/billing\/diagnostics"/);
+  assert.match(view, /href="\/admin-v2\/billing\/diagnostics\?scope=test"/);
   assert.match(view, /View Diagnostics/);
   assert.match(view, /\{isDiagnostics \? \(/);
   assert.match(view, /<ReconciliationWorkspace data=\{data\} \/>/);
