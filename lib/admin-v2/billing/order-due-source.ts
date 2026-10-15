@@ -1,4 +1,5 @@
 import "server-only";
+import type { AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import { buildAdminV2MoneyAggregate, type AdminV2MoneyAggregate } from "@/lib/admin-v2/finance/money";
 import {
@@ -230,7 +231,7 @@ function buildReconciliationIssues(rows: OrderDueRow[]) {
   return issues.sort((a, b) => issueSortPriority(a) - issueSortPriority(b) || a.orderReference.localeCompare(b.orderReference));
 }
 
-export async function getAdminV2OrderDueSnapshots(): Promise<AdminV2OrderDueSnapshotResult> {
+export async function getAdminV2OrderDueSnapshots(scope: AdminV2FinancialDataScope = "live"): Promise<AdminV2OrderDueSnapshotResult> {
   if (!hasSupabaseConfig()) {
     return {
       available: false,
@@ -257,6 +258,7 @@ export async function getAdminV2OrderDueSnapshots(): Promise<AdminV2OrderDueSnap
     let totalCount: number | null = null;
     const params = new URLSearchParams({
       select: orderDueSelect,
+      record_scope: `eq.${scope}`,
       status: "neq.Cancelled",
       archived_at: "is.null",
       order: "id.asc",
