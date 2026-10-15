@@ -376,6 +376,6 @@ test("Billing keeps overview concise and moves detailed finance exceptions to th
   assert.match(view, /reconciliation flags/);
   assert.match(view, /filteredIssues\.slice\(0, visibleCount\)/);
   assert.match(view, /setVisibleCount\(\(current\) => current \+ 50\)/);
-  assert.match(view, /owner-confirmed test records/);
+  assert.match(view, /Test-only diagnostics/);
   assert.equal(adminV2AccessRules.billing.permission, "finance.overview.view");
 });
