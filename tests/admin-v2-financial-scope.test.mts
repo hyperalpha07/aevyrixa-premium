@@ -128,3 +128,13 @@ test("Historic test payment and refund views cannot submit new records or void o
     assert.match(view, /data\.dataScope !== "test" && row\.status === "recorded"/);
   }
 });
+
+
+test("Dashboard fetches complete live-scoped order pages or marks order KPIs unavailable", () => {
+  const dashboard = read("lib/admin-v2/data.ts");
+  assert.match(dashboard, /recordScope=live&page=1&pageSize=50/);
+  assert.match(dashboard, /firstPage\.totalCount > maxLiveDashboardOrders/);
+  assert.match(dashboard, /orders\.length === firstPage\.totalCount/);
+  assert.match(dashboard, /orderPayload\.complete/);
+  assert.doesNotMatch(dashboard, /canViewOrders \? listOrders\(\)/);
+});
