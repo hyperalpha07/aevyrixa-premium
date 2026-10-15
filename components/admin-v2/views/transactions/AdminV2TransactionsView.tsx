@@ -159,7 +159,7 @@ export function AdminV2TransactionsView({ data, capabilities }: { data: AdminV2T
   async function recordPayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (data.dataScope === "test") {
-      setActionError("Test payment history is read-only; do not record financial changes from a historical test view.");
+      setRecordError("Test payment history is read-only; do not record financial changes from a historical test view.");
       return;
     }
     setRecordError("");
