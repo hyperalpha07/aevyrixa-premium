@@ -205,5 +205,6 @@ for each row execute function public.set_linked_expense_record_scope();
 comment on column public.finance_expenses.record_scope is
   'Explicit scope for unlinked expenses; linked expenses inherit their order provenance.';
 
--- No financial ledger rows, invoice snapshots, prices, payment state, due,
--- delivery history, or archived state are modified by this migration.
+-- Monetary amounts, ledger status, invoice snapshots, prices, payment state,
+-- due, delivery history, and archived state are never modified. Linked expense
+-- rows may receive the non-monetary record_scope provenance classification.
