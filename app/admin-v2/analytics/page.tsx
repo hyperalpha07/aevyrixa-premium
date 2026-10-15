@@ -1,4 +1,5 @@
 import { AdminV2AnalyticsView } from "@/components/admin-v2/views/analytics/AdminV2AnalyticsView";
+import { parseAdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 import { getAdminV2Analytics } from "@/lib/admin-v2/analytics/analytics-query";
 import { requireAdminV2Session } from "@/lib/admin-v2/auth";
 import { requireAdminV2RouteAccess } from "@/lib/admin-v2/permissions";
@@ -14,5 +15,5 @@ export default async function AdminV2AnalyticsPage(props: PageProps<"/admin-v2/a
   });
   const data = await getAdminV2Analytics(params);
 
-  return <AdminV2AnalyticsView data={data} />;
+  return <AdminV2AnalyticsView data={data} scope={parseAdminV2FinancialDataScope(params.get("scope"))} />;
 }
