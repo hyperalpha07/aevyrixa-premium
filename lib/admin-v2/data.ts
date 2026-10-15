@@ -35,10 +35,12 @@ export async function getAdminV2DashboardData(
     ]);
 
   const orderPayload = ordersResult.status === "fulfilled" ? ordersResult.value : null;
-  const realOrders =
+  const persistedOrders =
     orderPayload?.storageMode === "supabase"
       ? orderPayload.orders.filter((order) => !order.archivedAt && !order.deletedAt && !order.softDeletedAt)
       : [];
+
+  const liveOrders = persistedOrders.filter((order) => !order.isTestOrder);
 
   const productPayload = productsResult.status === "fulfilled" ? productsResult.value : null;
   const products =
@@ -53,12 +55,12 @@ export async function getAdminV2DashboardData(
   return {
     orders: {
       available: canViewOrders && orderPayload?.storageMode === "supabase",
-      count: realOrders.length,
-      revenue: realOrders
-        .filter((order) => order.status !== "Cancelled" && !order.isTestOrder)
+      count: liveOrders.length,
+      revenue: liveOrders
+        .filter((order) => order.status !== "Cancelled")
         .reduce((sum, order) => sum + (Number.isFinite(order.totalAmount) ? order.totalAmount : 0), 0),
-      pending: realOrders.filter((order) => order.status === "Pending").length,
-      recent: [...realOrders]
+      pending: liveOrders.filter((order) => order.status === "Pending").length,
+      recent: [...liveOrders]
         .sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt))
         .slice(0, 6),
       source: canViewOrders ? orderPayload?.storageMode ?? "unavailable" : "unauthorized",
