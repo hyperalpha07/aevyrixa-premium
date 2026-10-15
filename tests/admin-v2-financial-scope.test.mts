@@ -113,3 +113,18 @@ test("Test expense history never offers a create/void operation in its scoped UI
   assert.match(view, /Test expense history is read-only/);
   assert.match(view, /data\.dataScope !== "test" && row\.status === "active"/);
 });
+
+
+test("Historic test payment and refund views cannot submit new records or void old ledger rows", () => {
+  const ledgerViews = [
+    ["transactions", "canRecordPayment"],
+    ["refunds", "canRecordRefund"],
+  ] as const;
+  for (const [folder, permission] of ledgerViews) {
+    const file = folder === "transactions" ? "AdminV2TransactionsView" : "AdminV2RefundsView";
+    const view = read(`components/admin-v2/views/${folder}/${file}.tsx`);
+    assert.match(view, /data\.dataScope === "test"/);
+    assert.match(view, new RegExp(`capabilities\\.${permission} && data\\.dataScope !== "test"`));
+    assert.match(view, /data\.dataScope !== "test" && row\.status === "recorded"/);
+  }
+});
