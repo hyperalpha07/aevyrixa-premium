@@ -35,7 +35,7 @@ test("Classification is immutable through ordinary application writes", () => {
 test("Data-scope runbook prevents unilateral deployment and cash-history modification", () => {
   assert.match(runbook, /phase A/);
   assert.match(runbook, /database BEFORE pagination/);
-  assert.match(runbook, /same scope as the UI/);
+  assert.match(runbook, /identical scope as the UI/);
   assert.match(runbook, /No production migration/);
   assert.match(runbook, /expenses with nullable/);
 });
