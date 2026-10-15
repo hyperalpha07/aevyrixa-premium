@@ -65,7 +65,7 @@ export function buildAdminV2BillingResult(input: {
   refunds: AdminV2RefundQueryResult;
   expenses: AdminV2ExpenseQueryResult;
   invoices: AdminV2InvoiceQueryResult;
-}): AdminV2BillingResult {
+}, scope: AdminV2FinancialDataScope = "live"): AdminV2BillingResult {
   const reconciliationIssues = input.orderDue.reconciliationIssues ?? [];
   const missingDueSnapshotCount = input.orderDue.missingDueSnapshotCount ?? 0;
   const deliveryStatusMismatchCount = input.orderDue.deliveryStatusMismatchCount ?? 0;
@@ -113,6 +113,7 @@ export function buildAdminV2BillingResult(input: {
   }
 
   return {
+    recordScope: scope,
     sources: {
       analytics: sourceState(analyticsAvailable, input.analytics.limitation),
       transactions: sourceState(transactionsAvailable, input.transactions.limitation),
@@ -131,7 +132,7 @@ export function buildAdminV2BillingResult(input: {
         displayValue: adminV2MoneyAggregateUnavailable(input.orderDue.orderValueSummary) ? "Mixed currencies" : undefined,
         helper: adminV2MoneyAggregateUnavailable(input.orderDue.orderValueSummary)
           ? "Unavailable as a single total; multiple currencies are present."
-          : `All-time non-archived, non-cancelled order totals from ${input.orderDue.orderValueKnownCount.toLocaleString("en")} eligible orders. Test-order classification is not independently persisted.`,
+          : `All-time non-archived, non-cancelled order totals from ${input.orderDue.orderValueKnownCount.toLocaleString("en")} eligible orders. This report includes only ${scope} orders.`,
       },
       {
         label: "Recorded Payments",
