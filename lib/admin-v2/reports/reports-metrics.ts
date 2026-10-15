@@ -1,3 +1,4 @@
+import type { AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 import type { OrderRecord } from "@/app/lib/order-types";
 import type { ProductReview } from "@/app/lib/review-types";
 import type { AnalyticsSourceState } from "@/lib/admin-v2/analytics/analytics-source";
@@ -36,6 +37,7 @@ export type ReportTableColumn = {
 export type ReportTableRow = Record<string, string | number>;
 
 export type AdminV2ReportResult = {
+  dataScope: AdminV2FinancialDataScope;
   type: AdminV2ReportType;
   label: string;
   range: AnalyticsDateRange;
@@ -167,6 +169,7 @@ export function parseAdminV2ReportType(value: string | null | undefined): AdminV
 export function buildAdminV2Report(input: {
   type: AdminV2ReportType;
   range: AnalyticsDateRange;
+  dataScope?: AdminV2FinancialDataScope;
   orders: OrderRecord[];
   customers: ReportCustomerRow[];
   reviews: ProductReview[];
@@ -196,11 +199,12 @@ export function buildAdminV2Report(input: {
   const deliveryFees = qOrders.reduce((sum, order) => sum + (typeof order.deliveryCharge === "number" && Number.isFinite(order.deliveryCharge) ? Math.max(0, order.deliveryCharge) : 0), 0);
   const limit = input.previewLimit ?? maxPreviewRows;
   const base = {
+    dataScope: input.dataScope ?? "live",
     type: input.type,
     label: adminV2ReportLabels[input.type],
     range: input.range,
     analytics,
-    notes: ["Saved and scheduled reports are not available yet."],
+    notes: ["Saved and scheduled reports are not available yet.", `Order-derived data scope: ${input.dataScope ?? "live"}. Customer-account and review sources are separate from order provenance.`],
     exportable: Boolean(input.complete),
     exportDisabledReason: input.complete ? undefined : "Export is disabled because a required report source is unavailable or incomplete.",
     complete: input.complete !== false,
@@ -347,7 +351,7 @@ export function buildAdminV2Report(input: {
       { metric: "Discounts", value: discounts },
       { metric: "Delivery Fees", value: deliveryFees },
     ],
-    notes: [...base.notes, "Eligible Order Value uses persisted non-cancelled order totals. No standalone production test-order flag is assumed."],
+    notes: [...base.notes, "Eligible Order Value uses persisted non-cancelled order totals within the selected order provenance scope."],
   };
 }
 
