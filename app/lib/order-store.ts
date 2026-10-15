@@ -579,6 +579,7 @@ async function queryOrdersFromSupabase(query: AdminV2OrderQuery) {
   if (query.payment !== "all") appendFilter(params, "payment_method", "eq", query.payment);
   if (query.paymentStatus !== "all") appendFilter(params, "payment_status", "eq", query.paymentStatus);
   if (query.delivery !== "all") appendFilter(params, "delivery_status", "eq", query.delivery);
+  if (query.recordScope !== "all") appendFilter(params, "record_scope", "eq", query.recordScope);
   if (query.from) appendFilter(params, "created_at", "gte", `${query.from}T00:00:00.000Z`);
   if (query.to) appendFilter(params, "created_at", "lte", `${query.to}T23:59:59.999Z`);
 
