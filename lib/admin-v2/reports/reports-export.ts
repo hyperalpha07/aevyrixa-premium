@@ -46,6 +46,7 @@ export function adminV2ReportToCsv(report: AdminV2ReportResult) {
     ["Report", report.label],
     ["Date Range", report.range.label],
     ["Generated From", "Existing operational data"],
+    ["Order Data Scope", report.dataScope === "test" ? "TEST RECORDS — NOT BUSINESS SALES" : "LIVE BUSINESS ONLY"],
     ["Definition", "Eligible Order Value uses persisted non-cancelled order totals and is not settled revenue."],
     [],
   ];
