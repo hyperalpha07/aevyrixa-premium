@@ -88,7 +88,7 @@ function ProductRows({ rows, mode }: { rows: AnalyticsProductRank[]; mode: "quan
   );
 }
 
-export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult }) {
+export function AdminV2AnalyticsView({ data, scope = "live" }: { data: AdminV2AnalyticsResult; scope?: "live" | "test" }) {
   const statusMax = maximum(data.orderStatus.map((slice) => slice.count));
   const customAction = `/admin-v2/analytics`;
 
@@ -111,13 +111,14 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
             </Box>
             <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
               {analyticsPresetRanges.filter((range) => range !== "custom").map((range) => (
-                <Button key={range} href={`/admin-v2/analytics?range=${range}`} variant={data.range.preset === range ? "contained" : "outlined"} size="small">
+                <Button key={range} href={`/admin-v2/analytics?range=${range}&scope=${scope}`} variant={data.range.preset === range ? "contained" : "outlined"} size="small">
                   {rangeLabels[range]}
                 </Button>
               ))}
             </Stack>
             <Box component="form" action={customAction} method="get" sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
               <input type="hidden" name="range" value="custom" />
+              <input type="hidden" name="scope" value={scope} />
               <TextField name="from" type="date" size="small" label="From" defaultValue={data.range.from} slotProps={{ inputLabel: { shrink: true } }} />
               <TextField name="to" type="date" size="small" label="To" defaultValue={data.range.to} slotProps={{ inputLabel: { shrink: true } }} />
               <Button type="submit" variant="outlined" size="small">Apply</Button>
@@ -125,6 +126,7 @@ export function AdminV2AnalyticsView({ data }: { data: AdminV2AnalyticsResult })
           </Stack>
         </V2Card>
 
+        <Alert severity={scope === "test" ? "warning" : "info"}>{scope === "test" ? "TEST ORDERS — order-derived sales and product figures are test records, not real business revenue. Customer-account and review metrics have independent sources." : "LIVE ORDERS ONLY — historical test orders are excluded from order-derived analytics."}</Alert>
         {data.range.warnings.map((warning) => <Alert key={warning} severity="warning">{warning}</Alert>)}
         {data.limitation ? <Alert severity="warning">{data.limitation}</Alert> : null}
 
