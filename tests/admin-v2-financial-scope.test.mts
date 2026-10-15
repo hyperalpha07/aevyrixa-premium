@@ -94,3 +94,15 @@ test("Scope persists across financial navigation, filters, pagination, and CSV e
   assert.match(billing, /"\/admin-v2\/invoices\?scope=test"/);
   assert.match(billing, /"\/admin-v2\/transactions\?scope=test"/);
 });
+
+
+test("Finance exports permanently identify TEST versus LIVE rows and audit the scope", () => {
+  for (const name of ["transactions", "refunds", "expenses"]) {
+    const route = read(`app/api/admin/finance/${name}/export/route.ts`);
+    assert.match(route, /parseAdminV2FinancialDataScope\(url\.searchParams\.get\("scope"\)\)/);
+    assert.match(route, /recordScope\.toUpperCase\(\)/);
+    assert.match(route, /"Data Scope"/);
+    assert.match(route, /data_scope: recordScope/);
+    assert.match(route, /\$\{recordScope\}\.csv/);
+  }
+});
