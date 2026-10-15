@@ -1,4 +1,5 @@
 import "server-only";
+import { parseAdminV2FinancialDataScope, scopedOrderLinkedSelect, type AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import {
   adminV2InvoiceTotalPages,
@@ -96,8 +97,8 @@ function appendFilter(params: string[], key: string, operator: string, value: st
   params.push(`${key}=${operator}.${encodeURIComponent(value)}`);
 }
 
-function invoiceParams(query: AdminV2InvoiceQuery, includeOrder = true) {
-  const params = ["select=*"];
+function invoiceParams(query: AdminV2InvoiceQuery, includeOrder = true, scope: AdminV2FinancialDataScope = "live") {
+  const params = scopedOrderLinkedSelect("*", scope);
   if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.from) appendFilter(params, "issued_at", "gte", `${query.from}T00:00:00.000Z`);
   if (query.to) appendFilter(params, "issued_at", "lte", `${query.to}T23:59:59.999Z`);
@@ -112,10 +113,10 @@ function invoiceParams(query: AdminV2InvoiceQuery, includeOrder = true) {
   return params;
 }
 
-async function fetchInvoicePage(query: AdminV2InvoiceQuery) {
+async function fetchInvoicePage(query: AdminV2InvoiceQuery, scope: AdminV2FinancialDataScope) {
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
-  const response = await fetch(supabaseEndpoint(`invoices?${invoiceParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`invoices?${invoiceParams(query, true, scope).join("&")}`), {
     headers: {
       ...supabaseHeaders(),
       prefer: "count=exact",
@@ -129,11 +130,11 @@ async function fetchInvoicePage(query: AdminV2InvoiceQuery) {
   return { rows, totalCount: Number.isFinite(count) ? count : rows.length };
 }
 
-async function fetchMetricRows(query: AdminV2InvoiceQuery) {
+async function fetchMetricRows(query: AdminV2InvoiceQuery, scope: AdminV2FinancialDataScope) {
   const rows: AdminV2InvoiceRow[] = [];
   for (let from = 0; from < maxMetricRows; from += 1000) {
     const to = Math.min(from + 999, maxMetricRows - 1);
-    const response = await fetch(supabaseEndpoint(`invoices?${invoiceParams(query).join("&")}`), {
+    const response = await fetch(supabaseEndpoint(`invoices?${invoiceParams(query, true, scope).join("&")}`), {
       headers: { ...supabaseHeaders(), range: `${from}-${to}` },
       cache: "no-store",
     });
@@ -178,6 +179,7 @@ function withCancelledOrderInvoiceMetrics(rows: AdminV2InvoiceRow[], statuses: M
 
 export async function getAdminV2Invoices(searchParams = new URLSearchParams()): Promise<AdminV2InvoiceQueryResult> {
   const query = parseAdminV2InvoiceQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) {
     return {
       rows: [],
@@ -191,7 +193,7 @@ export async function getAdminV2Invoices(searchParams = new URLSearchParams()): 
   }
 
   try {
-    const [page, metricRows] = await Promise.all([fetchInvoicePage(query), fetchMetricRows(query)]);
+    const [page, metricRows] = await Promise.all([fetchInvoicePage(query, scope), fetchMetricRows(query, scope)]);
     const orderStatuses = await fetchInvoiceOrderStatuses(metricRows.rows.map((row) => row.orderReference));
     return {
       rows: page.rows,
