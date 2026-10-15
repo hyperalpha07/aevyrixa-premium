@@ -27,6 +27,10 @@ test("Historical test reclassification is an exact and fail-closed 21-order cont
 
 test("Classification is immutable through ordinary application writes", () => {
   assert.match(migration, /before update of record_scope on public\.orders/);
+  assert.match(migration, /alter table public\.orders disable trigger orders_set_updated_at/);
+  assert.match(migration, /alter table public\.orders enable trigger orders_set_updated_at/);
+  assert.match(migration, /v_history_timestamp_digest is distinct from/);
+  assert.match(migration, /Historical order updated_at changed during scope backfill/);
   assert.match(migration, /new\.record_scope is distinct from old\.record_scope/);
   assert.match(migration, /reviewed data migration/);
   assert.match(migration, /Monetary amounts, ledger status, invoice snapshots/);
