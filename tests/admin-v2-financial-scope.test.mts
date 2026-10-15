@@ -71,3 +71,26 @@ test("Finance diagnostics enforces the same Billing permission before scoped fet
   assert.match(diagnosticsRoute, /getAdminV2BillingOverview\(scope\)/);
   assert.match(diagnosticsRoute, /"test"/);
 });
+
+test("Scope persists across financial navigation, filters, pagination, and CSV export links", () => {
+  const views = [
+    read("components/admin-v2/views/reports/AdminV2ReportsView.tsx"),
+    read("components/admin-v2/views/transactions/AdminV2TransactionsView.tsx"),
+    read("components/admin-v2/views/refunds/AdminV2RefundsView.tsx"),
+    read("components/admin-v2/views/expenses/AdminV2ExpensesView.tsx"),
+  ];
+  for (const source of views) {
+    assert.match(source, /scope: data\.dataScope/);
+    assert.match(source, /name="scope" value=\{data\.dataScope/);
+    assert.match(source, /TEST DATA ONLY|TEST DATA ONLY|TEST ORDERS/);
+  }
+  const invoices = read("components/admin-v2/views/invoices/AdminV2InvoicesView.tsx");
+  assert.match(invoices, /name="scope" value=\{data\.dataScope/);
+  assert.match(invoices, /data\.dataScope === "test"\) params\.set\("scope", "test"\)/);
+  const analytics = read("components/admin-v2/views/analytics/AdminV2AnalyticsView.tsx");
+  assert.match(analytics, /name="scope" value=\{scope\}/);
+  assert.match(analytics, /scope=\$\{scope\}/);
+  const billing = read("components/admin-v2/views/billing/AdminV2BillingView.tsx");
+  assert.match(billing, /"\/admin-v2\/invoices\?scope=test"/);
+  assert.match(billing, /"\/admin-v2\/transactions\?scope=test"/);
+});
