@@ -755,13 +755,18 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
             </Typography>
             <Typography variant="body2" sx={{ mt: 1, color: "rgba(235,224,243,0.72)", maxWidth: 700 }}>
               {isDiagnostics
-                ? "Review order reconciliation exceptions and finance source guidance. These are read-only findings, not automatic accounting corrections."
-                : "Invoices, payments, refunds, expenses and operational finance in one workspace."}
+                ? `Review ${data.recordScope} order reconciliation exceptions and finance source guidance. These are read-only findings, not automatic accounting corrections.`
+                : "Live finance overview. Historical test orders and test transactions are excluded from these totals."}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
             {isDiagnostics ? (
-              <V2Button href="/admin-v2/billing" variant="outlined">Back to Billing</V2Button>
+              <>
+                <V2Button href="/admin-v2/billing" variant="outlined">Back to Billing</V2Button>
+                <V2Button href={data.recordScope === "test" ? "/admin-v2/billing/diagnostics?scope=live" : "/admin-v2/billing/diagnostics?scope=test"} variant="outlined">
+                  {data.recordScope === "test" ? "View Live Issues" : "View Test Issues"}
+                </V2Button>
+              </>
             ) : (
               <>
                 <V2Button href="/admin-v2/invoices" variant="outlined" startIcon={<FileText size={15} />}>Open Invoices</V2Button>
@@ -780,7 +785,7 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
             <ReconciliationWorkspace data={data} />
             <FinancialNotices notes={data.notes} sources={alerts} />
             <Typography variant="caption" sx={{ color: "rgba(222,208,232,0.70)" }}>
-              Existing historical orders are owner-confirmed test records. No per-order test/live designation is persisted; never treat these records as verified sales.
+              {data.recordScope === "test" ? "Test-only diagnostics: historical test orders are not customer sales." : "Live-only diagnostics: test order history is excluded."}
             </Typography>
           </>
         ) : (
@@ -845,10 +850,10 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
                 Finance diagnostics
               </Typography>
               <Typography variant="caption" sx={{ color: "rgba(222,208,232,0.68)" }}>
-                {data.reconciliation.issueCount.toLocaleString("en-US")} reconciliation flags · Historical test records are included in these totals.
+                {data.reconciliation.issueCount.toLocaleString("en-US")} live reconciliation flags · Test records excluded.
               </Typography>
             </Box>
-            <V2Button href="/admin-v2/billing/diagnostics" variant="outlined" size="small" startIcon={<ShieldAlert size={15} />}>
+            <V2Button href="/admin-v2/billing/diagnostics?scope=test" variant="outlined" size="small" startIcon={<ShieldAlert size={15} />}>
               View Diagnostics
             </V2Button>
           </Stack>
