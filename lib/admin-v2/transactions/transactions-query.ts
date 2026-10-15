@@ -1,4 +1,5 @@
 import "server-only";
+import { parseAdminV2FinancialDataScope, scopedOrderLinkedSelect, type AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import {
   adminV2TransactionTotalPages,
@@ -100,8 +101,8 @@ function appendFilter(params: string[], key: string, operator: string, value: st
   params.push(`${key}=${operator}.${encodeURIComponent(value)}`);
 }
 
-export function adminV2TransactionParams(query: AdminV2TransactionQuery, includeOrder = true) {
-  const params = [`select=${paymentSelect}`];
+export function adminV2TransactionParams(query: AdminV2TransactionQuery, includeOrder = true, scope: AdminV2FinancialDataScope = "live") {
+  const params = scopedOrderLinkedSelect(paymentSelect, scope);
   if (query.method !== "all") appendFilter(params, "payment_method", "eq", query.method);
   if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.from) appendFilter(params, "occurred_at", "gte", `${query.from}T00:00:00.000Z`);
@@ -117,10 +118,10 @@ export function adminV2TransactionParams(query: AdminV2TransactionQuery, include
   return params;
 }
 
-async function fetchTransactionPage(query: AdminV2TransactionQuery) {
+async function fetchTransactionPage(query: AdminV2TransactionQuery, scope: AdminV2FinancialDataScope) {
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
-  const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query, true, scope).join("&")}`), {
     headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
     cache: "no-store",
   });
@@ -130,12 +131,12 @@ async function fetchTransactionPage(query: AdminV2TransactionQuery) {
   return { rows, totalCount: Number.isFinite(count) ? count : rows.length };
 }
 
-async function fetchMetricRows(query: AdminV2TransactionQuery) {
+async function fetchMetricRows(query: AdminV2TransactionQuery, scope: AdminV2FinancialDataScope) {
   const rows: AdminV2TransactionRow[] = [];
   let totalCount: number | null = null;
   for (let from = 0; from < maxMetricRows; from += 1000) {
     const to = Math.min(from + 999, maxMetricRows - 1);
-    const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query).join("&")}`), {
+    const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query, true, scope).join("&")}`), {
       headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
       cache: "no-store",
     });
@@ -150,8 +151,9 @@ async function fetchMetricRows(query: AdminV2TransactionQuery) {
 
 export async function getAdminV2TransactionExportRows(searchParams = new URLSearchParams()) {
   const query = parseAdminV2TransactionQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) return { ok: false as const, status: 503, errors: ["Payment transaction ledger is unavailable."] };
-  const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`finance_payment_transactions?${adminV2TransactionParams(query, true, scope).join("&")}`), {
     headers: { ...supabaseHeaders(), prefer: "count=exact", range: `0-${adminV2TransactionExportLimit - 1}` },
     cache: "no-store",
   });
@@ -213,6 +215,7 @@ export async function getAdminV2OrderPaymentHistory(orderRef: string): Promise<A
 
 export async function getAdminV2Transactions(searchParams = new URLSearchParams()): Promise<AdminV2TransactionQueryResult> {
   const query = parseAdminV2TransactionQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) {
     return {
       rows: [],
@@ -227,7 +230,7 @@ export async function getAdminV2Transactions(searchParams = new URLSearchParams(
   }
 
   try {
-    const [page, metricRows] = await Promise.all([fetchTransactionPage(query), fetchMetricRows(query)]);
+    const [page, metricRows] = await Promise.all([fetchTransactionPage(query, scope), fetchMetricRows(query, scope)]);
     return {
       rows: page.rows,
       metrics: buildAdminV2TransactionMetrics(metricRows.rows),
