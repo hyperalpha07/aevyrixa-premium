@@ -48,6 +48,7 @@ export type AdminV2RefundMetrics = {
 };
 
 export type AdminV2RefundQueryResult = {
+  dataScope?: "live" | "test";
   rows: AdminV2RefundRow[];
   metrics: AdminV2RefundMetrics;
   query: AdminV2RefundQuery;
