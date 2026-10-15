@@ -1,3 +1,4 @@
+import type { AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 import type { AdminV2AnalyticsResult } from "@/lib/admin-v2/analytics/analytics-metrics";
 import type { AdminV2InvoiceQueryResult } from "@/lib/admin-v2/invoices/invoice-metrics";
 import type { AdminV2ExpenseQueryResult } from "@/lib/admin-v2/expenses/expense-metrics";
@@ -30,6 +31,7 @@ export type AdminV2BillingModuleCard = {
 };
 
 export type AdminV2BillingResult = {
+  recordScope: AdminV2FinancialDataScope;
   summary: AdminV2BillingSummaryMetric[];
   modules: AdminV2BillingModuleCard[];
   sources: Record<"analytics" | "transactions" | "orderDue" | "refunds" | "expenses" | "invoices", AdminV2BillingSourceState>;
