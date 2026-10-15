@@ -47,4 +47,4 @@ E. **Fallback:** do not drop the column or move orders back to `live` automatica
 
 ## Current status
 
-Only the guarded schema migration and regression contracts are prepared for code review. **No production migration, update, deletion, financial backfill, or release has been executed.**
+The guarded schema migration, explicit finance/query scope implementation, and regression contracts are staged for code review. Deployment remains blocked on CI, end-to-end staging verification, expense scope coverage, and the coordinated release gates above. **No production migration, update, deletion, financial backfill, or release has been executed.**
