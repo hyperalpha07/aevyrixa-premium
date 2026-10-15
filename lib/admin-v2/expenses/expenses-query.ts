@@ -1,4 +1,5 @@
 import "server-only";
+import { parseAdminV2FinancialDataScope, type AdminV2FinancialDataScope } from "@/lib/admin-v2/finance/financial-data-scope";
 
 import {
   adminV2ExpenseTotalPages,
@@ -71,8 +72,8 @@ function appendFilter(params: string[], key: string, operator: string, value: st
   params.push(`${key}=${operator}.${encodeURIComponent(value)}`);
 }
 
-export function adminV2ExpenseParams(query: AdminV2ExpenseQuery, includeOrder = true) {
-  const params = [`select=${expenseSelect}`];
+export function adminV2ExpenseParams(query: AdminV2ExpenseQuery, includeOrder = true, scope: AdminV2FinancialDataScope = "live") {
+  const params = [`select=${expenseSelect}`, `record_scope=eq.${scope}`];
   if (query.category !== "all") appendFilter(params, "category", "eq", query.category);
   if (query.status !== "all") appendFilter(params, "status", "eq", query.status);
   if (query.from) appendFilter(params, "occurred_at", "gte", `${query.from}T00:00:00.000Z`);
@@ -88,10 +89,10 @@ export function adminV2ExpenseParams(query: AdminV2ExpenseQuery, includeOrder = 
   return params;
 }
 
-async function fetchExpensePage(query: AdminV2ExpenseQuery) {
+async function fetchExpensePage(query: AdminV2ExpenseQuery, scope: AdminV2FinancialDataScope) {
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
-  const response = await fetch(supabaseEndpoint(`finance_expenses?${adminV2ExpenseParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`finance_expenses?${adminV2ExpenseParams(query, true, scope).join("&")}`), {
     headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
     cache: "no-store",
   });
@@ -101,12 +102,12 @@ async function fetchExpensePage(query: AdminV2ExpenseQuery) {
   return { rows, totalCount: Number.isFinite(count) ? count : rows.length };
 }
 
-async function fetchMetricRows(query: AdminV2ExpenseQuery) {
+async function fetchMetricRows(query: AdminV2ExpenseQuery, scope: AdminV2FinancialDataScope) {
   const rows: AdminV2ExpenseRow[] = [];
   let totalCount: number | null = null;
   for (let from = 0; from < maxMetricRows; from += 1000) {
     const to = Math.min(from + 999, maxMetricRows - 1);
-    const response = await fetch(supabaseEndpoint(`finance_expenses?${adminV2ExpenseParams(query).join("&")}`), {
+    const response = await fetch(supabaseEndpoint(`finance_expenses?${adminV2ExpenseParams(query, true, scope).join("&")}`), {
       headers: { ...supabaseHeaders(), prefer: "count=exact", range: `${from}-${to}` },
       cache: "no-store",
     });
@@ -121,8 +122,9 @@ async function fetchMetricRows(query: AdminV2ExpenseQuery) {
 
 export async function getAdminV2ExpenseExportRows(searchParams = new URLSearchParams()) {
   const query = parseAdminV2ExpenseQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) return { ok: false as const, status: 503, errors: ["Expense ledger is unavailable."] };
-  const response = await fetch(supabaseEndpoint(`finance_expenses?${adminV2ExpenseParams(query).join("&")}`), {
+  const response = await fetch(supabaseEndpoint(`finance_expenses?${adminV2ExpenseParams(query, true, scope).join("&")}`), {
     headers: { ...supabaseHeaders(), prefer: "count=exact", range: `0-${adminV2ExpenseExportLimit - 1}` },
     cache: "no-store",
   });
@@ -135,6 +137,7 @@ export async function getAdminV2ExpenseExportRows(searchParams = new URLSearchPa
 
 export async function getAdminV2Expenses(searchParams = new URLSearchParams()): Promise<AdminV2ExpenseQueryResult> {
   const query = parseAdminV2ExpenseQuery(searchParams);
+  const scope = parseAdminV2FinancialDataScope(searchParams.get("scope"));
   if (!hasSupabaseConfig()) {
     return {
       rows: [],
@@ -148,7 +151,7 @@ export async function getAdminV2Expenses(searchParams = new URLSearchParams()): 
     };
   }
   try {
-    const [page, metricRows] = await Promise.all([fetchExpensePage(query), fetchMetricRows(query)]);
+    const [page, metricRows] = await Promise.all([fetchExpensePage(query, scope), fetchMetricRows(query, scope)]);
     return {
       rows: page.rows,
       metrics: buildAdminV2ExpenseMetrics(metricRows.rows),
