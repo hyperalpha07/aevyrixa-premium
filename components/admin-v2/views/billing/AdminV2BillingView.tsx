@@ -766,6 +766,12 @@ export function AdminV2BillingView({ data, mode = "overview" }: { data: AdminV2B
                 <V2Button href={data.recordScope === "test" ? "/admin-v2/billing/diagnostics?scope=live" : "/admin-v2/billing/diagnostics?scope=test"} variant="outlined">
                   {data.recordScope === "test" ? "View Live Issues" : "View Test Issues"}
                 </V2Button>
+                <V2Button href={data.recordScope === "test" ? "/admin-v2/invoices?scope=test" : "/admin-v2/invoices"} variant="outlined">
+                  {data.recordScope === "test" ? "Test Invoices" : "Live Invoices"}
+                </V2Button>
+                <V2Button href={data.recordScope === "test" ? "/admin-v2/transactions?scope=test" : "/admin-v2/transactions"} variant="outlined">
+                  {data.recordScope === "test" ? "Test Payments" : "Live Payments"}
+                </V2Button>
               </>
             ) : (
               <>
