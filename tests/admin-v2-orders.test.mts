@@ -785,7 +785,9 @@ test("cart line identity and serialization preserve selected product options", (
   for (const field of ["size", "color", "absorbency", "variant"]) {
     assert.match(orderRoute, new RegExp(`${field}: optionalText\\(item\\.${field}\\)`));
   }
-  assert.match(orderRoute, /validateProductSelections\(product, item\)/);
+  const trustedQuote = readFileSync(new URL("../lib/checkout/trusted-quote.ts", import.meta.url), "utf8");
+  assert.match(trustedQuote, /validateProductSelections\(product, item\)/);
+  assert.match(orderRoute, /quoteCheckoutOrder\(input, catalogResult\.products, settings\.settings\)/);
 });
 
 test("color media uses assigned image and safely falls back when mapping is absent", () => {

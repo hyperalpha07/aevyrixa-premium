@@ -8,9 +8,8 @@ import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
 import { createOrder, OrderStoreError, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
 import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
-import { getProductBySlug, listProducts } from "@/app/lib/product-store";
-import { isPurchasableStock } from "@/app/lib/product-display";
-import { validateProductSelections } from "@/app/lib/product-options";
+import { listProducts } from "@/app/lib/product-store";
+import { quoteCheckoutOrder } from "@/lib/checkout/trusted-quote";
 import { normalizeAdminV2ImageSrc } from "@/lib/admin-v2/image-src";
 import { isPublicProductImageAllowed } from "@/app/lib/public-product-media-safety";
 import { safeAccountOrderImage, snapshotOrderItemImages } from "@/app/account/orders/account-order-image";
@@ -176,28 +175,6 @@ function validateOrderPayload(payload: unknown): {
   };
 }
 
-async function unavailableOrderItems(items: OrderCartItem[]) {
-  const unavailable: string[] = [];
-
-  for (const item of items) {
-    if (!item.slug) continue;
-
-    const { product } = await getProductBySlug(item.slug);
-    if (!product) {
-      unavailable.push(`${item.name} is no longer available.`);
-      continue;
-    }
-
-    if (!isPurchasableStock(product.stockStatus)) {
-      unavailable.push(`${item.name} is currently out of stock.`);
-    }
-    const optionErrors = validateProductSelections(product, item);
-    unavailable.push(...optionErrors.map((error) => `${item.name}: ${error}`));
-  }
-
-  return unavailable;
-}
-
 export async function GET(request: Request) {
   if (!(await verifyFreshAdminRequestPermission(request, "orders.view"))) {
     return forbiddenAdminResponse();
@@ -247,11 +224,6 @@ export async function POST(request: Request) {
   if (!input) return Response.json({ errors }, { status: 400 });
 
   try {
-    const itemAvailabilityErrors = await unavailableOrderItems(input.items);
-    if (itemAvailabilityErrors.length > 0) {
-      return Response.json({ errors: itemAvailabilityErrors }, { status: 409 });
-    }
-
     const customer = await getCustomerFromRequest(request).catch(() => null);
     const settings = await getStoreSettings().catch(() => null);
     const requiresCustomerAccount =
@@ -275,16 +247,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const orderInput =
-      customer &&
-      normalizeCustomerPhone(customer.phone) === normalizeCustomerPhone(input.customer.phone)
-        ? { ...input, customerId: customer.id }
-        : input;
-
     const catalogResult = await listProducts({ scope: "public" });
-    const resolvedItems = catalogResult.storageMode === "supabase"
-      ? snapshotOrderItemImages(orderInput.items, catalogResult.products, safeOrderImage)
-      : orderInput.items.map((item) => ({ ...item, image: safeOrderImage(item.image) }));
+    if (catalogResult.storageMode !== "supabase" || settings?.storageMode !== "supabase") {
+      return Response.json({ errors: ["Current catalog or checkout settings are unavailable. Please retry later."] }, { status: 503 });
+    }
+
+    const quote = quoteCheckoutOrder(input, catalogResult.products, settings.settings);
+    if (!quote.ok) {
+      return Response.json({ errors: quote.errors }, { status: 409 });
+    }
+
+    const orderInput = {
+      ...input,
+      ...(customer && normalizeCustomerPhone(customer.phone) === normalizeCustomerPhone(input.customer.phone)
+        ? { customerId: customer.id }
+        : {}),
+      items: quote.quote.items,
+      totals: quote.quote.totals,
+      deliveryCharge: quote.quote.deliveryCharge,
+    };
+    const resolvedItems = snapshotOrderItemImages(orderInput.items, catalogResult.products, safeOrderImage);
     const result = await createOrder({ ...orderInput, items: resolvedItems });
 
     await recordOrderEvent({
