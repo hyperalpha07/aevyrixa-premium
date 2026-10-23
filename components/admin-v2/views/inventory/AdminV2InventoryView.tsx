@@ -112,7 +112,7 @@ export function AdminV2InventoryView({ data, canEdit }: { data: AdminV2ProductCa
         </Grid>
         <V2Card>
           <Stack spacing={2}>
-            <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2} alignItems={{ md: "center" }}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ justifyContent: "space-between", alignItems: { md: "center" } }}>
               <Box>
                 <Typography variant="h6">Stock control</Typography>
                 <Typography variant="body2" color="text.secondary">
