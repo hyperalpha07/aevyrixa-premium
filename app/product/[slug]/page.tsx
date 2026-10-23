@@ -99,7 +99,9 @@ export default async function ProductPage({
   const availability =
     product.stockStatus === "out_of_stock"
       ? "https://schema.org/OutOfStock"
-      : "https://schema.org/InStock";
+      : product.stockStatus === "preorder"
+        ? "https://schema.org/PreOrder"
+        : "https://schema.org/InStock";
 
   const productStructuredData = {
     "@context": "https://schema.org",
