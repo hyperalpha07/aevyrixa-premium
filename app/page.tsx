@@ -24,6 +24,7 @@ import { whatsappHref } from "@/app/lib/admin-settings";
 import { publicProduct } from "@/app/lib/product-display";
 import { listProducts } from "@/app/lib/product-store";
 import { homeCardCtaLabel, smartHomeCtaHref } from "@/app/lib/shop-routing";
+import { trustworthyHomeStats } from "@/app/lib/trust-statistics";
 import { loadStorefrontSettings } from "@/app/lib/storefront-settings-loader";
 import { brandName, noromiAssets } from "@/configs/brand/noromi";
 
@@ -251,7 +252,8 @@ export default async function Home() {
     { value: hms.statItem1Value, label: hms.statItem1Label },
     { value: hms.statItem2Value, label: hms.statItem2Label },
     { value: hms.statItem3Value, label: hms.statItem3Label },
-  ].filter((item) => item.value && item.label);
+  ];
+  const verifiedHomepageStatItems = trustworthyHomeStats(homepageStatItems, statItems);
   const homepageMarqueeItems = hms.marqueeItems
     .split(",")
     .map((item) => item.trim())
@@ -358,9 +360,9 @@ export default async function Home() {
                 </Link>
               </div>
               {hms.showStatStrip ? (
-                <div className="aev-hero-stat-shelf aev-home-hero-stats mt-5 w-full max-w-xl overflow-hidden border-y border-[#FF4DB8]/16 sm:mt-7" aria-label="Brand trust statistics">
+                <div className="aev-hero-stat-shelf aev-home-hero-stats mt-5 w-full max-w-xl overflow-hidden border-y border-[#FF4DB8]/16 sm:mt-7" aria-label="Store service highlights">
                   <div className="grid grid-cols-3">
-                    {(homepageStatItems.length ? homepageStatItems : statItems).map(({ value, label }) => (
+                    {verifiedHomepageStatItems.map(({ value, label }) => (
                       <div key={label} className="aev-hero-stat flex flex-col items-center justify-center gap-0.5 px-1.5 py-2.5 text-center sm:px-3 sm:py-3">
                         <span className="aev-hero-stat-value block text-base font-extrabold text-[#FFB3D1] sm:text-lg">{value}</span>
                         <span className="block text-[0.53rem] font-semibold uppercase leading-tight tracking-[0.075em] text-[#D8CBE8]/70 sm:text-[0.62rem]">{label}</span>
