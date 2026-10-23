@@ -12,7 +12,7 @@ function unsupportedStatisticalClaim(stat: HomeStat) {
   );
 }
 
-export function trustworthyHomeStats(configured: HomeStat[], fallback: HomeStat[]) {
+export function trustworthyHomeStats(configured: readonly HomeStat[], fallback: readonly HomeStat[]) {
   return fallback.map((base, index) => {
     const chosen = configured[index];
     if (!chosen?.value?.trim() || !chosen?.label?.trim() || unsupportedStatisticalClaim(chosen)) {
