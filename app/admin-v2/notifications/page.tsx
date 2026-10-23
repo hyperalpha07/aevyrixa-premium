@@ -41,7 +41,7 @@ export default async function AdminV2NotificationsPage() {
           <Typography variant="h6" sx={{ mb: 2 }}>Review work queues</Typography>
           <Stack spacing={1.5}>
             {queues.filter((queue) => queue.available).map((queue) => (
-              <Stack key={queue.label} direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ md: "center" }} spacing={1} sx={{ p: 1.5, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+              <Stack key={queue.label} direction={{ xs: "column", md: "row" }} spacing={1} sx={{ p: 1.5, borderRadius: 2, border: "1px solid", borderColor: "divider", justifyContent: "space-between", alignItems: { md: "center" } }}>
                 <Typography variant="body2">{queue.label}: <strong>{queue.count}</strong></Typography>
                 <Button component={Link} href={queue.href} variant="outlined" size="small">Open queue</Button>
               </Stack>
