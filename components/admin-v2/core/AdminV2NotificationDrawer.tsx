@@ -55,7 +55,7 @@ export function AdminV2NotificationDrawer({ open, onClose, data }: AdminV2Notifi
                   }}
                 >
                   <ListItemText primary={item.title} secondary={item.description} />
-                  <V2Chip label="Unread" color={item.tone} />
+                  <V2Chip label="Review" color={item.tone} />
                 </ListItem>
               </AdminV2Reveal>
             ))}
@@ -63,7 +63,7 @@ export function AdminV2NotificationDrawer({ open, onClose, data }: AdminV2Notifi
         ) : (
           <V2EmptyState
             icon={Bell}
-            title="No active notifications"
+            title="No active work-queue alerts"
             description="No real pending order, review, or support notification is currently available for Admin V2."
           />
         )}
