@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import AdminPanel from "@/app/admin/admin-panel";
 import { getAdminSession } from "@/app/lib/admin-auth";
 import { canAccessSection, firstAccessibleAdminPath } from "@/app/lib/admin-permissions";
 
@@ -17,5 +16,5 @@ export default async function AdminMediaPage() {
     redirect(firstAccessibleAdminPath(session) ?? "/admin/login");
   }
 
-  return <AdminPanel view="media" initialSession={session} />;
+  redirect("/admin-v2/media");
 }
