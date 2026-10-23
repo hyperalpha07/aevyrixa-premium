@@ -74,8 +74,13 @@ end $$;
 create or replace function public.admin_return_case_record_event()
 returns trigger language plpgsql set search_path = pg_catalog, public as $$
 begin
-  insert into public.admin_return_case_events(case_id,from_status,to_status,hygiene_review,actor_name,review_note)
-  values(new.id,case when tg_op='INSERT' then null else old.status end,new.status,new.hygiene_review,new.actor_name,new.review_note);
+  if tg_op = 'INSERT' then
+    insert into public.admin_return_case_events(case_id,from_status,to_status,hygiene_review,actor_name,review_note)
+    values(new.id,null,new.status,new.hygiene_review,new.actor_name,new.review_note);
+  else
+    insert into public.admin_return_case_events(case_id,from_status,to_status,hygiene_review,actor_name,review_note)
+    values(new.id,old.status,new.status,new.hygiene_review,new.actor_name,new.review_note);
+  end if;
   return new;
 end $$;
 
