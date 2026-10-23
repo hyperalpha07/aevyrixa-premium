@@ -135,7 +135,7 @@ export function AdminV2InventoryView({ data, canEdit }: { data: AdminV2ProductCa
                     {items.map((product) => (
                       <TableRow key={product.id} hover>
                         <TableCell sx={{ maxWidth: 330 }}>
-                          <Typography variant="body2" fontWeight={700}>{product.name}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 700 }}>{product.name}</Typography>
                           <Typography variant="caption" color="text.secondary">{product.slug}</Typography>
                         </TableCell>
                         <TableCell><Chip size="small" label={product.status === "active" ? "Active" : "Draft"}
