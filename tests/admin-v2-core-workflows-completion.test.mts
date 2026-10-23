@@ -9,10 +9,9 @@ test("All Classic Admin bridges require session and Admin V2 permission before r
   assert.match(bridge, /await requireAdminV2Session\(\)/);
   assert.match(bridge, /requireAdminV2RouteAccess\(session, module\)/);
   assert.ok(bridge.indexOf("requireAdminV2RouteAccess(session, module)") < bridge.indexOf("redirect(classicModules[module])"));
-  for (const module of ["discounts", "media", "integrations"]) {
+<<<<<<< HEAD
+  for (const module of ["categories", "discounts", "media", "integrations"]) {
     assert.match(bridge, new RegExp(`${module}: "/admin/${module}"`));
-    const route = read(`app/admin-v2/${module}/page.tsx`);
-    assert.match(route, new RegExp(`openClassicAdminV2Module\\("${module}"\\)`));
     const legacy = read(`app/admin/${module}/page.tsx`);
     assert.match(legacy, /getAdminSession\(\)/);
     assert.match(legacy, /canAccessSection\(session,/);
@@ -22,8 +21,8 @@ test("All Classic Admin bridges require session and Admin V2 permission before r
 test("Classic workflows are distinguished from not-yet-built native Admin V2 modules", () => {
   const routes = read("configs/admin-v2/routes.ts");
   const nav = read("components/admin-v2/navigation/AdminV2Sidebar.tsx");
-  for (const module of ["discounts", "media", "integrations"]) {
-    assert.match(routes, new RegExp(`module: "${module}", description: "[^"]+", implemented: false, classicPath: "/admin/${module}"`));
+  for (const module of ["categories", "discounts", "media", "integrations"]) {
+    assert.match(routes, new RegExp(`module: "${module}", description: "[^"]+", implemented: true`));
   }
   assert.match(nav, /usesClassic \? "Classic" : "Soon"/);
   assert.match(routes, /module: "inventory", description: "[^"]+", implemented: true/);
