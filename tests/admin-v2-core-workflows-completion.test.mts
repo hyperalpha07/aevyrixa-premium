@@ -9,7 +9,7 @@ test("All Classic Admin bridges require session and Admin V2 permission before r
   assert.match(bridge, /await requireAdminV2Session\(\)/);
   assert.match(bridge, /requireAdminV2RouteAccess\(session, module\)/);
   assert.ok(bridge.indexOf("requireAdminV2RouteAccess(session, module)") < bridge.indexOf("redirect(classicModules[module])"));
-  for (const module of ["categories", "discounts", "media", "settings", "integrations"]) {
+  for (const module of ["categories", "discounts", "media", "integrations"]) {
     assert.match(bridge, new RegExp(`${module}: "/admin/${module}"`));
     const route = read(`app/admin-v2/${module}/page.tsx`);
     assert.match(route, new RegExp(`openClassicAdminV2Module\\("${module}"\\)`));
@@ -22,7 +22,7 @@ test("All Classic Admin bridges require session and Admin V2 permission before r
 test("Classic workflows are distinguished from not-yet-built native Admin V2 modules", () => {
   const routes = read("configs/admin-v2/routes.ts");
   const nav = read("components/admin-v2/navigation/AdminV2Sidebar.tsx");
-  for (const module of ["categories", "discounts", "media", "settings", "integrations"]) {
+  for (const module of ["categories", "discounts", "media", "integrations"]) {
     assert.match(routes, new RegExp(`module: "${module}", description: "[^"]+", implemented: false, classicPath: "/admin/${module}"`));
   }
   assert.match(nav, /usesClassic \? "Classic" : "Soon"/);
@@ -81,4 +81,20 @@ test("Chat reuses the protected real Support Inbox without creating a fake chat 
   assert.match(page, /await requireAdminV2Session\(\)/);
   assert.match(page, /requireAdminV2RouteAccess\(session, "chat"\)/);
   assert.match(page, /redirect\("\/admin-v2\/support"\)/);
+});
+
+test("Settings native route loads only real persisted settings and retains advanced Classic", () => {
+  const route = read("app/admin-v2/settings/page.tsx");
+  const view = read("components/admin-v2/views/settings/AdminV2SettingsView.tsx");
+  const routes = read("configs/admin-v2/routes.ts");
+  assert.match(route, /requireAdminV2RouteAccess\(session, "settings"\)/);
+  assert.match(route, /await getStoreSettings\(\)/);
+  assert.match(route, /hasPermission\(session, "settings.editBasic"\)/);
+  assert.match(route, /hasPermission\(session, "settings.editSensitive"\)/);
+  assert.match(view, /data\.settings/);
+  assert.match(view, /\/api\/settings/);
+  assert.match(view, /"PATCH"/);
+  assert.match(view, /were changed in another session/);
+  assert.match(view, /Advance[d]? Classic Settings/);
+  assert.match(routes, /module: "settings"[^\n]+implemented: true/);
 });
