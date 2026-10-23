@@ -4,6 +4,7 @@ export type AdminV2Route = {
   description: string;
   module: AdminV2ModuleKey;
   implemented: boolean;
+  classicPath?: string;
 };
 
 export type AdminV2ModuleKey =
@@ -64,18 +65,18 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Product media", path: "/admin-v2/products/[productId]/media", module: "productMedia", description: "Manage draft product images", implemented: true },
   { title: "Publish product", path: "/admin-v2/products/[productId]/publish", module: "productPublish", description: "Review and publish a draft product", implemented: true },
   { title: "Unpublish product", path: "/admin-v2/products/[productId]/unpublish", module: "productUnpublish", description: "Review and return an active product to draft", implemented: true },
-  { title: "Categories", path: "/admin-v2/categories", module: "categories", description: "Category management", implemented: false },
+  { title: "Categories", path: "/admin-v2/categories", module: "categories", description: "Category management", implemented: false, classicPath: "/admin/categories" },
   { title: "Inventory", path: "/admin-v2/inventory", module: "inventory", description: "Inventory workflow", implemented: false },
   { title: "Reviews", path: "/admin-v2/reviews", module: "reviews", description: "Review moderation", implemented: true },
     { title: "Customers", path: "/admin-v2/customers", module: "customers", description: "Customer management", implemented: true },
     { title: "Customer Detail", path: "/admin-v2/customers/[customerId]", module: "customerDetail", description: "Customer profile", implemented: true },
   { title: "Returns", path: "/admin-v2/returns", module: "returns", description: "Returns workflow", implemented: false },
-  { title: "Discounts", path: "/admin-v2/discounts", module: "discounts", description: "Discount management", implemented: false },
+  { title: "Discounts", path: "/admin-v2/discounts", module: "discounts", description: "Discount management", implemented: false, classicPath: "/admin/discounts" },
   { title: "Support", path: "/admin-v2/support", module: "support", description: "Support inbox", implemented: true },
   { title: "Chat", path: "/admin-v2/chat", module: "chat", description: "Live chat", implemented: false },
   { title: "Email", path: "/admin-v2/email", module: "email", description: "Email workspace", implemented: false },
   { title: "Notifications", path: "/admin-v2/notifications", module: "notifications", description: "Notification center", implemented: false },
-  { title: "Media", path: "/admin-v2/media", module: "media", description: "Media library", implemented: false },
+  { title: "Media", path: "/admin-v2/media", module: "media", description: "Media library", implemented: false, classicPath: "/admin/media" },
   { title: "Calendar", path: "/admin-v2/calendar", module: "calendar", description: "Calendar", implemented: false },
   { title: "Kanban", path: "/admin-v2/kanban", module: "kanban", description: "Kanban board", implemented: false },
   { title: "Couriers", path: "/admin-v2/couriers", module: "couriers", description: "Courier operations", implemented: false },
@@ -93,8 +94,8 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Refunds", path: "/admin-v2/refunds", module: "refunds", description: "Refund ledger", implemented: true },
   { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax settings", implemented: false },
   { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: true },
-  { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Store settings", implemented: false },
-  { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Integrations", implemented: false },
+  { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Store settings", implemented: false, classicPath: "/admin/settings" },
+  { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Integrations", implemented: false, classicPath: "/admin/integrations" },
   { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Webhook management", implemented: false },
   { title: "System Health", path: "/admin-v2/system-health", module: "systemHealth", description: "System health", implemented: false },
 ];
