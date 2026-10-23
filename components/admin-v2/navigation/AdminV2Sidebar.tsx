@@ -63,11 +63,13 @@ function SidebarItem({
   const active = isAdminV2NavigationItemActive(pathname, item) || visibleChildren.some((child) => childActive(pathname, child));
   const [open, setOpen] = useState(active);
   const Icon = item.icon;
-  const implemented = item.module ? findAdminV2Route(item.module)?.implemented === true : true;
+  const route = item.module ? findAdminV2Route(item.module) : undefined;
+  const implemented = item.module ? route?.implemented === true : true;
+  const usesClassic = !implemented && Boolean(route?.classicPath);
   const navigates = Boolean(item.href && (!hasChildren || collapsed));
   const tooltipTitle = hasChildren
     ? `${item.label}: ${visibleChildren.map((child) => child.label).join(", ")}`
-    : `${item.label}${implemented ? "" : " (Coming soon)"}`;
+    : `${item.label}${usesClassic ? " (Classic Admin)" : implemented ? "" : " (Coming soon)"}`;
 
   useEffect(() => {
     if (active) setOpen(true);
@@ -125,7 +127,7 @@ function SidebarItem({
             slotProps={{ primary: { variant: "body2", sx: { fontWeight: active ? 700 : 600 } } }}
           />
           {item.badge ? <Chip size="small" label={item.badge} color="primary" /> : null}
-          {!implemented ? <Chip size="small" label="Soon" variant="outlined" /> : null}
+          {!implemented ? <Chip size="small" label={usesClassic ? "Classic" : "Soon"} variant="outlined" /> : null}
           {hasChildren ? (
             <ChevronRight
               size={16}
