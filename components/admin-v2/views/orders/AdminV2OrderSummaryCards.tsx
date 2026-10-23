@@ -18,12 +18,12 @@ type Props = {
 
 export function AdminV2OrderSummaryCards({ metrics }: Props) {
   const cards = [
-    { label: "Total Orders", value: metrics.total, icon: ClipboardList, tone: "primary" as const },
-    { label: "Pending", value: metrics.pending, icon: CirclePause, tone: "warning" as const },
-    { label: "Confirmed / Processing", value: metrics.processing, icon: CheckCircle2, tone: "info" as const },
-    { label: "Delivered", value: metrics.delivered, icon: PackageCheck, tone: "success" as const },
-    { label: "Cancelled", value: metrics.cancelled, icon: XCircle, tone: "error" as const },
-    { label: "Total Revenue", value: metrics.revenue, icon: Banknote, tone: "success" as const, prefix: "BDT " },
+    { label: "Total Orders", value: metrics?.total ?? 0, icon: ClipboardList, tone: "primary" as const },
+    { label: "Pending", value: metrics?.pending ?? 0, icon: CirclePause, tone: "warning" as const },
+    { label: "Confirmed / Processing", value: metrics?.processing ?? 0, icon: CheckCircle2, tone: "info" as const },
+    { label: "Delivered", value: metrics?.delivered ?? 0, icon: PackageCheck, tone: "success" as const },
+    { label: "Cancelled", value: metrics?.cancelled ?? 0, icon: XCircle, tone: "error" as const },
+    { label: "Total Revenue", value: metrics?.revenue ?? 0, icon: Banknote, tone: "success" as const, prefix: "BDT " },
   ];
 
   return (
