@@ -17,7 +17,8 @@ const messages = [
 test("Support implemented; Chat and unrelated coming-soon flags stay false; server page guards access", () => {
   const routes = read("configs/admin-v2/routes.ts");
   assert.match(routes, /module: "support"[^\n]+implemented: true/);
-  for (const name of ["chat", "email", "notifications"]) assert.match(routes, new RegExp(`module: "${name}"[^\\n]+implemented: false`));
+  for (const name of ["chat", "email"]) assert.match(routes, new RegExp(`module: "${name}"[^\\n]+implemented: false`));
+  assert.match(routes, /module: "notifications"[^\n]+implemented: true/);
   const page = read("app/admin-v2/support/page.tsx");
   assert.match(page, /requireAdminV2Session\(\)/);
   assert.match(page, /requireAdminV2RouteAccess\(session, "support"\)/);
