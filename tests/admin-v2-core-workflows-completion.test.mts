@@ -54,3 +54,24 @@ test("Stock-only write route validates a fresh permission, input bounds, and con
   assert.match(api, /logStaffActivity\(/);
   assert.doesNotMatch(api, /updates\.price|updates\.status/);
 });
+
+test("Notifications only summarize real permission-scoped queues and never invent unread receipts", () => {
+  const route = read("app/admin-v2/notifications/page.tsx");
+  const drawer = read("components/admin-v2/core/AdminV2NotificationDrawer.tsx");
+  assert.match(route, /requireAdminV2RouteAccess\(session, "notifications"\)/);
+  assert.match(route, /getAdminV2DashboardData\(session\)/);
+  assert.match(route, /data\.orders\.available/);
+  assert.match(route, /data\.reviews\.available/);
+  assert.match(route, /data\.support\.available/);
+  assert.match(route, /No per-user read receipts or message-delivery history/);
+  assert.doesNotMatch(drawer, /label="Unread"/);
+});
+
+test("System health shows real source availability, never fabricated uptime", () => {
+  const route = read("app/admin-v2/system-health/page.tsx");
+  assert.match(route, /requireAdminV2RouteAccess\(session, "systemHealth"\)/);
+  assert.match(route, /getAdminV2DashboardData\(session\)/);
+  assert.match(route, /source\.available/);
+  assert.match(route, /not an uptime monitor/);
+  assert.doesNotMatch(route, /99\.9%|100% uptime/);
+});
