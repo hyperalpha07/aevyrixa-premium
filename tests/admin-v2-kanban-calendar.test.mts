@@ -42,7 +42,7 @@ test("Kanban and Calendar require actual authorized staff session and persisted 
  const routes=read("configs/admin-v2/routes.ts");
  for(const [page,permission] of [[kanban,"kanban"],[calendar,"calendar"]] as const){
   assert.match(page,/requireAdminV2Session\(\)/);
-  assert.match(page, /requireAdminV2RouteAccess\\(/);
+  assert.ok(page.includes("requireAdminV2RouteAccess("));
   assert.match(page, new RegExp(`"${permission}"`));
   assert.match(page,/loadWorkTasks\(/);
   assert.match(routes,new RegExp(`module: "${permission}"[^\\n]+implemented: true`));
