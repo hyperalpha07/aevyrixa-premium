@@ -70,7 +70,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Reviews", path: "/admin-v2/reviews", module: "reviews", description: "Review moderation", implemented: true },
     { title: "Customers", path: "/admin-v2/customers", module: "customers", description: "Customer management", implemented: true },
     { title: "Customer Detail", path: "/admin-v2/customers/[customerId]", module: "customerDetail", description: "Customer profile", implemented: true },
-  { title: "Returns", path: "/admin-v2/returns", module: "returns", description: "Returns workflow", implemented: false },
+  { title: "Returns", path: "/admin-v2/returns", module: "returns", description: "Real manual return and exchange case workflow", implemented: true },
   { title: "Discounts", path: "/admin-v2/discounts", module: "discounts", description: "Discount management", implemented: false, classicPath: "/admin/discounts" },
   { title: "Support", path: "/admin-v2/support", module: "support", description: "Support inbox", implemented: true },
   { title: "Chat", path: "/admin-v2/chat", module: "chat", description: "Live chat via the existing Support Inbox", implemented: true },
