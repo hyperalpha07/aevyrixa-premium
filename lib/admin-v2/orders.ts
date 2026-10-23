@@ -1,6 +1,7 @@
 import { getOrderByReference, OrderStoreError, queryOrders } from "@/app/lib/order-store";
 import { parseAdminV2OrderQuery, type AdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import type { OrderRecord } from "@/app/lib/order-types";
+import { summaryForOrders } from "@/components/admin-v2/views/orders/utils";
 
 export type AdminV2OrdersPayload = {
   orders: OrderRecord[];
@@ -12,6 +13,7 @@ export type AdminV2OrdersPayload = {
   pageSize: number;
   totalPages: number;
   appliedFilters: AdminV2OrderQuery;
+  summary: ReturnType<typeof summaryForOrders> | null;
 };
 
 export function isVisibleRealOrder(order: OrderRecord) {
@@ -54,25 +56,57 @@ function limitationForError(error: unknown) {
   return "The existing order backend could not load orders. Admin V2 is showing no fallback or demo orders.";
 }
 
+const maxSummaryRows = 10000;
+const summaryBatchSize = 50;
+
+// Read every matching order before calculating KPIs. Page length is not the
+// total order count, even when the table defaults to ten rows.
+export async function getCompleteAdminV2OrderSummary(query: AdminV2OrderQuery, expectedCount: number) {
+  if (!Number.isSafeInteger(expectedCount) || expectedCount < 0 || expectedCount > maxSummaryRows) return null;
+  const allOrders: OrderRecord[] = [];
+  const pages = Math.ceil(expectedCount / summaryBatchSize);
+  for (let page = 1; page <= pages; page += 5) {
+    const batch = await Promise.all(Array.from({ length: Math.min(5, pages - page + 1) }, (_, index) =>
+      queryOrders({ ...query, page: page + index, pageSize: summaryBatchSize })
+    ));
+    for (let index = 0; index < batch.length; index++) {
+      const result = batch[index];
+      const expectedSize = Math.min(summaryBatchSize, expectedCount - (page + index - 1) * summaryBatchSize);
+      if (result.storageMode !== "supabase" || result.totalCount !== expectedCount || result.rows.length !== expectedSize) {
+        return null;
+      }
+      allOrders.push(...result.rows.filter(isVisibleRealOrder));
+    }
+  }
+  return summaryForOrders(allOrders);
+}
+
 export async function getAdminV2Orders(searchParams = new URLSearchParams()): Promise<AdminV2OrdersPayload> {
   const query = parseAdminV2OrderQuery(searchParams);
 
   try {
     const result = await queryOrders(query);
     const available = result.storageMode === "supabase";
+    const summary = available
+      ? await getCompleteAdminV2OrderSummary(query, result.totalCount).catch((error) => {
+          logOrderLoadError(error, "admin order summary");
+          return null;
+        })
+      : null;
 
     return {
       orders: available ? result.rows.filter(isVisibleRealOrder) : [],
       storageMode: result.storageMode,
       available,
       limitation: available
-        ? null
+        ? summary === null ? "Complete order summary is unavailable or exceeds the safe 10,000-order limit. The order list remains available." : null
         : "Supabase order storage is not configured. Demo-memory orders are intentionally hidden in Admin V2.",
       totalCount: result.totalCount,
       page: result.page,
       pageSize: result.pageSize,
       totalPages: result.totalPages,
       appliedFilters: result.appliedFilters,
+      summary,
     };
   } catch (error) {
     logOrderLoadError(error, "admin orders list");
@@ -87,6 +121,7 @@ export async function getAdminV2Orders(searchParams = new URLSearchParams()): Pr
       pageSize: query.pageSize,
       totalPages: 1,
       appliedFilters: query,
+      summary: null,
     };
   }
 }
