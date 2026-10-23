@@ -1,5 +1,5 @@
-import { AdminV2ModulePage } from "@/components/admin-v2/views/AdminV2ModulePage";
+import { openClassicAdminV2Module } from "@/lib/admin-v2/classic-module-bridge";
 
-export default function AdminV2CategoriesPage() {
-  return <AdminV2ModulePage module="categories" />;
+export default async function AdminV2ClassicCategoriesPage() {
+  return openClassicAdminV2Module("categories");
 }
