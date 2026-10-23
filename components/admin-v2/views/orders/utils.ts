@@ -159,6 +159,7 @@ export function activeFilterCount(filters: AdminV2OrderFilters) {
 export function orderCsvRows(orders: OrderRecord[], includePii: boolean) {
   const headers = [
     "order_reference",
+    "data_scope",
     "created_at",
     "order_status",
     "payment_method",
@@ -173,6 +174,7 @@ export function orderCsvRows(orders: OrderRecord[], includePii: boolean) {
 
   const rows = orders.map((order) => [
     order.orderReference,
+    order.isTestOrder ? "TEST" : "LIVE",
     order.createdAt,
     order.status,
     order.paymentDetails.paymentMethod,
@@ -193,7 +195,12 @@ export function orderCsvRows(orders: OrderRecord[], includePii: boolean) {
   ]);
 
   return [headers, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    .map((row) => row.map((cell) => {
+      const raw = String(cell);
+      const leading = raw.match(/\S/u)?.[0];
+      const safe = leading && ["=", "+", "-", "@"].includes(leading) ? `'${raw}` : raw;
+      return `"${safe.replace(/"/g, '""')}"`;
+    }).join(","))
     .join("\r\n");
 }
 

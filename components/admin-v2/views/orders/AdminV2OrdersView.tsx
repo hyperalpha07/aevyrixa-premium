@@ -20,7 +20,6 @@ import {
   activeFilterCount,
   emptyOrderFilters,
   formatDateTime,
-  orderCsvRows,
   validNextOrderStatuses,
   isSensitiveOrderTransition,
   type AdminV2OrderFilters,
@@ -139,6 +138,7 @@ export function AdminV2OrdersView({
   const [toast, setToast] = useState<Toast | null>(null);
   const [isPending, startTransition] = useTransition();
   const [exportConfirm, setExportConfirm] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [invoiceOrder, setInvoiceOrder] = useState<OrderRecord | null>(null);
   const [invoiceIssueOrder, setInvoiceIssueOrder] = useState<OrderRecord | null>(null);
   const [issuedInvoice, setIssuedInvoice] = useState<OrderInvoiceRecord | null>(null);
@@ -178,19 +178,36 @@ export function AdminV2OrdersView({
     startTransition(() => router.refresh());
   };
 
-  const exportCsv = (includePii: boolean) => {
+  const exportCsv = async (includePii: boolean) => {
+    setExporting(true);
     try {
-      const csv = orderCsvRows(orders, includePii);
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${brandShortName.toLowerCase()}-orders-${new Date().toISOString().slice(0, 10)}.csv`;
-      link.click();
-      URL.revokeObjectURL(url);
-      setToast({ message: "Filtered real orders exported.", severity: "success" });
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (!value) return;
+        if (emptyOrderFilters[key as keyof AdminV2OrderFilters] === value) return;
+        params.set(key, value);
+      });
+      params.set("includePii", String(includePii));
+      const response = await fetch(`/api/admin-v2/orders/export?${params}`, { cache: "no-store" });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(Array.isArray(payload.errors) ? payload.errors.join(" ") : "Order export failed.");
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try {
+        const link = document.createElement("a");
+        link.href = objectUrl;
+        link.download = `${brandShortName.toLowerCase()}-orders-${filters.recordScope}-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+      setToast({ message: "Complete filtered orders exported across all pages.", severity: "success" });
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : "Export failed.", severity: "error" });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -332,10 +349,10 @@ export function AdminV2OrdersView({
             <V2Button
               variant="outlined"
               startIcon={<Download size={16} />}
-          disabled={!permissions.canExport || orders.length === 0}
+          disabled={!permissions.canExport || !available || totalCount === 0 || exporting}
               onClick={() => {
                 if (includesPii) setExportConfirm(true);
-                else exportCsv(false);
+                else void exportCsv(false);
               }}
             >
               Export
@@ -390,11 +407,11 @@ export function AdminV2OrdersView({
 
       <V2Dialog title="Export filtered orders?" open={exportConfirm} onClose={() => setExportConfirm(false)}>
         <DialogContentText>
-          This export is limited to the currently loaded server page. Customer PII is available in this result set.
+          Export all orders matching the active server-side filters, not just the visible page. Customer PII is included only when explicitly selected.
         </DialogContentText>
         <DialogActions sx={{ px: 0, pb: 0 }}>
-          <V2Button onClick={() => { setExportConfirm(false); exportCsv(false); }}>Export without PII</V2Button>
-          <V2Button variant="contained" onClick={() => { setExportConfirm(false); exportCsv(true); }}>
+          <V2Button disabled={exporting} onClick={() => { setExportConfirm(false); void exportCsv(false); }}>Export without PII</V2Button>
+          <V2Button variant="contained" disabled={exporting} onClick={() => { setExportConfirm(false); void exportCsv(true); }}>
             Include authorized PII
           </V2Button>
         </DialogActions>

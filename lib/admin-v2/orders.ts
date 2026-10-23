@@ -61,7 +61,7 @@ const summaryBatchSize = 50;
 
 // Read every matching order before calculating KPIs. Page length is not the
 // total order count, even when the table defaults to ten rows.
-export async function getCompleteAdminV2OrderSummary(query: AdminV2OrderQuery, expectedCount: number) {
+export async function getCompleteAdminV2OrderRows(query: AdminV2OrderQuery, expectedCount: number): Promise<OrderRecord[] | null> {
   if (!Number.isSafeInteger(expectedCount) || expectedCount < 0 || expectedCount > maxSummaryRows) return null;
   const allOrders: OrderRecord[] = [];
   const pages = Math.ceil(expectedCount / summaryBatchSize);
@@ -78,7 +78,12 @@ export async function getCompleteAdminV2OrderSummary(query: AdminV2OrderQuery, e
       allOrders.push(...result.rows.filter(isVisibleRealOrder));
     }
   }
-  return summaryForOrders(allOrders);
+  return allOrders;
+}
+
+export async function getCompleteAdminV2OrderSummary(query: AdminV2OrderQuery, expectedCount: number) {
+  const orders = await getCompleteAdminV2OrderRows(query, expectedCount);
+  return orders === null ? null : summaryForOrders(orders);
 }
 
 export async function getAdminV2Orders(searchParams = new URLSearchParams()): Promise<AdminV2OrdersPayload> {
