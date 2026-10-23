@@ -3,7 +3,7 @@
 import { Alert, Box, DialogActions, DialogContentText, Snackbar, Stack, TextField, Typography } from "@mui/material";
 import { Download, RefreshCcw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { OrderInvoiceRecord, OrderNoteRecord, OrderRecord, OrderStatus } from "@/app/lib/order-types";
 import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
@@ -23,7 +23,6 @@ import {
   orderCsvRows,
   validNextOrderStatuses,
   isSensitiveOrderTransition,
-  summaryForOrders,
   type AdminV2OrderFilters,
   type AdminV2OrderSort,
 } from "@/components/admin-v2/views/orders/utils";
@@ -34,6 +33,7 @@ type Props = {
   storageMode: string;
   limitation: string | null;
   totalCount: number;
+  summary: ReturnType<typeof import("@/components/admin-v2/views/orders/utils").summaryForOrders> | null;
   page: number;
   pageSize: number;
   totalPages: number;
@@ -124,6 +124,7 @@ export function AdminV2OrdersView({
   storageMode,
   limitation,
   totalCount,
+  summary,
   page: serverPage,
   pageSize,
   permissions,
@@ -151,7 +152,7 @@ export function AdminV2OrdersView({
   const [reason, setReason] = useState("");
   const [mutationPending, setMutationPending] = useState(false);
 
-  const metrics = useMemo(() => summaryForOrders(orders), [orders]);
+  const metrics = summary;
   const filtered = activeFilterCount(filters) > 0;
   const includesPii = orders.some(hasPii);
 
