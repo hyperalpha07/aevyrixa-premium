@@ -75,7 +75,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Support", path: "/admin-v2/support", module: "support", description: "Support inbox", implemented: true },
   { title: "Chat", path: "/admin-v2/chat", module: "chat", description: "Live chat", implemented: false },
   { title: "Email", path: "/admin-v2/email", module: "email", description: "Email workspace", implemented: false },
-  { title: "Notifications", path: "/admin-v2/notifications", module: "notifications", description: "Notification center", implemented: false },
+  { title: "Notifications", path: "/admin-v2/notifications", module: "notifications", description: "Live operational work-queue alerts; no unread history", implemented: true },
   { title: "Media", path: "/admin-v2/media", module: "media", description: "Media library", implemented: false, classicPath: "/admin/media" },
   { title: "Calendar", path: "/admin-v2/calendar", module: "calendar", description: "Calendar", implemented: false },
   { title: "Kanban", path: "/admin-v2/kanban", module: "kanban", description: "Kanban board", implemented: false },
@@ -97,7 +97,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Store settings", implemented: false, classicPath: "/admin/settings" },
   { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Integrations", implemented: false, classicPath: "/admin/integrations" },
   { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Webhook management", implemented: false },
-  { title: "System Health", path: "/admin-v2/system-health", module: "systemHealth", description: "System health", implemented: false },
+  { title: "System Health", path: "/admin-v2/system-health", module: "systemHealth", description: "Read-only source availability, not uptime monitoring", implemented: true },
 ];
 
 export function findAdminV2Route(module: AdminV2ModuleKey) {
