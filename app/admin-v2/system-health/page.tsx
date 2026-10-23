@@ -37,10 +37,10 @@ export default async function AdminV2SystemHealthPage() {
           <Typography variant="h6" sx={{ mb: 2 }}>Live source checks</Typography>
           <Stack spacing={1}>
             {sources.map((source) => (
-              <Stack key={source.title} direction="row" alignItems="center" justifyContent="space-between" spacing={2}
-                sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, px: 2, py: 1.5 }}>
+              <Stack key={source.title} direction="row" spacing={2}
+                sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, px: 2, py: 1.5, alignItems: "center", justifyContent: "space-between" }}>
                 <Typography variant="body2" fontWeight={700}>{source.title}</Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <Typography variant="caption" color="text.secondary">{source.source}</Typography>
                   <Chip size="small" variant="outlined" label={source.available ? "Available" : "Unavailable"} color={source.available ? "success" : "warning"} />
                 </Stack>
