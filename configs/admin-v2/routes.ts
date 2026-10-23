@@ -79,7 +79,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Media", path: "/admin-v2/media", module: "media", description: "Media library", implemented: false, classicPath: "/admin/media" },
   { title: "Calendar", path: "/admin-v2/calendar", module: "calendar", description: "Calendar", implemented: false },
   { title: "Kanban", path: "/admin-v2/kanban", module: "kanban", description: "Kanban board", implemented: false },
-  { title: "Couriers", path: "/admin-v2/couriers", module: "couriers", description: "Courier operations", implemented: false },
+  { title: "Couriers", path: "/admin-v2/couriers", module: "couriers", description: "Manual live-order fulfillment and courier tracking", implemented: true },
   { title: "Automation", path: "/admin-v2/automation", module: "automation", description: "Automation rules", implemented: false },
   { title: "Staff", path: "/admin-v2/staff", module: "staff", description: "Staff management", implemented: true },
   { title: "Roles", path: "/admin-v2/roles", module: "roles", description: "Role governance", implemented: true },
