@@ -22,6 +22,7 @@ export default async function AdminV2OrdersPage(props: PageProps<"/admin-v2/orde
       storageMode={payload.storageMode}
       limitation={payload.limitation}
       totalCount={payload.totalCount}
+      summary={payload.summary}
       page={payload.page}
       pageSize={payload.pageSize}
       totalPages={payload.totalPages}
