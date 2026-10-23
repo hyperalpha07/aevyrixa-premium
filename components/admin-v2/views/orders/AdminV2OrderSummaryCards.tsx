@@ -13,7 +13,7 @@ type Props = {
     delivered: number;
     cancelled: number;
     revenue: number;
-  };
+  } | null;
 };
 
 export function AdminV2OrderSummaryCards({ metrics }: Props) {
@@ -33,8 +33,8 @@ export function AdminV2OrderSummaryCards({ metrics }: Props) {
           <AdminV2Reveal delay={index * 45}>
             <V2MetricCard
               label={card.label}
-              value={String(card.value)}
-              animatedValue={card.value}
+              value={metrics ? String(card.value) : "Unavailable"}
+              animatedValue={metrics ? card.value : undefined}
               prefix={card.prefix}
               icon={card.icon}
               tone={card.tone}
