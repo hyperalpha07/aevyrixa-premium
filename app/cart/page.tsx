@@ -158,6 +158,9 @@ export default function CartPage() {
                                   .join(" / ")}
                             </p>
                           )}
+                          {item.stockStatus === "preorder" && (
+                            <p className="mt-2 text-xs leading-5 text-amber-200">Pre-order — not currently in stock. Dispatch timing will be confirmed after availability is checked.</p>
+                          )}
                           {item.stockStatus === "out_of_stock" && (
                             <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-200">
                               Out of stock
