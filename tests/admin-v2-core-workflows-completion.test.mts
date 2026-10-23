@@ -75,3 +75,10 @@ test("System health shows real source availability, never fabricated uptime", ()
   assert.match(route, /not an uptime monitor/);
   assert.doesNotMatch(route, /99\.9%|100% uptime/);
 });
+
+test("Chat reuses the protected real Support Inbox without creating a fake chat backend", () => {
+  const page = read("app/admin-v2/chat/page.tsx");
+  assert.match(page, /await requireAdminV2Session\(\)/);
+  assert.match(page, /requireAdminV2RouteAccess\(session, "chat"\)/);
+  assert.match(page, /redirect\("\/admin-v2\/support"\)/);
+});
