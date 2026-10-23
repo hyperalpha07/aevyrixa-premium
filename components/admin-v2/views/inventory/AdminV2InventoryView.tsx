@@ -66,10 +66,11 @@ export function AdminV2InventoryView({ data, canEdit }: { data: AdminV2ProductCa
     setSaving(true);
     setMessage(null);
     try {
-      // Existing product PATCH enforces a fresh products.edit permission and writes an audit record.
-      const response = await fetch(`/api/products/${encodeURIComponent(selected.id)}`, {
+      // The stock-only endpoint revalidates permission, previous stock state and quantity.
+      const response = await fetch(`/api/admin-v2/inventory/${encodeURIComponent(selected.id)}`, {
         method: "PATCH", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ stockStatus: status, stockQuantity: count }),
+        body: JSON.stringify({ stockStatus: status, stockQuantity: count,
+          previousStockStatus: selected.stockStatus, previousStockQuantity: selected.stockQuantity }),
       });
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
