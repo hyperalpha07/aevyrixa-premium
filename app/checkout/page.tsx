@@ -1067,6 +1067,9 @@ function OrderSummary({
                         .join(" / ")}
                   </p>
                 )}
+                {item.stockStatus === "preorder" && (
+                  <p className="mt-1 text-xs leading-5 text-amber-200">Pre-order — this item is not in stock. We will confirm availability and dispatch timing before shipment.</p>
+                )}
                 {item.stockStatus === "out_of_stock" && (
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-200">
                     Out of stock
