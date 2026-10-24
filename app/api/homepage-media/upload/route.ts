@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import {
   forbiddenAdminResponse,
-  verifyFreshAdminRequestPermission,
+  getFreshAdminRequestSession,
+  unauthorizedAdminResponse,
 } from "@/app/lib/admin-auth";
+import { hasPermission } from "@/app/lib/admin-permissions";
 import { logStaffActivity } from "@/app/lib/admin-staff";
 
 export const dynamic = "force-dynamic";
@@ -76,8 +78,11 @@ function json(payload: unknown, init: ResponseInit = {}) {
 }
 
 export async function POST(request: Request) {
-  const session = await verifyFreshAdminRequestPermission(request, "homepage.manage");
-  if (!session) return forbiddenAdminResponse();
+  const session = await getFreshAdminRequestSession(request);
+  if (!session) return unauthorizedAdminResponse();
+  const canEditHomepage = hasPermission(session, "homepage.manage");
+  const canEditCategories = hasPermission(session, "categories.manage");
+  if (!canEditHomepage && !canEditCategories) return forbiddenAdminResponse();
 
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -103,6 +108,16 @@ export async function POST(request: Request) {
 
   const section =
     ((formData.get("section") as string | null) ?? "").trim().replace(/[^a-z0-9-]/gi, "-") || "homepage";
+
+  // Category editors may upload only these seven category assets.
+  // They cannot upload or replace unrelated homepage sections.
+  const permittedCategorySections = new Set([
+    "category-reusable", "category-comfort-panty", "category-soft-bra",
+    "category-nightwear", "category-hygiene", "category-bundles", "category-new-arrivals",
+  ]);
+  if (!canEditHomepage && (!canEditCategories || !permittedCategorySections.has(section))) {
+    return forbiddenAdminResponse();
+  }
   const contentType = contentTypeFor(file);
 
   const isImage = ALLOWED_IMAGE_TYPES.has(contentType);
