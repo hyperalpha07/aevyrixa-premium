@@ -59,7 +59,11 @@ test("Persisted active editor uses fresh read, slug uniqueness, conditional PATC
 test("Active edit denies draft, deleted, duplicate slugs and stale writes",async()=>{
  const form=draftEditInitialValues(row);
  const draft:DraftEditRequest=async()=>Response.json([{...row,status:"draft"}]);
- assert.ok((await persistActiveEdit(id,form,draft)).errors.some(x=>x.includes("no longer active")));\n const stale:DraftEditRequest=async(query,init)=>init?.method==="PATCH"?Response.json([]):query.has("slug")?Response.json([]):Response.json([row]);\n assert.ok((await persistActiveEdit(id,form,stale)).errors.some(x=>x.includes("concurrently")));\n const duplicated:DraftEditRequest=async(query)=>query.has("slug")?Response.json([{id:"other"}]):Response.json([row]);\n assert.ok((await persistActiveEdit(id,form,duplicated)).fields.slug);
+ assert.ok((await persistActiveEdit(id,form,draft)).errors.some(x=>x.includes("no longer active")));
+ const stale:DraftEditRequest=async(query,init)=>init?.method==="PATCH"?Response.json([]):query.has("slug")?Response.json([]):Response.json([row]);
+ assert.ok((await persistActiveEdit(id,form,stale)).errors.some(x=>x.includes("concurrently")));
+ const duplicated:DraftEditRequest=async(query)=>query.has("slug")?Response.json([{id:"other"}]):Response.json([row]);
+ assert.ok((await persistActiveEdit(id,form,duplicated)).fields.slug);
 });
 
 test("Published editor is accessed only via product editor RBAC, and doesn't trigger publication",()=>{
