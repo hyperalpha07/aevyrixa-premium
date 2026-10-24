@@ -100,7 +100,9 @@ export function AdminV2EditProductView({ id, initialValues, supportsMerchandisin
                 value={values[field.key]} required={field.required} disabled={pending}
                 select={field.key === "stockStatus"} type={field.type ?? "text"}
                 multiline={Boolean(field.rows)} minRows={field.rows}
-                error={Boolean(error)} helperText={error || field.helper}
+                error={Boolean(error)} helperText={error ||
+                  (status === "active" && field.key === "stockStatus" ? "Blank preserves existing stock status." :
+                    status === "active" && field.key === "stockQuantity" ? "Blank preserves existing stock quantity." : field.helper)}
                 onChange={(event) => {
                   setValues((current) => ({ ...current, [field.key]: event.target.value }));
                   setLocal((current) => ({ ...current, fields: { ...current.fields, [field.key]: undefined } }));
