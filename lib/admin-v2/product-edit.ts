@@ -145,3 +145,74 @@ export async function persistDraftEdit(id: string, raw: unknown, request: DraftE
   }
   return { saved: true, errors: [], fields: {} };
 }
+
+/** Publish-safe query: active products remain active across edits. */
+export function activeEditQuery(id: string) {
+  return new URLSearchParams({ id: `eq.${id}`, status: "eq.active", deleted_at: "is.null", select: "id,status" });
+}
+
+export function isEditableActive(row: { status?: unknown; deleted_at?: unknown } | null) {
+  return Boolean(row && row.status === "active" && row.deleted_at == null);
+}
+
+export function activeEditPayload(raw: unknown, merchandising: unknown) {
+  const validation = validateDraftEdit(raw);
+  const p = validation.input;
+  if (!p) return { ...validation, payload: null };
+  const existing = typeof merchandising === "object" && merchandising !== null && !Array.isArray(merchandising)
+    ? merchandising as Record<string, unknown> : {};
+  // Never write status, featured, merchandising flags, media or checkout metadata from this form.
+  // The optional stock alert threshold is merged into the existing merchandising document.
+  return {
+    ...validation,
+    payload: {
+      name: p.name, slug: p.slug, price: p.price, category: p.category,
+      compare_at_price: p.compareAtPrice ?? null,
+      short_description: p.shortDescription, description: p.description,
+      sizes: p.sizes, colors: p.colors, absorbency: p.absorbency,
+      benefits: p.benefits, care: p.care,
+      seo_title: p.seoTitle || null, seo_description: p.seoDescription || null,
+      stock_status: p.stockStatus ?? "out_of_stock", stock_quantity: p.stockQuantity ?? null,
+      merchandising: { ...existing, lowStockThreshold: p.lowStockThreshold ?? null },
+    },
+  };
+}
+
+export async function persistActiveEdit(
+  id: string, raw: unknown, request: DraftEditRequest
+): Promise<DraftEditState & { saved?: boolean }> {
+  const validation = validateDraftEdit(raw);
+  if (!validation.input) return { errors: validation.errors, fields: validation.fields };
+  const row = await readDraftEditProduct(id, request);
+  if (!row) return { errors: ["The product was not found or is deleted."], fields: {} };
+  if (!isEditableActive(row)) return { errors: ["This product is no longer active. Refresh before editing."], fields: {} };
+  const merchandisingAvailable = Object.hasOwn(row, "merchandising");
+  if (!merchandisingAvailable && validation.input.lowStockThreshold !== undefined) {
+    return { errors: ["The low-stock threshold is not supported in this schema."], fields: { lowStockThreshold: "Unavailable." } };
+  }
+  const duplicate = await request(duplicateDraftSlugQuery(id, validation.input.slug!));
+  if (!duplicate.ok) return { errors: ["Could not validate unique product slug."], fields: {} };
+  const duplicates = await duplicate.json();
+  if (!Array.isArray(duplicates)) return { errors: ["Could not validate product slug."], fields: {} };
+  if (duplicates.length) return { errors: ["That slug is used by another product."], fields: { slug: "Choose a unique slug." } };
+
+  const { payload } = activeEditPayload(raw, row.merchandising);
+  const updatePayload: Record<string, unknown> = { ...payload };
+  if (!merchandisingAvailable) delete updatePayload.merchandising;
+  const query = activeEditQuery(id);
+  if (row.updated_at) query.set("updated_at", `eq.${row.updated_at}`);
+  const response = await request(query, {
+    method: "PATCH", headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ ...updatePayload, updated_at: new Date().toISOString() }),
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    if (detail.code === "23505") return { errors: ["That slug is used by another product."], fields: { slug: "Choose a unique slug." } };
+    return { errors: ["Active product changes were not confirmed. Refresh before retrying."], fields: {} };
+  }
+  const updated = await response.json();
+  if (!Array.isArray(updated) || updated.length !== 1 || updated[0].id !== id || updated[0].status !== "active") {
+    return { errors: ["This product changed concurrently or is no longer active. No successful save is confirmed."], fields: {} };
+  }
+  return { saved: true, errors: [], fields: {} };
+}
