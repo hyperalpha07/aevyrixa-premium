@@ -48,6 +48,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   tax: { section: "billing" },
   billing: { permission: "finance.overview.view" },
   settings: { section: "settings" },
+  homepage: { permission: "homepage.manage" },
   integrations: { section: "integrations" },
   webhooks: { section: "integrations" },
   systemHealth: { section: "settings" },

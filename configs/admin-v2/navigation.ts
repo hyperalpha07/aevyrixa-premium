@@ -122,6 +122,7 @@ export const adminV2Navigation: AdminV2NavigationSection[] = [
     heading: "System",
     items: [
       { label: "Settings", href: "/admin-v2/settings", icon: Settings, module: "settings" },
+      { label: "Homepage", href: "/admin-v2/homepage", icon: Image, module: "homepage" },
       { label: "Integrations", href: "/admin-v2/integrations", icon: GitBranch, module: "integrations" },
       { label: "Webhooks", href: "/admin-v2/webhooks", icon: Webhook, module: "webhooks" },
       { label: "System Health", href: "/admin-v2/system-health", icon: Activity, module: "systemHealth" },
