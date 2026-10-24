@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import AdminPanel from "@/app/admin/admin-panel";
 import { getAdminSession } from "@/app/lib/admin-auth";
 import { canAccessSection, firstAccessibleAdminPath } from "@/app/lib/admin-permissions";
 
@@ -16,5 +17,5 @@ export default async function AdminDiscountsPage() {
     redirect(firstAccessibleAdminPath(session) ?? "/admin/login");
   }
 
-  redirect("/admin-v2/discounts");
+  return <AdminPanel view="discounts" initialSession={session} />;
 }
