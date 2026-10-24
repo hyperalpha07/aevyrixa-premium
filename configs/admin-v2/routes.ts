@@ -49,6 +49,7 @@ export type AdminV2ModuleKey =
   | "tax"
   | "billing"
   | "settings"
+  | "homepage"
   | "integrations"
   | "webhooks"
   | "systemHealth";
@@ -95,6 +96,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax settings", implemented: false },
   { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: true },
   { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Native core store and checkout settings, advanced Classic available", implemented: true, classicPath: "/admin/settings" },
+  { title: "Homepage", path: "/admin-v2/homepage", module: "homepage", description: "Real homepage section, editorial, hero and media management", implemented: true },
   { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Integrations", implemented: false, classicPath: "/admin/integrations" },
   { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Webhook management", implemented: false },
   { title: "System Health", path: "/admin-v2/system-health", module: "systemHealth", description: "Read-only source availability, not uptime monitoring", implemented: true },
