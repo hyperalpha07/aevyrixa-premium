@@ -3,7 +3,7 @@
 import { Alert, Box, Button, Chip, Grid, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import Link from "next/link";
 import { useActionState, useRef, useState, type FormEvent } from "react";
-import { saveAdminV2DraftProduct } from "@/app/admin-v2/products/[productId]/edit/actions";
+import { saveAdminV2DraftProduct, saveAdminV2ActiveProduct } from "@/app/admin-v2/products/[productId]/edit/actions";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { draftEditFields, validateDraftEdit, type DraftEditField, type DraftEditState, type DraftEditValues } from "@/lib/admin-v2/product-edit";
@@ -51,10 +51,10 @@ export function AdminV2EditProductUnavailable({ id, active = false }: { id: stri
   </Stack>;
 }
 
-export function AdminV2EditProductView({ id, initialValues, supportsMerchandising }: { id: string; initialValues: DraftEditValues; supportsMerchandising: boolean }) {
+export function AdminV2EditProductView({ id, initialValues, supportsMerchandising, status = "draft" }: { id: string; initialValues: DraftEditValues; supportsMerchandising: boolean; status?: "draft" | "active" }) {
   const [values, setValues] = useState(initialValues);
   const [local, setLocal] = useState<DraftEditState>({ errors: [], fields: {} });
-  const [state, action, pending] = useActionState(saveAdminV2DraftProduct.bind(null, id), { errors: [], fields: {} } as DraftEditState);
+  const [state, action, pending] = useActionState((status === "active" ? saveAdminV2ActiveProduct : saveAdminV2DraftProduct).bind(null, id), { errors: [], fields: {} } as DraftEditState);
   const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
   const alertRef = useRef<HTMLDivElement>(null);
   const detailPath = `/admin-v2/products/${encodeURIComponent(id)}`;
@@ -76,13 +76,13 @@ export function AdminV2EditProductView({ id, initialValues, supportsMerchandisin
 
   const errors = local.errors.length ? local.errors : state.errors;
   return <Box component="form" action={action} onSubmit={submit} noValidate aria-busy={pending}>
-    <V2PageHeader title="Edit draft product" titleComponent="h1"
-      description="Update the private product record. Your changes remain in draft."
+    <V2PageHeader title={status === "active" ? "Edit active product" : "Edit draft product"} titleComponent="h1"
+      description={status === "active" ? "Edit the live catalog product without changing its published status, gallery or merchandising flags." : "Update the private product record. Your changes remain in draft."}
       breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Products", href: "/admin-v2/products" },
-        { label: initialValues.name || "Product", href: detailPath }, { label: "Edit draft" }]}
-      actions={<Chip label="Draft only" color="primary" variant="outlined" />} />
+        { label: initialValues.name || "Product", href: detailPath }, { label: status === "active" ? "Edit active" : "Edit draft" }]}
+      actions={<Chip label={status === "active" ? "Active: remains published" : "Draft only"} color={status === "active" ? "success" : "primary"} variant="outlined" />} />
     <Stack spacing={2}>
-      <Alert severity="info">This product stays private after saving. Publishing is not available yet.</Alert>
+      <Alert severity="info">{status === "active" ? "Changes to price, stock and product copy can affect live customers immediately. The product remains published. Review fields before saving." : "This product stays private after saving. Publishing is not available yet."}</Alert>
       {errors.length ? <Alert severity="error" ref={alertRef} tabIndex={-1}>
         {errors.length === 1 ? errors[0] : "Please correct the highlighted fields before saving."}
       </Alert> : null}
@@ -100,7 +100,9 @@ export function AdminV2EditProductView({ id, initialValues, supportsMerchandisin
                 value={values[field.key]} required={field.required} disabled={pending}
                 select={field.key === "stockStatus"} type={field.type ?? "text"}
                 multiline={Boolean(field.rows)} minRows={field.rows}
-                error={Boolean(error)} helperText={error || field.helper}
+                error={Boolean(error)} helperText={error ||
+                  (status === "active" && field.key === "stockStatus" ? "Blank preserves existing stock status." :
+                    status === "active" && field.key === "stockQuantity" ? "Blank preserves existing stock quantity." : field.helper)}
                 onChange={(event) => {
                   setValues((current) => ({ ...current, [field.key]: event.target.value }));
                   setLocal((current) => ({ ...current, fields: { ...current.fields, [field.key]: undefined } }));
@@ -125,7 +127,7 @@ export function AdminV2EditProductView({ id, initialValues, supportsMerchandisin
       </Stack></V2Card>
       <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={1} sx={{ justifyContent: "flex-end" }}>
         <Button component={Link} href={detailPath} disabled={pending} variant="outlined">Cancel</Button>
-        <Button type="submit" loading={pending} variant="contained">Save draft changes</Button>
+        <Button type="submit" loading={pending} variant="contained">{status === "active" ? "Save active product" : "Save draft changes"}</Button>
       </Stack>
     </Stack>
   </Box>;

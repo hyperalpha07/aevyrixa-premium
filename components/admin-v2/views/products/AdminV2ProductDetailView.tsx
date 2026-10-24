@@ -259,9 +259,9 @@ function CompactHeader({ product, canEditDraft, canManageMedia, canPublish, canU
             variant={product.status === "active" ? "filled" : "outlined"}
           />
           <Chip size="small" label="Read-only" color="primary" variant="outlined" />
-          {canEditDraft && product.status === "draft" ? (
+          {canEditDraft && (product.status === "draft" || product.status === "active") ? (
             <V2Button size="small" variant="contained" href={`/admin-v2/products/${encodeURIComponent(product.id)}/edit`}>
-              Edit draft
+              {product.status === "active" ? "Edit active" : "Edit draft"}
             </V2Button>
           ) : null}
           {canManageMedia && product.status === "draft" ? (
@@ -545,9 +545,11 @@ export function AdminV2ProductDetailView({ data, canEditDraft = false, canManage
         </V2Card>
 
         <Typography variant="caption" color="text.secondary" sx={{ textAlign: "center", pb: 0.5 }}>
-          {canEditDraft && product.status === "draft"
-            ? "This record is read-only. Use Edit draft to update its private draft details. Publishing and media management remain unavailable."
-            : "Editing, publishing, inventory changes, pricing changes, and media management remain unavailable."}
+          {canEditDraft
+            ? product.status === "active"
+              ? "This detail page is read-only. Use Edit active to update live product details. Media management remains separate."
+              : "This detail page is read-only. Use Edit draft to change draft details, and publish separately."
+            : "You have read-only product access. Ask an authorized editor to make changes."}
         </Typography>
       </Stack>
     </>
