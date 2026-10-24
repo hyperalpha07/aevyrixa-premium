@@ -4,14 +4,15 @@ import test from "node:test";
 
 const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),"utf8");
 
-test("No V2 links lead to fabricated Classic discount, media or integration dashboards",()=>{
+test("Native views show grounded data without prematurely removing Classic admin functionality",()=>{
  const routes=read("configs/admin-v2/routes.ts");
  for(const name of ["discounts","media","integrations"]){
   const page=read(`app/admin-v2/${name}/page.tsx`);
   const legacy=read(`app/admin/${name}/page.tsx`);
   assert.match(routes,new RegExp(`module: "${name}"[^\\n]+implemented: true`));
   assert.match(page,/requireAdminV2RouteAccess\(/);
-  assert.ok(legacy.includes(`redirect("/admin-v2/${name}")`));
+  assert.ok(legacy.includes("getAdminSession()"));
+  assert.ok(legacy.includes(`<AdminPanel view="${name}"`));
  }
 });
 
