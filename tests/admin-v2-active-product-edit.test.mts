@@ -39,6 +39,10 @@ test("Active editor preserves published status, merchandising flags and image",(
  assert.equal(Object.hasOwn(payload!,"image_url"),false);
  assert.deepEqual(payload?.merchandising,row.merchandising);
  assert.equal(payload?.stock_quantity,12);
+ const blankFields=activeEditPayload({...form,stockStatus:"",stockQuantity:""},row.merchandising).payload;
+ assert.ok(blankFields);
+ assert.equal(Object.hasOwn(blankFields!,"stock_status"),false);
+ assert.equal(Object.hasOwn(blankFields!,"stock_quantity"),false);
  assert.equal(activeEditQuery(id).get("status"),"eq.active");
  assert.equal(isEditableActive(row),true);
  assert.equal(isEditableActive({...row,status:"draft"}),false);
