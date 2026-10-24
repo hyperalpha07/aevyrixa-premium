@@ -1,10 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import {
- activeEditPayload, activeEditQuery, draftEditInitialValues, isEditableActive,
- persistActiveEdit, type DraftEditRequest,
-} from "../lib/admin-v2/product-edit.ts";
+import { registerHooks } from "node:module";
+import type { DraftEditRequest } from "../lib/admin-v2/product-edit.ts";
+
+const hooks = registerHooks({
+ resolve(specifier, context, nextResolve) {
+  if (specifier === "./product-create" && context.parentURL?.endsWith("/lib/admin-v2/product-edit.ts")) {
+   return nextResolve("./product-create.ts", context);
+  }
+  return nextResolve(specifier, context);
+ },
+});
+const { activeEditPayload, activeEditQuery, draftEditInitialValues, isEditableActive, persistActiveEdit } =
+ await import("../lib/admin-v2/product-edit.ts");
+hooks.deregister();
 
 const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),"utf8");
 const id="b11d7a23-eef6-4d2d-9f7c-0ce50f1b5a13";
