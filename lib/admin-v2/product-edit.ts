@@ -172,7 +172,9 @@ export function activeEditPayload(raw: unknown, merchandising: unknown) {
       sizes: p.sizes, colors: p.colors, absorbency: p.absorbency,
       benefits: p.benefits, care: p.care,
       seo_title: p.seoTitle || null, seo_description: p.seoDescription || null,
-      stock_status: p.stockStatus ?? "out_of_stock", stock_quantity: p.stockQuantity ?? null,
+      // On active records, blank stock fields mean preserve, never infer zero/out-of-stock.
+      ...(p.stockStatus ? { stock_status: p.stockStatus } : {}),
+      ...(p.stockQuantity === undefined ? {} : { stock_quantity: p.stockQuantity }),
       merchandising: { ...existing, lowStockThreshold: p.lowStockThreshold ?? null },
     },
   };
