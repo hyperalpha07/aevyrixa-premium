@@ -9,6 +9,7 @@ import { readDraftEditProduct } from "@/lib/admin-v2/product-edit";
 import { draftProductRequest } from "@/lib/admin-v2/product-edit-store";
 import { appendDraftProductImage, assignDraftProductColorImage, assignDraftRichContentImage, draftMediaUpdateQuery, draftProductMediaPath,
   hasValidAdminV2ImageSignature, mediaStepFailure, moveDraftProductImage, removeDraftProductImage,
+  liveMediaUpdateQuery, canRemovePublishedProductImage,
   safeDraftMediaStoragePath, setDraftProductPrimaryImage, validateAdminV2MediaFile } from "@/lib/admin-v2/product-media";
 import { publicProductMediaUrl, removeNewProductMediaObject, uploadProductMediaObject } from "@/lib/admin-v2/product-media-store";
 
@@ -39,7 +40,7 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
   try { row = await readDraftEditProduct(productId, draftProductRequest); }
   catch { return { errors: ["Product data is currently unavailable."] }; }
   if (!row || row.deleted_at != null) return { errors: ["Product was not found or has been deleted."] };
-  if (row.status !== "draft") return { errors: ["Only draft products can receive new media."] };
+  if (row.status !== "draft" && row.status !== "active") return { errors: ["Only draft or active products can receive new media."] };
 
   const body = await file.arrayBuffer();
   if (!hasValidAdminV2ImageSignature(validation.contentType, new Uint8Array(body))) {
@@ -53,7 +54,8 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
     const upload = await uploadProductMediaObject(objectPath, validation.contentType, body);
     if (!upload.ok) return { errors: [mediaStepFailure("storage", upload.status)] };
     uploaded = true;
-    const query = draftMediaUpdateQuery(productId, row.updated_at);
+    const query = row.status === "active"
+      ? liveMediaUpdateQuery(productId, row.updated_at) : draftMediaUpdateQuery(productId, row.updated_at);
     const response = await draftProductRequest(query, {
       method: "PATCH", headers: { Prefer: "return=representation" },
       body: JSON.stringify({ ...appendDraftProductImage(row, publicUrl, objectPath), updated_at: new Date().toISOString() }),
@@ -61,7 +63,7 @@ export async function uploadAdminV2DraftImage(productId: string, _state: AdminV2
     const updated = response.ok ? await response.json().catch(() => []) : [];
     if (!response.ok) return { errors: [mediaStepFailure("database", response.status)] };
     if (!Array.isArray(updated) || updated.length !== 1 || updated[0].id !== productId) {
-      return { errors: ["The product changed or is no longer an editable draft. Cleanup of the new storage object was attempted."] };
+      return { errors: ["The product changed or is no longer editable. Cleanup of the new storage object was attempted."] };
     }
     attached = true;
   } catch (error) {
@@ -102,7 +104,10 @@ export async function manageAdminV2DraftImage(productId: string, _state: AdminV2
   try { row = await readDraftEditProduct(productId, draftProductRequest); }
   catch { return { errors: ["Product data is currently unavailable."] }; }
   if (!row || row.deleted_at != null) return { errors: ["Product was not found or has been deleted."] };
-  if (row.status !== "draft") return { errors: ["Only draft product media can be changed."] };
+  if (row.status !== "draft" && row.status !== "active") return { errors: ["Only draft or active product media can be changed."] };
+  if (row.status === "active" && operation === "remove" && !canRemovePublishedProductImage(row, imageUrl)) {
+    return { errors: ["A published product must retain at least one gallery image."] };
+  }
 
   const typedOperation = operation as MediaOperation;
   const payload = typedOperation === "remove"
@@ -120,20 +125,23 @@ export async function manageAdminV2DraftImage(productId: string, _state: AdminV2
       ? "Choose a current product color and gallery image."
       : typedOperation === "rich"
         ? "Choose a supported rich-content role and current gallery image."
-      : "The selected image is no longer in this draft gallery."] };
+      : "The selected image is no longer in this product gallery."] };
 
-  const response = await draftProductRequest(draftMediaUpdateQuery(productId, row.updated_at), {
+  const query = row.status === "active"
+    ? liveMediaUpdateQuery(productId, row.updated_at) : draftMediaUpdateQuery(productId, row.updated_at);
+  const response = await draftProductRequest(query, {
     method: "PATCH", headers: { Prefer: "return=representation" },
     body: JSON.stringify({ ...payload, updated_at: new Date().toISOString() }),
   }).catch(() => null);
   const updated = response?.ok ? await response.json().catch(() => []) : [];
-  if (!response?.ok) return { errors: [`Draft media could not be updated${response ? ` (${response.status})` : ""}.`] };
+  if (!response?.ok) return { errors: [`Product media could not be updated${response ? ` (${response.status})` : ""}.`] };
   if (!Array.isArray(updated) || updated.length !== 1 || updated[0].id !== productId) {
-    return { errors: ["The product changed or is no longer an editable draft. Reload before trying again."] };
+    return { errors: ["The product changed or is no longer editable. Reload before trying again."] };
   }
 
   let cleanupFailed = false;
-  if (typedOperation === "remove") {
+  // Published images may be referenced in orders, social previews or cache: unlink only, never delete storage.
+  if (typedOperation === "remove" && row.status === "draft") {
     const path = safeDraftMediaStoragePath(imageUrl, productId);
     if (path) {
       const cleanup = await removeNewProductMediaObject(path).catch(() => null);
