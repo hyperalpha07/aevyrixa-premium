@@ -264,7 +264,7 @@ function CompactHeader({ product, canEditDraft, canManageMedia, canPublish, canU
               {product.status === "active" ? "Edit active" : "Edit draft"}
             </V2Button>
           ) : null}
-          {canManageMedia && product.status === "draft" ? (
+          {canManageMedia && (product.status === "draft" || product.status === "active") ? (
             <V2Button size="small" href={`/admin-v2/products/${encodeURIComponent(product.id)}/media`}>
               Manage media
             </V2Button>
