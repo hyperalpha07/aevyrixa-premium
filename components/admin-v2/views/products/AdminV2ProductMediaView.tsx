@@ -29,9 +29,10 @@ const richMediaRoles: Array<{ role: AdminV2RichMediaRole; label: string }> = [
   { role: "feature3", label: "Feature image 3" },
 ];
 
-export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, colors, colorAssignments, supportsColorMedia, richAssignments, supportsRichMedia, notice }: {
+export function AdminV2ProductMediaView({ id, name, status, images, primaryImageUrl, colors, colorAssignments, supportsColorMedia, richAssignments, supportsRichMedia, notice }: {
   id: string;
   name: string;
+  status: "active" | "draft";
   images: Array<{ value: string; src: string }>;
   primaryImageUrl: string | null;
   colors: string[];
@@ -48,15 +49,15 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
   const [hasValidSelection, setHasValidSelection] = useState(false);
   const detailPath = `/admin-v2/products/${encodeURIComponent(id)}`;
   return <>
-    <V2PageHeader title="Product media" titleComponent="h1" description="Upload and organize images for this private draft product."
+    <V2PageHeader title="Product media" titleComponent="h1" description={status === "active" ? "Upload and organize media for this published product. Changes affect the live storefront." : "Upload and organize images for this private draft product."}
       breadcrumbs={[{ label: "Admin V2", href: "/admin-v2/dashboard" }, { label: "Products", href: "/admin-v2/products" },
         { label: name, href: detailPath }, { label: "Media" }]}
-      actions={<Stack direction="row" spacing={1}><Chip label="Draft only" color="primary" variant="outlined" /><Chip label="Media management" variant="outlined" /></Stack>} />
+      actions={<Stack direction="row" spacing={1}><Chip label={status === "active" ? "Published — live changes" : "Draft only"} color={status === "active" ? "success" : "primary"} variant="outlined" /><Chip label="Media management" variant="outlined" /></Stack>} />
     <Stack spacing={2}>
-      <Alert severity="info">Draft-only media management is enabled. Publishing happens through the publish review step.</Alert>
+      <Alert severity={status === "active" ? "warning" : "info"}>{status === "active" ? "This gallery is published. Upload and assignment changes affect the public product immediately. The final published image cannot be removed. Removed live images are unlinked, not deleted from Storage." : "This is a private draft. Publishing happens through the publish review step."}</Alert>
       {notice.created ? <Alert severity="success">Product created. Add product images.</Alert> : null}
-      {notice.uploaded ? <Alert severity="success">Image uploaded and attached to this draft.</Alert> : null}
-      {notice.updated ? <Alert severity="success">Draft gallery updated.</Alert> : null}
+      {notice.uploaded ? <Alert severity="success">Image uploaded and attached to the product.</Alert> : null}
+      {notice.updated ? <Alert severity="success">Product gallery updated.</Alert> : null}
       {notice.cleanupFailed ? <Alert severity="warning">The gallery was updated, but Storage cleanup failed. The unreferenced object may need manual review.</Alert> : null}
       {manageState.errors.length ? <Alert severity="error">{manageState.errors[0]}</Alert> : null}
       <V2Card><Typography component="h2" variant="h6" sx={{ mb: 2 }}>Current gallery</Typography>
@@ -79,9 +80,9 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
                 <Button type="submit" size="small" disabled={managing} aria-label={`Move image ${index + 1} up`}>Move up</Button></Box> : null}
               {index < images.length - 1 ? <Box component="form" action={manageAction}><input type="hidden" name="operation" value="down" /><input type="hidden" name="imageUrl" value={image.value} />
                 <Button type="submit" size="small" disabled={managing} aria-label={`Move image ${index + 1} down`}>Move down</Button></Box> : null}
-              <Box component="form" action={manageAction} onSubmit={(event) => { if (!window.confirm(`Remove image ${index + 1} from this draft gallery?`)) event.preventDefault(); }}>
+              <Box component="form" action={manageAction} onSubmit={(event) => { if (!window.confirm(`Remove image ${index + 1} from this ${status === "active" ? "LIVE" : "draft"} gallery?`)) event.preventDefault(); }}>
                 <input type="hidden" name="operation" value="remove" /><input type="hidden" name="imageUrl" value={image.value} />
-                <Button type="submit" size="small" color="error" disabled={managing}>Remove</Button></Box>
+                <Button type="submit" size="small" color="error" disabled={managing || (status === "active" && images.length <= 1)}>Remove</Button></Box>
             </Stack>
             {supportsColorMedia && colors.length ? <Stack component="form" action={manageAction} direction={{ xs: "column", sm: "row" }} spacing={1}>
               <input type="hidden" name="operation" value="color" />
@@ -137,7 +138,7 @@ export function AdminV2ProductMediaView({ id, name, images, primaryImageUrl, col
             setClientError(file && !valid ? `Choose a non-empty JPG, PNG, or WebP image that is ${ADMIN_V2_MEDIA_MAX_MB} MB or smaller.` : "");
           }} /></Button>
           <Typography variant="body2" color={selectedFileName ? "text.primary" : "text.secondary"} sx={{ overflowWrap: "anywhere" }}>{selectedFileName || "No file selected"}</Typography>
-          <Button type="submit" variant="contained" loading={pending} disabled={pending || !hasValidSelection}>Upload image to draft</Button>
+          <Button type="submit" variant="contained" loading={pending} disabled={pending || !hasValidSelection}>{status === "active" ? "Upload to live product" : "Upload image to draft"}</Button>
         </Stack></Box>
       </V2Card>
       <Alert severity="info">Gallery images can be uploaded, removed, reordered, assigned to colors, and reused in rich product content. Separate inline uploads remain a later phase.</Alert>
