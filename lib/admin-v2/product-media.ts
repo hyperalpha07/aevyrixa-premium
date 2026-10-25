@@ -40,6 +40,17 @@ export function draftProductMediaPath(productId: string, uniqueId: string, exten
   return `products/${safeId}/images/${safeUniqueId}.${extension}`;
 }
 
+export function liveMediaUpdateQuery(id: string, updatedAt?: string) {
+  const query = new URLSearchParams({ id: `eq.${id}`, status: "eq.active", deleted_at: "is.null", select: "id,status" });
+  if (updatedAt) query.set("updated_at", `eq.${updatedAt}`);
+  return query;
+}
+
+export function canRemovePublishedProductImage(row: Record<string, unknown>, target: string) {
+  const images = draftProductMediaUrls(row);
+  return images.includes(target) && images.length > 1;
+}
+
 export function draftMediaUpdateQuery(id: string, updatedAt?: string) {
   const query = new URLSearchParams({ id: `eq.${id}`, status: "eq.draft", deleted_at: "is.null", select: "id" });
   if (updatedAt) query.set("updated_at", `eq.${updatedAt}`);

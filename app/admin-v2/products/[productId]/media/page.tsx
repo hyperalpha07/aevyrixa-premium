@@ -17,7 +17,7 @@ export default async function AdminV2ProductMediaPage(props: PageProps<"/admin-v
   try { product = await readDraftEditProduct(productId, draftProductRequest); }
   catch { return <AdminV2ProductMediaUnavailable id={productId} />; }
   if (!product) notFound();
-  if (product.status !== "draft") return <AdminV2ProductMediaUnavailable id={productId} active />;
+  if (product.status !== "draft" && product.status !== "active") return <AdminV2ProductMediaUnavailable id={productId} />;
   const primaryImageUrl = typeof product.primary_image_url === "string" && product.primary_image_url
     ? product.primary_image_url : typeof product.image_url === "string" ? product.image_url : null;
   const images = draftProductMediaUrls(product).flatMap((value) => {
@@ -27,7 +27,7 @@ export default async function AdminV2ProductMediaPage(props: PageProps<"/admin-v
   const colors = Array.isArray(product.colors)
     ? product.colors.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
     : [];
-  return <AdminV2ProductMediaView id={product.id} name={String(product.name || "Draft product")}
+  return <AdminV2ProductMediaView id={product.id} name={String(product.name || "Product")} status={product.status as "draft" | "active"}
     images={images} primaryImageUrl={primaryImageUrl} colors={colors}
     colorAssignments={draftColorImageAssignments(product)} supportsColorMedia={Object.hasOwn(product, "media")}
     richAssignments={draftRichContentAssignments(product)} supportsRichMedia={Object.hasOwn(product, "media")}
