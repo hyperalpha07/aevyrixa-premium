@@ -9,7 +9,6 @@ test("All Classic Admin bridges require session and Admin V2 permission before r
   assert.match(bridge, /await requireAdminV2Session\(\)/);
   assert.match(bridge, /requireAdminV2RouteAccess\(session, module\)/);
   assert.ok(bridge.indexOf("requireAdminV2RouteAccess(session, module)") < bridge.indexOf("redirect(classicModules[module])"));
-<<<<<<< HEAD
   for (const module of ["categories", "discounts", "media", "integrations"]) {
     assert.match(bridge, new RegExp(`${module}: "/admin/${module}"`));
     const legacy = read(`app/admin/${module}/page.tsx`);
