@@ -94,6 +94,10 @@ export async function listTaskAutomationRules(){
  ]);
  return {rules,runs};
 }
+export async function listScheduledTaskAutomationRules(){
+ return readList<TaskAutomationRule>("admin_automation_rules",
+  "select=*&is_enabled=eq.true&schedule_mode=eq.daily&order=updated_at.desc&limit=26");
+}
 export async function createTaskAutomationRule(input:TaskRuleInput,actor:string){
  return writeOne<TaskAutomationRule>("admin_automation_rules","POST",{...input,created_by:actor.slice(0,120),updated_by:actor.slice(0,120)});
 }
