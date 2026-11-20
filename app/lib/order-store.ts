@@ -46,6 +46,8 @@ const SUPABASE_ORDER_SELECT_COLUMNS = [
   "subtotal",
   "total",
   "discount_amount",
+  "coupon_id",
+  "coupon_code",
   "paid_amount",
   "due_amount",
   "refunded_amount",
@@ -98,6 +100,8 @@ type SupabaseOrderRow = {
   subtotal?: number | string | null;
   total?: number | string | null;
   discount_amount?: number | string | null;
+  coupon_id?: string | null;
+  coupon_code?: string | null;
   paid_amount?: number | string | null;
   due_amount?: number | string | null;
   refunded_amount?: number | string | null;
@@ -881,6 +885,8 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     },
     totalAmount: total,
     discountAmount: numberValue(row.discount_amount),
+    couponId: row.coupon_id ?? undefined,
+    couponCode: row.coupon_code ?? undefined,
     paidAmount: numberValue(row.paid_amount),
     dueAmount: numberValue(row.due_amount),
     refundedAmount: numberValue(row.refunded_amount),
