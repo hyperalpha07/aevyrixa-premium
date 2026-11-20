@@ -42,7 +42,7 @@ export function AdminV2DiscountCouponManager({ initial }: { initial: DiscountCou
         <Button variant="contained" onClick={() => { setForm(blank); setOpen(true); }}>Create code</Button>
       </Stack>
       {!initial ? <Alert severity="warning">Coupon source unavailable. No campaign data is substituted.</Alert> : coupons.length ? coupons.map((coupon) => <Stack key={coupon.id} direction={{ xs: "column", sm: "row" }} sx={{ justifyContent: "space-between", borderTop: 1, borderColor: "divider", pt: 1.5 }}>
-        <div><Typography fontWeight={700}>{coupon.code} · {coupon.name}</Typography><Typography variant="body2" color="text.secondary">{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `BDT ${coupon.discountValue}`} · Used {coupon.usageCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ""} · {coupon.expiresAt ? `Expires ${new Date(coupon.expiresAt).toLocaleDateString()}` : "No expiry"}</Typography></div>
+        <div><Typography sx={{ fontWeight: 700 }}>{coupon.code} · {coupon.name}</Typography><Typography variant="body2" color="text.secondary">{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `BDT ${coupon.discountValue}`} · Used {coupon.usageCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ""} · {coupon.expiresAt ? `Expires ${new Date(coupon.expiresAt).toLocaleDateString()}` : "No expiry"}</Typography></div>
         <Stack direction="row" spacing={1}><Chip size="small" label={coupon.isActive ? "Active" : "Inactive"} color={coupon.isActive ? "success" : "default"} /><Button size="small" onClick={() => { setForm(formCoupon(coupon)); setOpen(true); }}>Edit</Button></Stack>
       </Stack>) : <Alert severity="info">No coupon codes have been created.</Alert>}
     </Stack></V2Card>
