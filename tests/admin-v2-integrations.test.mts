@@ -35,7 +35,18 @@ test("integration UI never equates configured credentials with successful provid
   assert.match(view, /status === "responding"\) return "success"/);
   assert.match(view, /Verify bot identity/);
   assert.match(view, /No test message, payment or courier booking is sent/);
-  assert.match(view, /provider accounts, credentials and isolated integration tests/);
+  assert.match(view, /<FutureProviderSlots \/>/);
+  const slots = read("components/admin-v2/views/integrations/FutureProviderSlots.tsx");
+  const registry = read("lib/admin-v2/integrations/future-providers.ts");
+  assert.match(slots, /No integration is enabled here/);
+  assert.match(slots, /Awaiting API onboarding/);
+  assert.match(registry, /bkash-merchant/);
+  assert.match(registry, /nagad-merchant/);
+  assert.match(registry, /pathao-booking/);
+  assert.match(registry, /steadfast-booking/);
+  assert.match(registry, /whatsapp-business/);
+  assert.match(registry, /awaiting_provider_onboarding/);
+  assert.doesNotMatch(slots, /fetch\(|<input|setEnabled|type="password"/);
   assert.match(view, /\/admin-v2\/integrations\/verify\?provider=telegram/);
 });
 
