@@ -97,7 +97,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: true },
   { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Native core store and checkout settings, advanced Classic available", implemented: true, classicPath: "/admin/settings" },
   { title: "Homepage", path: "/admin-v2/homepage", module: "homepage", description: "Real homepage section, editorial, hero and media management", implemented: true },
-  { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Verified configuration facts without fake provider status", implemented: true },
+  { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Native configuration inventory and permissioned read-only Telegram identity verification; merchant/courier APIs not connected", implemented: true },
   { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Webhook management", implemented: false },
   { title: "System Health", path: "/admin-v2/system-health", module: "systemHealth", description: "Read-only source availability, not uptime monitoring", implemented: true },
 ];
