@@ -35,13 +35,13 @@ export async function previewDiscountCoupon(codeInput: string, trustedSubtotal: 
   const subtotalCents = BigInt(Math.round(trustedSubtotal * 100));
   const valueCents = BigInt(Math.round(Number(coupon.discount_value) * 100));
   let discountCents = coupon.discount_type === "percentage"
-    ? (subtotalCents * valueCents + 5000n) / 10000n
+    ? (subtotalCents * valueCents + BigInt(5000)) / BigInt(10000)
     : valueCents;
   if (coupon.maximum_discount !== null) {
     const cap = BigInt(Math.round(Number(coupon.maximum_discount) * 100));
     if (discountCents > cap) discountCents = cap;
   }
   if (discountCents > subtotalCents) discountCents = subtotalCents;
-  if (discountCents <= 0n) throw new Error("This discount cannot be applied.");
+  if (discountCents <= BigInt(0)) throw new Error("This discount cannot be applied.");
   return { code, discountAmount: Number(discountCents) / 100 };
 }
