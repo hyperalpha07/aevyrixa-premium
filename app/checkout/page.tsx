@@ -330,7 +330,7 @@ export default function CheckoutPage() {
   const couponPreviewFingerprint = JSON.stringify({
     code: form.couponCode.trim().toUpperCase(),
     items: items.map((item) => ({
-      slug: item.slug, productId: item.productId, quantity: item.quantity,
+      slug: item.slug, productId: item.productId, price: item.price, quantity: item.quantity,
       size: item.size, color: item.color, absorbency: item.absorbency, variant: item.variant,
     })),
     deliveryZone: form.deliveryZone,
