@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import type { DiscountCoupon } from "@/lib/admin-v2/discounts-store";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 
@@ -48,7 +48,7 @@ export function AdminV2DiscountCouponManager({ initial }: { initial: DiscountCou
     </Stack></V2Card>
     <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>{form.id ? "Edit coupon" : "Create coupon"}</DialogTitle><DialogContent><Stack spacing={2} sx={{ pt: 1 }}>
       {(["code", "name", "discountValue", "minimumSubtotal", "maximumDiscount", "usageLimit"] as const).map((key) => <TextField key={key} label={{ code: "Code", name: "Name", discountValue: "Discount value", minimumSubtotal: "Minimum subtotal", maximumDiscount: "Maximum discount", usageLimit: "Usage limit" }[key]} value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} />)}
-      <TextField select SelectProps={{ native: true }} label="Type" value={form.discountType} onChange={(event) => setForm({ ...form, discountType: event.target.value as CouponForm["discountType"] })}><option value="percentage">Percentage</option><option value="fixed">Fixed BDT</option></TextField>
+      <TextField select label="Type" value={form.discountType} onChange={(event) => setForm({ ...form, discountType: event.target.value as CouponForm["discountType"] })}><MenuItem value="percentage">Percentage</MenuItem><MenuItem value="fixed">Fixed BDT</MenuItem></TextField>
       <TextField type="datetime-local" label="Starts at" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} />
       <TextField type="datetime-local" label="Expires at" value={form.expiresAt} onChange={(event) => setForm({ ...form, expiresAt: event.target.value })} />
       <Button onClick={() => setForm({ ...form, isActive: !form.isActive })}>{form.isActive ? "Deactivate" : "Activate"}</Button>
