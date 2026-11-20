@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/app/lib/currency";
+import { getStoreSettings } from "@/app/lib/settings-store";
 import type { OrderRecord } from "@/app/lib/order-types";
 
 type NotificationResult =
@@ -105,6 +106,14 @@ export async function sendTelegramNotification(
 }
 
 export async function notifyNewOrder(order: OrderRecord) {
+  // The notification toggle is authoritative; do not infer delivery from credentials.
+  const settings = await getStoreSettings();
+  if (settings.storageMode !== "supabase") {
+    return { status: "skipped", reason: "Persisted notification settings are unavailable." } satisfies NotificationResult;
+  }
+  if (!settings.settings.notificationSettings.telegramNewOrderEnabled) {
+    return { status: "skipped", reason: "Telegram new-order alerts are disabled." } satisfies NotificationResult;
+  }
   return sendTelegramNotification(buildTelegramMessage(order));
 }
 
