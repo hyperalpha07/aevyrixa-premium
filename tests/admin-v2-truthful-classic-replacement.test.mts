@@ -16,14 +16,16 @@ test("Native views show grounded data without prematurely removing Classic admin
  }
 });
 
-test("Media totals derive solely from persisted product images, not fake storage usage",()=>{
+test("Media Library derives product-linked references from the persisted catalog and library objects from its dedicated storage prefix",()=>{
  const view=read("components/admin-v2/views/media/AdminV2MediaView.tsx");
+ const client=read("components/admin-v2/views/media/AdminV2MediaLibraryClient.tsx");
  const page=read("app/admin-v2/media/page.tsx");
  assert.match(page,/getAdminV2ProductCatalog\(\)/);
- assert.match(view,/data\.products\.flatMap/);
- assert.match(view,/new Set\(referenced\.map/);
+ assert.match(page,/listMediaLibraryObjects\(\)/);
+ assert.match(client,/catalog\.products\.flatMap/);
+ assert.match(client,/new Set\(attached\.map/);
  assert.match(view,/data\.available/);
- assert.doesNotMatch(view,/4,892|132\.48 GB|3,621|842 videos/);
+ assert.doesNotMatch(`${view}\n${client}`,/4,892|132\.48 GB|3,621|842 videos/);
 });
 
 test("Discount analytics show only real active product markdowns and configured shipping",()=>{
