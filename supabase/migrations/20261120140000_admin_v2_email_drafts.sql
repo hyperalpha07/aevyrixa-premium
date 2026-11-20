@@ -21,5 +21,6 @@ create index if not exists admin_email_drafts_active_updated_idx
 alter table public.admin_email_drafts enable row level security;
 revoke all on table public.admin_email_drafts from public, anon, authenticated;
 grant select, insert, update on table public.admin_email_drafts to service_role;
+revoke delete on table public.admin_email_drafts from service_role;
 
 -- No send operation, outbound queue, delivery log or automatic recipient contact is created.
