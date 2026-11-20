@@ -6,7 +6,7 @@ import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { AdminV2DiscountCouponManager } from "@/components/admin-v2/views/discounts/AdminV2DiscountCouponManager";
 import type { DiscountCoupon } from "@/lib/admin-v2/discounts-store";
 
-export function AdminV2DiscountsView({catalog,freeDeliveryThreshold}:{
+export function AdminV2DiscountsView({catalog,freeDeliveryThreshold,coupons}:{
  catalog:AdminV2ProductCatalogData;freeDeliveryThreshold:string|null;coupons:DiscountCoupon[]|null;
 }){
  const markdowns=catalog.products.filter(p=>p.status==="active"&&p.compareAtPrice!==null&&p.compareAtPrice>p.price&&p.price>=0);
