@@ -31,6 +31,9 @@ do $$ begin
   end if;
 end $$;
 
+-- Cover coupon-attribution lookups and the orders -> coupon foreign key.
+create index if not exists orders_coupon_id_idx on public.orders (coupon_id);
+
 create table if not exists public.discount_redemptions (
   id uuid primary key default gen_random_uuid(),
   coupon_id uuid not null references public.discount_coupons(id) on delete restrict,
