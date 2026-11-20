@@ -11,3 +11,37 @@ function map(row:Record<string,unknown>):DiscountCoupon{return{id:String(row.id?
 export async function listDiscountCoupons(){const {url}=config();const r=await fetch(`${url}/rest/v1/discount_coupons?select=*&order=created_at.desc`,{headers:headers(),cache:"no-store"});if(!r.ok)throw new Error("Discount coupons are unavailable.");return ((await r.json()) as Record<string,unknown>[]).map(map);}
 export async function saveDiscountCoupon(input:CouponInput,id?:string){const {url}=config();const body={code:input.code,name:input.name,discount_type:input.discountType,discount_value:input.discountValue,minimum_subtotal:input.minimumSubtotal,maximum_discount:input.maximumDiscount,usage_limit:input.usageLimit,is_active:input.isActive,starts_at:input.startsAt,expires_at:input.expiresAt};const endpoint=id?`${url}/rest/v1/discount_coupons?id=eq.${encodeURIComponent(id)}`:`${url}/rest/v1/discount_coupons`;const r=await fetch(endpoint,{method:id?"PATCH":"POST",headers:{...headers(),Prefer:"return=representation"},body:JSON.stringify(body)});if(!r.ok)throw new Error("Discount coupon could not be saved.");const rows=await r.json() as Record<string,unknown>[];if(!rows[0]||typeof rows[0].id!=="string")throw new Error("Coupon was not persisted.");return map(rows[0]);}
 export async function listDiscountRedemptions(couponId:string){const {url}=config();const r=await fetch(`${url}/rest/v1/discount_redemptions?coupon_id=eq.${encodeURIComponent(couponId)}&select=order_ref,coupon_code,subtotal_amount,discount_amount,created_at&order=created_at.desc&limit=50`,{headers:headers(),cache:"no-store"});if(!r.ok)throw new Error("Discount redemption history is unavailable.");return await r.json() as Array<{order_ref:string;coupon_code:string;subtotal_amount:number;discount_amount:number;created_at:string}>;}
+
+
+/** Read-only preview. The transactional checkout RPC revalidates the coupon at submission. */
+export async function previewDiscountCoupon(codeInput: string, trustedSubtotal: number) {
+  const code = codeInput.trim().toUpperCase();
+  if (!codePattern.test(code)) throw new Error("Enter a valid discount code.");
+  if (!Number.isFinite(trustedSubtotal) || trustedSubtotal <= 0 || trustedSubtotal > 9999999999) throw new Error("Order subtotal is invalid.");
+  const { url } = config();
+  const response = await fetch(
+    `${url}/rest/v1/discount_coupons?code=eq.${encodeURIComponent(code)}&select=code,discount_type,discount_value,minimum_subtotal,maximum_discount,usage_limit,usage_count,is_active,starts_at,expires_at&limit=1`,
+    { headers: headers(), cache: "no-store", signal: AbortSignal.timeout(12000) }
+  );
+  if (!response.ok) throw new Error("Discount validation is temporarily unavailable.");
+  const rows = await response.json() as Record<string,unknown>[];
+  const coupon = rows[0];
+  if (!coupon || coupon.is_active !== true) throw new Error("This discount code is unavailable.");
+  const now = Date.now();
+  if (coupon.starts_at && Date.parse(String(coupon.starts_at)) > now) throw new Error("This discount code is not active yet.");
+  if (coupon.expires_at && Date.parse(String(coupon.expires_at)) <= now) throw new Error("This discount code has expired.");
+  if (coupon.usage_limit !== null && Number(coupon.usage_count) >= Number(coupon.usage_limit)) throw new Error("This discount code has reached its usage limit.");
+  if (trustedSubtotal < Number(coupon.minimum_subtotal)) throw new Error("This code requires a larger order subtotal.");
+  const subtotalCents = BigInt(Math.round(trustedSubtotal * 100));
+  const valueCents = BigInt(Math.round(Number(coupon.discount_value) * 100));
+  let discountCents = coupon.discount_type === "percentage"
+    ? (subtotalCents * valueCents + 5000n) / 10000n
+    : valueCents;
+  if (coupon.maximum_discount !== null) {
+    const cap = BigInt(Math.round(Number(coupon.maximum_discount) * 100));
+    if (discountCents > cap) discountCents = cap;
+  }
+  if (discountCents > subtotalCents) discountCents = subtotalCents;
+  if (discountCents <= 0n) throw new Error("This discount cannot be applied.");
+  return { code, discountAmount: Number(discountCents) / 100 };
+}
