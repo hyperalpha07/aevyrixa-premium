@@ -89,3 +89,15 @@ test("native UIs never claim unverified tax charges or webhook deliveries",()=>{
  assert.match(hooks,/Delivery disabled/);
  assert.doesNotMatch(hooks,/fetch\("https:\/\//);
 });
+
+test("UTC daily cron has a timing-safe secret gate and bounded provider-free work",()=>{
+ const cron=read("app/api/cron/admin-v2-automation/route.ts");
+ const config=read("vercel.json");
+ assert.match(cron,/timingSafeEqual/);
+ assert.match(cron,/secret.length < 32/);
+ assert.match(cron,/listScheduledTaskAutomationRules/);
+ assert.match(cron,/rules.length > 25/);
+ assert.match(cron,/runTaskAutomationRule\(rule.id, "system-daily-automation", "scheduled"\)/);
+ assert.match(config,/"schedule": "5 0 \* \* \*"/);
+ assert.doesNotMatch(cron,/fetch\("https:\/\//);
+});
