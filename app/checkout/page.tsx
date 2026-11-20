@@ -1225,13 +1225,13 @@ function OrderSummary({
           <div className="h-px bg-white/10" />
           <div className="flex items-center justify-between gap-4">
             <span>Product Subtotal</span>
-            <span className="font-medium text-white">{formatCurrency(subtotal)}</span>
+            <span className="font-medium text-white">{formatCurrency(couponPreview?.subtotal ?? subtotal)}</span>
           </div>
           {deliveryZone ? (
             <div className="flex items-center justify-between gap-4">
               <span>Delivery ({deliveryZone})</span>
               <span className="font-medium text-white">
-                {deliveryChargeAmount === 0 ? "Free" : formatCurrency(deliveryChargeAmount)}
+                {(couponPreview?.deliveryCharge ?? deliveryChargeAmount) === 0 ? "Free" : formatCurrency(couponPreview?.deliveryCharge ?? deliveryChargeAmount)}
               </span>
             </div>
           ) : (
@@ -1241,14 +1241,19 @@ function OrderSummary({
             </div>
           )}
           <div className="h-px bg-white/10" />
+          {couponPreview ? <div className="flex items-center justify-between gap-4">
+            <span>Discount ({couponPreview.code})</span>
+            <span className="font-medium text-emerald-200">- {formatCurrency(couponPreview.discountAmount)}</span>
+          </div> : null}
           <div className="flex items-center justify-between text-lg font-semibold text-white">
             <span>Total Payable</span>
             <span>
-              {deliveryZone
-                ? formatCurrency(subtotal + deliveryChargeAmount)
-                : formatCurrency(subtotal)}
+              {couponPreview
+                ? formatCurrency(couponPreview.totalPayable)
+                : deliveryZone ? formatCurrency(subtotal + deliveryChargeAmount) : formatCurrency(subtotal)}
             </span>
           </div>
+          {couponPreview ? <p className="text-xs leading-5 text-white/45">{couponPreview.disclaimer}</p> : null}
           {!deliveryZone && (
             <p className="text-xs leading-5 text-white/45">
               + delivery charge confirmed before dispatch
