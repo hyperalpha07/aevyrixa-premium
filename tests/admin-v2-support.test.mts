@@ -14,11 +14,11 @@ const messages = [
   { id: "a", conversation_id: "one", body: "Admin first", sender_type: "admin" as const, created_at: "2026-01-01T00:00:00Z", is_read: false },
 ];
 
-test("Support implemented; Chat and unrelated coming-soon flags stay false; server page guards access", () => {
+test("Support and Chat remain implemented; Email draft workspace is separate and guarded", () => {
   const routes = read("configs/admin-v2/routes.ts");
   assert.match(routes, /module: "support"[^\n]+implemented: true/);
   assert.match(routes, /module: "chat"[^\n]+implemented: true/);
-  assert.match(routes, /module: "email"[^\n]+implemented: false/);
+  assert.match(routes, /module: "email"[^\n]+implemented: true/);
   assert.match(routes, /module: "notifications"[^\n]+implemented: true/);
   const page = read("app/admin-v2/support/page.tsx");
   assert.match(page, /requireAdminV2Session\(\)/);

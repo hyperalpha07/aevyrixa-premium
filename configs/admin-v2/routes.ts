@@ -75,7 +75,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Discounts", path: "/admin-v2/discounts", module: "discounts", description: "Actual catalog markdowns and delivery threshold, no coupon engine", implemented: true },
   { title: "Support", path: "/admin-v2/support", module: "support", description: "Support inbox", implemented: true },
   { title: "Chat", path: "/admin-v2/chat", module: "chat", description: "Live chat via the existing Support Inbox", implemented: true },
-  { title: "Email", path: "/admin-v2/email", module: "email", description: "Email workspace", implemented: false },
+  { title: "Email", path: "/admin-v2/email", module: "email", description: "Persisted admin email drafts; delivery/inbox not connected", implemented: true },
   { title: "Notifications", path: "/admin-v2/notifications", module: "notifications", description: "Live operational work-queue alerts; no unread history", implemented: true },
   { title: "Media", path: "/admin-v2/media", module: "media", description: "Actual product media references and editor links", implemented: true },
   { title: "Calendar", path: "/admin-v2/calendar", module: "calendar", description: "Persisted internal work-task due-date calendar", implemented: true },
