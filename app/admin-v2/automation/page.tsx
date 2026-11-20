@@ -8,5 +8,6 @@ export default async function AdminV2AutomationPage() {
  const session=await requireAdminV2Session();
  requireAdminV2RouteAccess(session,"automation");
  const data=await listTaskAutomationRules().catch(()=>null);
- return <AutomationOperationsView initial={data} canManage={hasPermission(session,"automation.manage")} />;
+ return <AutomationOperationsView initial={data} canManage={hasPermission(session,"automation.manage")}
+  schedulerConfigured={Boolean(process.env.CRON_SECRET && process.env.CRON_SECRET.length>=32)} />;
 }
