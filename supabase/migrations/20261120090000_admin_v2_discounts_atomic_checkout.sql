@@ -71,23 +71,33 @@ for each row execute function public.admin_v2_preserve_redeemed_coupon_code();
 -- The server has already performed the trusted catalog quote. This function exclusively
 -- owns coupon eligibility, exact-money calculation, order insert, redemption and usage count.
 create or replace function public.checkout_create_order_with_coupon(p_order jsonb, p_coupon_code text)
-returns public.orders language plpgsql security definer set search_path to 'pg_catalog', 'public' as $$
+returns public.orders language plpgsql security invoker set search_path to 'pg_catalog', 'public' as $$
 declare
   v_coupon public.discount_coupons%rowtype;
   v_order public.orders%rowtype;
   v_existing public.orders%rowtype;
   v_subtotal numeric(14,2); v_delivery numeric(14,2); v_discount numeric(14,2); v_total numeric(14,2);
   v_code text := upper(trim(coalesce(p_coupon_code,'')));
+  v_order_ref text := nullif(btrim(coalesce(p_order->>'order_ref','')), '');
 begin
   if v_code !~ '^[A-Z0-9][A-Z0-9_-]{2,63}$' then raise exception 'Invalid discount code.' using errcode='22023'; end if;
-  select * into v_existing from public.orders where order_ref = p_order->>'order_ref' for update;
+  if v_order_ref is null or length(v_order_ref)>128 then raise exception 'Invalid order reference.' using errcode='22023'; end if;
+  -- Order-reference lock serializes concurrent retries before the first row exists.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_order_ref, 0));
+  select * into v_existing from public.orders where order_ref = v_order_ref for update;
   if found then
-    if v_existing.coupon_code = v_code then return v_existing; end if;
-    raise exception 'Order reference has already been used.' using errcode='23505';
+    if v_existing.coupon_code = v_code
+       and v_existing.customer_phone = p_order->>'customer_phone'
+       and v_existing.items = coalesce(p_order->'items','[]'::jsonb)
+       and v_existing.subtotal = (p_order->>'subtotal')::numeric
+       and v_existing.delivery_charge = (p_order->>'delivery_charge')::numeric
+       and v_existing.payment_method = p_order->>'payment_method'
+    then return v_existing; end if;
+    raise exception 'Order reference has already been used with different details.' using errcode='23505';
   end if;
   v_subtotal := round(coalesce((p_order->>'subtotal')::numeric, -1), 2);
   v_delivery := round(coalesce((p_order->>'delivery_charge')::numeric, -1), 2);
-  if v_subtotal < 0 or v_delivery < 0 then raise exception 'Invalid trusted order totals.' using errcode='22023'; end if;
+  if v_subtotal is null or v_delivery is null or v_subtotal <= 0 or v_delivery < 0 then raise exception 'Invalid trusted order totals.' using errcode='22023'; end if;
   select * into v_coupon from public.discount_coupons where code=v_code for update;
   if not found or not v_coupon.is_active or (v_coupon.starts_at is not null and v_coupon.starts_at > now()) or (v_coupon.expires_at is not null and v_coupon.expires_at <= now()) then raise exception 'This discount code is unavailable.' using errcode='P0001'; end if;
   if v_coupon.usage_limit is not null and v_coupon.usage_count >= v_coupon.usage_limit then raise exception 'This discount code has reached its usage limit.' using errcode='P0001'; end if;
@@ -97,7 +107,7 @@ begin
   if v_discount <= 0 then raise exception 'This discount cannot be applied.' using errcode='P0001'; end if;
   v_total := round(v_subtotal-v_discount+v_delivery,2);
   insert into public.orders (order_ref,customer_id,customer_name,customer_phone,customer_email,city_area,delivery_address,size_fit_note,delivery_note,items,subtotal,total,discount_amount,coupon_id,coupon_code,payment_method,wallet_provider,payment_type,receiver_number,sender_number,transaction_id,status,delivery_charge,delivery_area,delivery_zone,payment_status,payment_reference,paid_amount,due_amount,refunded_amount,payment_verified_at,currency_code,created_at,updated_at)
-  values (p_order->>'order_ref',nullif(p_order->>'customer_id',''),p_order->>'customer_name',p_order->>'customer_phone',nullif(p_order->>'customer_email',''),p_order->>'city_area',p_order->>'delivery_address',nullif(p_order->>'size_fit_note',''),nullif(p_order->>'delivery_note',''),coalesce(p_order->'items','[]'::jsonb),v_subtotal,v_total,v_discount,v_coupon.id,v_code,p_order->>'payment_method',nullif(p_order->>'wallet_provider',''),nullif(p_order->>'payment_type',''),nullif(p_order->>'receiver_number',''),nullif(p_order->>'sender_number',''),nullif(p_order->>'transaction_id',''),coalesce(nullif(p_order->>'status',''),'Pending'),v_delivery,nullif(p_order->>'delivery_area',''),nullif(p_order->>'delivery_zone',''),nullif(p_order->>'payment_status',''),nullif(p_order->>'payment_reference',''),coalesce(round(nullif(p_order->>'paid_amount','')::numeric,2),0),case when coalesce(nullif(p_order->>'payment_method',''),'') = 'Cash on Delivery' then v_total else coalesce(round(nullif(p_order->>'due_amount','')::numeric,2),0) end,coalesce(round(nullif(p_order->>'refunded_amount','')::numeric,2),0),nullif(p_order->>'payment_verified_at','')::timestamptz,'BDT',coalesce((p_order->>'created_at')::timestamptz,now()),now()) returning * into v_order;
+  values (v_order_ref,nullif(p_order->>'customer_id',''),p_order->>'customer_name',p_order->>'customer_phone',nullif(p_order->>'customer_email',''),p_order->>'city_area',p_order->>'delivery_address',nullif(p_order->>'size_fit_note',''),nullif(p_order->>'delivery_note',''),coalesce(p_order->'items','[]'::jsonb),v_subtotal,v_total,v_discount,v_coupon.id,v_code,p_order->>'payment_method',nullif(p_order->>'wallet_provider',''),nullif(p_order->>'payment_type',''),nullif(p_order->>'receiver_number',''),nullif(p_order->>'sender_number',''),nullif(p_order->>'transaction_id',''),coalesce(nullif(p_order->>'status',''),'Pending'),v_delivery,nullif(p_order->>'delivery_area',''),nullif(p_order->>'delivery_zone',''),nullif(p_order->>'payment_status',''),nullif(p_order->>'payment_reference',''),coalesce(round(nullif(p_order->>'paid_amount','')::numeric,2),0),case when coalesce(nullif(p_order->>'payment_method',''),'') = 'Cash on Delivery' then v_total else coalesce(round(nullif(p_order->>'due_amount','')::numeric,2),0) end,coalesce(round(nullif(p_order->>'refunded_amount','')::numeric,2),0),nullif(p_order->>'payment_verified_at','')::timestamptz,'BDT',coalesce((p_order->>'created_at')::timestamptz,now()),now()) returning * into v_order;
   insert into public.discount_redemptions (coupon_id,order_ref,coupon_code,subtotal_amount,discount_amount) values (v_coupon.id,v_order.order_ref,v_code,v_subtotal,v_discount);
   update public.discount_coupons set usage_count=usage_count+1 where id=v_coupon.id;
   return v_order;
