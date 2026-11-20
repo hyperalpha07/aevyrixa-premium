@@ -40,11 +40,14 @@ test("Discount analytics show only real active product markdowns and configured 
 
 test("Integration status never claims unverified payment or courier API connectivity",()=>{
  const page=read("app/admin-v2/integrations/page.tsx");
+ const facts=read("lib/admin-v2/integrations/status.ts");
  const view=read("components/admin-v2/views/integrations/AdminV2IntegrationsView.tsx");
- assert.match(page,/const persisted=source\.storageMode==="supabase"/);
- assert.match(page,/Manual only/);
- assert.match(page,/Payment verification is manual/);
- assert.match(page,/Credential presence is not proof/);
- assert.match(view,/No connected-service totals/);
- assert.doesNotMatch(view,/98\.7%|token refreshed|webhook synced/);
+ assert.match(page,/collectIntegrationFacts\(\)/);
+ assert.match(facts,/source\.storageMode === "supabase"/);
+ assert.match(facts,/status: "manual"/);
+ assert.match(facts,/Manual wallet payment instructions enabled/);
+ assert.match(facts,/New-order alerts are enabled, and bot\/chat credentials are configured/);
+ assert.match(facts,/not a merchant gateway/);
+ assert.match(view,/Configuration is not proof of API access/);
+ assert.doesNotMatch(`${page}\n${facts}\n${view}`,/98\.7%|token refreshed|webhook synced/);
 });
