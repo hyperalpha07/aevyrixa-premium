@@ -66,6 +66,11 @@ type CheckoutErrors = Partial<
   >
 >;
 
+type DiscountPreview = {
+  code: string; subtotal: number; deliveryCharge: number; discountAmount: number;
+  totalPayable: number; disclaimer: string; fingerprint: string;
+};
+
 type PreparedOrder = {
   orderId: string;
   customerName: string;
@@ -157,6 +162,9 @@ export default function CheckoutPage() {
   const [preparedOrder, setPreparedOrder] = useState<PreparedOrder | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [couponPreview, setCouponPreview] = useState<DiscountPreview | null>(null);
+  const [couponPreviewError, setCouponPreviewError] = useState("");
+  const [isPreviewingCoupon, setIsPreviewingCoupon] = useState(false);
   const [copiedReceiver, setCopiedReceiver] = useState(false);
   const [adminSettings, setAdminSettings] =
     useState<StorefrontSettings>(defaultStorefrontSettings);
@@ -319,6 +327,68 @@ export default function CheckoutPage() {
           ? parseInt(adminSettings.deliverySettings.outsideDhakaDeliveryCharge) || 130
           : undefined;
 
+  const couponPreviewFingerprint = JSON.stringify({
+    code: form.couponCode.trim().toUpperCase(),
+    items: items.map((item) => ({
+      slug: item.slug, productId: item.productId, quantity: item.quantity,
+      size: item.size, color: item.color, absorbency: item.absorbency, variant: item.variant,
+    })),
+    deliveryZone: form.deliveryZone,
+    paymentMethod: form.paymentMethod,
+    paymentType: form.paymentType,
+    walletProvider: form.walletProvider,
+  });
+  const appliedCouponPreview = couponPreview?.fingerprint === couponPreviewFingerprint
+    ? couponPreview : null;
+  const couponRequiresPreview = Boolean(form.couponCode.trim()) && !appliedCouponPreview;
+
+  async function applyCouponPreview() {
+    if (!form.couponCode.trim()) {
+      setCouponPreviewError("Enter a discount code.");
+      return;
+    }
+    if (!form.deliveryZone || selectedDeliveryCharge === undefined) {
+      setCouponPreviewError("Select your delivery zone first.");
+      return;
+    }
+    setIsPreviewingCoupon(true);
+    setCouponPreviewError("");
+    const requestedFingerprint = couponPreviewFingerprint;
+    try {
+      const response = await fetch("/api/checkout/coupon-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: form.couponCode.trim(),
+          items, deliveryZone: form.deliveryZone,
+          paymentMethod: form.paymentMethod,
+          paymentType: form.paymentType,
+          walletProvider: form.walletProvider,
+        }),
+      });
+      const payload = await response.json().catch(() => null) as (Partial<DiscountPreview> & { errors?: string[] }) | null;
+      if (!response.ok || !payload ||
+          typeof payload.discountAmount !== "number" || typeof payload.subtotal !== "number" ||
+          typeof payload.deliveryCharge !== "number" || typeof payload.totalPayable !== "number" ||
+          typeof payload.code !== "string") {
+        throw new Error(payload?.errors?.join(" ") || "Discount preview is unavailable.");
+      }
+      if (Math.abs(payload.subtotal - subtotal) > 0.009 ||
+          Math.abs(payload.deliveryCharge - selectedDeliveryCharge) > 0.009) {
+        throw new Error("Prices or delivery fees changed. Refresh your cart before ordering.");
+      }
+      setCouponPreview({ code: payload.code, subtotal: payload.subtotal,
+        deliveryCharge: payload.deliveryCharge, discountAmount: payload.discountAmount,
+        totalPayable: payload.totalPayable, disclaimer: payload.disclaimer || "Discount rechecked at order submission.",
+        fingerprint: requestedFingerprint });
+    } catch (error) {
+      setCouponPreview(null);
+      setCouponPreviewError(error instanceof Error ? error.message : "Discount preview is unavailable.");
+    } finally {
+      setIsPreviewingCoupon(false);
+    }
+  }
+
   useEffect(() => {
     setForm((current) => ({
       ...current,
@@ -391,6 +461,7 @@ export default function CheckoutPage() {
 
     if (
       isSubmitting ||
+      isPreviewingCoupon ||
       isSubmitDisabled ||
       hasUnavailableItems ||
       (requiresCustomerAccount && !isLoggedInCustomer) ||
@@ -400,6 +471,11 @@ export default function CheckoutPage() {
       if (requiresCustomerAccount && !isLoggedInCustomer) {
         setSubmitError("Please log in or create an account before submitting checkout.");
       }
+      return;
+    }
+
+    if (couponRequiresPreview) {
+      setSubmitError("Apply and review your discount code before placing the order.");
       return;
     }
 
@@ -452,6 +528,22 @@ export default function CheckoutPage() {
       createdAt: new Date().toISOString(),
     };
 
+    let submissionPayload: typeof orderPayload & { orderReference?: string } = orderPayload;
+    if (form.couponCode.trim()) {
+      const intentKey = "aevyrixa-coupon-checkout-intent-v1";
+      const intentFingerprint = JSON.stringify({
+        items: orderPayload.items, customer: orderPayload.customer,
+        paymentDetails: orderPayload.paymentDetails, deliveryZone: orderPayload.deliveryZone,
+        deliveryCharge: orderPayload.deliveryCharge, couponCode: orderPayload.couponCode,
+      });
+      let existing: { fingerprint: string; reference: string } | null = null;
+      try { existing = JSON.parse(sessionStorage.getItem(intentKey) || "null"); } catch { /* storage may be unavailable */ }
+      const reference = existing?.fingerprint === intentFingerprint && /^AEV-C-[A-F0-9-]{36}$/.test(existing.reference)
+        ? existing.reference : `AEV-C-${crypto.randomUUID().toUpperCase()}`;
+      try { sessionStorage.setItem(intentKey, JSON.stringify({ fingerprint: intentFingerprint, reference })); } catch { /* no storage */ }
+      submissionPayload = { ...orderPayload, orderReference: reference };
+    }
+
     setIsSubmitting(true);
     setSubmitError("");
 
@@ -461,7 +553,7 @@ export default function CheckoutPage() {
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify(submissionPayload),
       });
       const result = (await response.json()) as OrderApiResponse;
 
@@ -480,6 +572,7 @@ export default function CheckoutPage() {
         paymentMethod: result.order.paymentDetails.paymentMethod,
       });
       clearCart();
+      try { sessionStorage.removeItem("aevyrixa-coupon-checkout-intent-v1"); } catch { /* no storage */ }
       localStorage.removeItem(CHECKOUT_DRAFT_KEY);
     } catch (error) {
       console.error("Failed to submit order:", error);
