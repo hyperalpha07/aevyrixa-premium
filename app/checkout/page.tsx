@@ -724,12 +724,24 @@ export default function CheckoutPage() {
                   value={form.deliveryNote}
                   onChange={(value) => updateField("deliveryNote", value)}
                 />
-                <TextField
-                  label="Discount code optional"
-                  value={form.couponCode}
-                  onChange={(value) => updateField("couponCode", value.toUpperCase())}
-                  autoComplete="off"
-                />
+                <div>
+                  <TextField
+                    label="Discount code optional"
+                    value={form.couponCode}
+                    onChange={(value) => { updateField("couponCode", value.toUpperCase()); setCouponPreviewError(""); }}
+                    autoComplete="off"
+                  />
+                  <button type="button" onClick={() => void applyCouponPreview()}
+                    disabled={isPreviewingCoupon || isSubmitting || !form.couponCode.trim()}
+                    className="mt-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
+                    {isPreviewingCoupon ? "Checking code..." : "Apply code"}
+                  </button>
+                  {couponPreviewError ? <p role="alert" className="mt-2 text-xs text-rose-200">{couponPreviewError}</p> : null}
+                  {appliedCouponPreview ? <p className="mt-2 text-xs text-emerald-200">
+                    {appliedCouponPreview.code} · Verified discount {formatCurrency(appliedCouponPreview.discountAmount)}.
+                    Final availability is checked when ordering.
+                  </p> : null}
+                </div>
               </div>
 
               <div className="mt-6">
@@ -978,9 +990,9 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-              disabled={isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)}
+              disabled={isSubmitDisabled || isSubmitting || isPreviewingCoupon || couponRequiresPreview || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)}
               className={`aev-checkout-primary-action aev-checkout-submit mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
-                  isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
+                  isSubmitDisabled || isSubmitting || isPreviewingCoupon || couponRequiresPreview || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
                     : "bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] text-white hover:scale-[1.01]"
                 }`}
@@ -991,7 +1003,9 @@ export default function CheckoutPage() {
                     ? "Login Required"
                   : isSubmitting
                     ? "Submitting Order..."
-                    : "Submit Order"}
+                    : couponRequiresPreview
+                      ? "Apply Discount Code First"
+                      : "Submit Order"}
               </button>
             </form>
 
@@ -1004,6 +1018,7 @@ export default function CheckoutPage() {
               insideDhakaCharge={adminSettings.deliverySettings.insideDhakaDeliveryCharge}
               outsideDhakaCharge={adminSettings.deliverySettings.outsideDhakaDeliveryCharge}
               freeDeliveryThreshold={adminSettings.checkoutSettings.freeDeliveryThreshold}
+              couponPreview={appliedCouponPreview}
             />
           </div>
         )}
@@ -1113,6 +1128,7 @@ function PremiumNotice({ children }: { children: ReactNode }) {
 }
 
 function OrderSummary({
+  couponPreview,
   storeName,
   deliveryNote,
   privacyPackagingMessage,
@@ -1122,6 +1138,7 @@ function OrderSummary({
   outsideDhakaCharge,
   freeDeliveryThreshold,
 }: {
+  couponPreview: DiscountPreview | null;
   storeName: string;
   deliveryNote: string;
   privacyPackagingMessage: string;
