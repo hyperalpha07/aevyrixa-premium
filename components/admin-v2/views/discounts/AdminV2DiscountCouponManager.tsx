@@ -5,7 +5,7 @@ import { Alert, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
 import type { DiscountCoupon } from "@/lib/admin-v2/discounts-store";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 
-type CouponForm = Omit<DiscountCoupon, "id" | "usageCount"> & { id?: string; maximumDiscount: number | ""; usageLimit: number | ""; startsAt: string; expiresAt: string };
+type CouponForm = Omit<DiscountCoupon, "id" | "usageCount" | "maximumDiscount" | "usageLimit" | "startsAt" | "expiresAt"> & { id?: string; maximumDiscount: number | ""; usageLimit: number | ""; startsAt: string; expiresAt: string };
 
 const blank: CouponForm = { code: "", name: "", discountType: "percentage", discountValue: 0, minimumSubtotal: 0, maximumDiscount: "", usageLimit: "", isActive: true, startsAt: "", expiresAt: "" };
 
