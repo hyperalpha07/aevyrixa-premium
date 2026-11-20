@@ -52,10 +52,16 @@ export async function collectIntegrationFacts(): Promise<IntegrationFact[]> {
     },
     {
       id: "telegram", group: "Messaging", name: "Telegram order alerts",
-      status: tgToken && tgChat ? "configured" : "not_configured",
-      detail: tgToken && tgChat
-        ? "Bot token and destination chat are configured. Delivery and destination permissions are unverified. Check bot identity without sending a message."
-        : "Bot token and/or destination chat are missing. No notifications can be assumed to be delivered.",
+      status: !tgToken || !tgChat ? "not_configured"
+        : !persisted ? "unavailable"
+        : settings.notificationSettings.telegramNewOrderEnabled ? "configured" : "disabled",
+      detail: !tgToken || !tgChat
+        ? "Bot token and/or destination chat are missing. No notifications can be assumed to be delivered."
+        : !persisted
+          ? "Credentials exist but the persisted notification toggle could not be read. New-order notifications are blocked until settings return."
+          : settings.notificationSettings.telegramNewOrderEnabled
+            ? "New-order alerts are enabled, and bot/chat credentials are configured. Delivery and chat permissions are unverified; identity can be checked without sending."
+            : "New-order alerts are disabled in persisted settings; the order notifier respects this toggle.",
       actionHref: "/admin/settings", actionLabel: "Notification settings",
       canCheckIdentity: tgToken,
     },
