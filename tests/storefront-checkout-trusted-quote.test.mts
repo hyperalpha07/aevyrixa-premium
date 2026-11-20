@@ -106,5 +106,7 @@ test("POST endpoint refuses missing live catalog/settings, requires server quote
   assert.match(route, /items: quote\.quote\.items/);
   assert.match(route, /totals: quote\.quote\.totals/);
   assert.match(route, /deliveryCharge: quote\.quote\.deliveryCharge/);
-  assert.ok(route.indexOf("quoteCheckoutOrder(input,") < route.indexOf("const result = await createOrder("));
+  assert.match(route, /createOrderWithCoupon/);
+  assert.match(route, /: await createOrder\(\{ \.\.\.orderInput/);
+  assert.ok(route.indexOf("quoteCheckoutOrder(input,") < route.indexOf("const result = orderInput.couponCode"));
 });

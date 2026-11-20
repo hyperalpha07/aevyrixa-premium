@@ -50,6 +50,7 @@ type CheckoutForm = {
   paymentType: PaymentType;
   walletSenderNumber: string;
   transactionReference: string;
+  couponCode: string;
 };
 
 type CheckoutErrors = Partial<
@@ -64,6 +65,11 @@ type CheckoutErrors = Partial<
     string
   >
 >;
+
+type DiscountPreview = {
+  code: string; subtotal: number; deliveryCharge: number; discountAmount: number;
+  totalPayable: number; disclaimer: string; fingerprint: string;
+};
 
 type PreparedOrder = {
   orderId: string;
@@ -111,6 +117,7 @@ const initialForm: CheckoutForm = {
   paymentType: "Send Money",
   walletSenderNumber: "",
   transactionReference: "",
+  couponCode: "",
 };
 
 const isBangladeshMobileNumber = (value: string) =>
@@ -155,6 +162,9 @@ export default function CheckoutPage() {
   const [preparedOrder, setPreparedOrder] = useState<PreparedOrder | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [couponPreview, setCouponPreview] = useState<DiscountPreview | null>(null);
+  const [couponPreviewError, setCouponPreviewError] = useState("");
+  const [isPreviewingCoupon, setIsPreviewingCoupon] = useState(false);
   const [copiedReceiver, setCopiedReceiver] = useState(false);
   const [adminSettings, setAdminSettings] =
     useState<StorefrontSettings>(defaultStorefrontSettings);
@@ -317,6 +327,68 @@ export default function CheckoutPage() {
           ? parseInt(adminSettings.deliverySettings.outsideDhakaDeliveryCharge) || 130
           : undefined;
 
+  const couponPreviewFingerprint = JSON.stringify({
+    code: form.couponCode.trim().toUpperCase(),
+    items: items.map((item) => ({
+      slug: item.slug, productId: item.productId, price: item.price, quantity: item.quantity,
+      size: item.size, color: item.color, absorbency: item.absorbency, variant: item.variant,
+    })),
+    deliveryZone: form.deliveryZone,
+    paymentMethod: form.paymentMethod,
+    paymentType: form.paymentType,
+    walletProvider: form.walletProvider,
+  });
+  const appliedCouponPreview = couponPreview?.fingerprint === couponPreviewFingerprint
+    ? couponPreview : null;
+  const couponRequiresPreview = Boolean(form.couponCode.trim()) && !appliedCouponPreview;
+
+  async function applyCouponPreview() {
+    if (!form.couponCode.trim()) {
+      setCouponPreviewError("Enter a discount code.");
+      return;
+    }
+    if (!form.deliveryZone || selectedDeliveryCharge === undefined) {
+      setCouponPreviewError("Select your delivery zone first.");
+      return;
+    }
+    setIsPreviewingCoupon(true);
+    setCouponPreviewError("");
+    const requestedFingerprint = couponPreviewFingerprint;
+    try {
+      const response = await fetch("/api/checkout/coupon-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: form.couponCode.trim(),
+          items, deliveryZone: form.deliveryZone,
+          paymentMethod: form.paymentMethod,
+          paymentType: form.paymentType,
+          walletProvider: form.walletProvider,
+        }),
+      });
+      const payload = await response.json().catch(() => null) as (Partial<DiscountPreview> & { errors?: string[] }) | null;
+      if (!response.ok || !payload ||
+          typeof payload.discountAmount !== "number" || typeof payload.subtotal !== "number" ||
+          typeof payload.deliveryCharge !== "number" || typeof payload.totalPayable !== "number" ||
+          typeof payload.code !== "string") {
+        throw new Error(payload?.errors?.join(" ") || "Discount preview is unavailable.");
+      }
+      if (Math.abs(payload.subtotal - subtotal) > 0.009 ||
+          Math.abs(payload.deliveryCharge - selectedDeliveryCharge) > 0.009) {
+        throw new Error("Prices or delivery fees changed. Refresh your cart before ordering.");
+      }
+      setCouponPreview({ code: payload.code, subtotal: payload.subtotal,
+        deliveryCharge: payload.deliveryCharge, discountAmount: payload.discountAmount,
+        totalPayable: payload.totalPayable, disclaimer: payload.disclaimer || "Discount rechecked at order submission.",
+        fingerprint: requestedFingerprint });
+    } catch (error) {
+      setCouponPreview(null);
+      setCouponPreviewError(error instanceof Error ? error.message : "Discount preview is unavailable.");
+    } finally {
+      setIsPreviewingCoupon(false);
+    }
+  }
+
   useEffect(() => {
     setForm((current) => ({
       ...current,
@@ -389,6 +461,7 @@ export default function CheckoutPage() {
 
     if (
       isSubmitting ||
+      isPreviewingCoupon ||
       isSubmitDisabled ||
       hasUnavailableItems ||
       (requiresCustomerAccount && !isLoggedInCustomer) ||
@@ -398,6 +471,11 @@ export default function CheckoutPage() {
       if (requiresCustomerAccount && !isLoggedInCustomer) {
         setSubmitError("Please log in or create an account before submitting checkout.");
       }
+      return;
+    }
+
+    if (couponRequiresPreview) {
+      setSubmitError("Apply and review your discount code before placing the order.");
       return;
     }
 
@@ -445,9 +523,26 @@ export default function CheckoutPage() {
       deliveryArea: form.cityArea.trim(),
       deliveryZone: form.deliveryZone,
       deliveryNote: form.deliveryNote.trim(),
+      couponCode: form.couponCode.trim(),
       status: "draft",
       createdAt: new Date().toISOString(),
     };
+
+    let submissionPayload: typeof orderPayload & { orderReference?: string } = orderPayload;
+    if (form.couponCode.trim()) {
+      const intentKey = "aevyrixa-coupon-checkout-intent-v1";
+      const intentFingerprint = JSON.stringify({
+        items: orderPayload.items, customer: orderPayload.customer,
+        paymentDetails: orderPayload.paymentDetails, deliveryZone: orderPayload.deliveryZone,
+        deliveryCharge: orderPayload.deliveryCharge, couponCode: orderPayload.couponCode,
+      });
+      let existing: { fingerprint: string; reference: string } | null = null;
+      try { existing = JSON.parse(sessionStorage.getItem(intentKey) || "null"); } catch { /* storage may be unavailable */ }
+      const reference = existing?.fingerprint === intentFingerprint && /^AEV-C-[A-F0-9-]{36}$/.test(existing.reference)
+        ? existing.reference : `AEV-C-${crypto.randomUUID().toUpperCase()}`;
+      try { sessionStorage.setItem(intentKey, JSON.stringify({ fingerprint: intentFingerprint, reference })); } catch { /* no storage */ }
+      submissionPayload = { ...orderPayload, orderReference: reference };
+    }
 
     setIsSubmitting(true);
     setSubmitError("");
@@ -458,7 +553,7 @@ export default function CheckoutPage() {
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify(submissionPayload),
       });
       const result = (await response.json()) as OrderApiResponse;
 
@@ -477,6 +572,7 @@ export default function CheckoutPage() {
         paymentMethod: result.order.paymentDetails.paymentMethod,
       });
       clearCart();
+      try { sessionStorage.removeItem("aevyrixa-coupon-checkout-intent-v1"); } catch { /* no storage */ }
       localStorage.removeItem(CHECKOUT_DRAFT_KEY);
     } catch (error) {
       console.error("Failed to submit order:", error);
@@ -628,6 +724,24 @@ export default function CheckoutPage() {
                   value={form.deliveryNote}
                   onChange={(value) => updateField("deliveryNote", value)}
                 />
+                <div>
+                  <TextField
+                    label="Discount code optional"
+                    value={form.couponCode}
+                    onChange={(value) => { updateField("couponCode", value.toUpperCase()); setCouponPreviewError(""); }}
+                    autoComplete="off"
+                  />
+                  <button type="button" onClick={() => void applyCouponPreview()}
+                    disabled={isPreviewingCoupon || isSubmitting || !form.couponCode.trim()}
+                    className="mt-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
+                    {isPreviewingCoupon ? "Checking code..." : "Apply code"}
+                  </button>
+                  {couponPreviewError ? <p role="alert" className="mt-2 text-xs text-rose-200">{couponPreviewError}</p> : null}
+                  {appliedCouponPreview ? <p className="mt-2 text-xs text-emerald-200">
+                    {appliedCouponPreview.code} · Verified discount {formatCurrency(appliedCouponPreview.discountAmount)}.
+                    Final availability is checked when ordering.
+                  </p> : null}
+                </div>
               </div>
 
               <div className="mt-6">
@@ -876,9 +990,9 @@ export default function CheckoutPage() {
 
               <button
                 type="submit"
-              disabled={isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)}
+              disabled={isSubmitDisabled || isSubmitting || isPreviewingCoupon || couponRequiresPreview || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)}
               className={`aev-checkout-primary-action aev-checkout-submit mt-7 flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold transition ${
-                  isSubmitDisabled || isSubmitting || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
+                  isSubmitDisabled || isSubmitting || isPreviewingCoupon || couponRequiresPreview || hasUnavailableItems || (requiresCustomerAccount && !isLoggedInCustomer)
                     ? "cursor-not-allowed border border-white/10 bg-white/[0.06] text-white/35"
                     : "bg-gradient-to-r from-[#FF4DB8] via-[#FF3FA4] to-[#A855F7] text-white hover:scale-[1.01]"
                 }`}
@@ -889,7 +1003,9 @@ export default function CheckoutPage() {
                     ? "Login Required"
                   : isSubmitting
                     ? "Submitting Order..."
-                    : "Submit Order"}
+                    : couponRequiresPreview
+                      ? "Apply Discount Code First"
+                      : "Submit Order"}
               </button>
             </form>
 
@@ -902,6 +1018,7 @@ export default function CheckoutPage() {
               insideDhakaCharge={adminSettings.deliverySettings.insideDhakaDeliveryCharge}
               outsideDhakaCharge={adminSettings.deliverySettings.outsideDhakaDeliveryCharge}
               freeDeliveryThreshold={adminSettings.checkoutSettings.freeDeliveryThreshold}
+              couponPreview={appliedCouponPreview}
             />
           </div>
         )}
@@ -1011,6 +1128,7 @@ function PremiumNotice({ children }: { children: ReactNode }) {
 }
 
 function OrderSummary({
+  couponPreview,
   storeName,
   deliveryNote,
   privacyPackagingMessage,
@@ -1020,6 +1138,7 @@ function OrderSummary({
   outsideDhakaCharge,
   freeDeliveryThreshold,
 }: {
+  couponPreview: DiscountPreview | null;
   storeName: string;
   deliveryNote: string;
   privacyPackagingMessage: string;
@@ -1106,13 +1225,13 @@ function OrderSummary({
           <div className="h-px bg-white/10" />
           <div className="flex items-center justify-between gap-4">
             <span>Product Subtotal</span>
-            <span className="font-medium text-white">{formatCurrency(subtotal)}</span>
+            <span className="font-medium text-white">{formatCurrency(couponPreview?.subtotal ?? subtotal)}</span>
           </div>
           {deliveryZone ? (
             <div className="flex items-center justify-between gap-4">
               <span>Delivery ({deliveryZone})</span>
               <span className="font-medium text-white">
-                {deliveryChargeAmount === 0 ? "Free" : formatCurrency(deliveryChargeAmount)}
+                {(couponPreview?.deliveryCharge ?? deliveryChargeAmount) === 0 ? "Free" : formatCurrency(couponPreview?.deliveryCharge ?? deliveryChargeAmount)}
               </span>
             </div>
           ) : (
@@ -1122,14 +1241,19 @@ function OrderSummary({
             </div>
           )}
           <div className="h-px bg-white/10" />
+          {couponPreview ? <div className="flex items-center justify-between gap-4">
+            <span>Discount ({couponPreview.code})</span>
+            <span className="font-medium text-emerald-200">- {formatCurrency(couponPreview.discountAmount)}</span>
+          </div> : null}
           <div className="flex items-center justify-between text-lg font-semibold text-white">
             <span>Total Payable</span>
             <span>
-              {deliveryZone
-                ? formatCurrency(subtotal + deliveryChargeAmount)
-                : formatCurrency(subtotal)}
+              {couponPreview
+                ? formatCurrency(couponPreview.totalPayable)
+                : deliveryZone ? formatCurrency(subtotal + deliveryChargeAmount) : formatCurrency(subtotal)}
             </span>
           </div>
+          {couponPreview ? <p className="text-xs leading-5 text-white/45">{couponPreview.disclaimer}</p> : null}
           {!deliveryZone && (
             <p className="text-xs leading-5 text-white/45">
               + delivery charge confirmed before dispatch

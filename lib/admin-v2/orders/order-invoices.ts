@@ -47,6 +47,11 @@ export function createOrderInvoiceSnapshot(order: OrderRecord) {
       unitPrice: item.price,
       lineTotal: item.lineTotal ?? item.price * item.quantity,
     })),
+    coupon: {
+      id: order.couponId ?? null,
+      code: order.couponCode ?? null,
+      discountAmount: discount,
+    },
     totals: {
       subtotal,
       discount,

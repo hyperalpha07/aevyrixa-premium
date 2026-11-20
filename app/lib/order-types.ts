@@ -106,6 +106,8 @@ export type OrderRecord = {
   totals: OrderTotals;
   totalAmount: number;
   discountAmount?: number;
+  couponId?: string;
+  couponCode?: string;
   paidAmount?: number;
   dueAmount?: number;
   refundedAmount?: number;
@@ -234,6 +236,7 @@ export type OrderSubmissionInput = Omit<
   "orderId" | "orderReference" | "status" | "createdAt" | "totalAmount"
 > & {
   orderReference?: string;
+  couponCode?: string;
 };
 
 export type OrderStorageMode = "supabase" | "demo-memory";

@@ -5,7 +5,7 @@ import {
 import { notifyNewOrder } from "@/app/lib/order-notifications";
 import { getCustomerFromRequest } from "@/app/api/account/_utils";
 import { normalizeCustomerPhone } from "@/app/lib/customer-account-store";
-import { createOrder, OrderStoreError, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
+import { createOrder, createOrderWithCoupon, OrderStoreError, queryOrders, recordOrderEvent } from "@/app/lib/order-store";
 import { parseAdminV2OrderQuery } from "@/lib/admin-v2/orders/order-query";
 import { getStoreSettings } from "@/app/lib/settings-store";
 import { listProducts } from "@/app/lib/product-store";
@@ -78,6 +78,7 @@ function validateOrderPayload(payload: unknown): {
   const walletSenderNumber = optionalText(paymentDetails.walletSenderNumber);
   const transactionReference = optionalText(paymentDetails.transactionReference);
   const deliveryCharge = optionalNumber(payload.deliveryCharge);
+  const couponCode = optionalText(payload.couponCode)?.toUpperCase();
 
   if (!fullName) errors.push("Full name is required.");
   if (!phone || !bdMobilePattern.test(phone)) {
@@ -171,6 +172,7 @@ function validateOrderPayload(payload: unknown): {
       deliveryNote: optionalText(payload.deliveryNote),
       paymentReference: transactionReference,
       paymentStatus: "pending",
+      couponCode,
     },
   };
 }
@@ -267,7 +269,9 @@ export async function POST(request: Request) {
       deliveryCharge: quote.quote.deliveryCharge,
     };
     const resolvedItems = snapshotOrderItemImages(orderInput.items, catalogResult.products, safeOrderImage);
-    const result = await createOrder({ ...orderInput, items: resolvedItems });
+    const result = orderInput.couponCode
+      ? await createOrderWithCoupon({ ...orderInput, items: resolvedItems }, orderInput.couponCode)
+      : await createOrder({ ...orderInput, items: resolvedItems });
 
     await recordOrderEvent({
       orderRef: result.order.orderReference,

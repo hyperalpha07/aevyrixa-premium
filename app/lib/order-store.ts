@@ -46,6 +46,8 @@ const SUPABASE_ORDER_SELECT_COLUMNS = [
   "subtotal",
   "total",
   "discount_amount",
+  "coupon_id",
+  "coupon_code",
   "paid_amount",
   "due_amount",
   "refunded_amount",
@@ -98,6 +100,8 @@ type SupabaseOrderRow = {
   subtotal?: number | string | null;
   total?: number | string | null;
   discount_amount?: number | string | null;
+  coupon_id?: string | null;
+  coupon_code?: string | null;
   paid_amount?: number | string | null;
   due_amount?: number | string | null;
   refunded_amount?: number | string | null;
@@ -881,6 +885,8 @@ function mapSupabaseOrder(row: SupabaseOrderRow): OrderRecord {
     },
     totalAmount: total,
     discountAmount: numberValue(row.discount_amount),
+    couponId: row.coupon_id ?? undefined,
+    couponCode: row.coupon_code ?? undefined,
     paidAmount: numberValue(row.paid_amount),
     dueAmount: numberValue(row.due_amount),
     refundedAmount: numberValue(row.refunded_amount),
@@ -992,6 +998,19 @@ export async function createOrder(
   // a production order database. Add Supabase env vars to persist real orders.
   demoOrders.unshift(order);
   return { order, storageMode };
+}
+
+/** Coupon orders use the database RPC so the order, redemption ledger and usage counter commit together. */
+export async function createOrderWithCoupon(input: OrderSubmissionInput, couponCode: string): Promise<OrderSaveResult> {
+  const order = buildOrder(input);
+  if (getStorageMode() !== "supabase") throw new OrderStoreError({ operation: "coupon checkout", status: 503, code: "COUPON_BACKEND_UNAVAILABLE", message: "Discount checkout is unavailable while the order database is offline." });
+  const response = await fetch(supabaseEndpoint("rpc/checkout_create_order_with_coupon"), {
+    method: "POST", headers: supabaseHeaders(),
+    body: JSON.stringify({ p_order: orderToSupabaseInsertPayload(order, true), p_coupon_code: couponCode }),
+  });
+  if (!response.ok) throw await supabaseError(response, "coupon checkout");
+  const row = await response.json() as SupabaseOrderRow;
+  return { order: mapSupabaseOrder(row), storageMode: "supabase" };
 }
 
 export const saveOrder = createOrder;
