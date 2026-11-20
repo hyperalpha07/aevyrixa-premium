@@ -91,6 +91,14 @@ begin
   if found then
     if v_existing.coupon_code = v_code
        and v_existing.customer_phone = p_order->>'customer_phone'
+       and v_existing.customer_name = p_order->>'customer_name'
+       and v_existing.city_area = p_order->>'city_area'
+       and v_existing.delivery_address = p_order->>'delivery_address'
+       and v_existing.customer_id is not distinct from nullif(p_order->>'customer_id','')
+       and v_existing.payment_type is not distinct from nullif(p_order->>'payment_type','')
+       and v_existing.wallet_provider is not distinct from nullif(p_order->>'wallet_provider','')
+       and v_existing.transaction_id is not distinct from nullif(p_order->>'transaction_id','')
+       and v_existing.payment_reference is not distinct from nullif(p_order->>'payment_reference','')
        and v_existing.items = coalesce(p_order->'items','[]'::jsonb)
        and v_existing.subtotal = (p_order->>'subtotal')::numeric
        and v_existing.delivery_charge = (p_order->>'delivery_charge')::numeric
