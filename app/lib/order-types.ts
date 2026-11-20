@@ -234,6 +234,7 @@ export type OrderSubmissionInput = Omit<
   "orderId" | "orderReference" | "status" | "createdAt" | "totalAmount"
 > & {
   orderReference?: string;
+  couponCode?: string;
 };
 
 export type OrderStorageMode = "supabase" | "demo-memory";

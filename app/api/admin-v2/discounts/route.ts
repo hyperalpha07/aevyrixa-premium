@@ -1,0 +1,6 @@
+import { forbiddenAdminResponse, verifyFreshAdminRequestPermission } from "@/app/lib/admin-auth";
+import { logStaffActivity } from "@/app/lib/admin-staff";
+import { listDiscountCoupons, saveDiscountCoupon, validateCouponInput } from "@/lib/admin-v2/discounts-store";
+export const dynamic="force-dynamic";
+export async function GET(request:Request){if(!(await verifyFreshAdminRequestPermission(request,"discounts.manage")))return forbiddenAdminResponse();try{return Response.json({coupons:await listDiscountCoupons()});}catch{return Response.json({errors:["Discount backend is unavailable."]},{status:503});}}
+export async function POST(request:Request){const session=await verifyFreshAdminRequestPermission(request,"discounts.manage");if(!session)return forbiddenAdminResponse();const validation=validateCouponInput(await request.json().catch(()=>null));if(!validation.input)return Response.json({errors:validation.errors},{status:400});try{const coupon=await saveDiscountCoupon(validation.input);await logStaffActivity({actor:session,action:"discount.created",targetType:"discount_coupon",targetId:coupon.id,metadata:{code:coupon.code}});return Response.json({coupon},{status:201});}catch{return Response.json({errors:["Discount coupon could not be saved."]},{status:409});}}

@@ -50,6 +50,7 @@ type CheckoutForm = {
   paymentType: PaymentType;
   walletSenderNumber: string;
   transactionReference: string;
+  couponCode: string;
 };
 
 type CheckoutErrors = Partial<
@@ -111,6 +112,7 @@ const initialForm: CheckoutForm = {
   paymentType: "Send Money",
   walletSenderNumber: "",
   transactionReference: "",
+  couponCode: "",
 };
 
 const isBangladeshMobileNumber = (value: string) =>
@@ -445,6 +447,7 @@ export default function CheckoutPage() {
       deliveryArea: form.cityArea.trim(),
       deliveryZone: form.deliveryZone,
       deliveryNote: form.deliveryNote.trim(),
+      couponCode: form.couponCode.trim(),
       status: "draft",
       createdAt: new Date().toISOString(),
     };
@@ -627,6 +630,12 @@ export default function CheckoutPage() {
                   label="Delivery Note optional"
                   value={form.deliveryNote}
                   onChange={(value) => updateField("deliveryNote", value)}
+                />
+                <TextField
+                  label="Discount code optional"
+                  value={form.couponCode}
+                  onChange={(value) => updateField("couponCode", value.toUpperCase())}
+                  autoComplete="off"
                 />
               </div>
 

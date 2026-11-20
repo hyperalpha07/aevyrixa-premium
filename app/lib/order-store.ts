@@ -994,6 +994,19 @@ export async function createOrder(
   return { order, storageMode };
 }
 
+/** Coupon orders use the database RPC so the order, redemption ledger and usage counter commit together. */
+export async function createOrderWithCoupon(input: OrderSubmissionInput, couponCode: string): Promise<OrderSaveResult> {
+  const order = buildOrder(input);
+  if (getStorageMode() !== "supabase") throw new OrderStoreError({ operation: "coupon checkout", status: 503, code: "COUPON_BACKEND_UNAVAILABLE", message: "Discount checkout is unavailable while the order database is offline." });
+  const response = await fetch(supabaseEndpoint("rpc/checkout_create_order_with_coupon"), {
+    method: "POST", headers: supabaseHeaders(),
+    body: JSON.stringify({ p_order: orderToSupabaseInsertPayload(order, true), p_coupon_code: couponCode }),
+  });
+  if (!response.ok) throw await supabaseError(response, "coupon checkout");
+  const row = await response.json() as SupabaseOrderRow;
+  return { order: mapSupabaseOrder(row), storageMode: "supabase" };
+}
+
 export const saveOrder = createOrder;
 
 export async function listOrders() {

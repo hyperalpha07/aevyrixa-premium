@@ -3,9 +3,11 @@ import { Alert, Button, Chip, Stack, Table, TableBody, TableCell, TableContainer
 import type { AdminV2ProductCatalogData } from "@/lib/admin-v2/products";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
+import { AdminV2DiscountCouponManager } from "@/components/admin-v2/views/discounts/AdminV2DiscountCouponManager";
+import type { DiscountCoupon } from "@/lib/admin-v2/discounts-store";
 
 export function AdminV2DiscountsView({catalog,freeDeliveryThreshold}:{
- catalog:AdminV2ProductCatalogData;freeDeliveryThreshold:string|null;
+ catalog:AdminV2ProductCatalogData;freeDeliveryThreshold:string|null;coupons:DiscountCoupon[]|null;
 }){
  const markdowns=catalog.products.filter(p=>p.status==="active"&&p.compareAtPrice!==null&&p.compareAtPrice>p.price&&p.price>=0);
  const threshold=freeDeliveryThreshold!==null && Number.isFinite(Number(freeDeliveryThreshold))
@@ -16,7 +18,8 @@ export function AdminV2DiscountsView({catalog,freeDeliveryThreshold}:{
    actions={<Button component={Link} href="/admin-v2/products" variant="outlined">Products</Button>}/>
   <Stack spacing={2}>
    {!catalog.available?<Alert severity="error">Product pricing source unavailable. Discounts cannot be calculated safely.</Alert>:null}
-   <Alert severity="info">Coupon campaigns, discount code redemption counts and marketing conversion lift are not persisted in the current commerce backend. They are intentionally not reported as real data.</Alert>
+   <Alert severity="info">Catalog markdowns and free delivery remain separate from coupon codes. Coupon reductions are calculated only by the checkout transaction.</Alert>
+   <AdminV2DiscountCouponManager initial={coupons} />
    <Stack direction="row" spacing={1} sx={{flexWrap:"wrap"}}>
     <Chip variant="outlined" label={catalog.available?`${markdowns.length} active product markdowns`:"Markdowns unavailable"} />
     <Chip variant="outlined" label={threshold===null?"Free shipping setting unavailable":threshold>0?`Free delivery from BDT ${threshold}`:"No positive free-delivery threshold"} />

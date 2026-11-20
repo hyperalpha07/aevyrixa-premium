@@ -24,7 +24,7 @@ export const adminV2AccessRules: Record<AdminV2ModuleKey, AdminV2AccessRule> = {
   customers: { section: "customers" },
   customerDetail: { section: "customers" },
   returns: { section: "orders" },
-  discounts: { section: "discounts" },
+  discounts: { permission: "discounts.manage" },
   support: { section: "support" },
   chat: { section: "support" },
   email: { section: "support" },
