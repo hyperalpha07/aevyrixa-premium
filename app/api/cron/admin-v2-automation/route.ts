@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { listTaskAutomationRules, runTaskAutomationRule } from "@/lib/admin-v2/operations-store";
+import { listScheduledTaskAutomationRules, runTaskAutomationRule } from "@/lib/admin-v2/operations-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,10 +22,9 @@ export async function GET(request: Request) {
   if (!authorized(request.headers.get("authorization"), secret)) {
     return Response.json({ errors: ["Unauthorized."] }, { status: 401, headers: noStore });
   }
-  let rules: Awaited<ReturnType<typeof listTaskAutomationRules>>["rules"];
+  let rules: Awaited<ReturnType<typeof listScheduledTaskAutomationRules>>;
   try {
-    const result = await listTaskAutomationRules();
-    rules = result.rules.filter(rule => rule.is_enabled && rule.schedule_mode === "daily");
+    rules = await listScheduledTaskAutomationRules();
     if (rules.length > 25) {
       return Response.json({ errors: ["Too many enabled daily rules; no execution attempted."] },
         { status: 503, headers: noStore });
