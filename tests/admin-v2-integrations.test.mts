@@ -9,8 +9,9 @@ test("integration facts distinguish persisted settings, manual providers, and cr
   assert.match(source, /source\.storageMode === "supabase"/);
   assert.match(source, /Boolean\(process\.env\.ORDER_NOTIFICATION_TELEGRAM_BOT_TOKEN\)/);
   assert.match(source, /Boolean\(process\.env\.ORDER_NOTIFICATION_TELEGRAM_CHAT_ID\)/);
-  assert.match(source, /status: tgToken && tgChat \? "configured" : "not_configured"/);
+  assert.match(source, /settings\.notificationSettings\.telegramNewOrderEnabled \? "configured" : "disabled"/);
   assert.match(source, /status: "manual"/);
+  assert.match(read("app/lib/order-notifications.ts"), /!settings\.settings\.notificationSettings\.telegramNewOrderEnabled/);
   assert.match(source, /This is not a full database or Storage health check/);
   assert.doesNotMatch(source, /botToken:\s*process\.env|chatId:\s*process\.env/);
 });
