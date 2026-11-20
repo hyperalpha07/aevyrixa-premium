@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/admin-v2-automation",
+      "schedule": "5 0 * * *"
+    }
+  ]
+}

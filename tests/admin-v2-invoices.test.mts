@@ -50,7 +50,7 @@ test("Invoices route is real, protected by orders.viewInvoice, and related finan
   assert.equal(findAdminV2Route("refunds")?.implemented, true);
   assert.equal(findAdminV2Route("billing")?.implemented, true);
   assert.equal(findAdminV2Route("expenses")?.implemented, true);
-  assert.equal(findAdminV2Route("tax")?.implemented, false);
+  assert.equal(findAdminV2Route("tax")?.implemented, true);
   assert.equal(adminV2AccessRules.invoices.permission, "orders.viewInvoice");
   assert.equal(adminV2AccessRules.invoices.section, undefined);
   assert.match(invoicesPage, /requireAdminV2RouteAccess\(session,\s*"invoices"\)/);
