@@ -77,7 +77,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
    breadcrumbs={[{label:"Admin V2",href:"/admin-v2/dashboard"},{label:"Automation"}]}
    actions={<Button variant="outlined" component={Link} href="/admin-v2/kanban">Open Kanban</Button>}/>
   <Stack spacing={2}>
-   <Alert severity="info">This runner creates internal work tasks only. It cannot send messages, charge customers, update orders or invoke provider APIs. Daily rules run via UTC daily scheduler only when CRON_SECRET is configured. ${schedulerConfigured?"Daily scheduler configured.":"Scheduler not yet activated; use Run once today."}</Alert>
+   <Alert severity="info">This runner creates internal work tasks only. It cannot send messages, charge customers, update orders or invoke provider APIs. Daily rules run via UTC daily scheduler only when CRON_SECRET is configured. {schedulerConfigured ? "Daily scheduler configured." : "Scheduler not yet activated; use Run once today."}</Alert>
    {!initial?<Alert severity="warning">Automation database unavailable. No simulated rules or run history.</Alert>:null}
    {!canManage?<Alert severity="info">Read-only access. Managing and executing rules requires automation.manage.</Alert>:null}
    {error?<Alert severity="error">{error}</Alert>:null}{message?<Alert severity="success">{message}</Alert>:null}
