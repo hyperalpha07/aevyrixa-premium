@@ -81,7 +81,7 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Calendar", path: "/admin-v2/calendar", module: "calendar", description: "Persisted internal work-task due-date calendar", implemented: true },
   { title: "Kanban", path: "/admin-v2/kanban", module: "kanban", description: "Persisted internal staff task board", implemented: true },
   { title: "Couriers", path: "/admin-v2/couriers", module: "couriers", description: "Manual live-order fulfillment and courier tracking", implemented: true },
-  { title: "Automation", path: "/admin-v2/automation", module: "automation", description: "Automation rules", implemented: false },
+  { title: "Automation", path: "/admin-v2/automation", module: "automation", description: "Persistent internal task rules with atomic daily deduplication; no external actions", implemented: true },
   { title: "Staff", path: "/admin-v2/staff", module: "staff", description: "Staff management", implemented: true },
   { title: "Roles", path: "/admin-v2/roles", module: "roles", description: "Role governance", implemented: true },
   { title: "Permissions", path: "/admin-v2/permissions", module: "permissions", description: "Access-control matrix", implemented: true },
@@ -93,12 +93,12 @@ export const adminV2Routes: AdminV2Route[] = [
   { title: "Transactions", path: "/admin-v2/transactions", module: "transactions", description: "Payment transaction ledger", implemented: true },
   { title: "Expenses", path: "/admin-v2/expenses", module: "expenses", description: "Expense ledger", implemented: true },
   { title: "Refunds", path: "/admin-v2/refunds", module: "refunds", description: "Refund ledger", implemented: true },
-  { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax settings", implemented: false },
+  { title: "Tax", path: "/admin-v2/tax", module: "tax", description: "Tax planning profile, not applied to checkout or legal filing", implemented: true },
   { title: "Billing", path: "/admin-v2/billing", module: "billing", description: "Billing", implemented: true },
   { title: "Settings", path: "/admin-v2/settings", module: "settings", description: "Native core store and checkout settings, advanced Classic available", implemented: true, classicPath: "/admin/settings" },
   { title: "Homepage", path: "/admin-v2/homepage", module: "homepage", description: "Real homepage section, editorial, hero and media management", implemented: true },
   { title: "Integrations", path: "/admin-v2/integrations", module: "integrations", description: "Native configuration inventory and permissioned read-only Telegram identity verification; merchant/courier APIs not connected", implemented: true },
-  { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Webhook management", implemented: false },
+  { title: "Webhooks", path: "/admin-v2/webhooks", module: "webhooks", description: "Disabled webhook destination registry awaiting provider verification", implemented: true },
   { title: "System Health", path: "/admin-v2/system-health", module: "systemHealth", description: "Read-only source availability, not uptime monitoring", implemented: true },
 ];
 
