@@ -7,6 +7,7 @@ import { Alert, Button, Chip, Stack, Typography } from "@mui/material";
 import type { IntegrationFact, IntegrationStatus } from "@/lib/admin-v2/integrations/status";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
+import { FutureProviderSlots } from "@/components/admin-v2/views/integrations/FutureProviderSlots";
 
 type ProbeResult = {
   state: "verified_identity" | "not_configured" | "unverified" | "unavailable";
@@ -110,10 +111,7 @@ export function AdminV2IntegrationsView({
           </V2Card>)}
         </Stack>;
       })}
-      <Alert severity="info">
-        Merchant gateways, automated courier booking, WhatsApp Business API messaging and provider webhooks need
-        verified provider accounts, credentials and isolated integration tests before they can be enabled.
-      </Alert>
+      <FutureProviderSlots />
     </Stack>
   </>;
 }
