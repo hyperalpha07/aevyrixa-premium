@@ -141,16 +141,16 @@ export function AdminV2EmailDraftWorkspace({
             </Stack>
             <TextField label="To (one email address)" fullWidth value={form.toAddress}
               disabled={!canManage || saving || initial === null}
-              inputProps={{ maxLength: 254 }}
+              slotProps={{ htmlInput: { maxLength: 254 } }}
               onChange={(event) => setForm((previous) => ({ ...previous, toAddress: event.target.value }))}
               helperText="Recipient is optional until ready. No message will be sent." />
             <TextField label="Subject" fullWidth value={form.subject}
               disabled={!canManage || saving || initial === null}
-              inputProps={{ maxLength: 200 }}
+              slotProps={{ htmlInput: { maxLength: 200 } }}
               onChange={(event) => setForm((previous) => ({ ...previous, subject: event.target.value }))} />
             <TextField label="Plain-text message" multiline minRows={9} fullWidth value={form.bodyText}
               disabled={!canManage || saving || initial === null}
-              inputProps={{ maxLength: 20000 }}
+              slotProps={{ htmlInput: { maxLength: 20000 } }}
               onChange={(event) => setForm((previous) => ({ ...previous, bodyText: event.target.value }))} />
             {active ? <Typography variant="caption" color="text.secondary">
               Revision {active.revision}. Last saved {new Date(active.updatedAt).toLocaleString()}.
