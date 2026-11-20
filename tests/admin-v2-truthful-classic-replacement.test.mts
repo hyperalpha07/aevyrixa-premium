@@ -46,7 +46,7 @@ test("Integration status never claims unverified payment or courier API connecti
  assert.match(facts,/source\.storageMode === "supabase"/);
  assert.match(facts,/status: "manual"/);
  assert.match(facts,/Manual wallet payment instructions enabled/);
- assert.match(facts,/Bot token and destination chat are configured/);
+ assert.match(facts,/New-order alerts are enabled, and bot\/chat credentials are configured/);
  assert.match(facts,/not a merchant gateway/);
  assert.match(view,/Configuration is not proof of API access/);
  assert.doesNotMatch(`${page}\n${facts}\n${view}`,/98\.7%|token refreshed|webhook synced/);
