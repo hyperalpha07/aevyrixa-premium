@@ -106,6 +106,8 @@ export type OrderRecord = {
   totals: OrderTotals;
   totalAmount: number;
   discountAmount?: number;
+  couponId?: string;
+  couponCode?: string;
   paidAmount?: number;
   dueAmount?: number;
   refundedAmount?: number;
