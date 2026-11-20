@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     const product = productsBySlug.get(string(item.slug) ?? "");
     const quantity = item.quantity;
     if (!product || (item.productId && item.productId !== product.id) ||
+        typeof item.price !== "number" || !Number.isFinite(item.price) || Math.abs(item.price - product.price) > 0.009 ||
         typeof quantity !== "number" || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 50) {
       return Response.json({ errors: ["A cart item changed. Refresh your cart."] }, { status: 409 });
     }
