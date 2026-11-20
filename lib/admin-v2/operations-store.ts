@@ -103,11 +103,11 @@ export async function updateTaskAutomationRule(id:string,version:number,input:Ta
  {...input,updated_by:actor.slice(0,120),version:version+1,updated_at:new Date().toISOString()},
  `id=eq.${encodeURIComponent(id)}&version=eq.${version}`);
 }
-export async function runTaskAutomationRule(id:string,actor:string){
+export async function runTaskAutomationRule(id:string,actor:string,mode:"manual"|"scheduled"="manual"){
  if(!validId(id))throw new Error("Invalid automation rule.");
  const r=await fetch(endpoint("rpc/admin_v2_run_internal_automation"),{
   method:"POST",headers:headers(),cache:"no-store",
-  body:JSON.stringify({p_rule_id:id,p_actor:actor.slice(0,120),p_mode:"manual"}),
+  body:JSON.stringify({p_rule_id:id,p_actor:actor.slice(0,120),p_mode:mode}),
   signal:AbortSignal.timeout(15000),
  });
  if(!r.ok)throw new Error("Rule cannot execute: disabled, invalid or internal task backend unavailable.");
