@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { Alert, Box, Button, Chip, Stack, Typography } from "@mui/material";
+import { Alert, Box, Stack, Typography } from "@mui/material";
 import type { AdminWorkTask } from "@/lib/admin-v2/work-tasks/work-tasks-store";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 
 type CalendarData={available:boolean;rows:AdminWorkTask[];totalCount:number};
@@ -29,16 +29,16 @@ export function AdminV2CalendarView({month,data}:{month:string;data:CalendarData
  return <>
   <V2PageHeader title="Task Calendar" description="Verified internal task deadlines, backed by the Kanban work board. Not connected to Google Calendar."
     breadcrumbs={[{label:"Admin V2",href:"/admin-v2/dashboard"},{label:"Calendar"}]}
-    actions={<Button component={Link} href="/admin-v2/kanban" variant="outlined">Open task board</Button>}/>
+    actions={<V2Button href="/admin-v2/kanban" variant="outlined">Open task board</V2Button>}/>
   <Stack spacing={2}>
     {!data.available?<Alert severity="error">Calendar task storage could not be loaded; no appointments are fabricated.</Alert>:null}
     <Alert severity="info">Calendar shows the due dates of saved Admin work tasks. It does not create meetings or send reminders and has no external calendar integration.</Alert>
     <V2Card>
       <Stack spacing={2}>
         <Stack direction="row" spacing={1} sx={{alignItems:"center",justifyContent:"space-between"}}>
-          <Button size="small" component={Link} href={`/admin-v2/calendar?month=${adjacent(month,-1)}`}>Previous</Button>
+          <V2Button size="small" href={`/admin-v2/calendar?month=${adjacent(month,-1)}`}>Previous</V2Button>
           <Typography variant="h6">{label}</Typography>
-          <Button size="small" component={Link} href={`/admin-v2/calendar?month=${adjacent(month,1)}`}>Next</Button>
+          <V2Button size="small" href={`/admin-v2/calendar?month=${adjacent(month,1)}`}>Next</V2Button>
         </Stack>
         <Typography variant="caption" color="text.secondary">Tasks with due dates this month: {data.available?data.totalCount:"Unavailable"}</Typography>
         <Box sx={{display:"grid",gridTemplateColumns:"repeat(7,minmax(0,1fr))",gap:0.75}}>

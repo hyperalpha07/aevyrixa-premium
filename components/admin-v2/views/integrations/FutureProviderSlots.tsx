@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Alert, Button, Chip, Divider, Stack, Typography } from "@mui/material";
+import { Alert, Chip, Divider, Stack, Typography } from "@mui/material";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { futureProviderSlots } from "@/lib/admin-v2/integrations/future-providers";
 
 /** Display only. Never renders a secret-entry form, connection toggle, or API call. */
@@ -33,7 +33,7 @@ export function FutureProviderSlots() {
           {provider.prerequisites.map((item) => <Typography key={item} component="li" variant="body2" color="text.secondary">{item}</Typography>)}
         </Stack>
         <Stack direction="row" sx={{ justifyContent: "flex-end" }}>
-          <Button component={Link} href={provider.destination} size="small" variant="outlined">{provider.destinationLabel}</Button>
+          <V2Button href={provider.destination} size="small" variant="outlined">{provider.destinationLabel}</V2Button>
         </Stack>
       </Stack>
     </V2Card>)}
