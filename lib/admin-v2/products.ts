@@ -319,7 +319,8 @@ export async function getAdminV2ProductCatalog(): Promise<AdminV2ProductCatalogD
 export async function getAdminV2ProductDetail(
   productId: string
 ): Promise<AdminV2ProductDetailData> {
-  const result = await listProducts({ scope: "admin" });
+  try {
+    const result = await listProducts({ scope: "admin" });
   if (result.storageMode !== "supabase") {
     return {
       available: false,
@@ -334,4 +335,8 @@ export async function getAdminV2ProductDetail(
     storageMode: result.storageMode,
     product: product ? await toDetail(product) : null,
   };
+  } catch (error) {
+    console.error("[admin-v2/product-detail] Product source unavailable", error instanceof Error ? error.name : "unknown error");
+    return { available: false, storageMode: "unavailable", product: null };
+  }
 }
