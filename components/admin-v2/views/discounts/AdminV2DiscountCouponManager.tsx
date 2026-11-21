@@ -46,26 +46,35 @@ export function AdminV2DiscountCouponManager({ initial }: { initial: DiscountCou
   }
 
   const save = async () => {
-    const response = await fetch(form.id ? `/api/admin-v2/discounts/${form.id}` : "/api/admin-v2/discounts", {
-      method: form.id ? "PATCH" : "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...form, discountValue: Number(form.discountValue), minimumSubtotal: Number(form.minimumSubtotal), maximumDiscount: form.maximumDiscount === "" ? null : Number(form.maximumDiscount), usageLimit: form.usageLimit === "" ? null : Number(form.usageLimit) }),
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      setMessage(payload.errors?.join(" ") ?? "Save failed.");
+    if (!initial) {
+      setMessage("Coupon backend unavailable; saving is disabled until the source recovers.");
       return;
     }
-    setCoupons((current) => form.id ? current.map((coupon) => coupon.id === payload.coupon.id ? payload.coupon : coupon) : [payload.coupon, ...current]);
-    setOpen(false);
-    setMessage("Coupon saved.");
+    try {
+      const response = await fetch(form.id ? `/api/admin-v2/discounts/${form.id}` : "/api/admin-v2/discounts", {
+        method: form.id ? "PATCH" : "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...form, discountValue: Number(form.discountValue), minimumSubtotal: Number(form.minimumSubtotal), maximumDiscount: form.maximumDiscount === "" ? null : Number(form.maximumDiscount), usageLimit: form.usageLimit === "" ? null : Number(form.usageLimit) }),
+      });
+      const payload = await response.json().catch(() => null) as { errors?: string[]; coupon?: DiscountCoupon } | null;
+      if (!response.ok || !payload?.coupon?.id) {
+        setMessage(payload?.errors?.join(" ") || "Coupon could not be saved. The backend may be unavailable.");
+        return;
+      }
+      const saved = payload.coupon;
+      setCoupons((current) => form.id ? current.map((coupon) => coupon.id === saved.id ? saved : coupon) : [saved, ...current]);
+      setOpen(false);
+      setMessage("Coupon saved.");
+    } catch {
+      setMessage("Coupon could not be saved. Check the connection and try again.");
+    }
   };
 
   return <>
     <V2Card><Stack spacing={1.5}>
       <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
         <Typography variant="h6">Coupon codes</Typography>
-        <Button variant="contained" onClick={() => { setForm(blank); setOpen(true); }}>Create code</Button>
+        <Button variant="contained" disabled={!initial} onClick={() => { setForm(blank); setOpen(true); }}>Create code</Button>
       </Stack>
       {!initial ? <Alert severity="warning">Coupon source unavailable. No campaign data is substituted.</Alert> : coupons.length ? coupons.map((coupon) => <Stack key={coupon.id} direction={{ xs: "column", sm: "row" }} sx={{ justifyContent: "space-between", borderTop: 1, borderColor: "divider", pt: 1.5 }}>
         <div><Typography sx={{ fontWeight: 700 }}>{coupon.code} · {coupon.name}</Typography><Typography variant="body2" color="text.secondary">{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `BDT ${coupon.discountValue}`} · Used {coupon.usageCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ""} · {coupon.expiresAt ? `Expires ${new Date(coupon.expiresAt).toLocaleDateString()}` : "No expiry"}</Typography></div>
