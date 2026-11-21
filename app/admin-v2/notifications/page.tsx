@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { Alert, Button, Chip, Grid, Stack, Typography } from "@mui/material";
+import { Alert, Chip, Grid, Stack, Typography } from "@mui/material";
 import { Bell, ClipboardList, HeartHandshake, MessageSquare } from "lucide-react";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
+import { V2Button } from "@/components/admin-v2/shared/V2Button";
 import { V2MetricCard } from "@/components/admin-v2/shared/V2MetricCard";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import { getAdminV2DashboardData } from "@/lib/admin-v2/data";
@@ -43,7 +43,7 @@ export default async function AdminV2NotificationsPage() {
             {queues.filter((queue) => queue.available).map((queue) => (
               <Stack key={queue.label} direction={{ xs: "column", md: "row" }} spacing={1} sx={{ p: 1.5, borderRadius: 2, border: "1px solid", borderColor: "divider", justifyContent: "space-between", alignItems: { md: "center" } }}>
                 <Typography variant="body2">{queue.label}: <strong>{queue.count}</strong></Typography>
-                <Button component={Link} href={queue.href} variant="outlined" size="small">Open queue</Button>
+                <V2Button href={queue.href} variant="outlined" size="small">Open queue</V2Button>
               </Stack>
             ))}
             {!active.length && !unavailable.length ? <Alert severity="success">No active work-queue alerts.</Alert> : null}
