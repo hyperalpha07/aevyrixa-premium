@@ -8,7 +8,11 @@ import { listDiscountCoupons } from "@/lib/admin-v2/discounts-store";
 export default async function AdminV2DiscountsPage() {
  const session=await requireAdminV2Session();
  requireAdminV2RouteAccess(session,"discounts");
- const [catalog,settings,coupons]=await Promise.all([getAdminV2ProductCatalog(),getStoreSettings(),listDiscountCoupons().catch(()=>null)]);
+ const [catalog,settings,coupons]=await Promise.all([
+  getAdminV2ProductCatalog(),
+  getStoreSettings().catch(()=>null),
+  listDiscountCoupons().catch(()=>null),
+ ]);
  return <AdminV2DiscountsView catalog={catalog}
-    coupons={coupons} freeDeliveryThreshold={settings.storageMode==="supabase"?settings.settings.checkoutSettings.freeDeliveryThreshold:null} />;
+    coupons={coupons} freeDeliveryThreshold={settings?.storageMode==="supabase"?settings.settings.checkoutSettings.freeDeliveryThreshold:null} />;
 }
