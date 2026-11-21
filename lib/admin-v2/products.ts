@@ -128,7 +128,7 @@ async function checkProductImageUrls(values: Array<string | null | undefined>) {
       if (!normalized) return { url: null, unavailable: imageReferenceLabel(raw) };
       if (normalized.startsWith("/")) return { url: normalized, unavailable: null };
       try {
-        const response = await fetch(normalized, { method: "HEAD", cache: "no-store" });
+        const response = await fetch(normalized, { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(5000) });
         return response.ok
           ? { url: normalized, unavailable: null }
           : { url: null, unavailable: imageReferenceLabel(raw) };
@@ -277,31 +277,43 @@ async function toDetail(product: ProductCatalogItem): Promise<AdminV2ProductDeta
 }
 
 export async function getAdminV2ProductCatalog(): Promise<AdminV2ProductCatalogData> {
-  const result = await listProducts({ scope: "admin" });
-  if (result.storageMode !== "supabase") {
+  try {
+    const result = await listProducts({ scope: "admin" });
+    if (result.storageMode !== "supabase") {
+      return {
+        available: false,
+        storageMode: result.storageMode,
+        products: [],
+        summary: { total: 0, active: 0, draft: 0, lowOrOutOfStock: 0 },
+      };
+    }
+
+    const products = await Promise.all(result.products.map(toListItem));
+    return {
+      available: true,
+      storageMode: result.storageMode,
+      products,
+      summary: {
+        total: products.length,
+        active: products.filter((product) => product.status === "active").length,
+        draft: products.filter((product) => product.status === "draft").length,
+        lowOrOutOfStock: products.filter(
+          (product) =>
+            product.stockStatus === "low_stock" || product.stockStatus === "out_of_stock"
+        ).length,
+      },
+    };
+  } catch (error) {
+    // A broken catalog source must not crash every Admin V2 page that depends on it.
+    // Do not substitute demo products or make empty data look like an authoritative catalog.
+    console.error("[admin-v2/catalog] Catalog unavailable", error instanceof Error ? error.name : "unknown error");
     return {
       available: false,
-      storageMode: result.storageMode,
+      storageMode: "unavailable",
       products: [],
       summary: { total: 0, active: 0, draft: 0, lowOrOutOfStock: 0 },
     };
   }
-
-  const products = await Promise.all(result.products.map(toListItem));
-  return {
-    available: true,
-    storageMode: result.storageMode,
-    products,
-    summary: {
-      total: products.length,
-      active: products.filter((product) => product.status === "active").length,
-      draft: products.filter((product) => product.status === "draft").length,
-      lowOrOutOfStock: products.filter(
-        (product) =>
-          product.stockStatus === "low_stock" || product.stockStatus === "out_of_stock"
-      ).length,
-    },
-  };
 }
 
 export async function getAdminV2ProductDetail(
