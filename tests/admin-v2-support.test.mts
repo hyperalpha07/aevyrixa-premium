@@ -277,7 +277,8 @@ test("workspace uses shared search, URL state, closed composer guard, manual ref
   assert.match(view, /mark_unread/);
   assert.match(view, /manifestToken: prepared\.manifestToken/);
   assert.doesNotMatch(view, /attachments: prepared\.attachments/);
-  assert.doesNotMatch(view, /setInterval/);
+  assert.match(view, /workspace !== "chat"/);
+  assert.match(view, /setInterval/);
   const conversation = read("components/admin-v2/views/support/AdminV2SupportConversation.tsx");
   assert.match(conversation, /canReplyToSupport\(canReply, conversation.status\)/);
   assert.match(conversation, /Copy conversation ID/);
@@ -743,7 +744,8 @@ test("support console layout uses connected workspace, flexible history and comp
   const conversation = read("components/admin-v2/views/support/AdminV2SupportConversation.tsx");
   const inbox = read("components/admin-v2/views/support/AdminV2SupportInbox.tsx");
   const composer = read("components/admin-v2/views/support/AdminV2SupportComposer.tsx");
-  assert.match(view, /gridTemplateColumns: "325px minmax\(0, 1fr\) 390px"/);
+  assert.match(view, /gridTemplateColumns: workspace === "chat"/);
+  assert.match(view, /"325px minmax\(0, 1fr\) 390px"/);
   assert.match(view, /Snackbar/);
   assert.match(view, /action: "assign"/);
   assert.match(view, /action: "attach_label"/);
