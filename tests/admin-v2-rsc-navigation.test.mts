@@ -39,18 +39,18 @@ test("the formerly broken Admin V2 routes use the client navigation wrapper", ()
   }
 });
 
-test("Chat is an independently authorized workspace, not a Support redirect", () => {
+test("Chat has a separate authorized workspace without a redirect", () => {
   const chat = readFileSync("app/admin-v2/chat/page.tsx", "utf8");
   const support = readFileSync("app/admin-v2/support/page.tsx", "utf8");
   const shell = readFileSync("components/admin-v2/core/AdminV2Shell.tsx", "utf8");
   const view = readFileSync("components/admin-v2/views/support/AdminV2SupportView.tsx", "utf8");
-  assert.match(chat, /requireAdminV2RouteAccess\\(session, "chat"\\)/);
-  assert.match(chat, /workspace="chat"/);
-  assert.match(chat, /hasPermission\\(session, "support.reply"\\)/);
-  assert.doesNotMatch(chat, /redirect\\(/);
-  assert.match(support, /requireAdminV2RouteAccess\\(session, "support"\\)/);
-  assert.match(view, /workspace === "chat"/);
-  assert.match(view, /Manage support case/);
-  assert.match(view, /Open Live Chat/);
-  assert.match(shell, /pathname === "\/admin-v2\/chat"/);
+  assert.ok(chat.includes('requireAdminV2RouteAccess(session, "chat")'));
+  assert.ok(chat.includes('workspace="chat"'));
+  assert.ok(chat.includes('hasPermission(session, "support.reply")'));
+  assert.ok(!chat.includes("redirect("));
+  assert.ok(support.includes('requireAdminV2RouteAccess(session, "support")'));
+  assert.ok(view.includes('workspace === "chat"'));
+  assert.ok(view.includes("Manage support case"));
+  assert.ok(view.includes("Open Live Chat"));
+  assert.ok(shell.includes('pathname === "/admin-v2/chat"'));
 });
