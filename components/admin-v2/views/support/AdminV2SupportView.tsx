@@ -42,7 +42,7 @@ async function readJson<T>(url: string, options?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }: { canReply: boolean; canClose: boolean; canManage: boolean; aiEnabled: boolean }) {
+export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled, workspace = "support" }: { canReply: boolean; canClose: boolean; canManage: boolean; aiEnabled: boolean; workspace?: "support" | "chat" }) {
   const router = useRouter();
   const params = useSearchParams();
   const query = (params.get("q") ?? "").slice(0, 160);
@@ -91,7 +91,7 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }:
   function navigate(nextQuery: string, nextFilter: SupportFilter, conversation: string) {
     setActionError("");
     setNotice("");
-    router.push(supportHref(nextQuery, nextFilter, conversation), { scroll: false });
+    router.push(supportHref(nextQuery, nextFilter, conversation, workspace), { scroll: false });
   }
 
   async function mutate(kind: "reply" | "note" | "status" | "markUnread" | "assign" | "priority" | "escalate" | "clearEscalation" | "attachLabel" | "removeLabel" | "createLabel" | "updateLabel" | "deleteLabel", value = "", files: File[] = [], extra: Record<string, unknown> = {}) {
@@ -201,15 +201,16 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }:
 
   const metrics = supportMetrics(items);
   const visible = querySupportInbox(items, query, filter);
+  // Chat is a focused conversation workspace; Support retains case tools and context.
   useEffect(() => {
     if (!loading && !selected && visible.length) {
-      router.replace(supportHref(query, filter, visible[0].id), { scroll: false });
+      router.replace(supportHref(query, filter, visible[0].id, workspace), { scroll: false });
     }
-  }, [filter, loading, query, router, selected, visible]);
+  }, [filter, loading, query, router, selected, visible, workspace]);
 
   return <Box sx={{ flex: 1, height: "100%", minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
     <Stack direction="row" sx={{ flex: "none", alignItems: "flex-start", justifyContent: "space-between", gap: 2, mb: 1 }}>
-      <V2PageHeader title="Support" description="Customer support conversations and live chat." />
+      <V2PageHeader title={workspace === "chat" ? "Live Chat" : "Support Cases"} description={workspace === "chat" ? "Customer messages and fast replies. Manage assignments, labels and escalations in Support." : "Manage customer cases, ownership, labels, priority and escalation with full conversation history."} />
       <V2Button variant="outlined" disabled={loading || busy} onClick={() => setReload(count => count + 1)} startIcon={<RefreshCw size={15} />}>Refresh</V2Button>
     </Stack>
 
@@ -266,7 +267,7 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }:
       <Snackbar open={Boolean(notice)} autoHideDuration={2600} onClose={() => setNotice("")} message={notice} role="status" anchorOrigin={{ vertical: "top", horizontal: "right" }} />
       <Box sx={{
         display: "grid",
-        gridTemplateColumns: "325px minmax(0, 1fr) 390px",
+        gridTemplateColumns: workspace === "chat" ? "325px minmax(0, 1fr)" : "325px minmax(0, 1fr) 390px",
         gridTemplateRows: "minmax(0, 1fr)",
         alignItems: "stretch",
         gap: 1.5,
@@ -309,7 +310,7 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }:
               onMarkUnread={() => { void mutate("markUnread"); }} /> :
             <Box sx={{ p: 6, textAlign: "center", m: "auto" }}><Typography variant="h6">{selected && loading ? "Loading conversation..." : "Select a conversation"}</Typography><Typography color="text.secondary" sx={{ mt: 1 }}>Read the history and respond from this workspace.</Typography></Box>}
         </Card>
-        <Card variant="outlined" sx={{ minWidth: 0, minHeight: 0, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 3.25, borderColor: "rgba(124, 77, 255, 0.16)", bgcolor: "rgba(255,255,255,0.96)", boxShadow: "0 22px 60px rgba(31,25,56,0.1), inset 0 1px 0 rgba(255,255,255,0.92)" }}>
+        {workspace === "support" ? <Card variant="outlined" sx={{ minWidth: 0, minHeight: 0, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column", borderRadius: 3.25, borderColor: "rgba(124, 77, 255, 0.16)", bgcolor: "rgba(255,255,255,0.96)", boxShadow: "0 22px 60px rgba(31,25,56,0.1), inset 0 1px 0 rgba(255,255,255,0.92)" }}>
           {detail && detail.id === selected ? <AdminV2SupportContextPanel conversation={detail} canClose={canClose} canManage={canManage} busy={busy || loading}
             onStatus={(status: ConversationStatus) => { void mutate("status", status); }}
             onAssign={(staffId, staffName) => { void mutate("assign", "", [], { staffId, staffName }); }}
@@ -325,7 +326,7 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled }:
               <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Customer context</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.6 }}>Select a conversation to see source, timeline, status, and customer details.</Typography>
             </Box>}
-        </Card>
+        </Card> : null}
       </Box>
   </Box>;
 }
