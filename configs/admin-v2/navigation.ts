@@ -79,8 +79,8 @@ export const adminV2Navigation: AdminV2NavigationSection[] = [
   {
     heading: "Communication",
     items: [
-      { label: "Support", href: "/admin-v2/support", icon: MessageSquare, module: "support" },
-      { label: "Chat", href: "/admin-v2/chat", icon: MessageSquare, module: "chat" },
+      { label: "Support Cases", href: "/admin-v2/support", icon: MessageSquare, module: "support" },
+      { label: "Live Chat", href: "/admin-v2/chat", icon: MessageSquare, module: "chat" },
       { label: "Email", href: "/admin-v2/email", icon: Mail, module: "email" },
       { label: "Notifications", href: "/admin-v2/notifications", icon: Bell, module: "notifications" },
     ],
