@@ -78,7 +78,9 @@ test("Chat reuses the protected real Support Inbox without creating a fake chat 
   const page = read("app/admin-v2/chat/page.tsx");
   assert.match(page, /await requireAdminV2Session\(\)/);
   assert.match(page, /requireAdminV2RouteAccess\(session, "chat"\)/);
-  assert.match(page, /redirect\("\/admin-v2\/support"\)/);
+  assert.match(page, /workspace="chat"/);
+  assert.ok(!page.includes("redirect("));
+  assert.match(page, /AdminV2SupportView/);
 });
 
 test("Settings native route loads only real persisted settings and retains advanced Classic", () => {

@@ -34,7 +34,7 @@ function AdminV2ShellContent({ session, dashboardData, children }: AdminV2ShellP
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { contentWidth, navigationStyle } = useAdminV2Theme();
   const sidebarWidth = collapsed ? collapsedWidth : expandedWidth;
-  const supportWorkspace = pathname === "/admin-v2/support";
+  const supportWorkspace = pathname === "/admin-v2/support" || pathname === "/admin-v2/chat";
   const notificationCount =
     (dashboardData?.orders.pending ?? 0) + (dashboardData?.reviews.pending ?? 0) + (dashboardData?.support.open ?? 0);
 

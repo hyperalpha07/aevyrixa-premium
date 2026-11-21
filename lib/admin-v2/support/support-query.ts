@@ -68,12 +68,12 @@ export function querySupportInbox(items: SupportInboxItem[], query: string, filt
   }).sort((a, b) => (b.last_message?.created_at ?? b.created_at).localeCompare(a.last_message?.created_at ?? a.created_at) || a.id.localeCompare(b.id));
 }
 
-export function supportHref(query: string, filter: SupportFilter, conversation: string) {
+export function supportHref(query: string, filter: SupportFilter, conversation: string, workspace: "support" | "chat" = "support") {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   if (filter !== "all") params.set("status", filter);
   if (conversation) params.set("conversation", conversation);
-  return `/admin-v2/support${params.size ? `?${params}` : ""}`;
+  return `/admin-v2/${workspace}${params.size ? `?${params}` : ""}`;
 }
 
 export function canReplyToSupport(canReply: boolean, status: ConversationStatus) {
