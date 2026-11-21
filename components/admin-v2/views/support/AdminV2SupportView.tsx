@@ -199,6 +199,18 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled, w
     }
   }
 
+  // Poll only the dedicated Chat workspace while it is visible.
+  // Case management keeps explicit manual refresh.
+  useEffect(() => {
+    if (workspace !== "chat") return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible" && !mutationLock.current) {
+        setReload((current) => current + 1);
+      }
+    }, 30_000);
+    return () => window.clearInterval(interval);
+  }, [workspace]);
+
   const metrics = supportMetrics(items);
   const visible = querySupportInbox(items, query, filter);
   // Chat is a focused conversation workspace; Support retains case tools and context.
@@ -211,7 +223,12 @@ export function AdminV2SupportView({ canReply, canClose, canManage, aiEnabled, w
   return <Box sx={{ flex: 1, height: "100%", minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
     <Stack direction="row" sx={{ flex: "none", alignItems: "flex-start", justifyContent: "space-between", gap: 2, mb: 1 }}>
       <V2PageHeader title={workspace === "chat" ? "Live Chat" : "Support Cases"} description={workspace === "chat" ? "Customer messages and fast replies. Manage assignments, labels and escalations in Support." : "Manage customer cases, ownership, labels, priority and escalation with full conversation history."} />
-      <V2Button variant="outlined" disabled={loading || busy} onClick={() => setReload(count => count + 1)} startIcon={<RefreshCw size={15} />}>Refresh</V2Button>
+      <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexShrink: 0 }}>
+        <V2Button href={workspace === "chat" ? `/admin-v2/support${selected ? `?conversation=${encodeURIComponent(selected)}` : ""}` : "/admin-v2/chat"} variant="outlined">
+          {workspace === "chat" ? "Manage support case" : "Open Live Chat"}
+        </V2Button>
+        <V2Button variant="outlined" disabled={loading || busy} onClick={() => setReload(count => count + 1)} startIcon={<RefreshCw size={15} />}>Refresh</V2Button>
+      </Stack>
     </Stack>
 
     <Box sx={{
