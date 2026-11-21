@@ -320,7 +320,7 @@ export async function getAdminV2ProductDetail(
   productId: string
 ): Promise<AdminV2ProductDetailData> {
   try {
-      const result = await listProducts({ scope: "admin" });
+    const result = await listProducts({ scope: "admin" });
     if (result.storageMode !== "supabase") {
       return {
         available: false,
