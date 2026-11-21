@@ -39,8 +39,18 @@ test("the formerly broken Admin V2 routes use the client navigation wrapper", ()
   }
 });
 
-test("intentional Chat route redirects to Support Inbox", () => {
+test("Chat is an independently authorized workspace, not a Support redirect", () => {
   const chat = readFileSync("app/admin-v2/chat/page.tsx", "utf8");
-  assert.match(chat, /requireAdminV2RouteAccess\(session, "chat"\)/);
-  assert.match(chat, /redirect\("\/admin-v2\/support"\)/);
+  const support = readFileSync("app/admin-v2/support/page.tsx", "utf8");
+  const shell = readFileSync("components/admin-v2/core/AdminV2Shell.tsx", "utf8");
+  const view = readFileSync("components/admin-v2/views/support/AdminV2SupportView.tsx", "utf8");
+  assert.match(chat, /requireAdminV2RouteAccess\\(session, "chat"\\)/);
+  assert.match(chat, /workspace="chat"/);
+  assert.match(chat, /hasPermission\\(session, "support.reply"\\)/);
+  assert.doesNotMatch(chat, /redirect\\(/);
+  assert.match(support, /requireAdminV2RouteAccess\\(session, "support"\\)/);
+  assert.match(view, /workspace === "chat"/);
+  assert.match(view, /Manage support case/);
+  assert.match(view, /Open Live Chat/);
+  assert.match(shell, /pathname === "\/admin-v2\/chat"/);
 });
