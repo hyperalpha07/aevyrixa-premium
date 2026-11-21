@@ -123,7 +123,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
    border:"1px solid rgba(135,153,206,0.15)",
    "& .MuiAlert-root":{borderRadius:"13px",alignItems:"center"},
   }}>
-   <Stack direction={{xs:"column",md:"row"}} justifyContent="space-between" alignItems={{xs:"stretch",md:"center"}} spacing={2} sx={{mb:3}}>
+   <Stack direction={{xs:"column",md:"row"}} spacing={2} sx={{justifyContent:"space-between",alignItems:{xs:"stretch",md:"center"},mb:3}}>
     <Box>
      <Typography variant="overline" sx={{color:"#74d9d7",fontWeight:800,letterSpacing:"0.17em"}}>
       ADMIN V2  /  OPERATIONS
@@ -160,11 +160,11 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
    <Box sx={{display:"grid",gridTemplateColumns:{xs:"repeat(2,minmax(0,1fr))",lg:"repeat(4,minmax(0,1fr))"},gap:1.5,mb:2.5}}>
     {metrics.map(metric=>
      <Box key={metric.label} sx={{...panelSx,p:{xs:1.7,md:2.1},minHeight:116,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+      <Stack direction="row" spacing={1} sx={{alignItems:"center",justifyContent:"space-between"}}>
        <Typography sx={{fontSize:"0.67rem",letterSpacing:"0.12em",fontWeight:750,color:"#aab8d5"}}>{metric.label}</Typography>
        <Box sx={{color:"#65d5d2",display:"flex"}}>{metric.icon}</Box>
       </Stack>
-      <Stack direction="row" spacing={1.2} alignItems="baseline" sx={{mt:1}}>
+      <Stack direction="row" spacing={1.2} sx={{alignItems:"baseline",mt:1}}>
        <Typography sx={{fontSize:{xs:"1.75rem",md:"2rem"},fontWeight:800,lineHeight:1,color:"#ffffff"}}>{metric.value}</Typography>
        <Typography sx={{fontSize:"0.71rem",color:"#9caecb"}}>{metric.hint}</Typography>
       </Stack>
@@ -174,7 +174,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
 
    <Box sx={{display:"grid",gridTemplateColumns:{xs:"minmax(0,1fr)",lg:"minmax(285px,0.9fr) minmax(0,2.1fr)"},gap:2.25,alignItems:"start"}}>
     <Box component="section" aria-label="Saved automation rules" sx={{...panelSx,p:{xs:2,md:2.5},minHeight:{lg:490}}}>
-     <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+     <Stack direction="row" spacing={1} sx={{alignItems:"center",justifyContent:"space-between"}}>
       <Box>
        <Typography sx={{fontWeight:800,fontSize:"1.11rem",color:"#ffffff"}}>Saved rules</Typography>
        <Typography sx={{fontSize:"0.76rem",mt:0.4,color:"#9eacc8"}}>{initial?rules.length:"Unavailable"} workflows in this workspace</Typography>
@@ -183,7 +183,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
      </Stack>
      <Box sx={{height:"1px",background:"rgba(178,191,230,0.14)",my:2}}/>
      {!rules.length?
-      <Stack sx={{py:{xs:3,lg:5},px:1}} spacing={1.5} alignItems="center" textAlign="center">
+      <Stack sx={{alignItems:"center",textAlign:"center",py:{xs:3,lg:5},px:1}} spacing={1.5}>
        <Box sx={{height:60,width:60,borderRadius:"19px",display:"grid",placeItems:"center",color:"#78ddd8",background:"rgba(59,177,185,0.11)",border:"1px solid rgba(94,205,207,0.19)"}}>
         <ClipboardList size={27}/>
        </Box>
@@ -198,7 +198,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
         <Button key={rule.id} aria-pressed={selectedId===rule.id} fullWidth onClick={()=>choose(rule)} disabled={busy}
          sx={{textTransform:"none",borderRadius:"14px",p:1.6,textAlign:"left",justifyContent:"flex-start",border:selectedId===rule.id?"1px solid rgba(110,216,210,0.65)":"1px solid rgba(160,185,224,0.15)",background:selectedId===rule.id?"rgba(32,132,143,0.21)":"rgba(6,13,30,0.45)","&:hover":{background:"rgba(45,96,139,0.24)"}}}>
          <Stack sx={{minWidth:0,width:"100%"}} spacing={0.9}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{alignItems:"center",justifyContent:"space-between"}}>
            <Typography noWrap sx={{fontSize:"0.9rem",fontWeight:750,color:"#f2f6ff"}}>{rule.name}</Typography>
            <Box sx={{height:8,width:8,borderRadius:"50%",background:rule.is_enabled?"#6fdfcb":"#78839e",flexShrink:0}}/>
           </Stack>
@@ -212,7 +212,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
     </Box>
 
     <Box component="section" aria-label="Automation rule editor" sx={{...panelSx,p:{xs:2,md:2.6,lg:3}}}>
-     <Stack direction={{xs:"column",sm:"row"}} alignItems={{xs:"flex-start",sm:"center"}} justifyContent="space-between" spacing={1} sx={{mb:2.5}}>
+     <Stack direction={{xs:"column",sm:"row"}} spacing={1} sx={{alignItems:{xs:"flex-start",sm:"center"},justifyContent:"space-between",mb:2.5}}>
       <Box>
        <Typography sx={{fontSize:"1.17rem",fontWeight:800,color:"#ffffff"}}>{selected?"Edit automation rule":"Create a new rule"}</Typography>
        <Typography sx={{fontSize:"0.79rem",mt:0.5,color:"#a9b9d4"}}>{selected?"Changes are saved with version checking.":"Configure one meaningful task before enabling it."}</Typography>
@@ -243,7 +243,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
      </Box>
 
      <Box sx={{mt:2.25,p:{xs:1.6,md:2},borderRadius:"15px",border:"1px solid rgba(130,175,219,0.21)",background:"linear-gradient(100deg,rgba(8,35,56,0.70),rgba(30,28,62,0.58))"}}>
-      <Stack direction={{xs:"column",sm:"row"}} alignItems={{xs:"stretch",sm:"center"}} justifyContent="space-between" spacing={1.5}>
+      <Stack direction={{xs:"column",sm:"row"}} spacing={1.5} sx={{alignItems:{xs:"stretch",sm:"center"},justifyContent:"space-between"}}>
        <Box>
         <Typography sx={{fontWeight:750,fontSize:"0.89rem",color:"#f3f8ff"}}>Rule status</Typography>
         <Typography sx={{mt:0.4,fontSize:"0.76rem",lineHeight:1.5,color:"#aab9d1"}}>Only enabled rules can run. One task per UTC day, with duplicate protection.</Typography>
@@ -270,7 +270,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
       </Stack>
      </Box>
 
-     <Stack direction={{xs:"column",sm:"row"}} alignItems={{xs:"stretch",sm:"center"}} justifyContent="space-between" spacing={1.5} sx={{mt:2.5}}>
+     <Stack direction={{xs:"column",sm:"row"}} spacing={1.5} sx={{alignItems:{xs:"stretch",sm:"center"},justifyContent:"space-between",mt:2.5}}>
       <Typography sx={{fontSize:"0.74rem",color:"#99abc8"}}>
        {selected?"Version "+selected.version+" · Changes are audited":"No external actions are performed on save"}
       </Typography>
@@ -289,7 +289,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
    </Box>
 
    <Box component="section" aria-label="Automation execution history" sx={{...panelSx,p:{xs:2,md:2.5},mt:2.25}}>
-    <Stack direction={{xs:"column",sm:"row"}} justifyContent="space-between" alignItems={{xs:"flex-start",sm:"center"}} spacing={1}>
+    <Stack direction={{xs:"column",sm:"row"}} spacing={1} sx={{justifyContent:"space-between",alignItems:{xs:"flex-start",sm:"center"}}}>
      <Box>
       <Typography sx={{fontSize:"1.13rem",fontWeight:800,color:"#ffffff"}}>Execution history</Typography>
       <Typography sx={{fontSize:"0.77rem",mt:0.4,color:"#a8b8d2"}}>Recorded internal task creation · latest 30 runs</Typography>
@@ -307,7 +307,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
        </Box>
       )}
      </Stack>
-     :<Stack alignItems="center" textAlign="center" spacing={1} sx={{py:{xs:2.5,md:3.5}}}>
+     :<Stack spacing={1} sx={{alignItems:"center",textAlign:"center",py:{xs:2.5,md:3.5}}}>
        <Activity size={26} color="#6baebc"/>
        <Typography sx={{fontWeight:750,color:"#d7e3f2",fontSize:"0.88rem"}}>No executions yet</Typography>
        <Typography sx={{color:"#99a9c5",fontSize:"0.78rem",maxWidth:420}}>Once an enabled rule runs, its real execution will appear here. No demo activity is shown.</Typography>
