@@ -132,7 +132,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
       Automation workspace
      </Typography>
      <Typography sx={{fontSize:"0.91rem",mt:1,color:"#aebad4",maxWidth:720,lineHeight:1.65}}>
-      Create scheduled internal tasks, manage rules and monitor execution in one place.
+      Manage internal staff-task rules, schedule daily reviews, and monitor real task execution in one place.
      </Typography>
     </Box>
     <Button component={Link} href="/admin-v2/kanban" variant="outlined" sx={{...outlinedButtonSx,flexShrink:0,alignSelf:{xs:"flex-start",md:"center"}}}>
