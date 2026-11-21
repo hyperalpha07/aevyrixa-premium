@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Alert, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import type { WebhookInput, WebhookSubscriptionDraft } from "@/lib/admin-v2/operations-store";
@@ -59,8 +59,8 @@ export function WebhookRegistryView({initial,canManage}:{
    {!initial?<Alert severity="error">Webhook registry unavailable. No saved endpoints are assumed.</Alert>:null}
    {!canManage?<Alert severity="info">Read-only. Editing requires webhooks.manage.</Alert>:null}
    {error?<Alert severity="error">{error}</Alert>:null}{message?<Alert severity="success">{message}</Alert>:null}
-   <Stack direction={{xs:"column",lg:"row"}} spacing={2} sx={{alignItems:"flex-start"}}>
-    <V2Card>
+   <Box sx={{display:"grid",gridTemplateColumns:{xs:"minmax(0,1fr)",lg:"minmax(270px,0.85fr) minmax(0,2.15fr)"},gap:2,alignItems:"start"}}>
+    <V2Card sx={{width:"100%",minWidth:0}}>
      <Stack spacing={1.25} sx={{minWidth:{lg:270}}}>
       <Typography variant="h6">Reserved destinations ({initial?records.length:"Unavailable"})</Typography>
       {canManage?<Button variant="outlined" disabled={!initial||busy} onClick={()=>choose(null)}>New destination</Button>:null}
@@ -76,7 +76,7 @@ export function WebhookRegistryView({initial,canManage}:{
       </Button>)}
      </Stack>
     </V2Card>
-    <V2Card>
+    <V2Card sx={{width:"100%",minWidth:0}}>
      <Stack spacing={2}>
       <Stack direction="row" sx={{alignItems:"center",justifyContent:"space-between"}}>
        <Typography variant="h6">{selected?"Edit destination":"Reserve destination"}</Typography>
@@ -102,7 +102,7 @@ export function WebhookRegistryView({initial,canManage}:{
       </Stack>
      </Stack>
     </V2Card>
-   </Stack>
+   </Box>
   </Stack>
  </>;
 }
