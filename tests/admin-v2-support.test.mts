@@ -50,6 +50,11 @@ test("URL selection, search, status round-trip; closed and read-only reply guard
   assert.equal(url.searchParams.get("q"), "hello & world");
   assert.equal(url.searchParams.get("status"), "pending");
   assert.equal(url.searchParams.get("conversation"), "id/one");
+  const chatUrl = new URL(supportHref("hello & world", "pending", "id/one", "chat"), "http://localhost");
+  assert.equal(chatUrl.pathname, "/admin-v2/chat");
+  assert.equal(chatUrl.searchParams.get("conversation"), "id/one");
+  assert.equal(chatUrl.searchParams.get("q"), "hello & world");
+  assert.equal(chatUrl.searchParams.get("status"), "pending");
   assert.equal(canReplyToSupport(true, "open"), true);
   assert.equal(canReplyToSupport(true, "pending"), true);
   assert.equal(canReplyToSupport(true, "closed"), false);
