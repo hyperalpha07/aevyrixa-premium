@@ -320,21 +320,21 @@ export async function getAdminV2ProductDetail(
   productId: string
 ): Promise<AdminV2ProductDetailData> {
   try {
-    const result = await listProducts({ scope: "admin" });
-  if (result.storageMode !== "supabase") {
-    return {
-      available: false,
-      storageMode: result.storageMode,
-      product: null,
-    };
-  }
+      const result = await listProducts({ scope: "admin" });
+    if (result.storageMode !== "supabase") {
+      return {
+        available: false,
+        storageMode: result.storageMode,
+        product: null,
+      };
+    }
 
-  const product = result.products.find((item) => item.id === productId) ?? null;
-  return {
-    available: true,
-    storageMode: result.storageMode,
-    product: product ? await toDetail(product) : null,
-  };
+    const product = result.products.find((item) => item.id === productId) ?? null;
+    return {
+      available: true,
+      storageMode: result.storageMode,
+      product: product ? await toDetail(product) : null,
+    };
   } catch (error) {
     console.error("[admin-v2/product-detail] Product source unavailable", error instanceof Error ? error.name : "unknown error");
     return { available: false, storageMode: "unavailable", product: null };
