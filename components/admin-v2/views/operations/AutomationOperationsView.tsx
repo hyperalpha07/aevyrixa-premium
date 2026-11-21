@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Alert, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { V2Card } from "@/components/admin-v2/shared/V2Card";
 import { V2PageHeader } from "@/components/admin-v2/shared/V2PageHeader";
 import type { TaskAutomationRule, TaskAutomationRun, TaskRuleInput } from "@/lib/admin-v2/operations-store";
@@ -81,8 +81,8 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
    {!initial?<Alert severity="warning">Automation database unavailable. No simulated rules or run history.</Alert>:null}
    {!canManage?<Alert severity="info">Read-only access. Managing and executing rules requires automation.manage.</Alert>:null}
    {error?<Alert severity="error">{error}</Alert>:null}{message?<Alert severity="success">{message}</Alert>:null}
-   <Stack direction={{xs:"column",lg:"row"}} spacing={2} sx={{alignItems:"flex-start"}}>
-    <V2Card>
+   <Box sx={{display:"grid",gridTemplateColumns:{xs:"minmax(0,1fr)",lg:"minmax(270px,0.85fr) minmax(0,2.15fr)"},gap:2,alignItems:"start"}}>
+    <V2Card sx={{width:"100%",minWidth:0}}>
      <Stack spacing={1.25} sx={{minWidth:{lg:270}}}>
       <Typography variant="subtitle1" sx={{fontWeight:700}}>Rules ({initial?rules.length:"Unavailable"})</Typography>
       {canManage?<Button variant="outlined" onClick={()=>choose(null)} disabled={busy||!initial}>New rule</Button>:null}
@@ -97,7 +97,7 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
        </Stack></Button>)}
      </Stack>
     </V2Card>
-    <V2Card>
+    <V2Card sx={{width:"100%",minWidth:0}}>
      <Stack spacing={1.75} sx={{minWidth:0}}>
       <Stack direction="row" spacing={1} sx={{justifyContent:"space-between",alignItems:"center"}}>
        <Typography variant="h6">{selected?"Edit internal rule":"Create internal rule"}</Typography>
@@ -134,8 +134,8 @@ export function AutomationOperationsView({initial,canManage,schedulerConfigured}
       {selected?<Typography variant="caption" color="text.secondary">Version {selected.version}. Dry-run preview: an internal task named “{selected.task_title}” with {selected.task_priority} priority would be created if enabled.</Typography>:null}
      </Stack>
     </V2Card>
-   </Stack>
-   <V2Card>
+   </Box>
+   <V2Card sx={{width:"100%",minWidth:0}}>
     <Typography variant="h6" sx={{mb:1}}>Execution history</Typography>
     {runs.length?runs.slice(0,30).map(r=><Typography key={r.id} variant="body2" sx={{py:0.5}}>
      {r.run_day} · {rules.find(x=>x.id===r.rule_id)?.name??"Rule no longer visible"} · internal task created · {r.run_mode}
